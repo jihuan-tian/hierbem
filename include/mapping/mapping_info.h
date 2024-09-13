@@ -71,7 +71,10 @@ namespace HierBEM
      * Resize the data tables in the internal data.
      *
      * The data tables depend on the number of mapping shape functions and the
-     * number of quadrature points.
+     * number of quadrature points. After resizing and computing shape function
+     * values including their derivatives, the values in the data tables will be
+     * copied into BEMValues. Then the internal data can be resized to be used
+     * for other cases.
      *
      * @pre
      * @post
@@ -92,9 +95,9 @@ namespace HierBEM
       return mapping;
     }
 
-    const std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>
-      &
-      get_data() const
+    const std::unique_ptr<
+      typename MappingQGeneric<dim, spacedim>::InternalData> &
+    get_data() const
     {
       return data;
     }

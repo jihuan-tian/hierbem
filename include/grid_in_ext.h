@@ -9,14 +9,53 @@
 #define INCLUDE_GRID_IN_EXT_H_
 
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/patterns.h>
 
 #include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/tria_description.h>
 
+#include <gmsh.h>
+
 namespace HierBEM
 {
   using namespace dealii;
+
+  /**
+   * Declaration of deal.ii internal functions which will be used in
+   * @p read_skeleton_mesh.
+   */
+  template <int spacedim>
+  void
+  assign_1d_boundary_ids(
+    const std::map<unsigned int, types::boundary_id> &boundary_ids,
+    Triangulation<1, spacedim>                       &triangulation)
+  {
+    if (boundary_ids.size() > 0)
+      for (const auto &cell : triangulation.active_cell_iterators())
+        for (unsigned int f : GeometryInfo<1>::face_indices())
+          if (boundary_ids.find(cell->vertex_index(f)) != boundary_ids.end())
+            {
+              AssertThrow(
+                cell->at_boundary(f),
+                ExcMessage(
+                  "You are trying to prescribe boundary ids on the face "
+                  "of a 1d cell (i.e., on a vertex), but this face is not actually at "
+                  "the boundary of the mesh. This is not allowed."));
+              cell->face(f)->set_boundary_id(
+                boundary_ids.find(cell->vertex_index(f))->second);
+            }
+  }
+
+  template <int dim, int spacedim>
+  void
+  assign_1d_boundary_ids(const std::map<unsigned int, types::boundary_id> &,
+                         Triangulation<dim, spacedim> &)
+  {
+    // we shouldn't get here since boundary ids are not assigned to
+    // vertices except in 1d
+    Assert(dim != 1, ExcInternalError());
+  }
 
   /**
    * Read mesh by assigning @p entity_tag as @p material_id for each cell.

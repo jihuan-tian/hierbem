@@ -1,5 +1,7 @@
 #include <deal.II/base/logstream.h>
 
+#include <deal.II/grid/grid_in.h>
+
 #include <cuda_runtime.h>
 #include <openblas-pthread/cblas.h>
 
@@ -96,8 +98,6 @@ run_mixed_l_shape()
   LaplaceBEM<dim, spacedim> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
-    1, // mapping order for dirichlet domain
-    1, // mapping order for neumann domain
     LaplaceBEM<dim, spacedim>::ProblemType::MixedBCProblem,
     is_interior_problem,         // is interior problem
     4,                           // n_min for cluster tree
@@ -112,15 +112,39 @@ run_mixed_l_shape()
   );
   bem.set_project_name("mixed-l-shape");
 
-  bem.set_dirichlet_boundary_ids({1, 2});
-  bem.set_neumann_boundary_ids({19, 20, 21, 22, 23, 24});
-
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");
 
   timer.start();
 
-  bem.read_volume_mesh(HBEM_TEST_MODEL_DIR "l-shape.msh");
+  std::ifstream           mesh_file(HBEM_TEST_MODEL_DIR "l-shape.msh");
+  Triangulation<spacedim> tria;
+  GridIn<spacedim>        grid_in;
+  grid_in.attach_triangulation(tria);
+  grid_in.read_msh(mesh_file);
+
+  // Create the map from material ids to manifold ids.
+  bem.get_manifold_description()[1] = 0;
+  bem.get_manifold_description()[2] = 0;
+  for (types::material_id i = 19; i <= 24; i++)
+    {
+      bem.get_manifold_description()[i] = 0;
+    }
+
+  FlatManifold<dim, spacedim> *flat_manifold =
+    new FlatManifold<dim, spacedim>();
+  bem.get_manifolds()[0] = flat_manifold;
+
+  Triangulation<dim, spacedim> surface_tria;
+  surface_tria.set_manifold(0, *flat_manifold);
+  bem.extract_surface_triangulation(tria, std::move(surface_tria), true);
+
+  // Create the map from manifold id to mapping order.
+  bem.get_manifold_id_to_mapping_order()[0] = 1;
+
+  // Build surface-to-volume and volume-to-surface relationship.
+  bem.get_subdomain_topology().generate_single_domain_topology_for_dealii_model(
+    {1, 2, 19, 20, 21, 22, 23, 24});
 
   timer.stop();
   print_wall_time(deallog, timer, "read mesh");
@@ -130,8 +154,8 @@ run_mixed_l_shape()
   DirichletBC dirichlet_bc;
   NeumannBC   neumann_bc;
 
-  bem.assign_dirichlet_bc(dirichlet_bc);
-  bem.assign_neumann_bc(neumann_bc);
+  bem.assign_dirichlet_bc(dirichlet_bc, {1, 2});
+  bem.assign_neumann_bc(neumann_bc, {19, 20, 21, 22, 23, 24});
 
   timer.stop();
   print_wall_time(deallog, timer, "assign boundary conditions");

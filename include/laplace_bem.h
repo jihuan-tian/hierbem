@@ -116,17 +116,17 @@ namespace HierBEM
        * @return
        */
       bool
-      is_normal_vector_inward(const types::material_id m)
+      is_normal_vector_inward(const types::material_id m) const
       {
-        if (subdomain_topology.get_surface_to_subdomain(m)[0] > 0)
+        if (subdomain_topology.get_surface_to_subdomain()[m][0] > 0)
           {
-            Assert(subdomain_topology.get_surface_to_subdomain(m)[1] == 0,
+            Assert(subdomain_topology.get_surface_to_subdomain()[m][1] == 0,
                    ExcInternalError());
             return false;
           }
         else
           {
-            Assert(subdomain_topology.get_surface_to_subdomain(m)[1] > 0,
+            Assert(subdomain_topology.get_surface_to_subdomain()[m][1] > 0,
                    ExcInternalError());
             return true;
           }
@@ -186,16 +186,16 @@ namespace HierBEM
               typename MatrixType>
     friend void
     assemble_bem_full_matrix(
-      const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-      const RangeNumberType                                factor,
-      const DoFHandler<dim, spacedim> &dof_handler_for_test_space,
-      const DoFHandler<dim, spacedim> &dof_handler_for_trial_space,
-      const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+      const KernelFunctionType<spacedim1, RangeNumberType> &kernel,
+      const RangeNumberType                                 factor,
+      const DoFHandler<dim1, spacedim1> &dof_handler_for_test_space,
+      const DoFHandler<dim1, spacedim1> &dof_handler_for_trial_space,
+      const std::vector<MappingInfo<dim1, spacedim1> *> &mappings,
       const std::map<types::material_id, unsigned int>
-                                      &material_id_to_mapping_index,
-      const SurfaceNormalDetector     &normal_detector,
-      const SauterQuadratureRule<dim> &sauter_quad_rule,
-      MatrixType                      &target_full_matrix);
+                                       &material_id_to_mapping_index,
+      const SurfaceNormalDetector      &normal_detector,
+      const SauterQuadratureRule<dim1> &sauter_quad_rule,
+      MatrixType                       &target_full_matrix);
 
 
     template <int dim1,
@@ -207,16 +207,16 @@ namespace HierBEM
               typename MatrixType>
     friend void
     assemble_bem_full_matrix_serial(
-      const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-      const RangeNumberType                                factor,
-      const DoFHandler<dim, spacedim> &dof_handler_for_test_space,
-      const DoFHandler<dim, spacedim> &dof_handler_for_trial_space,
-      const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+      const KernelFunctionType<spacedim1, RangeNumberType> &kernel,
+      const RangeNumberType                                 factor,
+      const DoFHandler<dim1, spacedim1> &dof_handler_for_test_space,
+      const DoFHandler<dim1, spacedim1> &dof_handler_for_trial_space,
+      const std::vector<MappingInfo<dim1, spacedim1> *> &mappings,
       const std::map<types::material_id, unsigned int>
-                                      &material_id_to_mapping_order,
-      const SurfaceNormalDetector     &normal_detector,
-      const SauterQuadratureRule<dim> &sauter_quad_rule,
-      MatrixType                      &target_full_matrix);
+                                       &material_id_to_mapping_order,
+      const SurfaceNormalDetector      &normal_detector,
+      const SauterQuadratureRule<dim1> &sauter_quad_rule,
+      MatrixType                       &target_full_matrix);
 
 
     /**
@@ -231,40 +231,40 @@ namespace HierBEM
     LaplaceBEM();
 
     /**
-     * Constructor for solving Laplace problem using full matrix, which has only
-     * verification purpose.
+     * @brief Constructor for solving Laplace problem using full matrix, which
+     * has only verification purpose.
      *
-     * \comment{Here we do not initialize the functions describing boundary
-     * conditions, because which one of them should be initialized depends on
-     * the problem type. This task is transferred to the user code.}
+     * @param fe_order_for_dirichlet_space
+     * @param fe_order_for_neumann_space
+     * @param problem_type
+     * @param is_interior_problem
+     * @param thread_num
      */
     LaplaceBEM(unsigned int fe_order_for_dirichlet_space,
                unsigned int fe_order_for_neumann_space,
-               unsigned int mapping_order_for_dirichlet_domain,
-               unsigned int mapping_order_for_neumann_domain,
                ProblemType  problem_type,
                bool         is_interior_problem,
                unsigned int thread_num);
 
     /**
-     * Constructor for solving Laplace problem using \hmatrix.
+     * @brief Constructor for solving Laplace problem using \hmatrix.
      *
-     * @param mesh_file_name
      * @param fe_order_for_dirichlet_space
      * @param fe_order_for_neumann_space
-     * @param mapping_order
      * @param problem_type
+     * @param is_interior_problem
      * @param n_min_for_ct
      * @param n_min_for_bct
      * @param eta
      * @param max_hmat_rank
      * @param aca_relative_error
+     * @param eta_for_preconditioner
+     * @param max_hmat_rank_for_preconditioner
+     * @param aca_relative_error_for_preconditioner
      * @param thread_num
      */
     LaplaceBEM(unsigned int fe_order_for_dirichlet_space,
                unsigned int fe_order_for_neumann_space,
-               unsigned int mapping_order_for_dirichlet_domain,
-               unsigned int mapping_order_for_neumann_domain,
                ProblemType  problem_type,
                bool         is_interior_problem,
                unsigned int n_min_for_ct,
@@ -311,8 +311,8 @@ namespace HierBEM
      * function to all surfaces in the model.
      */
     void
-    assign_dirichlet_bc(Function<spacedim> &f,
-                        const EntityTag     surface_tag = -1);
+    assign_dirichlet_bc(Function<spacedim, double> &f,
+                        const EntityTag             surface_tag = -1);
 
     /**
      * Assign Dirichlet boundary condition function object to a set of surfaces.
@@ -323,7 +323,7 @@ namespace HierBEM
      * @param surface_tags
      */
     void
-    assign_dirichlet_bc(Function<spacedim>           &f,
+    assign_dirichlet_bc(Function<spacedim, double>   &f,
                         const std::vector<EntityTag> &surface_tags);
 
     /**
@@ -335,7 +335,8 @@ namespace HierBEM
      * function to all surfaces in the model.
      */
     void
-    assign_neumann_bc(Function<spacedim> &f, const EntityTag surface_tag = -1);
+    assign_neumann_bc(Function<spacedim, double> &f,
+                      const EntityTag             surface_tag = -1);
 
     /**
      * Assign Neumann boundary condition function object to a set of surfaces.
@@ -344,11 +345,11 @@ namespace HierBEM
      * @param surface_tags
      */
     void
-    assign_neumann_bc(Function<spacedim>           &f,
+    assign_neumann_bc(Function<spacedim, double>   &f,
                       const std::vector<EntityTag> &surface_tags);
 
     void
-    initialize_manifolds();
+    initialize_manifolds_from_manifold_description();
 
     void
     initialize_mappings();
@@ -479,6 +480,78 @@ namespace HierBEM
     get_manifolds()
     {
       return manifolds;
+    }
+
+    const Triangulation<dim, spacedim> &
+    get_triangulation() const
+    {
+      return tria;
+    }
+
+    Triangulation<dim, spacedim> &
+    get_triangulation()
+    {
+      return tria;
+    }
+
+    const std::vector<MappingInfo<dim, spacedim> *> &
+    get_mappings() const
+    {
+      return mappings;
+    }
+
+    std::vector<MappingInfo<dim, spacedim> *> &
+    get_mappings()
+    {
+      return mappings;
+    }
+
+    const DoFHandler<dim, spacedim> &
+    get_dof_handler_dirichlet() const
+    {
+      return dof_handler_for_dirichlet_space;
+    }
+
+    DoFHandler<dim, spacedim> &
+    get_dof_handler_dirichlet()
+    {
+      return dof_handler_for_dirichlet_space;
+    }
+
+    const DoFHandler<dim, spacedim> &
+    get_dof_handler_neumann() const
+    {
+      return dof_handler_for_neumann_space;
+    }
+
+    DoFHandler<dim, spacedim> &
+    get_dof_handler_neumann()
+    {
+      return dof_handler_for_neumann_space;
+    }
+
+    const Vector<double> &
+    get_dirichlet_data() const
+    {
+      return dirichlet_data;
+    }
+
+    Vector<double> &
+    get_dirichlet_data()
+    {
+      return dirichlet_data;
+    }
+
+    const Vector<double> &
+    get_neumann_data() const
+    {
+      return neumann_data;
+    }
+
+    Vector<double> &
+    get_neumann_data()
+    {
+      return neumann_data;
     }
 
   private:
@@ -688,14 +761,14 @@ namespace HierBEM
     /**
      * Full matrices for verification purpose.
      */
-    FullMatrix<double> V1_matrix;
-    FullMatrix<double> K1_matrix;
-    FullMatrix<double> K_prime1_matrix;
-    FullMatrix<double> D1_matrix;
-    FullMatrix<double> K2_matrix_with_mass_matrix;
-    FullMatrix<double> V2_matrix;
-    FullMatrix<double> D2_matrix;
-    FullMatrix<double> K_prime2_matrix_with_mass_matrix;
+    LAPACKFullMatrixExt<double> V1_matrix;
+    LAPACKFullMatrixExt<double> K1_matrix;
+    LAPACKFullMatrixExt<double> K_prime1_matrix;
+    LAPACKFullMatrixExt<double> D1_matrix;
+    LAPACKFullMatrixExt<double> K2_matrix_with_mass_matrix;
+    LAPACKFullMatrixExt<double> V2_matrix;
+    LAPACKFullMatrixExt<double> D2_matrix;
+    LAPACKFullMatrixExt<double> K_prime2_matrix_with_mass_matrix;
 
     /**
      * Whether \hmatrix is used.
@@ -845,8 +918,7 @@ namespace HierBEM
     /**
      * Map surface entity tag to Neumann boundary condition.
      */
-    std::map<EntityTag, Function<spacedim, double> *>
-      neumann_boundary_conditions;
+    std::map<EntityTag, Function<spacedim, double> *> neumann_bc_definition;
 
     /**
      * Neumann boundary condition data on all DoFs in the associated DoF
@@ -870,8 +942,7 @@ namespace HierBEM
     /**
      * Map surface entity tag to Dirichlet boundary condition.
      */
-    std::map<EntityTag, Function<spacedim, double> *>
-      dirichlet_boundary_conditions;
+    std::map<EntityTag, Function<spacedim, double> *> dirichlet_bc_definition;
 
     /**
      * Dirichlet boundary condition data on all DoFs in the associated DoF
@@ -995,16 +1066,6 @@ namespace HierBEM
     , dof_i2e_numbering_for_neumann_space_on_dirichlet_domain(nullptr)
     , dof_e2i_numbering_for_neumann_space_on_neumann_domain(nullptr)
     , dof_i2e_numbering_for_neumann_space_on_neumann_domain(nullptr)
-    , mapping_order_for_dirichlet_domain(0)
-    , mapping_order_for_neumann_domain(0)
-    , kx_mapping_for_dirichlet_domain(0)
-    , ky_mapping_for_dirichlet_domain(0)
-    , kx_mapping_for_neumann_domain(0)
-    , ky_mapping_for_neumann_domain(0)
-    , kx_mapping_data_for_dirichlet_domain(nullptr)
-    , ky_mapping_data_for_dirichlet_domain(nullptr)
-    , kx_mapping_data_for_neumann_domain(nullptr)
-    , ky_mapping_data_for_neumann_domain(nullptr)
     , use_hmat(false)
     , cpu_serial(false)
     , n_min_for_ct(0)
@@ -1025,8 +1086,6 @@ namespace HierBEM
   LaplaceBEM<dim, spacedim>::LaplaceBEM(
     unsigned int fe_order_for_dirichlet_space,
     unsigned int fe_order_for_neumann_space,
-    unsigned int mapping_order_for_dirichlet_domain,
-    unsigned int mapping_order_for_neumann_domain,
     ProblemType  problem_type,
     bool         is_interior_problem,
     unsigned int thread_num)
@@ -1046,16 +1105,6 @@ namespace HierBEM
     , dof_i2e_numbering_for_neumann_space_on_dirichlet_domain(nullptr)
     , dof_e2i_numbering_for_neumann_space_on_neumann_domain(nullptr)
     , dof_i2e_numbering_for_neumann_space_on_neumann_domain(nullptr)
-    , mapping_order_for_dirichlet_domain(mapping_order_for_dirichlet_domain)
-    , mapping_order_for_neumann_domain(mapping_order_for_neumann_domain)
-    , kx_mapping_for_dirichlet_domain(mapping_order_for_dirichlet_domain)
-    , ky_mapping_for_dirichlet_domain(mapping_order_for_dirichlet_domain)
-    , kx_mapping_for_neumann_domain(mapping_order_for_neumann_domain)
-    , ky_mapping_for_neumann_domain(mapping_order_for_neumann_domain)
-    , kx_mapping_data_for_dirichlet_domain(nullptr)
-    , ky_mapping_data_for_dirichlet_domain(nullptr)
-    , kx_mapping_data_for_neumann_domain(nullptr)
-    , ky_mapping_data_for_neumann_domain(nullptr)
     , use_hmat(false)
     , cpu_serial(false)
     , n_min_for_ct(0)
@@ -1069,7 +1118,6 @@ namespace HierBEM
     , alpha_for_neumann(1.0)
   {
     initialize_memory_consumption_table_headers();
-    initialize_mapping_data();
   }
 
 
@@ -1077,8 +1125,6 @@ namespace HierBEM
   LaplaceBEM<dim, spacedim>::LaplaceBEM(
     unsigned int fe_order_for_dirichlet_space,
     unsigned int fe_order_for_neumann_space,
-    unsigned int mapping_order_for_dirichlet_domain,
-    unsigned int mapping_order_for_neumann_domain,
     ProblemType  problem_type,
     bool         is_interior_problem,
     unsigned int n_min_for_ct,
@@ -1106,16 +1152,6 @@ namespace HierBEM
     , dof_i2e_numbering_for_neumann_space_on_dirichlet_domain(nullptr)
     , dof_e2i_numbering_for_neumann_space_on_neumann_domain(nullptr)
     , dof_i2e_numbering_for_neumann_space_on_neumann_domain(nullptr)
-    , mapping_order_for_dirichlet_domain(mapping_order_for_dirichlet_domain)
-    , mapping_order_for_neumann_domain(mapping_order_for_neumann_domain)
-    , kx_mapping_for_dirichlet_domain(mapping_order_for_dirichlet_domain)
-    , ky_mapping_for_dirichlet_domain(mapping_order_for_dirichlet_domain)
-    , kx_mapping_for_neumann_domain(mapping_order_for_neumann_domain)
-    , ky_mapping_for_neumann_domain(mapping_order_for_neumann_domain)
-    , kx_mapping_data_for_dirichlet_domain(nullptr)
-    , ky_mapping_data_for_dirichlet_domain(nullptr)
-    , kx_mapping_data_for_neumann_domain(nullptr)
-    , ky_mapping_data_for_neumann_domain(nullptr)
     , use_hmat(true)
     , cpu_serial(false)
     , n_min_for_ct(n_min_for_ct)
@@ -1130,7 +1166,6 @@ namespace HierBEM
     , alpha_for_neumann(1.0)
   {
     initialize_memory_consumption_table_headers();
-    initialize_mapping_data();
   }
 
 
@@ -1223,6 +1258,7 @@ namespace HierBEM
     Timer timer;
     timer.stop();
 
+    initialize_manifolds_from_manifold_description();
     initialize_mappings();
 
     switch (problem_type)
@@ -1292,12 +1328,17 @@ namespace HierBEM
                   dof_indices_for_neumann_space_on_dirichlet_domain);
 
                 /**
-                 * Get the spatial coordinates of the support points.
+                 * Get the spatial coordinates of the support points. Even
+                 * though different surfaces may be assigned a manifold which is
+                 * further associated with a high order mapping, here we only
+                 * use the first order mapping to generate the support points
+                 * for finite element shape functions. This is good enough for
+                 * the partition of cluster trees.
                  */
                 support_points_for_dirichlet_space_on_dirichlet_domain.resize(
                   n_dofs_for_dirichlet_space);
                 DoFTools::map_dofs_to_support_points(
-                  kx_mapping_for_dirichlet_domain,
+                  mappings[0]->get_mapping(),
                   dof_handler_for_dirichlet_space,
                   support_points_for_dirichlet_space_on_dirichlet_domain);
 
@@ -1308,7 +1349,7 @@ namespace HierBEM
                 // Furthermore, the Jacobian of the mapping should also be taken
                 // into account in numerical quadrature.
                 DoFTools::map_dofs_to_support_points(
-                  kx_mapping_for_dirichlet_domain,
+                  mappings[0]->get_mapping(),
                   dof_handler_for_neumann_space,
                   support_points_for_neumann_space_on_dirichlet_domain);
 
@@ -1723,14 +1764,14 @@ namespace HierBEM
                 // Furthermore, the Jacobian of the mapping should also be taken
                 // into account in numerical quadrature.
                 DoFTools::map_dofs_to_support_points(
-                  kx_mapping_for_neumann_domain,
+                  mappings[0]->get_mapping(),
                   dof_handler_for_dirichlet_space,
                   support_points_for_dirichlet_space_on_neumann_domain);
 
                 support_points_for_neumann_space_on_neumann_domain.resize(
                   n_dofs_for_neumann_space);
                 DoFTools::map_dofs_to_support_points(
-                  kx_mapping_for_neumann_domain,
+                  mappings[0]->get_mapping(),
                   dof_handler_for_neumann_space,
                   support_points_for_neumann_space_on_neumann_domain);
 
@@ -1975,9 +2016,9 @@ namespace HierBEM
               dof_handler_for_dirichlet_space.n_dofs());
             dof_selectors_for_dirichlet_space_on_neumann_domain.resize(
               dof_handler_for_dirichlet_space.n_dofs());
-            DoFToolsExt::extract_material_domain_dofs(
+            DoFToolsExt::extract_boundary_condition_dofs(
               dof_handler_for_dirichlet_space,
-              boundary_ids_for_dirichlet_domain,
+              dirichlet_bc_definition,
               dof_selectors_for_dirichlet_space_on_dirichlet_domain);
 
             local_to_full_dirichlet_dof_indices_on_dirichlet_domain.reserve(
@@ -2011,9 +2052,9 @@ namespace HierBEM
               dof_handler_for_neumann_space.n_dofs());
             dof_selectors_for_neumann_space_on_neumann_domain.resize(
               dof_handler_for_neumann_space.n_dofs());
-            DoFToolsExt::extract_material_domain_dofs(
+            DoFToolsExt::extract_boundary_condition_dofs(
               dof_handler_for_neumann_space,
-              boundary_ids_for_dirichlet_domain,
+              dirichlet_bc_definition,
               dof_selectors_for_neumann_space_on_dirichlet_domain);
 
             local_to_full_neumann_dof_indices_on_dirichlet_domain.reserve(
@@ -2114,7 +2155,7 @@ namespace HierBEM
             support_points_for_dirichlet_space_on_dirichlet_domain.resize(
               n_dofs_for_dirichlet_space_on_dirichlet_domain);
             DoFToolsExt::map_dofs_to_support_points(
-              kx_mapping_for_dirichlet_domain,
+              mappings[0]->get_mapping(),
               dof_handler_for_dirichlet_space,
               local_to_full_dirichlet_dof_indices_on_dirichlet_domain,
               support_points_for_dirichlet_space_on_dirichlet_domain);
@@ -2122,7 +2163,7 @@ namespace HierBEM
             support_points_for_dirichlet_space_on_neumann_domain.resize(
               n_dofs_for_dirichlet_space_on_neumann_domain);
             DoFToolsExt::map_dofs_to_support_points(
-              kx_mapping_for_neumann_domain,
+              mappings[0]->get_mapping(),
               dof_handler_for_dirichlet_space,
               local_to_full_dirichlet_dof_indices_on_neumann_domain,
               support_points_for_dirichlet_space_on_neumann_domain);
@@ -2130,7 +2171,7 @@ namespace HierBEM
             support_points_for_neumann_space_on_dirichlet_domain.resize(
               n_dofs_for_neumann_space_on_dirichlet_domain);
             DoFToolsExt::map_dofs_to_support_points(
-              kx_mapping_for_dirichlet_domain,
+              mappings[0]->get_mapping(),
               dof_handler_for_neumann_space,
               local_to_full_neumann_dof_indices_on_dirichlet_domain,
               support_points_for_neumann_space_on_dirichlet_domain);
@@ -2138,7 +2179,7 @@ namespace HierBEM
             support_points_for_neumann_space_on_neumann_domain.resize(
               n_dofs_for_neumann_space_on_neumann_domain);
             DoFToolsExt::map_dofs_to_support_points(
-              kx_mapping_for_neumann_domain,
+              mappings[0]->get_mapping(),
               dof_handler_for_neumann_space,
               local_to_full_neumann_dof_indices_on_neumann_domain,
               support_points_for_neumann_space_on_neumann_domain);
@@ -2576,19 +2617,19 @@ namespace HierBEM
 
   template <int dim, int spacedim>
   void
-  LaplaceBEM<dim, spacedim>::assign_dirichlet_bc(Function<spacedim> &f,
+  LaplaceBEM<dim, spacedim>::assign_dirichlet_bc(Function<spacedim, double> &f,
                                                  const EntityTag surface_tag)
   {
     if (surface_tag == -1)
       {
         for (const auto &record : subdomain_topology.get_surface_to_subdomain())
           {
-            dirichlet_boundary_conditions[record.first] = &f;
+            dirichlet_bc_definition[record.first] = &f;
           }
       }
     else
       {
-        dirichlet_boundary_conditions[surface_tag] = &f;
+        dirichlet_bc_definition[surface_tag] = &f;
       }
   }
 
@@ -2596,31 +2637,31 @@ namespace HierBEM
   template <int dim, int spacedim>
   void
   LaplaceBEM<dim, spacedim>::assign_dirichlet_bc(
-    Function<spacedim>           &f,
+    Function<spacedim, double>   &f,
     const std::vector<EntityTag> &surface_tags)
   {
     for (const auto t : surface_tags)
       {
-        dirichlet_boundary_conditions[t] = &f;
+        dirichlet_bc_definition[t] = &f;
       }
   }
 
 
   template <int dim, int spacedim>
   void
-  LaplaceBEM<dim, spacedim>::assign_neumann_bc(Function<spacedim> &f,
-                                               const EntityTag     surface_tag)
+  LaplaceBEM<dim, spacedim>::assign_neumann_bc(Function<spacedim, double> &f,
+                                               const EntityTag surface_tag)
   {
     if (surface_tag == -1)
       {
         for (const auto &record : subdomain_topology.get_surface_to_subdomain())
           {
-            neumann_boundary_conditions[record.first] = &f;
+            neumann_bc_definition[record.first] = &f;
           }
       }
     else
       {
-        neumann_boundary_conditions[surface_tag] = &f;
+        neumann_bc_definition[surface_tag] = &f;
       }
   }
 
@@ -2628,19 +2669,19 @@ namespace HierBEM
   template <int dim, int spacedim>
   void
   LaplaceBEM<dim, spacedim>::assign_neumann_bc(
-    Function<spacedim>           &f,
+    Function<spacedim, double>   &f,
     const std::vector<EntityTag> &surface_tags)
   {
     for (const auto t : surface_tags)
       {
-        neumann_boundary_conditions[t] = &f;
+        neumann_bc_definition[t] = &f;
       }
   }
 
 
   template <int dim, int spacedim>
   void
-  LaplaceBEM<dim, spacedim>::initialize_manifolds()
+  LaplaceBEM<dim, spacedim>::initialize_manifolds_from_manifold_description()
   {
     // Assign manifold ids to all cells in the triangulation.
     for (auto &cell : tria.active_cell_iterators())
@@ -2671,7 +2712,7 @@ namespace HierBEM
     for (const auto &m : manifold_description)
       {
         material_id_to_mapping_index[m.first] =
-          manifold_id_to_mapping_order[m.second];
+          manifold_id_to_mapping_order[m.second] - 1;
       }
   }
 
@@ -2684,7 +2725,18 @@ namespace HierBEM
 
     // Because each surface may be assigned a different mapping object, here we
     // interpolate the Dirichlet boundary condition vector surface by surface.
-    for (const auto &bc : dirichlet_boundary_conditions)
+    //
+    // \mynote{Even though, a high order mapping is adopted, the fitted curved
+    // surface is still not identifical to the orignal CAD model. This makes the
+    // actually applied boundary condition function deviates from the
+    // theoretical version, when we want to apply an analytical function. Even
+    // when a manifold conforming mapping is adopted, which is realized in the
+    // deal.ii class MappingManifold, the finite element space will produce
+    // additional error when approximating the analytical function. This means
+    // no matter how accurately we assemble the matrix and solve the linear
+    // system, the solution vector will not be identical with the analytical
+    // solution.}
+    for (const auto &bc : dirichlet_bc_definition)
       {
         std::map<types::material_id, const Function<spacedim, double> *>
           single_pair_map;
@@ -2709,7 +2761,7 @@ namespace HierBEM
 
     // Because each surface may be assigned a different mapping object, here we
     // interpolate the Neumann boundary condition vector surface by surface.
-    for (const auto &bc : neumann_boundary_conditions)
+    for (const auto &bc : neumann_bc_definition)
       {
         std::map<types::material_id, const Function<spacedim, double> *>
           single_pair_map;
@@ -2970,7 +3022,7 @@ namespace HierBEM
             /**
              * Add the matrix \f$\alpha a a^T\f$ into \f$D\f$.
              */
-            FullMatrix<double> aaT(D1_matrix.m(), D1_matrix.n());
+            LAPACKFullMatrixExt<double> aaT(D1_matrix.m(), D1_matrix.n());
             aaT.outer_product(mass_vmult_weq, mass_vmult_weq);
             D1_matrix.add(alpha_for_neumann, aaT);
 
@@ -3078,10 +3130,9 @@ namespace HierBEM
                   nullptr,
                   *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
                   *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain,
-                  kx_mapping_for_dirichlet_domain,
-                  ky_mapping_for_dirichlet_domain,
-                  *kx_mapping_data_for_dirichlet_domain,
-                  *ky_mapping_data_for_dirichlet_domain,
+                  mappings,
+                  material_id_to_mapping_index,
+                  SurfaceNormalDetector(subdomain_topology),
                   false);
 
                 timer.stop();
@@ -3154,10 +3205,9 @@ namespace HierBEM
                 nullptr,
                 *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
                 *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
-                kx_mapping_for_dirichlet_domain,
-                ky_mapping_for_dirichlet_domain,
-                *kx_mapping_data_for_dirichlet_domain,
-                *ky_mapping_data_for_dirichlet_domain,
+                mappings,
+                material_id_to_mapping_index,
+                SurfaceNormalDetector(subdomain_topology),
                 true);
 
               timer.stop();
@@ -3209,10 +3259,9 @@ namespace HierBEM
                   nullptr,
                   *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
                   *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
-                  kx_mapping_for_neumann_domain,
-                  ky_mapping_for_neumann_domain,
-                  *kx_mapping_data_for_neumann_domain,
-                  *ky_mapping_data_for_neumann_domain,
+                  mappings,
+                  material_id_to_mapping_index,
+                  SurfaceNormalDetector(subdomain_topology),
                   false);
 
                 timer.stop();
@@ -3239,10 +3288,9 @@ namespace HierBEM
                   nullptr,
                   *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
                   *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
-                  kx_mapping_for_neumann_domain,
-                  ky_mapping_for_neumann_domain,
-                  *kx_mapping_data_for_neumann_domain,
-                  *ky_mapping_data_for_neumann_domain,
+                  mappings,
+                  material_id_to_mapping_index,
+                  SurfaceNormalDetector(subdomain_topology),
                   false);
 
                 timer.stop();
@@ -3352,10 +3400,9 @@ namespace HierBEM
               nullptr,
               *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
               *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
-              kx_mapping_for_neumann_domain,
-              ky_mapping_for_neumann_domain,
-              *kx_mapping_data_for_neumann_domain,
-              *ky_mapping_data_for_neumann_domain,
+              mappings,
+              material_id_to_mapping_index,
+              SurfaceNormalDetector(subdomain_topology),
               true);
 
             timer.stop();
@@ -3412,10 +3459,9 @@ namespace HierBEM
                   &local_to_full_dirichlet_dof_indices_on_dirichlet_domain,
                   *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
                   *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain,
-                  kx_mapping_for_dirichlet_domain,
-                  ky_mapping_for_dirichlet_domain,
-                  *kx_mapping_data_for_dirichlet_domain,
-                  *ky_mapping_data_for_dirichlet_domain,
+                  mappings,
+                  material_id_to_mapping_index,
+                  SurfaceNormalDetector(subdomain_topology),
                   false);
 
                 timer.stop();
@@ -3442,10 +3488,9 @@ namespace HierBEM
                   &local_to_full_neumann_dof_indices_on_neumann_domain,
                   *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
                   *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
-                  kx_mapping_for_neumann_domain,
-                  ky_mapping_for_neumann_domain,
-                  *kx_mapping_data_for_neumann_domain,
-                  *ky_mapping_data_for_neumann_domain,
+                  mappings,
+                  material_id_to_mapping_index,
+                  SurfaceNormalDetector(subdomain_topology),
                   false);
 
                 timer.stop();
@@ -3472,10 +3517,9 @@ namespace HierBEM
                   &local_to_full_dirichlet_dof_indices_on_dirichlet_domain,
                   *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
                   *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain,
-                  kx_mapping_for_dirichlet_domain,
-                  ky_mapping_for_dirichlet_domain,
-                  *kx_mapping_data_for_dirichlet_domain,
-                  *ky_mapping_data_for_dirichlet_domain,
+                  mappings,
+                  material_id_to_mapping_index,
+                  SurfaceNormalDetector(subdomain_topology),
                   false);
 
                 timer.stop();
@@ -3502,10 +3546,9 @@ namespace HierBEM
                   &local_to_full_neumann_dof_indices_on_neumann_domain,
                   *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
                   *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
-                  kx_mapping_for_neumann_domain,
-                  ky_mapping_for_neumann_domain,
-                  *kx_mapping_data_for_neumann_domain,
-                  *ky_mapping_data_for_neumann_domain,
+                  mappings,
+                  material_id_to_mapping_index,
+                  SurfaceNormalDetector(subdomain_topology),
                   false);
 
                 timer.stop();
@@ -3538,10 +3581,9 @@ namespace HierBEM
               &local_to_full_neumann_dof_indices_on_neumann_domain,
               *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
               *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
-              kx_mapping_for_dirichlet_domain,
-              ky_mapping_for_neumann_domain,
-              *kx_mapping_data_for_dirichlet_domain,
-              *ky_mapping_data_for_neumann_domain,
+              mappings,
+              material_id_to_mapping_index,
+              SurfaceNormalDetector(subdomain_topology),
               false);
 
             timer.stop();
@@ -3570,10 +3612,9 @@ namespace HierBEM
               &local_to_full_dirichlet_dof_indices_on_dirichlet_domain,
               *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
               *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain,
-              kx_mapping_for_neumann_domain,
-              ky_mapping_for_dirichlet_domain,
-              *kx_mapping_data_for_neumann_domain,
-              *ky_mapping_data_for_dirichlet_domain,
+              mappings,
+              material_id_to_mapping_index,
+              SurfaceNormalDetector(subdomain_topology),
               false);
 
             timer.stop();
@@ -3708,10 +3749,9 @@ namespace HierBEM
               &local_to_full_neumann_dof_indices_on_dirichlet_domain,
               *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
               *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
-              kx_mapping_for_dirichlet_domain,
-              ky_mapping_for_dirichlet_domain,
-              *kx_mapping_data_for_dirichlet_domain,
-              *ky_mapping_data_for_dirichlet_domain,
+              mappings,
+              material_id_to_mapping_index,
+              SurfaceNormalDetector(subdomain_topology),
               true);
 
             timer.stop();
@@ -3740,10 +3780,9 @@ namespace HierBEM
               &local_to_full_dirichlet_dof_indices_on_neumann_domain,
               *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
               *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
-              kx_mapping_for_dirichlet_domain,
-              ky_mapping_for_neumann_domain,
-              *kx_mapping_data_for_dirichlet_domain,
-              *ky_mapping_data_for_neumann_domain,
+              mappings,
+              material_id_to_mapping_index,
+              SurfaceNormalDetector(subdomain_topology),
               false);
 
             timer.stop();
@@ -3772,10 +3811,9 @@ namespace HierBEM
               &local_to_full_dirichlet_dof_indices_on_neumann_domain,
               *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
               *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
-              kx_mapping_for_neumann_domain,
-              ky_mapping_for_neumann_domain,
-              *kx_mapping_data_for_neumann_domain,
-              *ky_mapping_data_for_neumann_domain,
+              mappings,
+              material_id_to_mapping_index,
+              SurfaceNormalDetector(subdomain_topology),
               true);
 
             timer.stop();
@@ -4749,10 +4787,9 @@ namespace HierBEM
           nullptr,
           *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
           *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
-          kx_mapping_for_neumann_domain,
-          ky_mapping_for_neumann_domain,
-          *kx_mapping_data_for_neumann_domain,
-          *ky_mapping_data_for_neumann_domain,
+          mappings,
+          material_id_to_mapping_index,
+          SurfaceNormalDetector(subdomain_topology),
           true);
 
         add_memory_consumption_row("V1 H-matrix", V1_hmat, "After assembly");
@@ -4862,10 +4899,7 @@ namespace HierBEM
       "Memory (MB)",
       MemoryConsumption::memory_consumption(obj) / 1024.0 / 1024.0);
 
-    if (comment.size() > 0)
-      {
-        memory_consumption_table.add_value("Comment", comment);
-      }
+    memory_consumption_table.add_value("Comment", comment);
   }
 
 

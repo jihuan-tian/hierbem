@@ -3220,7 +3220,7 @@ $(v_1,\cdots,v_n)$ changes when we use a basis of the tangent space with a diffe
 orientation\footnote{Once the coordinate chart of a neighborhood of the point $p$ in the
   manifold $M^n$ is settled, such as $(x) = (x^1,\cdots,x^n)$, the basis of the tangent
   space $M_p^n$ rooted at $p$ is settled, which is $(\pdiff x^1, \cdots, \pdiff x^n)$, and
-  the basis of the space of $n$-forms is also settled, which is $(dx^1, )$}.
+  the basis of the space of $n$-forms is also settled, which is $(dx^1, \cdots, dx^n)$}.
 
 However, when we use the above $n$-form, either $dx^1 \wedge \cdots \wedge dx^n$ or
 $dy^1 \wedge \cdots \wedge dy^n$, to measure the volume spanned by the tuple of $n$
@@ -3234,7 +3234,9 @@ as described above. Here comes the definition of volume form.
   \label{def:volume-form}
   Let $(x)$ be a coordinate chart containing $p$ in $M^n$. Its corresponding basis
   $\vect{\pdiff}x = (\vect{\pdiff}x^1,\cdots,\vect{\pdiff}x^n)$ of the tangent space
-  $M_p^n$ is orthonormal. Then the volume $n$-form is
+  $M_p^n$ is orthonormal. Then the volume $n$-form is \footnote{Only when the coordinate
+    chart is orthonormal, the volume $n$-form has this form. Otherwise, the Jacobian
+    determinant should appear in the expression.}
   \begin{equation}
     \label{eq:volume-form}
     \mathrm{vol}^n = o(x) dx^1 \wedge \cdots \wedge dx^n.
@@ -3286,7 +3288,7 @@ Therefore, the volume $n$-form represented in the coordinate chart $(y)$ is
   \mathrm{vol}^n = o(y) \sqrt{g(y)} dy^1 \wedge\cdots\wedge dy^n.
 \end{equation}
 \begin{Remark}
-  The above definition of a volume $n$-form relies on the coordinate chart $(x)$ with a
+  The above definition of a volume $n$-form relies on the coordinate chart $(x)$ with an
   orthonormal basis $\vect{\pdiff}x$. However, this is not mandatory. Generally, a volume
   $n$-form is
   \begin{equation}

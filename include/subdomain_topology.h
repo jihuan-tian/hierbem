@@ -38,15 +38,14 @@ namespace HierBEM
      * surface normals all point outward and surfaces are not assigned any
      * physical groups.
      *
-     * All cells on the the surfaces have zero material ids. Even though there
-     * may be several bodies created in deal.ii, they are logically considered
-     * to be a single domain.
+     * They are logically considered to be a single domain.
      *
      * @pre
      * @post
      */
     void
-    generate_single_domain_topology_for_dealii_model();
+    generate_single_domain_topology_for_dealii_model(
+      const std::vector<EntityTag> &surface_list);
 
     void
     print(std::ostream &out) const;
@@ -92,18 +91,27 @@ namespace HierBEM
     gmsh::option::setNumber("General.Verbosity", 0);
     gmsh::open(cad_file);
     gmsh::merge(mesh_file);
-    gmsh::model::occ::synchronize();
+
+    // Check if the format of the CAD file is geo.
+    size_t is_geo_cad = cad_file.rfind(std::string(".geo"));
+
+    if (is_geo_cad != std::string::npos)
+      {
+        if (dim > 1)
+          throw(ExcMessage("geo model can only be used for 2D model!"));
+        else
+          gmsh::model::geo::synchronize();
+      }
+    else
+      gmsh::model::occ::synchronize();
 
     Assert(gmsh::model::getDimension() >= dim + 1, ExcInternalError());
 
-    // Get all volume entities by first trying the OCC kernel. If the number of
-    // returned entities is zero, try Gmsh's own CAD kernel.
     gmsh::vectorpair volume_dimtag_list;
-    gmsh::model::occ::getEntities(volume_dimtag_list, dim + 1);
-    if (volume_dimtag_list.size() == 0)
-      {
-        gmsh::model::getEntities(volume_dimtag_list, dim + 1);
-      }
+    if (is_geo_cad)
+      gmsh::model::getEntities(volume_dimtag_list, dim + 1);
+    else
+      gmsh::model::occ::getEntities(volume_dimtag_list, dim + 1);
 
     Assert(volume_dimtag_list.size() > 0, ExcInternalError());
 
@@ -128,16 +136,15 @@ namespace HierBEM
   template <int dim, int spacedim>
   void
   SubdomainTopology<dim, spacedim>::
-    generate_single_domain_topology_for_dealii_model()
+    generate_single_domain_topology_for_dealii_model(
+      const std::vector<EntityTag> &surface_list)
   {
-    // Actually, there is only one logical surface with entity tag 0.
-    std::vector<EntityTag> surface_list{0};
-    subdomain_to_surface[1] = surface_list;
-
-    // There is only one logical volume in the domain, and the surface normals
-    // point outward.
     std::array<EntityTag, 2> subdomains{{1, 0}};
-    surface_to_subdomain[0] = subdomains;
+    for (auto s : surface_list)
+      {
+        subdomain_to_surface[1].push_back(s);
+        surface_to_subdomain[s] = subdomains;
+      }
   }
 
 

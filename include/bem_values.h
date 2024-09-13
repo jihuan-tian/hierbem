@@ -131,7 +131,7 @@ namespace HierBEM
     /**
      * Mappings of from smallest to maximum order.
      */
-    std::vector<MappingInfo<dim, spacedim> *> &mappings;
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings;
     /**
      * Reference to 4D Sauter quadrature rule for the case that \f$K_x \equiv
      * K_y\f$.
@@ -221,8 +221,8 @@ namespace HierBEM
     /**
      * Data table of mapping shape function values for \f$K_x\f$ in the same
      * panel case. It has 4 dimensions:
-     * 1. Mapping order minus 1, which is used to get the corresponding pointer
-     * to the MappingInfo object in BEMValues::mappings.
+     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. Shape function index: size=number of shape functions in the highest
      * order mapping object
      * 3. \f$k_3\f$ term index: size=8
@@ -233,8 +233,8 @@ namespace HierBEM
     /**
      * Data table of mapping shape function values for \f$K_y\f$ in the same
      * panel case. It has 4 dimensions:
-     * 1. Mapping order minus 1, which is used to get the corresponding pointer
-     * to the MappingInfo object in BEMValues::mappings.
+     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. Shape function index: size=number of shape functions in the highest
      * order mapping object
      * 3. \f$k_3\f$ term index: size=8
@@ -245,8 +245,8 @@ namespace HierBEM
     /**
      * Data table of mapping shape function values for \f$K_x\f$ in the common
      * edge case. It has 4 dimensions:
-     * 1. Mapping order minus 1, which is used to get the corresponding pointer
-     * to the MappingInfo object in BEMValues::mappings.
+     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. Shape function index: size=number of shape functions in the highest
      * order mapping object
      * 3. \f$k_3\f$ term index: size=6
@@ -257,8 +257,8 @@ namespace HierBEM
     /**
      * Data table of mapping shape function values for \f$K_y\f$ in the common
      * edge case. It has 4 dimensions:
-     * 1. Mapping order minus 1, which is used to get the corresponding pointer
-     * to the MappingInfo object in BEMValues::mappings.
+     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. Shape function index: size=number of shape functions in the highest
      * order mapping object
      * 3. \f$k_3\f$ term index: size=6
@@ -269,8 +269,8 @@ namespace HierBEM
     /**
      * Data table of mapping shape function values for \f$K_x\f$ in the common
      * vertex case. It has 4 dimensions:
-     * 1. Mapping order minus 1, which is used to get the corresponding pointer
-     * to the MappingInfo object in BEMValues::mappings.
+     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. Shape function index: size=number of shape functions in the highest
      * order mapping object
      * 3. \f$k_3\f$ term index: size=4
@@ -281,8 +281,8 @@ namespace HierBEM
     /**
      * Data table of mapping shape function values for \f$K_y\f$ in the common
      * vertex case. It has 4 dimensions:
-     * 1. Mapping order minus 1, which is used to get the corresponding pointer
-     * to the MappingInfo object in BEMValues::mappings.
+     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. Shape function index: size=number of shape functions in the highest
      * order mapping object
      * 3. \f$k_3\f$ term index: size=4
@@ -293,8 +293,8 @@ namespace HierBEM
     /**
      * Data table of mapping shape function values for \f$K_x\f$ in the regular
      * case. It has 4 dimensions:
-     * 1. Mapping order minus 1, which is used to get the corresponding pointer
-     * to the MappingInfo object in BEMValues::mappings.
+     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. Shape function index: size=number of shape functions in the highest
      * order mapping object
      * 3. \f$k_3\f$ term index: size=1
@@ -305,8 +305,8 @@ namespace HierBEM
     /**
      * Data table of mapping shape function values for \f$K_y\f$ in the regular
      * case. It has 4 dimensions:
-     * 1. Mapping order minus 1, which is used to get the corresponding pointer
-     * to the MappingInfo object in BEMValues::mappings.
+     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. Shape function index: size=number of shape functions in the highest
      * order mapping object
      * 3. \f$k_3\f$ term index: size=1
@@ -398,8 +398,8 @@ namespace HierBEM
     /**
      * Data table of mapping shape function's gradient values for
      * \f$K_x\f$ in the same panel case. It has 3 dimensions:
-     * 1. Mapping order minus 1, which is used to get the corresponding pointer
-     * to the MappingInfo object in BEMValues::mappings.
+     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. \f$k_3\f$ term index: size=8
      * 3. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -411,8 +411,8 @@ namespace HierBEM
     /**
      * Data table of mapping shape function's gradient values for
      * \f$K_y\f$ in the same panel case. It has 3 dimensions:
-     * 1. Mapping order minus 1, which is used to get the corresponding pointer
-     * to the MappingInfo object in BEMValues::mappings.
+     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. \f$k_3\f$ term index: size=8
      * 3. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -424,8 +424,8 @@ namespace HierBEM
     /**
      * Data table of mapping shape function's gradient values for
      * \f$K_x\f$ in the common edge case. It has 3 dimensions:
-     * 1. Mapping order minus 1, which is used to get the corresponding pointer
-     * to the MappingInfo object in BEMValues::mappings.
+     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. \f$k_3\f$ term index: size=6
      * 3. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -437,8 +437,8 @@ namespace HierBEM
     /**
      * Data table of mapping shape function's gradient values for
      * \f$K_y\f$ in the common edge case. It has 3 dimensions:
-     * 1. Mapping order minus 1, which is used to get the corresponding pointer
-     * to the MappingInfo object in BEMValues::mappings.
+     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. \f$k_3\f$ term index: size=6
      * 3. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -450,8 +450,8 @@ namespace HierBEM
     /**
      * Data table of mapping shape function's gradient values for
      * \f$K_x\f$ in the common vertex case. It has 3 dimensions:
-     * 1. Mapping order minus 1, which is used to get the corresponding pointer
-     * to the MappingInfo object in BEMValues::mappings.
+     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. \f$k_3\f$ term index: size=4
      * 3. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -463,8 +463,8 @@ namespace HierBEM
     /**
      * Data table of mapping shape function's gradient values for
      * \f$K_y\f$ in the common vertex case. It has 3 dimensions:
-     * 1. Mapping order minus 1, which is used to get the corresponding pointer
-     * to the MappingInfo object in BEMValues::mappings.
+     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. \f$k_3\f$ term index: size=4
      * 3. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -476,8 +476,8 @@ namespace HierBEM
     /**
      * Data table of mapping shape function's gradient values for
      * \f$K_x\f$ in the regular case. It has 3 dimensions:
-     * 1. Mapping order minus 1, which is used to get the corresponding pointer
-     * to the MappingInfo object in BEMValues::mappings.
+     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. \f$k_3\f$ term index: size=1
      * 3. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -489,8 +489,8 @@ namespace HierBEM
     /**
      * Data table of mapping shape function's gradient values for
      * \f$K_y\f$ in the regular case. It has 3 dimensions:
-     * 1. Mapping order minus 1, which is used to get the corresponding pointer
-     * to the MappingInfo object in BEMValues::mappings.
+     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. \f$k_3\f$ term index: size=1
      * 3. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -541,7 +541,6 @@ namespace HierBEM
      * mapping object.
      *
      * @param table
-     * @param n_shape_functions
      */
     void
     init_internal_matrix_in_mapping_shape_grad_matrix_table(
@@ -549,6 +548,16 @@ namespace HierBEM
 
     /**
      * Resize the internal data in all orders of mappings.
+     *
+     * \mynote{The InternalData within a MappingQ object is a temporary place
+     * holding the shape function values and their derivatives. Because deal.ii
+     * is an FEM library, which does not handle different \f$k_3\f$ terms and
+     * cell neighboring types as in the Sauter quadrature used in BEM, whenever
+     * we come to a kind of cell neighboring type which has its associated
+     * quadrature object, we need to reinitialize the InternalData objects in
+     * all possible orders of mappings and then compute shape function values
+     * and their derivatives. After the computation, the values within
+     * InternalData will be copied into related data tables in BEMValues.}
      *
      * @pre
      * @post
@@ -614,7 +623,7 @@ namespace HierBEM
   BEMValues<dim, spacedim, RangeNumberType>::init_mapping_shape_value_tables()
   {
     const unsigned int max_mapping_n_shape_functions =
-      mappings.back()->get_data().n_shape_functions;
+      mappings.back()->get_data()->n_shape_functions;
 
     kx_mapping_shape_value_table_for_same_panel.reinit(
       TableIndices<4>(mappings.size(),
@@ -745,13 +754,13 @@ namespace HierBEM
     init_internal_matrix_in_mapping_shape_grad_matrix_table(
       Table<3, LAPACKFullMatrixExt<RangeNumberType>> &table)
   {
-    for (unsigned int m = 0; m < mappings.size(); m++)
+    for (unsigned int m = 0; m < table.size(0); m++)
       {
-        for (unsigned int i = 0; i < table.size(0); i++)
-          for (unsigned int j = 0; j < table.size(1); j++)
+        for (unsigned int i = 0; i < table.size(1); i++)
+          for (unsigned int j = 0; j < table.size(2); j++)
             {
               table(TableIndices<3>(m, i, j))
-                .reinit(mappings[m]->get_data().n_shape_functions, dim);
+                .reinit(mappings[m]->get_data()->n_shape_functions, dim);
             }
       }
   }
@@ -762,7 +771,7 @@ namespace HierBEM
   BEMValues<dim, spacedim, RangeNumberType>::resize_internal_data_in_mappings(
     const unsigned int n_q_points) const
   {
-    for (auto &m : mappings)
+    for (auto m : mappings)
       {
         m->resize_internal_data(n_q_points);
       }
@@ -784,10 +793,10 @@ namespace HierBEM
   void
   BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_same_panel()
   {
-    const unsigned int kx_dofs_per_cell = kx_fe.dofs_per_cell;
-    const unsigned int ky_dofs_per_cell = ky_fe.dofs_per_cell;
-    const unsigned int max_mapping_n_shape_functions =
-      mappings.back()->get_data().n_shape_functions;
+    const unsigned int                  kx_dofs_per_cell = kx_fe.dofs_per_cell;
+    const unsigned int                  ky_dofs_per_cell = ky_fe.dofs_per_cell;
+    [[maybe_unused]] const unsigned int max_mapping_n_shape_functions =
+      mappings.back()->get_data()->n_shape_functions;
     const unsigned int n_q_points = quad_rule_for_same_panel.size();
 
     // Make assertion about the length for each dimension of the data table.
@@ -840,7 +849,7 @@ namespace HierBEM
                     n_q_points);
 
     /**
-     * Initialize the internal data held in the mapping objects.
+     * Initialize the internal data in the mapping objects.
      */
     resize_internal_data_in_mappings(n_q_points);
 
@@ -945,15 +954,12 @@ namespace HierBEM
             auto              &mapping_data = mappings[m]->get_data();
             const unsigned int mapping_n_shape_functions =
               mapping_data->n_shape_functions;
+            // The numbering used for accessing shape function values and their
+            // derivatives in the lexicographic order.
+            const std::vector<unsigned int> &lexicographic_numbering =
+              mappings[m]->get_lexicographic_numberings()[0];
 
-            // Get the numbering for accessing the support points in the
-            // lexicographic ordering which are stored in the hierarchic
-            // ordering.
-            const std::vector<unsigned int>
-              mapping_poly_space_inverse_numbering(
-                FETools::lexicographic_to_hierarchic_numbering<dim>(
-                  mapping_data->polynomial_degree));
-
+            // Compute shape function values and their derivatives for kx.
             mapping_data->compute_shape_function_values(kx_unit_quad_points);
             for (unsigned int q = 0; q < n_q_points; q++)
               {
@@ -961,19 +967,19 @@ namespace HierBEM
                   {
                     kx_mapping_shape_value_table_for_same_panel(
                       TableIndices<4>(m, s, k, q)) =
-                      mapping_data->shape(
-                        q, mapping_poly_space_inverse_numbering[s]);
+                      mapping_data->shape(q, lexicographic_numbering[s]);
 
                     for (unsigned int d = 0; d < dim; d++)
                       {
                         kx_mapping_shape_grad_matrix_table_for_same_panel(
                           TableIndices<3>(m, k, q))(s, d) =
                           mapping_data->derivative(
-                            q, mapping_poly_space_inverse_numbering[s])[d];
+                            q, lexicographic_numbering[s])[d];
                       }
                   }
               }
 
+            // Compute shape function values and their derivatives for ky.
             mapping_data->compute_shape_function_values(ky_unit_quad_points);
             for (unsigned int q = 0; q < n_q_points; q++)
               {
@@ -981,15 +987,14 @@ namespace HierBEM
                   {
                     ky_mapping_shape_value_table_for_same_panel(
                       TableIndices<4>(m, s, k, q)) =
-                      mapping_data->shape(
-                        q, mapping_poly_space_inverse_numbering[s]);
+                      mapping_data->shape(q, lexicographic_numbering[s]);
 
                     for (unsigned int d = 0; d < dim; d++)
                       {
                         ky_mapping_shape_grad_matrix_table_for_same_panel(
                           TableIndices<3>(m, k, q))(s, d) =
                           mapping_data->derivative(
-                            q, mapping_poly_space_inverse_numbering[s])[d];
+                            q, lexicographic_numbering[s])[d];
                       }
                   }
               }
@@ -1002,10 +1007,10 @@ namespace HierBEM
   void
   BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_common_edge()
   {
-    const unsigned int kx_dofs_per_cell = kx_fe.dofs_per_cell;
-    const unsigned int ky_dofs_per_cell = ky_fe.dofs_per_cell;
-    unsigned int       max_mapping_n_shape_functions =
-      mappings.back()->get_data().n_shape_functions;
+    const unsigned int                  kx_dofs_per_cell = kx_fe.dofs_per_cell;
+    const unsigned int                  ky_dofs_per_cell = ky_fe.dofs_per_cell;
+    [[maybe_unused]] const unsigned int max_mapping_n_shape_functions =
+      mappings.back()->get_data()->n_shape_functions;
     const unsigned int n_q_points = quad_rule_for_common_edge.size();
 
     // Make assertion about the length for each dimension of the data table.
@@ -1058,7 +1063,7 @@ namespace HierBEM
                     n_q_points);
 
     /**
-     * Initialize the internal data held in the mapping objects.
+     * Initialize the internal data in the mapping objects.
      */
     resize_internal_data_in_mappings(n_q_points);
 
@@ -1163,15 +1168,12 @@ namespace HierBEM
             auto              &mapping_data = mappings[m]->get_data();
             const unsigned int mapping_n_shape_functions =
               mapping_data->n_shape_functions;
+            // The numbering used for accessing shape function values and their
+            // derivatives in the lexicographic order.
+            const std::vector<unsigned int> &lexicographic_numbering =
+              mappings[m]->get_lexicographic_numberings()[0];
 
-            // Get the numbering for accessing the support points in the
-            // lexicographic ordering which are stored in the hierarchic
-            // ordering.
-            const std::vector<unsigned int>
-              mapping_poly_space_inverse_numbering(
-                FETools::lexicographic_to_hierarchic_numbering<dim>(
-                  mapping_data->polynomial_degree));
-
+            // Compute shape function values and their derivatives for kx.
             mapping_data->compute_shape_function_values(kx_unit_quad_points);
             for (unsigned int q = 0; q < n_q_points; q++)
               {
@@ -1179,19 +1181,19 @@ namespace HierBEM
                   {
                     kx_mapping_shape_value_table_for_common_edge(
                       TableIndices<4>(m, s, k, q)) =
-                      mapping_data->shape(
-                        q, mapping_poly_space_inverse_numbering[s]);
+                      mapping_data->shape(q, lexicographic_numbering[s]);
 
                     for (unsigned int d = 0; d < dim; d++)
                       {
                         kx_mapping_shape_grad_matrix_table_for_common_edge(
                           TableIndices<3>(m, k, q))(s, d) =
                           mapping_data->derivative(
-                            q, mapping_poly_space_inverse_numbering[s])[d];
+                            q, lexicographic_numbering[s])[d];
                       }
                   }
               }
 
+            // Compute shape function values and their derivatives for ky.
             mapping_data->compute_shape_function_values(ky_unit_quad_points);
             for (unsigned int q = 0; q < n_q_points; q++)
               {
@@ -1199,15 +1201,14 @@ namespace HierBEM
                   {
                     ky_mapping_shape_value_table_for_common_edge(
                       TableIndices<4>(m, s, k, q)) =
-                      mapping_data->shape(
-                        q, mapping_poly_space_inverse_numbering[s]);
+                      mapping_data->shape(q, lexicographic_numbering[s]);
 
                     for (unsigned int d = 0; d < dim; d++)
                       {
                         ky_mapping_shape_grad_matrix_table_for_common_edge(
                           TableIndices<3>(m, k, q))(s, d) =
                           mapping_data->derivative(
-                            q, mapping_poly_space_inverse_numbering[s])[d];
+                            q, lexicographic_numbering[s])[d];
                       }
                   }
               }
@@ -1221,10 +1222,10 @@ namespace HierBEM
   BEMValues<dim, spacedim, RangeNumberType>::
     shape_function_values_common_vertex()
   {
-    const unsigned int kx_dofs_per_cell = kx_fe.dofs_per_cell;
-    const unsigned int ky_dofs_per_cell = ky_fe.dofs_per_cell;
-    const unsigned int max_mapping_n_shape_functions =
-      mappings.back()->get_data().n_shape_functions;
+    const unsigned int                  kx_dofs_per_cell = kx_fe.dofs_per_cell;
+    const unsigned int                  ky_dofs_per_cell = ky_fe.dofs_per_cell;
+    [[maybe_unused]] const unsigned int max_mapping_n_shape_functions =
+      mappings.back()->get_data()->n_shape_functions;
     const unsigned int n_q_points = quad_rule_for_common_vertex.size();
 
     // Make assertion about the length for each dimension of the data table.
@@ -1279,7 +1280,7 @@ namespace HierBEM
       ky_mapping_shape_grad_matrix_table_for_common_vertex.size(2), n_q_points);
 
     /**
-     * Initialize the internal data held in the mapping objects.
+     * Initialize the internal data in the mapping objects.
      */
     resize_internal_data_in_mappings(n_q_points);
 
@@ -1388,15 +1389,12 @@ namespace HierBEM
             auto              &mapping_data = mappings[m]->get_data();
             const unsigned int mapping_n_shape_functions =
               mapping_data->n_shape_functions;
+            // The numbering used for accessing shape function values and their
+            // derivatives in the lexicographic order.
+            const std::vector<unsigned int> &lexicographic_numbering =
+              mappings[m]->get_lexicographic_numberings()[0];
 
-            // Get the numbering for accessing the support points in the
-            // lexicographic ordering which are stored in the hierarchic
-            // ordering.
-            const std::vector<unsigned int>
-              mapping_poly_space_inverse_numbering(
-                FETools::lexicographic_to_hierarchic_numbering<dim>(
-                  mapping_data->polynomial_degree));
-
+            // Compute shape function values and their derivatives for kx.
             mapping_data->compute_shape_function_values(kx_unit_quad_points);
             for (unsigned int q = 0; q < n_q_points; q++)
               {
@@ -1404,19 +1402,19 @@ namespace HierBEM
                   {
                     kx_mapping_shape_value_table_for_common_vertex(
                       TableIndices<4>(m, s, k, q)) =
-                      mapping_data->shape(
-                        q, mapping_poly_space_inverse_numbering[s]);
+                      mapping_data->shape(q, lexicographic_numbering[s]);
 
                     for (unsigned int d = 0; d < dim; d++)
                       {
                         kx_mapping_shape_grad_matrix_table_for_common_vertex(
                           TableIndices<3>(m, k, q))(s, d) =
                           mapping_data->derivative(
-                            q, mapping_poly_space_inverse_numbering[s])[d];
+                            q, lexicographic_numbering[s])[d];
                       }
                   }
               }
 
+            // Compute shape function values and their derivatives for ky.
             mapping_data->compute_shape_function_values(ky_unit_quad_points);
             for (unsigned int q = 0; q < n_q_points; q++)
               {
@@ -1424,15 +1422,14 @@ namespace HierBEM
                   {
                     ky_mapping_shape_value_table_for_common_vertex(
                       TableIndices<4>(m, s, k, q)) =
-                      mapping_data->shape(
-                        q, mapping_poly_space_inverse_numbering[s]);
+                      mapping_data->shape(q, lexicographic_numbering[s]);
 
                     for (unsigned int d = 0; d < dim; d++)
                       {
                         ky_mapping_shape_grad_matrix_table_for_common_vertex(
                           TableIndices<3>(m, k, q))(s, d) =
                           mapping_data->derivative(
-                            q, mapping_poly_space_inverse_numbering[s])[d];
+                            q, lexicographic_numbering[s])[d];
                       }
                   }
               }
@@ -1445,10 +1442,10 @@ namespace HierBEM
   void
   BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_regular()
   {
-    const unsigned int kx_dofs_per_cell = kx_fe.dofs_per_cell;
-    const unsigned int ky_dofs_per_cell = ky_fe.dofs_per_cell;
-    const unsigned int max_mapping_n_shape_functions =
-      mappings.back()->get_data().n_shape_functions;
+    const unsigned int                  kx_dofs_per_cell = kx_fe.dofs_per_cell;
+    const unsigned int                  ky_dofs_per_cell = ky_fe.dofs_per_cell;
+    [[maybe_unused]] const unsigned int max_mapping_n_shape_functions =
+      mappings.back()->get_data()->n_shape_functions;
     const unsigned int n_q_points = quad_rule_for_regular.size();
 
     // Make assertion about the length for each dimension of the data table.
@@ -1495,7 +1492,7 @@ namespace HierBEM
                     n_q_points);
 
     /**
-     * Initialize the internal data held in the mapping objects.
+     * Initialize the internal data in the mapping objects.
      */
     resize_internal_data_in_mappings(n_q_points);
 
@@ -1595,13 +1592,12 @@ namespace HierBEM
         auto              &mapping_data = mappings[m]->get_data();
         const unsigned int mapping_n_shape_functions =
           mapping_data->n_shape_functions;
+        // The numbering used for accessing shape function values and their
+        // derivatives in the lexicographic order.
+        const std::vector<unsigned int> &lexicographic_numbering =
+          mappings[m]->get_lexicographic_numberings()[0];
 
-        // Get the numbering for accessing the support points in the
-        // lexicographic ordering which are stored in the hierarchic ordering.
-        const std::vector<unsigned int> mapping_poly_space_inverse_numbering(
-          FETools::lexicographic_to_hierarchic_numbering<dim>(
-            mapping_data->polynomial_degree));
-
+        // Compute shape function values and their derivatives for kx.
         mapping_data->compute_shape_function_values(kx_unit_quad_points);
         for (unsigned int q = 0; q < n_q_points; q++)
           {
@@ -1609,19 +1605,19 @@ namespace HierBEM
               {
                 kx_mapping_shape_value_table_for_regular(
                   TableIndices<4>(m, s, 0, q)) =
-                  mapping_data->shape(q,
-                                      mapping_poly_space_inverse_numbering[s]);
+                  mapping_data->shape(q, lexicographic_numbering[s]);
 
                 for (unsigned int d = 0; d < dim; d++)
                   {
                     kx_mapping_shape_grad_matrix_table_for_regular(
                       TableIndices<3>(m, 0, q))(s, d) =
-                      mapping_data->derivative(
-                        q, mapping_poly_space_inverse_numbering[s])[d];
+                      mapping_data->derivative(q,
+                                               lexicographic_numbering[s])[d];
                   }
               }
           }
 
+        // Compute shape function values and their derivatives for ky.
         mapping_data->compute_shape_function_values(ky_unit_quad_points);
         for (unsigned int q = 0; q < n_q_points; q++)
           {
@@ -1629,15 +1625,14 @@ namespace HierBEM
               {
                 ky_mapping_shape_value_table_for_regular(
                   TableIndices<4>(m, s, 0, q)) =
-                  mapping_data->shape(q,
-                                      mapping_poly_space_inverse_numbering[s]);
+                  mapping_data->shape(q, lexicographic_numbering[s]);
 
                 for (unsigned int d = 0; d < dim; d++)
                   {
                     ky_mapping_shape_grad_matrix_table_for_regular(
                       TableIndices<3>(m, 0, q))(s, d) =
-                      mapping_data->derivative(
-                        q, mapping_poly_space_inverse_numbering[s])[d];
+                      mapping_data->derivative(q,
+                                               lexicographic_numbering[s])[d];
                   }
               }
           }
@@ -1877,7 +1872,7 @@ namespace HierBEM
 
     /**
      * List of mapping support points in the real cell \f$K_x\f$ in the
-     * tensor product order.
+     * hierarchic order.
      *
      * This vector will be filled with values (by copy) from the support points
      * generated within the mapping object. Therefore, its size will
@@ -1887,7 +1882,7 @@ namespace HierBEM
       kx_mapping_support_points_in_default_order;
     /**
      * List of mapping support points in the real cell \f$K_y\f$ in the
-     * tensor product order.
+     * hierarchic order.
      *
      * This vector will be filled with values (by copy) from the support points
      * generated within the mapping object. Therefore, its size will
@@ -2197,21 +2192,21 @@ namespace HierBEM
       : cuda_stream_handle(0)
       , common_vertex_pair_local_indices(0)
       , kx_mapping_support_points_permuted(
-          mappings.back().get_data()->n_shape_functions)
+          mappings.back()->get_data()->n_shape_functions)
       , ky_mapping_support_points_permuted(
-          mappings.back().get_data()->n_shape_functions)
+          mappings.back()->get_data()->n_shape_functions)
       , kx_mapping_support_points_permuted_xy_components(
-          mappings.back().get_data()->n_shape_functions)
+          mappings.back()->get_data()->n_shape_functions)
       , kx_mapping_support_points_permuted_yz_components(
-          mappings.back().get_data()->n_shape_functions)
+          mappings.back()->get_data()->n_shape_functions)
       , kx_mapping_support_points_permuted_zx_components(
-          mappings.back().get_data()->n_shape_functions)
+          mappings.back()->get_data()->n_shape_functions)
       , ky_mapping_support_points_permuted_xy_components(
-          mappings.back().get_data()->n_shape_functions)
+          mappings.back()->get_data()->n_shape_functions)
       , ky_mapping_support_points_permuted_yz_components(
-          mappings.back().get_data()->n_shape_functions)
+          mappings.back()->get_data()->n_shape_functions)
       , ky_mapping_support_points_permuted_zx_components(
-          mappings.back().get_data()->n_shape_functions)
+          mappings.back()->get_data()->n_shape_functions)
       , kx_local_dof_indices_in_default_dof_order(kx_fe.dofs_per_cell)
       , ky_local_dof_indices_in_default_dof_order(ky_fe.dofs_per_cell)
       , kx_fe_poly_space_numbering_inverse(kx_fe.dofs_per_cell)
@@ -2411,21 +2406,21 @@ namespace HierBEM
       , cuda_stream_handle(0)
       , common_vertex_pair_local_indices(0)
       , kx_mapping_support_points_permuted(
-          mappings.back().get_data()->n_shape_functions)
+          mappings.back()->get_data()->n_shape_functions)
       , ky_mapping_support_points_permuted(
-          mappings.back().get_data()->n_shape_functions)
+          mappings.back()->get_data()->n_shape_functions)
       , kx_mapping_support_points_permuted_xy_components(
-          mappings.back().get_data()->n_shape_functions)
+          mappings.back()->get_data()->n_shape_functions)
       , kx_mapping_support_points_permuted_yz_components(
-          mappings.back().get_data()->n_shape_functions)
+          mappings.back()->get_data()->n_shape_functions)
       , kx_mapping_support_points_permuted_zx_components(
-          mappings.back().get_data()->n_shape_functions)
+          mappings.back()->get_data()->n_shape_functions)
       , ky_mapping_support_points_permuted_xy_components(
-          mappings.back().get_data()->n_shape_functions)
+          mappings.back()->get_data()->n_shape_functions)
       , ky_mapping_support_points_permuted_yz_components(
-          mappings.back().get_data()->n_shape_functions)
+          mappings.back()->get_data()->n_shape_functions)
       , ky_mapping_support_points_permuted_zx_components(
-          mappings.back().get_data()->n_shape_functions)
+          mappings.back()->get_data()->n_shape_functions)
       , kx_local_dof_indices_in_default_dof_order(kx_fe.dofs_per_cell)
       , ky_local_dof_indices_in_default_dof_order(ky_fe.dofs_per_cell)
       , kx_fe_poly_space_numbering_inverse(kx_fe.dofs_per_cell)

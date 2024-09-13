@@ -9,6 +9,7 @@
 #define INCLUDE_DOF_TOOLS_EXT_H_
 
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/function.h>
 #include <deal.II/base/geometry_info.h>
 
 #include <deal.II/dofs/dof_handler.h>
@@ -17,6 +18,8 @@
 #include <algorithm>
 #include <map>
 #include <vector>
+
+#include "gmsh_manipulation.h"
 
 using namespace dealii;
 
@@ -78,7 +81,7 @@ namespace HierBEM
      * collection.
      *
      * @param dof_handler
-     * @param material_id_collection
+     * @param material_ids
      * @param selected_dofs
      * @param reset_selectors_to_false If preset all selectors to false at the
      * beginning of this function.
@@ -116,6 +119,62 @@ namespace HierBEM
           auto found_iter = material_ids.find(cell->material_id());
 
           if (found_iter != material_ids.end())
+            {
+              const unsigned int dofs_per_cell = cell->get_fe().dofs_per_cell;
+              cell_dof_indices.resize(dofs_per_cell);
+              cell->get_dof_indices(cell_dof_indices);
+              for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                {
+                  selected_dofs[cell_dof_indices[i]] = true;
+                }
+            }
+        }
+    }
+
+
+    /**
+     * @brief Generate DoF selectors for those on the boundary condition.
+     *
+     * @tparam dim
+     * @tparam spacedim
+     * @param dof_handler
+     * @param boundary_bc_definition
+     * @param selected_dofs
+     * @param reset_selectors_to_false
+     */
+    template <int dim, int spacedim>
+    void
+    extract_boundary_condition_dofs(
+      const DoFHandler<dim, spacedim>                   &dof_handler,
+      std::map<EntityTag, Function<spacedim, double> *> &boundary_bc_definition,
+      std::vector<bool>                                 &selected_dofs,
+      const bool reset_selectors_to_false = true)
+    {
+      Assert(selected_dofs.size() == dof_handler.n_dofs(),
+             ExcDimensionMismatch(selected_dofs.size(), dof_handler.n_dofs()));
+
+      if (reset_selectors_to_false)
+        {
+          // preset all values by false
+          std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(), false);
+        }
+
+      // Global DoF indices for the current cell.
+      std::vector<types::global_dof_index> cell_dof_indices;
+      cell_dof_indices.reserve(
+        dof_handler.get_fe_collection().max_dofs_per_cell());
+
+      // this function is similar to the make_sparsity_pattern function, see
+      // there for more information
+      typename DoFHandler<dim, spacedim>::active_cell_iterator
+        cell = dof_handler.begin_active(),
+        endc = dof_handler.end();
+      for (; cell != endc; ++cell)
+        {
+          // Find the current cell's material id in the given list.
+          auto found_iter = boundary_bc_definition.find(cell->material_id());
+
+          if (found_iter != boundary_bc_definition.end())
             {
               const unsigned int dofs_per_cell = cell->get_fe().dofs_per_cell;
               cell_dof_indices.resize(dofs_per_cell);
@@ -337,9 +396,9 @@ namespace HierBEM
      * The value doubled is used as an estimate for the diameter of the support
      * set of each DoF.
      *
-     * @param dof_max_cell_size The returned list of maximum cell sizes. The memory
-     * for this vector should be preallocated and initialized to zero before
-     * calling this function.
+     * @param dof_max_cell_size The returned list of maximum cell sizes. The
+     * memory for this vector should be preallocated and initialized to zero
+     * before calling this function.
      */
     template <typename DoFHandlerType, typename Number = double>
     void
@@ -403,9 +462,9 @@ namespace HierBEM
      * The value doubled is used as an estimate for the diameter of the support
      * set of each DoF.
      *
-     * @param dof_min_cell_size The returned list of average cell sizes. The memory
-     * for this vector should be preallocated and initialized to zero before
-     * calling this function.
+     * @param dof_min_cell_size The returned list of average cell sizes. The
+     * memory for this vector should be preallocated and initialized to zero
+     * before calling this function.
      */
     template <typename DoFHandlerType, typename Number = double>
     void

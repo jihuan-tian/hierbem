@@ -127,8 +127,6 @@ run_neumann_hmatrix()
   LaplaceBEM<dim, spacedim> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
-    1, // mapping order for dirichlet domain
-    1, // mapping order for neumann domain
     LaplaceBEM<dim, spacedim>::ProblemType::NeumannBCProblem,
     is_interior_problem,         // is interior problem
     4,                           // n_min for cluster tree
@@ -171,13 +169,27 @@ run_neumann_hmatrix()
   GridGenerator::hyper_ball(tria, center, radius);
   tria.refine_global(1);
 
-  bem.assign_volume_triangulation(std::move(tria), true);
+  // Create the map from material ids to manifold ids. By default, the material
+  // ids of all cells are zero, if the triangulation is created by a deal.ii
+  // function in GridGenerator.
+  bem.get_manifold_description()[0] = 0;
 
-  Triangulation<dim, spacedim>           surface_tria;
-  const SphericalManifold<dim, spacedim> ball_surface_manifold(center);
-  surface_tria.set_manifold(0, ball_surface_manifold);
+  Triangulation<dim, spacedim>      surface_tria;
+  SphericalManifold<dim, spacedim> *ball_surface_manifold =
+    new SphericalManifold<dim, spacedim>(center);
+  bem.get_manifolds()[0] = ball_surface_manifold;
 
-  bem.assign_surface_triangulation(std::move(surface_tria), true);
+  // We should first assign manifold objects to the empty surface triangulation,
+  // then perform surface mesh extraction.
+  surface_tria.set_manifold(0, *ball_surface_manifold);
+  bem.extract_surface_triangulation(tria, std::move(surface_tria), true);
+
+  // Create the map from manifold id to mapping order.
+  bem.get_manifold_id_to_mapping_order()[0] = 1;
+
+  // Build surface-to-volume and volume-to-surface relationship.
+  bem.get_subdomain_topology().generate_single_domain_topology_for_dealii_model(
+    {0});
 
   timer.stop();
   print_wall_time(deallog, timer, "read mesh");

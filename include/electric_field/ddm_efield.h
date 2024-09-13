@@ -617,41 +617,6 @@ namespace HierBEM
   };
 
 
-  // Declaration of deal.ii internal functions which will be used in
-  // DDMEfield<dim, spacedim>::read_mesh.
-  template <int spacedim>
-  void
-  assign_1d_boundary_ids(
-    const std::map<unsigned int, types::boundary_id> &boundary_ids,
-    Triangulation<1, spacedim>                       &triangulation)
-  {
-    if (boundary_ids.size() > 0)
-      for (const auto &cell : triangulation.active_cell_iterators())
-        for (unsigned int f : GeometryInfo<1>::face_indices())
-          if (boundary_ids.find(cell->vertex_index(f)) != boundary_ids.end())
-            {
-              AssertThrow(
-                cell->at_boundary(f),
-                ExcMessage(
-                  "You are trying to prescribe boundary ids on the face "
-                  "of a 1d cell (i.e., on a vertex), but this face is not actually at "
-                  "the boundary of the mesh. This is not allowed."));
-              cell->face(f)->set_boundary_id(
-                boundary_ids.find(cell->vertex_index(f))->second);
-            }
-  }
-
-  template <int dim, int spacedim>
-  void
-  assign_1d_boundary_ids(const std::map<unsigned int, types::boundary_id> &,
-                         Triangulation<dim, spacedim> &)
-  {
-    // we shouldn't get here since boundary ids are not assigned to
-    // vertices except in 1d
-    Assert(dim != 1, ExcInternalError());
-  }
-
-
   template <int dim, int spacedim>
   DDMEfield<dim, spacedim>::DDMEfield()
     : project_name("default")
@@ -1435,15 +1400,15 @@ namespace HierBEM
 
     initialize_manifolds_and_mappings();
 
-    //#if ENABLE_DEBUG == 1
-    //    // Refine the mesh to see if the assigned spherical manifold works.
-    //    tria.refine_global(1);
-    //    // Write out the mesh to check if elementary tags have been assigned
-    //    // to material ids.
-    //    std::ofstream out("output.msh");
-    //    write_msh_correct<dim, spacedim>(tria, out);
-    //    out.close();
-    //#endif
+    // #if ENABLE_DEBUG == 1
+    //     // Refine the mesh to see if the assigned spherical manifold works.
+    //     tria.refine_global(1);
+    //     // Write out the mesh to check if elementary tags have been assigned
+    //     // to material ids.
+    //     std::ofstream out("output.msh");
+    //     write_msh_correct<dim, spacedim>(tria, out);
+    //     out.close();
+    // #endif
 
     // Initialize DoF handlers.
     dof_handler_for_dirichlet_space.reinit(tria);
@@ -1472,7 +1437,8 @@ namespace HierBEM
     ACAConfig aca_config(max_hmat_rank, aca_relative_error, eta);
 
     for (auto &steklov_poincare_hmat : system_matrix.get_subdomain_hmatrices())
-      {}
+      {
+      }
   }
 
 

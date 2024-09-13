@@ -67,11 +67,26 @@ namespace HierBEM
         }
     }
 
-
+    /**
+     * @brief Perform memory copy for shape gradient matrix from host to device.
+     *
+     * \alert{The data on the host are not continuous, since the memory of each
+     * matrix in the table is independently allocated,  while those on the
+     * device are continuous.}
+     *
+     * \mynote{The memory address of the first element in a matrix is acquired
+     * by first getting the iterator to the first matrix entry then getting its
+     * references. For example, <tt>&(table_cpu(k, q).begin()->value()</tt>.}
+     *
+     * @tparam RangeNumberType
+     * @param table_gpu
+     * @param table_cpu
+     * @param max_mapping_n_shape_function
+     */
     template <typename RangeNumberType = double>
     void
     mapping_shape_grad_matrix_table_assign_from_host(
-      CUDATable<5, RangeNumberType>                        &table_gpu,
+      CUDATable<4, RangeNumberType>                        &table_gpu,
       const Table<3, LAPACKFullMatrixExt<RangeNumberType>> &table_cpu,
       const unsigned int max_mapping_n_shape_function)
     {
@@ -79,19 +94,26 @@ namespace HierBEM
       const unsigned int mapping_num = table_cpu.size(0);
       const unsigned int k3_terms    = table_cpu.size(1);
       const unsigned int quad_num    = table_cpu.size(2);
+      const unsigned int dim         = table_cpu(0, 0, 0).n();
+      // The gradient matrix should have 2 columns.
+      AssertDimension(dim, 2);
+
+      // The space on GPU reserved for the gradient matrix, which can hold the
+      // data for the highest order mapping.
+      const unsigned int reserved_elements_for_grad_matrix_gpu =
+        max_mapping_n_shape_function * dim;
 
       for (unsigned int m = 0; m < mapping_num; m++)
         {
-          // Get the gradient matrix size.
-          const unsigned int n_elements_in_grad_matrix =
+          // All gradient matrices should have @p dim columns.
+          AssertDimension(dim, table_cpu(m, 0, 0).n());
+
+          // Get the gradient matrix size on CPU.
+          const unsigned int n_elements_in_grad_matrix_cpu =
             table_cpu(m, 0, 0).m() * table_cpu(m, 0, 0).n();
 
-          // The space reserved for the gradient matrix, which may be larger
-          // than the actually occupied memory space.
-          const unsigned int reserved_elements_for_grad_matrix =
-            max_mapping_n_shape_function * table_cpu(m, 0, 0).n();
-
-          Assert(reserved_elements_for_grad_matrix >= n_elements_in_grad_matrix,
+          Assert(reserved_elements_for_grad_matrix_gpu >=
+                   n_elements_in_grad_matrix_cpu,
                  ExcInternalError());
 
           for (unsigned int k = 0; k < k3_terms; k++)
@@ -100,11 +122,11 @@ namespace HierBEM
                 {
                   // Calculate the offset address in the table on the device.
                   std::size_t offset = ((m * k3_terms + k) * quad_num + q) *
-                                       reserved_elements_for_grad_matrix;
+                                       reserved_elements_for_grad_matrix_gpu;
                   table_gpu.assign_from_host(
                     &(table_cpu(m, k, q).begin()->value()),
                     offset,
-                    n_elements_in_grad_matrix);
+                    n_elements_in_grad_matrix_cpu);
                 }
             }
         }
@@ -223,7 +245,7 @@ namespace HierBEM
       /**
        * Data table of mapping shape function values for \f$K_x\f$ in the
        * same panel case. It has 4 dimensions:
-       * 1. Mapping index (=mapping order - 1), which is used to get the
+       * 1. Mapping index, which is mapping order minus 1. It is used to get the
        * corresponding pointer to the MappingInfo object in BEMValues::mappings.
        * 2. shape function index: size=number of shape functions in the highest
        * order mapping object
@@ -234,7 +256,7 @@ namespace HierBEM
       /**
        * Data table of mapping shape function values for \f$K_y\f$ in the
        * same panel case. It has 4 dimensions:
-       * 1. Mapping index (=mapping order - 1), which is used to get the
+       * 1. Mapping index, which is mapping order minus 1. It is used to get the
        * corresponding pointer to the MappingInfo object in BEMValues::mappings.
        * 2. shape function index: size=number of shape functions in the highest
        * order mapping object
@@ -245,7 +267,7 @@ namespace HierBEM
       /**
        * Data table of mapping shape function values for \f$K_x\f$ in the
        * common edge case. It has 4 dimensions:
-       * 1. Mapping index (=mapping order - 1), which is used to get the
+       * 1. Mapping index, which is mapping order minus 1. It is used to get the
        * corresponding pointer to the MappingInfo object in BEMValues::mappings.
        * 2. shape function index: size=number of shape functions in the
        * highest order mapping object
@@ -257,7 +279,7 @@ namespace HierBEM
       /**
        * Data table of mapping shape function values for \f$K_y\f$ in the
        * common edge case. It has 4 dimensions:
-       * 1. Mapping index (=mapping order - 1), which is used to get the
+       * 1. Mapping index, which is mapping order minus 1. It is used to get the
        * corresponding pointer to the MappingInfo object in BEMValues::mappings.
        * 2. shape function index: size=number of shape functions in the
        * highest order mapping object
@@ -269,7 +291,7 @@ namespace HierBEM
       /**
        * Data table of mapping shape function values for \f$K_x\f$ in the
        * common vertex case. It has 4 dimensions:
-       * 1. Mapping index (=mapping order - 1) which is used to get the
+       * 1. Mapping index, which is mapping order minus 1. It is used to get the
        * corresponding pointer to the MappingInfo object in BEMValues::mappings.
        * 2. shape function index: size=number of shape functions in the
        * highest order mapping object
@@ -281,7 +303,7 @@ namespace HierBEM
       /**
        * Data table of mapping shape function values for \f$K_y\f$ in the
        * common vertex case. It has 4 dimensions:
-       * 1. Mapping index (=mapping order - 1), which is used to get the
+       * 1. Mapping index, which is mapping order minus 1. It is used to get the
        * corresponding pointer to the MappingInfo object in BEMValues::mappings.
        * 2. shape function index: size=number of shape functions in the
        * highest order mapping object
@@ -293,7 +315,7 @@ namespace HierBEM
       /**
        * Data table of mapping shape function values for \f$K_x\f$ in the
        * regular case. It has 4 dimensions:
-       * 1. Mapping index (=mapping order - 1), which is used to get the
+       * 1. Mapping index, which is mapping order minus 1. It is used to get the
        * corresponding pointer to the MappingInfo object in BEMValues::mappings.
        * 2. shape function index: size=number of shape functions in the
        * highest order mapping object
@@ -304,8 +326,9 @@ namespace HierBEM
       /**
        * Data table of mapping shape function values for \f$K_y\f$ in the
        * regular case. It has 4 dimensions:
-       * 1. Mapping index (=mapping order - 1), which is used to get the
-       * corresponding pointer to the MappingInfo object in BEMValues::mappings.
+       * 11. Mapping index, which is mapping order minus 1. It is used to get
+       * the corresponding pointer to the MappingInfo object in
+       * BEMValues::mappings.
        * 2. shape function index: size=number of shape functions in the
        * highest order mapping object
        * 3. \f$k_3\f$ term index: size=1
@@ -391,106 +414,106 @@ namespace HierBEM
       /**
        * Data table of mapping shape function's gradient values for
        * \f$K_x\f$ in the same panel case. It has 5 dimensions:
-       * 1. Mapping index (=mapping order - 1) , which is used to get the
+       * 1. Mapping index, which is mapping order minus 1. It is used to get the
        * corresponding pointer to the MappingInfo object in BEMValues::mappings.
        * 2. \f$k_3\f$ term index: size=8
        * 3. Quadrature point index: size=number of quadrature points
-       * 4. Coordinate component index in the unit cell
-       * 5. Shape function index: size=number of shape functions in the highest
-       * order mapping object
+       * 4. Gradient matrix element index in column major. The total number of
+       * elements is (number of shape functions in the highest order mapping
+       * object)*dim.
        */
-      CUDATable<5, RangeNumberType>
+      CUDATable<4, RangeNumberType>
         kx_mapping_shape_grad_matrix_table_for_same_panel;
       /**
        * Data table of mapping shape function's gradient values for
        * \f$K_y\f$ in the same panel case. It has 5 dimensions:
-       * 1. Mapping index (=mapping order - 1), which is used to get the
+       * 1. Mapping index, which is mapping order minus 1. It is used to get the
        * corresponding pointer to the MappingInfo object in BEMValues::mappings.
        * 2. \f$k_3\f$ term index: size=8
        * 3. Quadrature point index: size=number of quadrature points
-       * 4. Coordinate component index in the unit cell
-       * 5. Shape function index: size=number of shape functions in the highest
-       * order mapping object
+       * 4. Gradient matrix element index in column major. The total number of
+       * elements is (number of shape functions in the highest order mapping
+       * object)*dim.
        */
-      CUDATable<5, RangeNumberType>
+      CUDATable<4, RangeNumberType>
         ky_mapping_shape_grad_matrix_table_for_same_panel;
       /**
        * Data table of mapping shape function's gradient values for
        * \f$K_x\f$ in the common edge case. It has 5 dimensions:
-       * 1. Mapping index (=mapping order - 1), which is used to get the
+       * 1. Mapping index, which is mapping order minus 1. It is used to get the
        * corresponding pointer to the MappingInfo object in BEMValues::mappings.
        * 2. \f$k_3\f$ term index: size=6
        * 3. Quadrature point index: size=number of quadrature points
-       * 4. Coordinate component index in the unit cell
-       * 5. Shape function index: size=number of shape functions in the highest
-       * order mapping object
+       * 4. Gradient matrix element index in column major. The total number of
+       * elements is (number of shape functions in the highest order mapping
+       * object)*dim.
        */
-      CUDATable<5, RangeNumberType>
+      CUDATable<4, RangeNumberType>
         kx_mapping_shape_grad_matrix_table_for_common_edge;
       /**
        * Data table of mapping shape function's gradient values for
        * \f$K_y\f$ in the common edge case. It has 5 dimensions:
-       * 1. Mapping index (=mapping order - 1), which is used to get the
+       * 1. Mapping index, which is mapping order minus 1. It is used to get the
        * corresponding pointer to the MappingInfo object in BEMValues::mappings.
        * 2. \f$k_3\f$ term index: size=6
        * 3. Quadrature point index: size=number of quadrature points
-       * 4. Coordinate component index in the unit cell
-       * 5. Shape function index: size=number of shape functions in the highest
-       * order mapping object
+       * 4. Gradient matrix element index in column major. The total number of
+       * elements is (number of shape functions in the highest order mapping
+       * object)*dim.
        */
-      CUDATable<5, RangeNumberType>
+      CUDATable<4, RangeNumberType>
         ky_mapping_shape_grad_matrix_table_for_common_edge;
       /**
        * Data table of mapping shape function's gradient values for
        * \f$K_x\f$ in the common vertex case. It has 5 dimensions:
-       * 1. Mapping index (=mapping order - 1), which is used to get the
+       * 1. Mapping index, which is mapping order minus 1. It is used to get the
        * corresponding pointer to the MappingInfo object in BEMValues::mappings.
        * 2. \f$k_3\f$ term index: size=4
        * 3. Quadrature point index: size=number of quadrature points
-       * 4. Coordinate component index in the unit cell
-       * 5. Shape function index: size=number of shape functions in the highest
-       * order mapping object
+       * 4. Gradient matrix element index in column major. The total number of
+       * elements is (number of shape functions in the highest order mapping
+       * object)*dim.
        */
-      CUDATable<5, RangeNumberType>
+      CUDATable<4, RangeNumberType>
         kx_mapping_shape_grad_matrix_table_for_common_vertex;
       /**
        * Data table of mapping shape function's gradient values for
        * \f$K_y\f$ in the common vertex case. It has 5 dimensions:
-       * 1. Mapping index (=mapping order - 1), which is used to get the
+       * 1. Mapping index, which is mapping order minus 1. It is used to get the
        * corresponding pointer to the MappingInfo object in BEMValues::mappings.
        * 2. \f$k_3\f$ term index: size=4
        * 3. Quadrature point index: size=number of quadrature points
-       * 4. Coordinate component index in the unit cell
-       * 5. Shape function index: size=number of shape functions in the highest
-       * order mapping object
+       * 4. Gradient matrix element index in column major. The total number of
+       * elements is (number of shape functions in the highest order mapping
+       * object)*dim.
        */
-      CUDATable<5, RangeNumberType>
+      CUDATable<4, RangeNumberType>
         ky_mapping_shape_grad_matrix_table_for_common_vertex;
       /**
        * Data table of mapping shape function's gradient values for
        * \f$K_x\f$ in the regular case. It has 5 dimensions:
-       * 1. Mapping index (=mapping order - 1), which is used to get the
+       * 1. Mapping index, which is mapping order minus 1. It is used to get the
        * corresponding pointer to the MappingInfo object in BEMValues::mappings.
        * 2. \f$k_3\f$ term index: size=1
        * 3. Quadrature point index: size=number of quadrature points
-       * 4. Coordinate component index in the unit cell
-       * 5. Shape function index: size=number of shape functions in the highest
-       * order mapping object
+       * 4. Gradient matrix element index in column major. The total number of
+       * elements is (number of shape functions in the highest order mapping
+       * object)*dim.
        */
-      CUDATable<5, RangeNumberType>
+      CUDATable<4, RangeNumberType>
         kx_mapping_shape_grad_matrix_table_for_regular;
       /**
        * Data table of mapping shape function's gradient values for
        * \f$K_y\f$ in the regular case. It has 5 dimensions:
-       * 1. Mapping index (=mapping order - 1), which is used to get the
+       * 1. Mapping index, which is mapping order minus 1. It is used to get the
        * corresponding pointer to the MappingInfo object in BEMValues::mappings.
        * 2. \f$k_3\f$ term index: size=1
        * 3. Quadrature point index: size=number of quadrature points
-       * 4. Coordinate component index in the unit cell
-       * 5. Shape function index: size=number of shape functions in the highest
-       * order mapping object
+       * 4. Gradient matrix element index in column major. The total number of
+       * elements is (number of shape functions in the highest order mapping
+       * object)*dim.
        */
-      CUDATable<5, RangeNumberType>
+      CUDATable<4, RangeNumberType>
         ky_mapping_shape_grad_matrix_table_for_regular;
 
     protected:
@@ -625,7 +648,7 @@ namespace HierBEM
         const BEMValues<dim, spacedim, RangeNumberType> &bem_values_cpu)
     {
       const unsigned int max_mapping_n_shape_functions =
-        bem_values_cpu.mappings.back()->get_data().n_shape_functions;
+        bem_values_cpu.mappings.back()->get_data()->n_shape_functions;
 
       kx_mapping_shape_value_table_for_same_panel.allocate(
         TableIndices<4>(bem_values_cpu.mappings.size(),
@@ -780,59 +803,51 @@ namespace HierBEM
         const BEMValues<dim, spacedim, RangeNumberType> &bem_values_cpu)
     {
       const unsigned int max_mapping_n_shape_functions =
-        bem_values_cpu.mappings.back()->get_data().n_shape_functions;
+        bem_values_cpu.mappings.back()->get_data()->n_shape_functions;
 
       kx_mapping_shape_grad_matrix_table_for_same_panel.allocate(
-        TableIndices<5>(bem_values_cpu.mappings.size(),
+        TableIndices<4>(bem_values_cpu.mappings.size(),
                         8,
                         bem_values_cpu.quad_rule_for_same_panel.size(),
-                        dim,
-                        max_mapping_n_shape_functions));
+                        dim * max_mapping_n_shape_functions));
       ky_mapping_shape_grad_matrix_table_for_same_panel.allocate(
-        TableIndices<5>(bem_values_cpu.mappings.size(),
+        TableIndices<4>(bem_values_cpu.mappings.size(),
                         8,
                         bem_values_cpu.quad_rule_for_same_panel.size(),
-                        dim,
-                        max_mapping_n_shape_functions));
+                        dim * max_mapping_n_shape_functions));
 
       kx_mapping_shape_grad_matrix_table_for_common_edge.allocate(
-        TableIndices<5>(bem_values_cpu.mappings.size(),
+        TableIndices<4>(bem_values_cpu.mappings.size(),
                         6,
                         bem_values_cpu.quad_rule_for_common_edge.size(),
-                        dim,
-                        max_mapping_n_shape_functions));
+                        dim * max_mapping_n_shape_functions));
       ky_mapping_shape_grad_matrix_table_for_common_edge.allocate(
-        TableIndices<5>(bem_values_cpu.mappings.size(),
+        TableIndices<4>(bem_values_cpu.mappings.size(),
                         6,
                         bem_values_cpu.quad_rule_for_common_edge.size(),
-                        dim,
-                        max_mapping_n_shape_functions));
+                        dim * max_mapping_n_shape_functions));
 
       kx_mapping_shape_grad_matrix_table_for_common_vertex.allocate(
-        TableIndices<5>(bem_values_cpu.mappings.size(),
+        TableIndices<4>(bem_values_cpu.mappings.size(),
                         4,
                         bem_values_cpu.quad_rule_for_common_vertex.size(),
-                        dim,
-                        max_mapping_n_shape_functions));
+                        dim * max_mapping_n_shape_functions));
       ky_mapping_shape_grad_matrix_table_for_common_vertex.allocate(
-        TableIndices<5>(bem_values_cpu.mappings.size(),
+        TableIndices<4>(bem_values_cpu.mappings.size(),
                         4,
                         bem_values_cpu.quad_rule_for_common_vertex.size(),
-                        dim,
-                        max_mapping_n_shape_functions));
+                        dim * max_mapping_n_shape_functions));
 
       kx_mapping_shape_grad_matrix_table_for_regular.allocate(
-        TableIndices<5>(bem_values_cpu.mappings.size(),
+        TableIndices<4>(bem_values_cpu.mappings.size(),
                         1,
                         bem_values_cpu.quad_rule_for_regular.size(),
-                        dim,
-                        max_mapping_n_shape_functions));
+                        dim * max_mapping_n_shape_functions));
       ky_mapping_shape_grad_matrix_table_for_regular.allocate(
-        TableIndices<5>(bem_values_cpu.mappings.size(),
+        TableIndices<4>(bem_values_cpu.mappings.size(),
                         1,
                         bem_values_cpu.quad_rule_for_regular.size(),
-                        dim,
-                        max_mapping_n_shape_functions));
+                        dim * max_mapping_n_shape_functions));
 
       mapping_shape_grad_matrix_table_assign_from_host(
         kx_mapping_shape_grad_matrix_table_for_same_panel,
@@ -1022,22 +1037,38 @@ namespace HierBEM
       /**
        * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
        * the same panel case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, Tensor<1, spacedim, RangeNumberType>> kx_normals_same_panel;
       /**
        * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
        * the common edge case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, Tensor<1, spacedim, RangeNumberType>> kx_normals_common_edge;
       /**
        * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
        * the common vertex case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, Tensor<1, spacedim, RangeNumberType>>
         kx_normals_common_vertex;
       /**
        * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
        * the regular case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, Tensor<1, spacedim, RangeNumberType>> kx_normals_regular;
 
@@ -1045,46 +1076,86 @@ namespace HierBEM
        * Covariant transformation matrix (with dimension <tt>spacedim *
        * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
        * cell \f$K_x\f$ for the same panel case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
+       * 3. Unit cell coordinate index
+       * 4. Real cell coordinate index
        */
       CUDATable<4, RangeNumberType> kx_covariants_same_panel;
       /**
        * Covariant transformation matrix (with dimension <tt>spacedim *
        * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
        * cell \f$K_x\f$ for the common edge case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
+       * 3. Unit cell coordinate index
+       * 4. Real cell coordinate index
        */
       CUDATable<4, RangeNumberType> kx_covariants_common_edge;
       /**
        * Covariant transformation matrix (with dimension <tt>spacedim *
        * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
        * cell \f$K_x\f$ for the common vertex case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
+       * 3. Unit cell coordinate index
+       * 4. Real cell coordinate index
        */
       CUDATable<4, RangeNumberType> kx_covariants_common_vertex;
       /**
        * Covariant transformation matrix (with dimension <tt>spacedim *
        * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
        * cell \f$K_x\f$ for the regular case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
+       * 3. Unit cell coordinate index
+       * 4. Real cell coordinate index
        */
       CUDATable<4, RangeNumberType> kx_covariants_regular;
 
       /**
        * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
        * quadrature point for the same panel case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, Point<spacedim, RangeNumberType>> kx_quad_points_same_panel;
       /**
        * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
        * quadrature point for the common edge case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, Point<spacedim, RangeNumberType>> kx_quad_points_common_edge;
       /**
        * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
        * quadrature point for the common vertex case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, Point<spacedim, RangeNumberType>>
         kx_quad_points_common_vertex;
       /**
        * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
        * quadrature point for the regular case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, Point<spacedim, RangeNumberType>> kx_quad_points_regular;
 
@@ -1128,22 +1199,38 @@ namespace HierBEM
       /**
        * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
        * the same panel case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, Tensor<1, spacedim, RangeNumberType>> ky_normals_same_panel;
       /**
        * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
        * the common edge case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, Tensor<1, spacedim, RangeNumberType>> ky_normals_common_edge;
       /**
        * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
        * the common vertex case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, Tensor<1, spacedim, RangeNumberType>>
         ky_normals_common_vertex;
       /**
        * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
        * the regular case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, Tensor<1, spacedim, RangeNumberType>> ky_normals_regular;
 
@@ -1151,46 +1238,86 @@ namespace HierBEM
        * Covariant transformation matrix (with dimension <tt>spacedim *
        * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
        * cell \f$K_y\f$ for the same panel case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
+       * 3. Unit cell coordinate index
+       * 4. Real cell coordinate index
        */
       CUDATable<4, RangeNumberType> ky_covariants_same_panel;
       /**
        * Covariant transformation matrix (with dimension <tt>spacedim *
        * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
        * cell \f$K_y\f$ for the common edge case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
+       * 3. Unit cell coordinate index
+       * 4. Real cell coordinate index
        */
       CUDATable<4, RangeNumberType> ky_covariants_common_edge;
       /**
        * Covariant transformation matrix (with dimension <tt>spacedim *
        * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
        * cell \f$K_y\f$ for the common vertex case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
+       * 3. Unit cell coordinate index
+       * 4. Real cell coordinate index
        */
       CUDATable<4, RangeNumberType> ky_covariants_common_vertex;
       /**
        * Covariant transformation matrix (with dimension <tt>spacedim *
        * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
        * cell \f$K_y\f$ for the regular case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
+       * 3. Unit cell coordinate index
+       * 4. Real cell coordinate index
        */
       CUDATable<4, RangeNumberType> ky_covariants_regular;
 
       /**
        * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
        * quadrature point for the same panel case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, Point<spacedim, RangeNumberType>> ky_quad_points_same_panel;
       /**
        * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
        * quadrature point for the common edge case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, Point<spacedim, RangeNumberType>> ky_quad_points_common_edge;
       /**
        * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
        * quadrature point for the common vertex case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, Point<spacedim, RangeNumberType>>
         ky_quad_points_common_vertex;
       /**
        * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
        * quadrature point for the regular case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, Point<spacedim, RangeNumberType>> ky_quad_points_regular;
 

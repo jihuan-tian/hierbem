@@ -116,8 +116,6 @@ run_dirichlet_hmatrix()
   LaplaceBEM<dim, spacedim> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
-    1, // mapping order for dirichlet domain
-    1, // mapping order for neumann domain
     LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
     is_interior_problem,         // is interior problem
     4,                           // n_min for cluster tree
@@ -176,7 +174,7 @@ run_dirichlet_hmatrix()
 
   // We should first assign manifold objects to the empty surface triangulation,
   // then perform surface mesh extraction.
-  bem.initialize_manifolds();
+  surface_tria.set_manifold(0, *ball_surface_manifold);
   bem.extract_surface_triangulation(tria, std::move(surface_tria), true);
 
   // Create the map from manifold id to mapping order.
@@ -186,8 +184,8 @@ run_dirichlet_hmatrix()
   print_wall_time(deallog, timer, "read mesh");
 
   // Build surface-to-volume and volume-to-surface relationship.
-  bem.get_subdomain_topology()
-    .generate_single_domain_topology_for_dealii_model();
+  bem.get_subdomain_topology().generate_single_domain_topology_for_dealii_model(
+    {0});
 
   timer.start();
 

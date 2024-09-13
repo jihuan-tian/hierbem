@@ -8,6 +8,7 @@
 
 #include "cu_profile.hcu"
 #include "debug_tools.hcu"
+#include "grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "laplace_bem.h"
 
@@ -101,8 +102,6 @@ run_dirichlet_hmatrix_two_spheres()
   LaplaceBEM<dim, spacedim> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
-    1, // mapping order for dirichlet domain
-    1, // mapping order for neumann domain
     LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
     is_interior_problem,         // is interior problem
     4,                           // n_min for cluster tree
@@ -122,79 +121,31 @@ run_dirichlet_hmatrix_two_spheres()
 
   timer.start();
 
-  Triangulation<spacedim> left_ball, right_ball, tria;
-  double                  inter_distance = 8;
-  double                  radius         = 1.0;
+  read_skeleton_mesh(HBEM_TEST_MODEL_DIR "two-spheres.msh",
+                     bem.get_triangulation());
+  bem.get_subdomain_topology().generate_topology(HBEM_TEST_MODEL_DIR
+                                                 "two-spheres.brep",
+                                                 HBEM_TEST_MODEL_DIR
+                                                 "two-spheres.msh");
 
-  GridGenerator::hyper_ball(left_ball,
-                            Point<spacedim>(-inter_distance / 2.0, 0, 0),
-                            radius);
-  GridGenerator::hyper_ball(right_ball,
-                            Point<spacedim>(inter_distance / 2.0, 0, 0),
-                            radius);
+  // Generate two sphere manifolds.
+  double                   inter_distance = 8.0;
+  Manifold<dim, spacedim> *left_sphere_manifold =
+    new SphericalManifold<dim, spacedim>(
+      Point<spacedim>(-inter_distance / 2.0, 0, 0));
+  Manifold<dim, spacedim> *right_sphere_manifold =
+    new SphericalManifold<dim, spacedim>(
+      Point<spacedim>(inter_distance / 2.0, 0, 0));
+  bem.get_manifolds()[0] = left_sphere_manifold;
+  bem.get_manifolds()[1] = right_sphere_manifold;
 
-  /**
-   * @internal Set different manifold ids and material ids to all the cells
-   * in the two balls.
-   */
-  for (typename Triangulation<spacedim>::active_cell_iterator cell =
-         left_ball.begin_active();
-       cell != left_ball.end();
-       cell++)
-    {
-      cell->set_all_manifold_ids(0);
-      cell->set_material_id(0);
-    }
+  // Create the map from manifold id to mapping order.
+  bem.get_manifold_id_to_mapping_order()[0] = 1;
+  bem.get_manifold_id_to_mapping_order()[1] = 1;
 
-  for (typename Triangulation<spacedim>::active_cell_iterator cell =
-         right_ball.begin_active();
-       cell != right_ball.end();
-       cell++)
-    {
-      cell->set_all_manifold_ids(1);
-      cell->set_material_id(1);
-    }
-
-  /**
-   * @internal @p merge_triangulation can only operate on coarse mesh, i.e.
-   * triangulations not refined. During the merging, the material ids are
-   * copied. When the last argument is true, the manifold ids are copied.
-   * Boundary ids will not be copied.
-   */
-  GridGenerator::merge_triangulations(left_ball, right_ball, tria, 1e-12, true);
-
-  /**
-   * @internal Assign manifold objects to the two balls in the merged mesh.
-   */
-  const SphericalManifold<spacedim> left_ball_manifold(
-    Point<spacedim>(-inter_distance / 2.0, 0, 0));
-  const SphericalManifold<spacedim> right_ball_manifold(
-    Point<spacedim>(inter_distance / 2.0, 0, 0));
-
-  tria.set_manifold(0, left_ball_manifold);
-  tria.set_manifold(1, right_ball_manifold);
-
-  // Refine the volume mesh.
-  tria.refine_global(1);
-
-  bem.assign_volume_triangulation(std::move(tria), true);
-
-  // Extract the boundary mesh. N.B. Before the operation, the association
-  // of manifold objects and manifold ids must also be set for the surface
-  // triangulation. The manifold objects for the surface triangulation have
-  // different dimension template paramreters as those for the volume
-  // triangulation.
-  Triangulation<dim, spacedim> surface_tria;
-
-  const SphericalManifold<dim, spacedim> left_ball_surface_manifold(
-    Point<spacedim>(-inter_distance / 2.0, 0, 0));
-  const SphericalManifold<dim, spacedim> right_ball_surface_manifold(
-    Point<spacedim>(inter_distance / 2.0, 0, 0));
-
-  surface_tria.set_manifold(0, left_ball_surface_manifold);
-  surface_tria.set_manifold(1, right_ball_surface_manifold);
-
-  bem.assign_surface_triangulation(std::move(surface_tria), true);
+  // Assign manifolds to surface entities.
+  bem.get_manifold_description()[1] = 0;
+  bem.get_manifold_description()[2] = 1;
 
   timer.stop();
   print_wall_time(deallog, timer, "read mesh");

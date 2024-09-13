@@ -706,7 +706,7 @@ namespace HierBEM
          * calculated within @p sauter_quadrature_on_one_pair_of_cells.
          */
         const unsigned int kx_mapping_index =
-          material_id_to_mapping_index[e->material_id()];
+          material_id_to_mapping_index.at(e->material_id());
         MappingInfo<dim, spacedim> &kx_mapping_info =
           *mappings[kx_mapping_index];
 
@@ -745,11 +745,11 @@ namespace HierBEM
             factor,
             std::cref(e),
             std::placeholders::_1,
-            mappings,
-            material_id_to_mapping_index,
-            kx_mapping_info,
+            std::cref(mappings),
+            std::cref(material_id_to_mapping_index),
+            std::cref(kx_mapping_info),
             std::cref(bem_values),
-            normal_detector,
+            std::cref(normal_detector),
             std::placeholders::_2,
             std::placeholders::_3,
             true),
@@ -865,7 +865,7 @@ namespace HierBEM
          * calculated within @p sauter_quadrature_on_one_pair_of_cells.
          */
         const unsigned int kx_mapping_index =
-          material_id_to_mapping_index[e->material_id()];
+          material_id_to_mapping_index.at(e->material_id());
         MappingInfo<dim, spacedim> &kx_mapping_info =
           *mappings[kx_mapping_index];
 
@@ -879,7 +879,7 @@ namespace HierBEM
              dof_handler_for_trial_space.active_cell_iterators())
           {
             const unsigned int ky_mapping_index =
-              material_id_to_mapping_index[f->material_id()];
+              material_id_to_mapping_index.at(f->material_id());
             MappingInfo<dim, spacedim> &ky_mapping_info =
               *mappings[ky_mapping_index];
 

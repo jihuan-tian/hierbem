@@ -422,10 +422,11 @@ namespace HierBEM
    *
    * @param scratch
    * @param data
+   * @param cell_neighboring_type
    * @param kx_cell_iter
    * @param ky_cell_iter
-   * @param kx_mapping
-   * @param ky_mapping
+   * @param kx_mapping_info
+   * @param ky_mapping_info
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
@@ -795,8 +796,8 @@ namespace HierBEM
     extern cudaDeviceProp device_properties;
 
     /**
-     * @brief Determine the dimensions of block rectangle and thread rectangle for CUDA
-     * parallelization over Sauter quadrature points.
+     * @brief Determine the dimensions of block rectangle and thread rectangle
+     * for CUDA parallelization over Sauter quadrature points.
      *
      * N.B. The allocation of thread blocks are enough to cover all quadrature
      * points. Therefore, there is no for-loop inside related kernel functions.
@@ -1045,6 +1046,8 @@ namespace HierBEM
                                                   current_quad_point_index),
               is_kx_normal_inward);
 
+          // In common edge case, the support points in ky are reversed,
+          // therefore, there is a negation on @p is_ky_normal_inward.
           scratch_data.ky_jacobians_common_edge(threadIdx.y,
                                                 current_quad_point_index) =
             BEMTools::CUDAWrappers::surface_jacobian_det_and_normal_vector(
@@ -2356,6 +2359,25 @@ namespace HierBEM
     class SauterQuadratureTaskScalarData
     {
     public:
+      SauterQuadratureTaskScalarData(
+        const unsigned int i_local_index,
+        const unsigned int j_local_index,
+        const unsigned int kx_mapping_index,
+        const unsigned int ky_mapping_index,
+        const unsigned int kx_mapping_n_shape_functions,
+        const unsigned int ky_mapping_n_shape_functions,
+        const bool         is_kx_normal_inward,
+        const bool         is_ky_normal_inward)
+        : i_local_index(i_local_index)
+        , j_local_index(j_local_index)
+        , kx_mapping_index(kx_mapping_index)
+        , ky_mapping_index(ky_mapping_index)
+        , kx_mapping_n_shape_functions(kx_mapping_n_shape_functions)
+        , ky_mapping_n_shape_functions(ky_mapping_n_shape_functions)
+        , is_kx_normal_inward(is_kx_normal_inward)
+        , is_ky_normal_inward(is_ky_normal_inward)
+      {}
+
       /**
        * Local DoF indices in \f$K_x\f$ corresponding to the global DoF
        * index \f$i\f$.
@@ -2478,7 +2500,8 @@ namespace HierBEM
        * @param fullmat_col_index Column index of the entry in the full matrix
        * @param i_local_index
        * @param j_local_index
-       * @param mass_matrix_entry Value of the mass matrix entry, if there is any.
+       * @param mass_matrix_entry Value of the mass matrix entry, if there is
+       * any.
        * @param scratch_data
        */
       __host__ void
@@ -2738,11 +2761,10 @@ namespace HierBEM
       ~SauterQuadratureTaskBufferForVector();
 
       /**
-       * Add a Sauter quadrature task to the buffer, the data of which are still
-       * on the host.
+       * @brief Add a Sauter quadrature task to the buffer, the data of which
+       * are still on the host.
        *
-       * @param i_local_index
-       * @param j_local_index
+       * @param scalar_data
        * @param scratch_data
        */
       void
@@ -2802,7 +2824,28 @@ namespace HierBEM
        */
       unsigned int task_num;
 
+      /**
+       * Store the list of starting task indices for each pair of DoFs.
+       *
+       * \mynote{For each pair of DoFs \f$i\f$ and \f$j\f$, the total number of
+       * associated quadrature tasks depends on the number of cells in the
+       * support sets of \f$i\f$ and \f$j\f$. To compute a particular element in
+       * the row or column vector of the rank-\f$k\f$ matrix, we need to
+       * accumulate the quadrature results from all tasks associated with this
+       * vector element. Therefore, we need this array to consecutively store
+       * the starting task index for each pair of DoFs. The length of this array
+       * is @p vector_size+1, with the last element being the ending task index
+       * for the last pair of DoFs.}
+       *
+       * The data are on the host.
+       */
       unsigned int *starting_task_indices_for_dof_pairs_cpu;
+
+      /**
+       * Store the list of starting task indices for each pair of DoFs.
+       *
+       * The data are on the device.
+       */
       unsigned int *starting_task_indices_for_dof_pairs_gpu;
 
       /**
@@ -3336,7 +3379,8 @@ namespace HierBEM
                         task_index, 0),
                       ky_normal,
                       ky_covariant_matrix,
-                      // The ky normal vector should be further negated.
+                      // The ky normal vector should be further negated for ky
+                      // in the common edge case.
                       !(scalar_data_ring_buffer_gpu[task_index]
                           .is_ky_normal_inward),
                       kernel.kernel_type == KernelType::HyperSingularRegular);
@@ -4008,7 +4052,7 @@ namespace HierBEM
         kx_mapping_support_points_permuted_buffer,
       CUDATable<2, Point<spacedim, RangeNumberType>>
                                       ky_mapping_support_points_permuted_buffer,
-      SauterQuadratureTaskScalarData *scalar_data_ring_buffer_gpu,
+      SauterQuadratureTaskScalarData *scalar_data_buffer_gpu,
       RangeNumberType                *values_at_all_quad_points_gpu,
       const unsigned int              task_num,
       const unsigned int              quad_point_num,
@@ -4055,13 +4099,12 @@ namespace HierBEM
               0,
               quad_no,
               bem_values.kx_mapping_shape_grad_matrix_table_for_regular,
-              scalar_data_ring_buffer_gpu[task_index].kx_mapping_index,
-              scalar_data_ring_buffer_gpu[task_index]
-                .kx_mapping_n_shape_functions,
+              scalar_data_buffer_gpu[task_index].kx_mapping_index,
+              scalar_data_buffer_gpu[task_index].kx_mapping_n_shape_functions,
               &kx_mapping_support_points_permuted_buffer(task_index, 0),
               kx_normal,
               kx_covariant_matrix,
-              scalar_data_ring_buffer_gpu[task_index].is_kx_normal_inward,
+              scalar_data_buffer_gpu[task_index].is_kx_normal_inward,
               kernel.kernel_type == KernelType::HyperSingularRegular);
 
           BEMTools::CUDAWrappers::
@@ -4069,9 +4112,8 @@ namespace HierBEM
               0,
               quad_no,
               bem_values.kx_mapping_shape_value_table_for_regular,
-              scalar_data_ring_buffer_gpu[task_index].kx_mapping_index,
-              scalar_data_ring_buffer_gpu[task_index]
-                .kx_mapping_n_shape_functions,
+              scalar_data_buffer_gpu[task_index].kx_mapping_index,
+              scalar_data_buffer_gpu[task_index].kx_mapping_n_shape_functions,
               &kx_mapping_support_points_permuted_buffer(task_index, 0),
               kx_quad_point);
 
@@ -4085,13 +4127,12 @@ namespace HierBEM
               0,
               quad_no,
               bem_values.ky_mapping_shape_grad_matrix_table_for_regular,
-              scalar_data_ring_buffer_gpu[task_index].ky_mapping_index,
-              scalar_data_ring_buffer_gpu[task_index]
-                .ky_mapping_n_shape_functions,
+              scalar_data_buffer_gpu[task_index].ky_mapping_index,
+              scalar_data_buffer_gpu[task_index].ky_mapping_n_shape_functions,
               &ky_mapping_support_points_permuted_buffer(task_index, 0),
               ky_normal,
               ky_covariant_matrix,
-              scalar_data_ring_buffer_gpu[task_index].is_ky_normal_inward,
+              scalar_data_buffer_gpu[task_index].is_ky_normal_inward,
               kernel.kernel_type == KernelType::HyperSingularRegular);
 
           BEMTools::CUDAWrappers::
@@ -4099,9 +4140,8 @@ namespace HierBEM
               0,
               quad_no,
               bem_values.ky_mapping_shape_value_table_for_regular,
-              scalar_data_ring_buffer_gpu[task_index].ky_mapping_index,
-              scalar_data_ring_buffer_gpu[task_index]
-                .ky_mapping_n_shape_functions,
+              scalar_data_buffer_gpu[task_index].ky_mapping_index,
+              scalar_data_buffer_gpu[task_index].ky_mapping_n_shape_functions,
               &ky_mapping_support_points_permuted_buffer(task_index, 0),
               ky_quad_point);
 
@@ -4127,13 +4167,13 @@ namespace HierBEM
                       0,
                       quad_no,
                       d,
-                      scalar_data_ring_buffer_gpu[task_index].i_local_index);
+                      scalar_data_buffer_gpu[task_index].i_local_index);
                   ky_shape_grad_in_unit_cell[d] =
                     bem_values.ky_shape_grad_matrix_table_for_regular(
                       0,
                       quad_no,
                       d,
-                      scalar_data_ring_buffer_gpu[task_index].j_local_index);
+                      scalar_data_buffer_gpu[task_index].j_local_index);
                 }
 
               /**
@@ -4184,11 +4224,11 @@ namespace HierBEM
                              ky_normal) *
                 kx_jacobian * ky_jacobian *
                 bem_values.kx_shape_value_table_for_regular(
-                  scalar_data_ring_buffer_gpu[task_index].i_local_index,
+                  scalar_data_buffer_gpu[task_index].i_local_index,
                   0,
                   quad_no) *
                 bem_values.ky_shape_value_table_for_regular(
-                  scalar_data_ring_buffer_gpu[task_index].j_local_index,
+                  scalar_data_buffer_gpu[task_index].j_local_index,
                   0,
                   quad_no) *
                 bem_values.quad_rule_for_regular.get_weights()[quad_no];
@@ -4283,16 +4323,19 @@ namespace HierBEM
        * counterpart in the ring buffer should have one more dimension which
        * corresponds to the task index.
        */
-      kx_mapping_support_points_permuted_ring_buffer_cpu.reinit(TableIndices<2>(
-        capacity, bem_values.mappings.back().get_data()->n_shape_functions));
+      const unsigned int max_mapping_n_shape_functions =
+        bem_values.mappings.back()->get_data()->n_shape_functions;
+
+      kx_mapping_support_points_permuted_ring_buffer_cpu.reinit(
+        TableIndices<2>(capacity, max_mapping_n_shape_functions));
       AssertCuda(cudaHostRegister(
         (void *)&(kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
         kx_mapping_support_points_permuted_ring_buffer_cpu.n_elements() *
           sizeof(Point<spacedim, RangeNumberType>),
         0));
 
-      ky_mapping_support_points_permuted_ring_buffer_cpu.reinit(TableIndices<2>(
-        capacity, bem_values.mappings.back().get_data()->n_shape_functions));
+      ky_mapping_support_points_permuted_ring_buffer_cpu.reinit(
+        TableIndices<2>(capacity, max_mapping_n_shape_functions));
       AssertCuda(cudaHostRegister(
         (void *)&(ky_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
         ky_mapping_support_points_permuted_ring_buffer_cpu.n_elements() *
@@ -4300,11 +4343,9 @@ namespace HierBEM
         0));
 
       kx_mapping_support_points_permuted_ring_buffer_gpu.allocate(
-        TableIndices<2>(
-          capacity, bem_values.mappings.back().get_data()->n_shape_functions));
+        TableIndices<2>(capacity, max_mapping_n_shape_functions));
       ky_mapping_support_points_permuted_ring_buffer_gpu.allocate(
-        TableIndices<2>(
-          capacity, bem_values.mappings.back().get_data()->n_shape_functions));
+        TableIndices<2>(capacity, max_mapping_n_shape_functions));
 
       AssertCuda(
         cudaMallocHost((void **)&scalar_data_ring_buffer_cpu,
@@ -5219,11 +5260,11 @@ namespace HierBEM
 
       kx_mapping_support_points_permuted_buffer_gpu.allocate(
         TableIndices<2>(
-          capacity, bem_values.mappings.back().get_data()->n_shape_functions),
+          capacity, bem_values.mappings.back()->get_data()->n_shape_functions),
         cuda_stream_handle);
       ky_mapping_support_points_permuted_buffer_gpu.allocate(
         TableIndices<2>(
-          capacity, bem_values.mappings.back().get_data()->n_shape_functions),
+          capacity, bem_values.mappings.back()->get_data()->n_shape_functions),
         cuda_stream_handle);
 
       AssertCuda(
@@ -5249,7 +5290,7 @@ namespace HierBEM
        * allocations on the device, in order that they can run in parallel.}
        */
       kx_mapping_support_points_permuted_buffer_cpu.reinit(TableIndices<2>(
-        capacity, bem_values.mappings.back().get_data()->n_shape_functions));
+        capacity, bem_values.mappings.back()->get_data()->n_shape_functions));
       AssertCuda(cudaHostRegister(
         (void *)&(kx_mapping_support_points_permuted_buffer_cpu(0, 0)),
         kx_mapping_support_points_permuted_buffer_cpu.n_elements() *
@@ -5258,7 +5299,7 @@ namespace HierBEM
 
 
       ky_mapping_support_points_permuted_buffer_cpu.reinit(TableIndices<2>(
-        capacity, bem_values.mappings.back().get_data()->n_shape_functions));
+        capacity, bem_values.mappings.back()->get_data()->n_shape_functions));
       AssertCuda(cudaHostRegister(
         (void *)&(ky_mapping_support_points_permuted_buffer_cpu(0, 0)),
         ky_mapping_support_points_permuted_buffer_cpu.n_elements() *
@@ -5415,9 +5456,8 @@ namespace HierBEM
                         cudaMemcpyHostToDevice,
                         cuda_stream_handle));
 
-
       /**
-       * @internal Process all Sauter quadrature tasks to the
+       * @internal Process all Sauter quadrature tasks in the
        * buffer for assembling the row or column vector.
        */
       const unsigned int quad_point_num_per_block =
@@ -5439,7 +5479,7 @@ namespace HierBEM
                               kernel_factor,
                               kx_mapping_support_points_permuted_buffer_gpu,
                               ky_mapping_support_points_permuted_buffer_gpu,
-                              scalar_data_ring_buffer_gpu,
+                              scalar_data_buffer_gpu,
                               values_at_all_quad_points_gpu,
                               task_num,
                               quad_point_num,
@@ -5476,17 +5516,20 @@ namespace HierBEM
 
 
     /**
-     * Iterate over each matrix entry of the full matrices in the collection
-     * of near field \hmatrices and add it as a Sauter quadrature task.
+     * @brief Iterate over each matrix entry of the full matrices in the
+     * collection of near field \hmatrices and add it as a Sauter quadrature
+     * task.
      *
      * This is the work function associated with a producer thread.
      *
+     * @tparam RangeNumberType
+     * @tparam SurfaceNormalDetector
+     * @tparam capacity
      * @tparam dim
      * @tparam spacedim
-     * @tparam RangeNumberType
      * @param near_field_leaf_set
      * @param start_leaf_set_index
-     * @param end_leaf_set_index It is the pass-the-end index.
+     * @param end_leaf_set_index This is the pass-the-end index.
      * @param ring_buffer_for_same_panel
      * @param ring_buffer_for_common_edge
      * @param ring_buffer_for_common_vertex
@@ -5494,15 +5537,15 @@ namespace HierBEM
      * @param kx_dof_to_cell_topo
      * @param ky_dof_to_cell_topo
      * @param bem_values
-     * @param bem_values_gpu
      * @param kx_dof_handler
      * @param ky_dof_handler
      * @param kx_map_from_local_to_full_dof_indices
      * @param ky_map_from_local_to_full_dof_indices
      * @param kx_dof_i2e_numbering
      * @param ky_dof_i2e_numbering
-     * @param kx_mapping
-     * @param ky_mapping
+     * @param mappings
+     * @param material_id_to_mapping_index
+     * @param normal_detector
      * @param is_kernel_symmetric
      * @param enable_build_symmetric_hmat
      */
@@ -5668,8 +5711,9 @@ namespace HierBEM
                                 j_global_dof_index,
                                 kx_dof_to_cell_topo,
                                 ky_dof_to_cell_topo,
-                                kx_mapping,
-                                ky_mapping,
+                                mappings,
+                                material_id_to_mapping_index,
+                                normal_detector,
                                 scratch_data,
                                 copy_data);
                             }
@@ -5728,8 +5772,9 @@ namespace HierBEM
                                 j_global_dof_index,
                                 kx_dof_to_cell_topo,
                                 ky_dof_to_cell_topo,
-                                kx_mapping,
-                                ky_mapping,
+                                mappings,
+                                material_id_to_mapping_index,
+                                normal_detector,
                                 scratch_data,
                                 copy_data);
                             }
@@ -5787,8 +5832,9 @@ namespace HierBEM
                         j_global_dof_index,
                         kx_dof_to_cell_topo,
                         ky_dof_to_cell_topo,
-                        kx_mapping,
-                        ky_mapping,
+                        mappings,
+                        material_id_to_mapping_index,
+                        normal_detector,
                         scratch_data,
                         copy_data);
                     }
@@ -5808,19 +5854,21 @@ namespace HierBEM
 
 
     /**
-     * @brief Iterate over each matrix entry of the full matrices in the collection
-     * of near field \hmatrices and add it as a Sauter quadrature task.
+     * @brief Iterate over each matrix entry of the full matrices in the
+     * collection of near field \hmatrices and add it as a Sauter quadrature
+     * task.
      *
      * This is the work function associated with a producer thread. This
      * overloaded version add a mass matrix to the \hmat.
      *
      * @tparam RangeNumberType
+     * @tparam SurfaceNormalDetector
      * @tparam capacity
      * @tparam dim
      * @tparam spacedim
      * @param near_field_leaf_set
      * @param start_leaf_set_index
-     * @param end_leaf_set_index
+     * @param end_leaf_set_index This is the pass-the-end index.
      * @param ring_buffer_for_same_panel
      * @param ring_buffer_for_common_edge
      * @param ring_buffer_for_common_vertex
@@ -5836,15 +5884,17 @@ namespace HierBEM
      * @param ky_map_from_local_to_full_dof_indices
      * @param kx_dof_i2e_numbering
      * @param ky_dof_i2e_numbering
-     * @param kx_mapping
-     * @param ky_mapping
+     * @param mappings
+     * @param material_id_to_mapping_index
+     * @param normal_detector
      * @param is_kernel_symmetric
      * @param enable_build_symmetric_hmat
      */
     template <int capacity,
               int dim,
               int spacedim,
-              typename RangeNumberType = double>
+              typename RangeNumberType,
+              typename SurfaceNormalDetector>
     void
     sauter_quadrature_for_near_field_matrix_entries_producer(
       const std::vector<HMatrix<spacedim, RangeNumberType> *>
@@ -5874,12 +5924,14 @@ namespace HierBEM
         *kx_map_from_local_to_full_dof_indices,
       const std::vector<types::global_dof_index>
         *ky_map_from_local_to_full_dof_indices,
-      const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
-      const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-      const MappingQGenericExt<dim, spacedim>    &kx_mapping,
-      const MappingQGenericExt<dim, spacedim>    &ky_mapping,
-      const bool                                  is_kernel_symmetric,
-      const bool enable_build_symmetric_hmat = false)
+      const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+      const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+      const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+      const std::map<types::material_id, unsigned int>
+                                  &material_id_to_mapping_index,
+      const SurfaceNormalDetector &normal_detector,
+      const bool                   is_kernel_symmetric,
+      const bool                   enable_build_symmetric_hmat = false)
     {
       const std::thread::id current_thread_id = std::this_thread::get_id();
       deallog << "Producer thread " << current_thread_id << " starts...\n";
@@ -5909,8 +5961,7 @@ namespace HierBEM
         current_thread_id,
         kx_dof_handler.get_fe(),
         ky_dof_handler.get_fe(),
-        kx_mapping,
-        ky_mapping,
+        mappings,
         bem_values);
       PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
         kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
@@ -6013,8 +6064,9 @@ namespace HierBEM
                                 j_global_dof_index,
                                 kx_dof_to_cell_topo,
                                 ky_dof_to_cell_topo,
-                                kx_mapping,
-                                ky_mapping,
+                                mappings,
+                                material_id_to_mapping_index,
+                                normal_detector,
                                 mass_matrix_scratch_data,
                                 scratch_data,
                                 copy_data);
@@ -6075,8 +6127,9 @@ namespace HierBEM
                                 j_global_dof_index,
                                 kx_dof_to_cell_topo,
                                 ky_dof_to_cell_topo,
-                                kx_mapping,
-                                ky_mapping,
+                                mappings,
+                                material_id_to_mapping_index,
+                                normal_detector,
                                 mass_matrix_scratch_data,
                                 scratch_data,
                                 copy_data);
@@ -6136,8 +6189,9 @@ namespace HierBEM
                         j_global_dof_index,
                         kx_dof_to_cell_topo,
                         ky_dof_to_cell_topo,
-                        kx_mapping,
-                        ky_mapping,
+                        mappings,
+                        material_id_to_mapping_index,
+                        normal_detector,
                         mass_matrix_scratch_data,
                         scratch_data,
                         copy_data);
@@ -6213,17 +6267,20 @@ namespace HierBEM
               << " exits..." << std::endl;
     }
 
+
     /**
-     * Create Sauter quadrature tasks which are associated with a pair of
+     * @brief Create Sauter quadrature tasks which are associated with a pair of
      * global DoF indices in the external numbering with respect to the
      * complete DoF set in the DoF handler.
      *
      * The created tasks are added to the ring buffer with the corresponding
      * cell neighboring type.
      *
+     * @tparam RangeNumberType
+     * @tparam SurfaceNormalDetector
+     * @tparam capacity
      * @tparam dim
      * @tparam spacedim
-     * @tparam RangeNumberType
      * @param ring_buffer_for_same_panel
      * @param ring_buffer_for_common_edge
      * @param ring_buffer_for_common_vertex
@@ -6231,24 +6288,27 @@ namespace HierBEM
      * @param fullmat
      * @param fullmat_row_index
      * @param fullmat_col_index
-     * @param i_global_dof_index Global DoF index in the external numbering. If only a subset of
-     * the complete DoFs in the associated DoF handler is effective or
-     * selected, this index is with respect to the complete DoF set.
-     * @param j_global_dof_index Global DoF index in the external numbering. If only a subset of
-     * the complete DoFs in the associated DoF handler is effective or
-     * selected, this index is with respect to the complete DoF set.
+     * @param i_global_dof_index Global DoF index in the external numbering. If
+     * only a subset of the complete DoFs in the associated DoF handler is
+     * effective or selected, this index is with respect to the complete DoF
+     * set.
+     * @param j_global_dof_index Global DoF index in the external numbering. If
+     * only a subset of the complete DoFs in the associated DoF handler is
+     * effective or selected, this index is with respect to the complete DoF
+     * set.
      * @param kx_dof_to_cell_topo
      * @param ky_dof_to_cell_topo
-     * @param kx_mapping
-     * @param ky_mapping
+     * @param mappings
+     * @param material_id_to_mapping_index
+     * @param normal_detector
      * @param scratch_data
      * @param copy_data
-     * @param is_last_task
      */
     template <int capacity,
               int dim,
               int spacedim,
-              typename RangeNumberType = double>
+              typename RangeNumberType,
+              typename SurfaceNormalDetector>
     void
     create_sauter_quadrature_tasks_on_one_pair_of_dofs(
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
@@ -6269,9 +6329,11 @@ namespace HierBEM
         &kx_dof_to_cell_topo,
       const std::vector<
         std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-                                              &ky_dof_to_cell_topo,
-      const MappingQGenericExt<dim, spacedim> &kx_mapping,
-      const MappingQGenericExt<dim, spacedim> &ky_mapping,
+                                                      &ky_dof_to_cell_topo,
+      const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+      const std::map<types::material_id, unsigned int>
+                                  &material_id_to_mapping_index,
+      const SurfaceNormalDetector &normal_detector,
       PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
       PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
     {
@@ -6294,6 +6356,16 @@ namespace HierBEM
           const typename DoFHandler<dim, spacedim>::cell_iterator
             &kx_cell_iter = *kx_cell_iter_pointer;
 
+          const unsigned int kx_mapping_index =
+            material_id_to_mapping_index.at(kx_cell_iter->material_id());
+          MappingInfo<dim, spacedim> &kx_mapping_info =
+            *mappings[kx_mapping_index];
+          const unsigned int kx_mapping_n_shape_functions =
+            kx_mapping_info.get_data()->n_shape_functions;
+          const bool is_kx_normal_inward =
+            normal_detector.is_normal_vector_inward(
+              kx_cell_iter->material_id());
+
           /**
            * @internal Calculate the real support points in the cell \f$K_x\f$
            * via the mapping object. Because the calculated mapping support
@@ -6302,7 +6374,8 @@ namespace HierBEM
            * producer threads, computation of the mapping support points should
            * be performed in a local copy of @p kx_mapping.
            */
-          MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
+          MappingQGenericExt<dim, spacedim> kx_mapping_copy(
+            kx_mapping_info.get_mapping());
           kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
           /**
            * Copy the newly calculated support points into @p ScratchData.
@@ -6336,10 +6409,18 @@ namespace HierBEM
                   ky_cell_iter,
                   scratch_data.common_vertex_pair_local_indices);
 
-              /**
-               * @internal Similar to making a local copy of @p kx_mapping.
-               */
-              MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
+              const unsigned int ky_mapping_index =
+                material_id_to_mapping_index.at(ky_cell_iter->material_id());
+              MappingInfo<dim, spacedim> &ky_mapping_info =
+                *mappings[ky_mapping_index];
+              const unsigned int ky_mapping_n_shape_functions =
+                ky_mapping_info.get_data()->n_shape_functions;
+              const bool is_ky_normal_inward =
+                normal_detector.is_normal_vector_inward(
+                  ky_cell_iter->material_id());
+
+              MappingQGenericExt<dim, spacedim> ky_mapping_copy(
+                ky_mapping_info.get_mapping());
               ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
               /**
                * Copy the newly calculated support points into @p ScratchData.
@@ -6358,8 +6439,8 @@ namespace HierBEM
                 cell_neighboring_type,
                 kx_cell_iter,
                 ky_cell_iter,
-                kx_mapping_copy,
-                ky_mapping_copy);
+                kx_mapping_info,
+                ky_mapping_info);
 
               /**
                * @internal Find the array index in the permuted DoF indices of
@@ -6409,13 +6490,21 @@ namespace HierBEM
                         "add sauter task: same panel");
 #endif
 
-                      ring_buffer_for_same_panel.add_task(fullmat,
-                                                          fullmat_row_index,
-                                                          fullmat_col_index,
-                                                          i_index,
-                                                          j_index,
-                                                          0.,
-                                                          scratch_data);
+                      ring_buffer_for_same_panel.add_task(
+                        fullmat,
+                        fullmat_row_index,
+                        fullmat_col_index,
+                        SauterQuadratureTaskScalarData(
+                          i_index,
+                          j_index,
+                          kx_mapping_index,
+                          ky_mapping_index,
+                          kx_mapping_n_shape_functions,
+                          ky_mapping_n_shape_functions,
+                          is_kx_normal_inward,
+                          is_ky_normal_inward),
+                        0.,
+                        scratch_data);
 
                       break;
                     }
@@ -6425,13 +6514,21 @@ namespace HierBEM
                         "add sauter task: common edge");
 #endif
 
-                      ring_buffer_for_common_edge.add_task(fullmat,
-                                                           fullmat_row_index,
-                                                           fullmat_col_index,
-                                                           i_index,
-                                                           j_index,
-                                                           0.,
-                                                           scratch_data);
+                      ring_buffer_for_common_edge.add_task(
+                        fullmat,
+                        fullmat_row_index,
+                        fullmat_col_index,
+                        SauterQuadratureTaskScalarData(
+                          i_index,
+                          j_index,
+                          kx_mapping_index,
+                          ky_mapping_index,
+                          kx_mapping_n_shape_functions,
+                          ky_mapping_n_shape_functions,
+                          is_kx_normal_inward,
+                          is_ky_normal_inward),
+                        0.,
+                        scratch_data);
 
                       break;
                     }
@@ -6441,13 +6538,21 @@ namespace HierBEM
                         "add sauter task: common vertex");
 #endif
 
-                      ring_buffer_for_common_vertex.add_task(fullmat,
-                                                             fullmat_row_index,
-                                                             fullmat_col_index,
-                                                             i_index,
-                                                             j_index,
-                                                             0.,
-                                                             scratch_data);
+                      ring_buffer_for_common_vertex.add_task(
+                        fullmat,
+                        fullmat_row_index,
+                        fullmat_col_index,
+                        SauterQuadratureTaskScalarData(
+                          i_index,
+                          j_index,
+                          kx_mapping_index,
+                          ky_mapping_index,
+                          kx_mapping_n_shape_functions,
+                          ky_mapping_n_shape_functions,
+                          is_kx_normal_inward,
+                          is_ky_normal_inward),
+                        0.,
+                        scratch_data);
 
                       break;
                     }
@@ -6457,13 +6562,21 @@ namespace HierBEM
                         "add sauter task: regular");
 #endif
 
-                      ring_buffer_for_regular.add_task(fullmat,
-                                                       fullmat_row_index,
-                                                       fullmat_col_index,
-                                                       i_index,
-                                                       j_index,
-                                                       0.,
-                                                       scratch_data);
+                      ring_buffer_for_regular.add_task(
+                        fullmat,
+                        fullmat_row_index,
+                        fullmat_col_index,
+                        SauterQuadratureTaskScalarData(
+                          i_index,
+                          j_index,
+                          kx_mapping_index,
+                          ky_mapping_index,
+                          kx_mapping_n_shape_functions,
+                          ky_mapping_n_shape_functions,
+                          is_kx_normal_inward,
+                          is_ky_normal_inward),
+                        0.,
+                        scratch_data);
 
                       break;
                     }
@@ -6479,7 +6592,7 @@ namespace HierBEM
 
 
     /**
-     * Create Sauter quadrature tasks which are associated with a pair of
+     * @brief Create Sauter quadrature tasks which are associated with a pair of
      * global DoF indices in the external numbering with respect to the
      * complete set of DoFs in the DoF handler. This version handles the case
      * when a mass matrix (scaled by @p mass_matrix_factor) is to be added to
@@ -6489,9 +6602,11 @@ namespace HierBEM
      * mass matrix entry if needed. The final result will be the addition of
      * this value and the Sauter quadrature result.}
      *
+     * @tparam RangeNumberType
+     * @tparam SurfaceNormalDetector
+     * @tparam capacity
      * @tparam dim
      * @tparam spacedim
-     * @tparam RangeNumberType
      * @param ring_buffer_for_same_panel
      * @param ring_buffer_for_common_edge
      * @param ring_buffer_for_common_vertex
@@ -6500,25 +6615,28 @@ namespace HierBEM
      * @param fullmat
      * @param fullmat_row_index
      * @param fullmat_col_index
-     * @param i_global_dof_index Global DoF index in the external numbering. If only a subset of
-     * the complete DoFs in the associated DoF handler is effective or
-     * selected, this index is with respect to the complete DoF set.
-     * @param j_global_dof_index Global DoF index in the external numbering. If only a subset of
-     * the complete DoFs in the associated DoF handler is effective or
-     * selected, this index is with respect to the complete DoF set.
+     * @param i_global_dof_index Global DoF index in the external numbering. If
+     * only a subset of the complete DoFs in the associated DoF handler is
+     * effective or selected, this index is with respect to the complete DoF
+     * set.
+     * @param j_global_dof_index Global DoF index in the external numbering. If
+     * only a subset of the complete DoFs in the associated DoF handler is
+     * effective or selected, this index is with respect to the complete DoF
+     * set.
      * @param kx_dof_to_cell_topo
      * @param ky_dof_to_cell_topo
-     * @param kx_mapping
-     * @param ky_mapping
+     * @param mappings
+     * @param material_id_to_mapping_index
+     * @param normal_detector
      * @param mass_matrix_scratch_data
      * @param scratch_data
      * @param copy_data
-     * @param is_last_task
      */
     template <int capacity,
               int dim,
               int spacedim,
-              typename RangeNumberType = double>
+              typename RangeNumberType,
+              typename SurfaceNormalDetector>
     void
     create_sauter_quadrature_tasks_on_one_pair_of_dofs(
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
@@ -6541,8 +6659,10 @@ namespace HierBEM
       const std::vector<
         std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                       &ky_dof_to_cell_topo,
-      const MappingQGenericExt<dim, spacedim>         &kx_mapping,
-      const MappingQGenericExt<dim, spacedim>         &ky_mapping,
+      const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+      const std::map<types::material_id, unsigned int>
+                                  &material_id_to_mapping_index,
+      const SurfaceNormalDetector &normal_detector,
       CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
       PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
       PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -6567,6 +6687,16 @@ namespace HierBEM
                             &kx_cell_iter  = *kx_cell_iter_pointer;
           const unsigned int kx_cell_index = kx_cell_iter->active_cell_index();
 
+          const unsigned int kx_mapping_index =
+            material_id_to_mapping_index.at(kx_cell_iter->material_id());
+          MappingInfo<dim, spacedim> &kx_mapping_info =
+            *mappings[kx_mapping_index];
+          const unsigned int kx_mapping_n_shape_functions =
+            kx_mapping_info.get_data()->n_shape_functions;
+          const bool is_kx_normal_inward =
+            normal_detector.is_normal_vector_inward(
+              kx_cell_iter->material_id());
+
           /**
            * @internal Calculate the real support points in the cell \f$K_x\f$
            * via the mapping object. Because the calculated mapping support
@@ -6575,7 +6705,8 @@ namespace HierBEM
            * producer threads, computation of the mapping support points should
            * be performed in a local copy of @p kx_mapping.
            */
-          MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
+          MappingQGenericExt<dim, spacedim> kx_mapping_copy(
+            kx_mapping_info.get_mapping());
           kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
           /**
            * Copy the newly calculated support points into @p ScratchData.
@@ -6611,10 +6742,18 @@ namespace HierBEM
                   ky_cell_iter,
                   scratch_data.common_vertex_pair_local_indices);
 
-              /**
-               * @internal Similar to making a local copy of @p kx_mapping.
-               */
-              MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
+              const unsigned int ky_mapping_index =
+                material_id_to_mapping_index.at(ky_cell_iter->material_id());
+              MappingInfo<dim, spacedim> &ky_mapping_info =
+                *mappings[ky_mapping_index];
+              const unsigned int ky_mapping_n_shape_functions =
+                ky_mapping_info.get_data()->n_shape_functions;
+              const bool is_ky_normal_inward =
+                normal_detector.is_normal_vector_inward(
+                  ky_cell_iter->material_id());
+
+              MappingQGenericExt<dim, spacedim> ky_mapping_copy(
+                ky_mapping_info.get_mapping());
               ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
               /**
                * Copy the newly calculated support points into @p ScratchData.
@@ -6633,8 +6772,8 @@ namespace HierBEM
                 cell_neighboring_type,
                 kx_cell_iter,
                 ky_cell_iter,
-                kx_mapping_copy,
-                ky_mapping_copy);
+                kx_mapping_info,
+                ky_mapping_info);
 
               /**
                * @internal Before creating the Sauter quadrature task, compute
@@ -6821,13 +6960,21 @@ namespace HierBEM
                         "add sauter task: same panel");
 #endif
 
-                      ring_buffer_for_same_panel.add_task(fullmat,
-                                                          fullmat_row_index,
-                                                          fullmat_col_index,
-                                                          i_index,
-                                                          j_index,
-                                                          mass_matrix_entry,
-                                                          scratch_data);
+                      ring_buffer_for_same_panel.add_task(
+                        fullmat,
+                        fullmat_row_index,
+                        fullmat_col_index,
+                        SauterQuadratureTaskScalarData(
+                          i_index,
+                          j_index,
+                          kx_mapping_index,
+                          ky_mapping_index,
+                          kx_mapping_n_shape_functions,
+                          ky_mapping_n_shape_functions,
+                          is_kx_normal_inward,
+                          is_ky_normal_inward),
+                        mass_matrix_entry,
+                        scratch_data);
 
                       break;
                     }
@@ -6837,13 +6984,21 @@ namespace HierBEM
                         "add sauter task: common edge");
 #endif
 
-                      ring_buffer_for_common_edge.add_task(fullmat,
-                                                           fullmat_row_index,
-                                                           fullmat_col_index,
-                                                           i_index,
-                                                           j_index,
-                                                           mass_matrix_entry,
-                                                           scratch_data);
+                      ring_buffer_for_common_edge.add_task(
+                        fullmat,
+                        fullmat_row_index,
+                        fullmat_col_index,
+                        SauterQuadratureTaskScalarData(
+                          i_index,
+                          j_index,
+                          kx_mapping_index,
+                          ky_mapping_index,
+                          kx_mapping_n_shape_functions,
+                          ky_mapping_n_shape_functions,
+                          is_kx_normal_inward,
+                          is_ky_normal_inward),
+                        mass_matrix_entry,
+                        scratch_data);
 
                       break;
                     }
@@ -6853,13 +7008,21 @@ namespace HierBEM
                         "add sauter task: common vertex");
 #endif
 
-                      ring_buffer_for_common_vertex.add_task(fullmat,
-                                                             fullmat_row_index,
-                                                             fullmat_col_index,
-                                                             i_index,
-                                                             j_index,
-                                                             mass_matrix_entry,
-                                                             scratch_data);
+                      ring_buffer_for_common_vertex.add_task(
+                        fullmat,
+                        fullmat_row_index,
+                        fullmat_col_index,
+                        SauterQuadratureTaskScalarData(
+                          i_index,
+                          j_index,
+                          kx_mapping_index,
+                          ky_mapping_index,
+                          kx_mapping_n_shape_functions,
+                          ky_mapping_n_shape_functions,
+                          is_kx_normal_inward,
+                          is_ky_normal_inward),
+                        mass_matrix_entry,
+                        scratch_data);
 
                       break;
                     }
@@ -6869,13 +7032,21 @@ namespace HierBEM
                         "add sauter task: regular");
 #endif
 
-                      ring_buffer_for_regular.add_task(fullmat,
-                                                       fullmat_row_index,
-                                                       fullmat_col_index,
-                                                       i_index,
-                                                       j_index,
-                                                       mass_matrix_entry,
-                                                       scratch_data);
+                      ring_buffer_for_regular.add_task(
+                        fullmat,
+                        fullmat_row_index,
+                        fullmat_col_index,
+                        SauterQuadratureTaskScalarData(
+                          i_index,
+                          j_index,
+                          kx_mapping_index,
+                          ky_mapping_index,
+                          kx_mapping_n_shape_functions,
+                          ky_mapping_n_shape_functions,
+                          is_kx_normal_inward,
+                          is_ky_normal_inward),
+                        mass_matrix_entry,
+                        scratch_data);
 
                       break;
                     }
@@ -6891,27 +7062,31 @@ namespace HierBEM
 
 
     /**
-     * This version is used for assembling a row or column vector in a far field
-     * \hmat.
+     * @brief This version is used for assembling a row or column vector in a
+     * far field \hmat.
      *
      * \mynote{The cell neighboring type for each pair of cells is @p regular.}
      *
+     * @tparam RangeNumberType
+     * @tparam SurfaceNormalDetector
      * @tparam dim
      * @tparam spacedim
-     * @tparam RangeNumberType
      * @param task_buffer
-     * @param vector_element_index
      * @param i_global_dof_index
      * @param j_global_dof_index
      * @param kx_dof_to_cell_topo
      * @param ky_dof_to_cell_topo
-     * @param kx_mapping
-     * @param ky_mapping
+     * @param mappings
+     * @param material_id_to_mapping_index
+     * @param normal_detector
      * @param scratch_data
      * @param copy_data
-     * @return Number of Sauter quadrature tasks for the pair of DoFs.
+     * @return
      */
-    template <int dim, int spacedim, typename RangeNumberType = double>
+    template <int dim,
+              int spacedim,
+              typename RangeNumberType,
+              typename SurfaceNormalDetector>
     unsigned int
     create_sauter_quadrature_tasks_on_one_pair_of_dofs(
       SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
@@ -6923,9 +7098,11 @@ namespace HierBEM
         &kx_dof_to_cell_topo,
       const std::vector<
         std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-                                              &ky_dof_to_cell_topo,
-      const MappingQGenericExt<dim, spacedim> &kx_mapping,
-      const MappingQGenericExt<dim, spacedim> &ky_mapping,
+                                                      &ky_dof_to_cell_topo,
+      const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+      const std::map<types::material_id, unsigned int>
+                                  &material_id_to_mapping_index,
+      const SurfaceNormalDetector &normal_detector,
       PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
       PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
     {
@@ -6940,6 +7117,16 @@ namespace HierBEM
           const typename DoFHandler<dim, spacedim>::cell_iterator
             &kx_cell_iter = *kx_cell_iter_pointer;
 
+          const unsigned int kx_mapping_index =
+            material_id_to_mapping_index.at(kx_cell_iter->material_id());
+          MappingInfo<dim, spacedim> &kx_mapping_info =
+            *mappings[kx_mapping_index];
+          const unsigned int kx_mapping_n_shape_functions =
+            kx_mapping_info.get_data()->n_shape_functions;
+          const bool is_kx_normal_inward =
+            normal_detector.is_normal_vector_inward(
+              kx_cell_iter->material_id());
+
           /**
            * @internal Calculate the real support points in the cell \f$K_x\f$
            * via the mapping object. Because the calculated mapping support
@@ -6948,7 +7135,8 @@ namespace HierBEM
            * producer threads, computation of the mapping support points should
            * be performed in a local copy of @p kx_mapping.
            */
-          MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
+          MappingQGenericExt<dim, spacedim> kx_mapping_copy(
+            kx_mapping_info.get_mapping());
           kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
           /**
            * Copy the newly calculated support points into @p ScratchData.
@@ -6971,10 +7159,18 @@ namespace HierBEM
               const typename DoFHandler<dim, spacedim>::cell_iterator
                 &ky_cell_iter = *ky_cell_iter_pointer;
 
-              /**
-               * @internal Similar to making a local copy of @p kx_mapping.
-               */
-              MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
+              const unsigned int ky_mapping_index =
+                material_id_to_mapping_index.at(ky_cell_iter->material_id());
+              MappingInfo<dim, spacedim> &ky_mapping_info =
+                *mappings[ky_mapping_index];
+              const unsigned int ky_mapping_n_shape_functions =
+                ky_mapping_info.get_data()->n_shape_functions;
+              const bool is_ky_normal_inward =
+                normal_detector.is_normal_vector_inward(
+                  ky_cell_iter->material_id());
+
+              MappingQGenericExt<dim, spacedim> ky_mapping_copy(
+                ky_mapping_info.get_mapping());
               ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
               /**
                * Copy the newly calculated support points into @p ScratchData.
@@ -6993,8 +7189,8 @@ namespace HierBEM
                 CellNeighboringType::Regular,
                 kx_cell_iter,
                 ky_cell_iter,
-                kx_mapping_copy,
-                ky_mapping_copy);
+                kx_mapping_info,
+                ky_mapping_info);
 
               /**
                * @internal Find the array index in the permuted DoF indices of
@@ -7029,7 +7225,16 @@ namespace HierBEM
               unsigned int j_index =
                 j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
-              task_buffer.add_task(i_index, j_index, scratch_data);
+              task_buffer.add_task(
+                SauterQuadratureTaskScalarData(i_index,
+                                               j_index,
+                                               kx_mapping_index,
+                                               ky_mapping_index,
+                                               kx_mapping_n_shape_functions,
+                                               ky_mapping_n_shape_functions,
+                                               is_kx_normal_inward,
+                                               is_ky_normal_inward),
+                scratch_data);
 
               number_of_tasks_for_dof_pair++;
             }
@@ -7052,9 +7257,15 @@ namespace HierBEM
    *
    * \mynote{This version involves @p PairCellWiseScratchData.}
    *
-   * @param scratch
-   * @param data
    * @param cell_neighboring_type
+   * @param bem_values
+   * @param kx_mapping_index
+   * @param ky_mapping_index
+   * @param kx_mapping_n_shape_functions
+   * @param ky_mapping_n_shape_functions
+   * @param is_kx_normal_inward
+   * @param is_ky_normal_inward
+   * @param scratch
    * @param active_quad_rule
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
@@ -7307,11 +7518,15 @@ namespace HierBEM
 
 
   /**
+   * @brief Compute the covariant matrix on the host.
    *
-   *
-   * @param scratch
    * @param cell_neighboring_type
    * @param bem_values
+   * @param kx_mapping_index
+   * @param ky_mapping_index
+   * @param kx_mapping_n_shape_functions
+   * @param ky_mapping_n_shape_functions
+   * @param scratch
    * @param active_quad_rule
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
@@ -7468,6 +7683,8 @@ namespace HierBEM
    * @param quad_rule
    * @param f
    * @param factor
+   * @param bem_values
+   * @param scratch_data
    * @param component
    * @return
    */
@@ -7575,9 +7792,10 @@ namespace HierBEM
    * @param factor
    * @param kx_cell_iter
    * @param ky_cell_iter
-   * @param kx_mapping
-   * @param ky_mapping
+   * @param kx_mapping_info
+   * @param ky_mapping_info
    * @param bem_values
+   * @param normal_detector
    * @param scratch_data
    * @param copy_data
    * @param is_kx_mapping_internaldata_computed
@@ -7785,7 +8003,7 @@ namespace HierBEM
     const bool is_kx_mapping_internaldata_computed = true)
   {
     const unsigned int ky_mapping_index =
-      material_id_to_mapping_index[ky_cell_iter->material_id()];
+      material_id_to_mapping_index.at(ky_cell_iter->material_id());
     MappingInfo<dim, spacedim> &ky_mapping_info = *mappings[ky_mapping_index];
 
     sauter_quadrature_on_one_pair_of_cells(kernel,
@@ -7798,7 +8016,7 @@ namespace HierBEM
                                            normal_detector,
                                            scratch_data,
                                            copy_data,
-                                           true);
+                                           is_kx_mapping_internaldata_computed);
   }
 
 
@@ -7957,8 +8175,8 @@ namespace HierBEM
 
 
   /**
-   * @brief Perform Galerkin-BEM double integral with respect to a given kernel on a
-   * pair of DoFs \f$(i, j)\f$ using the Sauter quadrature.
+   * @brief Perform Galerkin-BEM double integral with respect to a given kernel
+   * on a pair of DoFs \f$(i, j)\f$ using the Sauter quadrature.
    *
    * Assume \f$\mathcal{K}_i\f$ is the collection of cells sharing the DoF
    * support point \f$i\f$ and \f$\mathcal{K}_j\f$ is the collection of cells
@@ -8048,7 +8266,7 @@ namespace HierBEM
           *kx_cell_iter_pointer;
 
         const unsigned int kx_mapping_index =
-          material_id_to_mapping_index[kx_cell_iter->material_id()];
+          material_id_to_mapping_index.at(kx_cell_iter->material_id());
         MappingInfo<dim, spacedim> &kx_mapping_info =
           *mappings[kx_mapping_index];
         const unsigned int kx_mapping_n_shape_functions =
@@ -8100,7 +8318,7 @@ namespace HierBEM
                 scratch_data.common_vertex_pair_local_indices);
 
             const unsigned int ky_mapping_index =
-              material_id_to_mapping_index[ky_cell_iter->material_id()];
+              material_id_to_mapping_index.at(ky_cell_iter->material_id());
             MappingInfo<dim, spacedim> &ky_mapping_info =
               *mappings[ky_mapping_index];
             const unsigned int ky_mapping_n_shape_functions =
@@ -8533,8 +8751,8 @@ namespace HierBEM
 
 
   /**
-   * @brief Perform Galerkin-BEM double integral with respect to a given kernel on a
-   * pair of DoFs \f$(i, j)\f$ using the Sauter quadrature. In addition,
+   * @brief Perform Galerkin-BEM double integral with respect to a given kernel
+   * on a pair of DoFs \f$(i, j)\f$ using the Sauter quadrature. In addition,
    * entries of the mass matrix are calculated and added into this matrix.
    * Because the evaluation of mass matrix entries involves integrating the
    * product of two shape functions with compact support, there is no
@@ -8634,7 +8852,7 @@ namespace HierBEM
         const unsigned int kx_cell_index = kx_cell_iter->active_cell_index();
 
         const unsigned int kx_mapping_index =
-          material_id_to_mapping_index[kx_cell_iter->material_id()];
+          material_id_to_mapping_index.at(kx_cell_iter->material_id());
         MappingInfo<dim, spacedim> &kx_mapping_info =
           *mappings[kx_mapping_index];
         const unsigned int kx_mapping_n_shape_functions =
@@ -8688,7 +8906,7 @@ namespace HierBEM
                 scratch_data.common_vertex_pair_local_indices);
 
             const unsigned int ky_mapping_index =
-              material_id_to_mapping_index[ky_cell_iter->material_id()];
+              material_id_to_mapping_index.at(ky_cell_iter->material_id());
             MappingInfo<dim, spacedim> &ky_mapping_info =
               *mappings[ky_mapping_index];
             const unsigned int ky_mapping_n_shape_functions =
@@ -9291,7 +9509,7 @@ namespace HierBEM
           *kx_cell_iter_pointer;
 
         const unsigned int kx_mapping_index =
-          material_id_to_mapping_index[kx_cell_iter->material_id()];
+          material_id_to_mapping_index.at(kx_cell_iter->material_id());
         MappingInfo<dim, spacedim> &kx_mapping_info =
           *mappings[kx_mapping_index];
         const unsigned int kx_mapping_n_shape_functions =
@@ -9333,7 +9551,7 @@ namespace HierBEM
               &ky_cell_iter = *ky_cell_iter_pointer;
 
             const unsigned int ky_mapping_index =
-              material_id_to_mapping_index[ky_cell_iter->material_id()];
+              material_id_to_mapping_index.at(ky_cell_iter->material_id());
             MappingInfo<dim, spacedim> &ky_mapping_info =
               *mappings[ky_mapping_index];
             const unsigned int ky_mapping_n_shape_functions =

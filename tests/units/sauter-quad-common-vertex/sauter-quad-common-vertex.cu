@@ -20,6 +20,44 @@
 using namespace dealii;
 using namespace HierBEM;
 
+class OutwardSurfaceNormalDetector
+{
+public:
+  // Because there is no need to invert the computed normal vector of a cell in
+  // this test, this function always returns false.
+  bool
+  is_normal_vector_inward([[maybe_unused]] const types::material_id m) const
+  {
+    return false;
+  }
+};
+
+// Initialize mapping objects from the first order to the maximum.
+template <int dim, int spacedim>
+void
+initialize_mappings(std::vector<MappingInfo<dim, spacedim> *> &mappings,
+                    const unsigned int max_mapping_order)
+{
+  // Create different orders of mapping.
+  mappings.reserve(max_mapping_order);
+  for (unsigned int i = 1; i <= max_mapping_order; i++)
+    {
+      mappings.push_back(new MappingInfo<dim, spacedim>(i));
+    }
+}
+
+// Release all mappings on the heap.
+template <int dim, int spacedim>
+void
+destroy_mappings(std::vector<MappingInfo<dim, spacedim> *> &mappings)
+{
+  for (auto m : mappings)
+    {
+      if (m != nullptr)
+        delete m;
+    }
+}
+
 int
 main()
 {
@@ -43,225 +81,488 @@ main()
   grid_out.write_msh(triangulation, mesh_file);
 
   /**
-   * Generate finite element, which is shared by both test and ansatz spaces.
-   */
-  const unsigned int  fe_order = 2;
-  FE_Q<dim, spacedim> fe(fe_order);
-
-  /**
-   * Generate Dof handler.
-   */
-  DoFHandler<dim, spacedim> dof_handler(triangulation);
-  dof_handler.distribute_dofs(fe);
-
-  /**
    * Generate mapping objects and associated smart pointers to their internal
    * data. High order mapping is adopted just to make this demo non-trivial in
    * the mapping aspect.
    *
-   * N.B. Two mapping objects should be defined for the pair of cells \f$K_x\f$
-   * and \f$K_y\f$ respectively, because the two sets of quadrature points
-   * defined in the unit cells \f$\hat{K}_x\f$ and \f$\hat{K}_y\f$ are
+   * N.B. Two mapping objects should be defined for the pair of cells
+   * \f$K_x\f$ and \f$K_y\f$ respectively, because the two sets of quadrature
+   * points defined in the unit cells \f$\hat{K}_x\f$ and \f$\hat{K}_y\f$ are
    * different.
    */
-  const unsigned int                mapping_order = 2;
-  MappingQGenericExt<dim, spacedim> mapping_test_space(mapping_order);
-  MappingQGenericExt<dim, spacedim> mapping_ansatz_space(mapping_order);
+  const unsigned int                        max_mapping_order = 3;
+  std::vector<MappingInfo<dim, spacedim> *> mappings;
+  initialize_mappings(mappings, max_mapping_order);
 
-  /**
-   * Procedures of extracting pointers to the internal data of mapping:
-   * 1.Get the pointer to the internal database in the parent class @p Mapping.
-   * N.B. A dummy quadrature object is passed to the @p get_data function. The
-   * @p UpdateFlags is set to @p update_default (it means no update),
-   * which at the moment disables any memory allocation, because this
-   * operation will be manually taken care of later on.
-   * 2. Downcast the smart pointer of @p Mapping<dim, spacedim>::InternalDataBase to
-   * @p MappingQGeneric<dim,spacedim>::InternalData by first unwrapping
-   * the original smart pointer via @p static_cast then wrapping it again.
-   */
-  std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
-    mapping_database_test_space =
-      mapping_test_space.get_data(update_default, QGauss<dim>(1));
-  std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>
-    mapping_data_test_space =
-      std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>(
-        static_cast<typename MappingQGeneric<dim, spacedim>::InternalData *>(
-          mapping_database_test_space.release()));
+  {
+    std::cout << "=== fe-order=(dirichlet:2, neumann:2), mapping order=2 ==="
+              << std::endl;
 
-  std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
-    mapping_database_ansatz_space =
-      mapping_ansatz_space.get_data(update_default, QGauss<dim>(1));
-  std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>
-    mapping_data_ansatz_space =
-      std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>(
-        static_cast<typename MappingQGeneric<dim, spacedim>::InternalData *>(
-          mapping_database_ansatz_space.release()));
+    /**
+     * Generate finite element, which is shared by both test and ansatz spaces.
+     */
+    const unsigned int  fe_order = 2;
+    FE_Q<dim, spacedim> fe(fe_order);
 
-  /**
-   * Create different Laplace kernel functions.
-   */
-  HierBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<spacedim>        slp;
-  HierBEM::CUDAWrappers::LaplaceKernel::DoubleLayerKernel<spacedim>        dlp;
-  HierBEM::CUDAWrappers::LaplaceKernel::AdjointDoubleLayerKernel<spacedim> adlp;
-  HierBEM::CUDAWrappers::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
+    /**
+     * Generate Dof handler.
+     */
+    DoFHandler<dim, spacedim> dof_handler(triangulation);
+    dof_handler.distribute_dofs(fe);
 
-  /**
-   * Generate 4D Gauss-Legendre quadrature rules for various cell neighboring
-   * types. Even though only the common vertex case is considered in this
-   * testcase, all of these quadrature objects are needed to initialize the
-   * @p BEMValues object.
-   */
-  const unsigned int quad_order_for_same_panel    = 5;
-  const unsigned int quad_order_for_common_edge   = 4;
-  const unsigned int quad_order_for_common_vertex = 4;
-  const unsigned int quad_order_for_regular       = 3;
+    const unsigned int          mapping_order = 2;
+    MappingInfo<dim, spacedim> &mapping_test_space =
+      *mappings[mapping_order - 1];
+    MappingInfo<dim, spacedim> &mapping_ansatz_space =
+      *mappings[mapping_order - 1];
 
-  QGauss<4> quad_rule_for_same_panel(quad_order_for_same_panel);
-  QGauss<4> quad_rule_for_common_edge(quad_order_for_common_edge);
-  QGauss<4> quad_rule_for_common_vertex(quad_order_for_common_vertex);
-  QGauss<4> quad_rule_for_regular(quad_order_for_regular);
+    /**
+     * Create different Laplace kernel functions.
+     */
+    HierBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<spacedim> slp;
+    HierBEM::CUDAWrappers::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
+    HierBEM::CUDAWrappers::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
+                                                                        adlp;
+    HierBEM::CUDAWrappers::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
 
-  /**
-   * Precalculate data tables for shape function values at quadrature points in
-   * the reference cells.
-   *
-   * Here shape functions have two meanings:
-   * 1. basis polynomials for spanning the finite element space on a cell;
-   * 2. basis polynomials for approximating the mapping from the reference cell
-   * to real cells.
-   */
-  HierBEM::BEMValues<dim, spacedim> bem_values(fe,
-                                               fe,
-                                               *mapping_data_test_space,
-                                               *mapping_data_ansatz_space,
-                                               quad_rule_for_same_panel,
-                                               quad_rule_for_common_edge,
-                                               quad_rule_for_common_vertex,
-                                               quad_rule_for_regular);
-  bem_values.shape_function_values_common_vertex();
+    /**
+     * Generate 4D Gauss-Legendre quadrature rules for various cell neighboring
+     * types. Even though only the common vertex case is considered in this
+     * testcase, all of these quadrature objects are needed to initialize the
+     * @p BEMValues object.
+     */
+    const unsigned int quad_order_for_same_panel    = 5;
+    const unsigned int quad_order_for_common_edge   = 4;
+    const unsigned int quad_order_for_common_vertex = 4;
+    const unsigned int quad_order_for_regular       = 3;
 
-  /**
-   * Create temporary scratch data and copy data.
-   */
-  PairCellWiseScratchData<dim, spacedim, double> scratch_data(
-    fe, fe, mapping_test_space, mapping_ansatz_space, bem_values);
-  PairCellWisePerTaskData<dim, spacedim, double> copy_data(fe, fe);
+    QGauss<4> quad_rule_for_same_panel(quad_order_for_same_panel);
+    QGauss<4> quad_rule_for_common_edge(quad_order_for_common_edge);
+    QGauss<4> quad_rule_for_common_vertex(quad_order_for_common_vertex);
+    QGauss<4> quad_rule_for_regular(quad_order_for_regular);
 
-  [[maybe_unused]] DoFHandler<dim, spacedim>::active_cell_iterator cell_iter =
-    dof_handler.begin_active();
+    /**
+     * Precalculate data tables for shape function values at quadrature points
+     * in the reference cells.
+     *
+     * Here shape functions have two meanings:
+     * 1. basis polynomials for spanning the finite element space on a cell;
+     * 2. basis polynomials for approximating the mapping from the reference
+     * cell to real cells.
+     */
+    HierBEM::BEMValues<dim, spacedim> bem_values(fe,
+                                                 fe,
+                                                 mappings,
+                                                 quad_rule_for_same_panel,
+                                                 quad_rule_for_common_edge,
+                                                 quad_rule_for_common_vertex,
+                                                 quad_rule_for_regular);
+    bem_values.shape_function_values_common_vertex();
 
-  std::vector<DoFHandler<dim, spacedim>::active_cell_iterator> cell_iterators;
-  for (auto iter : dof_handler.active_cell_iterators())
-    {
-      cell_iterators.push_back(iter);
-    }
+    /**
+     * Create temporary scratch data and copy data.
+     */
+    PairCellWiseScratchData<dim, spacedim, double> scratch_data(fe,
+                                                                fe,
+                                                                mappings,
+                                                                bem_values);
+    PairCellWisePerTaskData<dim, spacedim, double> copy_data(fe, fe);
 
-  /**
-   * Compute the Sauter quadrature for each pair of cell-local shape functions.
-   */
-  LAPACKFullMatrixExt<double> slp_cell_matrix(fe.dofs_per_cell,
-                                              fe.dofs_per_cell);
+    [[maybe_unused]] DoFHandler<dim, spacedim>::active_cell_iterator cell_iter =
+      dof_handler.begin_active();
 
-  for (unsigned int i = 0; i < slp_cell_matrix.m(); i++)
-    {
-      for (unsigned int j = 0; j < slp_cell_matrix.n(); j++)
-        {
-          slp_cell_matrix(i, j) =
-            sauter_quadrature_on_one_pair_of_shape_functions(
-              slp,
-              1.0,
-              i,
-              j,
-              cell_iterators[1],
-              cell_iterators[2],
-              mapping_test_space,
-              mapping_ansatz_space,
-              bem_values,
-              scratch_data,
-              copy_data);
-        }
-    }
+    std::vector<DoFHandler<dim, spacedim>::active_cell_iterator> cell_iterators;
+    for (auto iter : dof_handler.active_cell_iterators())
+      {
+        cell_iterators.push_back(iter);
+      }
 
-  std::cout << "Cell matrix for single layer potential kernel:\n";
-  slp_cell_matrix.print_formatted_to_mat(std::cout, "slp", 15, true, 25);
-
-  LAPACKFullMatrixExt<double> dlp_cell_matrix(fe.dofs_per_cell,
-                                              fe.dofs_per_cell);
-
-  for (unsigned int i = 0; i < dlp_cell_matrix.m(); i++)
-    {
-      for (unsigned int j = 0; j < dlp_cell_matrix.n(); j++)
-        {
-          dlp_cell_matrix(i, j) =
-            sauter_quadrature_on_one_pair_of_shape_functions(
-              dlp,
-              1.0,
-              i,
-              j,
-              cell_iterators[1],
-              cell_iterators[2],
-              mapping_test_space,
-              mapping_ansatz_space,
-              bem_values,
-              scratch_data,
-              copy_data);
-        }
-    }
-
-  std::cout << "Cell matrix for double layer potential kernel:\n";
-  dlp_cell_matrix.print_formatted_to_mat(std::cout, "dlp", 15, true, 25);
-
-  LAPACKFullMatrixExt<double> adlp_cell_matrix(fe.dofs_per_cell,
-                                               fe.dofs_per_cell);
-
-  for (unsigned int i = 0; i < adlp_cell_matrix.m(); i++)
-    {
-      for (unsigned int j = 0; j < adlp_cell_matrix.n(); j++)
-        {
-          adlp_cell_matrix(i, j) =
-            sauter_quadrature_on_one_pair_of_shape_functions(
-              adlp,
-              1.0,
-              i,
-              j,
-              cell_iterators[1],
-              cell_iterators[2],
-              mapping_test_space,
-              mapping_ansatz_space,
-              bem_values,
-              scratch_data,
-              copy_data);
-        }
-    }
-
-  std::cout << "Cell matrix for adjoint double layer potential kernel:\n";
-  adlp_cell_matrix.print_formatted_to_mat(std::cout, "adlp", 15, true, 25);
-
-  LAPACKFullMatrixExt<double> hyper_cell_matrix(fe.dofs_per_cell,
+    /**
+     * Compute the Sauter quadrature for each pair of cell-local shape
+     * functions.
+     */
+    LAPACKFullMatrixExt<double> slp_cell_matrix(fe.dofs_per_cell,
                                                 fe.dofs_per_cell);
 
-  for (unsigned int i = 0; i < hyper_cell_matrix.m(); i++)
+    for (unsigned int i = 0; i < slp_cell_matrix.m(); i++)
+      {
+        for (unsigned int j = 0; j < slp_cell_matrix.n(); j++)
+          {
+            slp_cell_matrix(i, j) =
+              sauter_quadrature_on_one_pair_of_shape_functions(
+                slp,
+                1.0,
+                i,
+                j,
+                cell_iterators[1],
+                cell_iterators[2],
+                mapping_test_space,
+                mapping_ansatz_space,
+                bem_values,
+                OutwardSurfaceNormalDetector(),
+                scratch_data,
+                copy_data);
+          }
+      }
+
+    std::cout << "Cell matrix for single layer potential kernel:\n";
+    slp_cell_matrix.print_formatted_to_mat(std::cout, "slp", 15, true, 25);
+
+    LAPACKFullMatrixExt<double> dlp_cell_matrix(fe.dofs_per_cell,
+                                                fe.dofs_per_cell);
+
+    for (unsigned int i = 0; i < dlp_cell_matrix.m(); i++)
+      {
+        for (unsigned int j = 0; j < dlp_cell_matrix.n(); j++)
+          {
+            dlp_cell_matrix(i, j) =
+              sauter_quadrature_on_one_pair_of_shape_functions(
+                dlp,
+                1.0,
+                i,
+                j,
+                cell_iterators[1],
+                cell_iterators[2],
+                mapping_test_space,
+                mapping_ansatz_space,
+                bem_values,
+                OutwardSurfaceNormalDetector(),
+                scratch_data,
+                copy_data);
+          }
+      }
+
+    std::cout << "Cell matrix for double layer potential kernel:\n";
+    dlp_cell_matrix.print_formatted_to_mat(std::cout, "dlp", 15, true, 25);
+
+    LAPACKFullMatrixExt<double> adlp_cell_matrix(fe.dofs_per_cell,
+                                                 fe.dofs_per_cell);
+
+    for (unsigned int i = 0; i < adlp_cell_matrix.m(); i++)
+      {
+        for (unsigned int j = 0; j < adlp_cell_matrix.n(); j++)
+          {
+            adlp_cell_matrix(i, j) =
+              sauter_quadrature_on_one_pair_of_shape_functions(
+                adlp,
+                1.0,
+                i,
+                j,
+                cell_iterators[1],
+                cell_iterators[2],
+                mapping_test_space,
+                mapping_ansatz_space,
+                bem_values,
+                OutwardSurfaceNormalDetector(),
+                scratch_data,
+                copy_data);
+          }
+      }
+
+    std::cout << "Cell matrix for adjoint double layer potential kernel:\n";
+    adlp_cell_matrix.print_formatted_to_mat(std::cout, "adlp", 15, true, 25);
+
+    LAPACKFullMatrixExt<double> hyper_cell_matrix(fe.dofs_per_cell,
+                                                  fe.dofs_per_cell);
+
+    for (unsigned int i = 0; i < hyper_cell_matrix.m(); i++)
+      {
+        for (unsigned int j = 0; j < hyper_cell_matrix.n(); j++)
+          {
+            hyper_cell_matrix(i, j) =
+              sauter_quadrature_on_one_pair_of_shape_functions(
+                hyper,
+                1.0,
+                i,
+                j,
+                cell_iterators[1],
+                cell_iterators[2],
+                mapping_test_space,
+                mapping_ansatz_space,
+                bem_values,
+                OutwardSurfaceNormalDetector(),
+                scratch_data,
+                copy_data);
+          }
+      }
+
+    std::cout << "Cell matrix for hyper-singular potential kernel:\n";
+    hyper_cell_matrix.print_formatted_to_mat(std::cout, "hyper", 15, true, 25);
+
+    dof_handler.clear();
+
+    scratch_data.release();
+    copy_data.release();
+  }
+
+  {
+    std::cout << "=== fe-order=(dirichlet:2, neumann:1), mapping order=2 ==="
+              << std::endl;
+
+    /**
+     * Generate finite element, which is shared by both test and ansatz spaces.
+     */
+    FE_DGQ<dim, spacedim> fe_neumann_space(1);
+    FE_Q<dim, spacedim>   fe_dirichlet_space(2);
+
+    /**
+     * Generate Dof handler.
+     */
+    DoFHandler<dim, spacedim> dof_handler_neumann_space(triangulation);
+    DoFHandler<dim, spacedim> dof_handler_dirichlet_space(triangulation);
+    dof_handler_neumann_space.distribute_dofs(fe_neumann_space);
+    dof_handler_dirichlet_space.distribute_dofs(fe_dirichlet_space);
+
+    const unsigned int          mapping_order = 2;
+    MappingInfo<dim, spacedim> &mapping_info_test_space =
+      *mappings[mapping_order - 1];
+    MappingInfo<dim, spacedim> &mapping_info_ansatz_space =
+      *mappings[mapping_order - 1];
+
+    /**
+     * Create different Laplace kernel functions.
+     */
+    HierBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<spacedim> slp;
+    HierBEM::CUDAWrappers::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
+    HierBEM::CUDAWrappers::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
+                                                                        adlp;
+    HierBEM::CUDAWrappers::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
+
+    /**
+     * Generate 4D Gauss-Legendre quadrature rules for various cell neighboring
+     * types. Even though only the same panel case is considered in this
+     * testcase,
+     * all of these quadrature objects are needed to initialize the @p BEMValues
+     * object.
+     */
+    const unsigned int quad_order_for_same_panel    = 5;
+    const unsigned int quad_order_for_common_edge   = 4;
+    const unsigned int quad_order_for_common_vertex = 4;
+    const unsigned int quad_order_for_regular       = 3;
+
+    QGauss<4> quad_rule_for_same_panel(quad_order_for_same_panel);
+    QGauss<4> quad_rule_for_common_edge(quad_order_for_common_edge);
+    QGauss<4> quad_rule_for_common_vertex(quad_order_for_common_vertex);
+    QGauss<4> quad_rule_for_regular(quad_order_for_regular);
+
+    std::vector<DoFHandler<dim, spacedim>::active_cell_iterator>
+      cell_iterators_neumann_space;
+    for (auto iter : dof_handler_neumann_space.active_cell_iterators())
+      {
+        cell_iterators_neumann_space.push_back(iter);
+      }
+
+    std::vector<DoFHandler<dim, spacedim>::active_cell_iterator>
+      cell_iterators_dirichlet_space;
+    for (auto iter : dof_handler_dirichlet_space.active_cell_iterators())
+      {
+        cell_iterators_dirichlet_space.push_back(iter);
+      }
+
     {
-      for (unsigned int j = 0; j < hyper_cell_matrix.n(); j++)
+      HierBEM::BEMValues<dim, spacedim> bem_values(fe_neumann_space,
+                                                   fe_neumann_space,
+                                                   mappings,
+                                                   quad_rule_for_same_panel,
+                                                   quad_rule_for_common_edge,
+                                                   quad_rule_for_common_vertex,
+                                                   quad_rule_for_regular);
+      bem_values.shape_function_values_common_vertex();
+
+      /**
+       * Create temporary scratch data and copy data.
+       */
+      PairCellWiseScratchData<dim, spacedim, double> scratch_data(
+        fe_neumann_space, fe_neumann_space, mappings, bem_values);
+      PairCellWisePerTaskData<dim, spacedim, double> copy_data(
+        fe_neumann_space, fe_neumann_space);
+
+      /**
+       * Compute the Sauter quadrature for each pair of cell-local shape
+       * functions.
+       */
+      LAPACKFullMatrixExt<double> slp_cell_matrix(
+        fe_neumann_space.dofs_per_cell, fe_neumann_space.dofs_per_cell);
+
+      for (unsigned int i = 0; i < slp_cell_matrix.m(); i++)
         {
-          hyper_cell_matrix(i, j) =
-            sauter_quadrature_on_one_pair_of_shape_functions(
-              hyper,
-              1.0,
-              i,
-              j,
-              cell_iterators[1],
-              cell_iterators[2],
-              mapping_test_space,
-              mapping_ansatz_space,
-              bem_values,
-              scratch_data,
-              copy_data);
+          for (unsigned int j = 0; j < slp_cell_matrix.n(); j++)
+            {
+              slp_cell_matrix(i, j) =
+                sauter_quadrature_on_one_pair_of_shape_functions(
+                  slp,
+                  1.0,
+                  i,
+                  j,
+                  cell_iterators_neumann_space[1],
+                  cell_iterators_neumann_space[2],
+                  mapping_info_test_space,
+                  mapping_info_ansatz_space,
+                  bem_values,
+                  OutwardSurfaceNormalDetector(),
+                  scratch_data,
+                  copy_data);
+            }
         }
+
+      std::cout << "Cell matrix for single layer potential kernel:\n";
+      slp_cell_matrix.print_formatted_to_mat(std::cout, "slp", 15, true, 25);
+
+      scratch_data.release();
+      copy_data.release();
     }
 
-  std::cout << "Cell matrix for hyper-singular potential kernel:\n";
-  hyper_cell_matrix.print_formatted_to_mat(std::cout, "hyper", 15, true, 25);
+    {
+      HierBEM::BEMValues<dim, spacedim> bem_values(fe_neumann_space,
+                                                   fe_dirichlet_space,
+                                                   mappings,
+                                                   quad_rule_for_same_panel,
+                                                   quad_rule_for_common_edge,
+                                                   quad_rule_for_common_vertex,
+                                                   quad_rule_for_regular);
+      bem_values.shape_function_values_common_vertex();
 
-  dof_handler.clear();
+      /**
+       * Create temporary scratch data and copy data.
+       */
+      PairCellWiseScratchData<dim, spacedim, double> scratch_data(
+        fe_neumann_space, fe_dirichlet_space, mappings, bem_values);
+      PairCellWisePerTaskData<dim, spacedim, double> copy_data(
+        fe_neumann_space, fe_dirichlet_space);
+
+      LAPACKFullMatrixExt<double> dlp_cell_matrix(
+        fe_neumann_space.dofs_per_cell, fe_dirichlet_space.dofs_per_cell);
+
+      for (unsigned int i = 0; i < dlp_cell_matrix.m(); i++)
+        {
+          for (unsigned int j = 0; j < dlp_cell_matrix.n(); j++)
+            {
+              dlp_cell_matrix(i, j) =
+                sauter_quadrature_on_one_pair_of_shape_functions(
+                  dlp,
+                  1.0,
+                  i,
+                  j,
+                  cell_iterators_neumann_space[1],
+                  cell_iterators_dirichlet_space[2],
+                  mapping_info_test_space,
+                  mapping_info_ansatz_space,
+                  bem_values,
+                  OutwardSurfaceNormalDetector(),
+                  scratch_data,
+                  copy_data);
+            }
+        }
+
+      std::cout << "Cell matrix for double layer potential kernel:\n";
+      dlp_cell_matrix.print_formatted_to_mat(std::cout, "dlp", 15, true, 25);
+
+      scratch_data.release();
+      copy_data.release();
+    }
+
+    {
+      HierBEM::BEMValues<dim, spacedim> bem_values(fe_dirichlet_space,
+                                                   fe_neumann_space,
+                                                   mappings,
+                                                   quad_rule_for_same_panel,
+                                                   quad_rule_for_common_edge,
+                                                   quad_rule_for_common_vertex,
+                                                   quad_rule_for_regular);
+      bem_values.shape_function_values_common_vertex();
+
+      /**
+       * Create temporary scratch data and copy data.
+       */
+      PairCellWiseScratchData<dim, spacedim, double> scratch_data(
+        fe_dirichlet_space, fe_neumann_space, mappings, bem_values);
+      PairCellWisePerTaskData<dim, spacedim, double> copy_data(
+        fe_dirichlet_space, fe_neumann_space);
+
+      LAPACKFullMatrixExt<double> adlp_cell_matrix(
+        fe_dirichlet_space.dofs_per_cell, fe_neumann_space.dofs_per_cell);
+
+      for (unsigned int i = 0; i < adlp_cell_matrix.m(); i++)
+        {
+          for (unsigned int j = 0; j < adlp_cell_matrix.n(); j++)
+            {
+              adlp_cell_matrix(i, j) =
+                sauter_quadrature_on_one_pair_of_shape_functions(
+                  adlp,
+                  1.0,
+                  i,
+                  j,
+                  cell_iterators_dirichlet_space[1],
+                  cell_iterators_neumann_space[2],
+                  mapping_info_test_space,
+                  mapping_info_ansatz_space,
+                  bem_values,
+                  OutwardSurfaceNormalDetector(),
+                  scratch_data,
+                  copy_data);
+            }
+        }
+
+      std::cout << "Cell matrix for adjoint double layer potential kernel:\n";
+      adlp_cell_matrix.print_formatted_to_mat(std::cout, "adlp", 15, true, 25);
+
+      scratch_data.release();
+      copy_data.release();
+    }
+
+    {
+      HierBEM::BEMValues<dim, spacedim> bem_values(fe_dirichlet_space,
+                                                   fe_dirichlet_space,
+                                                   mappings,
+                                                   quad_rule_for_same_panel,
+                                                   quad_rule_for_common_edge,
+                                                   quad_rule_for_common_vertex,
+                                                   quad_rule_for_regular);
+      bem_values.shape_function_values_common_vertex();
+
+      /**
+       * Create temporary scratch data and copy data.
+       */
+      PairCellWiseScratchData<dim, spacedim, double> scratch_data(
+        fe_dirichlet_space, fe_dirichlet_space, mappings, bem_values);
+      PairCellWisePerTaskData<dim, spacedim, double> copy_data(
+        fe_dirichlet_space, fe_dirichlet_space);
+
+      LAPACKFullMatrixExt<double> hyper_cell_matrix(
+        fe_dirichlet_space.dofs_per_cell, fe_dirichlet_space.dofs_per_cell);
+
+      for (unsigned int i = 0; i < hyper_cell_matrix.m(); i++)
+        {
+          for (unsigned int j = 0; j < hyper_cell_matrix.n(); j++)
+            {
+              hyper_cell_matrix(i, j) =
+                sauter_quadrature_on_one_pair_of_shape_functions(
+                  hyper,
+                  1.0,
+                  i,
+                  j,
+                  cell_iterators_dirichlet_space[1],
+                  cell_iterators_dirichlet_space[2],
+                  mapping_info_test_space,
+                  mapping_info_ansatz_space,
+                  bem_values,
+                  OutwardSurfaceNormalDetector(),
+                  scratch_data,
+                  copy_data);
+            }
+        }
+
+      std::cout << "Cell matrix for hyper-singular potential kernel:\n";
+      hyper_cell_matrix.print_formatted_to_mat(
+        std::cout, "hyper", 15, true, 25);
+
+      scratch_data.release();
+      copy_data.release();
+    }
+
+    dof_handler_neumann_space.clear();
+    dof_handler_dirichlet_space.clear();
+  }
+
+  destroy_mappings(mappings);
 }
