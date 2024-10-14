@@ -120,7 +120,7 @@ $(i_0, \cdots, i_{d-1})$. Let the linear index be $I$.
   $\mathbb{C}^r$. $f$ can be written as $f(x,y)$, where $x \in \mathbb{R}^n$ and
   $y \in \mathbb{R}^{r}$. Assume $(a,b) \in A$, where $a \in \mathbb{R}^n$,
   $b \in \mathbb{R}^r$ and $f(a,b) = 0$, and the Jacobian
-  $\abs{\frac{\pdiff f}{\pdiff y}}_{x=a, y=b} \neq 0$. Then $\exists$ neighborhood $B$ of
+  $\abs{\frac{\partial f}{\partial y}}_{x=a, y=b} \neq 0$. Then $\exists$ neighborhood $B$ of
   $a$ in $\mathbb{R}^n$ and a unique $\mathbb{C}^r$ function
   $g: B \rightarrow \mathbb{R}^r$ such that $g(a) = b$ and
   $f(x, g(x)) = 0 \; (\forall x \in B)$, i.e. $y \in \mathbb{R}^r$ can be differentiably
@@ -143,9 +143,9 @@ $(i_0, \cdots, i_{d-1})$. Let the linear index be $I$.
 \begin{Proof}
   Let $f'(a, b) = f(a, b) - t = 0$, it's easy to see that
   $$
-  \frac{\pdiff f'}{\pdiff y} = \frac{\pdiff f}{\pdiff y}
+  \frac{\partial f'}{\partial y} = \frac{\partial f}{\partial y}
   $$
-  Therefore, $\abs{\frac{\pdiff f'}{\pdiff y}}_{x=a, y=b} \neq 0$. According to Theorem
+  Therefore, $\abs{\frac{\partial f'}{\partial y}}_{x=a, y=b} \neq 0$. According to Theorem
   \ref{theo:implicit-func}, $\exists$ neighborhood $B$ of $a$ in $\mathbb{R}^n$ and a
   unique $\mathbb{C}^r$ function $g: B \rightarrow \mathbb{R}^r$ such that $g(a) = b$ and
   $f'(x, g(x)) = 0 \; (\forall x \in B)$, which is equivalent to $f(x, g(x)) = t$.
@@ -156,7 +156,7 @@ $(i_0, \cdots, i_{d-1})$. Let the linear index be $I$.
   Let $A$ be an open set in $\mathbb{R}^{n+r}$ and $f: A \rightarrow \mathbb{R}^r$ be
   $\mathbb{C}^r$, $f(x) = t \; \forall x \in A$, $t$ is a constant in $\mathbb{R}^r$. Then
   if $\exists x_0 \in A$ such that
-  $\rank\left( \left[ \frac{\pdiff f}{\pdiff x} \right] \bigg\vert_{x=x_0} \right)=r$,
+  $\rank\left( \left[ \frac{\partial f}{\partial x} \right] \bigg\vert_{x=x_0} \right)=r$,
   then $\exists$ neighborhood $B$ of $x_0$ in $\mathbb{R}^{n+r}$ such that
   $\forall x \in B$, its $r$ components can be uniquely represented by a $\mathbb{C}^r$
   function $g$ in terms of the other $n$ components. If $\forall x_0 \in A$ satisfies the
@@ -184,11 +184,11 @@ $(i_0, \cdots, i_{d-1})$. Let the linear index be $I$.
   \end{equation*}
   Its derivatives with respect to $x$ and $y$ are
   \begin{equation*}
-    \frac{\pdiff z}{\pdiff x} = \frac{-x}{\sqrt{1 - x^2 - y^2}}, \; \frac{\pdiff z}{\pdiff
+    \frac{\partial z}{\partial x} = \frac{-x}{\sqrt{1 - x^2 - y^2}}, \; \frac{\partial z}{\partial
       y} = \frac{-y}{\sqrt{1 - x^2 - y^2}}.
   \end{equation*}
-  When $(x,y,z)$ approaches to the equator, $\frac{\pdiff z}{\pdiff x}$ and
-  $\frac{\pdiff z}{\pdiff y}$ will be infinite. Therefore, the upper hemisphere excluding
+  When $(x,y,z)$ approaches to the equator, $\frac{\partial z}{\partial x}$ and
+  $\frac{\partial z}{\partial y}$ will be infinite. Therefore, the upper hemisphere excluding
   the equator is an open set where $z$ can be differentiably represented by $x$ and $y$.
 \end{Example}
 
@@ -384,7 +384,7 @@ definition for the submanifold of a manifold.
   $$
   F^1(x) = 0, \cdots, F^{n-r}(x) = 0
   $$
-  whose Jacobian matrix $\frac{\pdiff F}{\pdiff x}$ has rank $n-r$ at each point of U.
+  whose Jacobian matrix $\frac{\partial F}{\partial x}$ has rank $n-r$ at each point of U.
   Then $W^r$ is a $r$-dimensional submanifold of $M^n$.
 \end{Definition}
 
@@ -443,15 +443,15 @@ definition for the submanifold of a manifold.
   of such $n$-tuples derived from two different charts $(U,x_U)$ and $(V,x_V)$ is
   \begin{equation}
     \label{eq:contravariant-transformation}
-    v_V^i = \sum_{j=1}^n \frac{\pdiff x_V^i}{\pdiff x_U^j} \Bigg\vert_p v_U^j.
+    v_V^i = \sum_{j=1}^n \frac{\partial x_V^i}{\partial x_U^j} \Bigg\vert_p v_U^j.
   \end{equation}
 \end{Definition}
 If we use a column vector to represent $v$, the matrix form of (\ref{eq:contravariant-transformation}) is
 \begin{equation}
   \label{eq:contravariant-transformation-matrix-form}
-  v_V = \left[ \frac{\pdiff x_{V}}{\pdiff x_U} \right] \Bigg\vert_p v_U,
+  v_V = \left[ \frac{\partial x_{V}}{\partial x_U} \right] \Bigg\vert_p v_U,
 \end{equation}
-where $\left[ \frac{\pdiff x_{V}}{\pdiff x_U} \right]\Big\vert_p$ is the Jacobian matrix of the transition
+where $\left[ \frac{\partial x_{V}}{\partial x_U} \right]\Big\vert_p$ is the Jacobian matrix of the transition
 map $\phi_{VU}$ evaluated at $p$. The transition map $\phi_{VU}$ is
 \begin{equation}
   x_V^i = x_V^i(x_U^1, \cdots, x_U^n) \quad (i=1,\cdots,n).
@@ -459,9 +459,9 @@ map $\phi_{VU}$ evaluated at $p$. The transition map $\phi_{VU}$ is
 The Jacobian matrix is
 \begin{equation}
   \begin{pmatrix}
-    \frac{\pdiff x_V^1}{\pdiff x_U^1} & \cdots & \frac{\pdiff x_V^1}{\pdiff x_U^n} \\
+    \frac{\partial x_V^1}{\partial x_U^1} & \cdots & \frac{\partial x_V^1}{\partial x_U^n} \\
     \vdots & \vdots & \vdots \\
-    \frac{\pdiff x_V^n}{\pdiff x_U^1} & \cdots & \frac{\pdiff x_V^n}{\pdiff x_U^n}
+    \frac{\partial x_V^n}{\partial x_U^1} & \cdots & \frac{\partial x_V^n}{\partial x_U^n}
   \end{pmatrix}.
 \end{equation}
 
@@ -502,15 +502,15 @@ time $dt$ is actually walking along a straight line $x_U(t) = p_U+t\vect{v}_U$. 
 the above derivative of $f$ can be expanded as
 \begin{equation}
   \label{eq:df-in-xu}
-  D_{\vect{v}_U}(f) = \sum_{i=1}^n \frac{\pdiff f}{\pdiff x_U^i} \frac{\diff
-    x_{U}^i(t)}{\diff t} = \sum_{i=1}^n \frac{\pdiff f}{\pdiff x_U^i}\Bigg\vert_{x_U=p_U} v_U^i.
+  D_{\vect{v}_U}(f) = \sum_{i=1}^n \frac{\partial f}{\partial x_U^i} \frac{\diff
+    x_{U}^i(t)}{\diff t} = \sum_{i=1}^n \frac{\partial f}{\partial x_U^i}\Bigg\vert_{x_U=p_U} v_U^i.
 \end{equation}
 If another coordinate chart $(V, x_V)$ is adopted which overlaps with $(U,x_U)$, the
 derivative of $f$ can also be written as
 \begin{equation}
   \label{eq:df-in-xv}
-  D_{\vect{v}_V}(f) = \sum_{i=1}^n \frac{\pdiff f}{\pdiff x_V^i} \frac{\diff
-    x_{V}^i(t)}{\diff t} = \sum_{i=1}^n \frac{\pdiff f}{\pdiff x_V^i} \Bigg\vert_{x_V=p_V} v_V^i.
+  D_{\vect{v}_V}(f) = \sum_{i=1}^n \frac{\partial f}{\partial x_V^i} \frac{\diff
+    x_{V}^i(t)}{\diff t} = \sum_{i=1}^n \frac{\partial f}{\partial x_V^i} \Bigg\vert_{x_V=p_V} v_V^i.
 \end{equation}
 We can prove that such definition of directional derivative is actually coordinate
 independent.
@@ -520,14 +520,14 @@ independent.
   the Jacobian matrix of the transition map $\phi_{VU}$ as below:
   \begin{equation}
     \label{eq:tangent-vector-transform}
-    v_V^i = \sum_{j=1}^n \frac{\pdiff x_{V}^i}{\pdiff x_{U}^j} x_U^j \quad (i=1,\cdots,n).
+    v_V^i = \sum_{j=1}^n \frac{\partial x_{V}^i}{\partial x_{U}^j} v_U^j \quad (i=1,\cdots,n).
   \end{equation}
   Substitute this transformation into Equation (\ref{eq:df-in-xv}), we have
   $$
-  D_{\vect{v}_V}(f) = \sum_{i=1}^n \frac{\pdiff f}{\pdiff x_V^i} \sum_{j=1}^n \frac{\pdiff
-    x_{V}^i}{\pdiff x_{U}^j} x_U^j = \sum_{j=1}^n \left( \sum_{i=1}^n \frac{\pdiff f}{\pdiff
-      x_V^i} \frac{\pdiff x_{V}^i}{\pdiff x_{U}^j} \right) x_U^j = \sum_{j=1}^n \frac{\pdiff
-    f}{\pdiff x_U^j} x_U^j = D_{\vect{v}_U}(f).
+  D_{\vect{v}_V}(f) = \sum_{i=1}^n \frac{\partial f}{\partial x_V^i} \sum_{j=1}^n \frac{\partial
+    x_{V}^i}{\partial x_{U}^j} x_U^j = \sum_{j=1}^n \left( \sum_{i=1}^n \frac{\partial f}{\partial
+      x_V^i} \frac{\partial x_{V}^i}{\partial x_{U}^j} \right) x_U^j = \sum_{j=1}^n \frac{\partial
+    f}{\partial x_U^j} x_U^j = D_{\vect{v}_U}(f).
   $$
   This is means $D_v(f)$ itself is a \emph{physical entity}, which does not depend on the
   actual coordinate chart we've assigned to the neighborhood of $p$.
@@ -549,19 +549,19 @@ a tangent vector $v$ rooted at $p$ in a local coordinate chart $(U,x)$ can be
 identified with a differential operator:
 \begin{equation}
   \label{eq:tangent-vector-as-diff-op}
-  v=\sum_j v^j \frac{\pdiff}{\pdiff x^j}\Bigg\vert_p.
+  v=\sum_j v^j \frac{\partial}{\partial x^j}\Bigg\vert_p.
 \end{equation}
 Here $v^j$ is the vector coefficient and the differential operator
-$\frac{\pdiff }{\pdiff x^j}\Big\vert_p$ is the corresponding basis vector, which will be
-written as $\frac{\vect{\pdiff}}{\vect{\pdiff} x^j}$ in bold typeface from now on or in a
-simpler form $\vect{\pdiff} x^j$. Hence, $\left\{ \vect{\pdiff} x^j \right\}_{j=1}^n$ is a
+$\frac{\partial }{\partial x^j}\Big\vert_p$ is the corresponding basis vector, which will be
+written as $\frac{\vect{\partial}}{\vect{\partial} x^j}$ in bold typeface from now on or in a
+simpler form $\vect{\partial} x^j$. Hence, $\left\{ \vect{\partial} x^j \right\}_{j=1}^n$ is a
 basis of the coordinate chart $(U,x)$. Since the $j$-th component of $v$ in this chart is
-just $v^j$, the corresponding basis vector $\vect{\pdiff} x^j$ is numerically the same as
+just $v^j$, the corresponding basis vector $\vect{\partial} x^j$ is numerically the same as
 the basis vector $\boldsymbol{e}_j$ of the Cartesian frame $\mathbb{R}^n$, i.e. the $i$-th
-component of $\vect{\pdiff}x^j$ is the Kronecker $\delta_j^i$. However, it is not a global
+component of $\vect{\partial}x^j$ is the Kronecker $\delta_j^i$. However, it is not a global
 Cartesian frame, but a local Cartesian coordinate frame at $p$ using the coordinate chart
 $(U,x)$. More importantly, we should keep in mind that the length of one unit along the
-axis $\vect{\pdiff}x^j$ is not necessarily 1, since $\vect{\pdiff}x^j$ may not be a
+axis $\vect{\partial}x^j$ is not necessarily 1, since $\vect{\partial}x^j$ may not be a
 normalized tangent vector and the metric tensor associated with the coordinate chart may
 not be an identity matrix (see Section \ref{sec:metric-tensor} for more information).
 
@@ -584,32 +584,37 @@ curve at $p$ is the derivative of $x$ at $t=0$, since $p$ is the root point:
   \label{eq:tangent-vector-of-coordinate-curve}
   \frac{dx}{dt}\Bigg\vert_{t=0}=(\delta_{j}^1, \cdots, \delta_j^n).
 \end{equation}
-This is just equal to $\vect{\pdiff}x^j$.
-
-Therefore, the set of velocity vectors of all coordinate curves at $p$ using the
+This is just equal to $\vect{\partial}x^j$ which is represented in the coordinate chart
+$(U,x)$. Then the set of velocity vectors of all coordinate curves at $p$ using the
 coordinate chart $(U,x)$ forms the basis of the tangent space at $p$, i.e.
-$\left\{ \vect{\pdiff} x^j \right\}_{j=1}^n$. This is the same as the results derived from
-treating a tangent vector as a differential operator.
+$\left\{ \vect{\partial} x^j \right\}_{j=1}^n$. This is the same as the results derived
+from treating a tangent vector as a differential operator. Numerically, a basis vector
+$\boldsymbol{\partial}x^j$ represented in its respective coordinate chart $(U,x)$ is equal
+to the $j$-th basis vector $\boldsymbol{e}_j$ of the Cartesian space $\mathbb{R}^d$. This
+means the tangent space is similar to the Cartesian space. However, such similarity is
+only locally valid, i.e. the basis is only applicable to an infinitesimal neighborhood
+around $p$. This is because the coordinate curves may not be straight but curved. If the
+point $p$ moves a little to a new point $p'$, the basis of the new tangent space rooted at
+$p'$ may change their directions a little bit compared to the basis at $p$.
 
 If a different coordinate chart $(V,y)$ containing $p$ is adopted, where
 $y = (y^1,\cdots,y^{n'})$ may have different number of components from $x$, the basis
-$\left\{ \vect{\pdiff}x^j \right\}_{j=1}^n$ in $(U,x)$ can be transformed to the new chart
-via the Jacobian matrix of the transition map $\phi_{VU}$, since each basis vector is also a
-tangent vector, which should follow the same transformation rule as in
-(\ref{eq:tangent-vector-transform}). For the basis vector $\vect{\pdiff}x^j$, the $i$-th
-component in the transformed vector is
+$\left\{ \vect{\partial}x^j \right\}_{j=1}^n$ of $(U,x)$ can be represented using the
+coordinate variables of the new chart via the Jacobian matrix of the transition map
+$\phi_{VU}$, since each basis vector is also a tangent vector, which should follow the
+same transformation rule as in (\ref{eq:tangent-vector-transform}). For the basis vector
+$\vect{\partial}x^j$, the $i$-th component in the transformed vector is
 \begin{equation}
   \label{eq:tangent-space-basis-transform}
-  \sum_{k=1}^n \frac{\pdiff y^i}{\pdiff x^k} (\vect{\pdiff} x^j)_k = \sum_{k=1}^n
-  \frac{\pdiff y^i}{\pdiff x^k} \delta_k^j = \frac{\pdiff y^{i}}{\pdiff x^{j}} \quad (i=1,\cdots,n').
+  \sum_{k=1}^n \frac{\partial y^i}{\partial x^k} (\vect{\partial} x^j)_k = \sum_{k=1}^n
+  \frac{\partial y^i}{\partial x^k} \delta_k^j = \frac{\partial y^{i}}{\partial x^{j}} \quad (i=1,\cdots,n').
 \end{equation}
-Hence, the transformed vector of $\vect{\pdiff}x^j$ is just the $j$-th column of the
-Jacobian matrix
+This is just the $j$-th column of the Jacobian matrix
 $$
 \begin{pmatrix}
-  \frac{\pdiff y^{1}}{\pdiff x^j} \\
+  \frac{\partial y^{1}}{\partial x^j} \\
   \vdots \\
-  \frac{\pdiff y^{d'}}{\pdiff x^j}
+  \frac{\partial y^{n'}}{\partial x^j}
 \end{pmatrix}.
 $$
 
@@ -640,14 +645,14 @@ $$
     \end{pmatrix}.
   \end{equation}
   Then for a point $p$ in $U$, the basis of the tangent space represented in the chart
-  $(\theta, \phi)$ is $\left\{ \vect{\pdiff}\theta, \vect{\pdiff}\phi \right\}$. In the
+  $(\theta, \phi)$ is $\left\{ \vect{\partial}\theta, \vect{\partial}\phi \right\}$. In the
   chart $(x,y,z)$, the basis is
   \begin{equation}
     \begin{aligned}
-      \vect{\pdiff}\theta &= r\cos\phi \cos\theta \vect{\pdiff}x + r\sin\phi \cos\theta
-      \vect{\pdiff}y - r\sin\theta \vect{\pdiff}z \\
-      \vect{\pdiff}\phi &= -r\sin\phi \sin\theta \vect{\pdiff}x + r\cos\phi \sin\theta
-      \vect{\pdiff}y
+      \vect{\partial}\theta &= r\cos\phi \cos\theta \vect{\partial}x + r\sin\phi \cos\theta
+      \vect{\partial}y - r\sin\theta \vect{\partial}z \\
+      \vect{\partial}\phi &= -r\sin\phi \sin\theta \vect{\partial}x + r\cos\phi \sin\theta
+      \vect{\partial}y
     \end{aligned}.
   \end{equation}
   This can be visualized in Figure \ref{fig:basis-on-sphere}, where a set of points are
@@ -658,21 +663,21 @@ $$
     \caption{}
     \label{fig:basis-on-sphere}
   \end{figure}
-  We also notice that the basis vectors $\vect{\pdiff}\theta$ and $\vect{\pdiff}\phi$ are
+  We also notice that the basis vectors $\vect{\partial}\theta$ and $\vect{\partial}\phi$ are
   not normalized:
   \begin{equation*}
     \begin{aligned}
-      \norm{\vect{\pdiff}\theta} &= \sqrt{r^2\cos^2\phi\cos^{2}\theta +
+      \norm{\vect{\partial}\theta} &= \sqrt{r^2\cos^2\phi\cos^{2}\theta +
         r^2\sin^2\phi\cos^2\theta + r^2\sin^2\theta} = \sqrt{r^2\cos^2\theta +
         r^2\sin^2\theta} = r \\
-      \norm{\vect{\pdiff}\phi} &= \sqrt{r^2\sin^2\phi\sin^2\theta +
+      \norm{\vect{\partial}\phi} &= \sqrt{r^2\sin^2\phi\sin^2\theta +
         r^2\cos^2\phi\sin^2\theta} = \sqrt{r^2\sin^2\theta} = r\sin\theta
     \end{aligned}.
   \end{equation*}
   Therefore, a normalized basis
-  $\left\{ \vect{\pdiff}\hat{\theta}, \vect{\pdiff}\hat{\phi} \right\}$ of the spherical
+  $\left\{ \vect{\partial}\hat{\theta}, \vect{\partial}\hat{\phi} \right\}$ of the spherical
   coordinate chart is
-  $\left\{ \frac{1}{r} \vect{\pdiff}\theta, \frac{1}{r\sin\theta} \vect{\pdiff}\phi
+  $\left\{ \frac{1}{r} \vect{\partial}\theta, \frac{1}{r\sin\theta} \vect{\partial}\phi
   \right\}$.
 \end{Example}
 
@@ -694,19 +699,19 @@ $$
   The columns of this matrix form the basis of the tangent space for a ball:
   \begin{equation}
     \begin{aligned}
-      \vect{\pdiff}r &= \cos\phi \sin\theta \vect{\pdiff}x + \sin\phi \sin\theta
-      \vect{\pdiff}y + \cos\theta \vect{\pdiff}z \\
-      \vect{\pdiff}\theta &= r\cos\phi\cos\theta \vect{\pdiff}x + r\sin\phi\cos\theta
-      \vect{\pdiff}y - r\sin\theta \vect{\pdiff}z \\
-      \vect{\pdiff}\phi &= -r\sin\phi \sin\theta \vect{\pdiff}x + r\cos\phi \sin\theta
-      \vect{\pdiff}y
+      \vect{\partial}r &= \cos\phi \sin\theta \vect{\partial}x + \sin\phi \sin\theta
+      \vect{\partial}y + \cos\theta \vect{\partial}z \\
+      \vect{\partial}\theta &= r\cos\phi\cos\theta \vect{\partial}x + r\sin\phi\cos\theta
+      \vect{\partial}y - r\sin\theta \vect{\partial}z \\
+      \vect{\partial}\phi &= -r\sin\phi \sin\theta \vect{\partial}x + r\cos\phi \sin\theta
+      \vect{\partial}y
     \end{aligned}.
   \end{equation}
   The normalized basis
-  $\left\{ \vect{\pdiff}\hat{r}, \vect{\pdiff}\hat{\theta}, \vect{\pdiff}\hat{\phi}
+  $\left\{ \vect{\partial}\hat{r}, \vect{\partial}\hat{\theta}, \vect{\partial}\hat{\phi}
   \right\}$ is
-  $\left\{ \vect{\pdiff}r, \frac{1}{r} \vect{\pdiff}\theta, \frac{1}{r\sin\theta}
-    \vect{\pdiff}\phi \right\}$.
+  $\left\{ \vect{\partial}r, \frac{1}{r} \vect{\partial}\theta, \frac{1}{r\sin\theta}
+    \vect{\partial}\phi \right\}$.
 \end{Example}
 
 \begin{Example}[Basis of tangent space for a cylinder parameterized by $(r, \varphi, z')$]
@@ -732,13 +737,13 @@ $$
   The columns of this matrix form the basis of the tangent space:
   \begin{equation}
     \begin{aligned}
-      \vect{\pdiff}r &= \cos\phi \vect{\pdiff}x + \sin\phi \vect{\pdiff}y \\
-      \vect{\pdiff}\phi &= -r \sin\phi \vect{\pdiff}x + r \cos\phi \vect{\pdiff}y \\
-      \vect{\pdiff}z' &= \vect{\pdiff}z
+      \vect{\partial}r &= \cos\phi \vect{\partial}x + \sin\phi \vect{\partial}y \\
+      \vect{\partial}\phi &= -r \sin\phi \vect{\partial}x + r \cos\phi \vect{\partial}y \\
+      \vect{\partial}z' &= \vect{\partial}z
     \end{aligned}.
   \end{equation}
   The normalized basis is
-  $\left\{ \vect{\pdiff}r, \frac{1}{r}\vect{\pdiff}\phi, \vect{\pdiff}z' \right\}$.
+  $\left\{ \vect{\partial}r, \frac{1}{r}\vect{\partial}\phi, \vect{\partial}z' \right\}$.
 \end{Example}
 
 The above tangent and velocity vectors of a manifold $M$ can be visualized in an Euclidean
@@ -753,52 +758,53 @@ such embedding.
 \subsection{Relationship between bases of different coordinate charts}
 
 Assume there are two coordinate charts $(U,x_U)$ and $(V,x_V)$ assigned to the tangent
-space $M_p^n$. The basis vector using the coordinate chart $(U,x_U)$ is
-$\left\{ \vect{\pdiff}x_U^j \right\}$ and the basis vector of $(V,x_V)$ is
-$\left\{ \vect{\pdiff}x_V^i \right\}$. Still as before, the number of coordinate
-components in $x_U$ and $x_V$ may not be the same. Then we want to know how each basis
-vector $\vect{\pdiff}x_V^i$ in $(V,x_V)$ is represented using the basis
-$\left\{ \vect{\pdiff}x_U^j \right\}$ in $(U,x_U)$, i.e. we want to compute the expansion
-coefficients $a_j$ in the following expression
+space $M_p^n$. The basis vectors of the coordinate chart $(U,x_U)$ are
+$\left\{ \vect{\partial}x_U^j \right\}_{j=1}^n$ and the basis vectors of $(V,x_V)$ are
+$\left\{ \vect{\partial}x_V^i \right\}_{i=1}^{n'}$. Still as before, the number of
+coordinate components in $x_U$ and $x_V$ may not be the same, i.e. $n\neq n'$. Then we
+want to know how each basis vector $\vect{\partial}x_V^i$ in $(V,x_V)$ is numerically
+represented using the basis $\left\{ \vect{\partial}x_U^j \right\}$ in $(U,x_U)$, i.e. we
+want to compute the expansion coefficients $a_j$ in the following expression
 \begin{equation*}
-  \vect{\pdiff}x_V^i = \sum_j a^j \vect{\pdiff}x_U^j.
+  \left( \vect{\partial}x_V^i \right)_{U} = \sum_j a^j \vect{\partial}x_U^j.
 \end{equation*}
 \begin{Remark}
   It should be emphasized that unlike a tangent vector $v$ in $M_p^n$ which is a fixed physical
   entity having multiple representations in different coordinate charts, the basis vectors
-  of different coordinate charts like $\vect{\pdiff}x_U^j$ and $\vect{\pdiff}x_V^i$ are
+  of different coordinate charts like $\vect{\partial}x_U^j$ and $\vect{\partial}x_V^i$ are
   two different physical entities, i.e. they are usually two different tangent vectors in
   $M_p^n$.
 \end{Remark}
 
-Because $\vect{\pdiff}x_V^i$ itself is a tangent vector, its transformation from $(V,x_V)$
+Because $\vect{\partial}x_V^i$ itself is a tangent vector, its transformation from $(V,x_V)$
 into $(U,x_U)$ follows the rule of contravariant transformation in Equation
 (\ref{eq:contravariant-transformation}):
 \begin{equation*}
-  \frac{\pdiff x_U}{\pdiff x_V} (\vect{\pdiff}x_V^i)^{\mathrm{T}}.
+  \frac{\partial x_U}{\partial x_V} (\vect{\partial}x_V^i)^{\mathrm{T}}.
 \end{equation*}
-Note here we've transposed the basis vector $\vect{\pdiff}x_V^i$, because as a convention,
-a tangent vector in the matrix form is written as a column vector, while the matrix form
-of a basis vector in the tangent space is a row vector. Since $\vect{\pdiff}x_V^i$ is
-numerically equivalent to $\vect{e}_i$, the above expression extracts the $i$-th column of
-the Jacobian matrix of $\phi_{UV}$. Therefore, the expansion coefficient $a^{j}$ is just the
-$j$-th component in this column vector, i.e.
+Note here we've transposed the basis vector $\vect{\partial}x_V^i$, because as a
+convention, a tangent vector in the matrix form is written as a column vector, while the
+matrix form of a basis vector in the tangent space is a row vector. Since
+$\vect{\partial}x_V^i$ represented in $(V,x_V)$ is numerically the same as $\vect{e}_i$,
+the above expression extracts the $i$-th column of the Jacobian matrix of $\phi_{UV}$.
+Therefore, the expansion coefficient $a^{j}$ is just the $j$-th component in this column
+vector, i.e.
 \begin{equation}
-  a^j = \frac{\pdiff x_U^j}{\pdiff x_V^i}.
+  a^j = \frac{\partial x_U^j}{\partial x_V^i}.
 \end{equation}
-Hence, the basis vector $\vect{\pdiff}x_V^i$ can be represented as
+Hence, the basis vector $\vect{\partial}x_V^i$ can be numerically represented in $(U,x_U)$ as
 \begin{equation}
   \label{eq:tangent-vector-basis-relation}
-  \vect{\pdiff}x_V^i = \sum_j \frac{\pdiff x_U^j}{\pdiff x_V^i} \vect{\pdiff}x_U^j.
+  \vect{\partial}x_V^i = \sum_j \frac{\partial x_U^j}{\partial x_V^i} \vect{\partial}x_U^j.
 \end{equation}
 If we horizontally juxtapose the basis vectors as
-$(\vect{\pdiff}x_V^1,\cdots,\vect{\pdiff}x_V^n)$ and
-$(\vect{\pdiff}x_U^1,\cdots,\vect{\pdiff}x_U^n)$, the matrix form of the
-relationship between the two bases is
+$(\vect{\partial}x_V^1,\cdots,\vect{\partial}x_V^n)$ and
+$(\vect{\partial}x_U^1,\cdots,\vect{\partial}x_U^n)$, the matrix form of the relationship
+between the two bases is
 \begin{equation}
   \label{eq:tangent-space-bases-relation}
-  (\vect{\pdiff}x_V^1,\cdots,\vect{\pdiff}x_V^n) =
-  (\vect{\pdiff}x_U^1,\cdots,\vect{\pdiff}x_U^n) \left[ \frac{\pdiff x_U}{\pdiff x_V} \right].
+  (\vect{\partial}x_V^1,\cdots,\vect{\partial}x_V^n) =
+  (\vect{\partial}x_U^1,\cdots,\vect{\partial}x_U^n) \left[ \frac{\partial x_U}{\partial x_V} \right].
 \end{equation}
 
 \section{Covector and cotangent space}
@@ -958,18 +964,18 @@ Applying a 1-form to a tangent vector, we obtain a scalar value.
   $M^n$, $\alpha$ is a differential 1-form.
 \end{Definition}
 
-Apply $\alpha$ to the $i$-th basis vector $\vect{\pdiff}x^i$ of the tangent space, we
+Apply $\alpha$ to the $i$-th basis vector $\vect{\partial}x^i$ of the tangent space, we
 obtain the $i$-th expansion coefficient of $\alpha$:
 \begin{equation}
   \label{eq:apply-1-form-to-basis}
-  \alpha(\vect{\pdiff}x^i) = \sum_j a_j \sigma^j(\vect{\pdiff}x^i) = \sum_j a_j
+  \alpha(\vect{\partial}x^i) = \sum_j a_j \sigma^j(\vect{\partial}x^i) = \sum_j a_j
   \delta^j_i = a_i.
 \end{equation}
 
 \subsubsection{Differential of 0-form is 1-form}
 
 Let $f: M^n \rightarrow \mathbb{R}$ be a 0-form on $M^n$. At a point $p$, the basis of the
-tangent space $M_p^n$ is $\left\{ \vect{\pdiff}x^j \right\}$ and the basis of the
+tangent space $M_p^n$ is $\left\{ \vect{\partial}x^j \right\}$ and the basis of the
 cotangent space $M_p^{n*}$ is $\left\{ \sigma^i \right\}$.
 $df: M_p^n \rightarrow \mathbb{R}$ is the differential of $f$, which is a linear
 functional operating on a tangent vector $v$. It is defined to be the same as the
@@ -977,15 +983,15 @@ directional derivative of $f$ with respect to $v$ (see Equation
 (\ref{eq:directional-derivative-wrt-v}) and (\ref{eq:tangent-vector-as-diff-op})):
 \begin{equation}
   \label{eq:df-and-directional-derivative}
-  df(v) = D_v(f) = v(f) = df \left( \sum_j v^j \vect{\pdiff}x^j \right) = \sum_j v^j
-  df(\vect{\pdiff}x^j) = \sum_j v^j \frac{\pdiff f}{\pdiff x^j}\Bigg\vert_p.
+  df(v) = D_v(f) = v(f) = df \left( \sum_j v^j \vect{\partial}x^j \right) = \sum_j v^j
+  df(\vect{\partial}x^j) = \sum_j v^j \frac{\partial f}{\partial x^j}\Bigg\vert_p.
 \end{equation}
 We can see that applying $df$ to the $j$ basis vector in the tangent space simply returns
 the partial derivative of $f$ with respect to $x^j$ evaluated at $p$.
 
 If $f=x^i$, we have
 \begin{equation*}
-  df(v) = dx^i(v) = \sum_j v^j \frac{\pdiff x^{i}}{\pdiff x^j} = \sum_j v^j \delta^i_j = v^i.
+  df(v) = dx^i(v) = \sum_j v^j \frac{\partial x^{i}}{\partial x^j} = \sum_j v^j \delta^i_j = v^i.
 \end{equation*}
 This means the operator $dx^i$ extracts the $i$-th component of $v$, which is the same as
 the projection operator $\sigma^i$. Therefore, $\left\{ dx^i \right\}$ is the basis of the
@@ -993,10 +999,10 @@ dual space.
 
 Assume $df$ can be expanded as $df = \sum_j a_j dx^j$. According to Equation
 (\ref{eq:apply-1-form-to-basis}),
-$a_j = df(\vect{\pdiff}x^j) = \frac{\pdiff f}{\pdiff x^j} \Big\vert_p$. Hence,
+$a_j = df(\vect{\partial}x^j) = \frac{\partial f}{\partial x^j} \Big\vert_p$. Hence,
 \begin{equation}
   \label{eq:differential-of-0-form}
-  df = \sum_j \frac{\pdiff f}{\pdiff x^j}\Bigg\vert_p dx^j.
+  df = \sum_j \frac{\partial f}{\partial x^j}\Bigg\vert_p dx^j.
 \end{equation}
 
 \subsubsection{Coordinate transformation of a basis vector in the cotangent space}
@@ -1010,11 +1016,11 @@ of $x_U$. Therefore, according to Equation (\ref{eq:differential-of-0-form}), th
 expansion of $dx_V^i$ takes the form
 \begin{equation}
   \label{eq:cotangent-basis-transformation}
-  dx_V^i=\sum_j \frac{\pdiff x_V^i}{\pdiff x_U^j} dx_U^j.
+  dx_V^i=\sum_j \frac{\partial x_V^i}{\partial x_U^j} dx_U^j.
 \end{equation}
 Its matrix form is
 \begin{equation}
-  dx_V = \left[ \frac{\pdiff x_V}{\pdiff x_U} \right]\Bigg\vert_p dx_U,
+  dx_V = \left[ \frac{\partial x_V}{\partial x_U} \right]\Bigg\vert_p dx_U,
 \end{equation}
 where $dx_V = (dx_V^1,\cdots,dx_V^n)^{\mathrm{T}}$ and $dx_U = (dx_U^1,\cdots,dx_U^n)^{\mathrm{T}}$.
 
@@ -1030,50 +1036,50 @@ $(V,x_V)$, it can be expanded as
 Substitute Equation (\ref{eq:cotangent-basis-transformation}) for $dx_V^i$, we can get the
 expansion of $\alpha$ in the coordinate chart $(U,x_U)$ as below.
 \begin{equation*}
-  \alpha = \sum_i a_i^V \sum_j \frac{\pdiff x_V^i}{\pdiff x_U^j} dx_U^j = \sum_i\sum_j
-  a_i^V \left( \frac{\pdiff x_V^i}{\pdiff x_U^j} \right) dx_U^j = \sum_j \left[ \sum_i
-    a_i^V \left( \frac{\pdiff x_V^i}{\pdiff x_U^j} \right) \right] dx_U^j = \sum_j a_j^U dx_U^j,
+  \alpha = \sum_i a_i^V \sum_j \frac{\partial x_V^i}{\partial x_U^j} dx_U^j = \sum_i\sum_j
+  a_i^V \left( \frac{\partial x_V^i}{\partial x_U^j} \right) dx_U^j = \sum_j \left[ \sum_i
+    a_i^V \left( \frac{\partial x_V^i}{\partial x_U^j} \right) \right] dx_U^j = \sum_j a_j^U dx_U^j,
 \end{equation*}
 where the expansion coefficient is
 \begin{equation*}
   \label{eq:covector-transformation}
-  a_j^U = \sum_i a_i^V \left( \frac{\pdiff x_V^i}{\pdiff x_U^j} \right).
+  a_j^U = \sum_i a_i^V \left( \frac{\partial x_V^i}{\partial x_U^j} \right).
 \end{equation*}
 Its matrix form is
 \begin{equation}
-  a^U = a^V \left[ \frac{\pdiff x_V}{\pdiff x_U} \right],
+  a^U = a^V \left[ \frac{\partial x_V}{\partial x_U} \right],
 \end{equation}
 where $a^U = (a_1^U,\cdots,a_n^U)$ and $a^V = (a_1^V,\cdots,a_n^V)$,
-$\left[ \frac{\pdiff x_V}{\pdiff x_U} \right]$ is the Jacobian matrix of the transition map
+$\left[ \frac{\partial x_V}{\partial x_U} \right]$ is the Jacobian matrix of the transition map
 $\phi_{VU}$. Similarly,
 \begin{equation}
-a^V = a^U \left[ \frac{\pdiff x_U}{\pdiff x_V} \right].
+a^V = a^U \left[ \frac{\partial x_U}{\partial x_V} \right].
 \end{equation}
 
 The above coordinate transformation is called the \emph{covariant transformation}.
 
 \subsubsection{Relationship between Jacobian matrices}
 
-We've already met two Jacobian matrices $\left[ \frac{\pdiff x_V}{\pdiff x_U} \right]$ and
-$\left[ \frac{\pdiff x_U}{\pdiff x_V} \right]$. The former is the Jacobian matrix of the
+We've already met two Jacobian matrices $\left[ \frac{\partial x_V}{\partial x_U} \right]$ and
+$\left[ \frac{\partial x_U}{\partial x_V} \right]$. The former is the Jacobian matrix of the
 transition map $\phi_{VU}$ and the latter is that of the map $\phi_{UV}$. Here we should
 emphasize that the number of coordinate components in the chart $(U,x_U)$ may be different
 from that of $(V,x_V)$. Moreover, neither of them is necessarily equal to the manifold
 dimension $n$. If $(U,x_U)$ has $m$ coordinate components and $(U,x_V)$ has $n$ coordinate
-components, $\left[ \frac{\pdiff x_V}{\pdiff x_U} \right] \in \mathbb{R}^{n\times m}$ and
-$\left[ \frac{\pdiff x_U}{\pdiff x_V} \right]\in \mathbb{R}^{m\times n}$, i.e. both of
+components, $\left[ \frac{\partial x_V}{\partial x_U} \right] \in \mathbb{R}^{n\times m}$ and
+$\left[ \frac{\partial x_U}{\partial x_V} \right]\in \mathbb{R}^{m\times n}$, i.e. both of
 which may be rectangular matrices and have no inverse matrices.
 
 The product of these two matrices are
 \begin{equation}
-  \left[ \frac{\pdiff x_V}{\pdiff x_U} \right] \cdot \left[ \frac{\pdiff x_U}{\pdiff x_V}
-  \right] = \left\{ \sum_k \frac{\pdiff x_V^i}{\pdiff x_U^k} \frac{\pdiff x_U^k}{\pdiff
-      x_V^j} \right\}_{ij} = \frac{\pdiff x_V^i}{\pdiff x_V^j} = \left\{ \delta^i_j
+  \left[ \frac{\partial x_V}{\partial x_U} \right] \cdot \left[ \frac{\partial x_U}{\partial x_V}
+  \right] = \left\{ \sum_k \frac{\partial x_V^i}{\partial x_U^k} \frac{\partial x_U^k}{\partial
+      x_V^j} \right\}_{ij} = \frac{\partial x_V^i}{\partial x_V^j} = \left\{ \delta^i_j
   \right\}_{ij} = I_n.
 \end{equation}
 Similarly,
 \begin{equation}
-  \left[ \frac{\pdiff x_U}{\pdiff x_V} \right] \cdot \left[ \frac{\pdiff x_V}{\pdiff x_U} \right] = I_m.
+  \left[ \frac{\partial x_U}{\partial x_V} \right] \cdot \left[ \frac{\partial x_V}{\partial x_U} \right] = I_m.
 \end{equation}
 
 \subsection{Conventions for super and subscripts}
@@ -1084,13 +1090,13 @@ cotangent space.
 
 Let $v$ be a tangent vector in the tangent space $M_p^n$ and $\alpha$ a cotangent vector
 in the cotangent space $M_p^{n*}$. The basis of $M_p^n$ is
-$\left\{ \vect{\pdiff}x^i \right\}_{i=1}^n$. The basis of $M_p^{n*}$ is
+$\left\{ \vect{\partial}x^i \right\}_{i=1}^n$. The basis of $M_p^{n*}$ is
 $\left\{ dx^i \right\}_{i=1}^n$. Superscripts are adopted for
 \begin{enumerate}
 \item a component of the tangent vector $v$: $v^i$
-\item index of a basis vector in the tangent space: $\vect{\pdiff}x^i$. \emph{N.B. The
-    superscript $i$ used here is only formal. In fact, $\vect{\pdiff}x^i$ is short for
-    $\frac{\pdiff}{\pdiff x^i}$. The superscript $i$ assigned to $x$ appears in the
+\item index of a basis vector in the tangent space: $\vect{\partial}x^i$. \emph{N.B. The
+    superscript $i$ used here is only formal. In fact, $\vect{\partial}x^i$ is short for
+    $\frac{\partial}{\partial x^i}$. The superscript $i$ assigned to $x$ appears in the
     denominator, which can be considered as a subscript to index the basis vectors.}
 \item index of a basis vector in the cotangent space: $dx^i$
 \end{enumerate}
@@ -1100,7 +1106,7 @@ When a vector component or basis vector has been assigned a superscript (subscri
 can explicitly specify the coordinate chart this entity is using via the unused subscript
 (superscript). For example, $v_U^{i}$ is the $i$-th component of the tangent vector $v$,
 when the coordinate chart $(U,x_U)$ is adopted. $a_i^U$ is the $i$-th component of the
-cotangent vector $\alpha$ and $\vect{\pdiff}x_U^i$ is the $i$-th basis vector in this
+cotangent vector $\alpha$ and $\vect{\partial}x_U^i$ is the $i$-th basis vector in this
 chart.
 
 The reason for bothering with the above conventions is to use these formal symbols to
@@ -1114,7 +1120,7 @@ tangent and cotangent vectors as well as basis vectors in matrix form.
 Row vectors are adopted for
 \begin{itemize}
 \item a covariant vector $\alpha$
-\item a basis vector $\vect{\pdiff}x^i$ of the tangent space
+\item a basis vector $\vect{\partial}x^i$ of the tangent space
 \end{itemize}
 Column vectors are adopted for
 \begin{itemize}
@@ -1134,14 +1140,14 @@ In a same coordinate chart $(x)$ containing $p$, the inner product of two tangen
 $a$ and $b$ in $M_p^n$ is
 \begin{equation}
   \label{eq:inner-product}
-  \left\langle a,b \right\rangle = \left\langle \sum_i a^i \vect{\pdiff}x^i, \sum_j b^j
-    \vect{\pdiff}x^j \right\rangle = \sum_i\sum_j a^i b^j \left\langle \vect{\pdiff}x^i,
-    \vect{\pdiff}x^j \right\rangle.
+  \left\langle a,b \right\rangle = \left\langle \sum_i a^i \vect{\partial}x^i, \sum_j b^j
+    \vect{\partial}x^j \right\rangle = \sum_i\sum_j a^i b^j \left\langle \vect{\partial}x^i,
+    \vect{\partial}x^j \right\rangle.
 \end{equation}
 
 \begin{Definition}[Metric tensor]
   \label{def:metric-tensor}
-  $g_{ij} \coloneqq \left\langle \vect{\pdiff}x^i, \vect{\pdiff}x^j \right\rangle$ is
+  $g_{ij} \coloneqq \left\langle \vect{\partial}x^i, \vect{\partial}x^j \right\rangle$ is
   called the metric tensor.
 \end{Definition}
 
@@ -1181,43 +1187,43 @@ the relationship between metric tensors in different coordinate charts.
 Let $(U,x_U)$ and $(V,x_V)$ be two coordinate charts containing the point $p$. In the
 neighborhood of $p$, the metric tensor can be represented as
 \begin{equation*}
-  g_{ij}^V = \left\langle \vect{\pdiff}x_V^i, \vect{\pdiff}x_V^j \right\rangle
+  g_{ij}^V = \left\langle \vect{\partial}x_V^i, \vect{\partial}x_V^j \right\rangle
 \end{equation*}
 using the chart $(V,x_V)$. Or it can be represented as
 \begin{equation*}
-  g_{rs}^U = \left\langle \vect{\pdiff}x_U^r, \vect{\pdiff}x_U^s \right\rangle
+  g_{rs}^U = \left\langle \vect{\partial}x_U^r, \vect{\partial}x_U^s \right\rangle
 \end{equation*}
 in the chart $(U,x_U)$. According to Equation (\ref{eq:tangent-vector-basis-relation}), we
 have
 \begin{equation*}
-  \vect{\pdiff}x_V^i = \sum_r \frac{\pdiff x_U^r}{\pdiff x_V^i} \vect{\pdiff}x_U^r
+  \vect{\partial}x_V^i = \sum_r \frac{\partial x_U^r}{\partial x_V^i} \vect{\partial}x_U^r
 \end{equation*}
 and
 \begin{equation*}
-  \vect{\pdiff}x_V^j = \sum_s \frac{\pdiff x_U^s}{\pdiff x_V^j} \vect{\pdiff}x_U^s.
+  \vect{\partial}x_V^j = \sum_s \frac{\partial x_U^s}{\partial x_V^j} \vect{\partial}x_U^s.
 \end{equation*}
 Then
 \begin{equation}
   \label{eq:metric-tensor-transformation}
-  g_{ij}^V = \left\langle \sum_r \frac{\pdiff x_U^r}{\pdiff x_V^i} \vect{\pdiff}x_U^r,
-    \sum_s \frac{\pdiff x_U^s}{\pdiff x_V^j} \vect{\pdiff}x_U^s \right\rangle =
-  \sum_r\sum_s \frac{\pdiff x_U^r}{\pdiff x_V^i} \frac{\pdiff x_U^s}{\pdiff x_V^j}
-  \left\langle \vect{\pdiff}x_U^r, \vect{\pdiff}x_U^s \right\rangle = \sum_r\sum_s
-  \frac{\pdiff x_U^r}{\pdiff x_V^i} \frac{\pdiff x_U^s}{\pdiff x_V^j} g_{rs}^U.
+  g_{ij}^V = \left\langle \sum_r \frac{\partial x_U^r}{\partial x_V^i} \vect{\partial}x_U^r,
+    \sum_s \frac{\partial x_U^s}{\partial x_V^j} \vect{\partial}x_U^s \right\rangle =
+  \sum_r\sum_s \frac{\partial x_U^r}{\partial x_V^i} \frac{\partial x_U^s}{\partial x_V^j}
+  \left\langle \vect{\partial}x_U^r, \vect{\partial}x_U^s \right\rangle = \sum_r\sum_s
+  \frac{\partial x_U^r}{\partial x_V^i} \frac{\partial x_U^s}{\partial x_V^j} g_{rs}^U.
 \end{equation}
 Its matrix form is
 \begin{equation}
   \label{eq:metric-tensor-transformation-matrix-form}
-  G^V = \left[ \frac{\pdiff x_U}{\pdiff x_V} \right]^{\mathrm{T}} G^U \left[ \frac{\pdiff
-      x_U}{\pdiff x_V} \right] = J_{UV}^{\mathrm{T}} G^U J_{UV}.
+  G^V = \left[ \frac{\partial x_U}{\partial x_V} \right]^{\mathrm{T}} G^U \left[ \frac{\partial
+      x_U}{\partial x_V} \right] = J_{UV}^{\mathrm{T}} G^U J_{UV}.
 \end{equation}
 
 \begin{Example}[Metric tensor of spherical coordinate chart]
   \label{exam:spherical-coordinate-metric-tensor}
   Let $(U,x_U)$ be a coordinate chart using the Cartesian coordinate frame and $(V,x_V)$
   be a coordinate chart using the spherical coordinate frame. Then the basis of $(U,x_U)$
-  is $\left\{ \vect{\pdiff}x, \vect{\pdiff}y, \vect{\pdiff}z \right\}$ and the basis of
-  $(V,x_V)$ is $\left\{ \vect{\pdiff}\theta, \vect{\pdiff}\phi \right\}$. The metric
+  is $\left\{ \vect{\partial}x, \vect{\partial}y, \vect{\partial}z \right\}$ and the basis of
+  $(V,x_V)$ is $\left\{ \vect{\partial}\theta, \vect{\partial}\phi \right\}$. The metric
   tensor $G^U$ of $(U,x_U)$ is simply a $3\times 3$ identity matrix. Hence, the metric
   tensor $G^V$ of $(V,x_V)$ is
   \begin{equation}
@@ -1230,15 +1236,15 @@ Its matrix form is
   where the Jacobian matrix $J_{UV}$ is given in Equation
   (\ref{eq:spherical-coordinate-jacobian-matrix}). Because $G^V$ is a diagonal matrix but
   not an identity matrix, the spherical coordinate frame is orthogonal but not normalized.
-  When $r=1$, the basis vector $\vect{\pdiff}\theta$ has unit length but
-  $\vect{\pdiff}\phi$ usually does not. $\vect{\pdiff}\phi$ only has unit length when
+  When $r=1$, the basis vector $\vect{\partial}\theta$ has unit length but
+  $\vect{\partial}\phi$ usually does not. $\vect{\partial}\phi$ only has unit length when
   $\theta=\frac{\pi}{2}$, i.e. at the equator.
 \end{Example}
 
 \begin{Example}[Metric tensor of ball coordinate chart]
   \label{exam:ball-coordinate-metric-tensor}
   If the basis of $(V,x_V)$ is
-  $\left\{ \vect{\pdiff}r, \vect{\pdiff}\theta, \vect{\pdiff}\phi \right\}$, i.e. the
+  $\left\{ \vect{\partial}r, \vect{\partial}\theta, \vect{\partial}\phi \right\}$, i.e. the
   radius $r$ is also a coordinate component, using the Jacobian matrix in Equation
   (\ref{eq:ball-coordinate-jacobian-matrix}), the metric tensor is
   \begin{equation}
@@ -1255,8 +1261,8 @@ Its matrix form is
   \label{exam:cylindrical-coordinate-metric-tensor}
   Let $(U,x_U)$ be a coordinate chart using the Cartesian coordinate frame and $(V,x_V)$
   be a coordinate chart using the cylindrical coordinate frame. The basis of $(U,x_U)$ is
-  $\left\{ \vect{\pdiff}x, \vect{\pdiff}y, \vect{\pdiff}z \right\}$ and the basis of
-  $(V,x_V)$ is $\left\{ \vect{\pdiff}r, \vect{\pdiff}\phi, \vect{\pdiff}z \right\}$. Using
+  $\left\{ \vect{\partial}x, \vect{\partial}y, \vect{\partial}z \right\}$ and the basis of
+  $(V,x_V)$ is $\left\{ \vect{\partial}r, \vect{\partial}\phi, \vect{\partial}z \right\}$. Using
   the Jacobian matrix $J_{UV}$ in Equation (\ref{eq:cylindrical-coordinate-jacobian-matrix}), the metric
   tensor of $(V,x_V)$ is
   \begin{equation}
@@ -1273,13 +1279,13 @@ Its matrix form is
 
 Assume the covector $\alpha$ above can be expanded as
 \begin{equation*}
-  \alpha = \sum_j \alpha_j dx^j = \sum_j \alpha(\vect{\pdiff}x^j) dx^j = \sum_j
-  \left\langle a, \vect{\pdiff}x^j \right\rangle dx^j.
+  \alpha = \sum_j \alpha_j dx^j = \sum_j \alpha(\vect{\partial}x^j) dx^j = \sum_j
+  \left\langle a, \vect{\partial}x^j \right\rangle dx^j.
 \end{equation*}
-If the tangent vector $a$ is expanded as $a = \sum_i a^i \vect{\pdiff}x^i$, we have
+If the tangent vector $a$ is expanded as $a = \sum_i a^i \vect{\partial}x^i$, we have
 \begin{equation*}
-  \alpha = \sum_j \left\langle \sum_i a^i \vect{\pdiff}x^i, \vect{\pdiff}x^j \right\rangle
-  dx^j = \sum_j\sum_i a^i \left\langle \vect{\pdiff}x^i, \vect{\pdiff}x^j \right\rangle
+  \alpha = \sum_j \left\langle \sum_i a^i \vect{\partial}x^i, \vect{\partial}x^j \right\rangle
+  dx^j = \sum_j\sum_i a^i \left\langle \vect{\partial}x^i, \vect{\partial}x^j \right\rangle
   dx^j = \sum_j\sum_i a^i g_{ij} dx^j = \sum_j \left( \sum_i a^i g_{ij} \right) dx^j.
 \end{equation*}
 Therefore, the expansion coefficient of the covector $\alpha$ is
@@ -1342,7 +1348,7 @@ following definition of the gradient operator is consistent with that learned in
 \end{Definition}
 Compare
 \begin{equation*}
-  df(v) = \sum_j \frac{\pdiff f}{\pdiff x^j} v^j
+  df(v) = \sum_j \frac{\partial f}{\partial x^j} v^j
 \end{equation*}
 and
 \begin{equation*}
@@ -1352,12 +1358,12 @@ and
 we have the relationship between the components of the 1-form $df$ and the tangent vector
 $\nabla f$
 \begin{equation*}
-  \frac{\pdiff f}{\pdiff x^j} = \sum_i \left( \nabla f \right)^i g_{ij}.
+  \frac{\partial f}{\partial x^j} = \sum_i \left( \nabla f \right)^i g_{ij}.
 \end{equation*}
 Because the metric tensor is symmetric, $g_{ij} = g_{ji}$,
 \begin{equation}
   \label{eq:gradient-to-df}
-  \frac{\pdiff f}{\pdiff x^j} = \sum_i g_{ji} \left( \nabla f \right)^i.
+  \frac{\partial f}{\partial x^j} = \sum_i g_{ji} \left( \nabla f \right)^i.
 \end{equation}
 Swapping the subscripts is to derive the following matrix form,
 \begin{equation}
@@ -1368,7 +1374,7 @@ where $df$ is a row vector and $\nabla f$ is a column vector.
 On the other hand,
 \begin{equation}
   \label{eq:df-to-gradient}
-  \left( \nabla f \right)^i = \sum_j g^{ij} \frac{\pdiff f}{\pdiff x^{i}}
+  \left( \nabla f \right)^i = \sum_j g^{ij} \frac{\partial f}{\partial x^{i}}
 \end{equation}
 with the matrix form
 \begin{equation}
@@ -1385,7 +1391,7 @@ According to Definition \ref{def:flat-operator} and \ref{def:sharp-operator},
   According to Example \ref{exam:spherical-coordinate-metric-tensor}, the matrix form of
   the metric tensor $G$ in the spherical coordinate chart is Equation
   (\ref{eq:spherical-coordinate-metric-tensor}). If the basis
-  $\left\{ \vect{\pdiff}\phi, \vect{\pdiff}\theta \right\}$ is adopted for the tangent space, the matrix form of
+  $\left\{ \vect{\partial}\phi, \vect{\partial}\theta \right\}$ is adopted for the tangent space, the matrix form of
   $\nabla f$ is
   \begin{equation}
     \nabla f = \begin{pmatrix}
@@ -1394,27 +1400,27 @@ According to Definition \ref{def:flat-operator} and \ref{def:sharp-operator},
     \end{pmatrix}
     \cdot
     \begin{pmatrix}
-      \frac{\pdiff f}{\pdiff \theta} \\
-      \frac{\pdiff f}{\pdiff \phi}
+      \frac{\partial f}{\partial \theta} \\
+      \frac{\partial f}{\partial \phi}
     \end{pmatrix} = \begin{pmatrix}
-      \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta} \\
-      \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi}
+      \frac{1}{r^2} \frac{\partial f}{\partial \theta} \\
+      \frac{1}{r^2\sin^2\theta} \frac{\partial f}{\partial \phi}
     \end{pmatrix}.
   \end{equation}
   Its tangent vector form is
   \begin{equation}
-    \nabla f = \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta} \vect{\pdiff}\theta +
-    \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi} \vect{\pdiff}\phi.
+    \nabla f = \frac{1}{r^2} \frac{\partial f}{\partial \theta} \vect{\partial}\theta +
+    \frac{1}{r^2\sin^2\theta} \frac{\partial f}{\partial \phi} \vect{\partial}\phi.
   \end{equation}
   If the normalized basis
-  $\left\{ \vect{\pdiff}\hat{\theta}, \vect{\pdiff}\hat{\phi} \right\}$ as in Example
+  $\left\{ \vect{\partial}\hat{\theta}, \vect{\partial}\hat{\phi} \right\}$ as in Example
   \ref{exam:spherical-coordinate-basis} is adopted, the tangent vector form is
   \begin{equation}
-    \nabla f = \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta} r \vect{\pdiff}\hat{\theta} +
-    \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi} r\sin\theta
-    \vect{\pdiff}\hat{\phi} = \frac{1}{r} \frac{\pdiff f}{\pdiff \theta}
-    \vect{\pdiff}\hat{\theta} + \frac{1}{r\sin\theta} \frac{\pdiff f}{\pdiff \phi}
-    \vect{\pdiff}\hat{\phi}.
+    \nabla f = \frac{1}{r^2} \frac{\partial f}{\partial \theta} r \vect{\partial}\hat{\theta} +
+    \frac{1}{r^2\sin^2\theta} \frac{\partial f}{\partial \phi} r\sin\theta
+    \vect{\partial}\hat{\phi} = \frac{1}{r} \frac{\partial f}{\partial \theta}
+    \vect{\partial}\hat{\theta} + \frac{1}{r\sin\theta} \frac{\partial f}{\partial \phi}
+    \vect{\partial}\hat{\phi}.
   \end{equation}
 \end{Example}
 
@@ -1430,28 +1436,28 @@ According to Definition \ref{def:flat-operator} and \ref{def:sharp-operator},
     \end{pmatrix}
     \cdot
     \begin{pmatrix}
-      \frac{\pdiff f}{\pdiff r} \\
-      \frac{\pdiff f}{\pdiff \theta} \\
-      \frac{\pdiff f}{\pdiff \phi}
+      \frac{\partial f}{\partial r} \\
+      \frac{\partial f}{\partial \theta} \\
+      \frac{\partial f}{\partial \phi}
     \end{pmatrix} = \begin{pmatrix}
-      \frac{\pdiff f}{\pdiff r} \\
-      \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta} \\
-      \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi}
+      \frac{\partial f}{\partial r} \\
+      \frac{1}{r^2} \frac{\partial f}{\partial \theta} \\
+      \frac{1}{r^2\sin^2\theta} \frac{\partial f}{\partial \phi}
     \end{pmatrix}.
   \end{equation}
   Its tangent vector form is
   \begin{equation}
-    \nabla f = \frac{\pdiff f}{\pdiff r}\vect{\pdiff}r + \frac{1}{r^2} \frac{\pdiff
-      f}{\pdiff \theta} \vect{\pdiff}\theta + \frac{1}{r^2\sin^2\theta} \frac{\pdiff
-      f}{\pdiff \phi} \vect{\pdiff}\phi.
+    \nabla f = \frac{\partial f}{\partial r}\vect{\partial}r + \frac{1}{r^2} \frac{\partial
+      f}{\partial \theta} \vect{\partial}\theta + \frac{1}{r^2\sin^2\theta} \frac{\partial
+      f}{\partial \phi} \vect{\partial}\phi.
   \end{equation}
   Using the normalized basis
-  $\left\{ \vect{\pdiff}\hat{r}, \vect{\pdiff}\hat{\theta}, \vect{\pdiff}\hat{\phi}
+  $\left\{ \vect{\partial}\hat{r}, \vect{\partial}\hat{\theta}, \vect{\partial}\hat{\phi}
   \right\}$, we have
   \begin{equation}
-    \nabla f = \frac{\pdiff f}{\pdiff r}\vect{\pdiff}\hat{r} + \frac{1}{r} \frac{\pdiff
-      f}{\pdiff \theta} \vect{\pdiff}\hat{\theta} + \frac{1}{r\sin\theta} \frac{\pdiff
-      f}{\pdiff \phi} \vect{\pdiff}\hat{\phi}.
+    \nabla f = \frac{\partial f}{\partial r}\vect{\partial}\hat{r} + \frac{1}{r} \frac{\partial
+      f}{\partial \theta} \vect{\partial}\hat{\theta} + \frac{1}{r\sin\theta} \frac{\partial
+      f}{\partial \phi} \vect{\partial}\hat{\phi}.
   \end{equation}
   This is consistent with the result in a classical electrodynamics book such as
   \citep{GriffithsIntroduction1999}.
@@ -1466,20 +1472,20 @@ According to Definition \ref{def:flat-operator} and \ref{def:sharp-operator},
       0 & \frac{1}{r^2} & 0\\
       0 & 0 & 1
     \end{pmatrix} \cdot \begin{pmatrix}
-      \frac{\pdiff f}{\pdiff r} \\
-      \frac{\pdiff f}{\pdiff \phi} \\
-      \frac{\pdiff f}{\pdiff z}
+      \frac{\partial f}{\partial r} \\
+      \frac{\partial f}{\partial \phi} \\
+      \frac{\partial f}{\partial z}
     \end{pmatrix} = \begin{pmatrix}
-      \frac{\pdiff f}{\pdiff r} \\
-      \frac{1}{r^2}\frac{\pdiff f}{\pdiff \phi} \\
-      \frac{\pdiff f}{\pdiff z}
+      \frac{\partial f}{\partial r} \\
+      \frac{1}{r^2}\frac{\partial f}{\partial \phi} \\
+      \frac{\partial f}{\partial z}
     \end{pmatrix}.
   \end{equation}
-  Using the normalized basis $\left\{ \vect{\pdiff}\hat{r}, \vect{\pdiff}\hat{\phi},
-    \vect{\pdiff}\hat{z} \right\}$, we have
+  Using the normalized basis $\left\{ \vect{\partial}\hat{r}, \vect{\partial}\hat{\phi},
+    \vect{\partial}\hat{z} \right\}$, we have
   \begin{equation}
-    \nabla f = \frac{\pdiff f}{\pdiff r} \vect{\pdiff}\hat{r} + \frac{1}{r} \frac{\pdiff
-      f}{\pdiff \phi} \vect{\pdiff}\hat{\phi} + \frac{\pdiff f}{\pdiff z} \vect{\pdiff}\hat{z}.
+    \nabla f = \frac{\partial f}{\partial r} \vect{\partial}\hat{r} + \frac{1}{r} \frac{\partial
+      f}{\partial \phi} \vect{\partial}\hat{\phi} + \frac{\partial f}{\partial z} \vect{\partial}\hat{z}.
   \end{equation}
 \end{Example}
 
@@ -1507,7 +1513,7 @@ covariant tensor.
 
 \begin{Definition}[Covariant tensor]
   An $r$-th rank covariant tensor $Q$ is a multilinear functional operating on the
-  Cartesian product $r$ of tangent spaces $\otimes^r M_p^n$, i.e.
+  Cartesian product of $r$ tangent spaces $\otimes^r M_p^n$, i.e.
   $Q: \otimes^r M_p^n \rightarrow \mathbb{R}$.
 \end{Definition}
 Therefore, a 1-form can be considered as a rank-1 tensor, which is a degenerate case.
@@ -1516,16 +1522,16 @@ Applying $Q$ to any $v_1, \cdots, v_r$ in $M_p^n$, using multilinearity, we have
 \begin{equation}
   \label{eq:covariant-tensor-applied-to-r-vectors-expanded}
   \begin{aligned}
-    Q(v_1,\cdots,v_r) &= Q(\sum_{i_1}v_1^{i_1} \vect{\pdiff}x^{i_1}, \cdots,
-    \sum_{i_r}v_r^{i_r} \vect{\pdiff}x^{i_r}) \\
-    &= \sum_{i_1}v_1^{i_1} Q(\vect{\pdiff}x^{i_1},\cdots,\sum_{i_r}v_r^{i_r}\vect{\pdiff}x^{i_r}) \\
+    Q(v_1,\cdots,v_r) &= Q(\sum_{i_1}v_1^{i_1} \vect{\partial}x^{i_1}, \cdots,
+    \sum_{i_r}v_r^{i_r} \vect{\partial}x^{i_r}) \\
+    &= \sum_{i_1}v_1^{i_1} Q(\vect{\partial}x^{i_1},\cdots,\sum_{i_r}v_r^{i_r}\vect{\partial}x^{i_r}) \\
     &= \sum_{i_1}\cdots\sum_{i_r}v_1^{i_1}\cdots v_r^{i_r}
-    Q(\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_r}),
+    Q(\vect{\partial}x^{i_1},\cdots,\vect{\partial}x^{i_r}),
   \end{aligned}
 \end{equation}
 where we use $i_k$ as the index to iterative over each component of the $k$-th tangent
 vector $v_k$ for $k=1,\cdots,r$. Let
-$Q_{i_1\cdots i_r}= Q(\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_r})$, which is the
+$Q_{i_1\cdots i_r}= Q(\vect{\partial}x^{i_1},\cdots,\vect{\partial}x^{i_r})$, which is the
 application of $Q$ to a basis vector of the product tangent space. Using the Einstein
 summation notation (i.e. the summation symbol $\sum_{i_k}$ with respect to an index $i_k$
 can be omitted whenever there is a pair of subscript $i_k$ and superscript $i_k$ appearing
@@ -1555,25 +1561,25 @@ $v_1, \cdots, v_r$ in $M_p^n$,
 \begin{equation}
   \left(\otimes_i\alpha^i\right)(v_1,\cdots,v_r) = \prod_i \alpha^i(v_i).
 \end{equation}
-Apply $\otimes_i\alpha^i$ to $\vect{\pdiff}x^{k_1},\cdots,\vect{\pdiff}x^{k_r}$, we have
+Apply $\otimes_i\alpha^i$ to $\vect{\partial}x^{k_1},\cdots,\vect{\partial}x^{k_r}$, we have
 \begin{equation}
-  \left( \otimes_i\alpha^i \right)(\vect{\pdiff}x^{k_1},\cdots,\vect{\pdiff}x^{k_r}) =
-  \prod_i\alpha^i(\vect{\pdiff}x^{k_i}) = \prod_i \alpha_{k_i}^{i}.
+  \left( \otimes_i\alpha^i \right)(\vect{\partial}x^{k_1},\cdots,\vect{\partial}x^{k_r}) =
+  \prod_i\alpha^i(\vect{\partial}x^{k_i}) = \prod_i \alpha_{k_i}^{i}.
 \end{equation}
 Then expand $\prod_i \alpha^i(v_i)$\footnote{Originally, we may want to expand it like this:
-  $\prod_i \alpha^i(v_i) = \prod_i \alpha^i\left( \sum_k v_i^k \vect{\pdiff}x^k \right) =
-  \prod_i \sum_k v_i^k \alpha^i(\vect{\pdiff}x^k)$. However, this hides the fact that for
+  $\prod_i \alpha^i(v_i) = \prod_i \alpha^i\left( \sum_k v_i^k \vect{\partial}x^k \right) =
+  \prod_i \sum_k v_i^k \alpha^i(\vect{\partial}x^k)$. However, this hides the fact that for
   each multiplier in the product, its summation index is independent from others.
   Therefore, the summation index $k$ for the $i$-th multiplier should have a subscript $i$
   to distinguish it from others.}:
 \begin{equation}
   \begin{aligned}
     \prod_i \alpha^i(v_i) &= \prod_i \alpha^i\left( \sum_{k_i}v_i^{k_i}
-      \vect{\pdiff}x^{k_i} \right) = \prod_i \sum_{k_i}v_i^{k_i}
-    \alpha^i(\vect{\pdiff}x^{k_i}) = \prod_i \sum_{k_i} v_i^{k_i} \alpha_{k_i}^i \\
+      \vect{\partial}x^{k_i} \right) = \prod_i \sum_{k_i}v_i^{k_i}
+    \alpha^i(\vect{\partial}x^{k_i}) = \prod_i \sum_{k_i} v_i^{k_i} \alpha_{k_i}^i \\
     &= \sum_{k_1}\cdots\sum_{k_r} v_1^{k_1}\cdots v_r^{k_r}
     \alpha_{k_1}^1\cdots\alpha_{k_r}^r = v_1^{k_1}\cdots v_r^{k_r} \left(
-      \otimes_i\alpha^i \right)(\vect{\pdiff}x^{k_1},\cdots,\vect{\pdiff}x^{k_r}).
+      \otimes_i\alpha^i \right)(\vect{\partial}x^{k_1},\cdots,\vect{\partial}x^{k_r}).
   \end{aligned}
 \end{equation}
 This means the construction of a $r$-th rank covariant tensor via tensor product of $r$
@@ -1689,11 +1695,11 @@ Then expand $\prod_i v_i(\alpha^i)$:
 Since a contravariant tensor is constructed from the tensor product of $s$ tangent
 vectors, a basis vector of the contravariant tensor space can be represented as the tensor
 product of the bases for all the tangent spaces in which the $s$ tangent vectors reside.
-Therefore, $\vect{\pdiff}x^{i_1}\otimes\cdots\otimes \vect{\pdiff}x^{i_s}$ is a basis
+Therefore, $\vect{\partial}x^{i_1}\otimes\cdots\otimes \vect{\partial}x^{i_s}$ is a basis
 vector of the contravariant tensor space and the tensor $T$ can be represented as
 \begin{equation}
   \label{eq:contravariant-tensor-expanded-as-tensor-product}
-  T = T^{i_1\cdots i_s} \vect{\pdiff}x^{i_1}\otimes\cdots\otimes \vect{\pdiff}x^{i_s}.
+  T = T^{i_1\cdots i_s} \vect{\partial}x^{i_1}\otimes\cdots\otimes \vect{\partial}x^{i_s}.
 \end{equation}
 
 \subsubsection{Mixed tensor}
@@ -1709,9 +1715,9 @@ Hence $W$ belongs to the dual space of the product space
 $\left( \otimes^s M_p^{n*} \right) \otimes \left( \otimes^r M_p^n \right)$.
 
 Similar as before, apply $W$ to a basis vector of this product space,
-$(dx^{i_1},\cdots,dx^{i_s},\vect{\pdiff}x^{j_1},\cdots,\vect{\pdiff}x^{j_r})$, we obtain
+$(dx^{i_1},\cdots,dx^{i_s},\vect{\partial}x^{j_1},\cdots,\vect{\partial}x^{j_r})$, we obtain
 \begin{equation}
-  W^{i_1\cdots i_s}_{j_1\cdots j_r} = W(dx^{i_1},\cdots,dx^{i_s},\vect{\pdiff}x^{j_1},\cdots,\vect{\pdiff}x^{j_r}).
+  W^{i_1\cdots i_s}_{j_1\cdots j_r} = W(dx^{i_1},\cdots,dx^{i_s},\vect{\partial}x^{j_1},\cdots,\vect{\partial}x^{j_r}).
 \end{equation}
 Then
 \begin{equation}
@@ -1724,8 +1730,8 @@ Similar as the expansion of a covariant or contravariant tensor, a mixed tensor 
 represented as
 \begin{equation}
   \label{eq:mixed-tensor-expanded-as-tensor-product}
-  W = W^{i_1\cdots i_s}_{j_1\cdots j_r} \vect{\pdiff}x^{i_1}\otimes\cdots\otimes
-  \vect{\pdiff}x^{i_s}\otimes dx^{j_1}\otimes\cdots\otimes dx^{j_r}.
+  W = W^{i_1\cdots i_s}_{j_1\cdots j_r} \vect{\partial}x^{i_1}\otimes\cdots\otimes
+  \vect{\partial}x^{i_s}\otimes dx^{j_1}\otimes\cdots\otimes dx^{j_r}.
 \end{equation}
 
 \subsubsection{Conventions for super and subscripts}
@@ -1755,21 +1761,21 @@ $i\cdots j$ and $k\cdots l$ for $(V,x_V)$.
 \item Coordinate transformation of a covariant tensor
   \begin{equation}
     \label{eq:covariant-tensor-transform}
-    Q_{i\cdots j}^V = \left( \frac{\pdiff x_U^r}{\pdiff x_V^i} \right) \cdots \left(
-      \frac{\pdiff x_U^s}{\pdiff x_V^j} \right) Q_{r \cdots s}^U
+    Q_{i\cdots j}^V = \left( \frac{\partial x_U^r}{\partial x_V^i} \right) \cdots \left(
+      \frac{\partial x_U^s}{\partial x_V^j} \right) Q_{r \cdots s}^U
   \end{equation}
 \item Coordinate transformation of a contravariant tensor
   \begin{equation}
     \label{eq:contravariant-tensor-transform}
-    T_V^{i \cdots j} = \left( \frac{\pdiff x_V^i}{\pdiff x_U^r} \right) \cdots \left(
-      \frac{\pdiff x_V^j}{\pdiff x_U^s} \right) T_U^{r \cdots s}
+    T_V^{i \cdots j} = \left( \frac{\partial x_V^i}{\partial x_U^r} \right) \cdots \left(
+      \frac{\partial x_V^j}{\partial x_U^s} \right) T_U^{r \cdots s}
   \end{equation}
 \item Coordinate transformation of a mixed tensor
   \begin{equation}
     \label{eq:mixed-tensor-transform}
-    \left( W^{i \cdots j}_{k \cdots l} \right)_V = \left( \frac{\pdiff x_V^i}{\pdiff x_U^c} \right)
-    \cdots \left( \frac{\pdiff x_V^j}{\pdiff x_U^d} \right) \left( \frac{\pdiff
-        x_U^r}{\pdiff x_V^k} \right) \cdots \left( \frac{\pdiff x_U^s}{\pdiff x_V^l}
+    \left( W^{i \cdots j}_{k \cdots l} \right)_V = \left( \frac{\partial x_V^i}{\partial x_U^c} \right)
+    \cdots \left( \frac{\partial x_V^j}{\partial x_U^d} \right) \left( \frac{\partial
+        x_U^r}{\partial x_V^k} \right) \cdots \left( \frac{\partial x_U^s}{\partial x_V^l}
     \right) \left( W^{c \cdots d}_{r \cdots s} \right)_U
   \end{equation}
 \end{itemize}
@@ -1779,22 +1785,22 @@ $i\cdots j$ and $k\cdots l$ for $(V,x_V)$.
 \begin{Definition}[Contraction of a mixed tensor]
   \label{def:contraction-of-mixed-tensor}
   Let
-  $W_U = \left( W^{i_1 \cdots i_p}_{j_1 \cdots j_q} \right)_U \vect{\pdiff}x^{i_1} \otimes
-  \cdots \otimes \vect{\pdiff}x^{i_p} \otimes dx^{j_1} \otimes \cdots \otimes dx^{j_q}$ be
-  a mixed tensor of contravariant rank $p$ and covariant rank $q$ using the coordinate
-  chart $(U,x)$. The contraction of its $k$-th contravariant index and the $l$-th
-  covariant index produces a $(p-1)$-th contravariant rank and $(q-1)$-th covariant rank
-  tensor, which is defined as
+  $W_U = \left( W^{i_1 \cdots i_p}_{j_1 \cdots j_q} \right)_U \vect{\partial}x^{i_1}
+  \otimes \cdots \otimes \vect{\partial}x^{i_p} \otimes dx^{j_1} \otimes \cdots \otimes
+  dx^{j_q}$ be a mixed tensor of contravariant rank $p$ and covariant rank $q$ using the
+  coordinate chart $(U,x)$. The contraction of its $k$-th contravariant index and the
+  $l$-th covariant index produces a $(p-1)$-th contravariant rank and $(q-1)$-th covariant
+  rank tensor, which is defined as
   \begin{equation}
     \label{eq:contraction-of-mixed-tensor}
     \begin{aligned}
       \overset{\circ}{W}_U &= \left( \overset{\circ}{W}^{i_1 \cdots \hat{i}_k \cdots
-          i_p}_{j_1 \cdots \hat{j}_l \cdots j_q} \right)_U \vect{\pdiff}x^{i_1} \otimes
-      \cdots \widehat{\vect{\pdiff}x^{i_k}} \cdots \otimes \vect{\pdiff}x^{i_p} \otimes
+          i_p}_{j_1 \cdots \hat{j}_l \cdots j_q} \right)_U \vect{\partial}x^{i_1} \otimes
+      \cdots \widehat{\vect{\partial}x^{i_k}} \cdots \otimes \vect{\partial}x^{i_p} \otimes
       dx^{j_1}  \otimes \cdots \widehat{dx^{j_l}} \cdots \otimes dx^{j_q} \\
       &= \sum_{m=1}^n \left( W^{i_1 \cdots i_{k-1}, m, i_{k+1} \cdots i_p}_{j_1 \cdots
-          j_{l-1}, m, j_{l+1} \cdots j_{q}} \right)_U \vect{\pdiff}x^{i_1} \otimes \cdots
-      \widehat{\vect{\pdiff}x^{i_k}} \cdots \otimes \vect{\pdiff}x^{i_p} \otimes dx^{j_1}
+          j_{l-1}, m, j_{l+1} \cdots j_{q}} \right)_U \vect{\partial}x^{i_1} \otimes \cdots
+      \widehat{\vect{\partial}x^{i_k}} \cdots \otimes \vect{\partial}x^{i_p} \otimes dx^{j_1}
       \otimes \cdots \widehat{dx^{j_l}} \cdots \otimes dx^{j_q}.
     \end{aligned}
   \end{equation}
@@ -1804,19 +1810,20 @@ a mixed tensor, i.e. the resulted entity should satisfy the rule of coordinate
 transformation for a mixed tensor.
 \begin{Proof}
   Let
-  $W_V = \left( W^{r_1 \cdots r_p}_{s_1 \cdots s_q} \right)_V \vect{\pdiff}y^{r_1} \otimes
-  \cdots \otimes \vect{\pdiff}y^{r_p} \otimes dy^{s_1} \otimes \cdots \otimes dy^{s_q}$ be
-  the same mixed tensor as $W_U$ but represented with the coordinate chart $(V,y)$. After
-  contracting its $k$-th contravariant index and $l$-th covariant index, it becomes
+  $W_V = \left( W^{r_1 \cdots r_p}_{s_1 \cdots s_q} \right)_V \vect{\partial}y^{r_1}
+  \otimes \cdots \otimes \vect{\partial}y^{r_p} \otimes dy^{s_1} \otimes \cdots \otimes
+  dy^{s_q}$ be the same mixed tensor as $W_U$ but represented in the coordinate chart
+  $(V,y)$. After contracting its $k$-th contravariant index and $l$-th covariant index, it
+  becomes
   \begin{align*}
     \overset{\circ}{W}_V
     &= \left( \overset{\circ}{W}^{r_1 \cdots \hat{r}_k \cdots r_p}_{s_1 \cdots \hat{s}_l
-      \cdots s_q} \right)_{V} \vect{\pdiff}y^{r_1}
-      \otimes \cdots \widehat{\vect{\pdiff}y^{r_k}} \cdots \otimes \vect{\pdiff}y^{r_p}
+      \cdots s_q} \right)_{V} \vect{\partial}y^{r_1}
+      \otimes \cdots \widehat{\vect{\partial}y^{r_k}} \cdots \otimes \vect{\partial}y^{r_p}
       \otimes dy^{s_1} \otimes \cdots \widehat{dy^{s_l}} \cdots \otimes dy^{s_q} \\
     &= \sum_{m=1}^n \left( W^{r_1 \cdots r_{k-1}, m, r_{k+1} \cdots
-      r_p}_{s_1 \cdots s_{l-1}, m, s_{l+1} \cdots s_q} \right)_V \vect{\pdiff}y^{r_1}
-      \otimes \cdots \widehat{\vect{\pdiff}y^{r_k}} \cdots \otimes \vect{\pdiff}y^{r_p}
+      r_p}_{s_1 \cdots s_{l-1}, m, s_{l+1} \cdots s_q} \right)_V \vect{\partial}y^{r_1}
+      \otimes \cdots \widehat{\vect{\partial}y^{r_k}} \cdots \otimes \vect{\partial}y^{r_p}
       \otimes dy^{s_1} \otimes \cdots \widehat{dy^{s_l}} \cdots \otimes dy^{s_q},
   \end{align*}
   According to Equation (\ref{eq:mixed-tensor-transform}), the expansion coefficient can
@@ -1826,67 +1833,67 @@ transformation for a mixed tensor.
     \cdots s_q} \right)_{V}
     &= \sum_{m=1}^n \left( W^{r_1 \cdots r_{k-1}, m, r_{k+1} \cdots
       r_p}_{s_1 \cdots s_{l-1}, m, s_{l+1} \cdots s_q} \right)_V \\
-    &= \sum_{m=1}^n \left( \frac{\pdiff y^{r_1}}{\pdiff x^{i_1}} \cdots \frac{\pdiff
-      y^{r_{k-1}}}{\pdiff x^{i_{k-1}}} \frac{\pdiff y^{m}}{\pdiff x^{i_k}} \frac{\pdiff
-      y^{r_{k+1}}}{\pdiff x^{i_{k+1}}} \cdots \frac{\pdiff y^{r_p}}{\pdiff x^{i_p}}
+    &= \sum_{m=1}^n \left( \frac{\partial y^{r_1}}{\partial x^{i_1}} \cdots \frac{\partial
+      y^{r_{k-1}}}{\partial x^{i_{k-1}}} \frac{\partial y^{m}}{\partial x^{i_k}} \frac{\partial
+      y^{r_{k+1}}}{\partial x^{i_{k+1}}} \cdots \frac{\partial y^{r_p}}{\partial x^{i_p}}
       \right) \cdot \\
-    & \quad \quad \left( \frac{\pdiff x^{j_1}}{\pdiff y^{s_1}} \cdots \frac{\pdiff
-      x^{j_{l-1}}}{\pdiff y^{s_{l-1}}} \frac{\pdiff x^{j_l}}{\pdiff y^{m}} \frac{\pdiff
-      x^{j_{l+1}}}{\pdiff y^{s_{l+1}}} \cdots \frac{\pdiff x^{j_q}}{\pdiff y^{s_q}}
+    & \quad \quad \left( \frac{\partial x^{j_1}}{\partial y^{s_1}} \cdots \frac{\partial
+      x^{j_{l-1}}}{\partial y^{s_{l-1}}} \frac{\partial x^{j_l}}{\partial y^{m}} \frac{\partial
+      x^{j_{l+1}}}{\partial y^{s_{l+1}}} \cdots \frac{\partial x^{j_q}}{\partial y^{s_q}}
       \right) \left( W^{i_1 \cdots i_{k-1},
       i_k, i_{k+1} \cdots i_p}_{j_1 \cdots j_{l-1}, j_l, j_{l+1} \cdots j_{q}} \right)_U
     \\
-    &= \left( \sum_{m=1}^n \frac{\pdiff y^{m}}{\pdiff x^{i_k}} \frac{\pdiff
-      x^{j_l}}{\pdiff y^{m}} \right) \left( \frac{\pdiff y^{r_1}}{\pdiff x^{i_1}} \cdots
-      \frac{\pdiff y^{r_{k-1}}}{\pdiff x^{i_{k-1}}} \frac{\pdiff y^{r_{k+1}}}{\pdiff
-      x^{i_{k+1}}} \cdots \frac{\pdiff y^{r_p}}{\pdiff x^{i_p}} \right) \cdot \\
-    & \quad \quad \left( \frac{\pdiff x^{j_1}}{\pdiff y^{s_1}} \cdots \frac{\pdiff
-      x^{j_{l-1}}}{\pdiff y^{s_{l-1}}} \frac{\pdiff
-      x^{j_{l+1}}}{\pdiff y^{s_{l+1}}} \cdots \frac{\pdiff x^{j_q}}{\pdiff y^{s_q}}
+    &= \left( \sum_{m=1}^n \frac{\partial y^{m}}{\partial x^{i_k}} \frac{\partial
+      x^{j_l}}{\partial y^{m}} \right) \left( \frac{\partial y^{r_1}}{\partial x^{i_1}} \cdots
+      \frac{\partial y^{r_{k-1}}}{\partial x^{i_{k-1}}} \frac{\partial y^{r_{k+1}}}{\partial
+      x^{i_{k+1}}} \cdots \frac{\partial y^{r_p}}{\partial x^{i_p}} \right) \cdot \\
+    & \quad \quad \left( \frac{\partial x^{j_1}}{\partial y^{s_1}} \cdots \frac{\partial
+      x^{j_{l-1}}}{\partial y^{s_{l-1}}} \frac{\partial
+      x^{j_{l+1}}}{\partial y^{s_{l+1}}} \cdots \frac{\partial x^{j_q}}{\partial y^{s_q}}
       \right) \left( W^{i_1 \cdots i_{k-1},
       i_k, i_{k+1} \cdots i_p}_{j_1 \cdots j_{l-1}, j_l, j_{l+1} \cdots j_{q}} \right)_U,
   \end{align*}
   where
   \begin{equation*}
-    \sum_{m=1}^n \frac{\pdiff y^{m}}{\pdiff x^{i_k}} \frac{\pdiff x^{j_l}}{\pdiff y^{m}} =
-    \frac{\pdiff x^{j_l}}{\pdiff x^{i_k}} = \delta^{j_l}_{i_k}.
+    \sum_{m=1}^n \frac{\partial y^{m}}{\partial x^{i_k}} \frac{\partial x^{j_l}}{\partial y^{m}} =
+    \frac{\partial x^{j_l}}{\partial x^{i_k}} = \delta^{j_l}_{i_k}.
   \end{equation*}
   Therefore, only when $j_l = i_k$, the term in the sum for the tensor coefficient is
   non-zero. We finally have
   \begin{align*}
     \left( \overset{\circ}{W}^{r_1 \cdots \hat{r}_k \cdots r_p}_{s_1 \cdots \hat{s}_l
     \cdots s_q} \right)_{V}
-    &= \left( \frac{\pdiff y^{r_1}}{\pdiff x^{i_1}} \cdots
-      \frac{\pdiff y^{r_{k-1}}}{\pdiff x^{i_{k-1}}} \frac{\pdiff y^{r_{k+1}}}{\pdiff
-      x^{i_{k+1}}} \cdots \frac{\pdiff y^{r_p}}{\pdiff x^{i_p}} \right) \cdot \\
-    & \quad \quad \left( \frac{\pdiff x^{j_1}}{\pdiff y^{s_1}} \cdots \frac{\pdiff
-      x^{j_{l-1}}}{\pdiff y^{s_{l-1}}} \frac{\pdiff
-      x^{j_{l+1}}}{\pdiff y^{s_{l+1}}} \cdots \frac{\pdiff x^{j_q}}{\pdiff y^{s_q}}
+    &= \left( \frac{\partial y^{r_1}}{\partial x^{i_1}} \cdots
+      \frac{\partial y^{r_{k-1}}}{\partial x^{i_{k-1}}} \frac{\partial y^{r_{k+1}}}{\partial
+      x^{i_{k+1}}} \cdots \frac{\partial y^{r_p}}{\partial x^{i_p}} \right) \cdot \\
+    & \quad \quad \left( \frac{\partial x^{j_1}}{\partial y^{s_1}} \cdots \frac{\partial
+      x^{j_{l-1}}}{\partial y^{s_{l-1}}} \frac{\partial
+      x^{j_{l+1}}}{\partial y^{s_{l+1}}} \cdots \frac{\partial x^{j_q}}{\partial y^{s_q}}
       \right) \left( \sum_{j_l, i_k} \delta^{j_l}_{i_k} \left( W^{i_1 \cdots i_{k-1},
       i_k, i_{k+1} \cdots i_p}_{j_1 \cdots j_{l-1}, j_l, j_{l+1} \cdots j_{q}} \right)_U
       \right) \\
-    &= \left( \frac{\pdiff y^{r_1}}{\pdiff x^{i_1}} \cdots
-      \frac{\pdiff y^{r_{k-1}}}{\pdiff x^{i_{k-1}}} \frac{\pdiff y^{r_{k+1}}}{\pdiff
-      x^{i_{k+1}}} \cdots \frac{\pdiff y^{r_p}}{\pdiff x^{i_p}} \right) \cdot \\
-    & \quad \quad \left( \frac{\pdiff x^{j_1}}{\pdiff y^{s_1}} \cdots \frac{\pdiff
-      x^{j_{l-1}}}{\pdiff y^{s_{l-1}}} \frac{\pdiff
-      x^{j_{l+1}}}{\pdiff y^{s_{l+1}}} \cdots \frac{\pdiff x^{j_q}}{\pdiff y^{s_q}}
+    &= \left( \frac{\partial y^{r_1}}{\partial x^{i_1}} \cdots
+      \frac{\partial y^{r_{k-1}}}{\partial x^{i_{k-1}}} \frac{\partial y^{r_{k+1}}}{\partial
+      x^{i_{k+1}}} \cdots \frac{\partial y^{r_p}}{\partial x^{i_p}} \right) \cdot \\
+    & \quad \quad \left( \frac{\partial x^{j_1}}{\partial y^{s_1}} \cdots \frac{\partial
+      x^{j_{l-1}}}{\partial y^{s_{l-1}}} \frac{\partial
+      x^{j_{l+1}}}{\partial y^{s_{l+1}}} \cdots \frac{\partial x^{j_q}}{\partial y^{s_q}}
       \right) \left( \sum_{m=1}^n \left( W^{i_1 \cdots i_{k-1},
       m, i_{k+1} \cdots i_p}_{j_1 \cdots j_{l-1}, m, j_{l+1} \cdots j_{q}} \right)_U
       \right) \\
-    &= \left( \frac{\pdiff y^{r_1}}{\pdiff x^{i_1}} \cdots
-      \frac{\pdiff y^{r_{k-1}}}{\pdiff x^{i_{k-1}}} \frac{\pdiff y^{r_{k+1}}}{\pdiff
-      x^{i_{k+1}}} \cdots \frac{\pdiff y^{r_p}}{\pdiff x^{i_p}} \right) \cdot \\
-    & \quad \quad \left( \frac{\pdiff x^{j_1}}{\pdiff y^{s_1}} \cdots \frac{\pdiff
-      x^{j_{l-1}}}{\pdiff y^{s_{l-1}}} \frac{\pdiff
-      x^{j_{l+1}}}{\pdiff y^{s_{l+1}}} \cdots \frac{\pdiff x^{j_q}}{\pdiff y^{s_q}}
+    &= \left( \frac{\partial y^{r_1}}{\partial x^{i_1}} \cdots
+      \frac{\partial y^{r_{k-1}}}{\partial x^{i_{k-1}}} \frac{\partial y^{r_{k+1}}}{\partial
+      x^{i_{k+1}}} \cdots \frac{\partial y^{r_p}}{\partial x^{i_p}} \right) \cdot \\
+    & \quad \quad \left( \frac{\partial x^{j_1}}{\partial y^{s_1}} \cdots \frac{\partial
+      x^{j_{l-1}}}{\partial y^{s_{l-1}}} \frac{\partial
+      x^{j_{l+1}}}{\partial y^{s_{l+1}}} \cdots \frac{\partial x^{j_q}}{\partial y^{s_q}}
       \right) \left( \overset{\circ}{W}^{i_1 \cdots \hat{i_k} \cdots i_p}_{j_1 \cdots
       \hat{j_l} \cdots j_q} \right)_U.
   \end{align*}
   Therefore, the contraction of a $p$-th contravariant rank and $q$-th covariant rank
   mixed tensor is indeed a $(p-1)$-th contravariant rank and $(q-1)$-th covariant rank
-  mixed tensor. \emph{This can be considered as an internal interaction in a mixed tensor
-    consumes or eliminates a pair of indices.}
+  mixed tensor. \emph{This can be considered as an internal interaction in a mixed tensor,
+    which consumes or eliminates a pair of indices.}
 \end{Proof}
 
 \subsection{Exterior form and exterior algebra}
@@ -1923,37 +1930,37 @@ a $k$-vector $(v_1,\cdots,v_k)$ can be similarly expanded as
 \begin{equation}
   \label{eq:k-form-applied-to-k-vector-expanded}
   \alpha(v_{1},\cdots,v_{k}) = \alpha \left(
-    \sum_{i_1}v_1^{i_1}\vect{\pdiff}x^{i_1},\cdots,\sum_{i_k}v_k^{i_k}\vect{\pdiff}x^{i_k}
+    \sum_{i_1}v_1^{i_1}\vect{\partial}x^{i_1},\cdots,\sum_{i_k}v_k^{i_k}\vect{\partial}x^{i_k}
   \right) = \sum_{i_1}\cdots\sum_{i_k}v_1^{i_1}\cdots v_k^{i_k}
-  \alpha(\vect{\pdiff}x^{i_1},\cdots, \vect{\pdiff}x^{i_k}).
+  \alpha(\vect{\partial}x^{i_1},\cdots, \vect{\partial}x^{i_k}).
 \end{equation}
 Moreover, due to the antisymmetry of $\alpha$, some terms in the above multi-summation can
 be combined. For example, because
 \begin{equation}
-  \alpha(\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_r},\cdots,\vect{\pdiff}x^{i_s},\cdots,\vect{\pdiff}x^{i_k})
+  \alpha(\vect{\partial}x^{i_1},\cdots,\vect{\partial}x^{i_r},\cdots,\vect{\partial}x^{i_s},\cdots,\vect{\partial}x^{i_k})
   =
-  -\alpha(\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_s},\cdots,\vect{\pdiff}x^{i_r},\cdots,\vect{\pdiff}x^{i_k}),
+  -\alpha(\vect{\partial}x^{i_1},\cdots,\vect{\partial}x^{i_s},\cdots,\vect{\partial}x^{i_r},\cdots,\vect{\partial}x^{i_k}),
 \end{equation}
 the following two terms can be merged
 \begin{equation}
   \begin{aligned}
     & v_1^{i_1} \cdots v_r^{i_r} \cdots v_s^{i_s} \cdots v_k^{i_k}
-    \alpha(\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_r},\cdots,\vect{\pdiff}x^{i_s},\cdots,\vect{\pdiff}x^{i_k})
+    \alpha(\vect{\partial}x^{i_1},\cdots,\vect{\partial}x^{i_r},\cdots,\vect{\partial}x^{i_s},\cdots,\vect{\partial}x^{i_k})
     + \\
     & v_1^{i_1} \cdots v_r^{i_s} \cdots v_s^{i_r} \cdots v_k^{i_k}
-    \alpha(\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_s},\cdots,\vect{\pdiff}x^{i_r},\cdots,\vect{\pdiff}x^{i_k})
+    \alpha(\vect{\partial}x^{i_1},\cdots,\vect{\partial}x^{i_s},\cdots,\vect{\partial}x^{i_r},\cdots,\vect{\partial}x^{i_k})
     \\
     = & \left( v_1^{i_1} \cdots v_r^{i_r} \cdots v_s^{i_s} \cdots v_k^{i_k} - v_1^{i_1}
-      \cdots v_r^{i_s} \cdots v_s^{i_r} \cdots v_k^{i_k} \right) \alpha(\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_r},\cdots,\vect{\pdiff}x^{i_s},\cdots,\vect{\pdiff}x^{i_k}).
+      \cdots v_r^{i_s} \cdots v_s^{i_r} \cdots v_k^{i_k} \right) \alpha(\vect{\partial}x^{i_1},\cdots,\vect{\partial}x^{i_r},\cdots,\vect{\partial}x^{i_s},\cdots,\vect{\partial}x^{i_k}).
   \end{aligned}
 \end{equation}
 For simplicity, we can write the tuple of basis vectors
 $\left(
-  \vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_r},\cdots,\vect{\pdiff}x^{i_s},\cdots,\vect{\pdiff}x^{i_k}
-\right)$ as $\vect{\pdiff}x^{I}$, where $I$ is a tuple of indices $I = (i_1,\cdots,i_k)$
+  \vect{\partial}x^{i_1},\cdots,\vect{\partial}x^{i_r},\cdots,\vect{\partial}x^{i_s},\cdots,\vect{\partial}x^{i_k}
+\right)$ as $\vect{\partial}x^{I}$, where $I$ is a tuple of indices $I = (i_1,\cdots,i_k)$
 with each component index in the range $1,\cdots,n$. For any two terms in the expansion of
 Equation (\ref{eq:k-form-applied-to-k-vector-expanded}) which contain
-$\alpha(\vect{\pdiff}x^I) = \alpha_I$ and $\alpha(\vect{\pdiff}x^J) = \alpha_J$, if the
+$\alpha(\vect{\partial}x^I) = \alpha_I$ and $\alpha(\vect{\partial}x^J) = \alpha_J$, if the
 index set $J$ is a permutation of $I$, the two terms can be combined.
 
 \begin{Remark}[Permutation independence]
@@ -1962,10 +1969,10 @@ rank covariant tensors.
 \end{Remark}
 Meanwhile, if any two indices in the index set $I$ are equal, $\alpha_I$ is evaluated to
 zero. Therefore, the total effective number of terms in the multi-summation of Equation
-(\ref{eq:k-form-applied-to-k-vector-expanded}) is is $C_n^k$, which is the number of ways
+(\ref{eq:k-form-applied-to-k-vector-expanded}) is $C_n^k$, which is the number of ways
 that we can select $k$ different indices in the range $1,\cdots,n$. This also means the
 behavior of a $k$-form when it operates on a $k$-vector can be completely determined by
-applying it to all such tuples of basis vectors $\vect{\pdiff}x^I$ of the tangent space
+applying it to all such tuples of basis vectors $\vect{\partial}x^I$ of the tangent space
 with an increasing index set $I = (i_1,\cdots,i_k)$. From now on, for an increasing index
 set like $I$, we write it as $\underaccent{\rightharpoondown}{I}$.
 
@@ -1975,7 +1982,7 @@ Here we have three special cases:
   Since a 0-form defined on the manifold $M^n$ is simply a scalar function, this only term
   is its evaluation at the point $p$.
 \item When $\alpha$ is a $n$-form, $C_n^n = 1$ and there is only term in the summation,
-  which contains $\alpha(\vect{\pdiff}x^1,\cdots,\vect{\pdiff}x^n)$.
+  which contains $\alpha(\vect{\partial}x^1,\cdots,\vect{\partial}x^n)$.
 \item\label{item:zero-form} When $\alpha$ is a $k$-form with $k > n$, $C_n^k = 0$ and we
   can say no matter how we select those $k$ indices in the range $1,\cdots,n$, there will
   be at least two equal indices in the index set $I$. Therefore, there are no terms in the
@@ -2018,12 +2025,12 @@ $\alpha$ and $\beta$, by applying this product to $k+l$ tangent vectors, we have
   \alpha \otimes \beta (v_1,\cdots,v_k,v_{k+1},\cdots,v_{k+l}) = \alpha(v_1,\cdots,v_k) \beta(v_{k+1},\cdots,v_{k+l}).
 \end{equation}
 If we swap any two vectors $v_i$ and $v_j$ with $i,j$ in the range $1,\cdots,k$, the above
-evaluation only changes sign. Similar result holds for the case when $i,j$ are in the
-range $k+1,\cdots,k+l$. However, if $i$ is selected from $1,\cdots,k$ and $j$ is selected
-from $k+1,\cdots,k+l$, swapping $v_i$ and $v_j$ will make $\alpha\otimes\beta$ not
-antisymmetric. Therefore, a normal tensor product of two exterior forms is not a closed
-operation and we need to define a new type of product which ensures the antisymmetric
-property.
+evaluation changes sign, which satisfies anti-symmetry. Similar result holds for the case
+when $i,j$ are in the range $k+1,\cdots,k+l$. However, if $i$ is selected from
+$1,\cdots,k$ and $j$ is selected from $k+1,\cdots,k+l$, swapping $v_i$ and $v_j$ will make
+$\alpha\otimes\beta$ not antisymmetric. Therefore, a standard tensor product of two
+exterior forms is not a closed operation and we need to define a new type of product which
+ensures the antisymmetric property.
 
 \begin{Definition}[Generalized Kronecker delta $\delta_I^J$]
   Let $I = (i_1,\cdots,i_m)$ and $J = (j_1,\cdots,j_m)$ be two index sets.
@@ -2061,7 +2068,7 @@ property.
     on the value range for each component index, since the tuple of tangent vectors $v_I$
     can be assigned arbitrary indices. However, when $v_I$ are specifically selected as a
     set of basis vectors of the tangent space $M_p^n$, such as
-    $\vect{\pdiff}x^I = \left( \vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_{l+m}}
+    $\vect{\partial}x^I = \left( \vect{\partial}x^{i_1},\cdots,\vect{\partial}x^{i_{l+m}}
     \right)$ with $l + m = n$, the component indices within $I$ should be in the range
     $1,\cdots,n$, since there are only $n$ basis vectors in $M_p^n$ which are indexed by
     starting from 1.\label{fn:index-value-range-in-exterior-form}}. The multi-summation
@@ -2076,13 +2083,13 @@ property.
   \item $l+m \leq n$ should be satisfied, otherwise $\left( \alpha+\beta \right)$ is
     always zero according to previous discussion about the special case
     \ref{item:zero-form} of exterior forms.
-  \item $J$ and $K$ is a partition of the index set $I$, each of which is an increasing
-    set of indices. Hence, the total number of terms in the summation
+  \item $J$ and $K$ comprise a partition of the index set $I$, each of which is an
+    increasing set of indices. Hence, the total number of terms in the summation
     $\sum_{\underaccent{\rightharpoondown}{J}}\sum_{\underaccent{\rightharpoondown}{K}}$
     is $C_{l+m}^l$.
   \item If the tuple of $l+m$ tangent vectors are simply basis vectors of the tangent
-    space, i.e. $\vect{\pdiff}x^I =
-    (\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_{l+m}})$, Equation
+    space, i.e. $\vect{\partial}x^I =
+    (\vect{\partial}x^{i_1},\cdots,\vect{\partial}x^{i_{l+m}})$, Equation
     (\ref{eq:exterior-product-applied-to-vectors}) can be written as
     \begin{equation}
       \label{eq:exterior-product-applied-to-basis-vectors}
@@ -2183,7 +2190,7 @@ property.
   tangent space and checking their equality.
 
   Let $N = (n_1, \cdots, n_{l+m+r})$ be a tuple of index sets and
-  $(\vect{\pdiff}x^{n_1},\cdots,\vect{\pdiff}x^{l+m+r})$ be a tuple of basis vectors in
+  $(\vect{\partial}x^{n_1},\cdots,\vect{\partial}x^{l+m+r})$ be a tuple of basis vectors in
   the tangent space $M_p^n$. Meanwhile, let $I$, $J$, $K$, $L$ and $M$ be index sets,
   which are to be used with $\alpha^l$, $\beta^m$, $\gamma^r$, $\alpha^l\wedge\beta^m$ and
   $\beta^m\wedge\gamma^r$ respectively.
@@ -2309,7 +2316,7 @@ which is equivalent to the determinant
   Because $dx^i$ is a projection vector which extracts the $i$-th component of the input
   tangent vector, each column in the above determinant is the corresponding vector in
   $v_J$ that is projected to the subspace spanned by the basis vectors
-  $\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_k}$ of the tangent space. Then the
+  $\vect{\partial}x^{i_1},\cdots,\vect{\partial}x^{i_k}$ of the tangent space. Then the
   determinant is just the signed volume spanned by these projected vectors.
 
   Moreover, if we take all the $n$ basis vectors in the cotangent space to generate the
@@ -2339,19 +2346,19 @@ which is equivalent to the determinant
   
   Let the $k$-vector $\left( v_{j_1},\cdots,v_{j_k} \right)$ be basis vectors in the
   tangent space $M_p^n$:
-  $\vect{\pdiff}x^J \coloneqq (\vect{\pdiff}x^{j_1},\cdots,\vect{\pdiff}x^{j_k})$. Then we
-  apply $dx^I$ to $\vect{\pdiff}x^J$ and use Equation
+  $\vect{\partial}x^J \coloneqq (\vect{\partial}x^{j_1},\cdots,\vect{\partial}x^{j_k})$. Then we
+  apply $dx^I$ to $\vect{\partial}x^J$ and use Equation
   (\ref{eq:1-form-exterior-product-applied-to-k-vector}) and
   (\ref{eq:projection-operator}):
   \begin{equation}
-    dx^I(\vect{\pdiff}x^J) = \sum_{L} \delta_J^L dx^{i_1}(\vect{\pdiff}x^{l_1}) \cdots
-    dx^{i_k}(\vect{\pdiff}x^{l_k}) = \sum_L \delta_J^L \delta_{l_1}^{i_1} \cdots
+    dx^I(\vect{\partial}x^J) = \sum_{L} \delta_J^L dx^{i_1}(\vect{\partial}x^{l_1}) \cdots
+    dx^{i_k}(\vect{\partial}x^{l_k}) = \sum_L \delta_J^L \delta_{l_1}^{i_1} \cdots
     \delta_{l_k}^{i_k}.
   \end{equation}
   It is obvious that only when $L=I$, the term in the sum is not zero. Therefore,
   \begin{equation}
     \label{eq:cotangent-basis-appled-to-tangent-basis}
-    dx^I(\vect{\pdiff}x^J) = \delta_J^I.
+    dx^I(\vect{\partial}x^J) = \delta_J^I.
   \end{equation}
 \end{Example}
 
@@ -2363,29 +2370,29 @@ which is equivalent to the determinant
   Let $\alpha^k$ be a $k$-form. Let $I = (i_1,\cdots,i_k)$ be an index set with each
   component index in the range $1,\cdots,n$. $\alpha^k$ can be expanded as
   \begin{equation}
-    \alpha^k = \sum_{\underaccent{\rightharpoondown}{I}} \alpha^k(\vect{\pdiff}x^I) dx^I.
+    \alpha^k = \sum_{\underaccent{\rightharpoondown}{I}} \alpha^k(\vect{\partial}x^I) dx^I.
   \end{equation}
 \end{Proposition}
 
 \begin{Proof}
   Let $J = (j_1,\cdots,j_k)$ be an index set with each component index in the range
   $1,\cdots,n$. Apply both sides of the equation to the tuple of basis vectors in the
-  tangent space: $\vect{\pdiff}x^J$. If the equality holds for any $J$, the proposition is
+  tangent space: $\vect{\partial}x^J$. If the equality holds for any $J$, the proposition is
   proved.
 
-  The left hand side is simply $\alpha^k(\vect{\pdiff}x^J)$. The right hand side is
+  The left hand side is simply $\alpha^k(\vect{\partial}x^J)$. The right hand side is
   \begin{equation}
-    \sum_{\underaccent{\rightharpoondown}{I}}\alpha^k(\vect{\pdiff}x^I)dx^I(\vect{\pdiff}x^J)
-    = \sum_{\underaccent{\rightharpoondown}{I}} \alpha^k(\vect{\pdiff}x^I)\delta_J^I.
+    \sum_{\underaccent{\rightharpoondown}{I}}\alpha^k(\vect{\partial}x^I)dx^I(\vect{\partial}x^J)
+    = \sum_{\underaccent{\rightharpoondown}{I}} \alpha^k(\vect{\partial}x^I)\delta_J^I.
   \end{equation}
   It is obvious that only when the index set $I$ is a permutation of $J$, the term in the
   sum is not zero. Since $I$ is ensured to be increasing, there is only one non-zero term.
 
   Let $I_0$ be the index set for this non-zero term. When $I_0$ is an even permutation of
   $J$, $\delta_J^{I_0}=1$ and
-  $\alpha^k(\vect{\pdiff}x^{I_0}) = \alpha^k(\vect{\pdiff}x^J)$. Hence, the right hand
+  $\alpha^k(\vect{\partial}x^{I_0}) = \alpha^k(\vect{\partial}x^J)$. Hence, the right hand
   side is equal to the left hand side. When $I_0$ is an odd permutation of $J$,
-  $\delta_J^{I_0}=-1$ and $\alpha^k(\vect{\pdiff}x^{I_0}) = -\alpha^k(\vect{\pdiff}x^J)$.
+  $\delta_J^{I_0}=-1$ and $\alpha^k(\vect{\partial}x^{I_0}) = -\alpha^k(\vect{\partial}x^J)$.
   Hence, the right hand side is still equal to the left hand side. Therefore, this
   proposition is valid.
 \end{Proof}
@@ -2397,7 +2404,7 @@ $k$-forms. Meanwhile, the space of $k$-forms can be considered as an exterior pr
 $k$ cotangent spaces. A $k$-form can be expanded by a set of basis vectors like $dx^I$,
 each of which is indexed by an increasing index set $\underaccent{\rightharpoondown}{I}$.
 The expansion coefficient associated with $dx^I$ is the scalar value obtained by applying
-$\alpha^k$ to the set of basis vectors $\vect{\pdiff}x^I$ in the tangent space $M_p^n$
+$\alpha^k$ to the set of basis vectors $\vect{\partial}x^I$ in the tangent space $M_p^n$
 with the same index set $I$. This concept is similar to the expansion of a covariant
 tensor, which is given in Equation (\ref{eq:covariant-tensor-expanded-as-tensor-product})
 in Section \ref{sec:covariant-tensor}.
@@ -2419,7 +2426,7 @@ $k$-forms. This is called exterior differentiation.
   For a $0$-form $\alpha^0$, its exterior differential $d\alpha^0$ is the same as its
   differential. In a coordinate chart $(U,x)$, $\alpha^0 = a(x)$ and
   \begin{equation}
-    d\alpha^{0} = \frac{\pdiff a(x)}{\pdiff x^j} dx^j.
+    d\alpha^{0} = \frac{\partial a(x)}{\partial x^j} dx^j.
   \end{equation}
 
   For a $k$-form $\alpha^k = \sum_{\underaccent{\rightharpoondown}{I}} \alpha_I dx^I$ with
@@ -2497,18 +2504,18 @@ Exterior differentiation satisfies the following properties:
                  d \left( \sum_{\underaccent{\rightharpoondown}{K}} d\alpha_K \wedge dx^K
                  \right) \\
       \intertext{In a coordinate chart $(U,x)$:}
-               &= d \left( \sum_{\underaccent{\rightharpoondown}{K}} \frac{\pdiff
-                 \alpha_{K}(x)}{\pdiff x^i} dx^i \wedge dx^K \right) \\
+               &= d \left( \sum_{\underaccent{\rightharpoondown}{K}} \frac{\partial
+                 \alpha_{K}(x)}{\partial x^i} dx^i \wedge dx^K \right) \\
       \intertext{N.B. Einstein summation notation is adopted above and the summation with respect to $i$ is
       omitted.}
-               &= \sum_{\underaccent{\rightharpoondown}{K}} d \left( \frac{\pdiff
-                 \alpha_K(x)}{\pdiff x^i} \right) dx^i \wedge dx^K =
-                 \sum_{\underaccent{\rightharpoondown}{K}} \frac{\pdiff^2 \alpha_K(x)}{\pdiff x^i
-                 \pdiff x^j} dx^i \wedge dx^j \wedge dx^K. \\
+               &= \sum_{\underaccent{\rightharpoondown}{K}} d \left( \frac{\partial
+                 \alpha_K(x)}{\partial x^i} \right) dx^i \wedge dx^K =
+                 \sum_{\underaccent{\rightharpoondown}{K}} \frac{\partial^2 \alpha_K(x)}{\partial x^i
+                 \partial x^j} dx^i \wedge dx^j \wedge dx^K. \\
     \end{align*}
     For any pair of different $i$ and $j$,
-    $\frac{\pdiff^2 \alpha_K(x)}{\pdiff x^i \pdiff x^j}$ is equal to
-    $\frac{\pdiff^2 \alpha_K(x)}{\pdiff x^j \pdiff x^i}$ and according to Equation
+    $\frac{\partial^2 \alpha_K(x)}{\partial x^i \partial x^j}$ is equal to
+    $\frac{\partial^2 \alpha_K(x)}{\partial x^j \partial x^i}$ and according to Equation
     (\ref{eq:exterior-product-antisymmetry}) $dx^i \wedge dx^j = -dx^j \wedge dx^i$.
     Therefore, the above sum is zero.
   \end{Proof}
@@ -2521,7 +2528,7 @@ $\alpha^k = \sum_{\underaccent{\rightharpoondown}{I}} \alpha_I dx^I$, where $I$ 
 increasing index set with $k$ components $(i_1,\cdots,i_k)$. Its exterior differential
 $d\alpha^k$ is a $(k+1)$-form, which can be similarly expanded as
 $d\alpha^k = \sum_{\underaccent{\rightharpoondown}{J}} (d\alpha^k)_J dx^J =
-\sum_{\underaccent{\rightharpoondown}{J}} d\alpha^k(\vect{\pdiff}x^J) dx^J$, where $J$ is
+\sum_{\underaccent{\rightharpoondown}{J}} d\alpha^k(\vect{\partial}x^J) dx^J$, where $J$ is
 an increasing index set with $k+1$ components $(j_1,\cdots,j_{k+1})$. Here we would like
 to know the expression for the expansion coefficient $(d\alpha^k)_{J}$. N.B. In the
 expansion of $d\alpha^k$, the index set $J$ is increasing, but in the following
@@ -2534,22 +2541,22 @@ According to Equation (\ref{eq:exterior-diff-k-form}),
                   \wedge dx^I\right)_J \\
   \intertext{Apply Equation (\ref{eq:exterior-product-applied-to-basis-vectors}). Because
   $d\alpha_I$ is a 1-form, we need to select an arbitrary index $j$ from $J$, then apply
-  $d\alpha_I$ to $\vect{\pdiff}x^j$ and $dx^I$ apply to
-  $\vect{\pdiff}x^L$, where $L$ is an increasing index set $L =
+  $d\alpha_I$ to $\vect{\partial}x^j$ and $dx^I$ apply to
+  $\vect{\partial}x^L$, where $L$ is an increasing index set $L =
   \underaccent{\rightharpoondown}{J\backslash\{j\}}$. Hence,}
                 &= \sum_{\underaccent{\rightharpoondown}{I}} \sum_j \sum_{\underaccent{\rightharpoondown}{L}} \delta_J^{jL}
-                  d\alpha_I(\vect{\pdiff}x^j) dx^I(\vect{\pdiff}x^L) \\
+                  d\alpha_I(\vect{\partial}x^j) dx^I(\vect{\partial}x^L) \\
   \intertext{According to Equation (\ref{eq:cotangent-basis-appled-to-tangent-basis}):}
                 &= \sum_{\underaccent{\rightharpoondown}{I}} \sum_j
-                  \sum_{\underaccent{\rightharpoondown}{L}} \delta_J^{jL} \frac{\pdiff
-                  \alpha_I(x)}{\pdiff x^j} \delta_L^I
+                  \sum_{\underaccent{\rightharpoondown}{L}} \delta_J^{jL} \frac{\partial
+                  \alpha_I(x)}{\partial x^j} \delta_L^I
 \end{align*}
 Since $I$ is an increasing index set and
 $L = \underaccent{\rightharpoondown}{J\backslash\{j\}}$ is also an increasing index set,
 only when $I = L$, the term in the above sum is non-zero. Therefore,
 \begin{equation}
   (d\alpha^k)_J = \sum_j \sum_{\underaccent{\rightharpoondown}{L}} \delta_J^{jL}
-  \frac{\pdiff \alpha_L(x)}{\pdiff x^j}.
+  \frac{\partial \alpha_L(x)}{\partial x^j}.
 \end{equation}
 Because $j$ is selected from $J$ and $L$ is the remaining increasing indices in $J$, when
 a $j$ is given, there is only one term in the sum with respect to
@@ -2557,27 +2564,27 @@ $\underaccent{\rightharpoondown}{L}$. Because there are $k+1$ possible ways of s
 $j$ from $J$, there are altogether $k+1$ terms in $(d\alpha^k)_J$. Hence, we have
 \begin{equation}
   \label{eq:expansion-of-exterior-differential}
-  (d\alpha^k)_J = \sum_j \delta_J^{jL} \frac{\pdiff \alpha_L(x)}{\pdiff x^j}.
+  (d\alpha^k)_J = \sum_j \delta_J^{jL} \frac{\partial \alpha_L(x)}{\partial x^j}.
 \end{equation}
 If $J$ is an increasing index set, the above expression can be explicitly written as
 \begin{equation}
   \label{eq:eq:expansion-of-exterior-differential2}
-  (d\alpha^k)_J = \frac{\pdiff
-    \alpha_{\underaccent{\rightharpoondown}{J\backslash\{j_1\}}}}{\pdiff x^{j_1}} -
-  \frac{\pdiff \alpha_{\underaccent{\rightharpoondown}{J\backslash\{j_2\}}}}{\pdiff
-    x^{j_2}} + \frac{\pdiff
-    \alpha_{\underaccent{\rightharpoondown}{J\backslash\{j_3\}}}}{\pdiff x^{j_3}} - \cdots
-  = \sum_{r=1}^{k+1} (-1)^{r-1} \frac{\pdiff
-    \alpha_{\underaccent{\rightharpoondown}{J\backslash\{j_r\}}}}{\pdiff x^{j_r}}.
+  (d\alpha^k)_J = \frac{\partial
+    \alpha_{\underaccent{\rightharpoondown}{J\backslash\{j_1\}}}}{\partial x^{j_1}} -
+  \frac{\partial \alpha_{\underaccent{\rightharpoondown}{J\backslash\{j_2\}}}}{\partial
+    x^{j_2}} + \frac{\partial
+    \alpha_{\underaccent{\rightharpoondown}{J\backslash\{j_3\}}}}{\partial x^{j_3}} - \cdots
+  = \sum_{r=1}^{k+1} (-1)^{r-1} \frac{\partial
+    \alpha_{\underaccent{\rightharpoondown}{J\backslash\{j_r\}}}}{\partial x^{j_r}}.
 \end{equation}
 
 \begin{Example}[Exterior differential of a 1-form]
   Let $\alpha^1 = \alpha_i dx^i$ be a 1-form. Let the index set $J$ be $(i,j)$.
   \begin{equation}
     \label{eq:exterior-diff-1-form}
-    (d\alpha^1)_{J} = \delta_{J}^{ij} \frac{\pdiff \alpha_j(x)}{\pdiff x^i} +
-    \delta_{J}^{ji} \frac{\pdiff \alpha_i(x)}{\pdiff x^j} = \frac{\pdiff
-      \alpha_j(x)}{\pdiff x^i} - \frac{\pdiff \alpha_i(x)}{\pdiff x^j}.
+    (d\alpha^1)_{J} = \delta_{J}^{ij} \frac{\partial \alpha_j(x)}{\partial x^i} +
+    \delta_{J}^{ji} \frac{\partial \alpha_i(x)}{\partial x^j} = \frac{\partial
+      \alpha_j(x)}{\partial x^i} - \frac{\partial \alpha_i(x)}{\partial x^j}.
   \end{equation}
 \end{Example}
 
@@ -2586,15 +2593,15 @@ If $J$ is an increasing index set, the above expression can be explicitly writte
   \begin{equation}
     \label{eq:exterior-diff-1-form-3d}
     \begin{aligned}
-      (d\alpha^1) &= \left( \frac{\pdiff \alpha_2}{\pdiff x^1} - \frac{\pdiff
-          \alpha_1}{\pdiff x^2} \right) dx^1 \wedge dx^2 + \left( \frac{\pdiff
-          \alpha_3}{\pdiff x^2} - \frac{\pdiff \alpha_2}{\pdiff x^3} \right) dx^2 \wedge
-      dx^3 + \left( \frac{\pdiff \alpha_3}{\pdiff x^1} - \frac{\pdiff \alpha_1}{\pdiff x^3}
+      (d\alpha^1) &= \left( \frac{\partial \alpha_2}{\partial x^1} - \frac{\partial
+          \alpha_1}{\partial x^2} \right) dx^1 \wedge dx^2 + \left( \frac{\partial
+          \alpha_3}{\partial x^2} - \frac{\partial \alpha_2}{\partial x^3} \right) dx^2 \wedge
+      dx^3 + \left( \frac{\partial \alpha_3}{\partial x^1} - \frac{\partial \alpha_1}{\partial x^3}
       \right) dx^1 \wedge dx^3 \\
-      &= \left( \frac{\pdiff \alpha_2}{\pdiff x^1} - \frac{\pdiff
-          \alpha_1}{\pdiff x^2} \right) dx^1 \wedge dx^2 + \left( \frac{\pdiff
-          \alpha_3}{\pdiff x^2} - \frac{\pdiff \alpha_2}{\pdiff x^3} \right) dx^2 \wedge
-      dx^3 + \left( \frac{\pdiff \alpha_1}{\pdiff x^3} - \frac{\pdiff \alpha_3}{\pdiff x^1}
+      &= \left( \frac{\partial \alpha_2}{\partial x^1} - \frac{\partial
+          \alpha_1}{\partial x^2} \right) dx^1 \wedge dx^2 + \left( \frac{\partial
+          \alpha_3}{\partial x^2} - \frac{\partial \alpha_2}{\partial x^3} \right) dx^2 \wedge
+      dx^3 + \left( \frac{\partial \alpha_1}{\partial x^3} - \frac{\partial \alpha_3}{\partial x^1}
       \right) dx^3 \wedge dx^1.
     \end{aligned}
   \end{equation}
@@ -2609,12 +2616,12 @@ If $J$ is an increasing index set, the above expression can be explicitly writte
   \begin{equation}
     \label{eq:exterior-diff-2-form}
     \begin{aligned}
-      (d\beta^2)_{J} &= \delta_J^{ijk} \frac{\pdiff \beta_{jk}(x)}{\pdiff x^i} +
-      \delta_J^{jik} \frac{\pdiff \beta_{ik}(x)}{\pdiff x^j} + \delta_J^{kij} \frac{\pdiff
-        \beta_{ij}(x)}{\pdiff x^k} \\
-      &= \frac{\pdiff \beta_{jk}(x)}{\pdiff x^i} - \frac{\pdiff \beta_{ik}(x)}{\pdiff x^j}
-      + \frac{\pdiff \beta_{ij}(x)}{\pdiff x^k} = \frac{\pdiff \beta_{jk}(x)}{\pdiff x^i}
-      + \frac{\pdiff \beta_{ki}(x)}{\pdiff x^j} + \frac{\pdiff \beta_{ij}(x)}{\pdiff x^k}.
+      (d\beta^2)_{J} &= \delta_J^{ijk} \frac{\partial \beta_{jk}(x)}{\partial x^i} +
+      \delta_J^{jik} \frac{\partial \beta_{ik}(x)}{\partial x^j} + \delta_J^{kij} \frac{\partial
+        \beta_{ij}(x)}{\partial x^k} \\
+      &= \frac{\partial \beta_{jk}(x)}{\partial x^i} - \frac{\partial \beta_{ik}(x)}{\partial x^j}
+      + \frac{\partial \beta_{ij}(x)}{\partial x^k} = \frac{\partial \beta_{jk}(x)}{\partial x^i}
+      + \frac{\partial \beta_{ki}(x)}{\partial x^j} + \frac{\partial \beta_{ij}(x)}{\partial x^k}.
     \end{aligned}
   \end{equation}
 \end{Example}
@@ -2626,18 +2633,18 @@ If $J$ is an increasing index set, the above expression can be explicitly writte
   \wedge dx^3$. $d\beta^2$ is a 3-form. When the manifold dimension is 3, it has only one
   term:
   \begin{equation}
-    (d\beta^2)_{123} = \delta_{123}^{123} \frac{\pdiff \beta_{23}}{\pdiff x^1} +
-    \delta_{123}^{213} \frac{\pdiff \beta_{13}}{\pdiff x^2} + \delta_{123}^{312}
-    \frac{\pdiff \beta_{12}}{\pdiff x^3} = \frac{\pdiff \beta_{23}}{\pdiff x^1} -
-    \frac{\pdiff \beta_{13}}{\pdiff x^2} + \frac{\pdiff \beta_{12}}{\pdiff x^3}.
+    (d\beta^2)_{123} = \delta_{123}^{123} \frac{\partial \beta_{23}}{\partial x^1} +
+    \delta_{123}^{213} \frac{\partial \beta_{13}}{\partial x^2} + \delta_{123}^{312}
+    \frac{\partial \beta_{12}}{\partial x^3} = \frac{\partial \beta_{23}}{\partial x^1} -
+    \frac{\partial \beta_{13}}{\partial x^2} + \frac{\partial \beta_{12}}{\partial x^3}.
   \end{equation}
   If we let $\beta_{31} = -\beta_{13}$, $\beta^2$ can be written as
   $\beta^2 = \beta_{12} dx^1 \wedge dx^2 + \beta_{23} dx^2 \wedge dx^3 + \beta_{31} dx^3
   \wedge dx^1$. Then its exterior differential becomes
 
   \begin{equation}
-    d\beta^2 = \left( \frac{\pdiff \beta_{23}}{\pdiff x^1} + \frac{\pdiff \beta_{31}}{\pdiff
-        x^2} + \frac{\pdiff \beta_{12}}{\pdiff x^3} \right) dx^1 \wedge dx^2 \wedge dx^3.
+    d\beta^2 = \left( \frac{\partial \beta_{23}}{\partial x^1} + \frac{\partial \beta_{31}}{\partial
+        x^2} + \frac{\partial \beta_{12}}{\partial x^3} \right) dx^1 \wedge dx^2 \wedge dx^3.
   \end{equation}
   As a convention, we write $\beta^2$ as
   $\beta^2 = b_1 dx^2 \wedge dx^3 + b_2 dx^3 \wedge dx^1 + b_3 dx^1 \wedge dx^2$, so that
@@ -2648,8 +2655,8 @@ If $J$ is an increasing index set, the above expression can be explicitly writte
   is
   \begin{equation}
     \label{eq:exterior-diff-2-form-3d}
-    d\beta^2 = \left( \frac{\pdiff b_1}{\pdiff x^{1}} + \frac{\pdiff b_2}{\pdiff x^2} +
-      \frac{\pdiff b_3}{\pdiff x^3} \right) dx^1 \wedge dx^2 \wedge dx^3.
+    d\beta^2 = \left( \frac{\partial b_1}{\partial x^{1}} + \frac{\partial b_2}{\partial x^2} +
+      \frac{\partial b_3}{\partial x^3} \right) dx^1 \wedge dx^2 \wedge dx^3.
   \end{equation}
   Obviously, this formula relates to the divergence of a vector in $\mathbb{R}^3$ in
   classical calculus.
@@ -2661,8 +2668,8 @@ If $J$ is an increasing index set, the above expression can be explicitly writte
   dx^4 \wedge dx^1 \wedge dx^2 + b_4 dx^1 \wedge dx^2 \wedge dx^3$. Its exterior
   differential is
   \begin{equation}
-    d\beta^3 = \left( \frac{\pdiff b_1}{\pdiff x^1} - \frac{\pdiff b_2}{\pdiff x^2} +
-      \frac{\pdiff b_3}{\pdiff x^3} - \frac{\pdiff b_4}{\pdiff x^4} \right) dx^1 \wedge dx^2
+    d\beta^3 = \left( \frac{\partial b_1}{\partial x^1} - \frac{\partial b_2}{\partial x^2} +
+      \frac{\partial b_3}{\partial x^3} - \frac{\partial b_4}{\partial x^4} \right) dx^1 \wedge dx^2
     \wedge dx^3 \wedge dx^4.
   \end{equation}
 \end{Example}
@@ -2685,8 +2692,8 @@ If $J$ is an increasing index set, the above expression can be explicitly writte
   Apply Equation (\ref{eq:eq:expansion-of-exterior-differential2}), its exterior
   differential is
   \begin{equation}
-    d\beta^{n-1} = \left( \sum_{r=1}^n (-1)^{r-1} \frac{\pdiff
-        \beta_{(1,\cdots,\hat{r},\cdots,n)}}{\pdiff x^r}
+    d\beta^{n-1} = \left( \sum_{r=1}^n (-1)^{r-1} \frac{\partial
+        \beta_{(1,\cdots,\hat{r},\cdots,n)}}{\partial x^r}
     \right) dx^{(1,\cdots,n)}.
   \end{equation}
   Now we want to use the above cyclic permutation convention. For the $r$-th term in the
@@ -2695,12 +2702,12 @@ If $J$ is an increasing index set, the above expression can be explicitly writte
   $(1,\cdots,\hat{r},\cdots,n)$ into $(r+1,\cdots,n,1,\cdots,r-1)$, we need $(r-1)(n-2)$
   times of index permutations. Hence, the exterior differential $d\beta^{n-1}$ becomes
   \begin{equation}
-    d\beta^{n-1} = \left( \sum_{r=1}^n (-1)^{(r-1)(n-1)} \frac{\pdiff
-        \beta_{(r+1,\cdots,n,1,\cdots,r-1)}}{\pdiff x^r}
+    d\beta^{n-1} = \left( \sum_{r=1}^n (-1)^{(r-1)(n-1)} \frac{\partial
+        \beta_{(r+1,\cdots,n,1,\cdots,r-1)}}{\partial x^r}
     \right) dx^{(1,\cdots,n)}.
   \end{equation}
   When the manifold dimension $n$ (assume it is larger than 2) is odd, the sign of the
-  term $\pdiff \beta_{(r+1,\cdots,n,1,\cdots,r-1)}/\pdiff x^r$ in the above sum, i.e.
+  term $\partial \beta_{(r+1,\cdots,n,1,\cdots,r-1)}/\partial x^r$ in the above sum, i.e.
   $(-1)^{(r-1)(n-1)}$, is always positive. When $n$ is even, this sign is alternating with
   $r$.
 \end{Example}
@@ -2711,14 +2718,14 @@ If $J$ is an increasing index set, the above expression can be explicitly writte
   (\ref{eq:exterior-diff-1-form-3d}) and (\ref{eq:exterior-diff-2-form-3d}), we have
   \begin{equation}
     \begin{aligned}
-      dd\alpha^1 &= \left( \frac{\pdiff (d\alpha^1)_{23}}{\pdiff x^1} + \frac{\pdiff
-          (d\alpha^1)_{31}}{\pdiff x^2} + \frac{\pdiff (d\alpha^1)_{12}}{\pdiff x^3}
+      dd\alpha^1 &= \left( \frac{\partial (d\alpha^1)_{23}}{\partial x^1} + \frac{\partial
+          (d\alpha^1)_{31}}{\partial x^2} + \frac{\partial (d\alpha^1)_{12}}{\partial x^3}
       \right) dx^1 \wedge dx^2 \wedge
       dx^3 \\
-      &= \left( \frac{\pdiff^2 \alpha_3}{\pdiff x^2 \pdiff x^1} - \frac{\pdiff^2
-          \alpha_2}{\pdiff x^3 \pdiff x^1} + \frac{\pdiff^2 \alpha_1}{\pdiff x^3 \pdiff
-          x^2} - \frac{\pdiff^2 \alpha_3}{\pdiff x^1 \pdiff x^2} + \frac{\pdiff^2
-          \alpha_2}{\pdiff x^1 \pdiff x^3} - \frac{\pdiff^2 \alpha_1}{\pdiff x^2 \pdiff
+      &= \left( \frac{\partial^2 \alpha_3}{\partial x^2 \partial x^1} - \frac{\partial^2
+          \alpha_2}{\partial x^3 \partial x^1} + \frac{\partial^2 \alpha_1}{\partial x^3 \partial
+          x^2} - \frac{\partial^2 \alpha_3}{\partial x^1 \partial x^2} + \frac{\partial^2
+          \alpha_2}{\partial x^1 \partial x^3} - \frac{\partial^2 \alpha_1}{\partial x^2 \partial
           x^3} \right) dx^1 \wedge dx^2 \wedge dx^3 \\
       &= 0,
     \end{aligned}
@@ -2875,7 +2882,7 @@ composition of $F_{*}^{-1}$ and $\alpha$ (see Figure \ref{fig:push-forward-1-for
       $W_{p(x)}^m$, which is written as $v_x$ here to explicitly specify the coordinate
       variable, apply the exterior differentiation of the pull-back of $\alpha$,
       \begin{equation*}
-        d(F^{*}\alpha)(v_x) = \frac{\pdiff (F^{*}\alpha)(x)}{\pdiff x^i} v_x^i.
+        d(F^{*}\alpha)(v_x) = \frac{\partial (F^{*}\alpha)(x)}{\partial x^i} v_x^i.
       \end{equation*}
       According to the definition of the pull-back of a 0-form
       \begin{equation*}
@@ -2883,16 +2890,16 @@ composition of $F_{*}^{-1}$ and $\alpha$ (see Figure \ref{fig:push-forward-1-for
       \end{equation*}
       we have
       \begin{equation*}
-        d(F^{*}\alpha)(v_x) = \frac{\pdiff \alpha(y(x))}{\pdiff x^i} v_x^i = \frac{\pdiff
-          \alpha(y)}{\pdiff y^j} \frac{\pdiff y^j}{\pdiff x^i} v_x^i.
+        d(F^{*}\alpha)(v_x) = \frac{\partial \alpha(y(x))}{\partial x^i} v_x^i = \frac{\partial
+          \alpha(y)}{\partial y^j} \frac{\partial y^j}{\partial x^i} v_x^i.
       \end{equation*}
       Refer to the expression of contravariant transformation in Equation
-      (\ref{eq:contravariant-transformation}), $\frac{\pdiff y^j}{\pdiff x^i}v_x^i$ is the
+      (\ref{eq:contravariant-transformation}), $\frac{\partial y^j}{\partial x^i}v_x^i$ is the
       $j$-th component of the tangent vector $v_y$ in $M_{p(y)}^n$, which is $dy^j(v_y)$.
       Therefore,
       \begin{equation*}
-        d(F^{*}\alpha)(v_x) = \frac{\pdiff \alpha(y)}{\pdiff y^j} dy^j(v_y) = \left(
-          \frac{\pdiff \alpha(y)}{\pdiff y^j} dy^j \right)(v_y).
+        d(F^{*}\alpha)(v_x) = \frac{\partial \alpha(y)}{\partial y^j} dy^j(v_y) = \left(
+          \frac{\partial \alpha(y)}{\partial y^j} dy^j \right)(v_y).
       \end{equation*}
       The term in the first pair of brackets is just the exterior differential of $\alpha$
       with the coordinate variable $y$ and $v_y$ can be obtained by applying the Jacobi
@@ -2937,7 +2944,7 @@ composition of $F_{*}^{-1}$ and $\alpha$ (see Figure \ref{fig:push-forward-1-for
   \begin{equation}
     \label{eq:pullback-of-basis}
     F^{*}dy^J = \sum_{\underaccent{\rightharpoondown}{L}} \det \left\{
-      \frac{\pdiff y^J}{\pdiff x^L} \right\} dx^L.
+      \frac{\partial y^J}{\partial x^L} \right\} dx^L.
   \end{equation}
 \end{Proposition}
 
@@ -2946,15 +2953,15 @@ composition of $F_{*}^{-1}$ and $\alpha$ (see Figure \ref{fig:push-forward-1-for
   product $dy^J = dy^{j_1} \wedge \cdots \wedge dy^{j_k}$, we examine its pull-back. Let
   $v_x$ be any tangent vector in $W_{p(x)}^m$, we have
   \begin{equation*}
-    \left( F^{*} dy^{j_l} \right)(v_x) = dy^{j_l}(F_{*} v_x) = \frac{\pdiff y^{j_l}}{\pdiff
-      x^i} v_x^i = \frac{\pdiff y^{j_l}}{\pdiff x^i} dx^i(v_x) = \left( \frac{\pdiff
-        y^{j_l}}{\pdiff x^i} dx^i \right)(v_x).
+    \left( F^{*} dy^{j_l} \right)(v_x) = dy^{j_l}(F_{*} v_x) = \frac{\partial y^{j_l}}{\partial
+      x^i} v_x^i = \frac{\partial y^{j_l}}{\partial x^i} dx^i(v_x) = \left( \frac{\partial
+        y^{j_l}}{\partial x^i} dx^i \right)(v_x).
   \end{equation*}
   Replacing the summation index $i$ with $i_l$ just to indicate this summation is with
   respect to the term $dy^{j_l}$, we have
   \begin{equation}
     \label{eq:pullback-of-one-basis}
-    F^{*}dy^{j_l} = \frac{\pdiff y^{j_l}}{\pdiff x^{i_l}} dx^{i_l}.
+    F^{*}dy^{j_l} = \frac{\partial y^{j_l}}{\partial x^{i_l}} dx^{i_l}.
   \end{equation}
   Then use the algebra homomorphism of pull-back,
   \begin{align*}
@@ -2962,39 +2969,39 @@ composition of $F_{*}^{-1}$ and $\alpha$ (see Figure \ref{fig:push-forward-1-for
     &= F^{*}(dy^{j_1} \wedge \cdots \wedge dy^{j_k}) = \left( F^{*}dy^{j_1}
       \right) \wedge \cdots \wedge \left( F^{*}dy^{j_k} \right) \\
     &= \left(
-      \frac{\pdiff y^{j_1}}{\pdiff x^{i_1}} dx^{i_1} \right) \wedge \cdots \wedge \left(
-      \frac{\pdiff y^{j_k}}{\pdiff x^{i_k}} dx^{i_k} \right) \\
-    &= \sum_I \left( \frac{\pdiff y^{j_1}}{\pdiff x^{i_1}} \cdots \frac{\pdiff
-      y^{j_k}}{\pdiff x^{i_k}} \right) dx^I.
+      \frac{\partial y^{j_1}}{\partial x^{i_1}} dx^{i_1} \right) \wedge \cdots \wedge \left(
+      \frac{\partial y^{j_k}}{\partial x^{i_k}} dx^{i_k} \right) \\
+    &= \sum_I \left( \frac{\partial y^{j_1}}{\partial x^{i_1}} \cdots \frac{\partial
+      y^{j_k}}{\partial x^{i_k}} \right) dx^I.
   \end{align*}
   N.B. At this moment, the index set $I$ in the above sum is not required to be
   increasing. To get the canonical expansion of $F^{*}dy^J$ using increasing index set as
   in Section \ref{sec:expansion-of-k-form}, we need to project the above representation to
-  the basis $\vect{\pdiff}x^L$ of the product tangent space, where $L=(l_1,\cdots,l_k)$ is
+  the basis $\vect{\partial}x^L$ of the product tangent space, where $L=(l_1,\cdots,l_k)$ is
   an increasing index set.
   \begin{align*}
-    \left( F^{*}dy^J \right)(\vect{\pdiff}x^L)
-    &= \left[ \sum_I \left( \frac{\pdiff
-      y^{j_1}}{\pdiff x^{i_1}} \cdots \frac{\pdiff
-      y^{j_k}}{\pdiff x^{i_k}} \right) dx^I \right](\vect{\pdiff}x^L) \\
-    &= \sum_I \left( \frac{\pdiff y^{j_1}}{\pdiff x^{i_1}} \cdots \frac{\pdiff
-      y^{j_k}}{\pdiff x^{i_k}} \right) dx^I(\vect{\pdiff}x^L) \\
+    \left( F^{*}dy^J \right)(\vect{\partial}x^L)
+    &= \left[ \sum_I \left( \frac{\partial
+      y^{j_1}}{\partial x^{i_1}} \cdots \frac{\partial
+      y^{j_k}}{\partial x^{i_k}} \right) dx^I \right](\vect{\partial}x^L) \\
+    &= \sum_I \left( \frac{\partial y^{j_1}}{\partial x^{i_1}} \cdots \frac{\partial
+      y^{j_k}}{\partial x^{i_k}} \right) dx^I(\vect{\partial}x^L) \\
     \intertext{Apply Equation (\ref{eq:cotangent-basis-appled-to-tangent-basis})}
-    &= \sum_I \left( \frac{\pdiff y^{j_1}}{\pdiff x^{i_1}} \cdots \frac{\pdiff
-      y^{j_k}}{\pdiff x^{i_k}} \right) \delta_L^I.
+    &= \sum_I \left( \frac{\partial y^{j_1}}{\partial x^{i_1}} \cdots \frac{\partial
+      y^{j_k}}{\partial x^{i_k}} \right) \delta_L^I.
   \end{align*}
   Compare this formula with Equation
   (\ref{eq:1-form-exterior-product-applied-to-k-vector}) and
   (\ref{eq:determinant-definition-with-general-indices}), this is just equal to the
   determinant
   \begin{equation*}
-    \det \left( \frac{\pdiff y^{j_r}}{\pdiff x^{l_s}} \right) = \det \left\{
-      \frac{\pdiff y^J}{\pdiff x^L} \right\}.
+    \det \left( \frac{\partial y^{j_r}}{\partial x^{l_s}} \right) = \det \left\{
+      \frac{\partial y^J}{\partial x^L} \right\}.
   \end{equation*}
   Then, the pull-back $F^{*}dy^J$ can be expanded as
   \begin{equation*}
     F^{*}dy^J = \sum_{\underaccent{\rightharpoondown}{L}} \det \left\{
-      \frac{\pdiff y^J}{\pdiff x^L} \right\} dx^L.
+      \frac{\partial y^J}{\partial x^L} \right\} dx^L.
   \end{equation*}
 \end{Proof}
 
@@ -3008,7 +3015,7 @@ expression of the pull-back of a $k$-form can be obtained.
   expansion coefficient $\alpha_L^{*}$ is
   \begin{equation}
     \alpha_L^{*} = \sum_{\underaccent{\rightharpoondown}{J}} \alpha_J(y(x)) \det \left\{
-      \frac{\pdiff y^{J}}{\pdiff x^L} \right\}.
+      \frac{\partial y^{J}}{\partial x^L} \right\}.
   \end{equation}
 \end{Proposition}
 
@@ -3019,17 +3026,17 @@ expression of the pull-back of a $k$-form can be obtained.
       \sum_{\underaccent{\rightharpoondown}{J}} \left( F^{*}\alpha_J \right) F^{*}(dy^J)
     \\
     &= \sum_{\underaccent{\rightharpoondown}{J}} \alpha_J(y(x))
-      \sum_{\underaccent{\rightharpoondown}{L}} \det \left\{ \frac{\pdiff y^J}{\pdiff x^L}
+      \sum_{\underaccent{\rightharpoondown}{L}} \det \left\{ \frac{\partial y^J}{\partial x^L}
       \right\} dx^L \\
     &= \sum_{\underaccent{\rightharpoondown}{L}} \left(
-      \sum_{\underaccent{\rightharpoondown}{J}} \alpha_J(y(x)) \det \left\{ \frac{\pdiff
-      y^J}{\pdiff x^L} \right\} \right) dx^L.
+      \sum_{\underaccent{\rightharpoondown}{J}} \alpha_J(y(x)) \det \left\{ \frac{\partial
+      y^J}{\partial x^L} \right\} \right) dx^L.
   \end{align*}
-  Therefore, the expansion coefficient $\alpha_L^{*} = (F^{*}\alpha^k)(\vect{\pdiff}x^L)$
+  Therefore, the expansion coefficient $\alpha_L^{*} = (F^{*}\alpha^k)(\vect{\partial}x^L)$
   is
   \begin{equation*}
     \alpha_L^{*} = \sum_{\underaccent{\rightharpoondown}{J}} \alpha_J(y(x)) \det \left\{
-      \frac{\pdiff y^{J}}{\pdiff x^L} \right\}.
+      \frac{\partial y^{J}}{\partial x^L} \right\}.
   \end{equation*}
 \end{Proof}
 
@@ -3047,13 +3054,13 @@ expression of the pull-back of a $k$-form can be obtained.
   which is related to the basis $du^1 \wedge du^2$. It has the following expression.
   \begin{align*}
     \vect{i}^{*}\beta^2
-    &= \left( b_1(x(u)) \det \left\{ \frac{\pdiff (x^2, x^3)}{\pdiff (u^1,u^2)} \right\} -
-      b_2(x(u)) \det \left\{ \frac{\pdiff (x^1,x^3)}{\pdiff (u^1,u^2)} \right\} +
-      b_3(x(u)) \det \left\{ \frac{\pdiff (x^1,x^2)}{\pdiff (u^1,u^2)} \right\} \right)
+    &= \left( b_1(x(u)) \det \left\{ \frac{\partial (x^2, x^3)}{\partial (u^1,u^2)} \right\} -
+      b_2(x(u)) \det \left\{ \frac{\partial (x^1,x^3)}{\partial (u^1,u^2)} \right\} +
+      b_3(x(u)) \det \left\{ \frac{\partial (x^1,x^2)}{\partial (u^1,u^2)} \right\} \right)
       du^1 \wedge du^2 \\
-    &= \left( b_1(x(u)) \det \left\{ \frac{\pdiff (x^2, x^3)}{\pdiff (u^1,u^2)} \right\} +
-      b_2(x(u)) \det \left\{ \frac{\pdiff (x^3,x^1)}{\pdiff (u^1,u^2)} \right\} +
-      b_3(x(u)) \det \left\{ \frac{\pdiff (x^1,x^2)}{\pdiff (u^1,u^2)} \right\} \right)
+    &= \left( b_1(x(u)) \det \left\{ \frac{\partial (x^2, x^3)}{\partial (u^1,u^2)} \right\} +
+      b_2(x(u)) \det \left\{ \frac{\partial (x^3,x^1)}{\partial (u^1,u^2)} \right\} +
+      b_3(x(u)) \det \left\{ \frac{\partial (x^1,x^2)}{\partial (u^1,u^2)} \right\} \right)
       du^1 \wedge du^2.
   \end{align*}
   This formulation reminds us of performing surface integral of a vector field
@@ -3064,24 +3071,24 @@ expression of the pull-back of a $k$-form can be obtained.
   clarified below.
 
   At a point $p(u)$ in $M^2$, the pair of basis vectors
-  $\left\{ \vect{\pdiff}u^1, \vect{\pdiff}u^2 \right\}$ of the tangent space $M_{p(u)}^2$
+  $\left\{ \vect{\partial}u^1, \vect{\partial}u^2 \right\}$ of the tangent space $M_{p(u)}^2$
   define a normal vector $\vect{n}$ via the cross product of their representations using
-  the basis $\left\{ \vect{\pdiff}x^1, \vect{\pdiff}x^2, \vect{\pdiff}x^3 \right\}$ of the
+  the basis $\left\{ \vect{\partial}x^1, \vect{\partial}x^2, \vect{\partial}x^3 \right\}$ of the
   tangent space $\mathbb{R}_{p(x)}^3$ (N.B. When there is a raw operation on classical
   vectors, for example the cross product here, it should be performed in the Cartesian
   space but not in the local coordinate chart $(u^1,u^2)$, since
-  $\left\{ \vect{\pdiff}u^1,\vect{\pdiff}u^2 \right\}$ may not be an orthonormal basis,
+  $\left\{ \vect{\partial}u^1,\vect{\partial}u^2 \right\}$ may not be an orthonormal basis,
   which invalidates the classical definition of cross product). Such representations have
   been given in Equation (\ref{eq:tangent-vector-basis-relation}), which are just the
   columns of the Jacobian map $\vect{i}_{*}$ in its matrix form. Then the normal vector is
   \begin{equation*}
     \vect{n} = \begin{pmatrix}
-      \frac{\pdiff x^1}{\pdiff u^1} \\ \frac{\pdiff x^2}{\pdiff u^1} \\ \frac{\pdiff
-        x^3}{\pdiff u^1}
+      \frac{\partial x^1}{\partial u^1} \\ \frac{\partial x^2}{\partial u^1} \\ \frac{\partial
+        x^3}{\partial u^1}
     \end{pmatrix}
     \times \begin{pmatrix}
-      \frac{\pdiff x^1}{\pdiff u^2} \\ \frac{\pdiff x^2}{\pdiff u^2} \\ \frac{\pdiff
-        x^3}{\pdiff u^2}
+      \frac{\partial x^1}{\partial u^2} \\ \frac{\partial x^2}{\partial u^2} \\ \frac{\partial
+        x^3}{\partial u^2}
     \end{pmatrix}.
   \end{equation*}
   It can be checked that the above formula for $\vect{i}^{*}\beta^2$ is just the same as
@@ -3095,7 +3102,7 @@ expression of the pull-back of a $k$-form can be obtained.
   Let $\alpha^3 = a(x) dx^1 \wedge dx^2 \wedge dx^3$ be a 3-form with respect to the range
   space. Then its pull-back is
   \begin{equation*}
-    \vect{I}^{*}\alpha^3 = a(x(u)) \det \left\{ \frac{\pdiff x}{\pdiff u} \right\} du^1
+    \vect{I}^{*}\alpha^3 = a(x(u)) \det \left\{ \frac{\partial x}{\partial u} \right\} du^1
     \wedge du^2 \wedge du^3.
   \end{equation*}
   This expression is also consistent with the coordinate transformation of volume
@@ -3116,7 +3123,7 @@ expression of the pull-back of a $k$-form can be obtained.
     \label{eq:relation-between-vector-space-bases}
     (\vect{f}_1,\cdots,\vect{f}_n) = (\vect{e}_1,\cdots,\vect{e}_n) P.
   \end{equation}
-  Therefore, for any $i$ in the range $1,\cdots,n$, $\vect{f}_i = \vect{e}_i P^j_i$. If
+  Therefore, for any $i$ in the range $1,\cdots,n$, $\vect{f}_i = \vect{e}_j P^j_i$. If
   the determinant of $P$ is positive, the two bases have a same orientation.
 
   This defines an equivalence relation on the collection of all possible bases of $E^n$,
@@ -3147,7 +3154,7 @@ An $n$-dimensional manifold $M^n$ can be covered by an atlas. For any coordinate
 $(U,x)$ in this atlas and for any point $p(x)$ in $U$, the tangent space $M_{p(x)}^n$
 associated with $p(x)$ is an $n$-dimensional vector space, which can be assigned an
 orientation that is determined from the basis
-$(\vect{\pdiff}x^1,\cdots,\vect{\pdiff}x^n)$. Even though all coordinate charts in the
+$(\vect{\partial}x^1,\cdots,\vect{\partial}x^n)$. Even though all coordinate charts in the
 atlas covering $M^n$ can be given their own orientations in this way, these orientations
 are only locally valid. Whether $M^n$ as a whole can be given an unique global orientation
 depends on if all of these local orientations are compatible or consistent with each
@@ -3157,20 +3164,24 @@ other.
   \label{def:manifold-orientation}
   For each coordinate chart $(U,x)$ in the atlas covering an $n$-dimensional manifold
   $M^n$, its orientation is given by the tuple of basis vectors
-  $(\vect{\pdiff}x^1,\cdots,\vect{\pdiff}x^n)$. For any point $p$ in the overlap of two
+  $(\vect{\partial}x^1,\cdots,\vect{\partial}x^n)$. For any point $p$ in the overlap of two
   charts $(U,x)$ and $(V,y)$, the orientation of the tangent space $M_p^n$ can also be
-  determined from the basis $(\vect{\pdiff}y^1,\cdots,\vect{\pdiff}y^n)$. According to the
-  relationship between $\vect{\pdiff}x$ and $\vect{\pdiff}y$ in Equation
-  (\ref{eq:tangent-space-bases-relation}), if the Jacobian determinant
-  $\abs{\frac{\pdiff x}{\pdiff y}}$ is positive, according to Definition
-  \ref{def:vector-space-orientation}, the two orientations are equivalent. If all pairs of
-  overlapping coordinate charts have equivalent orientations, the manifold $M^n$ is
-  orientable and has a definite orientation.
+  determined from the basis $(\vect{\partial}y^1,\cdots,\vect{\partial}y^n)$. According to
+  Equation (\ref{eq:tangent-space-bases-relation}), the relationship between
+  $\vect{\partial}x$ and $\vect{\partial}y$ is
+  \begin{equation}
+    \left( \partial y^1,\cdots,\partial y^n \right) = \left( \partial
+      x^1,\cdots,\partial x^n  \right) \left[ \frac{\partial x}{\partial y} \right].
+  \end{equation}
+  If the Jacobian determinant $\abs{\frac{\partial x}{\partial y}}$ is positive, according
+  to Definition \ref{def:vector-space-orientation}, the two orientations are equivalent.
+  If all pairs of overlapping coordinate charts have equivalent orientations, the manifold
+  $M^n$ is orientable and has a definite orientation.
 \end{Definition}
 
 \begin{Definition}[Orientation function]
   For a coordinate chart $(U,x)$ of the manifold $M^n$, an orientation function
-  $o(\vect{\pdiff}x^1,\cdots,\vect{\pdiff}x^n)$ is defined to operate on the basis of the
+  $o(\vect{\partial}x^1,\cdots,\vect{\partial}x^n)$ is defined to operate on the basis of the
   tangent space $M_{p(x)}^n$, which is simply written as $o(x)$. When the basis has a
   positive orientation, $o(x) = 1$, otherwise, $o(x) = -1$.
 \end{Definition}
@@ -3181,7 +3192,7 @@ other.
   \label{def:pseudo-form}
   Let $\alpha^k$ be a pseudo $k$-form operating on the Cartesian product of $k$ tangent
   spaces $\otimes^k M_p^n$. When the tangent space $M_p^n$ with the local basis
-  $(\vect{\pdiff}x^1,\cdots,\vect{\pdiff}x^n)$ has the positive orientation, i.e.
+  $(\vect{\partial}x^1,\cdots,\vect{\partial}x^n)$ has the positive orientation, i.e.
   $o(x) = 1$, $\alpha^k$ is a normal $k$-form $\alpha_o = \alpha^k$. When the basis has
   the negative orientation, i.e. $o(x) = -1$, $\alpha^k$ changes its sign, i.e.
   $\alpha_{-o} = -\alpha^k = -\alpha_o$.
@@ -3198,18 +3209,18 @@ these vectors, i.e. $\det(v_1,\cdots,v_n)$. The sign of this value depends on th
 orientation of the tangent space $M_p^n$, which can be explained as below.
 
 Assume we want to use a new coordinate chart $(y)$ for $M_{p}^n$ with the basis
-$\vect{\pdiff}y = (\vect{\pdiff}y^1,\cdots,\vect{\pdiff}y^n)$, where
+$\vect{\partial}y = (\vect{\partial}y^1,\cdots,\vect{\partial}y^n)$, where
 \begin{equation*}
   \begin{cases}
-    \vect{\pdiff}y^{i_0} = \vect{\pdiff}x^{j_0}, \vect{\pdiff}y^{j_0} =
-    \vect{\pdiff}x^{i_0} \\
-    \vect{\pdiff}y^i = \vect{\pdiff}x^i & (i \neq i_0, i\neq j_0)
+    \vect{\partial}y^{i_0} = \vect{\partial}x^{j_0}, \vect{\partial}y^{j_0} =
+    \vect{\partial}x^{i_0} \\
+    \vect{\partial}y^i = \vect{\partial}x^i & (i \neq i_0, i\neq j_0)
   \end{cases}.
 \end{equation*}
-Hence, the new basis $\vect{\pdiff}y$ is obtained by swapping the $i_0$-th and $j_0$-th
-components in the original basis $\vect{\pdiff}x$. Since the tuple of vectors
+Hence, the new basis $\vect{\partial}y$ is obtained by swapping the $i_0$-th and $j_0$-th
+components in the original basis $\vect{\partial}x$. Since the tuple of vectors
 $(v_1,\cdots,v_n)$ are physical entities which maintain their lengths and directions in
-the tangent space $M_p^n$, when the new basis $\vect{\pdiff}y$ is adopted, their numerical
+the tangent space $M_p^n$, when the new basis $\vect{\partial}y$ is adopted, their numerical
 representations must change accordingly, i.e. the $i_0$-th and $j_0$-th coordinate
 components in each $v_i$ ($i=1,\cdots,n$) should be swapped. Then we apply the new basis
 $dy^1 \wedge \cdots \wedge dy^n$ of the space of $n$-forms in the coordinate chart $(y)$
@@ -3219,7 +3230,7 @@ rows in $\det(v_1(x),\cdots,v_n(x))$. Therefore, the sign of the volume spanned 
 $(v_1,\cdots,v_n)$ changes when we use a basis of the tangent space with a different
 orientation\footnote{Once the coordinate chart of a neighborhood of the point $p$ in the
   manifold $M^n$ is settled, such as $(x) = (x^1,\cdots,x^n)$, the basis of the tangent
-  space $M_p^n$ rooted at $p$ is settled, which is $(\pdiff x^1, \cdots, \pdiff x^n)$, and
+  space $M_p^n$ rooted at $p$ is settled, which is $(\partial x^1, \cdots, \partial x^n)$, and
   the basis of the space of $n$-forms is also settled, which is $(dx^1, \cdots, dx^n)$}.
 
 However, when we use the above $n$-form, either $dx^1 \wedge \cdots \wedge dx^n$ or
@@ -3233,7 +3244,7 @@ as described above. Here comes the definition of volume form.
 \begin{Definition}[Volume $n$-form with respect to $n$-dimensional manifold $M^n$]
   \label{def:volume-form}
   Let $(x)$ be a coordinate chart containing $p$ in $M^n$. Its corresponding basis
-  $\vect{\pdiff}x = (\vect{\pdiff}x^1,\cdots,\vect{\pdiff}x^n)$ of the tangent space
+  $\vect{\partial}x = (\vect{\partial}x^1,\cdots,\vect{\partial}x^n)$ of the tangent space
   $M_p^n$ is orthonormal. Then the volume $n$-form is \footnote{Only when the coordinate
     chart is orthonormal, the volume $n$-form has this form. Otherwise, the Jacobian
     determinant should appear in the expression.}
@@ -3242,27 +3253,27 @@ as described above. Here comes the definition of volume form.
     \mathrm{vol}^n = o(x) dx^1 \wedge \cdots \wedge dx^n.
   \end{equation}
 \end{Definition} 
-Apply this volume $n$-form to the basis $\vect{\pdiff}x$ and use Equation
+Apply this volume $n$-form to the basis $\vect{\partial}x$ and use Equation
 (\ref{eq:cotangent-basis-appled-to-tangent-basis}), we know that the volume spanned by the
-basis $\vect{\pdiff}x$ is $o(x)$, i.e. \emph{the volume spanned by a set of positively
+basis $\vect{\partial}x$ is $o(x)$, i.e. \emph{the volume spanned by a set of positively
   oriented orthonormal basis vectors is 1.}
 
-Let $(y)$ be an arbitrary coordinate chart containing $p$. The basis $\vect{\pdiff}y$ for
+Let $(y)$ be an arbitrary coordinate chart containing $p$. The basis $\vect{\partial}y$ for
 $M_{p}^n$ needs not be orthonormal. Let $\vect{I}$ be the identity map from $M_{p(y)}^n$
 to $M_{p(x)}^n$ and its Jacobian map be $\vect{I}_{*}$. The expression of the volume
 $n$-form using the chart $(y)$ can be obtained via pull-back according to Example
 \ref{exam:pullback-of-identity-map} as below.
 \begin{equation*}
-  \mathrm{vol}^n = o(x) dx^1 \wedge \cdots \wedge dx^n = o(x) \det \left\{  \frac{\pdiff x}{\pdiff
+  \mathrm{vol}^n = o(x) dx^1 \wedge \cdots \wedge dx^n = o(x) \det \left\{  \frac{\partial x}{\partial
       y} \right\} dy^1 \wedge \cdots \wedge dy^n.
 \end{equation*}
-When $M_{p(y)}^n$ has the positive orientation, $\mathrm{vol}_{(y)}^n(\vect{\pdiff}y)$
+When $M_{p(y)}^n$ has the positive orientation, $\mathrm{vol}_{(y)}^n(\vect{\partial}y)$
 should produce a positive value, while $M_{p(y)}^n$ has the negative orientation, a
 negative value should be returned. Hence, the volume $n$-form in the coordinate chart
 $(y)$ should be
 \begin{equation}
   \label{eq:volume-form-in-y}
-  \mathrm{vol}^n = o(y) \Bigg\vert\det \left\{ \frac{\pdiff x}{\pdiff y}
+  \mathrm{vol}^n = o(y) \Bigg\vert\det \left\{ \frac{\partial x}{\partial y}
   \right\}\Bigg\vert dy^1 \wedge\cdots\wedge dy^n.
 \end{equation}
 
@@ -3271,16 +3282,16 @@ $(x)$ is $g^{(x)} = \delta_{ij} dx^i \otimes dx^j$ \footnote{N.B. The metric ten
   2nd rank covariant tensor not a 2-form.}. If the arbitrary coordinate chart $(y)$
 is adopted, the metric tensor is $g^{(y)} = g_{rs}^{(y)} dy^r \otimes dy^s$, where
 \begin{equation*}
-  g_{rs}^{(y)} = \frac{\pdiff x^i}{\pdiff y^r} \frac{\pdiff x^j}{\pdiff y^s} g_{ij}^{(x)}
-  = \frac{\pdiff x^i}{\pdiff y^r} \frac{\pdiff x^j}{\pdiff y^s} \delta_{ij} = \sum_i
-  \frac{\pdiff x^i}{\pdiff y^r} \frac{\pdiff x^i}{\pdiff y^s}.
+  g_{rs}^{(y)} = \frac{\partial x^i}{\partial y^r} \frac{\partial x^j}{\partial y^s} g_{ij}^{(x)}
+  = \frac{\partial x^i}{\partial y^r} \frac{\partial x^j}{\partial y^s} \delta_{ij} = \sum_i
+  \frac{\partial x^i}{\partial y^r} \frac{\partial x^i}{\partial y^s}.
 \end{equation*}
 Define $g(y) \coloneqq \det(g_{rs}^{(y)})$, we have
 \begin{equation*}
   g(y) = \det \left\{ \sum_i
-    \frac{\pdiff x^i}{\pdiff y^r} \frac{\pdiff x^i}{\pdiff y^s} \right\} = \det \left\{
-    \left[ \frac{\pdiff x}{\pdiff y}^{\mathrm{T}} \right] \left[ \frac{\pdiff x}{\pdiff y}
-    \right] \right\} = \det \left\{ \frac{\pdiff x}{\pdiff y} \right\}^2.
+    \frac{\partial x^i}{\partial y^r} \frac{\partial x^i}{\partial y^s} \right\} = \det \left\{
+    \left[ \frac{\partial x}{\partial y}^{\mathrm{T}} \right] \left[ \frac{\partial x}{\partial y}
+    \right] \right\} = \det \left\{ \frac{\partial x}{\partial y} \right\}^2.
 \end{equation*}
 Therefore, the volume $n$-form represented in the coordinate chart $(y)$ is
 \begin{equation}
@@ -3289,7 +3300,7 @@ Therefore, the volume $n$-form represented in the coordinate chart $(y)$ is
 \end{equation}
 \begin{Remark}
   The above definition of a volume $n$-form relies on the coordinate chart $(x)$ with an
-  orthonormal basis $\vect{\pdiff}x$. However, this is not mandatory. Generally, a volume
+  orthonormal basis $\vect{\partial}x$. However, this is not mandatory. Generally, a volume
   $n$-form is
   \begin{equation}
     \mathrm{vol}^n = o(u) \rho(u) du^1 \wedge \cdots \wedge du^n.
@@ -3344,7 +3355,7 @@ physical entity no matter which coordinate frame is adopted. For example (see Fi
 \ref{fig:cross-product-under-inversion}), assume the given vector $u$ is represented as
 $(u^1,u^2,u^3)^{\mathrm{T}}$ in the local coordinate chart $(x)$. If a new coordinate
 chart $(y)$ is selected, which is an inversion of $(x)$ in this case, i.e.
-$\vect{\pdiff}y^i = -\vect{\pdiff}x^i$, the numerical representation of $u$ in this new
+$\vect{\partial}y^i = -\vect{\partial}x^i$, the numerical representation of $u$ in this new
 frame changes into $(-u^1,-u^2,-u^3)^{\mathrm{T}}$. Similarly, for another vector
 $v = (v^1,v^2,v^3)^{\mathrm{T}}$ in the coordinate chart $(x)$, its representation in
 $(y)$ is $(-v^1,-v^2,-v^3)^{\mathrm{T}}$. Their cross product in the chart $(x)$ is
@@ -3504,11 +3515,11 @@ third property is proved below.
 \end{Proposition}
 
 \begin{Proof}
-  Assume the coordinate chart is $(x)$, let $v=v^i \vect{\pdiff}x^i$. Then
+  Assume the coordinate chart is $(x)$, let $v=v^i \vect{\partial}x^i$. Then
   \begin{equation}
-    (i_v\alpha^k)_J = \alpha^k(v, \vect{\pdiff}x^{j_2},\cdots,\vect{\pdiff}x^{j_k}) =
-    \alpha^k(v^i \vect{\pdiff}x^i, \vect{\pdiff}x^{j_2},\cdots,\vect{\pdiff}x^{j_k}) = v^i
-    \alpha^k(\vect{\pdiff}x^i, \vect{\pdiff}x^{j_2},\cdots,\vect{\pdiff}x^{j_k}) = v^i\alpha^k_{i,J}.
+    (i_v\alpha^k)_J = \alpha^k(v, \vect{\partial}x^{j_2},\cdots,\vect{\partial}x^{j_k}) =
+    \alpha^k(v^i \vect{\partial}x^i, \vect{\partial}x^{j_2},\cdots,\vect{\partial}x^{j_k}) = v^i
+    \alpha^k(\vect{\partial}x^i, \vect{\partial}x^{j_2},\cdots,\vect{\partial}x^{j_k}) = v^i\alpha^k_{i,J}.
   \end{equation}
   Here, $v^i\alpha^k_{i,I}$ is just the expansion coefficient of the contraction of the
   mixed tensor $v^i \alpha_{j,J}$ for the first (and the only) contravariant index and the
@@ -3538,20 +3549,20 @@ third property is proved below.
     a = \sharp(\alpha), a^i = g^{ij}\alpha_j, a = G^{-1}(\alpha)^{\mathrm{T}}.
   \end{equation}
 \item The exterior differential of a 0-form $f$, i.e.
-  $df = \frac{\pdiff f}{\pdiff x^j} dx^j$, is equivalent to the gradient of the scalar
+  $df = \frac{\partial f}{\partial x^j} dx^j$, is equivalent to the gradient of the scalar
   function $f$ in vector analysis in the following sense
   \begin{equation}
     df(v) = \left\langle \nabla f, v \right\rangle.
   \end{equation}
   $df$ and $\nabla f$ are associated via the flat and sharp operators:
   \begin{equation}
-    df = \flat(\nabla f), (df)_j = \frac{\pdiff f}{\pdiff x^j} = g_{ji} \left( \nabla f
+    df = \flat(\nabla f), (df)_j = \frac{\partial f}{\partial x^j} = g_{ji} \left( \nabla f
     \right)^i, df^{\mathrm{T}} = G\nabla f.
   \end{equation}
 
   \begin{equation}
     \label{eq:1-form-to-gradient}
-    \nabla f = \sharp(df), (\nabla f)^i = g^{ij} (df)_j = g^{ij} \frac{\pdiff f}{\pdiff
+    \nabla f = \sharp(df), (\nabla f)^i = g^{ij} (df)_j = g^{ij} \frac{\partial f}{\partial
       x^{i}}, \nabla f = G^{-1} df^{\mathrm{T}}.
   \end{equation}
 
@@ -3560,18 +3571,18 @@ third property is proved below.
   \begin{equation}
     \label{eq:gradient-in-spherical-coordinate-chart}
     \begin{pmatrix}
-      \frac{\pdiff f}{\pdiff r} \\
-      \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta} \\
-      \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi}
+      \frac{\partial f}{\partial r} \\
+      \frac{1}{r^2} \frac{\partial f}{\partial \theta} \\
+      \frac{1}{r^2\sin^2\theta} \frac{\partial f}{\partial \phi}
     \end{pmatrix}.
   \end{equation}
   With the normalized basis, it is
   \begin{equation}
     \label{eq:gradient-in-spherical-coordinate-chart-normalized}
     \begin{pmatrix}
-      \frac{\pdiff f}{\pdiff r} \\
-      \frac{1}{r} \frac{\pdiff f}{\pdiff \theta} \\
-      \frac{1}{r\sin\theta} \frac{\pdiff f}{\pdiff \phi}
+      \frac{\partial f}{\partial r} \\
+      \frac{1}{r} \frac{\partial f}{\partial \theta} \\
+      \frac{1}{r\sin\theta} \frac{\partial f}{\partial \phi}
     \end{pmatrix}.
   \end{equation}
   
@@ -3580,18 +3591,18 @@ third property is proved below.
   \begin{equation}
     \label{eq:gradient-in-cylindrical-coordinate-chart}
     \begin{pmatrix}
-      \frac{\pdiff f}{\pdiff r} \\
-      \frac{1}{r^2} \frac{\pdiff f}{\pdiff \phi} \\
-      \frac{\pdiff f}{\pdiff z}
+      \frac{\partial f}{\partial r} \\
+      \frac{1}{r^2} \frac{\partial f}{\partial \phi} \\
+      \frac{\partial f}{\partial z}
     \end{pmatrix}.
   \end{equation}
   With the normalized basis, it is
   \begin{equation}
     \label{eq:gradient-in-cylindrical-coordinate-chart-normalized}
     \begin{pmatrix}
-      \frac{\pdiff f}{\pdiff r} \\
-      \frac{1}{r} \frac{\pdiff f}{\pdiff \phi} \\
-      \frac{\pdiff f}{\pdiff z}
+      \frac{\partial f}{\partial r} \\
+      \frac{1}{r} \frac{\partial f}{\partial \phi} \\
+      \frac{\partial f}{\partial z}
     \end{pmatrix}.
   \end{equation}
   
@@ -3602,27 +3613,27 @@ third property is proved below.
 
   Let the pseudo volume $n$-form be
   $\mathrm{vol}^n = o(u) \rho(u) du^1 \wedge \cdots \wedge du^n$ using the coordinate
-  chart $(x)$. Let $v$ be a tangent vector $v = v^j \vect{\pdiff}u^j$. The interior
+  chart $(x)$. Let $v$ be a tangent vector $v = v^j \vect{\partial}u^j$. The interior
   product of $\mathrm{vol}^n$ with respect to $v$ is
   \begin{align*}
     i_v \mathrm{vol}^n
     &= i_v \left( o(u) \rho(u) du^1 \wedge \cdots \wedge du^n \right) \\
-    &= i_{v^j \vect{\pdiff}u^j} \left( o(u) \rho(u) du^1 \wedge \cdots \wedge du^n \right)
+    &= i_{v^j \vect{\partial}u^j} \left( o(u) \rho(u) du^1 \wedge \cdots \wedge du^n \right)
     \\
     \intertext{Apply the linearity property of interior product operator (see Equation
     (\ref{eq:interior-product-linearity-summation}) and
     (\ref{eq:interior-product-linearity-scalar-product})):}
-    &= o(u) \rho(u) v^j i_{\vect{\pdiff}u^j} \left( du^1 \wedge \cdots \wedge du^n \right)
+    &= o(u) \rho(u) v^j i_{\vect{\partial}u^j} \left( du^1 \wedge \cdots \wedge du^n \right)
     \\
     \intertext{Apply the antiderivation property of interior product operator repeatedly
     (see Equation (\ref{eq:interior-product-antiderivation})):}
-    &= o(u) \rho(u) v^j \left( i_{\vect{\pdiff}u^j}(du^1) \wedge \cdots \wedge du^n - du^1
-      \wedge i_{\vect{\pdiff}u^j}\left( du^2 \wedge \cdots \wedge du^n \right) \right) \\
-    &= o(u) \rho(u) v^j \left( i_{\vect{\pdiff}u^j}(du^1) \wedge \cdots \wedge du^n -
-      du^1 \wedge i_{\vect{\pdiff}u^j}(du^2) \wedge \cdots \wedge du^n + du^1 \wedge du^2
-      \wedge i_{\vect{\pdiff}u^j}\left( du^3 \wedge \cdots \wedge du^n \right) \right) \\
+    &= o(u) \rho(u) v^j \left( i_{\vect{\partial}u^j}(du^1) \wedge \cdots \wedge du^n - du^1
+      \wedge i_{\vect{\partial}u^j}\left( du^2 \wedge \cdots \wedge du^n \right) \right) \\
+    &= o(u) \rho(u) v^j \left( i_{\vect{\partial}u^j}(du^1) \wedge \cdots \wedge du^n -
+      du^1 \wedge i_{\vect{\partial}u^j}(du^2) \wedge \cdots \wedge du^n + du^1 \wedge du^2
+      \wedge i_{\vect{\partial}u^j}\left( du^3 \wedge \cdots \wedge du^n \right) \right) \\
     &= o(u) \rho(u) v^j \left( \sum_{i=1}^n (-1)^{i-1} du^1 \wedge \cdots
-      \wedge i_{\vect{\pdiff}u^j}(du^i) \wedge \cdots \wedge du^n \right) \\
+      \wedge i_{\vect{\partial}u^j}(du^i) \wedge \cdots \wedge du^n \right) \\
     &= o(u) \rho(u) v^j \left( \sum_{i=1}^n \delta^i_j (-1)^{i-1} du^1 \wedge \cdots
       \wedge \widehat{du^i} \wedge \cdots \wedge du^n \right) \\
     \intertext{Remember that there is still a summation over the index $j$, which is not
@@ -3654,7 +3665,7 @@ third property is proved below.
   \end{equation}
   
   With this general form obtained, we can get its specific form in $M^3$, which has
-  orthonormal basis $\vect{\pdiff}x$. In this space, the pseudo volume 3-form using the
+  orthonormal basis $\vect{\partial}x$. In this space, the pseudo volume 3-form using the
   coordinate chart $(y)$ has been given in Equation (\ref{eq:volume-3-form}). Then its
   interior product with respect to $v$, which is a pseudo 2-form, is
   \begin{equation}
@@ -3744,7 +3755,7 @@ third property is proved below.
       \left\langle u\times v, w \right\rangle = w^{\mathrm{T}} G (u\times v),
     \end{equation*}
     where $G$ is the metric tensor. It is equal to
-    $\left[ \frac{\pdiff x}{\pdiff y} \right]^{\mathrm{T}} \left[ \frac{\pdiff x}{\pdiff y}
+    $\left[ \frac{\partial x}{\partial y} \right]^{\mathrm{T}} \left[ \frac{\partial x}{\partial y}
     \right]$, where $(x)$ is an orthonormal coordinate chart. Now the orientation function
     $o(y)$ is removed from this matrix form, since the cross product $u\times v$ as a whole
     already includes or implies this factor.
@@ -3847,8 +3858,8 @@ third property is proved below.
           u^2v^3-u^3v^2 \\
           u^3v^1-u^1v^3 \\
           u^1v^2-u^2v^1
-        \end{pmatrix} = \det\left\{\left[ \frac{\pdiff x}{\pdiff y} \right]^{\mathrm{T}} \left[
-            \frac{\pdiff x}{\pdiff y} \right]\right\} G^{-1} \begin{pmatrix}
+        \end{pmatrix} = \det\left\{\left[ \frac{\partial x}{\partial y} \right]^{\mathrm{T}} \left[
+            \frac{\partial x}{\partial y} \right]\right\} G^{-1} \begin{pmatrix}
           u^2v^3-u^3v^2 \\
           u^3v^1-u^1v^3 \\
           u^1v^2-u^2v^1
@@ -3877,8 +3888,8 @@ third property is proved below.
           g_{11}g_{23} \\
           g_{21}g_{32} - g_{31}g_{22} & g_{31}g_{12} - g_{11}g_{32} & g_{11}g_{22} -
           g_{21}g_{12}
-        \end{pmatrix}}{\det\left\{\left[ \frac{\pdiff x}{\pdiff y} \right]^{\mathrm{T}}
-          \left[ \frac{\pdiff x}{\pdiff y} \right]\right\}}.
+        \end{pmatrix}}{\det\left\{\left[ \frac{\partial x}{\partial y} \right]^{\mathrm{T}}
+          \left[ \frac{\partial x}{\partial y} \right]\right\}}.
     \end{equation*}
     Then
     \begin{align*}
@@ -3976,9 +3987,9 @@ is(interior_product = alpha_wedge_beta);
   \begin{equation}
     \label{eq:curl-expr-general}
     \curl a = \frac{1}{\sqrt{g(y)}} \begin{pmatrix}
-      \frac{\pdiff \alpha_3}{\pdiff y^2} - \frac{\pdiff \alpha_2}{\pdiff y^3} \\
-      \frac{\pdiff \alpha_1}{\pdiff y^3} - \frac{\pdiff \alpha_3}{\pdiff y^1} \\
-      \frac{\pdiff \alpha_2}{\pdiff y^1} - \frac{\pdiff \alpha_1}{\pdiff y^2}
+      \frac{\partial \alpha_3}{\partial y^2} - \frac{\partial \alpha_2}{\partial y^3} \\
+      \frac{\partial \alpha_1}{\partial y^3} - \frac{\partial \alpha_3}{\partial y^1} \\
+      \frac{\partial \alpha_2}{\partial y^1} - \frac{\partial \alpha_1}{\partial y^2}
     \end{pmatrix},
   \end{equation}
   where $(\alpha_1,\alpha_2,\alpha_3)^{\mathrm{T}} = G (a^1,a^2,a^3)^{\mathrm{T}}$.
@@ -3987,60 +3998,60 @@ is(interior_product = alpha_wedge_beta);
   \begin{equation}
     \label{eq:curl-expr-cartesian}
     \curl a = \begin{pmatrix}
-      \frac{\pdiff a^3}{\pdiff x^2} - \frac{\pdiff a^2}{\pdiff x^3} \\
-      \frac{\pdiff a^1}{\pdiff x^3} - \frac{\pdiff a^3}{\pdiff x^1} \\
-      \frac{\pdiff a^2}{\pdiff x^1} - \frac{\pdiff a^1}{\pdiff x^2}
+      \frac{\partial a^3}{\partial x^2} - \frac{\partial a^2}{\partial x^3} \\
+      \frac{\partial a^1}{\partial x^3} - \frac{\partial a^3}{\partial x^1} \\
+      \frac{\partial a^2}{\partial x^1} - \frac{\partial a^1}{\partial x^2}
     \end{pmatrix}.
   \end{equation}
   
   In the ball coordinate chart $(r,\theta,\phi)$ with the non-normalized basis
-  $\left\{ \vect{\pdiff}r, \vect{\pdiff}\theta, \vect{\pdiff}\phi \right\}$,
+  $\left\{ \vect{\partial}r, \vect{\partial}\theta, \vect{\partial}\phi \right\}$,
   \begin{equation}
     \label{eq:curl-expr-ball-coordinate-nonnormalized-basis}
     \curl a = \begin{pmatrix}
-      \sin\theta \frac{\pdiff a^{3}}{\pdiff \theta} - \frac{1}{\sin\theta} \frac{\pdiff
-        a^{2}}{\pdiff \phi} + 2a^3\cos\theta \\
-      -\frac{2\sin\theta}{r}a^3 - \sin\theta \frac{\pdiff a^3}{\pdiff r} +
-      \frac{1}{r^2\sin\theta}\frac{\pdiff a^1}{\pdiff \phi}\\
-      \frac{2}{r\sin\theta}a^2 - \frac{1}{r^2\sin\theta}\frac{\pdiff a^1}{\pdiff \theta} +
-      \frac{1}{\sin\theta}\frac{\pdiff a^{2}}{\pdiff r}
+      \sin\theta \frac{\partial a^{3}}{\partial \theta} - \frac{1}{\sin\theta} \frac{\partial
+        a^{2}}{\partial \phi} + 2a^3\cos\theta \\
+      -\frac{2\sin\theta}{r}a^3 - \sin\theta \frac{\partial a^3}{\partial r} +
+      \frac{1}{r^2\sin\theta}\frac{\partial a^1}{\partial \phi}\\
+      \frac{2}{r\sin\theta}a^2 - \frac{1}{r^2\sin\theta}\frac{\partial a^1}{\partial \theta} +
+      \frac{1}{\sin\theta}\frac{\partial a^{2}}{\partial r}
     \end{pmatrix}.
   \end{equation}
   If the normalized basis
-  $\left\{ \vect{\pdiff}\hat{r}, \vect{\pdiff}\hat{\theta}, \vect{\pdiff}\hat{\phi}
+  $\left\{ \vect{\partial}\hat{r}, \vect{\partial}\hat{\theta}, \vect{\partial}\hat{\phi}
   \right\}$ is adopted,
   \begin{equation}
     \label{eq:curl-expr-ball-coordinate-normalized-basis}
     \curl a = \begin{pmatrix}
-      \frac{\cos\theta}{r\sin\theta} a^3 - \frac{1}{r\sin\theta} \frac{\pdiff
-        a^{2}}{\pdiff \phi} + \frac{1}{r} \frac{\pdiff a^{3}}{\pdiff \theta} \\
-      \frac{1}{r\sin\theta} \frac{\pdiff a^{1}}{\pdiff \phi} - \frac{1}{r}a^3 -
-      \frac{\pdiff a^{3}}{\pdiff r} \\
-      \frac{1}{r}a^2 - \frac{1}{r} \frac{\pdiff a^{1}}{\pdiff \theta} + \frac{\pdiff
-        a^{2}}{\pdiff r}
+      \frac{\cos\theta}{r\sin\theta} a^3 - \frac{1}{r\sin\theta} \frac{\partial
+        a^{2}}{\partial \phi} + \frac{1}{r} \frac{\partial a^{3}}{\partial \theta} \\
+      \frac{1}{r\sin\theta} \frac{\partial a^{1}}{\partial \phi} - \frac{1}{r}a^3 -
+      \frac{\partial a^{3}}{\partial r} \\
+      \frac{1}{r}a^2 - \frac{1}{r} \frac{\partial a^{1}}{\partial \theta} + \frac{\partial
+        a^{2}}{\partial r}
     \end{pmatrix}.
   \end{equation}
   
   In the cylindrical coordinate chart $(r,\phi,z)$ with the non-normalized basis $\left\{
-    \vect{\pdiff}r, \vect{\pdiff}\phi, \vect{\pdiff}z \right\}$,
+    \vect{\partial}r, \vect{\partial}\phi, \vect{\partial}z \right\}$,
   \begin{equation}
     \label{eq:curl-expr-cylindrical-coordinate-nonnormalized-basis}
     \curl a = \begin{pmatrix}
-      \frac{1}{r}\frac{\pdiff a^{3}}{\pdiff \phi} - r \frac{\pdiff a^{2}}{\pdiff z} \\
-      \frac{1}{r}\frac{\pdiff a^{1}}{\pdiff z} - \frac{1}{r}\frac{\pdiff a^{3}}{\pdiff r}
+      \frac{1}{r}\frac{\partial a^{3}}{\partial \phi} - r \frac{\partial a^{2}}{\partial z} \\
+      \frac{1}{r}\frac{\partial a^{1}}{\partial z} - \frac{1}{r}\frac{\partial a^{3}}{\partial r}
       \\
-      r \frac{\pdiff a^{2}}{\pdiff r} - \frac{1}{r} \frac{\pdiff a^{1}}{\pdiff \phi} +
+      r \frac{\partial a^{2}}{\partial r} - \frac{1}{r} \frac{\partial a^{1}}{\partial \phi} +
       2a^2
     \end{pmatrix}.
   \end{equation}
-  If the normalized basis $\left\{ \vect{\pdiff}\hat{r}, \vect{\pdiff}\hat{\phi},
-    \vect{\pdiff}\hat{z} \right\}$ is adopted,
+  If the normalized basis $\left\{ \vect{\partial}\hat{r}, \vect{\partial}\hat{\phi},
+    \vect{\partial}\hat{z} \right\}$ is adopted,
   \begin{equation}
     \label{eq:curl-expr-cylindrical-coordinate-normalized-basis}
     \curl a = \begin{pmatrix}
-      \frac{1}{r} \frac{\pdiff a^{3}}{\pdiff \phi} - \frac{\pdiff a^{2}}{\pdiff z} \\
-      \frac{\pdiff a^{1}}{\pdiff z} - \frac{\pdiff a^{3}}{\pdiff r} \\
-      \frac{\pdiff a^{2}}{\pdiff r} - \frac{1}{r} \frac{\pdiff a^{1}}{\pdiff \phi} +
+      \frac{1}{r} \frac{\partial a^{3}}{\partial \phi} - \frac{\partial a^{2}}{\partial z} \\
+      \frac{\partial a^{1}}{\partial z} - \frac{\partial a^{3}}{\partial r} \\
+      \frac{\partial a^{2}}{\partial r} - \frac{1}{r} \frac{\partial a^{1}}{\partial \phi} +
       \frac{1}{r}a^2
     \end{pmatrix}.
   \end{equation}
@@ -4064,8 +4075,8 @@ is(interior_product = alpha_wedge_beta);
   Then using Equation (\ref{eq:exterior-diff-2-form-3d}), the exterior differential of
   $\beta^2$ is
   \begin{equation}
-    d\beta^2 = o(y) \left( \frac{\pdiff}{\pdiff y^1} \left( \sqrt{g(y)}b^1 \right) +
-      \frac{\pdiff}{\pdiff y^2} \left( \sqrt{g(y)}b^2 \right) + \frac{\pdiff}{\pdiff y^3}
+    d\beta^2 = o(y) \left( \frac{\partial}{\partial y^1} \left( \sqrt{g(y)}b^1 \right) +
+      \frac{\partial}{\partial y^2} \left( \sqrt{g(y)}b^2 \right) + \frac{\partial}{\partial y^3}
       \left( \sqrt{g(y)}b^3 \right) \right) dy^1 \wedge dy^2 \wedge dy^3.
   \end{equation}
   Meanwhile, the right hand side of Equation \ref{eq:vector-divergence} is
@@ -4076,48 +4087,48 @@ is(interior_product = alpha_wedge_beta);
   Therefore, the divergence of $b$ is
   \begin{equation}
     \label{eq:div-expr-general}
-    \divergence b = \frac{1}{\sqrt{g(y)}} \left( \frac{\pdiff}{\pdiff y^1} \left(
-        \sqrt{g(y)}b^1 \right) + \frac{\pdiff}{\pdiff y^2} \left( \sqrt{g(y)}b^2 \right) +
-      \frac{\pdiff}{\pdiff y^3} \left( \sqrt{g(y)}b^3 \right) \right).
+    \divergence b = \frac{1}{\sqrt{g(y)}} \left( \frac{\partial}{\partial y^1} \left(
+        \sqrt{g(y)}b^1 \right) + \frac{\partial}{\partial y^2} \left( \sqrt{g(y)}b^2 \right) +
+      \frac{\partial}{\partial y^3} \left( \sqrt{g(y)}b^3 \right) \right).
   \end{equation}
 
   In the Cartesian coordinate chart,
   \begin{equation}
     \label{eq:div-expr-cartesian}
-    \divergence b = \frac{\pdiff b^1}{\pdiff x^1} + \frac{\pdiff b^{2}}{\pdiff x^{2}} +
-    \frac{\pdiff b^{3}}{\pdiff x^{3}}.
+    \divergence b = \frac{\partial b^1}{\partial x^1} + \frac{\partial b^{2}}{\partial x^{2}} +
+    \frac{\partial b^{3}}{\partial x^{3}}.
   \end{equation}
 
   In the ball coordinate chart $(r,\theta,\phi)$ with the non-normalized basis $\left\{
-    \vect{\pdiff}r, \vect{\pdiff}\theta, \vect{\pdiff}\phi \right\}$,
+    \vect{\partial}r, \vect{\partial}\theta, \vect{\partial}\phi \right\}$,
   \begin{equation}
     \label{eq:div-expr-ball-coordinate-nonnormalized-basis}
-    \divergence b = \frac{\pdiff b^{1}}{\pdiff r} + \frac{2}{r}b^1 + \frac{\pdiff
-      b^{2}}{\pdiff \theta} + \frac{\cos\theta}{\sin\theta}b^2 + \frac{\pdiff b^{3}}{\pdiff
+    \divergence b = \frac{\partial b^{1}}{\partial r} + \frac{2}{r}b^1 + \frac{\partial
+      b^{2}}{\partial \theta} + \frac{\cos\theta}{\sin\theta}b^2 + \frac{\partial b^{3}}{\partial
       \phi}. 
   \end{equation}
- If the normalized basis $\left\{ \vect{\pdiff}\hat{r}, \vect{\pdiff}\hat{\theta},
-   \vect{\pdiff}\hat{\phi} \right\}$ is adopted,
+ If the normalized basis $\left\{ \vect{\partial}\hat{r}, \vect{\partial}\hat{\theta},
+   \vect{\partial}\hat{\phi} \right\}$ is adopted,
  \begin{equation}
    \label{eq:div-expr-ball-coordinate-normalized-basis}
-   \divergence b = \frac{\pdiff b^{1}}{\pdiff r} + \frac{2}{r}b^1 +
-   \frac{1}{r}\frac{\pdiff b^{2}}{\pdiff \theta} + \frac{\cos\theta}{r\sin\theta}b^2 +
-   \frac{1}{r\sin\theta}\frac{\pdiff b^{3}}{\pdiff \phi}.
+   \divergence b = \frac{\partial b^{1}}{\partial r} + \frac{2}{r}b^1 +
+   \frac{1}{r}\frac{\partial b^{2}}{\partial \theta} + \frac{\cos\theta}{r\sin\theta}b^2 +
+   \frac{1}{r\sin\theta}\frac{\partial b^{3}}{\partial \phi}.
  \end{equation}
 
  In the cylindrical coordinate chart $(r,\phi,z)$ with the non-normalized basis $\left\{
-   \vect{\pdiff}r, \vect{\pdiff}\phi, \vect{\pdiff}z \right\}$,
+   \vect{\partial}r, \vect{\partial}\phi, \vect{\partial}z \right\}$,
  \begin{equation}
    \label{eq:div-expr-cylindrival-coordinate-nonnormalized-basis}
-   \divergence b = \frac{\pdiff b^{1}}{\pdiff r} + \frac{1}{r}b^1 + \frac{\pdiff
-     b^{2}}{\pdiff \phi} + \frac{\pdiff b^{3}}{\pdiff z}.
+   \divergence b = \frac{\partial b^{1}}{\partial r} + \frac{1}{r}b^1 + \frac{\partial
+     b^{2}}{\partial \phi} + \frac{\partial b^{3}}{\partial z}.
  \end{equation}
- If the normalized basis $\left\{ \vect{\pdiff}\hat{r}, \vect{\pdiff}\hat{\phi},
-   \vect{\pdiff}\hat{z} \right\}$ is adopted,
+ If the normalized basis $\left\{ \vect{\partial}\hat{r}, \vect{\partial}\hat{\phi},
+   \vect{\partial}\hat{z} \right\}$ is adopted,
  \begin{equation}
    \label{eq:div-expr-cylindrival-coordinate-normalized-basis}
-   \divergence b = \frac{\pdiff b^{1}}{\pdiff r} + \frac{1}{r}b^1 +
-   \frac{1}{r}\frac{\pdiff b^{2}}{\pdiff \phi} + \frac{\pdiff b^{3}}{\pdiff z}.
+   \divergence b = \frac{\partial b^{1}}{\partial r} + \frac{1}{r}b^1 +
+   \frac{1}{r}\frac{\partial b^{2}}{\partial \phi} + \frac{\partial b^{3}}{\partial z}.
  \end{equation}
 \item Laplacian of a 0-form $f$: it is defined as the divergence of the gradient of $f$:
   \begin{equation}
@@ -4126,8 +4137,8 @@ is(interior_product = alpha_wedge_beta);
   \end{equation}
   First, the exterior differential of $f$ can be computed as
   \begin{equation}
-    df = \frac{\pdiff f}{\pdiff y^{1}} dy^1 + \frac{\pdiff f}{\pdiff y^{2}} dy^2 +
-    \frac{\pdiff f}{\pdiff y^{3}} dy^3.
+    df = \frac{\partial f}{\partial y^{1}} dy^1 + \frac{\partial f}{\partial y^{2}} dy^2 +
+    \frac{\partial f}{\partial y^{3}} dy^3.
   \end{equation}
   Then its associated tangent vector $\nabla f$ can be obtained from Equation
   (\ref{eq:1-form-to-gradient}). Then the corresponding 2-form $\beta^2$ of $\nabla f$ is
@@ -4136,18 +4147,18 @@ is(interior_product = alpha_wedge_beta);
   be computed according to Equation (\ref{eq:vector-divergence}):
   \begin{equation}
     \label{eq:laplacian-expr-general}
-    \triangle f = \frac{1}{\sqrt{g(y)}} \left[ \frac{\pdiff}{\pdiff y^1} \left(
-        \sqrt{g(y)} g^{1j} \frac{\pdiff f}{\pdiff y^{j}} \right) + \frac{\pdiff}{\pdiff
-        y^2} \left( \sqrt{g(y)}g^{2j} \frac{\pdiff f}{\pdiff y^{j}} \right) +
-      \frac{\pdiff}{\pdiff y^3} \left( \sqrt{g(y)} g^{3j} \frac{\pdiff f}{\pdiff y^{j}}
+    \triangle f = \frac{1}{\sqrt{g(y)}} \left[ \frac{\partial}{\partial y^1} \left(
+        \sqrt{g(y)} g^{1j} \frac{\partial f}{\partial y^{j}} \right) + \frac{\partial}{\partial
+        y^2} \left( \sqrt{g(y)}g^{2j} \frac{\partial f}{\partial y^{j}} \right) +
+      \frac{\partial}{\partial y^3} \left( \sqrt{g(y)} g^{3j} \frac{\partial f}{\partial y^{j}}
       \right) \right].
   \end{equation}
 
   In the Cartesian coordinate chart,
   \begin{equation}
     \label{eq:laplacian-expr-cartesian}
-    \triangle f = \frac{\pdiff^2 f}{\pdiff (x^1)^2} + \frac{\pdiff^2 f}{\pdiff (x^2)^2} +
-    \frac{\pdiff^2 f}{\pdiff (x^3)^2}.
+    \triangle f = \frac{\partial^2 f}{\partial (x^1)^2} + \frac{\partial^2 f}{\partial (x^2)^2} +
+    \frac{\partial^2 f}{\partial (x^3)^2}.
   \end{equation}
 
   In the ball coordinate chart $(r,\theta,\phi)$, since the Laplacian is a scalar value,
@@ -4155,17 +4166,17 @@ is(interior_product = alpha_wedge_beta);
   expression of $\triangle f$ is
   \begin{equation}
     \label{eq:laplacian-expr-ball-coordinate}
-    \triangle f = \frac{\pdiff^2 f}{\pdiff r^2} + \frac{2}{r} \frac{\pdiff f}{\pdiff r} +
-    \frac{1}{r^2}\frac{\pdiff^2 f}{\pdiff \theta^2} +
-    \frac{\cos\theta}{r^2\sin\theta}\frac{\pdiff f}{\pdiff \theta} +
-    \frac{1}{r^2\sin\theta^2} \frac{\pdiff^2 f}{\pdiff \phi^2}.
+    \triangle f = \frac{\partial^2 f}{\partial r^2} + \frac{2}{r} \frac{\partial f}{\partial r} +
+    \frac{1}{r^2}\frac{\partial^2 f}{\partial \theta^2} +
+    \frac{\cos\theta}{r^2\sin\theta}\frac{\partial f}{\partial \theta} +
+    \frac{1}{r^2\sin\theta^2} \frac{\partial^2 f}{\partial \phi^2}.
   \end{equation}
 
   In the cylindrical coordinate chart $(r,\phi,z)$,
   \begin{equation}
     \label{eq:laplacian-expr-cylindrical-coordinate}
-    \triangle f = \frac{\pdiff^2 f}{\pdiff r^2} + \frac{1}{r}\frac{\pdiff f}{\pdiff r} +
-    \frac{1}{r^2} \frac{\pdiff^2 f}{\pdiff \phi^2} + \frac{\pdiff^2 f}{\pdiff z^2}.
+    \triangle f = \frac{\partial^2 f}{\partial r^2} + \frac{1}{r}\frac{\partial f}{\partial r} +
+    \frac{1}{r^2} \frac{\partial^2 f}{\partial \phi^2} + \frac{\partial^2 f}{\partial z^2}.
   \end{equation}
 \end{enumerate}
 
@@ -4552,8 +4563,8 @@ cells.
 When a coordinate transformation is applied to a surface integral, a scaling of the
 integral element $\partial \hat{x}_1 \wedge \partial \hat{x}_2$ is needed. On a curved
 surface or 2D manifold, such scaling is the area of the parallelogram spanned by the
-tangent vectors $\frac{\pdiff x}{\pdiff \hat{x}_1}$ and
-$\frac{\pdiff x}{\pdiff \hat{x}_2}$ (see Figure \ref{fig:surface-element-scaling}).
+tangent vectors $\frac{\partial x}{\partial \hat{x}_1}$ and
+$\frac{\partial x}{\partial \hat{x}_2}$ (see Figure \ref{fig:surface-element-scaling}).
 \footnote{In a cell $\tau$, the transformation from $(\hat{x}_1, \hat{x}_2)$ to $x$ is
   just $\chi_{\tau}$.}
 \begin{figure}[htbp]
@@ -4567,14 +4578,14 @@ vectors:
 \begin{equation}
   \tilde{\vect{e}}_3=\tilde{\vect{e}}_1\times\tilde{\vect{e}}_2=\left\vert\begin{matrix}
       \vect{i} & \vect{j} & \vect{k} \\
-      \frac{\pdiff x_{1}}{\pdiff \hat{x}_{1}} & \frac{\pdiff x_{2}}{\pdiff \hat{x}_{1}} & \frac{\pdiff
-        x_{3}}{\pdiff \hat{x}_{1}} \\
-      \frac{\pdiff x_{1}}{\pdiff \hat{x}_{2}} & \frac{\pdiff x_{2}}{\pdiff \hat{x}_{2}} & \frac{\pdiff
-        x_{3}}{\pdiff \hat{x}_{2}}
+      \frac{\partial x_{1}}{\partial \hat{x}_{1}} & \frac{\partial x_{2}}{\partial \hat{x}_{1}} & \frac{\partial
+        x_{3}}{\partial \hat{x}_{1}} \\
+      \frac{\partial x_{1}}{\partial \hat{x}_{2}} & \frac{\partial x_{2}}{\partial \hat{x}_{2}} & \frac{\partial
+        x_{3}}{\partial \hat{x}_{2}}
     \end{matrix}\right\vert=
-  \left\vert\frac{\pdiff (x_{2},x_{3})}{\pdiff (\hat{x}_1,\hat{x}_2)}\right\vert \vect{i} +
-  \left\vert\frac{\pdiff (x_{3},x_{1})}{\pdiff (\hat{x}_1,\hat{x}_2)}\right\vert \vect{j} +
-  \left\vert\frac{\pdiff (x_{1},x_{2})}{\pdiff (\hat{x}_1,\hat{x}_2)}\right\vert \vect{k}
+  \left\vert\frac{\partial (x_{2},x_{3})}{\partial (\hat{x}_1,\hat{x}_2)}\right\vert \vect{i} +
+  \left\vert\frac{\partial (x_{3},x_{1})}{\partial (\hat{x}_1,\hat{x}_2)}\right\vert \vect{j} +
+  \left\vert\frac{\partial (x_{1},x_{2})}{\partial (\hat{x}_1,\hat{x}_2)}\right\vert \vect{k}
 \end{equation}
 
 \begin{mycomment}
@@ -4585,12 +4596,12 @@ vectors:
     \curl\vect{A} =
     \left\vert\begin{matrix}
         \vect{i} & \vect{j} & \vect{k} \\
-        \frac{\pdiff }{\pdiff x_1} & \frac{\pdiff }{\pdiff x_2} & \frac{\pdiff }{\pdiff x_3} \\
+        \frac{\partial }{\partial x_1} & \frac{\partial }{\partial x_2} & \frac{\partial }{\partial x_3} \\
         A_1 & A_2 & A_3
-    \end{matrix}\right\vert = \left( \frac{\pdiff A_3}{\pdiff x_{\emphr{2}}} - \frac{\pdiff A_{2}}{\pdiff
-      x_{\emphr{3}}} \right) \vect{i} + \left( \frac{\pdiff A_{1}}{\pdiff x_{\emphr{3}}} -
-    \frac{\pdiff A_{3}}{\pdiff x_{\emphr{1}}} \right) \vect{j} + \left( \frac{\pdiff A_{2}}{\pdiff
-      x_{\emphr{1}}} - \frac{\pdiff A_{1}}{\pdiff x_{\emphr{2}}} \right) \vect{k}.
+    \end{matrix}\right\vert = \left( \frac{\partial A_3}{\partial x_{\emphr{2}}} - \frac{\partial A_{2}}{\partial
+      x_{\emphr{3}}} \right) \vect{i} + \left( \frac{\partial A_{1}}{\partial x_{\emphr{3}}} -
+    \frac{\partial A_{3}}{\partial x_{\emphr{1}}} \right) \vect{j} + \left( \frac{\partial A_{2}}{\partial
+      x_{\emphr{1}}} - \frac{\partial A_{1}}{\partial x_{\emphr{2}}} \right) \vect{k}.
   \end{equation}
   The cyclic indices can be generated by using the $\mod$ operation as below.
   \begin{enumerate}
@@ -4620,9 +4631,9 @@ vectors:
     starting from 1.}
 \end{mycomment}
 
-Let $\abs{J_{23}} = \left\vert \frac{\pdiff (x_2,x_3)}{\pdiff (\hat{x}_1,\hat{x}_2)}\right\vert$,
-$\abs{J_{31}} = \left\vert \frac{\pdiff (x_3,x_1)}{\pdiff (\hat{x}_1,\hat{x}_2)}\right\vert$ and
-$\abs{J_{12}} = \left\vert \frac{\pdiff (x_1,x_2)}{\pdiff (\hat{x}_1,\hat{x}_2)}\right\vert$. Then
+Let $\abs{J_{23}} = \left\vert \frac{\partial (x_2,x_3)}{\partial (\hat{x}_1,\hat{x}_2)}\right\vert$,
+$\abs{J_{31}} = \left\vert \frac{\partial (x_3,x_1)}{\partial (\hat{x}_1,\hat{x}_2)}\right\vert$ and
+$\abs{J_{12}} = \left\vert \frac{\partial (x_1,x_2)}{\partial (\hat{x}_1,\hat{x}_2)}\right\vert$. Then
 the unit normal vector at $(\hat{x}_1,\hat{x}_2)$ is
 \begin{equation}
   \label{eq:surface-normal-vector}
@@ -7016,7 +7027,7 @@ which is the Dirichlet data.
 
 Its normal derivative at $\Gamma$ is
 \begin{equation}
-  \frac{\pdiff u}{\pdiff n}\Big\vert_{\Gamma} = n(x)\cdot\nabla_x
+  \frac{\partial u}{\partial n}\Big\vert_{\Gamma} = n(x)\cdot\nabla_x
   \left( \frac{1}{4\pi\norm{x-x_0}} \right) = \frac{1}{4\pi}\frac{(n(x),
     x_0-x)}{\norm{x-x_0}^3} \quad (x\in\Gamma),
 \end{equation}
@@ -7025,7 +7036,7 @@ which is the Neumann data.
 Because $\Omega$ is a unit sphere located at the origin, the outward unit normal vector
 $n(x)$ rooted on $\Gamma$ is just $x$ itself. Hence,
 \begin{equation}
-  \frac{\pdiff u}{\pdiff n}\Big\vert_{\Gamma} = \frac{1}{4\pi}\frac{(x,
+  \frac{\partial u}{\partial n}\Big\vert_{\Gamma} = \frac{1}{4\pi}\frac{(x,
     x_0-x)}{\norm{x-x_0}^3} \quad (x\in\Gamma).
 \end{equation}
 N.B. Because $x_0$ is inside $\Omega$, $x_0-x$ points into the sphere, while $x$ points
@@ -7050,7 +7061,7 @@ test cases for Laplace exterior problems are defined below.
   \begin{equation}
     \begin{cases}
       \triangle u = 0 & \text{in $\Omega^{\rm c}\coloneqq\mathbb{R}^3\backslash\overline{\Omega}$} \\
-      \frac{\pdiff u}{\pdiff n}\Big\vert_{\Gamma} = g_{\rm N} = \frac{1}{4\pi}\frac{(n(x),
+      \frac{\partial u}{\partial n}\Big\vert_{\Gamma} = g_{\rm N} = \frac{1}{4\pi}\frac{(n(x),
         x_0-x)}{\norm{x-x_0}^3} & x\in\Gamma, x_0\in\Omega \\
       \abs{u(x)} = O(\norm{x}^{-1}) & \text{when $\norm{x-x_0}\rightarrow\infty$}
     \end{cases}
@@ -7077,7 +7088,7 @@ The potential function $u$ of a unit Dirac source at $x_0$ satisfies
 \end{equation}
 For any domain $\Omega$ containing $x_0$, apply the Gauss's divergence theorem, we have
 \begin{equation}
-  \int_{\Gamma} -\frac{\pdiff u}{\pdiff n} \intd s = 1.
+  \int_{\Gamma} -\frac{\partial u}{\partial n} \intd s = 1.
 \end{equation}
 Therefore, we adopt the $\Omega$ in Section \ref{sec:testcase-exterior-laplace} and
 integrate the negative Neumann data $\frac{1}{4\pi}\frac{(x, x-x_0)}{\norm{x-x_0}^3}$ on
