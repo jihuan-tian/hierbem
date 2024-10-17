@@ -22,7 +22,7 @@
 #include "bem_values.h"
 #include "cu_bem_values.hcu"
 #include "debug_tools.hcu"
-#include "mapping_q_generic_ext.h"
+#include "mapping/mapping_q_generic_ext.h"
 #include "sauter_quadrature.hcu"
 #include "sauter_quadrature_tools.h"
 

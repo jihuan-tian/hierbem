@@ -92,8 +92,10 @@ set(DEAL_II_CUDA_FLAGS_RELEASE "--default-stream per-thread")
 
 # Remove the language standard in DEAL_II_* related variables and hand over the
 # control to the macro HBEM_STD_COMPILE_FLAGS.
-string(REGEX REPLACE "(-+std +|-std=)c\\+\\+[0-9][0-9]" "" DEAL_II_CXX_FLAGS ${DEAL_II_CXX_FLAGS})
-string(REGEX REPLACE "(-+std +|-std=)c\\+\\+[0-9][0-9]" "" DEAL_II_CUDA_FLAGS ${DEAL_II_CUDA_FLAGS})
+string(REGEX REPLACE "(-+std +|-std=)c\\+\\+[0-9][0-9]" "" DEAL_II_CXX_FLAGS
+                     ${DEAL_II_CXX_FLAGS})
+string(REGEX REPLACE "(-+std +|-std=)c\\+\\+[0-9][0-9]" "" DEAL_II_CUDA_FLAGS
+                     ${DEAL_II_CUDA_FLAGS})
 
 # Remove unknown flag from Clang compiler flags
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

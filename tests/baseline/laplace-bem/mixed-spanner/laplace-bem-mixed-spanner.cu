@@ -117,8 +117,6 @@ main()
   LaplaceBEM<dim, spacedim> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
-    1, // mapping order for dirichlet domain
-    1, // mapping order for neumann domain
     LaplaceBEM<dim, spacedim>::ProblemType::MixedBCProblem,
     is_interior_problem,         // is interior problem
     64,                          // n_min for cluster tree
@@ -138,10 +136,31 @@ main()
 
   timer.start();
 
-  bem.set_dirichlet_boundary_ids({1, 2});
-  bem.set_neumann_boundary_ids({0});
+  std::ifstream           mesh_file(HBEM_TEST_MODEL_DIR "spanner.msh");
+  Triangulation<spacedim> tria;
+  GridIn<spacedim>        grid_in;
+  grid_in.attach_triangulation(tria);
+  grid_in.read_msh(mesh_file);
 
-  bem.read_volume_mesh(HBEM_TEST_MODEL_DIR "spanner.msh");
+  // Create the map from material ids to manifold ids.
+  bem.get_manifold_description()[0] = 0;
+  bem.get_manifold_description()[1] = 0;
+  bem.get_manifold_description()[2] = 0;
+
+  FlatManifold<dim, spacedim> *flat_manifold =
+    new FlatManifold<dim, spacedim>();
+  bem.get_manifolds()[0] = flat_manifold;
+
+  Triangulation<dim, spacedim> surface_tria;
+  surface_tria.set_manifold(0, *flat_manifold);
+  bem.extract_surface_triangulation(tria, std::move(surface_tria), true);
+
+  // Create the map from manifold id to mapping order.
+  bem.get_manifold_id_to_mapping_order()[0] = 1;
+
+  // Build surface-to-volume and volume-to-surface relationship.
+  bem.get_subdomain_topology().generate_single_domain_topology_for_dealii_model(
+    {0, 1, 2});
 
   timer.stop();
   print_wall_time(deallog, timer, "read mesh");
@@ -151,8 +170,8 @@ main()
   DirichletBC dirichlet_bc;
   NeumannBC   neumann_bc;
 
-  bem.assign_dirichlet_bc(dirichlet_bc);
-  bem.assign_neumann_bc(neumann_bc);
+  bem.assign_dirichlet_bc(dirichlet_bc, {1, 2});
+  bem.assign_neumann_bc(neumann_bc, 0);
 
   timer.stop();
   print_wall_time(deallog, timer, "assign boundary conditions");

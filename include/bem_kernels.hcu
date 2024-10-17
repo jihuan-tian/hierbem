@@ -478,16 +478,6 @@ namespace HierBEM
             }
         }
 
-      /**
-       * Negate the normal vector in \f$K_y\f$ when the cell neighboring type is
-       * common edge. This is because the cell \f$K_y\f$'s orientation has been
-       * reversed.
-       */
-      if (cell_neighboring_type == CommonEdge)
-        {
-          ny = -ny;
-        }
-
       if (kernel_function.kernel_type == HyperSingularRegular)
         {
           /**
@@ -750,16 +740,6 @@ namespace HierBEM
                 }
               break;
             }
-        }
-
-      /**
-       * Negate the normal vector in \f$K_y\f$ when the cell neighboring type is
-       * common edge. This is because the cell \f$K_y\f$'s orientation has been
-       * reversed.
-       */
-      if (cell_neighboring_type == CommonEdge)
-        {
-          ny = -ny;
         }
 
       if (kernel_function.kernel_type == HyperSingularRegular)

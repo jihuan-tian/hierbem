@@ -116,8 +116,6 @@ run_dirichlet_hmatrix()
   LaplaceBEM<dim, spacedim> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
-    1, // mapping order for dirichlet domain
-    1, // mapping order for neumann domain
     LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
     is_interior_problem,         // is interior problem
     4,                           // n_min for cluster tree
@@ -160,16 +158,34 @@ run_dirichlet_hmatrix()
   GridGenerator::hyper_ball(tria, center, radius);
   tria.refine_global(1);
 
-  bem.assign_volume_triangulation(std::move(tria), true);
+  Triangulation<dim, spacedim> surface_tria;
 
-  Triangulation<dim, spacedim>           surface_tria;
-  const SphericalManifold<dim, spacedim> ball_surface_manifold(center);
-  surface_tria.set_manifold(0, ball_surface_manifold);
+  // Create the map from material ids to manifold ids. By default, the material
+  // ids of all cells are zero, if the triangulation is created by a deal.ii
+  // function in GridGenerator.
+  bem.get_manifold_description()[0] = 0;
 
-  bem.assign_surface_triangulation(std::move(surface_tria), true);
+  // Create the map from manifold ids to manifold objects. Because in the
+  // destructor of LaplaceBEM the manifold objects will be released, the
+  // manifold object here is created on the heap.
+  SphericalManifold<dim, spacedim> *ball_surface_manifold =
+    new SphericalManifold<dim, spacedim>(center);
+  bem.get_manifolds()[0] = ball_surface_manifold;
+
+  // We should first assign manifold objects to the empty surface triangulation,
+  // then perform surface mesh extraction.
+  surface_tria.set_manifold(0, *ball_surface_manifold);
+  bem.extract_surface_triangulation(tria, std::move(surface_tria), true);
+
+  // Create the map from manifold id to mapping order.
+  bem.get_manifold_id_to_mapping_order()[0] = 1;
 
   timer.stop();
   print_wall_time(deallog, timer, "read mesh");
+
+  // Build surface-to-volume and volume-to-surface relationship.
+  bem.get_subdomain_topology().generate_single_domain_topology_for_dealii_model(
+    {0});
 
   timer.start();
 

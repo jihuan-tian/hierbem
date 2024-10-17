@@ -10,6 +10,12 @@
 
 #include <deal.II/base/logstream.h>
 
+#include <deal.II/fe/mapping_manifold.h>
+
+#include <deal.II/grid/manifold.h>
+
+#include <boost/program_options.hpp>
+
 #include <cuda_runtime.h>
 
 #include <fstream>
@@ -22,6 +28,48 @@
 
 using namespace dealii;
 using namespace HierBEM;
+namespace po = boost::program_options;
+
+struct CmdOpts
+{
+  unsigned int dirichlet_space_fe_order;
+  unsigned int neumann_space_fe_order;
+  unsigned int mapping_order;
+  unsigned int refinement;
+};
+
+CmdOpts
+parse_cmdline(int argc, char *argv[])
+{
+  CmdOpts                 opts;
+  po::options_description desc("Allowed options");
+
+  // clang-format off
+  desc.add_options()
+    ("help,h", "show help message")
+    ("dirichlet-order,d", po::value<unsigned int>()->default_value(1), "Finite element space order for the Dirichlet data")
+    ("neumann-order,n", po::value<unsigned int>()->default_value(0), "Finite element space order for the Neumann data")
+    ("mapping-order,m", po::value<unsigned int>()->default_value(1), "Mapping order for the sphere")
+    ("refinement,r", po::value<unsigned int>()->default_value(5), "Number of global refinement when deal.ii is used to generate the mesh");
+  // clang-format on
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+  po::notify(vm);
+
+  if (vm.count("help"))
+    {
+      std::cout << desc << std::endl;
+      std::exit(EXIT_SUCCESS);
+    }
+
+  opts.dirichlet_space_fe_order = vm["dirichlet-order"].as<unsigned int>();
+  opts.neumann_space_fe_order   = vm["neumann-order"].as<unsigned int>();
+  opts.mapping_order            = vm["mapping-order"].as<unsigned int>();
+  opts.refinement               = vm["refinement"].as<unsigned int>();
+
+  return opts;
+}
 
 /**
  * Function object for the Dirichlet boundary condition data, which is
@@ -69,8 +117,10 @@ namespace HierBEM
 } // namespace HierBEM
 
 int
-main()
+main(int argc, char *argv[])
 {
+  CmdOpts opts = parse_cmdline(argc, argv);
+
   /**
    * @internal Pop out the default "DEAL" prefix string.
    */
@@ -108,8 +158,8 @@ main()
     cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
 
   /**
-   * @internal Use 8-byte bank size in shared memory, since double value type is
-   * used.
+   * @internal Use 8-byte bank size in shared memory, since double value type
+   * is used.
    */
   // AssertCuda(cudaDeviceSetSharedMemConfig(cudaSharedMemBankSizeEightByte));
 
@@ -118,10 +168,8 @@ main()
 
   const bool                is_interior_problem = true;
   LaplaceBEM<dim, spacedim> bem(
-    1, // fe order for dirichlet space
-    0, // fe order for neumann space
-    1, // mapping order for dirichlet domain
-    1, // mapping order for neumann domain
+    opts.dirichlet_space_fe_order, // fe order for dirichlet space
+    opts.neumann_space_fe_order,   // fe order for neumann space
     LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
     is_interior_problem,         // is interior problem
     64,                          // n_min for cluster tree
@@ -162,18 +210,36 @@ main()
   Triangulation<spacedim> tria;
   // The manifold_id is set to 0 on the boundary faces in @p hyper_ball.
   GridGenerator::hyper_ball(tria, center, radius);
-  tria.refine_global(5);
+  tria.refine_global(opts.refinement);
 
-  bem.assign_volume_triangulation(std::move(tria), true);
+  Triangulation<dim, spacedim> surface_tria;
 
-  Triangulation<dim, spacedim>           surface_tria;
-  const SphericalManifold<dim, spacedim> ball_surface_manifold(center);
-  surface_tria.set_manifold(0, ball_surface_manifold);
+  // Create the map from material ids to manifold ids. By default, the
+  // material ids of all cells are zero, if the triangulation is created by a
+  // deal.ii function in GridGenerator.
+  bem.get_manifold_description()[0] = 0;
 
-  bem.assign_surface_triangulation(std::move(surface_tria), true);
+  // Create the map from manifold ids to manifold objects. Because in the
+  // destructor of LaplaceBEM the manifold objects will be released, the
+  // manifold object here is created on the heap.
+  SphericalManifold<dim, spacedim> *ball_surface_manifold =
+    new SphericalManifold<dim, spacedim>(center);
+  bem.get_manifolds()[0] = ball_surface_manifold;
+
+  // We should first assign manifold objects to the empty surface
+  // triangulation, then perform surface mesh extraction.
+  surface_tria.set_manifold(0, *ball_surface_manifold);
+  bem.extract_surface_triangulation(tria, std::move(surface_tria), true);
+
+  // Create the map from manifold id to mapping order.
+  bem.get_manifold_id_to_mapping_order()[0] = opts.mapping_order;
 
   timer.stop();
   print_wall_time(deallog, timer, "read mesh");
+
+  // Build surface-to-volume and volume-to-surface relationship.
+  bem.get_subdomain_topology().generate_single_domain_topology_for_dealii_model(
+    {0});
 
   timer.start();
 

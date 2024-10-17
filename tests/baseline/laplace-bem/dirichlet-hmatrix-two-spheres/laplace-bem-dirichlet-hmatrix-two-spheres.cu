@@ -8,6 +8,8 @@
 
 #include <deal.II/base/logstream.h>
 
+#include <boost/program_options.hpp>
+
 #include <cuda_runtime.h>
 
 #include <fstream>
@@ -15,11 +17,51 @@
 
 #include "cu_profile.hcu"
 #include "debug_tools.hcu"
+#include "grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "laplace_bem.h"
 
 using namespace dealii;
 using namespace HierBEM;
+namespace po = boost::program_options;
+
+struct CmdOpts
+{
+  unsigned int dirichlet_space_fe_order;
+  unsigned int neumann_space_fe_order;
+  unsigned int mapping_order;
+};
+
+CmdOpts
+parse_cmdline(int argc, char *argv[])
+{
+  CmdOpts                 opts;
+  po::options_description desc("Allowed options");
+
+  // clang-format off
+  desc.add_options()
+    ("help,h", "show help message")
+    ("dirichlet-order,d", po::value<unsigned int>()->default_value(1), "Finite element space order for the Dirichlet data")
+    ("neumann-order,n", po::value<unsigned int>()->default_value(0), "Finite element space order for the Neumann data")
+    ("mapping-order,m", po::value<unsigned int>()->default_value(1), "Mapping order for the sphere");
+  // clang-format on
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+  po::notify(vm);
+
+  if (vm.count("help"))
+    {
+      std::cout << desc << std::endl;
+      std::exit(EXIT_SUCCESS);
+    }
+
+  opts.dirichlet_space_fe_order = vm["dirichlet-order"].as<unsigned int>();
+  opts.neumann_space_fe_order   = vm["neumann-order"].as<unsigned int>();
+  opts.mapping_order            = vm["mapping-order"].as<unsigned int>();
+
+  return opts;
+}
 
 class DirichletBC : public Function<3>
 {
@@ -50,8 +92,10 @@ namespace HierBEM
 } // namespace HierBEM
 
 int
-main()
+main(int argc, char *argv[])
 {
+  CmdOpts opts = parse_cmdline(argc, argv);
+
   /**
    * @internal Pop out the default "DEAL" prefix string.
    */
@@ -101,10 +145,8 @@ main()
 
   const bool                is_interior_problem = false;
   LaplaceBEM<dim, spacedim> bem(
-    1, // fe order for dirichlet space
-    0, // fe order for neumann space
-    1, // mapping order for dirichlet domain
-    1, // mapping order for neumann domain
+    opts.dirichlet_space_fe_order, // fe order for dirichlet space
+    opts.neumann_space_fe_order,   // fe order for neumann space
     LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
     is_interior_problem,         // is interior problem
     64,                          // n_min for cluster tree
@@ -124,79 +166,31 @@ main()
 
   timer.start();
 
-  Triangulation<spacedim> left_ball, right_ball, tria;
-  double                  inter_distance = 8;
-  double                  radius         = 1.0;
+  read_skeleton_mesh(HBEM_TEST_MODEL_DIR "two-spheres-fine.msh",
+                     bem.get_triangulation());
+  bem.get_subdomain_topology().generate_topology(HBEM_TEST_MODEL_DIR
+                                                 "two-spheres.brep",
+                                                 HBEM_TEST_MODEL_DIR
+                                                 "two-spheres-fine.msh");
 
-  GridGenerator::hyper_ball(left_ball,
-                            Point<spacedim>(-inter_distance / 2.0, 0, 0),
-                            radius);
-  GridGenerator::hyper_ball(right_ball,
-                            Point<spacedim>(inter_distance / 2.0, 0, 0),
-                            radius);
+  // Generate two sphere manifolds.
+  double                   inter_distance = 8.0;
+  Manifold<dim, spacedim> *left_sphere_manifold =
+    new SphericalManifold<dim, spacedim>(
+      Point<spacedim>(-inter_distance / 2.0, 0, 0));
+  Manifold<dim, spacedim> *right_sphere_manifold =
+    new SphericalManifold<dim, spacedim>(
+      Point<spacedim>(inter_distance / 2.0, 0, 0));
+  bem.get_manifolds()[0] = left_sphere_manifold;
+  bem.get_manifolds()[1] = right_sphere_manifold;
 
-  /**
-   * @internal Set different manifold ids and material ids to all the cells
-   * in the two balls.
-   */
-  for (typename Triangulation<spacedim>::active_cell_iterator cell =
-         left_ball.begin_active();
-       cell != left_ball.end();
-       cell++)
-    {
-      cell->set_all_manifold_ids(0);
-      cell->set_material_id(0);
-    }
+  // Create the map from manifold id to mapping order.
+  bem.get_manifold_id_to_mapping_order()[0] = opts.mapping_order;
+  bem.get_manifold_id_to_mapping_order()[1] = opts.mapping_order;
 
-  for (typename Triangulation<spacedim>::active_cell_iterator cell =
-         right_ball.begin_active();
-       cell != right_ball.end();
-       cell++)
-    {
-      cell->set_all_manifold_ids(1);
-      cell->set_material_id(1);
-    }
-
-  /**
-   * @internal @p merge_triangulation can only operate on coarse mesh, i.e.
-   * triangulations not refined. During the merging, the material ids are
-   * copied. When the last argument is true, the manifold ids are copied.
-   * Boundary ids will not be copied.
-   */
-  GridGenerator::merge_triangulations(left_ball, right_ball, tria, 1e-12, true);
-
-  /**
-   * @internal Assign manifold objects to the two balls in the merged mesh.
-   */
-  const SphericalManifold<spacedim> left_ball_manifold(
-    Point<spacedim>(-inter_distance / 2.0, 0, 0));
-  const SphericalManifold<spacedim> right_ball_manifold(
-    Point<spacedim>(inter_distance / 2.0, 0, 0));
-
-  tria.set_manifold(0, left_ball_manifold);
-  tria.set_manifold(1, right_ball_manifold);
-
-  // Refine the volume mesh.
-  tria.refine_global(5);
-
-  bem.assign_volume_triangulation(std::move(tria), true);
-
-  // Extract the boundary mesh. N.B. Before the operation, the association
-  // of manifold objects and manifold ids must also be set for the surface
-  // triangulation. The manifold objects for the surface triangulation have
-  // different dimension template paramreters as those for the volume
-  // triangulation.
-  Triangulation<dim, spacedim> surface_tria;
-
-  const SphericalManifold<dim, spacedim> left_ball_surface_manifold(
-    Point<spacedim>(-inter_distance / 2.0, 0, 0));
-  const SphericalManifold<dim, spacedim> right_ball_surface_manifold(
-    Point<spacedim>(inter_distance / 2.0, 0, 0));
-
-  surface_tria.set_manifold(0, left_ball_surface_manifold);
-  surface_tria.set_manifold(1, right_ball_surface_manifold);
-
-  bem.assign_surface_triangulation(std::move(surface_tria), true);
+  // Assign manifolds to surface entities.
+  bem.get_manifold_description()[1] = 0;
+  bem.get_manifold_description()[2] = 1;
 
   timer.stop();
   print_wall_time(deallog, timer, "read mesh");

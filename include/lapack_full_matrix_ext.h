@@ -349,9 +349,6 @@ namespace HierBEM
     LAPACKFullMatrixExt<Number> &
     operator=(const Number d);
 
-    void
-    reinit(const size_type nrows, const size_type ncols);
-
     /**
      * Set a matrix column as zeros.
      */
@@ -436,7 +433,8 @@ namespace HierBEM
      * Perform the standard singular value decomposition (SVD).
      *
      * @param U with a dimension \f$m \times m\f$.
-     * @param Sigma_r the list of singular values, with a dimension \f$\min(m,n)\f$.
+     * @param Sigma_r the list of singular values, with a dimension
+     * \f$\min(m,n)\f$.
      * @param VT with a dimension \f$n \times n\f$
      */
     void
@@ -454,7 +452,8 @@ namespace HierBEM
      * zeros; \p Sigma_r's \p (truncation_rank+1)'th to \p n'th values are set to
      * zeros.
      * @param U with a dimension \f$m \times m\f$.
-     * @param Sigma_r the list of singular values, which has a dimension \f$\min(m,n)\f$.
+     * @param Sigma_r the list of singular values, which has a dimension
+     * \f$\min(m,n)\f$.
      * @param VT with a dimension \f$n \times n\f$.
      */
     void
@@ -918,6 +917,26 @@ namespace HierBEM
         const bool is_result_matrix_store_tril_only = false);
 
     /**
+     * @brief Add a single value to the specified matrix element.
+     *
+     * @param i
+     * @param j
+     * @param value
+     */
+    void
+    add(const size_type i, const size_type j, const Number value);
+
+    /**
+     * @brief Compute the outer product of the two vectors and store the results
+     * into the current matrix.
+     *
+     * @param v
+     * @param w
+     */
+    void
+    outer_product(const Vector<Number> &v, const Vector<Number> &w);
+
+    /**
      * Matrix-vector multiplication which also handles the case when the matrix
      * is symmetric and lower triangular.
      *
@@ -1131,7 +1150,8 @@ namespace HierBEM
      * By the way, no permutation is needed when calling backward substitution
      * or solving Cholesky related matrices.}
      *
-     * @param b Right hand side vector and after execution, it stores the result vector.
+     * @param b Right hand side vector and after execution, it stores the result
+     * vector.
      * @param transposed
      * @param permute_rhs_vector
      */
@@ -1161,7 +1181,8 @@ namespace HierBEM
      * The right hand side vector \f$b\f$ will be overwritten by the solution
      * vector \f$x\f$.
      *
-     * @param b Right hand side vector and after execution, it stores the result vector.
+     * @param b Right hand side vector and after execution, it stores the result
+     * vector.
      * @param transposed
      */
     void
@@ -2380,8 +2401,8 @@ namespace HierBEM
     const LAPACKFullMatrixExt<Number> &matrix)
   {
     LAPACKFullMatrix<Number>::operator=(matrix);
-    state                             = matrix.state;
-    property                          = matrix.property;
+    state    = matrix.state;
+    property = matrix.property;
     /**
      * Since \p ipiv contains the crucial permutation data if the matrix has been
      * factorized by LU, it needs to be copied.
@@ -2420,15 +2441,6 @@ namespace HierBEM
     state = LAPACKSupport::matrix;
 
     return (*this);
-  }
-
-
-  template <typename Number>
-  void
-  LAPACKFullMatrixExt<Number>::reinit(const size_type nrows,
-                                      const size_type ncols)
-  {
-    LAPACKFullMatrix<Number>::reinit(nrows, ncols);
   }
 
 
@@ -4288,6 +4300,35 @@ namespace HierBEM
 
   template <typename Number>
   void
+  LAPACKFullMatrixExt<Number>::add(const size_type i,
+                                   const size_type j,
+                                   const Number    value)
+  {
+    (*this)(i, j) += value;
+  }
+
+
+  template <typename Number>
+  void
+  LAPACKFullMatrixExt<Number>::outer_product(const Vector<Number> &v,
+                                             const Vector<Number> &w)
+  {
+    Assert(v.size() == w.size(),
+           ExcMessage("Vectors v, w must be the same size."));
+    this->reinit(v.size(), v.size());
+
+    for (size_type i = 0; i < this->n(); ++i)
+      {
+        for (size_type j = 0; j < this->n(); ++j)
+          {
+            (*this)(i, j) = v(i) * w(j);
+          }
+      }
+  }
+
+
+  template <typename Number>
+  void
   LAPACKFullMatrixExt<Number>::vmult(Vector<Number>       &w,
                                      const Vector<Number> &v,
                                      const bool            adding) const
@@ -4981,7 +5022,7 @@ namespace HierBEM
             AssertThrow(n_cols > 0,
                         ExcMessage("Matrix to be read has no columns!"));
 
-            reinit(n_rows, n_cols);
+            LAPACKFullMatrix<Number>::reinit(n_rows, n_cols);
             /**
              * Get each row of the matrix.
              */
