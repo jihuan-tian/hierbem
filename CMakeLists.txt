@@ -5,6 +5,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27.0")
   cmake_policy(SET CMP0146 OLD)
 endif()
 
+# External depedencies
 find_package(
   deal.II
   9.4.0
@@ -22,6 +23,17 @@ if(NOT ${deal.II_FOUND})
       "*** Could not locate a (sufficiently recent) version of deal.II. ***\n\n"
       "You may want to either pass a flag -DDEAL_II_DIR=/path/to/deal.II to cmake\n"
       "or set an environment variable \"DEAL_II_DIR\" that contains this path.")
+endif()
+
+find_package(reflectcpp REQUIRED HINTS ${REFLECT_CPP_DIR} $ENV{REFLECT_CPP_DIR})
+if(NOT ${reflectcpp_FOUND})
+  message(
+    FATAL_ERROR
+      "\n"
+      "*** Could not locate a (sufficiently recent) version of reflect-cpp. ***\n\n"
+      "You may want to either pass a flag -DREFLECT_CPP_DIR=/path/to/reflect-cpp to cmake\n"
+      "or set an environment variable \"REFLECT_CPP_DIR\" that contains this path."
+  )
 endif()
 
 #
