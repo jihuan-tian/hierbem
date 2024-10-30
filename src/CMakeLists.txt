@@ -19,3 +19,5 @@ add_library(
 # include paths and library paths need to be imported by calling this macro
 # DEAL_II_SETUP_TARGET.
 deal_ii_setup_target(generic_tools)
+
+add_subdirectory(hierbem)

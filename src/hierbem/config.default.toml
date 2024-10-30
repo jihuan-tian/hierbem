@@ -1,0 +1,29 @@
+[project]
+project_name = 'test'
+input_mesh = 'grid.msh'
+# output_dir = 'output'
+
+# [bem]
+# boundary_dim = 2
+# space_dim = 3
+# fe_order_for_dirichlet_space = 1
+# fe_order_for_neumann_space = 0
+# problem_type = 'dirichlet'
+# is_interior_problem = false
+
+# [cluster_tree]
+# n_min_for_bct = 32
+# n_min_for_ct = 4
+
+# [hmatrix]
+# aca_relative_err = 0.01
+# eta = 0.8
+# max_rank = 5
+
+# [precond]
+# aca_relative_err = 0.1
+# eta = 1.0
+# max_rank = 2
+
+# [misc]
+# aca_thread_num = -1
