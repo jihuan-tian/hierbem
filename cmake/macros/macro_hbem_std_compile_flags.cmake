@@ -47,8 +47,4 @@ macro(HBEM_STD_COMPILE_FLAGS)
     "$<${_is_cxx}:${_werror_if_not_relaxed};${_pedantic_if_not_relaxed};${_disable_deprecated_warning};${_pch_if_gcc}>"
     "$<${_is_cuda}:-Werror=all-warnings;${_stack_size_opts}>")
 
-  # Dependency: tomlplusplus
-  find_package(PkgConfig REQUIRED)
-  pkg_check_modules(tomlplusplus REQUIRED IMPORTED_TARGET tomlplusplus)
-
 endmacro()

@@ -5,6 +5,9 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27.0")
   cmake_policy(SET CMP0146 OLD)
 endif()
 
+# Project name
+project("hierbem" LANGUAGES CUDA CXX)
+
 # External depedencies
 find_package(
   deal.II
@@ -24,6 +27,12 @@ if(NOT ${deal.II_FOUND})
       "You may want to either pass a flag -DDEAL_II_DIR=/path/to/deal.II to cmake\n"
       "or set an environment variable \"DEAL_II_DIR\" that contains this path.")
 endif()
+
+find_package(fmt CONFIG REQUIRED)
+find_package(cpptrace CONFIG REQUIRED)
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(tomlplusplus REQUIRED IMPORTED_TARGET tomlplusplus)
 
 find_package(reflectcpp REQUIRED HINTS ${REFLECT_CPP_DIR} $ENV{REFLECT_CPP_DIR})
 if(NOT ${reflectcpp_FOUND})
@@ -52,9 +61,6 @@ endif()
 if(NOT _mixed_build_mode)
   deal_ii_initialize_cached_variables()
 endif()
-
-# Project name
-project("hierbem" LANGUAGES CUDA CXX)
 
 # Get CUDA toolkit versions
 find_package(CUDAToolkit)

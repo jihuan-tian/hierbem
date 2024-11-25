@@ -1,9 +1,11 @@
-find_package(fmt CONFIG REQUIRED)
+include(macro_hbem_std_compile_flags)
+hbem_std_compile_flags()
 
-set(_target hierbem)
-add_executable(${_target} hierbem.cc)
+set(_target hbem_laplace)
+add_executable(${_target} hbem_laplace.cc)
 target_link_libraries(${_target} generic_tools fmt::fmt reflectcpp::reflectcpp
-                      PkgConfig::tomlplusplus)
+                      PkgConfig::tomlplusplus cpptrace::cpptrace)
+deal_ii_setup_target(${_target})
 
 add_custom_command(
   TARGET ${_target}

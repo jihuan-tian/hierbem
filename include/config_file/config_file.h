@@ -14,6 +14,12 @@ namespace HierBEM
     rfl::Pattern<R"(([a-zA-Z][a-zA-Z0-9_]*)?)", "ProjectName">;
   // BEM problem type
   using ProblemType = rfl::Literal<"neumann", "dirichlet", "mixed">;
+  // BEM space dimension (currently only 3 is supported)
+  using SpaceDim =
+    rfl::Validator<std::uint32_t, rfl::AllOf<rfl::Minimum<3>, rfl::Maximum<3>>>;
+  // BEM boundary dimension (currently only 2 is supported)
+  using BoundaryDim =
+    rfl::Validator<std::uint32_t, rfl::AllOf<rfl::Minimum<2>, rfl::Maximum<2>>>;
 
   /**
    * Configuration for a simulation project
@@ -30,8 +36,8 @@ namespace HierBEM
    */
   struct ConfBEM
   {
-    std::uint32_t boundary_dim = 2; // The dimension of model boundary
-    std::uint32_t space_dim    = 3; // The dimension of embeding space
+    BoundaryDim   boundary_dim = 2; // The dimension of model boundary
+    SpaceDim      space_dim    = 3; // The dimension of embeding space
     std::uint32_t fe_order_for_dirichlet_space =
       1; // FE order for Dirichlet space
     std::uint32_t fe_order_for_neumann_space = 0; // FE order for Neumann space
@@ -109,27 +115,27 @@ namespace HierBEM
     void
     initialize(const std::string &file_path)
     {
-      std::lock_guard<std::mutex> lock(_mutex);
-      if (!_initialized)
+      std::lock_guard<std::mutex> lock(lock_);
+      if (!initialized_)
         {
-          _config      = load_config(file_path);
-          _initialized = true;
+          conf_        = load_config(file_path);
+          initialized_ = true;
         }
     }
 
     const ConfHierBEM &
     get_config() const
     {
-      if (!_initialized)
+      if (!initialized_)
         {
           throw std::runtime_error("ConfigFile not initialized");
         }
-      return _config;
+      return conf_;
     }
 
   private:
     ConfigFile()
-      : _initialized(false)
+      : initialized_(false)
     {}
     ConfigFile(const ConfigFile &) = delete;
     ConfigFile &
@@ -138,14 +144,29 @@ namespace HierBEM
     ConfHierBEM
     load_config(const std::string &file_path)
     {
-      return rfl::toml::
-        load<ConfHierBEM, rfl::DefaultIfMissing, rfl::NoExtraFields>(file_path)
+      auto &conf =
+        rfl::toml::load<ConfHierBEM, rfl::DefaultIfMissing, rfl::NoExtraFields>(
+          file_path)
           .value();
+
+      validate_conf(conf);
+      return conf;
     }
 
-    ConfHierBEM _config;
-    bool        _initialized;
-    std::mutex  _mutex;
+    void
+    validate_conf(const ConfHierBEM &conf)
+    {
+      // Space dimension must be greater than boundary dimension
+      if (conf.bem.space_dim.value() <= conf.bem.boundary_dim.value())
+        {
+          throw std::runtime_error(
+            "'space_dim' must be greater than 'boundary_dim'");
+        }
+    }
+
+    ConfHierBEM conf_;
+    bool        initialized_;
+    std::mutex  lock_;
   };
 
 } // namespace HierBEM

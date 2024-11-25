@@ -20,4 +20,4 @@ add_library(
 # DEAL_II_SETUP_TARGET.
 deal_ii_setup_target(generic_tools)
 
-add_subdirectory(hierbem)
+add_subdirectory(hierbem_laplace)
