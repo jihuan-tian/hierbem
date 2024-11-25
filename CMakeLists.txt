@@ -44,7 +44,7 @@ if(NOT ${reflectcpp_FOUND})
       "or set an environment variable \"REFLECT_CPP_DIR\" that contains this path."
   )
 endif()
-      
+
 #
 # Check if we are using mixed build mode
 #
