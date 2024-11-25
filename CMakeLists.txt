@@ -5,6 +5,10 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27.0")
   cmake_policy(SET CMP0146 OLD)
 endif()
 
+# Project name
+project("hierbem" LANGUAGES CUDA CXX)
+
+# External dependencies
 find_package(
   deal.II
   9.4.0
@@ -24,6 +28,23 @@ if(NOT ${deal.II_FOUND})
       "or set an environment variable \"DEAL_II_DIR\" that contains this path.")
 endif()
 
+find_package(fmt CONFIG REQUIRED)
+find_package(cpptrace CONFIG REQUIRED)
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(tomlplusplus REQUIRED IMPORTED_TARGET tomlplusplus)
+
+find_package(reflectcpp REQUIRED HINTS ${REFLECT_CPP_DIR} $ENV{REFLECT_CPP_DIR})
+if(NOT ${reflectcpp_FOUND})
+  message(
+    FATAL_ERROR
+      "\n"
+      "*** Could not locate a (sufficiently recent) version of reflect-cpp. ***\n\n"
+      "You may want to either pass a flag -DREFLECT_CPP_DIR=/path/to/reflect-cpp to cmake\n"
+      "or set an environment variable \"REFLECT_CPP_DIR\" that contains this path."
+  )
+endif()
+      
 #
 # Check if we are using mixed build mode
 #
@@ -40,9 +61,6 @@ endif()
 if(NOT _mixed_build_mode)
   deal_ii_initialize_cached_variables()
 endif()
-
-# Project name
-project("hierbem" LANGUAGES CUDA CXX)
 
 # Get CUDA toolkit versions
 find_package(CUDAToolkit)
