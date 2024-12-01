@@ -38,6 +38,7 @@
 #include <deal.II/lac/precondition.h>
 #include <deal.II/lac/solver_bicgstab.h>
 #include <deal.II/lac/solver_cg.h>
+#include <deal.II/lac/vector_operations_internal.h>
 
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
@@ -1712,16 +1713,21 @@ namespace HierBEM
                 K_prime2_matrix_with_mass_matrix.reinit(
                   n_dofs_for_dirichlet_space, n_dofs_for_neumann_space);
 
+#if HBEM_NEUMANN_SOLUTION_SPACE == 1
                 /**
                  * SLP matrix for solving the natural density \f$w_{\rm eq}\f$.
                  */
                 V1_matrix.reinit(n_dofs_for_neumann_space,
                                  n_dofs_for_neumann_space);
+#endif
 
                 add_memory_consumption_row("D1 full matrix", D1_matrix);
                 add_memory_consumption_row("K'2 with mass full matrix",
                                            K_prime2_matrix_with_mass_matrix);
+
+#if HBEM_NEUMANN_SOLUTION_SPACE == 1
                 add_memory_consumption_row("V1 full matrix", V1_matrix);
+#endif
               }
             else
               {
@@ -1759,10 +1765,9 @@ namespace HierBEM
                  */
                 support_points_for_dirichlet_space_on_neumann_domain.resize(
                   n_dofs_for_dirichlet_space);
-                // TODO In reality, different subdomains are assigned different
-                // mapping objects, which should be handled separately.
-                // Furthermore, the Jacobian of the mapping should also be taken
-                // into account in numerical quadrature.
+                // Here we only use the first order mapping to generate the
+                // support point coordinates, which is good enough for cluster
+                // partition.
                 DoFTools::map_dofs_to_support_points(
                   mappings[0]->get_mapping(),
                   dof_handler_for_dirichlet_space,
@@ -1859,11 +1864,14 @@ namespace HierBEM
                   ct_for_neumann_space_on_neumann_domain,
                   eta,
                   n_min_for_bct);
+
+#if HBEM_NEUMANN_SOLUTION_SPACE == 1
                 bct_for_bilinear_form_V1 = BlockClusterTree<spacedim>(
                   ct_for_neumann_space_on_neumann_domain,
                   ct_for_neumann_space_on_neumann_domain,
                   eta,
                   n_min_for_bct);
+#endif
 
                 /**
                  * Partition the block cluster trees.
@@ -1879,10 +1887,13 @@ namespace HierBEM
                   support_points_for_neumann_space_on_neumann_domain,
                   dof_average_cell_size_for_dirichlet_space_on_neumann_domain,
                   dof_average_cell_size_for_neumann_space_on_neumann_domain);
+
+#if HBEM_NEUMANN_SOLUTION_SPACE == 1
                 bct_for_bilinear_form_V1.partition(
                   *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
                   support_points_for_neumann_space_on_neumann_domain,
                   dof_average_cell_size_for_neumann_space_on_neumann_domain);
+#endif
 
                 timer.stop();
                 print_wall_time(deallog, timer, "build block cluster trees");
@@ -1892,8 +1903,11 @@ namespace HierBEM
                 add_memory_consumption_row(
                   "Block cluster tree for K'2 with mass",
                   bct_for_bilinear_form_K_prime2);
+
+#if HBEM_NEUMANN_SOLUTION_SPACE == 1
                 add_memory_consumption_row("Block cluster tree for V1",
                                            bct_for_bilinear_form_V1);
+#endif
 
                 /**
                  * Initialize \hmatrices.
@@ -1918,6 +1932,7 @@ namespace HierBEM
                   << std::endl;
                 K_prime2_hmat_with_mass_matrix.print_leaf_set_info(std::cout);
 
+#if HBEM_NEUMANN_SOLUTION_SPACE == 1
                 /**
                  * SLP matrix for solving the natural density \f$w_{\rm eq}\f$.
                  */
@@ -1927,6 +1942,7 @@ namespace HierBEM
                 std::cout << "=== Leaf set information of V1_hmat ==="
                           << std::endl;
                 V1_hmat.print_leaf_set_info(std::cout);
+#endif
 
                 timer.stop();
                 print_wall_time(deallog, timer, "initialize H-matrices");
@@ -1939,10 +1955,13 @@ namespace HierBEM
                   "K'2 with mass H-matrix",
                   K_prime2_hmat_with_mass_matrix,
                   "After initialization and before assembly");
+
+#if HBEM_NEUMANN_SOLUTION_SPACE == 1
                 add_memory_consumption_row(
                   "V1 H-matrix",
                   V1_hmat,
                   "After initialization and before assembly");
+#endif
               }
 
             /**
@@ -1974,7 +1993,10 @@ namespace HierBEM
              * H^{-1/2}(\Gamma)\f$ and its associated right hand side vector.
              */
             natural_density.reinit(n_dofs_for_neumann_space);
+
+#if HBEM_NEUMANN_SOLUTION_SPACE == 1
             system_rhs_for_natural_density.reinit(n_dofs_for_neumann_space);
+#endif
 
             /**
              * Allocate memory for the product of mass matrix and the natural
@@ -4743,6 +4765,7 @@ namespace HierBEM
   {
     Assert(problem_type == ProblemType::NeumannBCProblem, ExcInternalError());
 
+#if HBEM_NEUMANN_SOLUTION_SPACE == 1
     if (!use_hmat)
       {
         /**
@@ -4834,7 +4857,10 @@ namespace HierBEM
                                    "After assembly");
 
         /**
-         * Perform Cholesky factorisation of the preconditioner.
+         * Perform Cholesky factorisation of the preconditioner. Only when the
+         * preconditioner @p V1_hmat_preconditioner has a hierarchical structure,
+         * i.e. it does not contain a root node only, the task parallel Cholesky
+         * factorization will be used.
          */
         std::cout << "=== Cholesky factorization of V ===" << std::endl;
         if (V1_hmat_preconditioner.get_type() ==
@@ -4866,12 +4892,29 @@ namespace HierBEM
      */
     alpha_for_neumann =
       1.0 / 4.0 / (natural_density * system_rhs_for_natural_density);
-    std::cout << "Neumann stabilization factor: " << alpha_for_neumann
-              << std::endl;
 
     std::cout << "=== Release the RHS vector for solving natural density ==="
               << std::endl;
     system_rhs_for_natural_density.reinit(0);
+#endif
+
+#if HBEM_NEUMANN_SOLUTION_SPACE == 2
+    // Simply fill the natural density vector with ones.
+    dealii::internal::VectorOperations::Vector_set<double> setter(
+      1.0, natural_density.begin());
+    auto partitioner =
+      std::make_shared<dealii::parallel::internal::TBBPartitioner>();
+    dealii::internal::VectorOperations::parallel_for(setter,
+                                                     0,
+                                                     natural_density.size(),
+                                                     partitioner);
+
+    // The stabilization factor \f$\alpha\f$ is set to 1.
+    alpha_for_neumann = 1.0;
+#endif
+
+    std::cout << "Neumann stabilization factor: " << alpha_for_neumann
+              << std::endl;
   }
 
 
