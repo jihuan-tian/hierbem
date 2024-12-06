@@ -1,15 +1,18 @@
 /**
- * @file op-precond-coupling-matrix-for-dirichlet.cc
- * @brief Verify building the coupling matrix for operator preconditioning used
+ * @file op-precond-mass-matrix-for-dirichlet.cu
+ * @brief Verify building the mass matrix for operator preconditioning used
  * in Laplace Dirichlet problem.
  *
  * @ingroup preconditioner
  * @author Jihuan Tian
- * @date 2024-12-03
+ * @date 2024-12-06
  */
+
+#include <deal.II/base/quadrature_lib.h>
 
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
+#include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_out.h>
@@ -48,8 +51,8 @@ main(int argc, const char *argv[])
                                                           fe_dual_space,
                                                           tria);
 
-  // Build the coupling matrix.
-  precond.build_coupling_matrix();
+  // Build the averaging matrix.
+  precond.build_mass_matrix_on_refined_mesh(QGauss<2>(2));
 
   // Export the refined mesh.
   ofstream refined_mesh_out("refined-mesh.msh");
@@ -57,10 +60,10 @@ main(int argc, const char *argv[])
 
   // Print the sparsity pattern.
   ofstream sp_pattern("sparsity-pattern.svg");
-  precond.get_coupling_matrix().get_sparsity_pattern().print_svg(sp_pattern);
+  precond.get_mass_matrix().get_sparsity_pattern().print_svg(sp_pattern);
 
   // Print matrix.
-  precond.get_coupling_matrix().print_formatted(std::cout, 15, true, 25, "0");
+  precond.get_mass_matrix().print_formatted(std::cout, 15, true, 25, "0");
 
   return 0;
 }

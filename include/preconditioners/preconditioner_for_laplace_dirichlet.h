@@ -9,8 +9,6 @@
 #ifndef INCLUDE_PRECONDITIONER_FOR_LAPLACE_DIRICHLET_H_
 #define INCLUDE_PRECONDITIONER_FOR_LAPLACE_DIRICHLET_H_
 
-#include <deal.II/lac/dynamic_sparsity_pattern.h>
-
 #include <vector>
 
 #include "hmatrix_symm.h"

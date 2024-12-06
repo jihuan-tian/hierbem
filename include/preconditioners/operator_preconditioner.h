@@ -9,18 +9,23 @@
 #ifndef INCLUDE_OPERATOR_PRECONDITIONER_H_
 #define INCLUDE_OPERATOR_PRECONDITIONER_H_
 
+#include <deal.II/base/quadrature.h>
+
 #include <deal.II/dofs/dof_handler.h>
+#include <deal.II/dofs/dof_tools.h>
 
 #include <deal.II/fe/fe.h>
 
 #include <deal.II/grid/tria.h>
 
+#include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/sparsity_pattern.h>
 #include <deal.II/lac/vector.h>
 
 #include <vector>
 
+#include "bem_general.h"
 #include "dof_tools_ext.h"
 
 namespace HierBEM
@@ -81,7 +86,7 @@ namespace HierBEM
      * Build the mass matrix on the refined mesh.
      */
     virtual void
-    build_mass_matrix_on_refined_mesh();
+    build_mass_matrix_on_refined_mesh(const Quadrature<dim> &quad_rule);
 
     virtual void
     build_preconditioning_hmat_on_refined_mesh() = 0;
@@ -116,6 +121,18 @@ namespace HierBEM
     get_averaging_matrix() const
     {
       return averaging_matrix;
+    }
+
+    SparseMatrix<RangeNumberType> &
+    get_mass_matrix()
+    {
+      return mass_matrix;
+    }
+
+    const SparseMatrix<RangeNumberType> &
+    get_mass_matrix() const
+    {
+      return mass_matrix;
     }
 
     Triangulation<dim, spacedim> &
@@ -269,16 +286,8 @@ namespace HierBEM
     OperatorPreconditioner(FiniteElement<dim, spacedim>       &fe_primal_space,
                            FiniteElement<dim, spacedim>       &fe_dual_space,
                            const Triangulation<dim, spacedim> &primal_tria)
-    : tria()
-    , coupling_matrix()
-    , averaging_matrix()
-    , mass_matrix()
-    , preconditioner_kernel()
-    , preconditioning_mat()
-    , fe_primal_space(fe_primal_space)
+    : fe_primal_space(fe_primal_space)
     , fe_dual_space(fe_dual_space)
-    , dof_handler_primal_space()
-    , dof_handler_dual_space()
   {
     // Make a copy of the existing triangulation and perform a global
     // refinement.
@@ -364,8 +373,25 @@ namespace HierBEM
                          spacedim,
                          KernelFunctionType,
                          MatrixType,
-                         RangeNumberType>::build_mass_matrix_on_refined_mesh()
-  {}
+                         RangeNumberType>::
+    build_mass_matrix_on_refined_mesh(const Quadrature<dim> &quad_rule)
+  {
+    // Generate the sparsity pattern for the mass matrix.
+    DynamicSparsityPattern dsp(dof_handler_dual_space.n_dofs(1),
+                               dof_handler_primal_space.n_dofs(1));
+    DoFTools::make_sparsity_pattern(dof_handler_dual_space,
+                                    dof_handler_primal_space,
+                                    dsp);
+    mass_matrix_sp.copy_from(dsp);
+    mass_matrix.reinit(mass_matrix_sp);
+
+    // Assemble the mass matrix.
+    assemble_fem_scaled_mass_matrix(dof_handler_dual_space,
+                                    dof_handler_primal_space,
+                                    1.0,
+                                    quad_rule,
+                                    mass_matrix);
+  }
 
   template <int dim,
             int spacedim,

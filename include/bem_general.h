@@ -142,6 +142,18 @@ namespace HierBEM
       copy_data.local_dof_indices_for_trial_space);
   }
 
+
+  /**
+   * @brief Copy locally assembled mass matrix on a cell to the global mass
+   * matrix.
+   *
+   * @tparam RangeNumberType
+   * @tparam MatrixType
+   * @tparam dim
+   * @tparam spacedim
+   * @param data
+   * @param target_matrix
+   */
   template <int dim,
             int spacedim,
             typename RangeNumberType,
@@ -149,7 +161,7 @@ namespace HierBEM
   void
   copy_cell_local_to_global_for_fem_matrix(
     const CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType> &data,
-    MatrixType &target_full_matrix)
+    MatrixType &target_matrix)
   {
     const unsigned int dofs_per_cell_for_test_space  = data.local_matrix.m();
     const unsigned int dofs_per_cell_for_trial_space = data.local_matrix.n();
@@ -158,9 +170,9 @@ namespace HierBEM
       {
         for (unsigned int j = 0; j < dofs_per_cell_for_trial_space; j++)
           {
-            target_full_matrix.add(data.local_dof_indices_for_test_space[i],
-                                   data.local_dof_indices_for_trial_space[j],
-                                   data.local_matrix(i, j));
+            target_matrix.add(data.local_dof_indices_for_test_space[i],
+                              data.local_dof_indices_for_trial_space[j],
+                              data.local_matrix(i, j));
           }
       }
   }
@@ -391,7 +403,8 @@ namespace HierBEM
    * @param dof_handler_for_trial_space
    * @param factor
    * @param quad_rule
-   * @param target_full_matrix
+   * @param target_matrix The target mass matrix to be assembled, which can be
+   * either a full matrix or sparse matrix.
    */
   template <int dim,
             int spacedim,
@@ -403,7 +416,7 @@ namespace HierBEM
     const DoFHandler<dim, spacedim> &dof_handler_for_trial_space,
     const RangeNumberType            factor,
     const Quadrature<dim>           &quad_rule,
-    MatrixType                      &target_full_matrix)
+    MatrixType                      &target_matrix)
   {
     // Because the test and ansatz function spaces related to the mass matrix
     // are on a same spatial domain, here we make an assertion about the
@@ -439,7 +452,7 @@ namespace HierBEM
                                                           MatrixType>,
 
                 std::placeholders::_1,
-                std::ref(target_full_matrix)),
+                std::ref(target_matrix)),
       CellWiseScratchDataForMassMatrix<dim, spacedim>(
         dof_handler_for_test_space.get_fe(),
         dof_handler_for_trial_space.get_fe(),
