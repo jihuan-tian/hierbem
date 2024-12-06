@@ -19,6 +19,10 @@
 #include <deal.II/lac/sparsity_pattern.h>
 #include <deal.II/lac/vector.h>
 
+#include <vector>
+
+#include "dof_tools_ext.h"
+
 namespace HierBEM
 {
   using namespace dealii;
@@ -102,6 +106,18 @@ namespace HierBEM
       return coupling_matrix;
     }
 
+    SparseMatrix<RangeNumberType> &
+    get_averaging_matrix()
+    {
+      return averaging_matrix;
+    }
+
+    const SparseMatrix<RangeNumberType> &
+    get_averaging_matrix() const
+    {
+      return averaging_matrix;
+    }
+
     Triangulation<dim, spacedim> &
     get_triangulation()
     {
@@ -112,6 +128,30 @@ namespace HierBEM
     get_triangulation() const
     {
       return tria;
+    }
+
+    DoFHandler<dim, spacedim> &
+    get_dof_handler_primal_space()
+    {
+      return dof_handler_primal_space;
+    }
+
+    const DoFHandler<dim, spacedim> &
+    get_dof_handler_primal_space() const
+    {
+      return dof_handler_primal_space;
+    }
+
+    DoFHandler<dim, spacedim> &
+    get_dof_handler_dual_space()
+    {
+      return dof_handler_dual_space;
+    }
+
+    const DoFHandler<dim, spacedim> &
+    get_dof_handler_dual_space() const
+    {
+      return dof_handler_dual_space;
     }
 
   protected:
@@ -193,6 +233,26 @@ namespace HierBEM
      * distributed its DoFs to the multigrid.
      */
     DoFHandler<dim, spacedim> dof_handler_dual_space;
+    /**
+     * Collection of cell iterators held in the DoF handler for the primal
+     * space on the refined mesh.
+     */
+    std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
+      cell_iterators_primal_space;
+    /**
+     * Collection of cell iterators held in the DoF handler for the dual space
+     * on the refined mesh.
+     */
+    std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
+      cell_iterators_dual_space;
+    /**
+     * DoF-to-cell topology for the primal space on the refined mesh.
+     */
+    DoFToolsExt::DoFToCellTopology<dim, spacedim> dof_to_cell_topo_primal_space;
+    /**
+     * DoF-to-cell topology for the dual space on the refined mesh.
+     */
+    DoFToolsExt::DoFToCellTopology<dim, spacedim> dof_to_cell_topo_dual_space;
   };
 
 
@@ -220,9 +280,12 @@ namespace HierBEM
     , dof_handler_primal_space()
     , dof_handler_dual_space()
   {
+    // Make a copy of the existing triangulation and perform a global
+    // refinement.
     tria.copy_triangulation(primal_tria);
     tria.refine_global();
 
+    // Initialize DoF handlers for primal and dual function spaces.
     dof_handler_primal_space.reinit(tria);
     dof_handler_dual_space.reinit(tria);
 
@@ -230,6 +293,32 @@ namespace HierBEM
     dof_handler_primal_space.distribute_mg_dofs();
     dof_handler_dual_space.distribute_dofs(fe_dual_space);
     dof_handler_dual_space.distribute_mg_dofs();
+
+    // Collect cell iterators for the two function spaces on the refined mesh.
+    cell_iterators_primal_space.reserve(dof_handler_primal_space.n_dofs(1));
+    for (const auto &cell :
+         dof_handler_primal_space.mg_cell_iterators_on_level(1))
+      {
+        cell_iterators_primal_space.push_back(cell);
+      }
+
+    cell_iterators_dual_space.reserve(dof_handler_dual_space.n_dofs(1));
+    for (const auto &cell :
+         dof_handler_dual_space.mg_cell_iterators_on_level(1))
+      {
+        cell_iterators_dual_space.push_back(cell);
+      }
+
+    // Generate DoF-to-cell topologies for the two function spaces on the
+    // refined mesh.
+    DoFToolsExt::build_mg_dof_to_cell_topology(dof_to_cell_topo_primal_space,
+                                               cell_iterators_primal_space,
+                                               dof_handler_primal_space,
+                                               1);
+    DoFToolsExt::build_mg_dof_to_cell_topology(dof_to_cell_topo_dual_space,
+                                               cell_iterators_dual_space,
+                                               dof_handler_dual_space,
+                                               1);
   }
 
 

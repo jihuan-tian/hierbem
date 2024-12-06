@@ -159,8 +159,10 @@ main(int argc, char *argv[])
           cell_iterators.push_back(cell);
         }
 
-      DofToCellTopology<dim, spacedim> dof_to_cell_topo;
-      build_dof_to_cell_topology(dof_to_cell_topo, cell_iterators, dof_handler);
+      DoFToolsExt::DoFToCellTopology<dim, spacedim> dof_to_cell_topo;
+      DoFToolsExt::build_dof_to_cell_topology(dof_to_cell_topo,
+                                              cell_iterators,
+                                              dof_handler);
 
       // Generate lists of DoF indices.
       std::vector<types::global_dof_index> dof_indices(dof_handler.n_dofs());

@@ -291,6 +291,53 @@ namespace HierBEM
 
 
     /**
+     * @brief Return a list of support points for DoFs on the specified level in
+     * the DoF handler.
+     *
+     * @tparam dim
+     * @tparam spacedim
+     * @param mapping
+     * @param dof_handler
+     * @param level
+     * @param support_points
+     */
+    template <int dim, int spacedim>
+    void
+    map_mg_dofs_to_support_points(
+      const Mapping<dim, spacedim>                       &mapping,
+      const DoFHandler<dim, spacedim>                    &dof_handler,
+      const unsigned int                                  level,
+      std::map<types::global_dof_index, Point<spacedim>> &support_points)
+    {
+      support_points.clear();
+
+      // Get the unit support point coordinates.
+      const std::vector<Point<dim>> &unit_supports =
+        dof_handler.get_fe().get_unit_support_points();
+
+      std::vector<types::global_dof_index> dof_indices_in_cell(
+        dof_handler.get_fe().dofs_per_cell);
+
+      // Iterate over each cell on the specified level.
+      for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
+        {
+          // Get the DoF indices in the current cell.
+          cell->get_mg_dof_indices(dof_indices_in_cell);
+
+          // Transform each unit support point to real cell and added to the
+          // result map.
+          unsigned int i = 0;
+          for (const auto &p : unit_supports)
+            {
+              support_points[dof_indices_in_cell[i]] =
+                mapping.transform_unit_to_real_cell(cell, p);
+              i++;
+            }
+        }
+    }
+
+
+    /**
      * Calculate the average cell sizes associated with those DoFs handled by
      * the given DoF handler object.
      *
@@ -573,6 +620,217 @@ namespace HierBEM
         {
           all_dof_values(map_from_local_to_full_dof_indices[i]) =
             selected_dof_values(i);
+        }
+    }
+
+
+    template <int dim, int spacedim>
+    class DoFToCellTopology
+    {
+    public:
+      /**
+       * The core structure describing the DoF-to-cell topology.
+       */
+      std::vector<
+        std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+        topology;
+
+      /**
+       * Maximum number of cells associated with a DoF.
+       */
+      unsigned int max_cells_per_dof;
+    };
+
+    /**
+     * Build the topology for "DoF support point-to-cell" relation.
+     *
+     * \mynote{2022-06-06 This topology is needed when the continuous finite
+     * element such as @p FE_Q is adopted. For the discontinuous finite element
+     * such as @p FE_DGQ, the DoFs in a cell are separated from those in other
+     * cells. Hence, such point-to-cell topology is not necessary.}
+     *
+     * @param dof_to_cell_topo
+     * @param dof_handler
+     * @param fe_index
+     */
+    template <int dim, int spacedim>
+    void
+    build_dof_to_cell_topology(
+      std::vector<
+        std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+        &dof_to_cell_topo,
+      const std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
+                                      &cell_iterators_in_dof_handler,
+      const DoFHandler<dim, spacedim> &dof_handler,
+      const unsigned int               fe_index = 0)
+    {
+      const types::global_dof_index        n_dofs = dof_handler.n_dofs();
+      const FiniteElement<dim, spacedim>  &fe = dof_handler.get_fe(fe_index);
+      const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
+      std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+
+      dof_to_cell_topo.resize(n_dofs);
+
+      for (const auto &cell : cell_iterators_in_dof_handler)
+        {
+          cell->get_dof_indices(local_dof_indices);
+          for (auto dof_index : local_dof_indices)
+            {
+              dof_to_cell_topo[dof_index].push_back(&cell);
+            }
+        }
+    }
+
+
+    /**
+     * @brief Build the topology for "DoF support point-to-cell" relation.
+     *
+     * This function is similar to \ref
+     * build_dof_to_cell_topology(std::vector<std::vector<const typename
+     * DoFHandler<dim, spacedim>::cell_iterator *>> &, const
+     * std::vector<typename DoFHandler<dim, spacedim>::cell_iterator> &, const
+     * DoFHandler<dim, spacedim> &, const unsigned int), but the result is
+     * returned in the object DoFToCellTopology, which also stores the maximum
+     * number of cells associated with a DoF.
+     *
+     * @tparam dim
+     * @tparam spacedim
+     * @param dof_to_cell_topo
+     * @param cell_iterators_in_dof_handler
+     * @param dof_handler
+     * @param fe_index
+     */
+    template <int dim, int spacedim>
+    void
+    build_dof_to_cell_topology(
+      DoFToCellTopology<dim, spacedim> &dof_to_cell_topo,
+      const std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
+                                      &cell_iterators_in_dof_handler,
+      const DoFHandler<dim, spacedim> &dof_handler,
+      const unsigned int               fe_index = 0)
+    {
+      const types::global_dof_index        n_dofs = dof_handler.n_dofs();
+      const FiniteElement<dim, spacedim>  &fe = dof_handler.get_fe(fe_index);
+      const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
+      std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+
+      dof_to_cell_topo.topology.resize(n_dofs);
+      dof_to_cell_topo.max_cells_per_dof = 0;
+
+      for (const auto &cell : cell_iterators_in_dof_handler)
+        {
+          cell->get_dof_indices(local_dof_indices);
+          for (auto dof_index : local_dof_indices)
+            {
+              dof_to_cell_topo.topology[dof_index].push_back(&cell);
+            }
+        }
+
+      for (const auto &dof_to_cells : dof_to_cell_topo.topology)
+        {
+          if (dof_to_cells.size() > dof_to_cell_topo.max_cells_per_dof)
+            {
+              dof_to_cell_topo.max_cells_per_dof = dof_to_cells.size();
+            }
+        }
+    }
+
+
+    /**
+     * @brief Build the topology for "DoF support point-to-cell" relation. The
+     * DoFs are on a specific level in the multigrid.
+     *
+     * @tparam dim
+     * @tparam spacedim
+     * @param dof_to_cell_topo
+     * @param mg_cell_iterators_in_dof_handler
+     * @param dof_handler
+     * @param level
+     * @param fe_index
+     */
+    template <int dim, int spacedim>
+    void
+    build_mg_dof_to_cell_topology(
+      std::vector<
+        std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+        &dof_to_cell_topo,
+      const std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
+                                      &mg_cell_iterators_in_dof_handler,
+      const DoFHandler<dim, spacedim> &dof_handler,
+      const unsigned int               level    = 0,
+      const unsigned int               fe_index = 0)
+    {
+      const types::global_dof_index        n_dofs = dof_handler.n_dofs(level);
+      const FiniteElement<dim, spacedim>  &fe = dof_handler.get_fe(fe_index);
+      const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
+      std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+
+      dof_to_cell_topo.resize(n_dofs);
+
+      for (const auto &cell : mg_cell_iterators_in_dof_handler)
+        {
+          cell->get_mg_dof_indices(local_dof_indices);
+          for (auto dof_index : local_dof_indices)
+            {
+              dof_to_cell_topo[dof_index].push_back(&cell);
+            }
+        }
+    }
+
+
+    /**
+     * @brief Build the topology for "DoF support point-to-cell" relation. The
+     * DoFs are on a specific level in the multigrid.
+     *
+     * This function is similar to \ref
+     * build_dof_to_cell_topology(std::vector<std::vector<const typename
+     * DoFHandler<dim, spacedim>::cell_iterator *>> &, const
+     * std::vector<typename DoFHandler<dim, spacedim>::cell_iterator> &, const
+     * DoFHandler<dim, spacedim> &, const unsigned int, const unsigned int), but
+     * the result is returned in the object DoFToCellTopology, which also stores
+     * the maximum number of cells associated with a DoF.
+     *
+     * @tparam dim
+     * @tparam spacedim
+     * @param dof_to_cell_topo
+     * @param mg_cell_iterators_in_dof_handler
+     * @param dof_handler
+     * @param level
+     * @param fe_index
+     */
+    template <int dim, int spacedim>
+    void
+    build_mg_dof_to_cell_topology(
+      DoFToCellTopology<dim, spacedim> &dof_to_cell_topo,
+      const std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
+                                      &mg_cell_iterators_in_dof_handler,
+      const DoFHandler<dim, spacedim> &dof_handler,
+      const unsigned int               level    = 0,
+      const unsigned int               fe_index = 0)
+    {
+      const types::global_dof_index        n_dofs = dof_handler.n_dofs(level);
+      const FiniteElement<dim, spacedim>  &fe = dof_handler.get_fe(fe_index);
+      const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
+      std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+
+      dof_to_cell_topo.topology.resize(n_dofs);
+      dof_to_cell_topo.max_cells_per_dof = 0;
+
+      for (const auto &cell : mg_cell_iterators_in_dof_handler)
+        {
+          cell->get_mg_dof_indices(local_dof_indices);
+          for (auto dof_index : local_dof_indices)
+            {
+              dof_to_cell_topo.topology[dof_index].push_back(&cell);
+            }
+        }
+
+      for (const auto &dof_to_cells : dof_to_cell_topo.topology)
+        {
+          if (dof_to_cells.size() > dof_to_cell_topo.max_cells_per_dof)
+            {
+              dof_to_cell_topo.max_cells_per_dof = dof_to_cells.size();
+            }
         }
     }
   } // namespace DoFToolsExt

@@ -18,35 +18,10 @@
 #include <iostream>
 #include <vector>
 
+#inlcude "dof_tools_ext.h"
+
+using namespace HierBEM;
 using namespace dealii;
-
-template <int dim, int spacedim>
-void
-build_dof_to_cell_topology(
-  std::vector<
-    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-    &dof_to_cell_topo,
-  const std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
-                                  &cell_iterators_in_dof_handler,
-  const DoFHandler<dim, spacedim> &dof_handler,
-  const unsigned int               fe_index = 0)
-{
-  const types::global_dof_index        n_dofs = dof_handler.n_dofs();
-  const FiniteElement<dim, spacedim>  &fe     = dof_handler.get_fe(fe_index);
-  const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
-  std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-
-  dof_to_cell_topo.resize(n_dofs);
-
-  for (const auto &cell : cell_iterators_in_dof_handler)
-    {
-      cell->get_dof_indices(local_dof_indices);
-      for (auto dof_index : local_dof_indices)
-        {
-          dof_to_cell_topo[dof_index].push_back(&cell);
-        }
-    }
-}
 
 int
 main()
@@ -79,7 +54,9 @@ main()
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     dof_to_cell_topo;
 
-  build_dof_to_cell_topology(dof_to_cell_topo, cell_iterators, dof_handler);
+  DoFToolsExt::build_dof_to_cell_topology(dof_to_cell_topo,
+                                          cell_iterators,
+                                          dof_handler);
 
   for (const auto &e : dof_to_cell_topo)
     {

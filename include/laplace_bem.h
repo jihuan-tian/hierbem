@@ -557,7 +557,7 @@ namespace HierBEM
 
   private:
     void
-    generate_cell_iterators();
+    collect_cell_iterators();
 
     /**
      * Solve the equation \f$Vw_{\rm eq}=1\f$ for the natural density \f$w_{\rm
@@ -735,8 +735,10 @@ namespace HierBEM
      * DoF-to-cell topologies for various DoF handlers, which are used for
      * matrix assembly on a pair of DoFs.
      */
-    DofToCellTopology<dim, spacedim> dof_to_cell_topo_for_dirichlet_space;
-    DofToCellTopology<dim, spacedim> dof_to_cell_topo_for_neumann_space;
+    DoFToolsExt::DoFToCellTopology<dim, spacedim>
+      dof_to_cell_topo_for_dirichlet_space;
+    DoFToolsExt::DoFToCellTopology<dim, spacedim>
+      dof_to_cell_topo_for_neumann_space;
 
     /**
      * Kernel function for the single layer potential.
@@ -1227,7 +1229,7 @@ namespace HierBEM
 
   template <int dim, int spacedim>
   void
-  LaplaceBEM<dim, spacedim>::generate_cell_iterators()
+  LaplaceBEM<dim, spacedim>::collect_cell_iterators()
   {
     cell_iterators_for_dirichlet_space.reserve(
       dof_handler_for_dirichlet_space.get_triangulation().n_active_cells());
@@ -1304,13 +1306,15 @@ namespace HierBEM
                  */
                 timer.start();
 
-                generate_cell_iterators();
-                build_dof_to_cell_topology(dof_to_cell_topo_for_dirichlet_space,
-                                           cell_iterators_for_dirichlet_space,
-                                           dof_handler_for_dirichlet_space);
-                build_dof_to_cell_topology(dof_to_cell_topo_for_neumann_space,
-                                           cell_iterators_for_neumann_space,
-                                           dof_handler_for_neumann_space);
+                collect_cell_iterators();
+                DoFToolsExt::build_dof_to_cell_topology(
+                  dof_to_cell_topo_for_dirichlet_space,
+                  cell_iterators_for_dirichlet_space,
+                  dof_handler_for_dirichlet_space);
+                DoFToolsExt::build_dof_to_cell_topology(
+                  dof_to_cell_topo_for_neumann_space,
+                  cell_iterators_for_neumann_space,
+                  dof_handler_for_neumann_space);
 
                 timer.stop();
                 print_wall_time(deallog, timer, "build dof-to-cell topology");
@@ -1736,13 +1740,15 @@ namespace HierBEM
                  */
                 timer.start();
 
-                generate_cell_iterators();
-                build_dof_to_cell_topology(dof_to_cell_topo_for_dirichlet_space,
-                                           cell_iterators_for_dirichlet_space,
-                                           dof_handler_for_dirichlet_space);
-                build_dof_to_cell_topology(dof_to_cell_topo_for_neumann_space,
-                                           cell_iterators_for_neumann_space,
-                                           dof_handler_for_neumann_space);
+                collect_cell_iterators();
+                DoFToolsExt::build_dof_to_cell_topology(
+                  dof_to_cell_topo_for_dirichlet_space,
+                  cell_iterators_for_dirichlet_space,
+                  dof_handler_for_dirichlet_space);
+                DoFToolsExt::build_dof_to_cell_topology(
+                  dof_to_cell_topo_for_neumann_space,
+                  cell_iterators_for_neumann_space,
+                  dof_handler_for_neumann_space);
 
                 timer.stop();
                 print_wall_time(deallog, timer, "build dof-to-cell topology");
@@ -2136,13 +2142,15 @@ namespace HierBEM
              */
             timer.start();
 
-            generate_cell_iterators();
-            build_dof_to_cell_topology(dof_to_cell_topo_for_dirichlet_space,
-                                       cell_iterators_for_dirichlet_space,
-                                       dof_handler_for_dirichlet_space);
-            build_dof_to_cell_topology(dof_to_cell_topo_for_neumann_space,
-                                       cell_iterators_for_neumann_space,
-                                       dof_handler_for_neumann_space);
+            collect_cell_iterators();
+            DoFToolsExt::build_dof_to_cell_topology(
+              dof_to_cell_topo_for_dirichlet_space,
+              cell_iterators_for_dirichlet_space,
+              dof_handler_for_dirichlet_space);
+            DoFToolsExt::build_dof_to_cell_topology(
+              dof_to_cell_topo_for_neumann_space,
+              cell_iterators_for_neumann_space,
+              dof_handler_for_neumann_space);
 
             timer.stop();
             print_wall_time(deallog, timer, "build dof-to-cell topology");
