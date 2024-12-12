@@ -20,10 +20,10 @@ main(int argc, const char *argv[])
   (void)argv;
 
   DDMEfield<1, 3> efield;
-  read_skeleton_mesh(
-    HBEM_TEST_MODEL_DIR
-    "circle-immersed-in-two-squares-different-surface-orientations.msh",
-    efield.get_triangulation());
+  read_msh(HBEM_TEST_MODEL_DIR
+           "circle-immersed-in-two-squares-different-surface-orientations.msh",
+           efield.get_triangulation(),
+           false);
 
   return 0;
 }

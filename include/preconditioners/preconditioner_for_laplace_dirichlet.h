@@ -9,9 +9,6 @@
 #ifndef INCLUDE_PRECONDITIONER_FOR_LAPLACE_DIRICHLET_H_
 #define INCLUDE_PRECONDITIONER_FOR_LAPLACE_DIRICHLET_H_
 
-#include <vector>
-
-#include "hmatrix_symm.h"
 #include "laplace_kernels.hcu"
 #include "preconditioners/operator_preconditioner.h"
 
@@ -19,15 +16,18 @@ namespace HierBEM
 {
   using namespace dealii;
 
-  template <int dim, int spacedim, typename RangeNumberType>
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   class PreconditionerForLaplaceDirichlet
     : public OperatorPreconditioner<
         dim,
         spacedim,
         HierBEM::CUDAWrappers::LaplaceKernel::
           HyperSingularKernelRegular<spacedim, RangeNumberType>,
-        HMatrixSymm<spacedim, RangeNumberType>,
-        RangeNumberType>
+        RangeNumberType,
+        SurfaceNormalDetector>
   {
   public:
     /**
@@ -43,14 +43,17 @@ namespace HierBEM
 
     virtual void
     build_averaging_matrix() final;
-
-    virtual void
-    build_preconditioning_hmat_on_refined_mesh() final;
   };
 
 
-  template <int dim, int spacedim, typename RangeNumberType>
-  PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
+  PreconditionerForLaplaceDirichlet<dim,
+                                    spacedim,
+                                    RangeNumberType,
+                                    SurfaceNormalDetector>::
     PreconditionerForLaplaceDirichlet(
       FiniteElement<dim, spacedim>       &fe_primal_space,
       FiniteElement<dim, spacedim>       &fe_dual_space,
@@ -60,15 +63,21 @@ namespace HierBEM
         spacedim,
         HierBEM::CUDAWrappers::LaplaceKernel::
           HyperSingularKernelRegular<spacedim, RangeNumberType>,
-        HMatrixSymm<spacedim, RangeNumberType>,
-        RangeNumberType>(fe_primal_space, fe_dual_space, primal_tria)
+        RangeNumberType,
+        SurfaceNormalDetector>(fe_primal_space, fe_dual_space, primal_tria)
   {}
 
 
-  template <int dim, int spacedim, typename RangeNumberType>
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   void
-  PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
-    build_coupling_matrix()
+  PreconditionerForLaplaceDirichlet<
+    dim,
+    spacedim,
+    RangeNumberType,
+    SurfaceNormalDetector>::build_coupling_matrix()
   {
     // Generate the dynamic sparsity pattern.
     DynamicSparsityPattern dsp(this->dof_handler_primal_space.n_dofs(0),
@@ -128,10 +137,16 @@ namespace HierBEM
   }
 
 
-  template <int dim, int spacedim, typename RangeNumberType>
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   void
-  PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
-    build_averaging_matrix()
+  PreconditionerForLaplaceDirichlet<
+    dim,
+    spacedim,
+    RangeNumberType,
+    SurfaceNormalDetector>::build_averaging_matrix()
   {
     // Generate the dynamic sparsity pattern. N.B. The row size of this matrix
     // is the number of DoFs in the dual space on the dual mesh, which is the
@@ -433,13 +448,6 @@ namespace HierBEM
         dof_index_in_dual_mesh++;
       }
   }
-
-
-  template <int dim, int spacedim, typename RangeNumberType>
-  void
-  PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
-    build_preconditioning_hmat_on_refined_mesh()
-  {}
 } // namespace HierBEM
 
 #endif

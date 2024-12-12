@@ -220,7 +220,7 @@ main(int argc, char *argv[])
 
   // Read the mesh.
   Triangulation<dim, spacedim> tria;
-  read_skeleton_mesh(opts.mesh_file, tria);
+  read_msh(opts.mesh_file, tria);
 
   // Initialize Gmsh.
   gmsh::initialize();

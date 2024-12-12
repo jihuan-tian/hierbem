@@ -93,7 +93,7 @@ main(int argc, char *argv[])
   SubdomainTopology<dim, spacedim> subdomain_topology;
 
   Triangulation<dim, spacedim> tria;
-  read_skeleton_mesh(HBEM_TEST_MODEL_DIR "two-spheres-fine.msh", tria);
+  read_msh(HBEM_TEST_MODEL_DIR "two-spheres-fine.msh", tria);
   subdomain_topology.generate_topology(HBEM_TEST_MODEL_DIR "two-spheres.brep",
                                        HBEM_TEST_MODEL_DIR "two-spheres.msh");
 
@@ -222,7 +222,7 @@ main(int argc, char *argv[])
         ct.get_internal_to_external_dof_numbering(),
         mappings,
         material_id_to_mapping_index,
-        LaplaceBEM<dim, spacedim>::SurfaceNormalDetector(subdomain_topology),
+        SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
         true);
 
       // Generate a random vector as @p x.

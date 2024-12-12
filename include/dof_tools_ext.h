@@ -294,6 +294,10 @@ namespace HierBEM
      * @brief Return a list of support points for DoFs on the specified level in
      * the DoF handler.
      *
+     * The result is a map from DoF indices to support points, which can be
+     * passed to DoFTools::write_gnuplot_dof_support_point_info for visualizing
+     * the distribution of support points.
+     *
      * @tparam dim
      * @tparam spacedim
      * @param mapping
@@ -338,8 +342,53 @@ namespace HierBEM
 
 
     /**
-     * Calculate the average cell sizes associated with those DoFs handled by
-     * the given DoF handler object.
+     * @brief Return a list of support points for DoFs on the specified level in
+     * the DoF handler.
+     *
+     * @tparam dim
+     * @tparam spacedim
+     * @param mapping
+     * @param dof_handler
+     * @param level
+     * @param support_points
+     */
+    template <int dim, int spacedim>
+    void
+    map_mg_dofs_to_support_points(const Mapping<dim, spacedim>    &mapping,
+                                  const DoFHandler<dim, spacedim> &dof_handler,
+                                  const unsigned int               level,
+                                  std::vector<Point<spacedim>> &support_points)
+    {
+      AssertDimension(dof_handler.n_dofs(level), support_points.size());
+
+      // Get the unit support point coordinates.
+      const std::vector<Point<dim>> &unit_supports =
+        dof_handler.get_fe().get_unit_support_points();
+
+      std::vector<types::global_dof_index> dof_indices_in_cell(
+        dof_handler.get_fe().dofs_per_cell);
+
+      // Iterate over each cell on the specified level.
+      for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
+        {
+          // Get the DoF indices in the current cell.
+          cell->get_mg_dof_indices(dof_indices_in_cell);
+
+          // Transform each unit support point to real cell.
+          unsigned int i = 0;
+          for (const auto &p : unit_supports)
+            {
+              support_points[dof_indices_in_cell[i]] =
+                mapping.transform_unit_to_real_cell(cell, p);
+              i++;
+            }
+        }
+    }
+
+
+    /**
+     * Calculate the average cell sizes associated with those DoFs in the given
+     * DoF handler object.
      *
      * \mynote{The doubled cell size will be used as an estimate for the
      * diameter of the support set of each DoF.}
@@ -378,7 +427,62 @@ namespace HierBEM
             cell->get_fe().dofs_per_cell);
           cell->get_dof_indices(dof_indices);
 
-          for (auto index : dof_indices)
+          for (const auto index : dof_indices)
+            {
+              number_of_cells_sharing_dof.at(index) += 1;
+              dof_average_cell_size.at(index) += cell_diameter;
+            }
+        }
+
+      for (unsigned int i = 0; i < n_dofs; i++)
+        {
+          dof_average_cell_size.at(i) /= number_of_cells_sharing_dof.at(i);
+        }
+    }
+
+
+    /**
+     * @brief Calculate the average cell sizes associated with those DoFs on a
+     * specific level in the given DoF handler object.
+     *
+     * @tparam Number
+     * @tparam dim
+     * @tparam spacedim
+     * @param dof_handler
+     * @param level
+     * @param dof_average_cell_size
+     */
+    template <int dim, int spacedim, typename Number = double>
+    void
+    map_mg_dofs_to_average_cell_size(
+      const DoFHandler<dim, spacedim> &dof_handler,
+      const unsigned int               level,
+      std::vector<Number>             &dof_average_cell_size)
+    {
+      const unsigned int n_dofs = dof_handler.n_dofs(level);
+      AssertDimension(n_dofs, dof_average_cell_size.size());
+
+      /**
+       * Create the vector which stores the number of cells that share a common
+       * DoF for each DoF.
+       */
+      std::vector<unsigned int> number_of_cells_sharing_dof(n_dofs, 0);
+
+      for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
+        {
+          /**
+           * Get the diameter of the current cell.
+           */
+          Number cell_diameter = cell->diameter();
+
+          /**
+           * Get DoF indices local to this cell.
+           */
+          std::vector<types::global_dof_index> dof_indices(
+            cell->get_fe().dofs_per_cell);
+          cell->get_mg_dof_indices(dof_indices);
+
+          for (const auto index : dof_indices)
             {
               number_of_cells_sharing_dof.at(index) += 1;
               dof_average_cell_size.at(index) += cell_diameter;
@@ -394,7 +498,7 @@ namespace HierBEM
 
     /**
      * Calculate the average cell sizes associated with a subset of DoFs
-     * selected from all those DoFs held within the DoF handler.
+     * selected from all those DoFs in the DoF handler.
      *
      * \mynote{The doubled cell size will be used as an estimate for the
      * diameter of the support set of each DoF.}
@@ -437,12 +541,51 @@ namespace HierBEM
 
 
     /**
-     * Calculate the maximum cell sizes associated with those DoFs handled by
-     * the given DoF handler object.
+     * @brief Calculate the average cell sizes associated with a subset of DoFs
+     * selected from all those DoFs on a specific level in the DoF handler.
+     *
+     * @tparam Number
+     * @tparam dim
+     * @tparam spacedim
+     * @param dof_handler
+     * @param map_from_local_to_full_dof_indices
+     * @param level
+     * @param dof_average_cell_size
+     */
+    template <int dim, int spacedim, typename Number = double>
+    void
+    map_mg_dofs_to_average_cell_size(
+      const DoFHandler<dim, spacedim> &dof_handler,
+      const std::vector<types::global_dof_index>
+                          &map_from_local_to_full_dof_indices,
+      const unsigned int   level,
+      std::vector<Number> &dof_average_cell_size)
+    {
+      const types::global_dof_index n_dofs =
+        map_from_local_to_full_dof_indices.size();
+      AssertDimension(n_dofs, dof_average_cell_size.size());
+
+      std::vector<Number> full_dof_average_cell_size(dof_handler.n_dofs(level));
+      map_mg_dofs_to_average_cell_size(dof_handler,
+                                       level,
+                                       full_dof_average_cell_size);
+
+      for (types::global_dof_index d = 0; d < n_dofs; d++)
+        {
+          dof_average_cell_size[d] =
+            full_dof_average_cell_size[map_from_local_to_full_dof_indices[d]];
+        }
+    }
+
+
+    /**
+     * Calculate the maximum cell sizes associated with those DoFs in the given
+     * DoF handler object.
      *
      * The value doubled is used as an estimate for the diameter of the support
      * set of each DoF.
      *
+     * @param dof_handler
      * @param dof_max_cell_size The returned list of maximum cell sizes. The
      * memory for this vector should be preallocated and initialized to zero
      * before calling this function.
@@ -480,6 +623,48 @@ namespace HierBEM
     }
 
 
+    /**
+     * Calculate the maximum cell sizes associated with those DoFs on a specific
+     * level in the given DoF handler object.
+     */
+    template <typename DoFHandlerType, typename Number = double>
+    void
+    map_mg_dofs_to_max_cell_size(const DoFHandlerType &dof_handler,
+                                 const unsigned int    level,
+                                 std::vector<Number>  &dof_max_cell_size)
+    {
+      const unsigned int n_dofs = dof_handler.n_dofs(level);
+      AssertDimension(n_dofs, dof_max_cell_size.size());
+
+      for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
+        {
+          /**
+           * Get the diameter of the current cell.
+           */
+          Number cell_diameter = cell->diameter();
+
+          /**
+           * Get DoF indices local to this cell.
+           */
+          std::vector<types::global_dof_index> dof_indices(
+            cell->get_fe().dofs_per_cell);
+          cell->get_mg_dof_indices(dof_indices);
+
+          for (const auto index : dof_indices)
+            {
+              if (cell_diameter > dof_max_cell_size.at(index))
+                {
+                  dof_max_cell_size.at(index) = cell_diameter;
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Calculate the maximum cell sizes associated with a subset of DoFs
+     * selected from all those DoFs in the DoF handler.
+     */
     template <int dim, int spacedim, typename Number = double>
     void
     map_dofs_to_max_cell_size(const DoFHandler<dim, spacedim> &dof_handler,
@@ -503,8 +688,43 @@ namespace HierBEM
 
 
     /**
-     * Calculate the minimum cell sizes associated with those DoFs handled by
-     * the given DoF handler object.
+     * @brief Calculate the maximum cell sizes associated with a subset of DoFs
+     * selected from all those DoFs on a specific level in the DoF handler.
+     *
+     * @tparam Number
+     * @tparam dim
+     * @tparam spacedim
+     * @param dof_handler
+     * @param map_from_local_to_full_dof_indices
+     * @param level
+     * @param dof_max_cell_size
+     */
+    template <int dim, int spacedim, typename Number = double>
+    void
+    map_mg_dofs_to_max_cell_size(const DoFHandler<dim, spacedim> &dof_handler,
+                                 const std::vector<types::global_dof_index>
+                                   &map_from_local_to_full_dof_indices,
+                                 const unsigned int   level,
+                                 std::vector<Number> &dof_max_cell_size)
+    {
+      const types::global_dof_index n_dofs =
+        map_from_local_to_full_dof_indices.size();
+      AssertDimension(n_dofs, dof_max_cell_size.size());
+
+      std::vector<Number> full_dof_max_cell_size(dof_handler.n_dofs(level));
+      map_mg_dofs_to_max_cell_size(dof_handler, level, full_dof_max_cell_size);
+
+      for (types::global_dof_index d = 0; d < n_dofs; d++)
+        {
+          dof_max_cell_size[d] =
+            full_dof_max_cell_size[map_from_local_to_full_dof_indices[d]];
+        }
+    }
+
+
+    /**
+     * Calculate the minimum cell sizes associated with those DoFs in the given
+     * DoF handler object.
      *
      * The value doubled is used as an estimate for the diameter of the support
      * set of each DoF.
@@ -547,6 +767,56 @@ namespace HierBEM
     }
 
 
+    /**
+     * Calculate the minimum cell sizes associated with those DoFs on a specific
+     * level in the given DoF handler object.
+     */
+    template <typename DoFHandlerType, typename Number = double>
+    void
+    map_mg_dofs_to_min_cell_size(const DoFHandlerType &dof_handler,
+                                 const unsigned int    level,
+                                 std::vector<Number>  &dof_min_cell_size)
+    {
+      const unsigned int n_dofs = dof_handler.n_dofs(level);
+      AssertDimension(n_dofs, dof_min_cell_size.size());
+
+      for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
+        {
+          /**
+           * Get the diameter of the current cell.
+           */
+          Number cell_diameter = cell->diameter();
+
+          /**
+           * Get DoF indices local to this cell.
+           */
+          std::vector<types::global_dof_index> dof_indices(
+            cell->get_fe().dofs_per_cell);
+          cell->get_mg_dof_indices(dof_indices);
+
+          for (const auto index : dof_indices)
+            {
+              if (cell_diameter < dof_min_cell_size.at(index) ||
+                  dof_min_cell_size.at(index) == 0)
+                {
+                  dof_min_cell_size.at(index) = cell_diameter;
+                }
+            }
+        }
+    }
+
+
+    /**
+     * @brief Calculate the minimum cell sizes associated with a subset of DoFs
+     * selected from all those DoFs in the DoF handler.
+     *
+     * @tparam Number
+     * @tparam dim
+     * @tparam spacedim
+     * @param dof_handler
+     * @param map_from_local_to_full_dof_indices
+     * @param dof_min_cell_size
+     */
     template <int dim, int spacedim, typename Number = double>
     void
     map_dofs_to_min_cell_size(const DoFHandler<dim, spacedim> &dof_handler,
@@ -569,6 +839,51 @@ namespace HierBEM
     }
 
 
+    /**
+     * @brief Calculate the minimum cell sizes associated with a subset of DoFs
+     * selected from all those DoFs on a specific level in the DoF handler.
+     *
+     * @tparam Number
+     * @tparam dim
+     * @tparam spacedim
+     * @param dof_handler
+     * @param map_from_local_to_full_dof_indices
+     * @param level
+     * @param dof_min_cell_size
+     */
+    template <int dim, int spacedim, typename Number = double>
+    void
+    map_mg_dofs_to_min_cell_size(const DoFHandler<dim, spacedim> &dof_handler,
+                                 const std::vector<types::global_dof_index>
+                                   &map_from_local_to_full_dof_indices,
+                                 const unsigned int   level,
+                                 std::vector<Number> &dof_min_cell_size)
+    {
+      const types::global_dof_index n_dofs =
+        map_from_local_to_full_dof_indices.size();
+      AssertDimension(n_dofs, dof_min_cell_size.size());
+
+      std::vector<Number> full_dof_min_cell_size(dof_handler.n_dofs(level));
+      map_mg_dofs_to_min_cell_size(dof_handler, level, full_dof_min_cell_size);
+
+      for (types::global_dof_index d = 0; d < n_dofs; d++)
+        {
+          dof_min_cell_size[d] =
+            full_dof_min_cell_size[map_from_local_to_full_dof_indices[d]];
+        }
+    }
+
+
+    /**
+     * @brief Print out support points for the list of selected DoFs, which are
+     * used for visualization in Gnuplot.
+     *
+     * @tparam spacedim
+     * @param out
+     * @param support_points
+     * @param selected_dofs
+     * @param has_label
+     */
     template <int spacedim>
     void
     write_gnuplot_dof_support_point_info(
@@ -605,6 +920,15 @@ namespace HierBEM
     }
 
 
+    /**
+     * @brief Copy the list of selected DoF values into the complete DoF value
+     * list.
+     *
+     * @tparam Number
+     * @param all_dof_values
+     * @param selected_dof_values
+     * @param map_from_local_to_full_dof_indices
+     */
     template <typename Number>
     void
     extend_selected_dof_values_to_full_dofs(

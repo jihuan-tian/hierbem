@@ -63,8 +63,9 @@ TEST_CASE("Create subdomain H-hmatrices", "[ddm_efield]")
                                  "sphere-immersed-in-two-boxes.brep",
                                  HBEM_TEST_MODEL_DIR
                                  "sphere-immersed-in-two-boxes.msh");
-  read_skeleton_mesh(HBEM_TEST_MODEL_DIR "sphere-immersed-in-two-boxes.msh",
-                     efield.get_triangulation());
+  read_msh(HBEM_TEST_MODEL_DIR "sphere-immersed-in-two-boxes.msh",
+           efield.get_triangulation(),
+           false);
   // At the moment, we manually assign problem parameters.
   efield.initialize_parameters();
   efield.setup_system();
