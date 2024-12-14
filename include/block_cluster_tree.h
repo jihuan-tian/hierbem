@@ -18,7 +18,7 @@
 
 #include "block_cluster.h"
 #include "cluster_tree.h"
-#include "debug_tools.hcu"
+#include "debug_tools.h"
 #include "lapack_full_matrix_ext.h"
 #include "tree.h"
 

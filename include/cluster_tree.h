@@ -4,7 +4,7 @@
 #include <deal.II/base/memory_consumption.h>
 
 #include "cluster.h"
-#include "debug_tools.hcu"
+#include "debug_tools.h"
 #include "tree.h"
 
 namespace HierBEM

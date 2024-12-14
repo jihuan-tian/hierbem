@@ -8,9 +8,9 @@
 #include <fstream>
 #include <iostream>
 
-#include "debug_tools.hcu"
+#include "cu_debug_tools.hcu"
 #include "hbem_test_config.h"
-#include "laplace_bem.h"
+#include "laplace_bem.hcu"
 
 using namespace dealii;
 using namespace HierBEM;

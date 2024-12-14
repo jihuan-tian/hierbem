@@ -8,6 +8,11 @@
 #ifndef INCLUDE_CONFIG_H_
 #define INCLUDE_CONFIG_H_
 
+#define HIERBEM_NAMESPACE_OPEN \
+  namespace HierBEM            \
+  {
+#define HIERBEM_NAMESPACE_CLOSE }
+
 #define ENABLE_DEBUG @HBEM_ENABLE_DEBUG@
 /**
  * The higher the debug level, the more verbose the print out message.
@@ -19,14 +24,16 @@
 #define RANDOM_ACA @HBEM_RANDOM_ACA@
 /**
  * In @p update tasks in H-LU and H-Cholesky for restricting work stealing:
- * - 1: use TBB arena 
+ * - 1: use TBB arena
  * - 2: use TBB isolate
  * - 3: disable TBB arena and isolate
  */
 #define ARENA_OR_ISOLATE_IN_LU_AND_CHOL @HBEM_ARENA_OR_ISOLATE_IN_LU_AND_CHOL@
 /**
- * Maximum concurrency used for TBB arena in update tasks for H-LU and H-Cholesky
- */ 
-#define ARENA_MAX_CONCURRENCY_IN_LU_AND_CHOL @HBEM_ARENA_MAX_CONCURRENCY_IN_LU_AND_CHOL@
+ * Maximum concurrency used for TBB arena in update tasks for H-LU and
+ * H-Cholesky
+ */
+#define ARENA_MAX_CONCURRENCY_IN_LU_AND_CHOL \
+  @HBEM_ARENA_MAX_CONCURRENCY_IN_LU_AND_CHOL@
 
 #endif /* INCLUDE_CONFIG_H_ */

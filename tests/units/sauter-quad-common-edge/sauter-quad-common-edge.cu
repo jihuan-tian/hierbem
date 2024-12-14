@@ -10,11 +10,9 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_out.h>
 
-#include <laplace_bem.h>
-
 #include <fstream>
 
-#include "laplace_bem.h"
+#include "laplace_bem.hcu"
 #include "sauter_quadrature.hcu"
 
 using namespace dealii;

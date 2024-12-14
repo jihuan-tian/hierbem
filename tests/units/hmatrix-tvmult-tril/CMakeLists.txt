@@ -4,7 +4,7 @@ find_package(Octave REQUIRED)
 # Visual Studio Code's TestMate extension
 set(_target test-hmatrix-tvmult-tril)
 
-add_executable(${_target} hmatrix-tvmult-tril.cc run-hmatrix-tvmult-tril.cu)
+add_executable(${_target} hmatrix-tvmult-tril.cc run-hmatrix-tvmult-tril.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})

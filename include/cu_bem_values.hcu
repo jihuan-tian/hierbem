@@ -12,7 +12,7 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/utilities.h>
 
-#include "bem_values.h"
+#include "bem_values.hcu"
 #include "cu_qgauss.hcu"
 #include "cu_table.hcu"
 #include "cu_table_indices.hcu"

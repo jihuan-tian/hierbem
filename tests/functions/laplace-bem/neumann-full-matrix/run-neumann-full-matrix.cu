@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "hbem_test_config.h"
-#include "laplace_bem.h"
+#include "laplace_bem.hcu"
 
 using namespace dealii;
 using namespace HierBEM;

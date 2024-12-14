@@ -7,7 +7,7 @@
  * @date 2024-08-06
  */
 
-#include "electric_field/ddm_efield.h"
+#include "electric_field/ddm_efield.hcu"
 #include "hbem_test_config.h"
 
 using namespace HierBEM;

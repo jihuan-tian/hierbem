@@ -19,8 +19,8 @@
 
 #include "grid_in_ext.h"
 #include "hbem_test_config.h"
-#include "laplace_bem.h"
-#include "mapping/mapping_info.h"
+#include "laplace_bem.hcu"
+#include "mapping/mapping_info.hcu"
 #include "subdomain_topology.h"
 
 using namespace dealii;

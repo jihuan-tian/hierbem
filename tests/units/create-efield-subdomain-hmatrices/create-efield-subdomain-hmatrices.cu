@@ -11,8 +11,8 @@
 
 #include <fstream>
 
-#include "debug_tools.hcu"
-#include "electric_field/ddm_efield.h"
+#include "cu_debug_tools.hcu"
+#include "electric_field/ddm_efield.hcu"
 #include "grid_in_ext.h"
 #include "grid_out_ext.h"
 #include "hbem_test_config.h"

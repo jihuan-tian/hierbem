@@ -5,7 +5,7 @@ find_package(Octave REQUIRED)
 set(_target test-hmatrix-tvmult-symm-parallel)
 
 add_executable(${_target} hmatrix-tvmult-symm-parallel.cc
-                          run-hmatrix-tvmult-symm-parallel.cu)
+                          run-hmatrix-tvmult-symm-parallel.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})

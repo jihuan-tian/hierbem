@@ -34,7 +34,7 @@
 #include <vector>
 
 #include "bem_tools.hcu"
-#include "bem_values.h"
+#include "bem_values.hcu"
 #include "cpu_table.h"
 #include "cu_bem_values.hcu"
 #include "cu_fullmatrix.hcu"

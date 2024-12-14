@@ -5,7 +5,7 @@ find_package(Octave REQUIRED)
 set(_target test-hmatrix-tvmult-triu-serial-iterative)
 
 add_executable(${_target} hmatrix-tvmult-triu-serial-iterative.cc
-                          run-hmatrix-tvmult-triu-serial-iterative.cu)
+                          run-hmatrix-tvmult-triu-serial-iterative.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})
