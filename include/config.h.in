@@ -13,6 +13,17 @@
   {
 #define HIERBEM_NAMESPACE_CLOSE }
 
+// Define host-device attribute macro for different platforms
+#ifdef __CUDACC__
+// in CUDA compiler
+#define HBEM_ATTR_HOST __host__
+#define HBEM_ATTR_DEV __device__
+#else
+// in host compiler
+#define HBEM_ATTR_HOST
+#define HBEM_ATTR_DEV
+#endif
+
 #define ENABLE_DEBUG @HBEM_ENABLE_DEBUG@
 /**
  * The higher the debug level, the more verbose the print out message.

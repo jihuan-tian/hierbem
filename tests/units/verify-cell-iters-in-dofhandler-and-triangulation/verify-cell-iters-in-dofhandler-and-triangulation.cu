@@ -29,7 +29,7 @@
 #include <map>
 #include <set>
 
-#include "bem_tools.hcu"
+#include "bem_tools.h"
 #include "debug_tools.h"
 
 using namespace dealii;

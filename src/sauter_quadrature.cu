@@ -6,6 +6,7 @@
  * @author Jihuan Tian
  */
 
+#include "config.h"
 #include "sauter_quadrature.hcu"
 
 namespace HierBEM

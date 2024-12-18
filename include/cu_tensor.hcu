@@ -20,8 +20,8 @@ namespace HierBEM
   namespace CUDAWrappers
   {
     template <int dim, typename Number1, typename Number2>
-    __host__
-      __device__ Tensor<1, dim, typename ProductType<Number1, Number2>::type>
+    HBEM_ATTR_HOST
+      HBEM_ATTR_DEV Tensor<1, dim, typename ProductType<Number1, Number2>::type>
                  cross_product_3d(const Tensor<1, dim, Number1> &src1,
                                   const Tensor<1, dim, Number2> &src2)
     {
@@ -41,8 +41,8 @@ namespace HierBEM
 
 
     template <int dim, typename Number1, typename Number2>
-    __host__
-      __device__ Tensor<1, dim, typename ProductType<Number1, Number2>::type>
+    HBEM_ATTR_HOST
+      HBEM_ATTR_DEV Tensor<1, dim, typename ProductType<Number1, Number2>::type>
                  cross_product_3d(const Tensor<1, dim, Number1> &src1,
                                   const CUDAVector<Number2>     &src2)
     {
@@ -72,7 +72,7 @@ namespace HierBEM
      * @return
      */
     template <int dim, typename Number1, typename Number2>
-    __host__ __device__ typename ProductType<Number1, Number2>::type
+    HBEM_ATTR_HOST HBEM_ATTR_DEV typename ProductType<Number1, Number2>::type
              scalar_product(const Tensor<1, dim, Number1> &t1,
                             const Tensor<1, dim, Number2> &t2)
     {

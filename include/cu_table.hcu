@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <vector>
 
+#include "config.h"
 #include "cu_table_indices.hcu"
 
 namespace HierBEM
@@ -49,7 +50,7 @@ namespace HierBEM
        *
        * @param table_size_arg
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       allocate(const TableIndices<N> &table_size_arg);
 
       /**
@@ -59,7 +60,7 @@ namespace HierBEM
        * @param table_size_arg
        * @param stream
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       allocate(const TableIndices<N> &table_size_arg,
                const cudaStream_t     stream);
 
@@ -69,7 +70,7 @@ namespace HierBEM
        *
        * @param table_size_arg
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       allocate(const CUDATableIndices<N> &table_size_arg);
 
       /**
@@ -79,7 +80,7 @@ namespace HierBEM
        * @param table_size_arg
        * @param stream
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       allocate(const CUDATableIndices<N> &table_size_arg,
                const cudaStream_t         stream);
 
@@ -92,7 +93,7 @@ namespace HierBEM
        *
        * @param table_cpu
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       assign_from_host(const Table<N, T> &table_cpu);
 
       /**
@@ -106,7 +107,7 @@ namespace HierBEM
        * @param table_cpu
        * @param stream
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       assign_from_host(const Table<N, T> &table_cpu, const cudaStream_t stream);
 
       /**
@@ -114,7 +115,7 @@ namespace HierBEM
        *
        * @param data
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       assign_from_host(const std::vector<T> &data);
 
       /**
@@ -124,7 +125,7 @@ namespace HierBEM
        * @param data
        * @param stream
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       assign_from_host(const std::vector<T> &data, const cudaStream_t stream);
 
       /**
@@ -133,7 +134,7 @@ namespace HierBEM
        * @param data
        * @param size
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       assign_from_host(const T *data, const size_type size);
 
       /**
@@ -144,7 +145,7 @@ namespace HierBEM
        * @param size
        * @param stream
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       assign_from_host(const T           *data,
                        const size_type    size,
                        const cudaStream_t stream);
@@ -156,7 +157,7 @@ namespace HierBEM
        * @param data
        * @param size
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       assign_from_host(const T        *data,
                        const size_type offset_in_device_table,
                        const size_type size);
@@ -170,7 +171,7 @@ namespace HierBEM
        * @param size
        * @param stream
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       assign_from_host(const T           *data,
                        const size_type    offset_in_device_table,
                        const size_type    size,
@@ -181,7 +182,7 @@ namespace HierBEM
        *
        * @param table_cpu
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       copy_to_host(Table<N, T> &table_cpu) const;
 
       /**
@@ -191,13 +192,13 @@ namespace HierBEM
        * @param table_cpu
        * @param stream
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       copy_to_host(Table<N, T> &table_cpu, const cudaStream_t stream) const;
 
       /**
        * Release the allocated global memory on the device.
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       release();
 
       /**
@@ -206,20 +207,20 @@ namespace HierBEM
        *
        * @param stream
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       release(const cudaStream_t stream);
 
       /**
        * Get the total number of elements in the table.
        * @return
        */
-      __host__ __device__ size_type
+      HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
       n_elements() const;
 
-      __host__
+      HBEM_ATTR_HOST
       CUDATable() = default;
 
-      __host__
+      HBEM_ATTR_HOST
       CUDATable(const CUDATable<N, T> &) = default;
 
       /**
@@ -232,7 +233,7 @@ namespace HierBEM
        * @param src
        * @return
        */
-      __host__ CUDATable<N, T>          &
+      HBEM_ATTR_HOST CUDATable<N, T>                &
       operator=(const CUDATable<N, T> &src);
 
       /**
@@ -246,7 +247,7 @@ namespace HierBEM
        * @param stream
        * @return
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       assign(const CUDATable<N, T> &src, const cudaStream_t stream);
 
       /**
@@ -260,7 +261,7 @@ namespace HierBEM
        * @param i
        * @return
        */
-      __device__ const T &
+      HBEM_ATTR_DEV const T &
       operator[](const size_type i) const;
 
       /**
@@ -273,7 +274,7 @@ namespace HierBEM
        * @param i
        * @return
        */
-      __device__ T &
+      HBEM_ATTR_DEV T &
       operator[](const size_type i);
 
       /**
@@ -287,7 +288,7 @@ namespace HierBEM
        * @param indices
        * @return
        */
-      __device__ const T &
+      HBEM_ATTR_DEV const T &
       operator()(const CUDATableIndices<N> &indices) const;
 
       /**
@@ -301,7 +302,7 @@ namespace HierBEM
        * @param indices
        * @return
        */
-      __device__ T &
+      HBEM_ATTR_DEV T &
       operator()(const CUDATableIndices<N> &indices);
 
       /**
@@ -312,7 +313,7 @@ namespace HierBEM
        * @param i
        * @return
        */
-      __device__ const T &
+      HBEM_ATTR_DEV const T &
       operator()(const size_type i) const;
 
       /**
@@ -323,7 +324,7 @@ namespace HierBEM
        * @param i
        * @return
        */
-      __device__ T &
+      HBEM_ATTR_DEV T &
       operator()(const size_type i);
 
       /**
@@ -335,7 +336,7 @@ namespace HierBEM
        * @param j
        * @return
        */
-      __device__ const T &
+      HBEM_ATTR_DEV const T &
       operator()(const size_type i, const size_type j) const;
 
       /**
@@ -347,7 +348,7 @@ namespace HierBEM
        * @param j
        * @return
        */
-      __device__ T &
+      HBEM_ATTR_DEV T &
       operator()(const size_type i, const size_type j);
 
       /**
@@ -360,7 +361,7 @@ namespace HierBEM
        * @param k
        * @return
        */
-      __device__ const T &
+      HBEM_ATTR_DEV const T &
       operator()(const size_type i, const size_type j, const size_type k) const;
 
       /**
@@ -373,7 +374,7 @@ namespace HierBEM
        * @param k
        * @return
        */
-      __device__ T &
+      HBEM_ATTR_DEV T &
       operator()(const size_type i, const size_type j, const size_type k);
 
       /**
@@ -387,7 +388,7 @@ namespace HierBEM
        * @param l
        * @return
        */
-      __device__ const T &
+      HBEM_ATTR_DEV const T &
       operator()(const size_type i,
                  const size_type j,
                  const size_type k,
@@ -404,7 +405,7 @@ namespace HierBEM
        * @param l
        * @return
        */
-      __device__ T &
+      HBEM_ATTR_DEV T &
       operator()(const size_type i,
                  const size_type j,
                  const size_type k,
@@ -422,7 +423,7 @@ namespace HierBEM
        * @param m
        * @return
        */
-      __device__ const T &
+      HBEM_ATTR_DEV const T &
       operator()(const size_type i,
                  const size_type j,
                  const size_type k,
@@ -441,7 +442,7 @@ namespace HierBEM
        * @param m
        * @return
        */
-      __device__ T &
+      HBEM_ATTR_DEV T &
       operator()(const size_type i,
                  const size_type j,
                  const size_type k,
@@ -457,7 +458,7 @@ namespace HierBEM
        * @param indices
        * @return
        */
-      __host__ __device__ size_type
+      HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
       offset(const CUDATableIndices<N> &indices) const;
 
       /**
@@ -471,7 +472,7 @@ namespace HierBEM
        * @param j
        * @return
        */
-      __host__ __device__ size_type
+      HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
       offset(const size_type i, const size_type j) const;
 
       /**
@@ -486,7 +487,7 @@ namespace HierBEM
        * @param k
        * @return
        */
-      __host__ __device__ size_type
+      HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
       offset(const size_type i, const size_type j, const size_type k) const;
 
       /**
@@ -502,7 +503,7 @@ namespace HierBEM
        * @param l
        * @return
        */
-      __host__ __device__ size_type
+      HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
       offset(const size_type i,
              const size_type j,
              const size_type k,
@@ -522,7 +523,7 @@ namespace HierBEM
        * @param m
        * @return
        */
-      __host__ __device__ size_type
+      HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
       offset(const size_type i,
              const size_type j,
              const size_type k,
@@ -534,7 +535,7 @@ namespace HierBEM
        *
        * @return
        */
-      __host__ __device__ const CUDATableIndices<N>                           &
+      HBEM_ATTR_HOST HBEM_ATTR_DEV const CUDATableIndices<N>                                    &
       size() const;
 
       /**
@@ -543,7 +544,7 @@ namespace HierBEM
        * @param i
        * @return
        */
-      __host__ __device__ size_type
+      HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
       size(const size_type i) const;
 
       /**
@@ -551,7 +552,7 @@ namespace HierBEM
        *
        * @return
        */
-      __host__ __device__ pointer
+      HBEM_ATTR_HOST HBEM_ATTR_DEV pointer
       data();
 
       /**
@@ -559,7 +560,7 @@ namespace HierBEM
        *
        * @return
        */
-      __host__ __device__ const_pointer
+      HBEM_ATTR_HOST HBEM_ATTR_DEV const_pointer
       data() const;
 
     private:
@@ -579,7 +580,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDATable<N, T>::allocate(const TableIndices<N> &table_size_arg)
     {
       table_size  = table_size_arg;
@@ -601,7 +602,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDATable<N, T>::allocate(const TableIndices<N> &table_size_arg,
                               const cudaStream_t     stream)
     {
@@ -625,7 +626,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDATable<N, T>::allocate(const CUDATableIndices<N> &table_size_arg)
     {
       table_size  = table_size_arg;
@@ -647,7 +648,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDATable<N, T>::allocate(const CUDATableIndices<N> &table_size_arg,
                               const cudaStream_t         stream)
     {
@@ -671,7 +672,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDATable<N, T>::assign_from_host(const Table<N, T> &table_cpu)
     {
       Assert(table_size == table_cpu.size(),
@@ -689,7 +690,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDATable<N, T>::assign_from_host(const Table<N, T> &table_cpu,
                                       const cudaStream_t stream)
     {
@@ -709,7 +710,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDATable<N, T>::assign_from_host(const std::vector<T> &data)
     {
       AssertDimension(element_num, data.size());
@@ -724,7 +725,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDATable<N, T>::assign_from_host(const std::vector<T> &data,
                                       const cudaStream_t    stream)
     {
@@ -741,7 +742,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDATable<N, T>::assign_from_host(const T *data, const size_type size)
     {
       Assert(data != nullptr, ExcMessage("Pointer to source data is empty!"));
@@ -757,7 +758,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDATable<N, T>::assign_from_host(const T           *data,
                                       const size_type    size,
                                       const cudaStream_t stream)
@@ -776,7 +777,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDATable<N, T>::assign_from_host(const T        *data,
                                       const size_type offset_in_device_table,
                                       const size_type size)
@@ -794,7 +795,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDATable<N, T>::assign_from_host(const T           *data,
                                       const size_type    offset_in_device_table,
                                       const size_type    size,
@@ -814,7 +815,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDATable<N, T>::copy_to_host(Table<N, T> &table_cpu) const
     {
       Assert(this->table_size == table_cpu.size(),
@@ -828,7 +829,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDATable<N, T>::copy_to_host(Table<N, T>       &table_cpu,
                                   const cudaStream_t stream) const
     {
@@ -844,7 +845,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDATable<N, T>::release()
     {
       // Reset the table sizes and number of elements to 0.
@@ -866,7 +867,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDATable<N, T>::release(const cudaStream_t stream)
     {
       // Reset the table sizes and number of elements to 0.
@@ -888,15 +889,15 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ __device__ inline typename CUDATable<N, T>::size_type
-             CUDATable<N, T>::n_elements() const
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDATable<N, T>::size_type
+                   CUDATable<N, T>::n_elements() const
     {
       return element_num;
     }
 
 
     template <int N, typename T>
-    __host__ CUDATable<N, T>          &
+    HBEM_ATTR_HOST CUDATable<N, T>                &
     CUDATable<N, T>::operator=(const CUDATable<N, T> &src)
     {
       if (table_size != src.table_size)
@@ -921,7 +922,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDATable<N, T>::assign(const CUDATable<N, T> &src,
                             const cudaStream_t     stream)
     {
@@ -947,7 +948,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __device__ inline const T &
+    HBEM_ATTR_DEV inline const T &
     CUDATable<N, T>::operator[](const size_type i) const
     {
       return values[i];
@@ -955,7 +956,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __device__ inline T &
+    HBEM_ATTR_DEV inline T &
     CUDATable<N, T>::operator[](const size_type i)
     {
       return values[i];
@@ -963,7 +964,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __device__ inline const T &
+    HBEM_ATTR_DEV inline const T &
     CUDATable<N, T>::operator()(const CUDATableIndices<N> &indices) const
     {
       return values[ndarray_indices_to_linear_index(indices, table_size)];
@@ -971,7 +972,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __device__ T &
+    HBEM_ATTR_DEV T &
     CUDATable<N, T>::operator()(const CUDATableIndices<N> &indices)
     {
       return values[ndarray_indices_to_linear_index(indices, table_size)];
@@ -979,7 +980,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __device__ inline const T &
+    HBEM_ATTR_DEV inline const T &
     CUDATable<N, T>::operator()(const size_type i) const
     {
       assert(N == 1);
@@ -989,7 +990,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __device__ inline T &
+    HBEM_ATTR_DEV inline T &
     CUDATable<N, T>::operator()(const size_type i)
     {
       assert(N == 1);
@@ -999,7 +1000,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __device__ inline const T &
+    HBEM_ATTR_DEV inline const T &
     CUDATable<N, T>::operator()(const size_type i, const size_type j) const
     {
       assert(N == 2);
@@ -1009,7 +1010,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __device__ inline T &
+    HBEM_ATTR_DEV inline T &
     CUDATable<N, T>::operator()(const size_type i, const size_type j)
     {
       assert(N == 2);
@@ -1019,7 +1020,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __device__ inline const T &
+    HBEM_ATTR_DEV inline const T &
     CUDATable<N, T>::operator()(const size_type i,
                                 const size_type j,
                                 const size_type k) const
@@ -1031,7 +1032,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __device__ inline T &
+    HBEM_ATTR_DEV inline T &
     CUDATable<N, T>::operator()(const size_type i,
                                 const size_type j,
                                 const size_type k)
@@ -1043,7 +1044,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __device__ inline const T &
+    HBEM_ATTR_DEV inline const T &
     CUDATable<N, T>::operator()(const size_type i,
                                 const size_type j,
                                 const size_type k,
@@ -1058,7 +1059,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __device__ inline T &
+    HBEM_ATTR_DEV inline T &
     CUDATable<N, T>::operator()(const size_type i,
                                 const size_type j,
                                 const size_type k,
@@ -1073,7 +1074,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __device__ inline const T &
+    HBEM_ATTR_DEV inline const T &
     CUDATable<N, T>::operator()(const size_type i,
                                 const size_type j,
                                 const size_type k,
@@ -1090,7 +1091,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __device__ inline T &
+    HBEM_ATTR_DEV inline T &
     CUDATable<N, T>::operator()(const size_type i,
                                 const size_type j,
                                 const size_type k,
@@ -1107,16 +1108,16 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ __device__ inline typename CUDATable<N, T>::size_type
-             CUDATable<N, T>::offset(const CUDATableIndices<N> &indices) const
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDATable<N, T>::size_type
+    CUDATable<N, T>::offset(const CUDATableIndices<N> &indices) const
     {
       return ndarray_indices_to_linear_index(indices, table_size);
     }
 
 
     template <int N, typename T>
-    __host__ __device__ inline typename CUDATable<N, T>::size_type
-             CUDATable<N, T>::offset(const size_type i, const size_type j) const
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDATable<N, T>::size_type
+    CUDATable<N, T>::offset(const size_type i, const size_type j) const
     {
       assert(N == 2);
 
@@ -1125,8 +1126,8 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ __device__ inline typename CUDATable<N, T>::size_type
-             CUDATable<N, T>::offset(const size_type i,
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDATable<N, T>::size_type
+                   CUDATable<N, T>::offset(const size_type i,
                             const size_type j,
                             const size_type k) const
     {
@@ -1137,8 +1138,8 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ __device__ inline typename CUDATable<N, T>::size_type
-             CUDATable<N, T>::offset(const size_type i,
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDATable<N, T>::size_type
+                   CUDATable<N, T>::offset(const size_type i,
                             const size_type j,
                             const size_type k,
                             const size_type l) const
@@ -1150,8 +1151,8 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ __device__ inline typename CUDATable<N, T>::size_type
-             CUDATable<N, T>::offset(const size_type i,
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDATable<N, T>::size_type
+                   CUDATable<N, T>::offset(const size_type i,
                             const size_type j,
                             const size_type k,
                             const size_type l,
@@ -1167,7 +1168,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ __device__ inline const CUDATableIndices<N>          &
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline const CUDATableIndices<N>                &
     CUDATable<N, T>::size() const
     {
       return table_size;
@@ -1175,24 +1176,24 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ __device__ inline typename CUDATable<N, T>::size_type
-             CUDATable<N, T>::size(const size_type i) const
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDATable<N, T>::size_type
+                   CUDATable<N, T>::size(const size_type i) const
     {
       return table_size[i];
     }
 
 
     template <int N, typename T>
-    __host__ __device__ inline typename CUDATable<N, T>::pointer
-             CUDATable<N, T>::data()
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDATable<N, T>::pointer
+                   CUDATable<N, T>::data()
     {
       return values;
     }
 
 
     template <int N, typename T>
-    __host__ __device__ inline typename CUDATable<N, T>::const_pointer
-             CUDATable<N, T>::data() const
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDATable<N, T>::const_pointer
+                   CUDATable<N, T>::data() const
     {
       return values;
     }

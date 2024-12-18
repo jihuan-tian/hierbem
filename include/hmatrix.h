@@ -2292,8 +2292,8 @@ namespace HierBEM
      * Number>::_invert_by_gauss_elim.
      *
      * @param M_inv
-     * @param M_root The \hmatnode from which this recursive function is called for
-     * the first time.
+     * @param M_root The \hmatnode from which this recursive function is called
+     * for the first time.
      * @param M_root_bct The \bct associated with \p M_root.
      * @param fixed_rank_k
      */
@@ -2786,7 +2786,8 @@ namespace HierBEM
      * factorization, which ensures the lower triangular matrix has unit
      * diagonal while the upper triangular matrix does not.}
      *
-     * @param b Right hand side vector and after execution, it stores the result vector.
+     * @param b Right hand side vector and after execution, it stores the result
+     * vector.
      */
     void
     solve_by_backward_substitution(Vector<Number> &b,
@@ -3619,8 +3620,8 @@ namespace HierBEM
      * elimination.
      *
      * @param M_inv
-     * @param M_root The \hmatnode from which this recursive function is called for
-     * the first time.
+     * @param M_root The \hmatnode from which this recursive function is called
+     * for the first time.
      * @param M_root_bct The \bct associated with \p M_root.
      * @param fixed_rank_k
      */
@@ -3706,7 +3707,8 @@ namespace HierBEM
      * current \hmatnode.
      *
      * @param dag
-     * @param same_level_column_block It corresponds to the \hmatnode \f$L_{ri}\f$.
+     * @param same_level_column_block It corresponds to the \hmatnode
+     * \f$L_{ri}\f$.
      * @param same_level_row_block It corresponds to the \hmatnode \f$U_{is}\f$.
      */
     void
@@ -3829,7 +3831,8 @@ namespace HierBEM
      * current \hmatnode.
      *
      * @param dag
-     * @param same_level_column_block It corresponds to the \hmatnode \f$L_{ri}\f$.
+     * @param same_level_column_block It corresponds to the \hmatnode
+     * \f$L_{ri}\f$.
      * @param same_level_row_block It corresponds to the \hmatnode \f$U_{is}\f$.
      */
     void
@@ -3878,7 +3881,8 @@ namespace HierBEM
      * Compute the \hmatrix/vector multiplication or transposed \hmatrix/vector
      * multiplication task cost for the current near field \hmatrix node.
      *
-     * @param top_hmat_property \hmatrix property of the top level \hmatrix node.
+     * @param top_hmat_property \hmatrix property of the top level \hmatrix
+     * node.
      * @return Task cost
      */
     double
@@ -3889,7 +3893,8 @@ namespace HierBEM
      * Compute the \hmatrix/vector multiplication or transposed \hmatrix/vector
      * multiplication task cost for the current far field \hmatrix node.
      *
-     * @param top_hmat_property \hmatrix property of the top level \hmatrix node.
+     * @param top_hmat_property \hmatrix property of the top level \hmatrix
+     * node.
      * @return Task cost
      */
     double
@@ -3900,7 +3905,8 @@ namespace HierBEM
      * Compute the task cost for assembling the current near field \hmatrix
      * node.
      *
-     * @param top_hmat_property \hmatrix property of the top level \hmatrix node.
+     * @param top_hmat_property \hmatrix property of the top level \hmatrix
+     * node.
      * @return Task cost
      */
     double
@@ -3910,7 +3916,8 @@ namespace HierBEM
     /**
      * Compute the task cost for assembling the current far field \hmatrix node.
      *
-     * @param top_hmat_property \hmatrix property of the top level \hmatrix node.
+     * @param top_hmat_property \hmatrix property of the top level \hmatrix
+     * node.
      * @return Task cost
      */
     double
@@ -4309,8 +4316,8 @@ namespace HierBEM
    * respect to a block cluster tree by starting from a tree node which is
    * to be associated with the current \hmatrix.
    *
-   * @param hmat Pointer to the current \hmatnode, <strong>which has already been
-   * created on the heap but with its internal data left empty.</strong>
+   * @param hmat Pointer to the current \hmatnode, <strong>which has already
+   * been created on the heap but with its internal data left empty.</strong>
    * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
    * associated with \p hmat.
    */
@@ -4628,11 +4635,12 @@ namespace HierBEM
    * The matrices in the leaf set are initialized with zero values. The rank of
    * the near field matrices are predefined fixed values.
    *
-   * @param hmat Pointer to the current \hmatnode, <strong>which has already been
-   * created on the heap but with its internal data left empty.</strong>
+   * @param hmat Pointer to the current \hmatnode, <strong>which has already
+   * been created on the heap but with its internal data left empty.</strong>
    * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
    * associated with \p hmat.
-   * @param top_hmat_node_property The property of the \hmatnode on the top level
+   * @param top_hmat_node_property The property of the \hmatnode on the top
+   * level
    */
   template <int spacedim, typename Number = double>
   void
@@ -5248,12 +5256,12 @@ namespace HierBEM
    * \mynote{@p hmat may not be global, but only a block in the global matrix, and
    * @p bc_node in this case is not the root node of the \bct.}
    *
-   * @param hmat Pointer to the current \hmatnode, <strong>which has already been
-   * created on the heap but with its internal data left empty.</strong>
+   * @param hmat Pointer to the current \hmatnode, <strong>which has already
+   * been created on the heap but with its internal data left empty.</strong>
    * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
    * associated with \p hmat.
-   * @param M The global full matrix containing all the data required to initialize the
-   * \hmatrix.
+   * @param M The global full matrix containing all the data required to
+   * initialize the \hmatrix.
    */
   template <int spacedim, typename Number = double>
   void
@@ -5966,12 +5974,12 @@ namespace HierBEM
    * only a block in the global matrix, and @p bc_node in this case is not the
    * root node of the \bct.}
    *
-   * @param hmat Pointer to the current \hmatnode, <strong>which has already been
-   * created on the heap but with its internal data left empty.</strong>
+   * @param hmat Pointer to the current \hmatnode, <strong>which has already
+   * been created on the heap but with its internal data left empty.</strong>
    * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
    * associated with \p hmat. It is not necessarily the root node.
-   * @param M The global full matrix containing all the data required to initialize the
-   * \hmatrix.
+   * @param M The global full matrix containing all the data required to
+   * initialize the \hmatrix.
    */
   template <int spacedim, typename Number = double>
   void
@@ -11422,9 +11430,10 @@ namespace HierBEM
    * @param M0 The initial product matrix on the \bcn \f$\tau_0\times\rho_0\f$,
    * which is a leaf node in the product \bct.
    *
-   * @param M The current product matrix \f$M\f$ on the \bcn \f$\tau\times\rho\f$,
-   * which will assembles the contribution from \f$M_1 \cdot M_2\f$ (N.B. This
-   * description is only valid for the first call of this function. During
+   * @param M The current product matrix \f$M\f$ on the \bcn
+   * \f$\tau\times\rho\f$, which will assembles the contribution from \f$M_1
+   * \cdot M_2\f$ (N.B. This description is only valid for the first call of
+   * this function. During
    * recursive calls of this function, @p M may not be on a same level as the
    * product of @p M1 and @p M2, when both @p M1 and @p M2 have substructures and
    * the multiplication needs to collect results from the multiplications of
@@ -11814,9 +11823,10 @@ namespace HierBEM
    *
    * @param M0 The initial product matrix on the \bcn \f$\tau_0\times\rho_0\f$.
    *
-   * @param M The current product matrix \f$M\f$ on the \bcn \f$\tau\times\rho\f$,
-   * which will assembles the contribution from \f$M_1 \cdot M_2\f$ (N.B. This
-   * description is only valid for the first call of this function. During
+   * @param M The current product matrix \f$M\f$ on the \bcn
+   * \f$\tau\times\rho\f$, which will assembles the contribution from \f$M_1
+   * \cdot M_2\f$ (N.B. This description is only valid for the first call of
+   * this function. During
    * recursive calls of this function, @p M may not be on a same level as the
    * product of @p M1 and @p M2, when both @p M1 and @p M2 have substructures and
    * the multiplication needs to collect results from the multiplications of
@@ -12674,9 +12684,10 @@ namespace HierBEM
    * Hackbusch's \hmatrix book.
    *
    * @param M0 The initial product matrix on the \bcn \f$\tau_0\times\rho_0\f$.
-   * @param M The current product matrix \f$M\f$ on the \bcn \f$\tau\times\rho\f$,
-   * which will assembles the contribution from \f$M_1 \cdot M_2^T\f$ (N.B. This
-   * description is only valid for the first call of this function. During
+   * @param M The current product matrix \f$M\f$ on the \bcn
+   * \f$\tau\times\rho\f$, which will assembles the contribution from \f$M_1
+   * \cdot M_2^T\f$ (N.B. This description is only valid for the first call of
+   * this function. During
    * recursive calls of this function, @p M may not be on a same level as the
    * product of @p M1 and @p M2, when both @p M1 and @p M2 have substructures and
    * the multiplication needs to collect results from the multiplications of
@@ -13077,9 +13088,10 @@ namespace HierBEM
    * Hackbusch's \hmatrix book.
    *
    * @param M0 The initial product matrix on the \bcn \f$\tau_0\times\rho_0\f$.
-   * @param M The current product matrix \f$M\f$ on the \bcn \f$\tau\times\rho\f$,
-   * which will assembles the contribution from \f$M_1 \cdot M_2^T\f$ (N.B. This
-   * description is only valid for the first call of this function. During
+   * @param M The current product matrix \f$M\f$ on the \bcn
+   * \f$\tau\times\rho\f$, which will assembles the contribution from \f$M_1
+   * \cdot M_2^T\f$ (N.B. This description is only valid for the first call of
+   * this function. During
    * recursive calls of this function, @p M may not be on a same level as the
    * product of @p M1 and @p M2, when both @p M1 and @p M2 have substructures and
    * the multiplication needs to collect results from the multiplications of

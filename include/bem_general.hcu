@@ -20,7 +20,7 @@
 
 #include "bem_kernels.hcu"
 #include "bem_values.hcu"
-#include "mapping/mapping_info.hcu"
+#include "mapping/mapping_info.h"
 #include "sauter_quadrature.hcu"
 
 namespace HierBEM

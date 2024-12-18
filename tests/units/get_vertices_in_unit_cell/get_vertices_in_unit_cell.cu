@@ -14,7 +14,7 @@
 #include <array>
 #include <iostream>
 
-#include "bem_tools.hcu"
+#include "bem_tools.h"
 #include "debug_tools.h"
 
 int

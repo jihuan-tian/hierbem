@@ -25,11 +25,11 @@
 #include <string>
 #include <thread>
 
-#include "bem_tools.hcu"
+#include "bem_tools.h"
 #include "config.h"
 #include "cpu_table.h"
 #include "lapack_full_matrix_ext.h"
-#include "mapping/mapping_info.hcu"
+#include "mapping/mapping_info.h"
 #include "sauter_quadrature_tools.h"
 
 namespace HierBEM

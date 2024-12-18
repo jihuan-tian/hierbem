@@ -15,6 +15,8 @@
 
 #include <iostream>
 
+#include "config.h"
+
 namespace HierBEM
 {
   using namespace dealii;
@@ -31,7 +33,7 @@ namespace HierBEM
       using size_type = std::size_t;
 
       template <int N1>
-      friend __host__ std::ostream &
+      friend HBEM_ATTR_HOST std::ostream &
       operator<<(std::ostream &out, const CUDATableIndices<N1> &indices);
 
       /**
@@ -41,7 +43,7 @@ namespace HierBEM
        * \mycomment{The member variable @p indices is declared with the empty
        * initializer list @p {}. This will be adopted by this default constructor.}
        */
-      __host__ __device__ constexpr CUDATableIndices() = default;
+      HBEM_ATTR_HOST HBEM_ATTR_DEV constexpr CUDATableIndices() = default;
 
       /**
        * Constructor with arbitrary (but fixed) number of input arguments to
@@ -54,7 +56,7 @@ namespace HierBEM
        * same type @p T.
        */
       template <typename... T>
-      __host__ __device__ constexpr CUDATableIndices(const T... args);
+      HBEM_ATTR_HOST HBEM_ATTR_DEV constexpr CUDATableIndices(const T... args);
 
       /**
        * Copy constructor from a @p TableIndices on CPU.
@@ -63,7 +65,7 @@ namespace HierBEM
        *
        * @param table_indices_cpu
        */
-      __host__
+      HBEM_ATTR_HOST
       CUDATableIndices(const TableIndices<N> &table_indices_cpu);
 
       /**
@@ -73,7 +75,7 @@ namespace HierBEM
        *
        * @param table_indices
        */
-      __host__ __device__
+      HBEM_ATTR_HOST HBEM_ATTR_DEV
       CUDATableIndices(const CUDATableIndices<N> &table_indices);
 
       /**
@@ -81,7 +83,7 @@ namespace HierBEM
        *
        * @param i
        */
-      __host__ __device__ constexpr std::size_t
+      HBEM_ATTR_HOST HBEM_ATTR_DEV constexpr std::size_t
                operator[](const unsigned int i) const;
 
       /**
@@ -89,7 +91,7 @@ namespace HierBEM
        *
        * @param i
        */
-      __host__ __device__ constexpr std::size_t          &
+      HBEM_ATTR_HOST HBEM_ATTR_DEV constexpr std::size_t          &
       operator[](const unsigned int i);
 
       /**
@@ -99,7 +101,7 @@ namespace HierBEM
        * \mycomment{This function can only run on the host, because the input
        * argument is on the host.}
        */
-      __host__ CUDATableIndices<N>          &
+      HBEM_ATTR_HOST CUDATableIndices<N>          &
       operator=(const TableIndices<N> &table_indices_cpu);
 
       /**
@@ -107,7 +109,7 @@ namespace HierBEM
        *
        * @return
        */
-      __host__ __device__ CUDATableIndices<N>                     &
+      HBEM_ATTR_HOST HBEM_ATTR_DEV CUDATableIndices<N>                     &
       operator=(const CUDATableIndices<N> &table_indices);
 
       /**
@@ -116,7 +118,7 @@ namespace HierBEM
        * @param T2
        * @return
        */
-      __host__ __device__ bool
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
       operator==(const CUDATableIndices<N> &T2) const;
 
       /**
@@ -125,7 +127,7 @@ namespace HierBEM
        * @param T2
        * @return
        */
-      __host__ bool
+      HBEM_ATTR_HOST bool
       operator==(const TableIndices<N> &T2) const;
 
       /**
@@ -134,7 +136,7 @@ namespace HierBEM
        * @param T2
        * @return
        */
-      __host__ __device__ bool
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
       operator!=(const CUDATableIndices<N> &T2) const;
 
       /**
@@ -143,14 +145,14 @@ namespace HierBEM
        * @param T2
        * @return
        */
-      __host__ bool
+      HBEM_ATTR_HOST bool
       operator!=(const TableIndices<N> &T2) const;
 
       /**
        * Print the indices to the standard output. This function can run on both
        * the host and device.
        */
-      __host__ __device__ void
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
       print() const;
 
     private:
@@ -159,7 +161,7 @@ namespace HierBEM
 
     template <int N>
     template <typename... T>
-    __host__ __device__ constexpr CUDATableIndices<N>::CUDATableIndices(
+    HBEM_ATTR_HOST HBEM_ATTR_DEV constexpr CUDATableIndices<N>::CUDATableIndices(
       const T... args)
       : indices{static_cast<std::size_t>(args)...}
     {
@@ -169,7 +171,7 @@ namespace HierBEM
 
 
     template <int N>
-    __host__
+    HBEM_ATTR_HOST
     CUDATableIndices<N>::CUDATableIndices(
       const TableIndices<N> &table_indices_cpu)
     {
@@ -181,7 +183,7 @@ namespace HierBEM
 
 
     template <int N>
-    __host__ __device__
+    HBEM_ATTR_HOST HBEM_ATTR_DEV
     CUDATableIndices<N>::CUDATableIndices(
       const CUDATableIndices<N> &table_indices)
     {
@@ -196,7 +198,7 @@ namespace HierBEM
 
 
     template <int N>
-    __host__ __device__ constexpr std::size_t
+    HBEM_ATTR_HOST HBEM_ATTR_DEV constexpr std::size_t
     CUDATableIndices<N>::operator[](const unsigned int i) const
     {
       return indices[i];
@@ -204,7 +206,7 @@ namespace HierBEM
 
 
     template <int N>
-    __host__ __device__ constexpr std::size_t &
+    HBEM_ATTR_HOST HBEM_ATTR_DEV constexpr std::size_t &
     CUDATableIndices<N>::operator[](const unsigned int i)
     {
       return indices[i];
@@ -212,7 +214,7 @@ namespace HierBEM
 
 
     template <int N>
-    __host__ CUDATableIndices<N> &
+    HBEM_ATTR_HOST CUDATableIndices<N> &
     CUDATableIndices<N>::operator=(const TableIndices<N> &table_indices_cpu)
     {
       for (size_type i = 0; i < N; i++)
@@ -225,7 +227,7 @@ namespace HierBEM
 
 
     template <int N>
-    __host__ __device__ CUDATableIndices<N> &
+    HBEM_ATTR_HOST HBEM_ATTR_DEV CUDATableIndices<N> &
     CUDATableIndices<N>::operator=(const CUDATableIndices<N> &table_indices)
     {
 #ifdef __CUDA_ARCH__
@@ -241,7 +243,7 @@ namespace HierBEM
 
 
     template <int N>
-    __host__ __device__ bool
+    HBEM_ATTR_HOST HBEM_ATTR_DEV bool
     CUDATableIndices<N>::operator==(const CUDATableIndices<N> &T2) const
     {
 #ifdef __CUDA_ARCH__
@@ -260,7 +262,7 @@ namespace HierBEM
 
 
     template <int N>
-    __host__ bool
+    HBEM_ATTR_HOST bool
     CUDATableIndices<N>::operator==(const TableIndices<N> &T2) const
     {
       for (size_type i = 0; i < N; i++)
@@ -276,7 +278,7 @@ namespace HierBEM
 
 
     template <int N>
-    __host__ __device__ bool
+    HBEM_ATTR_HOST HBEM_ATTR_DEV bool
     CUDATableIndices<N>::operator!=(const CUDATableIndices<N> &T2) const
     {
       return !(*this == T2);
@@ -284,7 +286,7 @@ namespace HierBEM
 
 
     template <int N>
-    __host__ bool
+    HBEM_ATTR_HOST bool
     CUDATableIndices<N>::operator!=(const TableIndices<N> &T2) const
     {
       return !(*this == T2);
@@ -292,7 +294,7 @@ namespace HierBEM
 
 
     template <int N>
-    __host__ __device__ void
+    HBEM_ATTR_HOST HBEM_ATTR_DEV void
     CUDATableIndices<N>::print() const
     {
       printf("[");
@@ -307,7 +309,7 @@ namespace HierBEM
 
 
     template <int N>
-    __host__ std::ostream          &
+    HBEM_ATTR_HOST std::ostream          &
     operator<<(std::ostream &out, const CUDATableIndices<N> &indices)
     {
       out << "[";
@@ -332,7 +334,7 @@ namespace HierBEM
      * @param src
      */
     template <int N>
-    __host__ void
+    HBEM_ATTR_HOST void
     copy_table_indices(TableIndices<N> &dest, const CUDATableIndices<N> &src)
     {
       for (int i = 0; i < N; i++)
@@ -351,7 +353,7 @@ namespace HierBEM
      * @param src
      */
     template <int N>
-    __host__ void
+    HBEM_ATTR_HOST void
     copy_table_indices(CUDATableIndices<N> &dest, const TableIndices<N> &src)
     {
       for (int i = 0; i < N; i++)
@@ -372,7 +374,7 @@ namespace HierBEM
      * @return
      */
     template <int N>
-    __host__ __device__ inline std::size_t
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline std::size_t
              ndarray_indices_to_linear_index(const CUDATableIndices<N> &indices,
                                              const CUDATableIndices<N> &sizes,
                                              const bool C_style_index = true)
@@ -411,7 +413,7 @@ namespace HierBEM
     }
 
     template <int N>
-    __host__ __device__ inline void
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline void
     linear_index_to_ndarray_indices(CUDATableIndices<N>       &indices,
                                     const CUDATableIndices<N> &sizes,
                                     std::size_t                index,

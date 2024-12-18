@@ -50,7 +50,7 @@
 
 #include "aca_plus.hcu"
 #include "bem_general.hcu"
-#include "bem_tools.hcu"
+#include "bem_tools.h"
 #include "bem_values.hcu"
 #include "block_cluster_tree.h"
 #include "cluster_tree.h"
@@ -65,7 +65,7 @@
 #include "hmatrix_symm.h"
 #include "hmatrix_symm_preconditioner.h"
 #include "laplace_kernels.hcu"
-#include "mapping/mapping_info.hcu"
+#include "mapping/mapping_info.h"
 #include "quadrature.templates.h"
 #include "read_octave_data.h"
 #include "subdomain_topology.h"

@@ -9,6 +9,7 @@
 #include <random>
 
 #include "aca_plus.hcu"
+#include "config.h"
 
 namespace HierBEM
 {

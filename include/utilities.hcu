@@ -16,7 +16,7 @@ namespace HierBEM
     namespace CUDAWrappers
     {
       template <int N, typename T>
-      __host__ __device__ inline T
+      HBEM_ATTR_HOST HBEM_ATTR_DEV inline T
       fixed_power(const T x)
       {
         if (N == 0)

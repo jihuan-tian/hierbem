@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "config.h"
 #include "cu_vector.hcu"
 
 namespace HierBEM
@@ -31,7 +32,7 @@ namespace HierBEM
       /**
        * Default constructor.
        */
-      __host__ __device__
+      HBEM_ATTR_HOST HBEM_ATTR_DEV
       CUDAFullMatrix();
 
       /**
@@ -41,13 +42,13 @@ namespace HierBEM
        * @param _rows
        * @param _cols
        */
-      __host__ __device__
+      HBEM_ATTR_HOST HBEM_ATTR_DEV
       CUDAFullMatrix(pointer p, const size_type _rows, const size_type _cols);
 
       /**
        * Reinitialize the current matrix wrapper with new pointer and dimension.
        */
-      __host__ __device__ void
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
       reinit(pointer p, const size_type _rows, const size_type _cols);
 
       /**
@@ -58,7 +59,7 @@ namespace HierBEM
        *
        * @param
        */
-      __host__ __device__
+      HBEM_ATTR_HOST HBEM_ATTR_DEV
       CUDAFullMatrix(const CUDAFullMatrix<T> &) = delete;
 
       /**
@@ -66,7 +67,7 @@ namespace HierBEM
        *
        * @param mat
        */
-      __host__ __device__
+      HBEM_ATTR_HOST HBEM_ATTR_DEV
       CUDAFullMatrix(CUDAFullMatrix<T> &&mat);
 
       /**
@@ -76,7 +77,7 @@ namespace HierBEM
        * @param mat
        * @return
        */
-      __host__ __device__ CUDAFullMatrix<T>                     &
+      HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAFullMatrix<T>                              &
       operator=(const CUDAFullMatrix<T> &mat);
 
       /**
@@ -85,13 +86,13 @@ namespace HierBEM
        * @param mat
        * @return
        */
-      __host__ __device__ CUDAFullMatrix<T>                     &
+      HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAFullMatrix<T>                              &
       operator=(CUDAFullMatrix<T> &&mat);
 
       /**
        * Fill the matrix from a pointer to the source data.
        */
-      __host__ __device__ void
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
       fill(const_pointer data);
 
       /**
@@ -99,7 +100,7 @@ namespace HierBEM
        *
        * @return
        */
-      __host__ __device__ size_type
+      HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
       m() const;
 
       /**
@@ -107,7 +108,7 @@ namespace HierBEM
        *
        * @return
        */
-      __host__ __device__ size_type
+      HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
       n() const;
 
       /**
@@ -115,7 +116,7 @@ namespace HierBEM
        *
        * @return
        */
-      __host__ __device__ size_type
+      HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
       n_elements() const;
 
       /**
@@ -124,7 +125,7 @@ namespace HierBEM
        * @param i
        * @return
        */
-      __host__ __device__ size_type
+      HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
       size(const size_type i) const;
 
       /**
@@ -132,7 +133,7 @@ namespace HierBEM
        *
        * @return
        */
-      __host__ __device__ pointer
+      HBEM_ATTR_HOST HBEM_ATTR_DEV pointer
       data();
 
       /**
@@ -140,7 +141,7 @@ namespace HierBEM
        *
        * @return
        */
-      __host__ __device__ const_pointer
+      HBEM_ATTR_HOST HBEM_ATTR_DEV const_pointer
       data() const;
 
       /**
@@ -150,7 +151,7 @@ namespace HierBEM
        * @param j
        * @return
        */
-      __host__ __device__ reference
+      HBEM_ATTR_HOST HBEM_ATTR_DEV reference
       operator()(const size_type i,
                  const size_type j,
                  const bool      is_column_major = true);
@@ -162,7 +163,7 @@ namespace HierBEM
        * @param j
        * @return
        */
-      __host__ __device__ const_reference
+      HBEM_ATTR_HOST HBEM_ATTR_DEV const_reference
       operator()(const size_type i,
                  const size_type j,
                  const bool      is_column_major = true) const;
@@ -175,7 +176,7 @@ namespace HierBEM
        * @param v
        * @param adding
        */
-      __host__ __device__ void
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
       vmult(CUDAVector<T>       &w,
             const CUDAVector<T> &v,
             const bool           adding = false) const;
@@ -188,7 +189,7 @@ namespace HierBEM
        * @param v
        * @param adding
        */
-      __host__ __device__ void
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
       Tvmult(CUDAVector<T>       &w,
              const CUDAVector<T> &v,
              const bool           adding = false) const;
@@ -201,7 +202,7 @@ namespace HierBEM
        * @param B
        * @param adding
        */
-      __host__ __device__ void
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
       mmult(CUDAFullMatrix<T>       &C,
             const CUDAFullMatrix<T> &B,
             const bool               adding = false) const;
@@ -214,7 +215,7 @@ namespace HierBEM
        * @param B
        * @param adding
        */
-      __host__ __device__ void
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
       Tmmult(CUDAFullMatrix<T>       &C,
              const CUDAFullMatrix<T> &B,
              const bool               adding = false) const;
@@ -227,7 +228,7 @@ namespace HierBEM
        * @param B
        * @param adding
        */
-      __host__ __device__ void
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
       mTmult(CUDAFullMatrix<T>       &C,
              const CUDAFullMatrix<T> &B,
              const bool               adding = false) const;
@@ -240,7 +241,7 @@ namespace HierBEM
        *
        * @param M_inv
        */
-      __host__ __device__ void
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
       invert_by_gauss_elim(CUDAFullMatrix<T> &M_inv);
 
       /**
@@ -263,7 +264,7 @@ namespace HierBEM
        *
        * @param inv
        */
-      __host__ __device__ void
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
       invert2x2(const CUDAFullMatrix<T> &M);
 
       /**
@@ -272,7 +273,7 @@ namespace HierBEM
        * @param factor
        * @return
        */
-      __host__ __device__ CUDAFullMatrix<T>                     &
+      HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAFullMatrix<T>                              &
       operator*=(const T factor);
 
       /**
@@ -281,7 +282,7 @@ namespace HierBEM
        * @param factor
        * @return
        */
-      __host__ __device__ CUDAFullMatrix<T>                     &
+      HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAFullMatrix<T>                              &
       operator/=(const T factor);
 
       /**
@@ -289,7 +290,7 @@ namespace HierBEM
        *
        * @return
        */
-      __host__ __device__ T
+      HBEM_ATTR_HOST HBEM_ATTR_DEV T
       determinant2x2() const;
 
       /**
@@ -297,21 +298,21 @@ namespace HierBEM
        *
        * @return
        */
-      __host__ __device__ T
+      HBEM_ATTR_HOST HBEM_ATTR_DEV T
       determinant3x3() const;
 
       /**
        * Print all the values in the matrix using the specified C or Fortran
        * index style.
        */
-      __host__ __device__ void
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
       print(const bool C_index_style = false,
             const bool scientific    = true) const;
 
       /**
        * Set all matrix entries to zero.
        */
-      __host__ __device__ void
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
       reinit();
 
     private:
@@ -322,7 +323,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__
+    HBEM_ATTR_HOST HBEM_ATTR_DEV
     CUDAFullMatrix<T>::CUDAFullMatrix()
       : values(nullptr)
       , rows(0)
@@ -331,7 +332,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__
+    HBEM_ATTR_HOST HBEM_ATTR_DEV
     CUDAFullMatrix<T>::CUDAFullMatrix(pointer         p,
                                       const size_type _rows,
                                       const size_type _cols)
@@ -342,7 +343,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ void
+    HBEM_ATTR_HOST HBEM_ATTR_DEV void
     CUDAFullMatrix<T>::reinit(pointer         p,
                               const size_type _rows,
                               const size_type _cols)
@@ -354,7 +355,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__
+    HBEM_ATTR_HOST HBEM_ATTR_DEV
     CUDAFullMatrix<T>::CUDAFullMatrix(CUDAFullMatrix<T> &&mat)
       : values(mat.values)
       , rows(mat.rows)
@@ -363,7 +364,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ CUDAFullMatrix<T> &
+    HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAFullMatrix<T> &
     CUDAFullMatrix<T>::operator=(const CUDAFullMatrix<T> &mat)
     {
       assert(rows == mat.rows);
@@ -379,7 +380,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ CUDAFullMatrix<T> &
+    HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAFullMatrix<T> &
     CUDAFullMatrix<T>::operator=(CUDAFullMatrix<T> &&mat)
     {
       values = mat.values;
@@ -391,7 +392,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ void
+    HBEM_ATTR_HOST HBEM_ATTR_DEV void
     CUDAFullMatrix<T>::fill(const_pointer data)
     {
       for (size_type i = 0; i < rows * cols; i++)
@@ -402,32 +403,32 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ inline typename CUDAFullMatrix<T>::size_type
-             CUDAFullMatrix<T>::m() const
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAFullMatrix<T>::size_type
+                   CUDAFullMatrix<T>::m() const
     {
       return rows;
     }
 
 
     template <typename T>
-    __host__ __device__ inline typename CUDAFullMatrix<T>::size_type
-             CUDAFullMatrix<T>::n() const
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAFullMatrix<T>::size_type
+                   CUDAFullMatrix<T>::n() const
     {
       return cols;
     }
 
 
     template <typename T>
-    __host__ __device__ inline typename CUDAFullMatrix<T>::size_type
-             CUDAFullMatrix<T>::n_elements() const
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAFullMatrix<T>::size_type
+                   CUDAFullMatrix<T>::n_elements() const
     {
       return rows * cols;
     }
 
 
     template <typename T>
-    __host__ __device__ typename CUDAFullMatrix<T>::size_type
-                        CUDAFullMatrix<T>::size(const size_type i) const
+    HBEM_ATTR_HOST HBEM_ATTR_DEV typename CUDAFullMatrix<T>::size_type
+                   CUDAFullMatrix<T>::size(const size_type i) const
     {
       switch (i)
         {
@@ -446,24 +447,25 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ inline typename CUDAFullMatrix<T>::pointer
-             CUDAFullMatrix<T>::data()
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAFullMatrix<T>::pointer
+                   CUDAFullMatrix<T>::data()
     {
       return values;
     }
 
 
     template <typename T>
-    __host__ __device__ inline typename CUDAFullMatrix<T>::const_pointer
-             CUDAFullMatrix<T>::data() const
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline
+      typename CUDAFullMatrix<T>::const_pointer
+      CUDAFullMatrix<T>::data() const
     {
       return values;
     }
 
 
     template <typename T>
-    __host__ __device__ inline typename CUDAFullMatrix<T>::reference
-    CUDAFullMatrix<T>::operator()(const size_type i,
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAFullMatrix<T>::reference
+                   CUDAFullMatrix<T>::operator()(const size_type i,
                                   const size_type j,
                                   const bool      is_column_major)
     {
@@ -472,17 +474,18 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ inline typename CUDAFullMatrix<T>::const_reference
-    CUDAFullMatrix<T>::operator()(const size_type i,
-                                  const size_type j,
-                                  const bool      is_column_major) const
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline
+      typename CUDAFullMatrix<T>::const_reference
+      CUDAFullMatrix<T>::operator()(const size_type i,
+                                    const size_type j,
+                                    const bool      is_column_major) const
     {
       return is_column_major ? values[rows * j + i] : values[cols * i + j];
     }
 
 
     template <typename T>
-    __host__ __device__ void
+    HBEM_ATTR_HOST HBEM_ATTR_DEV void
     CUDAFullMatrix<T>::vmult(CUDAVector<T>       &w,
                              const CUDAVector<T> &v,
                              const bool           adding) const
@@ -506,7 +509,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ void
+    HBEM_ATTR_HOST HBEM_ATTR_DEV void
     CUDAFullMatrix<T>::Tvmult(CUDAVector<T>       &w,
                               const CUDAVector<T> &v,
                               const bool           adding) const
@@ -530,7 +533,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ void
+    HBEM_ATTR_HOST HBEM_ATTR_DEV void
     CUDAFullMatrix<T>::mmult(CUDAFullMatrix<T>       &C,
                              const CUDAFullMatrix<T> &B,
                              const bool               adding) const
@@ -558,7 +561,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ void
+    HBEM_ATTR_HOST HBEM_ATTR_DEV void
     CUDAFullMatrix<T>::Tmmult(CUDAFullMatrix<T>       &C,
                               const CUDAFullMatrix<T> &B,
                               const bool               adding) const
@@ -586,7 +589,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ void
+    HBEM_ATTR_HOST HBEM_ATTR_DEV void
     CUDAFullMatrix<T>::mTmult(CUDAFullMatrix<T>       &C,
                               const CUDAFullMatrix<T> &B,
                               const bool               adding) const
@@ -614,7 +617,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ void
+    HBEM_ATTR_HOST HBEM_ATTR_DEV void
     CUDAFullMatrix<T>::invert_by_gauss_elim(CUDAFullMatrix<T> &M_inv)
     {
       assert(rows == cols);
@@ -740,7 +743,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ void
+    HBEM_ATTR_HOST HBEM_ATTR_DEV void
     CUDAFullMatrix<T>::invert2x2(const CUDAFullMatrix<T> &M)
     {
       assert(rows == cols);
@@ -757,7 +760,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ CUDAFullMatrix<T> &
+    HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAFullMatrix<T>                              &
     CUDAFullMatrix<T>::operator*=(const T factor)
     {
       for (size_type i = 0; i < n_elements(); i++)
@@ -770,7 +773,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ CUDAFullMatrix<T> &
+    HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAFullMatrix<T>                              &
     CUDAFullMatrix<T>::operator/=(const T factor)
     {
       for (size_type i = 0; i < n_elements(); i++)
@@ -783,7 +786,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ T
+    HBEM_ATTR_HOST HBEM_ATTR_DEV T
     CUDAFullMatrix<T>::determinant2x2() const
     {
       return (*this)(0, 0) * (*this)(1, 1) - (*this)(0, 1) * (*this)(1, 0);
@@ -791,7 +794,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ T
+    HBEM_ATTR_HOST HBEM_ATTR_DEV T
     CUDAFullMatrix<T>::determinant3x3() const
     {
       return (*this)(0, 0) * (*this)(1, 1) * (*this)(2, 2) +
@@ -804,7 +807,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ void
+    HBEM_ATTR_HOST HBEM_ATTR_DEV void
     CUDAFullMatrix<T>::print(const bool C_index_style,
                              const bool scientific) const
     {
@@ -830,7 +833,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ void
+    HBEM_ATTR_HOST HBEM_ATTR_DEV void
     CUDAFullMatrix<T>::reinit()
     {
       for (size_type i = 0; i < n_elements(); i++)

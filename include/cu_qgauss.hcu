@@ -16,6 +16,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "config.h"
 #include "cu_table.hcu"
 #include "quadrature.templates.h"
 
@@ -40,7 +41,7 @@ namespace HierBEM
        * @param n Total number of quadrature points, not the number of points
        * in a direction.
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       allocate(const unsigned int n);
 
       /**
@@ -51,13 +52,13 @@ namespace HierBEM
        *
        * @param quad_cpu
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       assign_from_host(const QGauss<dim> &quad_cpu);
 
       /**
        * Release the memory on the device.
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       release();
 
       /**
@@ -66,7 +67,7 @@ namespace HierBEM
        *
        * @return
        */
-      __host__ __device__ unsigned int
+      HBEM_ATTR_HOST HBEM_ATTR_DEV unsigned int
       size() const;
 
       /**
@@ -74,7 +75,7 @@ namespace HierBEM
        *
        * @return
        */
-      __host__ __device__ const CUDATable<2, double>                           &
+      HBEM_ATTR_HOST HBEM_ATTR_DEV const CUDATable<2, double>                           &
       get_points() const;
 
       /**
@@ -83,7 +84,7 @@ namespace HierBEM
        *
        * @return
        */
-      __host__ __device__ const double *
+      HBEM_ATTR_HOST HBEM_ATTR_DEV const double *
       get_weights() const;
 
     private:
@@ -103,7 +104,7 @@ namespace HierBEM
 
 
     template <int dim>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDAQGauss<dim>::allocate(const unsigned int n)
     {
       quad_num = n;
@@ -119,7 +120,7 @@ namespace HierBEM
 
 
     template <int dim>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDAQGauss<dim>::assign_from_host(const QGauss<dim> &quad_cpu)
     {
       AssertDimension(quad_num, quad_cpu.size());
@@ -139,7 +140,7 @@ namespace HierBEM
 
 
     template <int dim>
-    __host__ void
+    HBEM_ATTR_HOST void
     CUDAQGauss<dim>::release()
     {
       quad_num = 0;
@@ -155,7 +156,7 @@ namespace HierBEM
 
 
     template <int dim>
-    __host__ __device__ inline unsigned int
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline unsigned int
     CUDAQGauss<dim>::size() const
     {
       return quad_num;
@@ -163,7 +164,7 @@ namespace HierBEM
 
 
     template <int dim>
-    __host__ __device__ inline const CUDATable<2, double>          &
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline const CUDATable<2, double>          &
     CUDAQGauss<dim>::get_points() const
     {
       return points;
@@ -171,7 +172,7 @@ namespace HierBEM
 
 
     template <int dim>
-    __host__ __device__ inline const double *
+    HBEM_ATTR_HOST HBEM_ATTR_DEV inline const double *
     CUDAQGauss<dim>::get_weights() const
     {
       return weights;

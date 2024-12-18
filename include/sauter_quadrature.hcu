@@ -37,9 +37,9 @@
 #include "bem_values.hcu"
 #include "config.h"
 #include "cu_bem_values.hcu"
+#include "cu_debug_tools.hcu"
 #include "cu_profile.hcu"
 #include "cu_qgauss.hcu"
-#include "cu_debug_tools.hcu"
 #include "hmatrix.h"
 #include "mapping/mapping_q_generic_ext.h"
 #include "sauter_quadrature_tools.h"
@@ -1494,7 +1494,7 @@ namespace HierBEM
      * @param tid
      */
     template <typename RangeNumberType = double>
-    __device__ void
+    HBEM_ATTR_DEV void
     warpReduce(volatile RangeNumberType *data, const unsigned int tid)
     {
       assert(warpSize == 32);
@@ -2444,7 +2444,7 @@ namespace HierBEM
        * necessary data sizes, such as the number of shape functions used by the
        * mapping objects, the number of quadrature points, etc.
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       allocate(const CellNeighboringType       neighboring_type,
                const unsigned int              num_to_fetch,
                const BEMValues<dim, spacedim> &bem_values);
@@ -2452,28 +2452,28 @@ namespace HierBEM
       /**
        * Release the memory on the host and device.
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       release();
 
-      __host__ unsigned int
+      HBEM_ATTR_HOST unsigned int
       task_num_during_creation() const;
 
-      __host__ unsigned int
+      HBEM_ATTR_HOST unsigned int
       task_num_ready_for_processing() const;
 
-      __host__ unsigned int
+      HBEM_ATTR_HOST unsigned int
       task_num_during_processing() const;
 
-      __host__ unsigned
+      HBEM_ATTR_HOST unsigned
       task_num_total() const;
 
-      __host__ bool
+      HBEM_ATTR_HOST bool
       is_full() const;
 
-      __host__ bool
+      HBEM_ATTR_HOST bool
       is_not_full() const;
 
-      __host__ bool
+      HBEM_ATTR_HOST bool
       is_empty() const;
 
       /**
@@ -2504,7 +2504,7 @@ namespace HierBEM
        * any.
        * @param scratch_data
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       add_task(LAPACKFullMatrixExt<RangeNumberType> *fullmat,
                const unsigned int                    fullmat_row_index,
                const unsigned int                    fullmat_col_index,
@@ -2522,7 +2522,7 @@ namespace HierBEM
        * neighboring types.
        */
       template <template <int, typename> typename KernelFunctionType>
-      __host__ bool
+      HBEM_ATTR_HOST bool
       fetch_and_process_task_batch(
         const KernelFunctionType<spacedim, RangeNumberType> &kernel,
         const RangeNumberType                                kernel_factor,
@@ -2537,7 +2537,7 @@ namespace HierBEM
        *
        * @param log_stream
        */
-      __host__ void
+      HBEM_ATTR_HOST void
       print_pointers(LogStream &log_stream) const;
 
       /**
@@ -4304,7 +4304,7 @@ namespace HierBEM
 
 
     template <int capacity, int dim, int spacedim, typename RangeNumberType>
-    __host__ void
+    HBEM_ATTR_HOST void
     SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
       allocate(const CellNeighboringType       neighboring_type,
                const unsigned int              num_to_fetch,
@@ -4376,7 +4376,7 @@ namespace HierBEM
 
 
     template <int capacity, int dim, int spacedim, typename RangeNumberType>
-    __host__ void
+    HBEM_ATTR_HOST void
     SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
       release()
     {
@@ -4412,7 +4412,7 @@ namespace HierBEM
 
 
     template <int capacity, int dim, int spacedim, typename RangeNumberType>
-    __host__ inline unsigned int
+    HBEM_ATTR_HOST inline unsigned int
     SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
       task_num_during_creation() const
     {
@@ -4426,7 +4426,7 @@ namespace HierBEM
 
 
     template <int capacity, int dim, int spacedim, typename RangeNumberType>
-    __host__ inline unsigned int
+    HBEM_ATTR_HOST inline unsigned int
     SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
       task_num_ready_for_processing() const
     {
@@ -4437,7 +4437,7 @@ namespace HierBEM
 
 
     template <int capacity, int dim, int spacedim, typename RangeNumberType>
-    __host__ inline unsigned int
+    HBEM_ATTR_HOST inline unsigned int
     SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
       task_num_during_processing() const
     {
@@ -4448,7 +4448,7 @@ namespace HierBEM
 
 
     template <int capacity, int dim, int spacedim, typename RangeNumberType>
-    __host__ inline unsigned int
+    HBEM_ATTR_HOST inline unsigned int
     SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
       task_num_total() const
     {
@@ -4459,7 +4459,7 @@ namespace HierBEM
 
 
     template <int capacity, int dim, int spacedim, typename RangeNumberType>
-    __host__ inline bool
+    HBEM_ATTR_HOST inline bool
     SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
       is_full() const
     {
@@ -4470,7 +4470,7 @@ namespace HierBEM
 
 
     template <int capacity, int dim, int spacedim, typename RangeNumberType>
-    __host__ inline bool
+    HBEM_ATTR_HOST inline bool
     SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
       is_not_full() const
     {
@@ -4481,7 +4481,7 @@ namespace HierBEM
 
 
     template <int capacity, int dim, int spacedim, typename RangeNumberType>
-    __host__ inline bool
+    HBEM_ATTR_HOST inline bool
     SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
       is_empty() const
     {
@@ -4490,7 +4490,7 @@ namespace HierBEM
 
 
     template <int capacity, int dim, int spacedim, typename RangeNumberType>
-    __host__ void
+    HBEM_ATTR_HOST void
     SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
       add_task(LAPACKFullMatrixExt<RangeNumberType> *fullmat,
                const unsigned int                    fullmat_row_index,
@@ -4662,7 +4662,7 @@ namespace HierBEM
 
     template <int capacity, int dim, int spacedim, typename RangeNumberType>
     template <template <int, typename> typename KernelFunctionType>
-    __host__ bool
+    HBEM_ATTR_HOST bool
     SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
       fetch_and_process_task_batch(
         const KernelFunctionType<spacedim, RangeNumberType> &kernel,
@@ -7269,7 +7269,7 @@ namespace HierBEM
    * @param active_quad_rule
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
-  __host__ void
+  HBEM_ATTR_HOST void
   calc_jacobian_normals_for_sauter_quad(
     const CellNeighboringType                        cell_neighboring_type,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
@@ -7530,7 +7530,7 @@ namespace HierBEM
    * @param active_quad_rule
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
-  __host__ void
+  HBEM_ATTR_HOST void
   calc_covariant_transformations(
     const CellNeighboringType                        cell_neighboring_type,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
@@ -7693,7 +7693,7 @@ namespace HierBEM
             template <int, typename>
             typename KernelFunctionType,
             typename RangeNumberType = double>
-  __host__ RangeNumberType
+  HBEM_ATTR_HOST RangeNumberType
   ApplyQuadratureUsingBEMValues(
     const Quadrature<dim * 2> &quad_rule,
     const HierBEM::CUDAWrappers::KernelPulledbackToSauterSpace<
