@@ -112,11 +112,11 @@ main()
     /**
      * Create different Laplace kernel functions.
      */
-    HierBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<spacedim> slp;
-    HierBEM::CUDAWrappers::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
-    HierBEM::CUDAWrappers::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
+    HierBEM::CrossPlatform::LaplaceKernel::SingleLayerKernel<spacedim> slp;
+    HierBEM::CrossPlatform::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
+    HierBEM::CrossPlatform::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
                                                                         adlp;
-    HierBEM::CUDAWrappers::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
+    HierBEM::CrossPlatform::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
 
 
     /**
@@ -311,11 +311,11 @@ main()
     /**
      * Create different Laplace kernel functions.
      */
-    HierBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<spacedim> slp;
-    HierBEM::CUDAWrappers::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
-    HierBEM::CUDAWrappers::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
+    HierBEM::CrossPlatform::LaplaceKernel::SingleLayerKernel<spacedim> slp;
+    HierBEM::CrossPlatform::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
+    HierBEM::CrossPlatform::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
                                                                         adlp;
-    HierBEM::CUDAWrappers::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
+    HierBEM::CrossPlatform::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
 
     /**
      * Generate 4D Gauss-Legendre quadrature rules for various cell neighboring

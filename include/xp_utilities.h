@@ -1,19 +1,20 @@
 /**
- * @file utilities.hcu
- * @brief Introduction of utilities.hcu
+ * @file xp_utilities.h
+ * @brief Introduction of xp_utilities.h
  *
  * @date 2023-02-19
  * @author Jihuan Tian
  */
-#ifndef INCLUDE_UTILITIES_HCU_
-#define INCLUDE_UTILITIES_HCU_
+#ifndef INCLUDE_UTILITIES_XP_H_
+#define INCLUDE_UTILITIES_XP_H_
 
+#include "config.h"
 
 namespace HierBEM
 {
   namespace Utilities
   {
-    namespace CUDAWrappers
+    namespace CrossPlatform
     {
       template <int N, typename T>
       HBEM_ATTR_HOST HBEM_ATTR_DEV inline T
@@ -28,9 +29,9 @@ namespace HierBEM
           return ((N % 2 == 1) ? x * fixed_power<N / 2>(x * x) :
                                  fixed_power<N / 2>(x * x));
       }
-    } // namespace CUDAWrappers
-  }   // namespace Utilities
+    } // namespace CrossPlatform
+  } // namespace Utilities
 } // namespace HierBEM
 
 
-#endif /* INCLUDE_UTILITIES_HCU_ */
+#endif /* INCLUDE_UTILITIES_XP_H_ */

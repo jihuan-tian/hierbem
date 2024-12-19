@@ -10,6 +10,8 @@
 
 #include <assert.h>
 
+#include "config.h"
+
 namespace HierBEM
 {
   namespace CUDAWrappers
@@ -71,7 +73,7 @@ namespace HierBEM
        * @param vec
        * @return
        */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAVector<T>                     &
+      HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAVector<T>                              &
       operator=(const CUDAVector<T> &vec);
 
       /**
@@ -80,7 +82,7 @@ namespace HierBEM
        * @param vec
        * @return
        */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAVector<T>                     &
+      HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAVector<T>                              &
       operator=(CUDAVector<T> &&vec);
 
 
@@ -197,7 +199,7 @@ namespace HierBEM
 
 
     template <typename T>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAVector<T>                     &
+    HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAVector<T> &
     CUDAVector<T>::operator=(const CUDAVector<T> &vec)
     {
       assert(n == vec.n);
@@ -212,7 +214,7 @@ namespace HierBEM
 
 
     template <typename T>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAVector<T>                     &
+    HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAVector<T>                              &
     CUDAVector<T>::operator=(CUDAVector<T> &&vec)
     {
       values = vec.values;
@@ -243,7 +245,7 @@ namespace HierBEM
 
     template <typename T>
     HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::size_type
-             CUDAVector<T>::size() const
+                   CUDAVector<T>::size() const
     {
       return n;
     }
@@ -251,7 +253,7 @@ namespace HierBEM
 
     template <typename T>
     HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::pointer
-             CUDAVector<T>::data()
+                   CUDAVector<T>::data()
     {
       return values;
     }
@@ -259,7 +261,7 @@ namespace HierBEM
 
     template <typename T>
     HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::const_pointer
-             CUDAVector<T>::data() const
+                   CUDAVector<T>::data() const
     {
       return values;
     }
@@ -267,7 +269,7 @@ namespace HierBEM
 
     template <typename T>
     HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::reference
-             CUDAVector<T>::operator()(const size_type i)
+                   CUDAVector<T>::operator()(const size_type i)
     {
       return values[i];
     }
@@ -275,7 +277,7 @@ namespace HierBEM
 
     template <typename T>
     HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::reference
-             CUDAVector<T>::operator[](const size_type i)
+                   CUDAVector<T>::operator[](const size_type i)
     {
       return values[i];
     }
@@ -283,7 +285,7 @@ namespace HierBEM
 
     template <typename T>
     HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::const_reference
-             CUDAVector<T>::operator()(const size_type i) const
+                   CUDAVector<T>::operator()(const size_type i) const
     {
       return values[i];
     }
@@ -291,7 +293,7 @@ namespace HierBEM
 
     template <typename T>
     HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::const_reference
-             CUDAVector<T>::operator[](const size_type i) const
+                   CUDAVector<T>::operator[](const size_type i) const
     {
       return values[i];
     }

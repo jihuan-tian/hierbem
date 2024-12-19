@@ -44,22 +44,13 @@
 #include "cu_vector.hcu"
 #include "generic_functors.h"
 #include "lapack_full_matrix_ext.h"
-#include "utilities.hcu"
+#include "xp_laplace_kernels.h"
+#include "xp_utilities.h"
 
 namespace HierBEM
 {
   using namespace dealii;
   using namespace BEMTools;
-
-  enum KernelType
-  {
-    SingleLayer,
-    DoubleLayer,
-    AdjointDoubleLayer,
-    HyperSingular,
-    HyperSingularRegular,
-    NoneType
-  };
 
   namespace CUDAWrappers
   {
@@ -1158,7 +1149,7 @@ namespace HierBEM
               const CUDATable<2, double> &quad_points =
                 bem_values.quad_rule_for_common_vertex.get_points();
               double jacobian_det =
-                HierBEM::Utilities::CUDAWrappers::fixed_power<3>(
+                HierBEM::Utilities::CrossPlatform::fixed_power<3>(
                   quad_points(quad_no, 0));
 
 #pragma unroll

@@ -1647,8 +1647,8 @@ namespace HierBEM
                       component) *
                     scratch_data.kx_jacobians_same_panel(k3_index, quad_no) *
                     scratch_data.ky_jacobians_same_panel(k3_index, quad_no) *
-                    scalar_product(kx_shape_surface_curl,
-                                   ky_shape_surface_curl);
+                    HierBEM::CrossPlatform::scalar_product(
+                      kx_shape_surface_curl, ky_shape_surface_curl);
                 }
               else
                 {
@@ -1867,8 +1867,8 @@ namespace HierBEM
                       component) *
                     scratch_data.kx_jacobians_common_edge(k3_index, quad_no) *
                     scratch_data.ky_jacobians_common_edge(k3_index, quad_no) *
-                    scalar_product(kx_shape_surface_curl,
-                                   ky_shape_surface_curl) *
+                    HierBEM::CrossPlatform::scalar_product(
+                      kx_shape_surface_curl, ky_shape_surface_curl) *
                     (k3_index <= 1 ? jacobian_det1 : jacobian_det2);
                 }
               else
@@ -2077,8 +2077,8 @@ namespace HierBEM
                       component) *
                     scratch_data.kx_jacobians_common_vertex(k3_index, quad_no) *
                     scratch_data.ky_jacobians_common_vertex(k3_index, quad_no) *
-                    scalar_product(kx_shape_surface_curl,
-                                   ky_shape_surface_curl);
+                    HierBEM::CrossPlatform::scalar_product(
+                      kx_shape_surface_curl, ky_shape_surface_curl);
                 }
               else
                 {
@@ -2113,7 +2113,7 @@ namespace HierBEM
            */
           quad_values_in_thread_block[tid] =
             kernel_value *
-            HierBEM::Utilities::CUDAWrappers::fixed_power<3>(
+            HierBEM::Utilities::CrossPlatform::fixed_power<3>(
               quad_points(quad_no, 0)) *
             bem_values.quad_rule_for_common_vertex.get_weights()[quad_no];
         }
@@ -2269,7 +2269,8 @@ namespace HierBEM
                   component) *
                 scratch_data.kx_jacobians_regular(0, quad_no) *
                 scratch_data.ky_jacobians_regular(0, quad_no) *
-                scalar_product(kx_shape_surface_curl, ky_shape_surface_curl) *
+                HierBEM::CrossPlatform::scalar_product(kx_shape_surface_curl,
+                                                       ky_shape_surface_curl) *
                 bem_values.quad_rule_for_regular.get_weights()[quad_no];
             }
           else
@@ -3182,13 +3183,14 @@ namespace HierBEM
                           cross_product_3d(ky_normal,
                                            ky_shape_grad_in_real_cell_vector);
 
-                      kernel_value += kernel.value(kx_quad_point,
-                                                   ky_quad_point,
-                                                   kx_normal,
-                                                   ky_normal) *
-                                      kx_jacobian * ky_jacobian *
-                                      scalar_product(kx_shape_surface_curl,
-                                                     ky_shape_surface_curl);
+                      kernel_value +=
+                        kernel.value(kx_quad_point,
+                                     ky_quad_point,
+                                     kx_normal,
+                                     ky_normal) *
+                        kx_jacobian * ky_jacobian *
+                        HierBEM::CrossPlatform::scalar_product(
+                          kx_shape_surface_curl, ky_shape_surface_curl);
                     }
                   else
                     {
@@ -3478,8 +3480,8 @@ namespace HierBEM
                                      kx_normal,
                                      ky_normal) *
                         kx_jacobian * ky_jacobian *
-                        scalar_product(kx_shape_surface_curl,
-                                       ky_shape_surface_curl) *
+                        HierBEM::CrossPlatform::scalar_product(
+                          kx_shape_surface_curl, ky_shape_surface_curl) *
                         (k3_index <= 1 ? jacobian_det1 : jacobian_det2);
                     }
                   else
@@ -3754,13 +3756,14 @@ namespace HierBEM
                           cross_product_3d(ky_normal,
                                            ky_shape_grad_in_real_cell_vector);
 
-                      kernel_value += kernel.value(kx_quad_point,
-                                                   ky_quad_point,
-                                                   kx_normal,
-                                                   ky_normal) *
-                                      kx_jacobian * ky_jacobian *
-                                      scalar_product(kx_shape_surface_curl,
-                                                     ky_shape_surface_curl);
+                      kernel_value +=
+                        kernel.value(kx_quad_point,
+                                     ky_quad_point,
+                                     kx_normal,
+                                     ky_normal) *
+                        kx_jacobian * ky_jacobian *
+                        HierBEM::CrossPlatform::scalar_product(
+                          kx_shape_surface_curl, ky_shape_surface_curl);
                     }
                   else
                     {
@@ -3783,7 +3786,7 @@ namespace HierBEM
 
               quad_value +=
                 kernel_value *
-                HierBEM::Utilities::CUDAWrappers::fixed_power<3>(
+                HierBEM::Utilities::CrossPlatform::fixed_power<3>(
                   quad_points(quad_no, 0)) *
                 bem_values.quad_rule_for_common_vertex.get_weights()[quad_no];
             }
@@ -4002,8 +4005,8 @@ namespace HierBEM
                                  kx_normal,
                                  ky_normal) *
                     kx_jacobian * ky_jacobian *
-                    scalar_product(kx_shape_surface_curl,
-                                   ky_shape_surface_curl) *
+                    HierBEM::CrossPlatform::scalar_product(
+                      kx_shape_surface_curl, ky_shape_surface_curl) *
                     bem_values.quad_rule_for_regular.get_weights()[quad_no];
                 }
               else
@@ -4212,7 +4215,8 @@ namespace HierBEM
                              kx_normal,
                              ky_normal) *
                 kx_jacobian * ky_jacobian *
-                scalar_product(kx_shape_surface_curl, ky_shape_surface_curl) *
+                HierBEM::CrossPlatform::scalar_product(kx_shape_surface_curl,
+                                                       ky_shape_surface_curl) *
                 bem_values.quad_rule_for_regular.get_weights()[quad_no];
             }
           else

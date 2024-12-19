@@ -64,7 +64,7 @@
 #include "hmatrix.h"
 #include "hmatrix_symm.h"
 #include "hmatrix_symm_preconditioner.h"
-#include "laplace_kernels.hcu"
+#include "xp_laplace_kernels.h"
 #include "mapping/mapping_info.h"
 #include "quadrature.templates.h"
 #include "read_octave_data.h"
@@ -740,22 +740,22 @@ namespace HierBEM
     /**
      * Kernel function for the single layer potential.
      */
-    HierBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<3>
+    HierBEM::CrossPlatform::LaplaceKernel::SingleLayerKernel<3>
       single_layer_kernel;
     /**
      * Kernel function for the double layer potential.
      */
-    HierBEM::CUDAWrappers::LaplaceKernel::DoubleLayerKernel<3>
+    HierBEM::CrossPlatform::LaplaceKernel::DoubleLayerKernel<3>
       double_layer_kernel;
     /**
      * Kernel function for the adjoint double layer potential.
      */
-    HierBEM::CUDAWrappers::LaplaceKernel::AdjointDoubleLayerKernel<3>
+    HierBEM::CrossPlatform::LaplaceKernel::AdjointDoubleLayerKernel<3>
       adjoint_double_layer_kernel;
     /**
      * Kernel function for the hyper-singular potential.
      */
-    HierBEM::CUDAWrappers::LaplaceKernel::HyperSingularKernelRegular<3>
+    HierBEM::CrossPlatform::LaplaceKernel::HyperSingularKernelRegular<3>
       hyper_singular_kernel;
 
     /**

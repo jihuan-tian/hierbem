@@ -53,11 +53,11 @@
 #include "dof_tools_ext.h"
 #include "generic_functors.h"
 #include "grid_out_ext.h"
-#include "laplace_kernels.hcu"
 #include "mapping/mapping_info.h"
 #include "sauter_quadrature.hcu"
 #include "subdomain_steklov_poincare_hmatrix.h"
 #include "subdomain_topology.h"
+#include "xp_laplace_kernels.h"
 
 namespace HierBEM
 {
@@ -476,17 +476,17 @@ namespace HierBEM
     /**
      * Kernel function for the single layer potential.
      */
-    HierBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<3>
+    HierBEM::CrossPlatform::LaplaceKernel::SingleLayerKernel<3>
       single_layer_kernel;
     /**
      * Kernel function for the double layer potential.
      */
-    HierBEM::CUDAWrappers::LaplaceKernel::DoubleLayerKernel<3>
+    HierBEM::CrossPlatform::LaplaceKernel::DoubleLayerKernel<3>
       double_layer_kernel;
     /**
      * Kernel function for the hyper-singular potential.
      */
-    HierBEM::CUDAWrappers::LaplaceKernel::HyperSingularKernelRegular<3>
+    HierBEM::CrossPlatform::LaplaceKernel::HyperSingularKernelRegular<3>
       hyper_singular_kernel;
 
     /**

@@ -147,7 +147,7 @@ main(int argc, char *argv[])
   FE_DGQ<dim, spacedim>     fe(0);
   DoFHandler<dim, spacedim> dof_handler(tria);
 
-  HierBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<spacedim>
+  HierBEM::CrossPlatform::LaplaceKernel::SingleLayerKernel<spacedim>
     single_layer_kernel;
 
   TableHandler table;

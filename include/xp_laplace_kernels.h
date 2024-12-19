@@ -1,24 +1,37 @@
 /**
- * @file laplace_kernels.h
- * @brief Introduction of laplace_kernels.h
+ * @file xp_laplace_kernels.h
+ * @brief Introduction of xp_laplace_kernels.h
  *
  * @date 2022-03-04
  * @author Jihuan Tian
  */
-#ifndef INCLUDE_LAPLACE_KERNELS_HCU_
-#define INCLUDE_LAPLACE_KERNELS_HCU_
+#ifndef INCLUDE_LAPLACE_KERNELS_XP_H_
+#define INCLUDE_LAPLACE_KERNELS_XP_H_
+
+#include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
 
 #include <assert.h>
 
-#include "bem_kernels.hcu"
 #include "config.h"
-#include "utilities.hcu"
+#include "xp_tensor.h"
+#include "xp_utilities.h"
 
 namespace HierBEM
 {
   using namespace dealii;
 
-  namespace CUDAWrappers
+  enum KernelType
+  {
+    SingleLayer,
+    DoubleLayer,
+    AdjointDoubleLayer,
+    HyperSingular,
+    HyperSingularRegular,
+    NoneType
+  };
+
+  namespace CrossPlatform
   {
     namespace LaplaceKernel
     {
@@ -160,7 +173,7 @@ namespace HierBEM
 
             case 3:
               return scalar_product((x - y), ny) / 4.0 / numbers::PI /
-                     HierBEM::Utilities::CUDAWrappers::fixed_power<3>(
+                     HierBEM::Utilities::CrossPlatform::fixed_power<3>(
                        (x - y).norm());
 
             default:
@@ -230,7 +243,7 @@ namespace HierBEM
 
             case 3:
               return scalar_product((y - x), nx) / 4.0 / numbers::PI /
-                     HierBEM::Utilities::CUDAWrappers::fixed_power<3>(
+                     HierBEM::Utilities::CrossPlatform::fixed_power<3>(
                        (x - y).norm());
 
             default:
@@ -427,7 +440,7 @@ namespace HierBEM
         return true;
       }
     } // namespace LaplaceKernel
-  } // namespace CUDAWrappers
+  } // namespace CrossPlatform
 } // namespace HierBEM
 
-#endif /* INCLUDE_LAPLACE_KERNELS_HCU_ */
+#endif /* INCLUDE_LAPLACE_KERNELS_XP_H_ */
