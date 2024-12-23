@@ -7009,6 +7009,334 @@ In the mixed boundary value problem, we need two definitions.
   \end{itemize}
 \end{itemize}
 
+\section{Functional call hierarchy for assembling a full matrix}
+Double loop over each pair of cells $K_x$ and $K_y$ is used to assemble a full matrix as
+the Galerkin discretization of an integral operator. In the parallel version, TBB is used
+to parallelize the inner loop over $K_y$. \textbf{CUDA is not used in either serial or
+  parallel version.}
+
+\subsection{Serial version}
+\label{sec:orgb7c4d87}
+
+\begin{codeitemize}
+\item \texttt{assemble\_bem\_full\_matrix\_serial} \hfill \texttt{bem\_general.h}
+  \begin{codeitemize}
+  \item \texttt{sauter\_quadrature\_on\_one\_pair\_of\_cells} \hfill \texttt{sauter\_quadrature.hcu}
+    \begin{codeitemize}
+    \item \texttt{permute\_dofs\_and\_mapping\_support\_points\_for\_sauter\_quad} \hfill \texttt{sauter\_quadrature.hcu}
+    \item \texttt{calc\_jacobian\_normals\_for\_sauter\_quad} \hfill \texttt{sauter\_quadrature.hcu}
+      \begin{codeitemize}
+      \item \texttt{surface\_jacobian\_det\_and\_normal\_vector} \hfill \texttt{bem\_tools.hcu}
+      \item \texttt{transform\_quad\_point\_from\_unit\_to\_permuted\_real\_cell} \hfill \texttt{bem\_tools.hcu}
+      \end{codeitemize}
+    \item \texttt{calc\_covariant\_transformations} \hfill \texttt{sauter\_quadrature.hcu}
+      \begin{codeitemize}
+      \item \texttt{surface\_covariant\_transformation} \hfill \texttt{bem\_tools.hcu}
+      \end{codeitemize}
+    \item \texttt{ApplyQuadratureUsingBEMValues} \hfill \texttt{sauter\_quadrature.hcu}
+    \end{codeitemize}
+  \end{codeitemize}
+\end{codeitemize}
+
+\subsection{TBB parallel version}
+\label{sec:orgf510e5f}
+
+\begin{codeitemize}
+\item \texttt{assemble\_bem\_full\_matrix} \hfill \texttt{bem\_general.h}
+  \begin{codeitemize}
+  \item \texttt{sauter\_quadrature\_on\_one\_pair\_of\_cells\_parallel\_over\_ky} \hfill \texttt{sauter\_quadrature.hcu}
+    \begin{codeitemize}
+    \item \texttt{sauter\_quadrature\_on\_one\_pair\_of\_cells} \hfill \texttt{sauter\_quadrature.hcu}
+      \begin{codeitemize}
+      \item \texttt{permute\_dofs\_and\_mapping\_support\_points\_for\_sauter\_quad} \hfill \texttt{sauter\_quadrature.hcu}
+      \item \texttt{calc\_jacobian\_normals\_for\_sauter\_quad} \hfill \texttt{sauter\_quadrature.hcu}
+        \begin{codeitemize}
+        \item \texttt{surface\_jacobian\_det\_and\_normal\_vector} \hfill \texttt{bem\_tools.hcu}
+        \item \texttt{transform\_quad\_point\_from\_unit\_to\_permuted\_real\_cell} \hfill \texttt{bem\_tools.hcu}
+        \end{codeitemize}
+      \item \texttt{calc\_covariant\_transformations} \hfill \texttt{sauter\_quadrature.hcu}
+        \begin{codeitemize}
+        \item \texttt{surface\_covariant\_transformation} \hfill \texttt{bem\_tools.hcu}
+        \end{codeitemize}
+      \item \texttt{ApplyQuadratureUsingBEMValues} \hfill \texttt{sauter\_quadrature.hcu}
+      \end{codeitemize}
+    \end{codeitemize}
+  \end{codeitemize}
+\end{codeitemize}
+
+\section{Functional call hierarchy for assembling an $\mathcal{H}$-matrix}
+
+Generally, there are three overloaded functions for building an \(\mathcal{H}\)-matrix
+related to an boundary integral operator:
+\begin{enumerate}
+\item \(\mathcal{H}\)-matrix, e.g. matrix $\mathcal{V}$ for the single layer potential operator $V$.
+\item \(\mathcal{H}\)-matrix plus a mass matrix, e.g. matrix
+  $\frac{1}{2}\mathcal{M} + \mathcal{K}$ related to the double layer potential operator
+  $K$ plus the identity operator $\frac{1}{2}I$.
+\item \(\mathcal{H}\)-matrix plus a stabilization or regularization term, e.g. matrix
+  $\widetilde{\mathcal{D}}$ for the modified bilinear form associated with the
+  hypersingular operator $D$:
+  \begin{equation}
+    \langle \widetilde{D}u, v \rangle = \langle Du,v \rangle + \alpha \langle u,1
+     \rangle\cdot \langle v,1 \rangle,
+  \end{equation}
+  or
+  \begin{equation}
+    \langle \widetilde{D}u, v \rangle = \langle Du,v \rangle + \alpha \langle u,w_{\mathrm{eq}}
+    \rangle\cdot \langle v,w_{\mathrm{eq}} \rangle.
+  \end{equation}
+\end{enumerate}
+Because the mass matrix $\mathcal{M}$ above only contributes to near field
+$\mathcal{H}$-matrix blocks, when we build a far field $\mathcal{H}$-matrix block, there
+are only the two overloaded versions 1 and 3.
+
+\subsection{Serial on CPU + CUDA version}
+\label{sec:org4e26621}
+The function runs in serial mode on CPU without using TBB. For Sauter quadrature during
+the assembly of both near field and far field \(\mathcal{H}\)-matrix blocks, iterations
+are performed over each pair of cells in the support sets of each pair of DoFs. For each
+of such Sauter quadrature, the $k_3$ terms and quadrature points are distributed to GPU
+threads. Obviously, because Sauter quadrature tasks are not collected for batch
+processing, the GPU parallelization efficiency in this implementation is low.
+
+The function call hierarchy is below.
+\begin{codeitemize}
+\item \texttt{fill\_hmatrix\_with\_aca\_plus\_serial} (3 versions) \hfill
+  \texttt{aca\_plus.hcu}
+  \begin{codeitemize}
+  \item \texttt{fill\_hmatrix\_leaf\_node\_with\_aca\_plus} (3 versions) \hfill
+    \texttt{aca\_plus.hcu}
+    \begin{codeitemize}
+    \item \texttt{sauter\_assemble\_on\_one\_pair\_of\_dofs} (2 versions) \hfill
+      \texttt{sauter\_quadrature.hcu}
+      \begin{codeitemize}
+      \item \texttt{permute\_dofs\_and\_mapping\_support\_points\_for\_sauter\_quad}
+        \hfill \texttt{sauter\_quadrature.hcu}
+      \item
+        \texttt{CUDAWrappers::calc\_jacobian\_normals\_for\_sauter\_quad\_\{neighboring\_type\}}
+        \hfill \texttt{sauter\_quadrature.hcu}
+        
+        \emph{N.B. To reduce the cost on branching, for each cell neighboring type, a
+          kernel function is defined. The suffix \texttt{\{neighboring\_type\}} in the
+          function name can be: \texttt{same\_panel}, \texttt{common\_edge},
+          \texttt{common\_vertex}, \texttt{regular}.}
+        \begin{codeitemize}
+        \item \texttt{BEMTools::CUDAWrappers::surface\_jacobian\_det\_and\_normal\_vector}
+          \hfill \texttt{bem\_tools.hcu}
+        \item
+          \texttt{BEMTools::CUDAWrappers::transform\_quad\_point\_from\_unit\_to\_permuted\_real\_cell}
+          \hfill \texttt{bem\_tools.hcu}
+        \end{codeitemize}
+      \item \texttt{CUDAWrappers::calc\_covariant\_transformations\_\{neighboring\_type\}}
+        \hfill \texttt{sauter\_quadrature.hcu}
+        \begin{codeitemize}
+        \item \texttt{BEMTools::CUDAWrappers::surface\_covariant\_transformation} \hfill
+          \texttt{bem\_tools.hcu}
+        \end{codeitemize}
+      \item \texttt{CUDAWrappers::ApplyQuadratureUsingBEMValues\{NeighboringType\}} \hfill
+        \texttt{sauter\_quadrature.hcu}
+      \end{codeitemize}
+    \item \texttt{aca\_plus\_parallel\_sauter\_quad\_for\_vector\_entry} (2 versions) \hfill \texttt{aca\_plus.hcu}
+      \begin{codeitemize}
+      \item \texttt{random\_select\_ref\_row(Vector, ...)} (2 versions) \hfill \texttt{aca\_plus.hcu}
+        \begin{codeitemize}
+        \item \texttt{assemble\_kernel\_row(Vector, ...)} (2 versions) \hfill \texttt{aca\_plus.hcu}
+          \begin{codeitemize}
+          \item \texttt{sauter\_quadrature\_on\_one\_pair\_of\_far\_field\_dofs} \hfill
+            \texttt{sauter\_quadrature.hcu}
+            
+            \emph{The following functions calls are the same to those under
+            \texttt{sauter\_assemble\_on\_one\_pair\_of\_dofs} which is called by
+            \texttt{fill\_hmatrix\_with\_aca\_plus\_serial}.}
+            \begin{codeitemize}
+            \item \texttt{permute\_dofs\_and\_mapping\_support\_points\_for\_sauter\_quad}
+              \hfill \texttt{sauter\_quadrature.hcu}
+            \item
+              \texttt{CUDAWrappers::calc\_jacobian\_normals\_for\_sauter\_quad\_regular}
+              \hfill \texttt{sauter\_quadrature.hcu}
+              \begin{codeitemize}
+              \item
+                \texttt{BEMTools::CUDAWrappers::surface\_jacobian\_det\_and\_normal\_vector}
+                \hfill \texttt{bem\_tools.hcu}
+              \item
+                \texttt{BEMTools::CUDAWrappers::transform\_quad\_point\_from\_unit\_to\_permuted\_real\_cell}
+                \hfill \texttt{bem\_tools.hcu}
+              \end{codeitemize}
+            \item \texttt{CUDAWrappers::calc\_covariant\_transformations\_regular} \hfill
+              \texttt{sauter\_quadrature.hcu}
+              \begin{codeitemize}
+              \item \texttt{BEMTools::CUDAWrappers::surface\_covariant\_transformation}
+                \hfill \texttt{bem\_tools.hcu}
+              \end{codeitemize}
+            \item \texttt{CUDAWrappers::ApplyQuadratureUsingBEMValuesRegular} \hfill
+              \texttt{sauter\_quadrature.hcu}
+            \end{codeitemize}
+          \end{codeitemize}
+        \end{codeitemize}
+      \item \texttt{random\_select\_ref\_column(Vector, ...)} (2 versions) \hfill \texttt{aca\_plus.hcu}
+        \begin{codeitemize}
+        \item \texttt{assemble\_kernel\_column(Vector, ...)} (2 versions) \hfill \texttt{aca\_plus.hcu}
+          \begin{codeitemize}
+          \item \texttt{sauter\_quadrature\_on\_one\_pair\_of\_far\_field\_dofs} \hfill
+            \texttt{sauter\_quadrature.hcu}
+            \begin{codeitemize}
+            \item \texttt{permute\_dofs\_and\_mapping\_support\_points\_for\_sauter\_quad}
+              \hfill \texttt{sauter\_quadrature.hcu}
+            \item
+              \texttt{CUDAWrappers::calc\_jacobian\_normals\_for\_sauter\_quad\_regular}
+              \hfill \texttt{sauter\_quadrature.hcu}
+              \begin{codeitemize}
+              \item
+                \texttt{BEMTools::CUDAWrappers::surface\_jacobian\_det\_and\_normal\_vector}
+                \hfill \texttt{bem\_tools.hcu}
+              \item
+                \texttt{BEMTools::CUDAWrappers::transform\_quad\_point\_from\_unit\_to\_permuted\_real\_cell}
+                \hfill \texttt{bem\_tools.hcu}
+              \end{codeitemize}
+            \item \texttt{CUDAWrappers::calc\_covariant\_transformations\_regular} \hfill
+              \texttt{sauter\_quadrature.hcu}
+              \begin{codeitemize}
+              \item \texttt{BEMTools::CUDAWrappers::surface\_covariant\_transformation}
+                \hfill \texttt{bem\_tools.hcu}
+              \end{codeitemize}
+            \item \texttt{CUDAWrappers::ApplyQuadratureUsingBEMValuesRegular} \hfill
+              \texttt{sauter\_quadrature.hcu}
+            \end{codeitemize}
+          \end{codeitemize}
+        \end{codeitemize}
+      \end{codeitemize}
+    \end{codeitemize}
+  \end{codeitemize}
+\end{codeitemize}
+
+\subsection{TBB parallel + CUDA version}
+\label{sec:orgb2752cf}
+
+TBB is used to partition the near field leaf set of the $\mathcal{H}$-matrix into several
+ranges. Producer-consumer model is used for the assembly of near field
+\(\mathcal{H}\)-matrix blocks, during which Sauter quadrature tasks for different cell
+neighboring types are collected into their respective ring buffers and then sent to GPU
+for batch processing.
+
+For far field \(\mathcal{H}\)-matrix block assembly, a task buffer is adopted for
+assembling a whole row or whole column vector in the low-rank matrix. The computation of
+each vector entry is parallelized on GPU.
+
+\begin{codeitemize}
+\item \texttt{fill\_hmatrix\_with\_aca\_plus\_smp} (3 versions) \hfill
+  \texttt{aca\_plus.hcu}
+  \begin{codeitemize}
+  \item For near field \(\mathcal{H}\)-matrix blocks
+    \begin{codeitemize}
+    \item \texttt{sauter\_quadrature\_for\_near\_field\_matrix\_entries\_producer} (2
+      versions) \hfill \texttt{sauter\_quadrature.hcu}
+      \begin{codeitemize}
+      \item \texttt{create\_sauter\_quadrature\_tasks\_on\_one\_pair\_of\_dofs} (2
+        versions) \hfill \texttt{sauter\_quadrature.hcu}
+        \begin{codeitemize}
+        \item \texttt{permute\_dofs\_and\_mapping\_support\_points\_for\_sauter\_quad}
+          \hfill \texttt{sauter\_quadrature.hcu}
+        \item \texttt{SauterQuadratureTaskRingBuffer::add\_task} \hfill
+          \texttt{sauter\_quadrature.hcu}
+        \end{codeitemize}
+      \end{codeitemize}
+    \item \texttt{sauter\_quadrature\_for\_near\_field\_matrix\_entries\_consumer} \hfill
+      \texttt{sauter\_quadrature.hcu}
+      \begin{codeitemize}
+      \item \texttt{SauterQuadratureTaskScalarData::fetch\_and\_process\_task\_batch}
+        \hfill \texttt{sauter\_quadrature.hcu}
+        \begin{codeitemize}
+        \item
+          \texttt{process\_sauter\_task\_on\_one\_pair\_of\_dofs\_\{neighboring\_type\}}
+          \hfill \texttt{sauter\_quadrature.hcu}
+          \begin{codeitemize}
+          \item
+            \texttt{BEMTools::CUDAWrappers::surface\_jacobian\_det\_normal\_vector\_and\_covariant}
+            \hfill \texttt{bem\_tools.hcu}
+          \item
+            \texttt{BEMTools::CUDAWrappers::transform\_quad\_point\_from\_unit\_to\_permuted\_real\_cell}
+            \hfill \texttt{bem\_tools.hcu}
+          \end{codeitemize}
+        \end{codeitemize}
+      \end{codeitemize}
+    \end{codeitemize}
+  \item For far field \(\mathcal{H}\)-matrix blocks
+    \begin{codeitemize}
+    \item \texttt{fill\_far\_field\_hmatrix\_leaf\_node\_subrange\_with\_aca\_plus} (2
+      versions) \hfill \texttt{aca\_plus.hcu}
+      \begin{codeitemize}
+      \item \texttt{fill\_far\_field\_hmatrix\_leaf\_node\_with\_aca\_plus} (2 versions)
+        \hfill \texttt{aca\_plus.hcu}
+        \begin{codeitemize}
+        \item \texttt{aca\_plus\_parallel\_sauter\_quad\_for\_whole\_vector} (2 versions)
+          \hfill \texttt{aca\_plus.hcu}
+          \begin{codeitemize}
+          \item \texttt{random\_select\_ref\_row(SauterQuadratureTaskBufferForVector,
+              ...)} (2 versions) \hfill \texttt{aca\_plus.hcu}
+            \begin{codeitemize}
+            \item \texttt{assemble\_kernel\_row(SauterQuadratureTaskBufferForVector, ...)}
+              (2 versions) \hfill \texttt{aca\_plus.hcu}
+              \begin{codeitemize}
+              \item \texttt{create\_sauter\_quadrature\_tasks\_on\_one\_pair\_of\_dofs}
+                \hfill \texttt{sauter\_quadrature.hcu}
+                \begin{codeitemize}
+                \item
+                  \texttt{permute\_dofs\_and\_mapping\_support\_points\_for\_sauter\_quad}
+                  \hfill \texttt{sauter\_quadrature.hcu}
+                \end{codeitemize}
+              \item \texttt{SauterQuadratureTaskBufferForVector::process\_tasks} \hfill
+                \texttt{sauter\_quadrature.hcu}
+                \begin{codeitemize}
+                \item
+                  \texttt{process\_sauter\_tasks\_in\_buffer\_for\_far\_field\_hmat\_vector}
+                  \hfill \texttt{sauter\_quadrature.hcu}
+                  \begin{codeitemize}
+                  \item
+                    \texttt{BEMTools::CUDAWrappers::surface\_jacobian\_det\_normal\_vector\_and\_covariant}
+                    \hfill \texttt{bem\_tools.hcu}
+                  \item
+                    \texttt{\small BEMTools::CUDAWrappers::transform\_quad\_point\_from\_unit\_to\_permuted\_real\_cell}
+                    \hfill \texttt{bem\_tools.hcu}
+                  \end{codeitemize}
+                \end{codeitemize}
+              \end{codeitemize}
+            \end{codeitemize}
+          \item \texttt{random\_select\_ref\_column(SauterQuadratureTaskBufferForVector,
+              ...)} (2 versions) \hfill \texttt{aca\_plus.hcu}
+            \begin{codeitemize}
+            \item \texttt{assemble\_kernel\_column(SauterQuadratureTaskBufferForVector,
+                ...)} (2 versions) \hfill \texttt{aca\_plus.hcu}
+              \begin{codeitemize}
+              \item \texttt{create\_sauter\_quadrature\_tasks\_on\_one\_pair\_of\_dofs}
+                \hfill \texttt{sauter\_quadrature.hcu}
+                \begin{codeitemize}
+                \item
+                  \texttt{permute\_dofs\_and\_mapping\_support\_points\_for\_sauter\_quad}
+                  \hfill \texttt{sauter\_quadrature.hcu}
+                \end{codeitemize}
+              \item \texttt{SauterQuadratureTaskBufferForVector::process\_tasks}
+                \texttt{sauter\_quadrature.hcu}
+                \begin{codeitemize}
+                \item
+                  \texttt{process\_sauter\_tasks\_in\_buffer\_for\_far\_field\_hmat\_vector}
+                  \texttt{sauter\_quadrature.hcu}
+                  \begin{codeitemize}
+                  \item
+                    \texttt{BEMTools::CUDAWrappers::surface\_jacobian\_det\_normal\_vector\_and\_covariant}
+                    \hfill \texttt{bem\_tools.hcu}
+                  \item
+                    \texttt{\small BEMTools::CUDAWrappers::transform\_quad\_point\_from\_unit\_to\_permuted\_real\_cell}
+                    \hfill \texttt{bem\_tools.hcu}
+                  \end{codeitemize}
+                \end{codeitemize}
+              \end{codeitemize}
+            \end{codeitemize}
+          \end{codeitemize}
+        \end{codeitemize}
+      \end{codeitemize}
+    \end{codeitemize}
+  \end{codeitemize}
+\end{codeitemize}
 
 \chapter{Test cases}
 

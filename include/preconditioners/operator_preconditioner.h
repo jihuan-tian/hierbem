@@ -9,9 +9,11 @@
 #ifndef INCLUDE_OPERATOR_PRECONDITIONER_H_
 #define INCLUDE_OPERATOR_PRECONDITIONER_H_
 
+#include <deal.II/base/logstream.h>
 #include <deal.II/base/parallel.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature.h>
+#include <deal.II/base/subscriptor.h>
 
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_tools.h>
@@ -21,6 +23,9 @@
 #include <deal.II/grid/tria.h>
 
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
+#include <deal.II/lac/precondition.h>
+#include <deal.II/lac/solver_control.h>
+#include <deal.II/lac/solver_gmres.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/sparsity_pattern.h>
 #include <deal.II/lac/vector.h>
@@ -34,6 +39,7 @@
 #include "bem_general.h"
 #include "bem_kernels.hcu"
 #include "block_cluster_tree.h"
+#include "debug_tools.hcu"
 #include "dof_tools_ext.h"
 #include "generic_functors.h"
 #include "grid_out_ext.h"
@@ -58,8 +64,7 @@ namespace HierBEM
   template <int dim,
             int spacedim,
             typename KernelFunctionType,
-            typename RangeNumberType,
-            typename SurfaceNormalDetector>
+            typename RangeNumberType>
   class OperatorPreconditioner
   {
   public:
@@ -68,10 +73,24 @@ namespace HierBEM
      */
     OperatorPreconditioner(FiniteElement<dim, spacedim>       &fe_primal_space,
                            FiniteElement<dim, spacedim>       &fe_dual_space,
-                           const Triangulation<dim, spacedim> &primal_tria);
+                           const Triangulation<dim, spacedim> &primal_tria,
+                           const std::vector<types::global_dof_index>
+                                             &primal_space_dof_e2i_numbering,
+                           const unsigned int max_iter    = 1000,
+                           const double       tol         = 1e-8,
+                           const double       omega       = 1.0,
+                           const bool         log_history = true,
+                           const bool         log_result  = true);
 
     ~OperatorPreconditioner();
 
+    void
+    initialize_dof_handlers();
+
+    void
+    build_dof_to_cell_topology();
+
+    template <typename SurfaceNormalDetector>
     void
     setup_preconditioner(
       const unsigned int                               thread_num,
@@ -94,6 +113,15 @@ namespace HierBEM
     vmult(Vector<RangeNumberType> &y, const Vector<RangeNumberType> &x) const;
 
     /**
+     * Reinitialize intermediate vectors.
+     *
+     * This function should be called after building the matrices used in
+     * operator preconditioning.
+     */
+    void
+    reinit();
+
+    /**
      * Build the coupling matrix \f$C_p\f$.
      */
     virtual void
@@ -108,11 +136,25 @@ namespace HierBEM
     /**
      * Build the mass matrix on the refined mesh.
      */
-    virtual void
+    void
     build_mass_matrix_on_refined_mesh(const Quadrature<dim> &quad_rule);
 
     /**
-     * @brief Build the preconditioning \hmat on the refined mesh.
+     * @brief Build the cluster and block cluster trees for the \hmat to be
+     * constructed on the refined mesh.
+     *
+     * \alert{This function should be called before building the averaging
+     * matrix, because the column indices of the coupling matrix depends on the
+     * DoF external-to-internal numbering for the row DoFs of the \hmat.}
+     */
+    void
+    build_cluster_and_block_cluster_trees(
+      const HMatrixParameters                         &hmat_params,
+      const std::vector<MappingInfo<dim, spacedim> *> &mappings);
+
+    /**
+     * @brief Build the Galerkin \hmat for the preconditioner on the refined
+     * mesh.
      *
      * \alert{This function should be called after @p build_mass_matrix_on_refined_mesh ,
      * since it relies on the mass matrix when building the preconditioning
@@ -127,8 +169,9 @@ namespace HierBEM
      * of a cell.
      * @param sauter_quad_rule Sauter quadrature rule
      */
-    virtual void
-    build_preconditioning_hmat_on_refined_mesh(
+    template <typename SurfaceNormalDetector>
+    void
+    build_preconditioner_hmat_on_refined_mesh(
       const unsigned int                               thread_num,
       const HMatrixParameters                         &hmat_params,
       const std::vector<MappingInfo<dim, spacedim> *> &mappings,
@@ -138,12 +181,12 @@ namespace HierBEM
       const SauterQuadratureRule<dim> &sauter_quad_rule);
 
     void
-    solve_mass_matrix(Vector<RangeNumberType>       &y,
-                      const Vector<RangeNumberType> &x);
+    solve_mass_matrix_triple(Vector<RangeNumberType>       &y,
+                             const Vector<RangeNumberType> &x) const;
 
     void
-    solve_mass_matrix_transpose(Vector<RangeNumberType>       &y,
-                                const Vector<RangeNumberType> &x);
+    solve_mass_matrix_transpose_triple(Vector<RangeNumberType>       &y,
+                                       const Vector<RangeNumberType> &x) const;
 
     SparseMatrix<RangeNumberType> &
     get_coupling_matrix()
@@ -182,15 +225,27 @@ namespace HierBEM
     }
 
     HMatrixSymm<spacedim, RangeNumberType> &
-    get_preconditioning_hmatrix()
+    get_preconditioner_hmatrix()
     {
-      return preconditioning_hmat;
+      return preconditioner_hmat;
     }
 
     const HMatrixSymm<spacedim, RangeNumberType> &
-    get_preconditioning_hmatrix() const
+    get_preconditioner_hmatrix() const
     {
-      return preconditioning_hmat;
+      return preconditioner_hmat;
+    }
+
+    Vector<RangeNumberType> &
+    get_mass_matrix_triple_diag_reciprocal()
+    {
+      return mass_matrix_triple_diag_reciprocal;
+    }
+
+    const Vector<RangeNumberType> &
+    get_mass_matrix_triple_diag_reciprocal() const
+    {
+      return mass_matrix_triple_diag_reciprocal;
     }
 
     Triangulation<dim, spacedim> &
@@ -230,6 +285,197 @@ namespace HierBEM
     }
 
   protected:
+    /**
+     * @brief This class encapsulates the product of three matrices: \f$C_d M_r
+     * C_p^{\mathrm{T}}\f$.
+     */
+    class MassMatrixTriple : public Subscriptor
+    {
+    public:
+      MassMatrixTriple(
+        SparseMatrix<RangeNumberType> &coupling_matrix,
+        SparseMatrix<RangeNumberType> &averaging_matrix,
+        SparseMatrix<RangeNumberType> &mass_matrix,
+        Vector<RangeNumberType>       &mass_matrix_triple_diag_reciprocal)
+        : coupling_matrix(coupling_matrix)
+        , averaging_matrix(averaging_matrix)
+        , mass_matrix(mass_matrix)
+        , mass_matrix_triple_diag_reciprocal(mass_matrix_triple_diag_reciprocal)
+      {
+        v1 = new Vector<RangeNumberType>();
+        v2 = new Vector<RangeNumberType>();
+      }
+
+      ~MassMatrixTriple()
+      {
+        delete v1;
+        delete v2;
+      }
+
+      /**
+       * Reinitialize intermediate vectors.
+       *
+       * This function should be called after building the matrices used in
+       * operator preconditioning.
+       */
+      void
+      reinit()
+      {
+        v1->reinit(coupling_matrix.n());
+        v2->reinit(mass_matrix.m());
+      }
+
+      void
+      vmult(Vector<RangeNumberType> &y, const Vector<RangeNumberType> &x) const
+      {
+        AssertDimension(coupling_matrix.m(), x.size());
+        AssertDimension(averaging_matrix.m(), y.size());
+        AssertDimension(x.size(), y.size());
+
+        coupling_matrix.Tvmult(*v1, x);
+        mass_matrix.vmult(*v2, *v1);
+        averaging_matrix.vmult(y, *v2);
+      }
+
+      void
+      precondition_Jacobi(Vector<RangeNumberType>       &dst,
+                          const Vector<RangeNumberType> &src,
+                          const RangeNumberType          omega = 1.) const
+      {
+        using size_type = typename Vector<RangeNumberType>::size_type;
+
+        AssertDimension(dst.size(), src.size());
+
+        const size_type        n       = src.size();
+        RangeNumberType       *dst_ptr = dst.begin();
+        const RangeNumberType *src_ptr = src.begin();
+        const RangeNumberType *diag_ptr =
+          mass_matrix_triple_diag_reciprocal.begin();
+
+        if (omega == 1.0)
+          for (size_type i = 0; i < n; i++, dst_ptr++, src_ptr++, diag_ptr++)
+            *dst_ptr = *src_ptr * (*diag_ptr);
+        else
+          for (size_type i = 0; i < n; i++, dst_ptr++, src_ptr++, diag_ptr++)
+            *dst_ptr = *src_ptr * (*diag_ptr) * omega;
+      }
+
+    private:
+      SparseMatrix<RangeNumberType> &coupling_matrix;
+      SparseMatrix<RangeNumberType> &averaging_matrix;
+      SparseMatrix<RangeNumberType> &mass_matrix;
+      Vector<RangeNumberType>       &mass_matrix_triple_diag_reciprocal;
+
+      /**
+       * The result vector of \f$C_p^{\mathrm{T}}x\f$.
+       */
+      Vector<RangeNumberType> *v1;
+      /**
+       * The result vector of \f$M_r v_1\f$.
+       */
+      Vector<RangeNumberType> *v2;
+    };
+
+    /**
+     * @brief This class encapsulates the transpose of the product of three
+     * matrices: \f$C_d M_r C_p^{\mathrm{T}}\f$, which is actually \f$C_p
+     * M_r^{\mathrm{T}} C_d^{\mathrm{T}}\f$.
+     */
+    class MassMatrixTransposeTriple : public Subscriptor
+    {
+    public:
+      MassMatrixTransposeTriple(
+        SparseMatrix<RangeNumberType> &coupling_matrix,
+        SparseMatrix<RangeNumberType> &averaging_matrix,
+        SparseMatrix<RangeNumberType> &mass_matrix,
+        Vector<RangeNumberType>       &mass_matrix_triple_diag_reciprocal)
+        : coupling_matrix(coupling_matrix)
+        , averaging_matrix(averaging_matrix)
+        , mass_matrix(mass_matrix)
+        , mass_matrix_triple_diag_reciprocal(mass_matrix_triple_diag_reciprocal)
+      {
+        v1 = new Vector<RangeNumberType>();
+        v2 = new Vector<RangeNumberType>();
+      }
+
+      ~MassMatrixTransposeTriple()
+      {
+        delete v1;
+        delete v2;
+      }
+
+      /**
+       * Reinitialize intermediate vectors.
+       *
+       * This function should be called after building the matrices used in
+       * operator preconditioning.
+       */
+      void
+      reinit()
+      {
+        v1->reinit(averaging_matrix.n());
+        v2->reinit(mass_matrix.n());
+      }
+
+      void
+      vmult(Vector<RangeNumberType> &y, const Vector<RangeNumberType> &x) const
+      {
+        AssertDimension(averaging_matrix.m(), x.size());
+        AssertDimension(coupling_matrix.m(), y.size());
+        AssertDimension(x.size(), y.size());
+
+        averaging_matrix.Tvmult(*v1, x);
+        mass_matrix.Tvmult(*v2, *v1);
+        coupling_matrix.vmult(y, *v2);
+      }
+
+      void
+      precondition_Jacobi(Vector<RangeNumberType>       &dst,
+                          const Vector<RangeNumberType> &src,
+                          const RangeNumberType          omega = 1.) const
+      {
+        using size_type = typename Vector<RangeNumberType>::size_type;
+
+        AssertDimension(dst.size(), src.size());
+
+        const size_type        n       = src.size();
+        RangeNumberType       *dst_ptr = dst.begin();
+        const RangeNumberType *src_ptr = src.begin();
+        const RangeNumberType *diag_ptr =
+          mass_matrix_triple_diag_reciprocal.begin();
+
+        if (omega == 1.0)
+          for (size_type i = 0; i < n; i++, dst_ptr++, src_ptr++, diag_ptr++)
+            *dst_ptr = *src_ptr * (*diag_ptr);
+        else
+          for (size_type i = 0; i < n; i++, dst_ptr++, src_ptr++, diag_ptr++)
+            *dst_ptr = *src_ptr * (*diag_ptr) * omega;
+      }
+
+    private:
+      SparseMatrix<RangeNumberType> &coupling_matrix;
+      SparseMatrix<RangeNumberType> &averaging_matrix;
+      SparseMatrix<RangeNumberType> &mass_matrix;
+      Vector<RangeNumberType>       &mass_matrix_triple_diag_reciprocal;
+
+      /**
+       * The result vector of \f$C_d^{\mathrm{T}}x\f$.
+       */
+      Vector<RangeNumberType> *v1;
+      /**
+       * The result vector of \f$M_r^{\mathrm{T}}v_1\f$.
+       */
+      Vector<RangeNumberType> *v2;
+    };
+
+    void
+    compute_mass_matrix_triple_diag_reciprocal();
+
+    /**
+     * Original triangulation.
+     */
+    const Triangulation<dim, spacedim> &orig_tria;
+
     /**
      * Triangulation with two levels, i.e. orginal mesh and its refinement.
      */
@@ -284,7 +530,7 @@ namespace HierBEM
      * The Galerkin matrix for the preconditioner. This matrix maps from the
      * dual space on the refined mesh \f$\bar{\Gamma}_h\f$ to itself.
      */
-    HMatrixSymm<spacedim, RangeNumberType> preconditioning_hmat;
+    HMatrixSymm<spacedim, RangeNumberType> preconditioner_hmat;
 
     /**
      * Cluster tree for the preconditioning \hmat.
@@ -295,6 +541,15 @@ namespace HierBEM
      * Block cluster tree for the preconditioning \hmat.
      */
     BlockClusterTree<spacedim> bct;
+
+    /**
+     * The external-to-internal DoF numbering for the primal space on the primal
+     * mesh.
+     *
+     * This is crucial for matching the DoF indices of the inverse of the
+     * preconditioning matrix with those of the system matrix.
+     */
+    const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering;
 
     /**
      * Finite element for the primal space.
@@ -321,145 +576,131 @@ namespace HierBEM
     DoFHandler<dim, spacedim> dof_handler_dual_space;
 
     /**
-     * Collection of cell iterators held in the DoF handler for the primal
-     * space on the refined mesh.
-     */
-    std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
-      cell_iterators_primal_space;
-    /**
      * Collection of cell iterators held in the DoF handler for the dual space
      * on the refined mesh.
      */
     std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
       cell_iterators_dual_space;
-
-    /**
-     * DoF-to-cell topology for the primal space on the refined mesh.
-     */
-    DoFToolsExt::DoFToCellTopology<dim, spacedim> dof_to_cell_topo_primal_space;
     /**
      * DoF-to-cell topology for the dual space on the refined mesh.
      */
     DoFToolsExt::DoFToCellTopology<dim, spacedim> dof_to_cell_topo_dual_space;
+
+    // Intermediate vectors during @p vmult.
+    /**
+     * The result vector of \f$\(C_d M_r C_p^{\mathrm{T}}\)^{-\mathrm{T}}x\f$,
+     * which is equivalent to solve \f$\(C_d M_r C_p^{\mathrm{T}}\)y=x\f$ for
+     * \f$y\f$.
+     *
+     * It also stores the result vector of \f$C_d v_3\f$.
+     */
+    Vector<RangeNumberType> *v1;
+    /**
+     * @brief The result vector of \f$C_d^{\mathrm{T}} v_1\f$.
+     */
+    Vector<RangeNumberType> *v2;
+    /**
+     * @brief The result vector of \f$B_r v_2\f$, where \f$B_r\f$ is the \hmat
+     * of the preconditioner on the refined mesh.
+     */
+    Vector<RangeNumberType> *v3;
+
+    // Diagonal entries in @p mass_matrix_triple.
+    Vector<RangeNumberType> mass_matrix_triple_diag_reciprocal;
+
+    MassMatrixTriple          mass_matrix_triple;
+    MassMatrixTransposeTriple mass_matrix_transpose_triple;
+    unsigned int              solve_mass_matrix_max_iter;
+    double                    solve_mass_matrix_tol;
+    double                    solve_mass_matrix_relaxation;
+    bool                      solve_mass_matrix_log_history;
+    bool                      solve_mass_matrix_log_result;
   };
 
 
   template <int dim,
             int spacedim,
             typename KernelFunctionType,
-            typename RangeNumberType,
-            typename SurfaceNormalDetector>
-  OperatorPreconditioner<dim,
-                         spacedim,
-                         KernelFunctionType,
-                         RangeNumberType,
-                         SurfaceNormalDetector>::
+            typename RangeNumberType>
+  OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
     OperatorPreconditioner(FiniteElement<dim, spacedim>       &fe_primal_space,
                            FiniteElement<dim, spacedim>       &fe_dual_space,
-                           const Triangulation<dim, spacedim> &primal_tria)
-    : fe_primal_space(fe_primal_space)
+                           const Triangulation<dim, spacedim> &primal_tria,
+                           const std::vector<types::global_dof_index>
+                                             &primal_space_dof_e2i_numbering,
+                           const unsigned int max_iter,
+                           const double       tol,
+                           const double       omega,
+                           const bool         log_history,
+                           const bool         log_result)
+    : orig_tria(primal_tria)
+    , primal_space_dof_e2i_numbering(primal_space_dof_e2i_numbering)
+    , fe_primal_space(fe_primal_space)
     , fe_dual_space(fe_dual_space)
+    , mass_matrix_triple(coupling_matrix,
+                         averaging_matrix,
+                         mass_matrix,
+                         mass_matrix_triple_diag_reciprocal)
+    , mass_matrix_transpose_triple(coupling_matrix,
+                                   averaging_matrix,
+                                   mass_matrix,
+                                   mass_matrix_triple_diag_reciprocal)
+    , solve_mass_matrix_max_iter(max_iter)
+    , solve_mass_matrix_tol(tol)
+    , solve_mass_matrix_relaxation(omega)
+    , solve_mass_matrix_log_history(log_history)
+    , solve_mass_matrix_log_result(log_result)
   {
-    // Make a copy of the existing triangulation and perform a global
-    // refinement.
-    tria.copy_triangulation(primal_tria);
-    tria.refine_global();
-
-    // Initialize DoF handlers for primal and dual function spaces.
-    dof_handler_primal_space.reinit(tria);
-    dof_handler_dual_space.reinit(tria);
-
-    dof_handler_primal_space.distribute_dofs(fe_primal_space);
-    dof_handler_primal_space.distribute_mg_dofs();
-    dof_handler_dual_space.distribute_dofs(fe_dual_space);
-    dof_handler_dual_space.distribute_mg_dofs();
-
-    // Collect cell iterators for the two function spaces on the refined mesh.
-    cell_iterators_primal_space.reserve(dof_handler_primal_space.n_dofs(1));
-    for (const auto &cell :
-         dof_handler_primal_space.mg_cell_iterators_on_level(1))
-      {
-        cell_iterators_primal_space.push_back(cell);
-      }
-
-    cell_iterators_dual_space.reserve(dof_handler_dual_space.n_dofs(1));
-    for (const auto &cell :
-         dof_handler_dual_space.mg_cell_iterators_on_level(1))
-      {
-        cell_iterators_dual_space.push_back(cell);
-      }
-
-    // Generate DoF-to-cell topologies for the two function spaces on the
-    // refined mesh.
-    DoFToolsExt::build_mg_dof_to_cell_topology(dof_to_cell_topo_primal_space,
-                                               cell_iterators_primal_space,
-                                               dof_handler_primal_space,
-                                               1);
-    DoFToolsExt::build_mg_dof_to_cell_topology(dof_to_cell_topo_dual_space,
-                                               cell_iterators_dual_space,
-                                               dof_handler_dual_space,
-                                               1);
+    v1 = new Vector<RangeNumberType>();
+    v2 = new Vector<RangeNumberType>();
+    v3 = new Vector<RangeNumberType>();
   }
 
 
   template <int dim,
             int spacedim,
             typename KernelFunctionType,
-            typename RangeNumberType,
-            typename SurfaceNormalDetector>
-  OperatorPreconditioner<dim,
-                         spacedim,
-                         KernelFunctionType,
-                         RangeNumberType,
-                         SurfaceNormalDetector>::~OperatorPreconditioner()
+            typename RangeNumberType>
+  OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
+    ~OperatorPreconditioner()
   {
     dof_handler_primal_space.clear();
     dof_handler_dual_space.clear();
+
+    delete v1;
+    delete v2;
+    delete v3;
   }
 
 
   template <int dim,
             int spacedim,
             typename KernelFunctionType,
-            typename RangeNumberType,
-            typename SurfaceNormalDetector>
+            typename RangeNumberType>
   void
-  OperatorPreconditioner<
-    dim,
-    spacedim,
-    KernelFunctionType,
-    RangeNumberType,
-    SurfaceNormalDetector>::vmult(Vector<RangeNumberType>       &y,
-                                  const Vector<RangeNumberType> &x) const
-  {}
-
-
-  template <int dim,
-            int spacedim,
-            typename KernelFunctionType,
-            typename RangeNumberType,
-            typename SurfaceNormalDetector>
-  void
-  OperatorPreconditioner<dim,
-                         spacedim,
-                         KernelFunctionType,
-                         RangeNumberType,
-                         SurfaceNormalDetector>::
+  OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
     build_mass_matrix_on_refined_mesh(const Quadrature<dim> &quad_rule)
   {
+    // External-to-internal DoF numbering to be used for the column indices of
+    // the averaging matrix.
+    const std::vector<types::global_dof_index> &dof_e2i_numbering =
+      ct.get_external_to_internal_dof_numbering();
+
     // Generate the sparsity pattern for the mass matrix.
     DynamicSparsityPattern dsp(dof_handler_dual_space.n_dofs(1),
                                dof_handler_primal_space.n_dofs(1));
     // N.B. DoFTools::make_sparsity_pattern operates on active cells, which just
     // corresponds to the refined mesh that we desire.
-    DoFTools::make_sparsity_pattern(dof_handler_dual_space,
-                                    dof_handler_primal_space,
-                                    dsp);
+    DoFToolsExt::make_sparsity_pattern(dof_handler_dual_space,
+                                       dof_e2i_numbering,
+                                       dof_handler_primal_space,
+                                       dsp);
     mass_matrix_sp.copy_from(dsp);
     mass_matrix.reinit(mass_matrix_sp);
 
     // Assemble the mass matrix.
     assemble_fem_scaled_mass_matrix(dof_handler_dual_space,
+                                    dof_e2i_numbering,
                                     dof_handler_primal_space,
                                     1.0,
                                     quad_rule,
@@ -470,22 +711,12 @@ namespace HierBEM
   template <int dim,
             int spacedim,
             typename KernelFunctionType,
-            typename RangeNumberType,
-            typename SurfaceNormalDetector>
+            typename RangeNumberType>
   void
-  OperatorPreconditioner<dim,
-                         spacedim,
-                         KernelFunctionType,
-                         RangeNumberType,
-                         SurfaceNormalDetector>::
-    build_preconditioning_hmat_on_refined_mesh(
-      const unsigned int                               thread_num,
+  OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
+    build_cluster_and_block_cluster_trees(
       const HMatrixParameters                         &hmat_params,
-      const std::vector<MappingInfo<dim, spacedim> *> &mappings,
-      const std::map<types::material_id, unsigned int>
-                                      &material_id_to_mapping_index,
-      const SurfaceNormalDetector     &normal_detector,
-      const SauterQuadratureRule<dim> &sauter_quad_rule)
+      const std::vector<MappingInfo<dim, spacedim> *> &mappings)
   {
     /**
      * Generate lists of DoF indices.
@@ -545,8 +776,32 @@ namespace HierBEM
     bct.partition(dof_i2e_numbering,
                   support_points_in_dual_space,
                   dof_average_cell_size_list);
+  }
 
-    preconditioning_hmat =
+
+  template <int dim,
+            int spacedim,
+            typename KernelFunctionType,
+            typename RangeNumberType>
+  template <typename SurfaceNormalDetector>
+  void
+  OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
+    build_preconditioner_hmat_on_refined_mesh(
+      const unsigned int                               thread_num,
+      const HMatrixParameters                         &hmat_params,
+      const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+      const std::map<types::material_id, unsigned int>
+                                      &material_id_to_mapping_index,
+      const SurfaceNormalDetector     &normal_detector,
+      const SauterQuadratureRule<dim> &sauter_quad_rule)
+  {
+    /**
+     * Get the internal-to-external DoF numberings.
+     */
+    std::vector<types::global_dof_index> &dof_i2e_numbering =
+      ct.get_internal_to_external_dof_numbering();
+
+    preconditioner_hmat =
       HMatrixSymm<spacedim, RangeNumberType>(bct, hmat_params.max_hmat_rank);
 
     ACAConfig aca_config(hmat_params.max_hmat_rank,
@@ -586,14 +841,15 @@ namespace HierBEM
          * size of the input vector @p natural_density and the output vector
          * @p mass_vmult_weq.
          */
-        Vector<RangeNumberType> mass_vmult_weq(n_dofs);
+        Vector<RangeNumberType> mass_vmult_weq(
+          dof_handler_dual_space.n_dofs(1));
         mass_matrix.vmult(mass_vmult_weq, natural_density);
 
         /**
          * Assemble the preconditioning matrix.
          */
         fill_hmatrix_with_aca_plus_smp(thread_num,
-                                       preconditioning_hmat,
+                                       preconditioner_hmat,
                                        aca_config,
                                        preconditioner_kernel,
                                        1.0,
@@ -616,7 +872,7 @@ namespace HierBEM
     else
       {
         fill_hmatrix_with_aca_plus_smp(thread_num,
-                                       preconditioning_hmat,
+                                       preconditioner_hmat,
                                        aca_config,
                                        preconditioner_kernel,
                                        1.0,
@@ -640,14 +896,51 @@ namespace HierBEM
   template <int dim,
             int spacedim,
             typename KernelFunctionType,
-            typename RangeNumberType,
-            typename SurfaceNormalDetector>
+            typename RangeNumberType>
   void
-  OperatorPreconditioner<dim,
-                         spacedim,
-                         KernelFunctionType,
-                         RangeNumberType,
-                         SurfaceNormalDetector>::
+  OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
+    initialize_dof_handlers()
+  {
+    // Initialize DoF handlers for primal and dual function spaces.
+    dof_handler_primal_space.reinit(tria);
+    dof_handler_dual_space.reinit(tria);
+
+    dof_handler_primal_space.distribute_dofs(fe_primal_space);
+    dof_handler_primal_space.distribute_mg_dofs();
+    dof_handler_dual_space.distribute_dofs(fe_dual_space);
+    dof_handler_dual_space.distribute_mg_dofs();
+  }
+
+
+  template <int dim,
+            int spacedim,
+            typename KernelFunctionType,
+            typename RangeNumberType>
+  void
+  OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
+    build_dof_to_cell_topology()
+  {
+    cell_iterators_dual_space.reserve(dof_handler_dual_space.n_dofs(1));
+    for (const auto &cell :
+         dof_handler_dual_space.mg_cell_iterators_on_level(1))
+      cell_iterators_dual_space.push_back(cell);
+
+    // Generate DoF-to-cell topologies for the dual function space on the
+    // refined mesh.
+    DoFToolsExt::build_mg_dof_to_cell_topology(dof_to_cell_topo_dual_space,
+                                               cell_iterators_dual_space,
+                                               dof_handler_dual_space,
+                                               1);
+  }
+
+
+  template <int dim,
+            int spacedim,
+            typename KernelFunctionType,
+            typename RangeNumberType>
+  template <typename SurfaceNormalDetector>
+  void
+  OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
     setup_preconditioner(
       const unsigned int                               thread_num,
       const HMatrixParameters                         &hmat_params,
@@ -658,15 +951,168 @@ namespace HierBEM
       const SauterQuadratureRule<dim> &sauter_quad_rule,
       const Quadrature<dim>           &quad_rule_for_mass)
   {
+    // Make a copy of the existing triangulation and perform a global
+    // refinement.
+    tria.copy_triangulation(orig_tria);
+    tria.refine_global();
+
+    initialize_dof_handlers();
+    build_dof_to_cell_topology();
+    build_cluster_and_block_cluster_trees(hmat_params, mappings);
     build_coupling_matrix();
     build_averaging_matrix();
     build_mass_matrix_on_refined_mesh(quad_rule_for_mass);
-    build_preconditioning_hmat_on_refined_mesh(thread_num,
-                                               hmat_params,
-                                               mappings,
-                                               material_id_to_mapping_index,
-                                               normal_detector,
-                                               sauter_quad_rule);
+    build_preconditioner_hmat_on_refined_mesh(thread_num,
+                                              hmat_params,
+                                              mappings,
+                                              material_id_to_mapping_index,
+                                              normal_detector,
+                                              sauter_quad_rule);
+
+    mass_matrix_triple.reinit();
+    mass_matrix_transpose_triple.reinit();
+    reinit();
+
+    // Compute the diagonal entries of the mass matrix triple, which will be
+    // used in the Jacobi precondition.
+    compute_mass_matrix_triple_diag_reciprocal();
+
+    // DEBUG debug_tools.hcu: Print out the matrices.
+    print_sparse_matrix_to_mat(
+      deallog.get_file_stream(), "Cp", coupling_matrix, 15, true, 25);
+    print_sparse_matrix_to_mat(
+      deallog.get_file_stream(), "Cd", averaging_matrix, 15, true, 25);
+    print_sparse_matrix_to_mat(
+      deallog.get_file_stream(), "Mr", mass_matrix, 15, true, 25);
+    preconditioner_hmat.print_as_formatted_full_matrix(
+      deallog.get_file_stream(), "Br", 15, true, 25);
+    print_vector_to_mat(deallog.get_file_stream(),
+                        "M_diag_reciprocal",
+                        mass_matrix_triple_diag_reciprocal);
+  }
+
+
+  template <int dim,
+            int spacedim,
+            typename KernelFunctionType,
+            typename RangeNumberType>
+  void
+  OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
+    solve_mass_matrix_triple(Vector<RangeNumberType>       &y,
+                             const Vector<RangeNumberType> &x) const
+  {
+    SolverControl solver_control(solve_mass_matrix_max_iter,
+                                 solve_mass_matrix_tol,
+                                 solve_mass_matrix_log_history,
+                                 solve_mass_matrix_log_result);
+    SolverGMRES<> solver(solver_control);
+
+    PreconditionJacobi<MassMatrixTriple> precond;
+    precond.initialize(
+      mass_matrix_triple,
+      typename PreconditionJacobi<MassMatrixTriple>::AdditionalData(
+        solve_mass_matrix_relaxation));
+
+    solver.solve(mass_matrix_triple, y, x, precond);
+  }
+
+
+  template <int dim,
+            int spacedim,
+            typename KernelFunctionType,
+            typename RangeNumberType>
+  void
+  OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
+    solve_mass_matrix_transpose_triple(Vector<RangeNumberType>       &y,
+                                       const Vector<RangeNumberType> &x) const
+  {
+    SolverControl solver_control(solve_mass_matrix_max_iter,
+                                 solve_mass_matrix_tol,
+                                 solve_mass_matrix_log_history,
+                                 solve_mass_matrix_log_result);
+    SolverGMRES<> solver(solver_control);
+
+    PreconditionJacobi<MassMatrixTransposeTriple> precond;
+    precond.initialize(
+      mass_matrix_transpose_triple,
+      typename PreconditionJacobi<MassMatrixTransposeTriple>::AdditionalData(
+        solve_mass_matrix_relaxation));
+
+    solver.solve(mass_matrix_transpose_triple, y, x, precond);
+  }
+
+
+  template <int dim,
+            int spacedim,
+            typename KernelFunctionType,
+            typename RangeNumberType>
+  void
+  OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
+    reinit()
+  {
+    v1->reinit(averaging_matrix.m());
+    v2->reinit(averaging_matrix.n());
+    v3->reinit(averaging_matrix.n());
+
+    mass_matrix_triple_diag_reciprocal.reinit(averaging_matrix.m());
+  }
+
+
+  template <int dim,
+            int spacedim,
+            typename KernelFunctionType,
+            typename RangeNumberType>
+  void
+  OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
+    compute_mass_matrix_triple_diag_reciprocal()
+  {
+    Vector<RangeNumberType> Cd_row;
+    Vector<RangeNumberType> Cp_row;
+    // The result vector of @p Mr*Cp_row.
+    Vector<RangeNumberType> v;
+
+    // Iterate over each row.
+    for (typename SparseMatrix<RangeNumberType>::size_type i = 0;
+         i < averaging_matrix.m();
+         i++)
+      {
+        Cd_row.reinit(averaging_matrix.n());
+        Cp_row.reinit(coupling_matrix.n());
+        v.reinit(mass_matrix.m());
+
+        // Collect the ith row of Cd.
+        for (auto it = averaging_matrix.begin(i); it != averaging_matrix.end(i);
+             it++)
+          {
+            Cd_row(it->column()) = it->value();
+          }
+
+        // Collect the ith row of Cp.
+        for (auto it = coupling_matrix.begin(i); it != coupling_matrix.end(i);
+             it++)
+          {
+            Cp_row(it->column()) = it->value();
+          }
+
+        mass_matrix.vmult(v, Cp_row);
+        mass_matrix_triple_diag_reciprocal(i) = 1.0 / (Cd_row * v);
+      }
+  }
+
+
+  template <int dim,
+            int spacedim,
+            typename KernelFunctionType,
+            typename RangeNumberType>
+  void
+  OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
+    vmult(Vector<RangeNumberType> &y, const Vector<RangeNumberType> &x) const
+  {
+    solve_mass_matrix_transpose_triple(*v1, x);
+    averaging_matrix.Tvmult(*v2, *v1);
+    preconditioner_hmat.vmult(*v3, *v2);
+    averaging_matrix.vmult(*v1, *v3);
+    solve_mass_matrix_triple(y, *v1);
   }
 } // namespace HierBEM
 

@@ -1,6 +1,6 @@
 /**
  * @file op-precond-hmatrix-for-dirichlet.cu
- * @brief Verify building the preconditioning matrix on refined mesh for
+ * @brief Verify building the preconditioner matrix on refined mesh for
  * operator preconditioning used in Laplace Dirichlet problem.
  *
  * @ingroup preconditioner
@@ -59,8 +59,7 @@ namespace HierBEM
   }
 } // namespace HierBEM
 
-TEST_CASE("Build operator preconditioning matrix on refined mesh",
-          "[op-precond]")
+TEST_CASE("Build preconditioner matrix for Laplace Dirichlet", "[op-precond]")
 {
   ofstream ofs("op-precond-hmatrix-for-dirichlet.log");
 
@@ -142,31 +141,33 @@ TEST_CASE("Build operator preconditioning matrix on refined mesh",
   FE_Q<dim, spacedim>   fe_dual_space(1);
 
   // Create the preconditioner.
-  PreconditionerForLaplaceDirichlet<dim,
-                                    spacedim,
-                                    double,
-                                    SurfaceNormalDetector<dim, spacedim>>
-    precond(fe_primal_space, fe_dual_space, tria);
+  PreconditionerForLaplaceDirichlet<dim, spacedim, double> precond(
+    fe_primal_space, fe_dual_space, tria);
+
+  precond.get_triangulation().copy_triangulation(tria);
+  precond.get_triangulation().refine_global();
 
   // Build and print out the mass matrix on the refined mesh first, because it
-  // is needed by the preconditioning matrix.
+  // is needed by the preconditioner matrix.
+  precond.initialize_dof_handlers();
+  precond.build_dof_to_cell_topology();
   precond.build_mass_matrix_on_refined_mesh(QGauss<dim>(2));
   const SparseMatrix<double> &Mr = precond.get_mass_matrix();
   print_sparse_matrix_to_mat(ofs, "Mr", Mr, 15, true, 25);
 
-  // Build the preconditioning matrix on the refined mesh.
-  precond.build_preconditioning_hmat_on_refined_mesh(
+  // Build the preconditioner matrix on the refined mesh.
+  precond.build_preconditioner_hmat_on_refined_mesh(
     MultithreadInfo::n_threads(),
     HMatrixParameters(64, 64, 1.0, 2, 0.1),
     mappings,
     material_id_to_mapping_index,
     SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
     SauterQuadratureRule<dim>(5, 4, 4, 3));
-  const HMatrixSymm<spacedim, double> &Cr =
-    precond.get_preconditioning_hmatrix();
+  const HMatrixSymm<spacedim, double> &Br =
+    precond.get_preconditioner_hmatrix();
 
-  // Print out the preconditioning matrix on the refined mesh as full matrix.
-  Cr.print_as_formatted_full_matrix(ofs, "Cr", 15, true, 25);
+  // Print out the preconditioner matrix on the refined mesh as full matrix.
+  Br.print_as_formatted_full_matrix(ofs, "Br", 15, true, 25);
 
   // We also build and print out the two linking matrices, with which we can
   // check if their sizes are consistent with the preconditioning matrix.
@@ -179,7 +180,7 @@ TEST_CASE("Build operator preconditioning matrix on refined mesh",
   print_sparse_matrix_to_mat(ofs, "Cd", Cd, 15, true, 25);
 
   // Check the matrix sizes.
-  REQUIRE(Cd.n() == Cr.get_m());
+  REQUIRE(Cd.n() == Br.get_m());
   REQUIRE(Cd.n() == Mr.m());
   REQUIRE(Mr.n() == Cp.n());
 

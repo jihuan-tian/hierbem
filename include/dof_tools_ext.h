@@ -15,6 +15,10 @@
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_tools.h>
 
+#include <deal.II/grid/grid_tools.h>
+
+#include <deal.II/lac/sparsity_pattern.h>
+
 #include <algorithm>
 #include <map>
 #include <vector>
@@ -1154,6 +1158,59 @@ namespace HierBEM
           if (dof_to_cells.size() > dof_to_cell_topo.max_cells_per_dof)
             {
               dof_to_cell_topo.max_cells_per_dof = dof_to_cells.size();
+            }
+        }
+    }
+
+
+    /**
+     * @brief Make a sparsity pattern where the row indices of the matrix should
+     * be converted from external DoF numbering to internal.
+     */
+    template <int dim, int spacedim, typename SparsityPatternType>
+    void
+    make_sparsity_pattern(
+      const DoFHandler<dim, spacedim>            &dof_row,
+      const std::vector<types::global_dof_index> &dof_row_e2i_numbering,
+      const DoFHandler<dim, spacedim>            &dof_col,
+      SparsityPatternType                        &sparsity)
+    {
+      const types::global_dof_index n_dofs_row = dof_row.n_dofs();
+      const types::global_dof_index n_dofs_col = dof_col.n_dofs();
+      (void)n_dofs_row;
+      (void)n_dofs_col;
+
+      Assert(sparsity.n_rows() == n_dofs_row,
+             ExcDimensionMismatch(sparsity.n_rows(), n_dofs_row));
+      Assert(sparsity.n_cols() == n_dofs_col,
+             ExcDimensionMismatch(sparsity.n_cols(), n_dofs_col));
+
+      using cell_iterator = typename DoFHandler<dim, spacedim>::cell_iterator;
+      std::list<std::pair<cell_iterator, cell_iterator>> cell_list =
+        GridTools::get_finest_common_cells(dof_row, dof_col);
+
+      for (const auto &cell_pair : cell_list)
+        {
+          const cell_iterator cell_row = cell_pair.first;
+          const cell_iterator cell_col = cell_pair.second;
+
+          if (cell_row->is_active() && cell_col->is_active())
+            {
+              const unsigned int dofs_per_cell_row =
+                cell_row->get_fe().n_dofs_per_cell();
+              const unsigned int dofs_per_cell_col =
+                cell_col->get_fe().n_dofs_per_cell();
+              std::vector<types::global_dof_index> local_dof_indices_row(
+                dofs_per_cell_row);
+              std::vector<types::global_dof_index> local_dof_indices_col(
+                dofs_per_cell_col);
+              cell_row->get_dof_indices(local_dof_indices_row);
+              cell_col->get_dof_indices(local_dof_indices_col);
+              for (unsigned int i = 0; i < dofs_per_cell_row; ++i)
+                sparsity.add_entries(
+                  dof_row_e2i_numbering[local_dof_indices_row[i]],
+                  local_dof_indices_col.begin(),
+                  local_dof_indices_col.end());
             }
         }
     }

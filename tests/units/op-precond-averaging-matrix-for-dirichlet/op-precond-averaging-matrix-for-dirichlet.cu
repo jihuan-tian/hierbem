@@ -8,6 +8,8 @@
  * @date 2024-12-05
  */
 
+#include <deal.II/base/point.h>
+
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/mapping_q.h>
@@ -19,11 +21,64 @@
 #include <fstream>
 #include <iostream>
 
+#include "debug_tools.hcu"
 #include "preconditioners/preconditioner_for_laplace_dirichlet.h"
+#include "subdomain_topology.h"
 
 using namespace HierBEM;
 using namespace dealii;
 using namespace std;
+
+void
+print_weights_at_support_points_in_refined_mesh(
+  const PreconditionerForLaplaceDirichlet<2, 3, double> &precond)
+{
+  std::cout
+    << "# DoF index in dual mesh, DoF index in refined mesh, Support point coordinates x, y, z, Weight for dual basis"
+    << std::endl;
+
+  std::vector<types::global_dof_index> dof_indices_in_cell(
+    precond.get_dof_handler_dual_space().get_fe().dofs_per_cell);
+  const std::vector<Point<2>> &unit_support_points =
+    precond.get_dof_handler_dual_space().get_fe().get_unit_support_points();
+
+  MappingQ<2, 3> mapping(1);
+
+  // Iterate over each cell in the primal mesh, which is equivalent to
+  // iterating over each node in the dual mesh.
+  types::global_dof_index dof_index_in_dual_mesh = 0;
+  for (const auto &cell :
+       precond.get_dof_handler_dual_space().mg_cell_iterators_on_level(0))
+    {
+      // Iterate over each child in the refined mesh of the current cell in the
+      // primal mesh.
+      for (const auto &child : cell->child_iterators())
+        {
+          child->get_mg_dof_indices(dof_indices_in_cell);
+
+          // Iterate over each DoF index in the child cell.
+          unsigned int d = 0;
+          for (auto dof_index_in_refined_mesh : dof_indices_in_cell)
+            {
+              Point<3> support_point =
+                mapping.transform_unit_to_real_cell(child,
+                                                    unit_support_points[d]);
+
+              std::cout << dof_index_in_dual_mesh << " "
+                        << dof_index_in_refined_mesh << " " << support_point(0)
+                        << " " << support_point(1) << " " << support_point(2)
+                        << " "
+                        << precond.get_averaging_matrix().el(
+                             dof_index_in_dual_mesh, dof_index_in_refined_mesh)
+                        << std::endl;
+
+              d++;
+            }
+        }
+
+      dof_index_in_dual_mesh++;
+    }
+}
 
 int
 main(int argc, const char *argv[])
@@ -49,7 +104,12 @@ main(int argc, const char *argv[])
                                                           fe_dual_space,
                                                           tria);
 
+  precond.get_triangulation().copy_triangulation(tria);
+  precond.get_triangulation().refine_global();
+
   // Build the averaging matrix.
+  precond.initialize_dof_handlers();
+  precond.build_dof_to_cell_topology();
   precond.build_averaging_matrix();
 
   // Export the refined mesh.
@@ -61,23 +121,10 @@ main(int argc, const char *argv[])
   precond.get_averaging_matrix().get_sparsity_pattern().print_svg(sp_pattern);
 
   // Print matrix.
-  precond.get_averaging_matrix().print_formatted(std::cout, 15, true, 25, "0");
+  print_sparse_matrix_to_mat(
+    std::cout, "Cd", precond.get_averaging_matrix(), 15, true, 25);
 
-  // Generate DoF support points on the primal mesh.
-  MappingQ<2, 3>                              mapping(1);
-  std::map<types::global_dof_index, Point<3>> support_points;
-  DoFToolsExt::map_mg_dofs_to_support_points(
-    mapping, precond.get_dof_handler_dual_space(), 0, support_points);
-  ofstream support_out("support-points-primal.gpl");
-  DoFTools::write_gnuplot_dof_support_point_info(support_out, support_points);
-  support_out.close();
-
-  // Generate DoF support points on the refined mesh.
-  DoFToolsExt::map_mg_dofs_to_support_points(
-    mapping, precond.get_dof_handler_dual_space(), 1, support_points);
-  support_out.open("support-points-refined.gpl");
-  DoFTools::write_gnuplot_dof_support_point_info(support_out, support_points);
-  support_out.close();
+  print_weights_at_support_points_in_refined_mesh(precond);
 
   return 0;
 }

@@ -16,18 +16,14 @@ namespace HierBEM
 {
   using namespace dealii;
 
-  template <int dim,
-            int spacedim,
-            typename RangeNumberType,
-            typename SurfaceNormalDetector>
+  template <int dim, int spacedim, typename RangeNumberType>
   class PreconditionerForLaplaceDirichlet
     : public OperatorPreconditioner<
         dim,
         spacedim,
         HierBEM::CUDAWrappers::LaplaceKernel::
           HyperSingularKernelRegular<spacedim, RangeNumberType>,
-        RangeNumberType,
-        SurfaceNormalDetector>
+        RangeNumberType>
   {
   public:
     /**
@@ -36,7 +32,14 @@ namespace HierBEM
     PreconditionerForLaplaceDirichlet(
       FiniteElement<dim, spacedim>       &fe_primal_space,
       FiniteElement<dim, spacedim>       &fe_dual_space,
-      const Triangulation<dim, spacedim> &primal_tria);
+      const Triangulation<dim, spacedim> &primal_tria,
+      const std::vector<types::global_dof_index>
+                        &primal_space_dof_e2i_numbering,
+      const unsigned int max_iter    = 1000,
+      const double       tol         = 1e-8,
+      const double       omega       = 1.0,
+      const bool         log_history = true,
+      const bool         log_result  = true);
 
     virtual void
     build_coupling_matrix() final;
@@ -46,38 +49,40 @@ namespace HierBEM
   };
 
 
-  template <int dim,
-            int spacedim,
-            typename RangeNumberType,
-            typename SurfaceNormalDetector>
-  PreconditionerForLaplaceDirichlet<dim,
-                                    spacedim,
-                                    RangeNumberType,
-                                    SurfaceNormalDetector>::
+  template <int dim, int spacedim, typename RangeNumberType>
+  PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
     PreconditionerForLaplaceDirichlet(
       FiniteElement<dim, spacedim>       &fe_primal_space,
       FiniteElement<dim, spacedim>       &fe_dual_space,
-      const Triangulation<dim, spacedim> &primal_tria)
+      const Triangulation<dim, spacedim> &primal_tria,
+      const std::vector<types::global_dof_index>
+                        &primal_space_dof_e2i_numbering,
+      const unsigned int max_iter,
+      const double       tol,
+      const double       omega,
+      const bool         log_history,
+      const bool         log_result)
     : OperatorPreconditioner<
         dim,
         spacedim,
         HierBEM::CUDAWrappers::LaplaceKernel::
           HyperSingularKernelRegular<spacedim, RangeNumberType>,
-        RangeNumberType,
-        SurfaceNormalDetector>(fe_primal_space, fe_dual_space, primal_tria)
+        RangeNumberType>(fe_primal_space,
+                         fe_dual_space,
+                         primal_tria,
+                         primal_space_dof_e2i_numbering,
+                         max_iter,
+                         tol,
+                         omega,
+                         log_history,
+                         log_result)
   {}
 
 
-  template <int dim,
-            int spacedim,
-            typename RangeNumberType,
-            typename SurfaceNormalDetector>
+  template <int dim, int spacedim, typename RangeNumberType>
   void
-  PreconditionerForLaplaceDirichlet<
-    dim,
-    spacedim,
-    RangeNumberType,
-    SurfaceNormalDetector>::build_coupling_matrix()
+  PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
+    build_coupling_matrix()
   {
     // Generate the dynamic sparsity pattern.
     DynamicSparsityPattern dsp(this->dof_handler_primal_space.n_dofs(0),
@@ -93,7 +98,7 @@ namespace HierBEM
       {
         cell->get_mg_dof_indices(dof_indices_in_cell);
         types::global_dof_index dof_index_in_primal_mesh =
-          dof_indices_in_cell[0];
+          this->primal_space_dof_e2i_numbering[dof_indices_in_cell[0]];
         // Iterate over each child iterator of the current cell, i.e. on
         // level 1.
         for (const auto &child : cell->child_iterators())
@@ -120,7 +125,7 @@ namespace HierBEM
       {
         cell->get_mg_dof_indices(dof_indices_in_cell);
         types::global_dof_index dof_index_in_primal_mesh =
-          dof_indices_in_cell[0];
+          this->primal_space_dof_e2i_numbering[dof_indices_in_cell[0]];
         // Iterate over each child iterator of the current cell, i.e. on
         // level 1.
         for (const auto &child : cell->child_iterators())
@@ -137,16 +142,10 @@ namespace HierBEM
   }
 
 
-  template <int dim,
-            int spacedim,
-            typename RangeNumberType,
-            typename SurfaceNormalDetector>
+  template <int dim, int spacedim, typename RangeNumberType>
   void
-  PreconditionerForLaplaceDirichlet<
-    dim,
-    spacedim,
-    RangeNumberType,
-    SurfaceNormalDetector>::build_averaging_matrix()
+  PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
+    build_averaging_matrix()
   {
     // Generate the dynamic sparsity pattern. N.B. The row size of this matrix
     // is the number of DoFs in the dual space on the dual mesh, which is the
@@ -156,6 +155,11 @@ namespace HierBEM
 
     std::vector<types::global_dof_index> dof_indices_in_cell(
       this->fe_dual_space.dofs_per_cell);
+
+    // External-to-internal DoF numbering to be used for the column indices of
+    // the averaging matrix.
+    const std::vector<types::global_dof_index> &dof_e2i_numbering =
+      this->ct.get_external_to_internal_dof_numbering();
 
     // Iterate over each cell in the primal mesh, which is equivalent to
     // iterating over each node in the dual mesh.
@@ -172,27 +176,36 @@ namespace HierBEM
             switch (child_index)
               {
                   case 0: {
-                    dsp.add(dof_index_in_dual_mesh, dof_indices_in_cell[0]);
-                    dsp.add(dof_index_in_dual_mesh, dof_indices_in_cell[1]);
-                    dsp.add(dof_index_in_dual_mesh, dof_indices_in_cell[2]);
-                    dsp.add(dof_index_in_dual_mesh, dof_indices_in_cell[3]);
+                    dsp.add(dof_index_in_dual_mesh,
+                            dof_e2i_numbering[dof_indices_in_cell[0]]);
+                    dsp.add(dof_index_in_dual_mesh,
+                            dof_e2i_numbering[dof_indices_in_cell[1]]);
+                    dsp.add(dof_index_in_dual_mesh,
+                            dof_e2i_numbering[dof_indices_in_cell[2]]);
+                    dsp.add(dof_index_in_dual_mesh,
+                            dof_e2i_numbering[dof_indices_in_cell[3]]);
 
                     break;
                   }
                   case 1: {
-                    dsp.add(dof_index_in_dual_mesh, dof_indices_in_cell[1]);
-                    dsp.add(dof_index_in_dual_mesh, dof_indices_in_cell[3]);
+                    dsp.add(dof_index_in_dual_mesh,
+                            dof_e2i_numbering[dof_indices_in_cell[1]]);
+                    dsp.add(dof_index_in_dual_mesh,
+                            dof_e2i_numbering[dof_indices_in_cell[3]]);
 
                     break;
                   }
                   case 2: {
-                    dsp.add(dof_index_in_dual_mesh, dof_indices_in_cell[2]);
-                    dsp.add(dof_index_in_dual_mesh, dof_indices_in_cell[3]);
+                    dsp.add(dof_index_in_dual_mesh,
+                            dof_e2i_numbering[dof_indices_in_cell[2]]);
+                    dsp.add(dof_index_in_dual_mesh,
+                            dof_e2i_numbering[dof_indices_in_cell[3]]);
 
                     break;
                   }
                   case 3: {
-                    dsp.add(dof_index_in_dual_mesh, dof_indices_in_cell[3]);
+                    dsp.add(dof_index_in_dual_mesh,
+                            dof_e2i_numbering[dof_indices_in_cell[3]]);
 
                     break;
                   }
@@ -238,10 +251,10 @@ namespace HierBEM
                       this->dof_to_cell_topo_dual_space
                         .topology[dof_index_in_refined_mesh]
                         .size();
-                    this->averaging_matrix.set(dof_index_in_dual_mesh,
-                                               dof_index_in_refined_mesh,
-                                               1.0 /
-                                                 number_of_cells_sharing_dof);
+                    this->averaging_matrix.set(
+                      dof_index_in_dual_mesh,
+                      dof_e2i_numbering[dof_index_in_refined_mesh],
+                      1.0 / number_of_cells_sharing_dof);
 
                     // Vertex 1 in the child cell, which is in the middle of a
                     // primal edge.
@@ -258,7 +271,7 @@ namespace HierBEM
                             // primal edge at the boundary.
                             this->averaging_matrix.set(
                               dof_index_in_dual_mesh,
-                              dof_index_in_refined_mesh,
+                              dof_e2i_numbering[dof_index_in_refined_mesh],
                               1.0);
 
                             break;
@@ -268,7 +281,7 @@ namespace HierBEM
                             // primal edge in the interior.
                             this->averaging_matrix.set(
                               dof_index_in_dual_mesh,
-                              dof_index_in_refined_mesh,
+                              dof_e2i_numbering[dof_index_in_refined_mesh],
                               0.5);
 
                             break;
@@ -293,7 +306,7 @@ namespace HierBEM
                             // primal edge at the boundary.
                             this->averaging_matrix.set(
                               dof_index_in_dual_mesh,
-                              dof_index_in_refined_mesh,
+                              dof_e2i_numbering[dof_index_in_refined_mesh],
                               1.0);
 
                             break;
@@ -303,7 +316,7 @@ namespace HierBEM
                             // primal edge in the interior.
                             this->averaging_matrix.set(
                               dof_index_in_dual_mesh,
-                              dof_index_in_refined_mesh,
+                              dof_e2i_numbering[dof_index_in_refined_mesh],
                               0.5);
 
                             break;
@@ -316,9 +329,10 @@ namespace HierBEM
                     // Vertex 3 in the child cell, which is in the interior of
                     // the primal cell.
                     dof_index_in_refined_mesh = dof_indices_in_cell[3];
-                    this->averaging_matrix.set(dof_index_in_dual_mesh,
-                                               dof_index_in_refined_mesh,
-                                               1);
+                    this->averaging_matrix.set(
+                      dof_index_in_dual_mesh,
+                      dof_e2i_numbering[dof_index_in_refined_mesh],
+                      1);
 
                     break;
                   }
@@ -330,10 +344,10 @@ namespace HierBEM
                       this->dof_to_cell_topo_dual_space
                         .topology[dof_index_in_refined_mesh]
                         .size();
-                    this->averaging_matrix.set(dof_index_in_dual_mesh,
-                                               dof_index_in_refined_mesh,
-                                               1.0 /
-                                                 number_of_cells_sharing_dof);
+                    this->averaging_matrix.set(
+                      dof_index_in_dual_mesh,
+                      dof_e2i_numbering[dof_index_in_refined_mesh],
+                      1.0 / number_of_cells_sharing_dof);
 
                     // Vertex 3 in the child cell, which is in the middle of a
                     // primal edge.
@@ -350,7 +364,7 @@ namespace HierBEM
                             // primal edge at the boundary.
                             this->averaging_matrix.set(
                               dof_index_in_dual_mesh,
-                              dof_index_in_refined_mesh,
+                              dof_e2i_numbering[dof_index_in_refined_mesh],
                               1.0);
 
                             break;
@@ -360,7 +374,7 @@ namespace HierBEM
                             // primal edge in the interior.
                             this->averaging_matrix.set(
                               dof_index_in_dual_mesh,
-                              dof_index_in_refined_mesh,
+                              dof_e2i_numbering[dof_index_in_refined_mesh],
                               0.5);
 
                             break;
@@ -380,10 +394,10 @@ namespace HierBEM
                       this->dof_to_cell_topo_dual_space
                         .topology[dof_index_in_refined_mesh]
                         .size();
-                    this->averaging_matrix.set(dof_index_in_dual_mesh,
-                                               dof_index_in_refined_mesh,
-                                               1.0 /
-                                                 number_of_cells_sharing_dof);
+                    this->averaging_matrix.set(
+                      dof_index_in_dual_mesh,
+                      dof_e2i_numbering[dof_index_in_refined_mesh],
+                      1.0 / number_of_cells_sharing_dof);
 
                     // Vertex 3 in the child cell, which is in the middle of a
                     // primal edge.
@@ -400,7 +414,7 @@ namespace HierBEM
                             // primal edge at the boundary.
                             this->averaging_matrix.set(
                               dof_index_in_dual_mesh,
-                              dof_index_in_refined_mesh,
+                              dof_e2i_numbering[dof_index_in_refined_mesh],
                               1.0);
 
                             break;
@@ -410,7 +424,7 @@ namespace HierBEM
                             // primal edge in the interior.
                             this->averaging_matrix.set(
                               dof_index_in_dual_mesh,
-                              dof_index_in_refined_mesh,
+                              dof_e2i_numbering[dof_index_in_refined_mesh],
                               0.5);
 
                             break;
@@ -430,10 +444,10 @@ namespace HierBEM
                       this->dof_to_cell_topo_dual_space
                         .topology[dof_index_in_refined_mesh]
                         .size();
-                    this->averaging_matrix.set(dof_index_in_dual_mesh,
-                                               dof_index_in_refined_mesh,
-                                               1.0 /
-                                                 number_of_cells_sharing_dof);
+                    this->averaging_matrix.set(
+                      dof_index_in_dual_mesh,
+                      dof_e2i_numbering[dof_index_in_refined_mesh],
+                      1.0 / number_of_cells_sharing_dof);
 
                     break;
                   }
