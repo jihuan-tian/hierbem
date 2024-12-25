@@ -1,10 +1,13 @@
 #include <deal.II/base/logstream.h>
 
+#include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/manifold_lib.h>
+
 #include <fstream>
 #include <iostream>
 
 #include "hbem_test_config.h"
-#include "laplace_bem.hcu"
+#include "laplace_bem.h"
 
 using namespace dealii;
 using namespace HierBEM;

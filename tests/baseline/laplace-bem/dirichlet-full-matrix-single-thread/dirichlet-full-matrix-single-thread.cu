@@ -7,19 +7,25 @@
  * @author Jihuan Tian
  * @date 2023-10-24
  */
+#include <deal.II/base/timer.h>
+
 #include <deal.II/fe/mapping_manifold.h>
 
-#include <deal.II/grid/manifold.h>
+#include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/manifold_lib.h>
+
+#include <deal.II/numerics/vector_tools.h>
 
 #include <boost/program_options.hpp>
 
 #include <fstream>
 #include <iostream>
 
+#include "debug_tools.h"
 #include "grid_in_ext.h"
 #include "grid_out_ext.h"
 #include "hbem_test_config.h"
-#include "laplace_bem.hcu"
+#include "laplace_bem.h"
 
 using namespace dealii;
 using namespace HierBEM;

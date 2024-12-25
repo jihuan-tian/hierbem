@@ -10,7 +10,7 @@
 #include <iostream>
 
 #include "cu_bem_values.hcu"
-#include "laplace_bem.hcu"
+#include "laplace_bem.h"
 
 using namespace dealii;
 using namespace HierBEM;

@@ -15,7 +15,7 @@
 #include <iostream>
 
 #include "hbem_octave_wrapper.h"
-#include "hmatrix.h"
+#include "hmatrix/hmatrix.h"
 
 using namespace std;
 using namespace HierBEM;

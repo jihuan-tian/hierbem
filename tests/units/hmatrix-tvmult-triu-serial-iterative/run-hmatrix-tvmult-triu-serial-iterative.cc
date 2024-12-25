@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-#include "hmatrix.h"
+#include "hmatrix/hmatrix.h"
 #include "lapack_full_matrix_ext.h"
 #include "read_octave_data.h"
 

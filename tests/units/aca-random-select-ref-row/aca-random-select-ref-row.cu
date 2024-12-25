@@ -11,7 +11,7 @@
 #include <iterator>
 #include <vector>
 
-#include "aca_plus.hcu"
+#include "hmatrix/aca_plus/aca_plus.hcu"
 
 using namespace HierBEM;
 using namespace dealii;

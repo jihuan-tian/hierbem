@@ -14,7 +14,7 @@
 
 #include "config.h"
 
-HIERBEM_NAMESPACE_OPEN
+HBEM_NS_OPEN
 
 using namespace dealii;
 
@@ -429,6 +429,6 @@ SimpleBoundingBox<spacedim, Number>::point_inside(
   return is_inside;
 }
 
-HIERBEM_NAMESPACE_CLOSE
+HBEM_NS_CLOSE
 
 #endif // INCLUDE_SIMPLE_BOUNDING_BOX_H_

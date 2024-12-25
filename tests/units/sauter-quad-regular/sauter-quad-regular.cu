@@ -7,12 +7,14 @@
  * @author Jihuan Tian
  */
 
+#include <deal.II/fe/fe.h>
+#include <deal.II/fe/fe_dgq.h>
+
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_out.h>
 
 #include <fstream>
 
-#include "laplace_bem.hcu"
 #include "sauter_quadrature.hcu"
 
 using namespace dealii;
@@ -121,7 +123,7 @@ main()
     HierBEM::CrossPlatform::LaplaceKernel::SingleLayerKernel<spacedim> slp;
     HierBEM::CrossPlatform::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
     HierBEM::CrossPlatform::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
-                                                                        adlp;
+                                                                         adlp;
     HierBEM::CrossPlatform::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
 
     /**
@@ -326,7 +328,7 @@ main()
     HierBEM::CrossPlatform::LaplaceKernel::SingleLayerKernel<spacedim> slp;
     HierBEM::CrossPlatform::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
     HierBEM::CrossPlatform::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
-                                                                        adlp;
+                                                                         adlp;
     HierBEM::CrossPlatform::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
 
     /**

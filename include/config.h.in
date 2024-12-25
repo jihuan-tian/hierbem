@@ -5,13 +5,13 @@
  * @date 2022-12-16
  * @author Jihuan Tian
  */
-#ifndef INCLUDE_CONFIG_H_
-#define INCLUDE_CONFIG_H_
+#ifndef HIERBEM_INCLUDE_CONFIG_H_
+#define HIERBEM_INCLUDE_CONFIG_H_
 
-#define HIERBEM_NAMESPACE_OPEN \
+#define HBEM_NS_OPEN \
   namespace HierBEM            \
   {
-#define HIERBEM_NAMESPACE_CLOSE }
+#define HBEM_NS_CLOSE }
 
 // Define host-device attribute macro for different platforms
 #ifdef __CUDACC__
@@ -47,4 +47,4 @@
 #define ARENA_MAX_CONCURRENCY_IN_LU_AND_CHOL \
   @HBEM_ARENA_MAX_CONCURRENCY_IN_LU_AND_CHOL@
 
-#endif /* INCLUDE_CONFIG_H_ */
+#endif /* HIERBEM_INCLUDE_CONFIG_H_ */

@@ -16,7 +16,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "hmatrix.h"
+#include "hmatrix/hmatrix.h"
 
 using namespace HierBEM;
 

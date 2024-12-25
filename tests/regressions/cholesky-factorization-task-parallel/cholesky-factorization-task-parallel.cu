@@ -8,6 +8,11 @@
  * @date 2024-01-10
  */
 
+#include <deal.II/fe/fe.h>
+#include <deal.II/fe/fe_dgq.h>
+
+#include <deal.II/grid/manifold_lib.h>
+
 #include <cuda_runtime.h>
 #include <openblas-pthread/cblas.h>
 
@@ -15,11 +20,14 @@
 #include <fstream>
 #include <iostream>
 
+#include "hmatrix/aca_plus/aca_plus.hcu"
 #include "grid_in_ext.h"
 #include "hbem_test_config.h"
-#include "laplace_bem.hcu"
+#include "laplace_bem.h"
 #include "mapping/mapping_info.h"
+#include "sauter_quadrature.hcu"
 #include "subdomain_topology.h"
+#include "unary_template_arg_containers.h"
 
 using namespace dealii;
 using namespace HierBEM;

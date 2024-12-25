@@ -11,7 +11,7 @@
 
 #include "block_cluster_tree.h"
 #include "debug_tools.h"
-#include "hmatrix.h"
+#include "hmatrix/hmatrix.h"
 
 int
 main()

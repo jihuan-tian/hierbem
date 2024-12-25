@@ -32,7 +32,7 @@
 #include "block_cluster_tree.h"
 #include "cluster_tree.h"
 #include "debug_tools.h"
-#include "hmatrix.h"
+#include "hmatrix/hmatrix.h"
 #include "regex_tools.h"
 #include "simple_bounding_box.h"
 #include "unary_template_arg_containers.h"

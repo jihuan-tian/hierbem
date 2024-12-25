@@ -7,7 +7,7 @@
  * @date 2024-07-28
  */
 
-#include "electric_field/ddm_efield.hcu"
+#include "electric_field/ddm_efield.h"
 #include "grid_in_ext.h"
 #include "hbem_test_config.h"
 

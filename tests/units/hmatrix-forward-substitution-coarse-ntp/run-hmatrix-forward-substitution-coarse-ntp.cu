@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "cu_debug_tools.hcu"
-#include "hmatrix.h"
+#include "hmatrix/hmatrix.h"
 #include "lapack_full_matrix_ext.h"
 #include "read_octave_data.h"
 

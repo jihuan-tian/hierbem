@@ -11,7 +11,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "aca_plus.hcu"
+#include "hmatrix/aca_plus/aca_plus.hcu"
 #include "read_octave_data.h"
 
 using namespace HierBEM;

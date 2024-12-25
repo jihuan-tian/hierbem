@@ -7,6 +7,7 @@
  */
 
 #include <deal.II/base/logstream.h>
+#include <deal.II/grid/manifold_lib.h>
 
 #include <boost/program_options.hpp>
 
@@ -16,10 +17,10 @@
 #include <iostream>
 
 #include "cu_profile.hcu"
-#include "cu_debug_tools.hcu"
+#include "debug_tools.h"
 #include "grid_in_ext.h"
 #include "hbem_test_config.h"
-#include "laplace_bem.hcu"
+#include "laplace_bem.h"
 
 using namespace dealii;
 using namespace HierBEM;

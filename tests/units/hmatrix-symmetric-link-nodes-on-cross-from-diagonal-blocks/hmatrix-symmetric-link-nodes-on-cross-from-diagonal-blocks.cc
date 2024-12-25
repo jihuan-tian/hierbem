@@ -11,7 +11,7 @@
 #include <iostream>
 
 #include "hbem_octave_wrapper.h"
-#include "hmatrix.h"
+#include "hmatrix/hmatrix.h"
 #include "lapack_full_matrix_ext.h"
 
 using namespace HierBEM;

@@ -6,7 +6,7 @@
  * @author Jihuan Tian
  */
 
-#include "hmatrix_support.h"
+#include "hmatrix/hmatrix_support.h"
 
 namespace HierBEM
 {
