@@ -1,5 +1,5 @@
-#ifndef INCLUDE_SIMPLE_BOUNDING_BOX_H_
-#define INCLUDE_SIMPLE_BOUNDING_BOX_H_
+#ifndef HIERBEM_INCLUDE_SIMPLE_BOUNDING_BOX_H_
+#define HIERBEM_INCLUDE_SIMPLE_BOUNDING_BOX_H_
 
 #include <deal.II/base/memory_consumption.h>
 #include <deal.II/base/point.h>
@@ -431,4 +431,4 @@ SimpleBoundingBox<spacedim, Number>::point_inside(
 
 HBEM_NS_CLOSE
 
-#endif // INCLUDE_SIMPLE_BOUNDING_BOX_H_
+#endif // HIERBEM_INCLUDE_SIMPLE_BOUNDING_BOX_H_

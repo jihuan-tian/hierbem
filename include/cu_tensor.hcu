@@ -5,43 +5,43 @@
  * @date 2023-02-10
  * @author Jihuan Tian
  */
-#ifndef INCLUDE_CU_TENSOR_HCU_
-#define INCLUDE_CU_TENSOR_HCU_
+#ifndef HIERBEM_INCLUDE_CU_TENSOR_H_
+#define HIERBEM_INCLUDE_CU_TENSOR_H_
 
 #include <deal.II/base/template_constraints.h>
 #include <deal.II/base/tensor.h>
 
 #include "config.h"
 #include "cu_vector.hcu"
-#include "xp_tensor.h"
+#include "platform_shared/tensor.h"
 
-namespace HierBEM
+HBEM_NS_OPEN
+
+using namespace dealii;
+
+namespace CUDAWrappers
 {
-  using namespace dealii;
-
-  namespace CUDAWrappers
+  template <int dim, typename Number1, typename Number2>
+  HBEM_ATTR_HOST
+    HBEM_ATTR_DEV Tensor<1, dim, typename ProductType<Number1, Number2>::type>
+                  cross_product_3d(const Tensor<1, dim, Number1> &src1,
+                                   const CUDAVector<Number2>     &src2)
   {
-    template <int dim, typename Number1, typename Number2>
-    HBEM_ATTR_HOST
-      HBEM_ATTR_DEV Tensor<1, dim, typename ProductType<Number1, Number2>::type>
-                    cross_product_3d(const Tensor<1, dim, Number1> &src1,
-                                     const CUDAVector<Number2>     &src2)
-    {
-      Tensor<1, dim, typename ProductType<Number1, Number2>::type> result;
+    Tensor<1, dim, typename ProductType<Number1, Number2>::type> result;
 
-      // avoid compiler warnings
-      constexpr int s0 = 0 % dim;
-      constexpr int s1 = 1 % dim;
-      constexpr int s2 = 2 % dim;
+    // avoid compiler warnings
+    constexpr int s0 = 0 % dim;
+    constexpr int s1 = 1 % dim;
+    constexpr int s2 = 2 % dim;
 
-      result[s0] = src1[s1] * src2[s2] - src1[s2] * src2[s1];
-      result[s1] = src1[s2] * src2[s0] - src1[s0] * src2[s2];
-      result[s2] = src1[s0] * src2[s1] - src1[s1] * src2[s0];
+    result[s0] = src1[s1] * src2[s2] - src1[s2] * src2[s1];
+    result[s1] = src1[s2] * src2[s0] - src1[s0] * src2[s2];
+    result[s2] = src1[s0] * src2[s1] - src1[s1] * src2[s0];
 
-      return result;
-    }
-  } // namespace CUDAWrappers
-} // namespace HierBEM
+    return result;
+  }
+} // namespace CUDAWrappers
 
+HBEM_NS_CLOSE
 
-#endif /* INCLUDE_CU_TENSOR_HCU_ */
+#endif // HIERBEM_INCLUDE_CU_TENSOR_H_

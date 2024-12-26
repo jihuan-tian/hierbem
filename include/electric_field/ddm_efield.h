@@ -58,7 +58,7 @@
 #include "subdomain_steklov_poincare_hmatrix.h"
 #include "subdomain_topology.h"
 #include "unary_template_arg_containers.h"
-#include "xp_laplace_kernels.h"
+#include "platform_shared/laplace_kernels.h"
 
 HBEM_NS_OPEN
 
@@ -477,17 +477,17 @@ private:
   /**
    * Kernel function for the single layer potential.
    */
-  HierBEM::CrossPlatform::LaplaceKernel::SingleLayerKernel<3>
+  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<3>
     single_layer_kernel;
   /**
    * Kernel function for the double layer potential.
    */
-  HierBEM::CrossPlatform::LaplaceKernel::DoubleLayerKernel<3>
+  HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel<3>
     double_layer_kernel;
   /**
    * Kernel function for the hyper-singular potential.
    */
-  HierBEM::CrossPlatform::LaplaceKernel::HyperSingularKernelRegular<3>
+  HierBEM::PlatformShared::LaplaceKernel::HyperSingularKernelRegular<3>
     hyper_singular_kernel;
 
   /**

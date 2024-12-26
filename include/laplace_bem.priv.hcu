@@ -61,7 +61,7 @@
 #include "subdomain_topology.h"
 #include "triangulation_tools.h"
 #include "unary_template_arg_containers.h"
-#include "xp_laplace_kernels.h"
+#include "platform_shared/laplace_kernels.h"
 
 HBEM_NS_OPEN
 
@@ -361,22 +361,22 @@ private:
   /**
    * Kernel function for the single layer potential.
    */
-  HierBEM::CrossPlatform::LaplaceKernel::SingleLayerKernel<3>
+  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<3>
     single_layer_kernel_;
   /**
    * Kernel function for the double layer potential.
    */
-  HierBEM::CrossPlatform::LaplaceKernel::DoubleLayerKernel<3>
+  HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel<3>
     double_layer_kernel_;
   /**
    * Kernel function for the adjoint double layer potential.
    */
-  HierBEM::CrossPlatform::LaplaceKernel::AdjointDoubleLayerKernel<3>
+  HierBEM::PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel<3>
     adjoint_double_layer_kernel_;
   /**
    * Kernel function for the hyper-singular potential.
    */
-  HierBEM::CrossPlatform::LaplaceKernel::HyperSingularKernelRegular<3>
+  HierBEM::PlatformShared::LaplaceKernel::HyperSingularKernelRegular<3>
     hyper_singular_kernel_;
 
   /**

@@ -118,11 +118,11 @@ main()
     /**
      * Create different Laplace kernel functions.
      */
-    HierBEM::CrossPlatform::LaplaceKernel::SingleLayerKernel<spacedim> slp;
-    HierBEM::CrossPlatform::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
-    HierBEM::CrossPlatform::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
+    HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim> slp;
+    HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
+    HierBEM::PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
                                                                          adlp;
-    HierBEM::CrossPlatform::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
+    HierBEM::PlatformShared::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
 
     /**
      * Generate 4D Gauss-Legendre quadrature rules for various cell neighboring
@@ -321,11 +321,11 @@ main()
     /**
      * Create different Laplace kernel functions.
      */
-    HierBEM::CrossPlatform::LaplaceKernel::SingleLayerKernel<spacedim> slp;
-    HierBEM::CrossPlatform::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
-    HierBEM::CrossPlatform::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
+    HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim> slp;
+    HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
+    HierBEM::PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
                                                                          adlp;
-    HierBEM::CrossPlatform::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
+    HierBEM::PlatformShared::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
 
     /**
      * Generate 4D Gauss-Legendre quadrature rules for various cell neighboring

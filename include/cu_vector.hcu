@@ -5,330 +5,329 @@
  * @date 2023-02-09
  * @author Jihuan Tian
  */
-#ifndef INCLUDE_CU_VECTOR_HCU_
-#define INCLUDE_CU_VECTOR_HCU_
+#ifndef HIERBEM_INCLUDE_CU_VECTOR_H_
+#define HIERBEM_INCLUDE_CU_VECTOR_H_
 
 #include <assert.h>
 
 #include "config.h"
 
-namespace HierBEM
+HBEM_NS_OPEN
+
+namespace CUDAWrappers
 {
-  namespace CUDAWrappers
+  /**
+   * Wrapper class for a vector of values, which has no memory management.
+   *
+   * @tparam T
+   */
+  template <typename T = double>
+  class CUDAVector
   {
+  public:
+    using pointer         = T *;
+    using const_pointer   = const T *;
+    using reference       = T &;
+    using const_reference = const T &;
+    using size_type       = std::size_t;
+
     /**
-     * Wrapper class for a vector of values, which has no memory management.
-     *
-     * @tparam T
+     * Default constructor.
      */
-    template <typename T = double>
-    class CUDAVector
-    {
-    public:
-      using pointer         = T *;
-      using const_pointer   = const T *;
-      using reference       = T &;
-      using const_reference = const T &;
-      using size_type       = std::size_t;
-
-      /**
-       * Default constructor.
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV
-      CUDAVector();
-
-      /**
-       * Constructor from a pointer allocated with memory and specified vector
-       * size.
-       *
-       * @param p
-       * @param n
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV
-      CUDAVector(pointer p, const size_type _n);
-
-      /**
-       * Deep copy constructor is disabled. Since this class has no
-       * memory allocation because all memory allocation on GPU has been
-       * performed in the host code by calling @p cudaMalloc, the copy
-       * constructor is disabled.
-       *
-       * @param
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV
-      CUDAVector(const CUDAVector<T> &) = delete;
-
-      /**
-       * Shallow copy constructor is still available.
-       *
-       * @param vec
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV
-      CUDAVector(CUDAVector<T> &&vec);
-
-      /**
-       * Deep assignment. N.B. The target vector must have the same number of
-       * entries as the source vector.
-       *
-       * @param vec
-       * @return
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAVector<T>                              &
-      operator=(const CUDAVector<T> &vec);
-
-      /**
-       * Shallow assignment.
-       *
-       * @param vec
-       * @return
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAVector<T>                              &
-      operator=(CUDAVector<T> &&vec);
-
-
-      /**
-       * Fill the vector from the source data pointer.
-       *
-       * @param data
-       * @param source_offset
-       * @param target_offset
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV void
-      fill(const size_type n_elements_for_copy,
-           const_pointer   data,
-           const size_type source_offset = 0,
-           const size_type target_offset = 0);
-
-      /**
-       * Get the vector size.
-       *
-       * @return
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
-      size() const;
-
-      /**
-       * Get the internal data pointer.
-       *
-       * @return
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV pointer
-      data();
-
-      /**
-       * Get the internal data pointer (const version).
-       *
-       * @return
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV const_pointer
-      data() const;
-
-      /**
-       * Get the reference to the i'th element in the vector.
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV reference
-      operator()(const size_type i);
-
-      /**
-       * Get the reference to the i'th element in the vector.
-       *
-       * @param i
-       * @return
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV reference
-      operator[](const size_type i);
-
-      /**
-       * Get the const reference to the i'th element in the vector.
-       *
-       * @param i
-       * @return
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV const_reference
-      operator()(const size_type i) const;
-
-      /**
-       * Get the const reference to the i'th element in the vector.
-       *
-       * @param i
-       * @return
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV const_reference
-      operator[](const size_type i) const;
-
-      /**
-       * Print all the values in the vector.
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV void
-      print(const bool scientific = true) const;
-
-      /**
-       * Set all vector entries to zero.
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV void
-      reinit();
-
-    private:
-      pointer   values;
-      size_type n;
-    };
-
-
-    template <typename T>
     HBEM_ATTR_HOST HBEM_ATTR_DEV
-    CUDAVector<T>::CUDAVector()
-      : values(nullptr)
-      , n(0)
-    {}
+    CUDAVector();
 
-
-    template <typename T>
+    /**
+     * Constructor from a pointer allocated with memory and specified vector
+     * size.
+     *
+     * @param p
+     * @param n
+     */
     HBEM_ATTR_HOST HBEM_ATTR_DEV
-    CUDAVector<T>::CUDAVector(pointer p, const size_type _n)
-      : values(p)
-      , n(_n)
-    {}
+    CUDAVector(pointer p, const size_type _n);
 
-
-    template <typename T>
+    /**
+     * Deep copy constructor is disabled. Since this class has no
+     * memory allocation because all memory allocation on GPU has been
+     * performed in the host code by calling @p cudaMalloc, the copy
+     * constructor is disabled.
+     *
+     * @param
+     */
     HBEM_ATTR_HOST HBEM_ATTR_DEV
-    CUDAVector<T>::CUDAVector(CUDAVector<T> &&vec)
-      : values(vec.values)
-      , n(vec.n)
-    {}
+    CUDAVector(const CUDAVector<T> &) = delete;
 
+    /**
+     * Shallow copy constructor is still available.
+     *
+     * @param vec
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV
+    CUDAVector(CUDAVector<T> &&vec);
 
-    template <typename T>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAVector<T> &
-    CUDAVector<T>::operator=(const CUDAVector<T> &vec)
-    {
-      assert(n == vec.n);
-
-      for (size_t i = 0; i < vec.n; i++)
-        {
-          values[i] = vec.values[i];
-        }
-
-      return *this;
-    }
-
-
-    template <typename T>
+    /**
+     * Deep assignment. N.B. The target vector must have the same number of
+     * entries as the source vector.
+     *
+     * @param vec
+     * @return
+     */
     HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAVector<T>                              &
-    CUDAVector<T>::operator=(CUDAVector<T> &&vec)
-    {
-      values = vec.values;
-      n      = vec.n;
+    operator=(const CUDAVector<T> &vec);
 
-      return *this;
-    }
+    /**
+     * Shallow assignment.
+     *
+     * @param vec
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAVector<T>                              &
+    operator=(CUDAVector<T> &&vec);
 
 
-    template <typename T>
+    /**
+     * Fill the vector from the source data pointer.
+     *
+     * @param data
+     * @param source_offset
+     * @param target_offset
+     */
     HBEM_ATTR_HOST HBEM_ATTR_DEV void
-    CUDAVector<T>::fill(const size_type n_elements_for_copy,
-                        const_pointer   data,
-                        const size_type source_offset,
-                        const size_type target_offset)
-    {
-      [[maybe_unused]] const size_type allowed_n_elements_for_copy =
-        n - target_offset;
+    fill(const size_type n_elements_for_copy,
+         const_pointer   data,
+         const size_type source_offset = 0,
+         const size_type target_offset = 0);
 
-      assert(n_elements_for_copy <= allowed_n_elements_for_copy);
+    /**
+     * Get the vector size.
+     *
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
+    size() const;
 
-      for (size_type i = 0; i < n_elements_for_copy; i++)
-        {
-          values[target_offset + i] = data[source_offset + i];
-        }
-    }
+    /**
+     * Get the internal data pointer.
+     *
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV pointer
+    data();
 
+    /**
+     * Get the internal data pointer (const version).
+     *
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV const_pointer
+    data() const;
 
-    template <typename T>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::size_type
-                   CUDAVector<T>::size() const
-    {
-      return n;
-    }
+    /**
+     * Get the reference to the i'th element in the vector.
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV reference
+    operator()(const size_type i);
 
+    /**
+     * Get the reference to the i'th element in the vector.
+     *
+     * @param i
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV reference
+    operator[](const size_type i);
 
-    template <typename T>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::pointer
-                   CUDAVector<T>::data()
-    {
-      return values;
-    }
+    /**
+     * Get the const reference to the i'th element in the vector.
+     *
+     * @param i
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV const_reference
+    operator()(const size_type i) const;
 
+    /**
+     * Get the const reference to the i'th element in the vector.
+     *
+     * @param i
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV const_reference
+    operator[](const size_type i) const;
 
-    template <typename T>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::const_pointer
-                   CUDAVector<T>::data() const
-    {
-      return values;
-    }
-
-
-    template <typename T>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::reference
-                   CUDAVector<T>::operator()(const size_type i)
-    {
-      return values[i];
-    }
-
-
-    template <typename T>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::reference
-                   CUDAVector<T>::operator[](const size_type i)
-    {
-      return values[i];
-    }
-
-
-    template <typename T>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::const_reference
-                   CUDAVector<T>::operator()(const size_type i) const
-    {
-      return values[i];
-    }
-
-
-    template <typename T>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::const_reference
-                   CUDAVector<T>::operator[](const size_type i) const
-    {
-      return values[i];
-    }
-
-
-    template <typename T>
+    /**
+     * Print all the values in the vector.
+     */
     HBEM_ATTR_HOST HBEM_ATTR_DEV void
-    CUDAVector<T>::print(const bool scientific) const
-    {
-      for (size_type i = 0; i < n; i++)
-        {
-          if (scientific)
-            {
-              printf("%20.8e\n", values[i]);
-            }
-          else
-            {
-              printf("%20.8f\n", values[i]);
-            }
-        }
-    }
+    print(const bool scientific = true) const;
 
-
-    template <typename T>
+    /**
+     * Set all vector entries to zero.
+     */
     HBEM_ATTR_HOST HBEM_ATTR_DEV void
-    CUDAVector<T>::reinit()
-    {
-      for (size_type i = 0; i < n; i++)
-        {
-          values[i] = 0;
-        }
-    }
-  } // namespace CUDAWrappers
-} // namespace HierBEM
+    reinit();
+
+  private:
+    pointer   values;
+    size_type n;
+  };
 
 
+  template <typename T>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV
+  CUDAVector<T>::CUDAVector()
+    : values(nullptr)
+    , n(0)
+  {}
 
-#endif /* INCLUDE_CU_VECTOR_HCU_ */
+
+  template <typename T>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV
+  CUDAVector<T>::CUDAVector(pointer p, const size_type _n)
+    : values(p)
+    , n(_n)
+  {}
+
+
+  template <typename T>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV
+  CUDAVector<T>::CUDAVector(CUDAVector<T> &&vec)
+    : values(vec.values)
+    , n(vec.n)
+  {}
+
+
+  template <typename T>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAVector<T> &
+  CUDAVector<T>::operator=(const CUDAVector<T> &vec)
+  {
+    assert(n == vec.n);
+
+    for (size_t i = 0; i < vec.n; i++)
+      {
+        values[i] = vec.values[i];
+      }
+
+    return *this;
+  }
+
+
+  template <typename T>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAVector<T>                              &
+  CUDAVector<T>::operator=(CUDAVector<T> &&vec)
+  {
+    values = vec.values;
+    n      = vec.n;
+
+    return *this;
+  }
+
+
+  template <typename T>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV void
+  CUDAVector<T>::fill(const size_type n_elements_for_copy,
+                      const_pointer   data,
+                      const size_type source_offset,
+                      const size_type target_offset)
+  {
+    [[maybe_unused]] const size_type allowed_n_elements_for_copy =
+      n - target_offset;
+
+    assert(n_elements_for_copy <= allowed_n_elements_for_copy);
+
+    for (size_type i = 0; i < n_elements_for_copy; i++)
+      {
+        values[target_offset + i] = data[source_offset + i];
+      }
+  }
+
+
+  template <typename T>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::size_type
+                 CUDAVector<T>::size() const
+  {
+    return n;
+  }
+
+
+  template <typename T>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::pointer
+                 CUDAVector<T>::data()
+  {
+    return values;
+  }
+
+
+  template <typename T>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::const_pointer
+                 CUDAVector<T>::data() const
+  {
+    return values;
+  }
+
+
+  template <typename T>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::reference
+                 CUDAVector<T>::operator()(const size_type i)
+  {
+    return values[i];
+  }
+
+
+  template <typename T>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::reference
+                 CUDAVector<T>::operator[](const size_type i)
+  {
+    return values[i];
+  }
+
+
+  template <typename T>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::const_reference
+                 CUDAVector<T>::operator()(const size_type i) const
+  {
+    return values[i];
+  }
+
+
+  template <typename T>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::const_reference
+                 CUDAVector<T>::operator[](const size_type i) const
+  {
+    return values[i];
+  }
+
+
+  template <typename T>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV void
+  CUDAVector<T>::print(const bool scientific) const
+  {
+    for (size_type i = 0; i < n; i++)
+      {
+        if (scientific)
+          {
+            printf("%20.8e\n", values[i]);
+          }
+        else
+          {
+            printf("%20.8f\n", values[i]);
+          }
+      }
+  }
+
+
+  template <typename T>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV void
+  CUDAVector<T>::reinit()
+  {
+    for (size_type i = 0; i < n; i++)
+      {
+        values[i] = 0;
+      }
+  }
+} // namespace CUDAWrappers
+
+HBEM_NS_CLOSE
+
+#endif // HIERBEM_INCLUDE_CU_VECTOR_H_

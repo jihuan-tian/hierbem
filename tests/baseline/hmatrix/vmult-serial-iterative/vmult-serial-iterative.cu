@@ -29,7 +29,7 @@
 #include "sauter_quadrature.hcu"
 #include "subdomain_topology.h"
 #include "unary_template_arg_containers.h"
-#include "xp_laplace_kernels.h"
+#include "platform_shared/laplace_kernels.h"
 
 using namespace dealii;
 using namespace HierBEM;
@@ -145,7 +145,7 @@ main(int argc, char *argv[])
   FE_DGQ<dim, spacedim>     fe(0);
   DoFHandler<dim, spacedim> dof_handler(tria);
 
-  HierBEM::CrossPlatform::LaplaceKernel::SingleLayerKernel<spacedim>
+  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim>
     single_layer_kernel;
 
   const unsigned int n_min    = 32;

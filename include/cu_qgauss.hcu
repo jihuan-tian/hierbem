@@ -5,8 +5,8 @@
  * @date 2023-01-29
  * @author Jihuan Tian
  */
-#ifndef INCLUDE_CU_QGAUSS_HCU_
-#define INCLUDE_CU_QGAUSS_HCU_
+#ifndef HIERBEM_INCLUDE_CU_QGAUSS_H_
+#define HIERBEM_INCLUDE_CU_QGAUSS_H_
 
 #include <deal.II/base/table_indices.h>
 
@@ -20,197 +20,197 @@
 #include "cu_table.hcu"
 #include "quadrature.templates.h"
 
-namespace HierBEM
+HBEM_NS_OPEN
+
+using namespace dealii;
+
+namespace CUDAWrappers
 {
-  using namespace dealii;
-
-  namespace CUDAWrappers
+  template <int dim>
+  class CUDAQGauss
   {
-    template <int dim>
-    class CUDAQGauss
-    {
-    public:
-      // Declaration of friend functions.
-      template <int dim1>
-      friend __global__ void
-      print_cuda_object(const CUDAQGauss<dim1> quad);
+  public:
+    // Declaration of friend functions.
+    template <int dim1>
+    friend __global__ void
+    print_cuda_object(const CUDAQGauss<dim1> quad);
 
-      /**
-       * Allocate memory on the device from the host.
-       *
-       * @param n Total number of quadrature points, not the number of points
-       * in a direction.
-       */
-      HBEM_ATTR_HOST void
-      allocate(const unsigned int n);
-
-      /**
-       * Assign values held within a deal.ii @p QGauss object on the host to
-       * the device.
-       *
-       * \alert{The memory should preallocated before value assignment.}
-       *
-       * @param quad_cpu
-       */
-      HBEM_ATTR_HOST void
-      assign_from_host(const QGauss<dim> &quad_cpu);
-
-      /**
-       * Release the memory on the device.
-       */
-      HBEM_ATTR_HOST void
-      release();
-
-      /**
-       * Get the total number of quadrature points, not the number of points in
-       * a direction.
-       *
-       * @return
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV unsigned int
-      size() const;
-
-      /**
-       * Get the const reference to the table of quadrature points.
-       *
-       * @return
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV const CUDATable<2, double>                           &
-      get_points() const;
-
-      /**
-       * Get the const pointer which is also pointer to const of the quadrature
-       * weights.
-       *
-       * @return
-       */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV const double *
-      get_weights() const;
-
-    private:
-      unsigned int quad_num = 0;
-      /**
-       * Table of quadrature points.
-       * - The first dimension is the quadrature point index.
-       * - The second dimension is coordinate index.
-       *
-       * Since @p CUDATable adopts C style indexing, this memory configuration
-       * is consistent with the quadrature point data held within @p QGauss,
-       * which is a vector of @p Point objects.
-       */
-      CUDATable<2, double> points;
-      double              *weights = nullptr;
-    };
-
-
-    template <int dim>
+    /**
+     * Allocate memory on the device from the host.
+     *
+     * @param n Total number of quadrature points, not the number of points
+     * in a direction.
+     */
     HBEM_ATTR_HOST void
-    CUDAQGauss<dim>::allocate(const unsigned int n)
-    {
-      quad_num = n;
-      points.allocate(TableIndices<2>(quad_num, dim));
+    allocate(const unsigned int n);
 
-      if (weights != nullptr)
-        {
-          AssertCuda(cudaFree(weights));
-        }
-
-      AssertCuda(cudaMalloc((void **)&weights, sizeof(double) * quad_num));
-    }
-
-
-    template <int dim>
+    /**
+     * Assign values held within a deal.ii @p QGauss object on the host to
+     * the device.
+     *
+     * \alert{The memory should preallocated before value assignment.}
+     *
+     * @param quad_cpu
+     */
     HBEM_ATTR_HOST void
-    CUDAQGauss<dim>::assign_from_host(const QGauss<dim> &quad_cpu)
-    {
-      AssertDimension(quad_num, quad_cpu.size());
+    assign_from_host(const QGauss<dim> &quad_cpu);
 
-      // Allocate memory for the table of quadrature points, which should be
-      // accessed using the C style index. N.B. Here we explicitly cast the
-      // pointer type <code>Point<dim> *</code> to <code>const double *</code>,
-      // which is also the address of the first coordinate component of the
-      // first quadrature point.
-      points.assign_from_host((const double *)(quad_cpu.get_points().data()),
-                              dim * quad_num);
-      AssertCuda(cudaMemcpy((void *)weights,
-                            (void *)(quad_cpu.get_weights().data()),
-                            quad_num * sizeof(double),
-                            cudaMemcpyHostToDevice));
-    }
-
-
-    template <int dim>
+    /**
+     * Release the memory on the device.
+     */
     HBEM_ATTR_HOST void
-    CUDAQGauss<dim>::release()
-    {
-      quad_num = 0;
+    release();
 
-      points.release();
-      if (weights != nullptr)
-        {
-          AssertCuda(cudaFree(weights));
+    /**
+     * Get the total number of quadrature points, not the number of points in
+     * a direction.
+     *
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV unsigned int
+    size() const;
 
-          weights = nullptr;
-        }
-    }
+    /**
+     * Get the const reference to the table of quadrature points.
+     *
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV const CUDATable<2, double>                                    &
+    get_points() const;
 
+    /**
+     * Get the const pointer which is also pointer to const of the quadrature
+     * weights.
+     *
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV const double *
+    get_weights() const;
 
-    template <int dim>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV inline unsigned int
-    CUDAQGauss<dim>::size() const
-    {
-      return quad_num;
-    }
-
-
-    template <int dim>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV inline const CUDATable<2, double>          &
-    CUDAQGauss<dim>::get_points() const
-    {
-      return points;
-    }
-
-
-    template <int dim>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV inline const double *
-    CUDAQGauss<dim>::get_weights() const
-    {
-      return weights;
-    }
-
-
-    template <int dim>
-    __global__ void
-    print_cuda_object(const CUDAQGauss<dim> quad)
-    {
-      const unsigned int idx        = (blockIdx.x * blockDim.x) + threadIdx.x;
-      const unsigned int idy        = (blockIdx.y * blockDim.y) + threadIdx.y;
-      const unsigned int thread_idx = (gridDim.x * blockDim.x) * idy + idx;
-
-      if (thread_idx == 0)
-        {
-          for (unsigned int q = 0; q < quad.size(); q++)
-            {
-              printf("#%d: points=(", q);
-
-              for (unsigned int i = 0; i < dim; i++)
-                {
-                  if (i == dim - 1)
-                    {
-                      printf("%f), weights=%f\n",
-                             quad.get_points()[q * dim + i],
-                             quad.get_weights()[q]);
-                    }
-                  else
-                    {
-                      printf("%f,", quad.get_points()[q * dim + i]);
-                    }
-                }
-            }
-        }
-    }
-  } // namespace CUDAWrappers
-} // namespace HierBEM
+  private:
+    unsigned int quad_num = 0;
+    /**
+     * Table of quadrature points.
+     * - The first dimension is the quadrature point index.
+     * - The second dimension is coordinate index.
+     *
+     * Since @p CUDATable adopts C style indexing, this memory configuration
+     * is consistent with the quadrature point data held within @p QGauss,
+     * which is a vector of @p Point objects.
+     */
+    CUDATable<2, double> points;
+    double              *weights = nullptr;
+  };
 
 
-#endif /* INCLUDE_CU_QGAUSS_HCU_ */
+  template <int dim>
+  HBEM_ATTR_HOST void
+  CUDAQGauss<dim>::allocate(const unsigned int n)
+  {
+    quad_num = n;
+    points.allocate(TableIndices<2>(quad_num, dim));
+
+    if (weights != nullptr)
+      {
+        AssertCuda(cudaFree(weights));
+      }
+
+    AssertCuda(cudaMalloc((void **)&weights, sizeof(double) * quad_num));
+  }
+
+
+  template <int dim>
+  HBEM_ATTR_HOST void
+  CUDAQGauss<dim>::assign_from_host(const QGauss<dim> &quad_cpu)
+  {
+    AssertDimension(quad_num, quad_cpu.size());
+
+    // Allocate memory for the table of quadrature points, which should be
+    // accessed using the C style index. N.B. Here we explicitly cast the
+    // pointer type <code>Point<dim> *</code> to <code>const double *</code>,
+    // which is also the address of the first coordinate component of the
+    // first quadrature point.
+    points.assign_from_host((const double *)(quad_cpu.get_points().data()),
+                            dim * quad_num);
+    AssertCuda(cudaMemcpy((void *)weights,
+                          (void *)(quad_cpu.get_weights().data()),
+                          quad_num * sizeof(double),
+                          cudaMemcpyHostToDevice));
+  }
+
+
+  template <int dim>
+  HBEM_ATTR_HOST void
+  CUDAQGauss<dim>::release()
+  {
+    quad_num = 0;
+
+    points.release();
+    if (weights != nullptr)
+      {
+        AssertCuda(cudaFree(weights));
+
+        weights = nullptr;
+      }
+  }
+
+
+  template <int dim>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV inline unsigned int
+  CUDAQGauss<dim>::size() const
+  {
+    return quad_num;
+  }
+
+
+  template <int dim>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV inline const CUDATable<2, double>                &
+  CUDAQGauss<dim>::get_points() const
+  {
+    return points;
+  }
+
+
+  template <int dim>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV inline const double *
+  CUDAQGauss<dim>::get_weights() const
+  {
+    return weights;
+  }
+
+
+  template <int dim>
+  __global__ void
+  print_cuda_object(const CUDAQGauss<dim> quad)
+  {
+    const unsigned int idx        = (blockIdx.x * blockDim.x) + threadIdx.x;
+    const unsigned int idy        = (blockIdx.y * blockDim.y) + threadIdx.y;
+    const unsigned int thread_idx = (gridDim.x * blockDim.x) * idy + idx;
+
+    if (thread_idx == 0)
+      {
+        for (unsigned int q = 0; q < quad.size(); q++)
+          {
+            printf("#%d: points=(", q);
+
+            for (unsigned int i = 0; i < dim; i++)
+              {
+                if (i == dim - 1)
+                  {
+                    printf("%f), weights=%f\n",
+                           quad.get_points()[q * dim + i],
+                           quad.get_weights()[q]);
+                  }
+                else
+                  {
+                    printf("%f,", quad.get_points()[q * dim + i]);
+                  }
+              }
+          }
+      }
+  }
+} // namespace CUDAWrappers
+
+HBEM_NS_CLOSE
+
+#endif // HIERBEM_INCLUDE_CU_QGAUSS_H_

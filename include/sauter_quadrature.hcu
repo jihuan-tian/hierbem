@@ -5,8 +5,8 @@
  * @date 2022-03-02
  * @author Jihuan Tian
  */
-#ifndef INCLUDE_SAUTER_QUADRATURE_HCU_
-#define INCLUDE_SAUTER_QUADRATURE_HCU_
+#ifndef HIERBEM_INCLUDE_SAUTER_QUADRATURE_H_
+#define HIERBEM_INCLUDE_SAUTER_QUADRATURE_H_
 
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/utilities.h>
@@ -1620,7 +1620,7 @@ namespace CUDAWrappers
                     component) *
                   scratch_data.kx_jacobians_same_panel(k3_index, quad_no) *
                   scratch_data.ky_jacobians_same_panel(k3_index, quad_no) *
-                  HierBEM::CrossPlatform::scalar_product(kx_shape_surface_curl,
+                  HierBEM::PlatformShared::scalar_product(kx_shape_surface_curl,
                                                          ky_shape_surface_curl);
               }
             else
@@ -1838,7 +1838,7 @@ namespace CUDAWrappers
                     component) *
                   scratch_data.kx_jacobians_common_edge(k3_index, quad_no) *
                   scratch_data.ky_jacobians_common_edge(k3_index, quad_no) *
-                  HierBEM::CrossPlatform::scalar_product(
+                  HierBEM::PlatformShared::scalar_product(
                     kx_shape_surface_curl, ky_shape_surface_curl) *
                   (k3_index <= 1 ? jacobian_det1 : jacobian_det2);
               }
@@ -2048,7 +2048,7 @@ namespace CUDAWrappers
                     component) *
                   scratch_data.kx_jacobians_common_vertex(k3_index, quad_no) *
                   scratch_data.ky_jacobians_common_vertex(k3_index, quad_no) *
-                  HierBEM::CrossPlatform::scalar_product(kx_shape_surface_curl,
+                  HierBEM::PlatformShared::scalar_product(kx_shape_surface_curl,
                                                          ky_shape_surface_curl);
               }
             else
@@ -2084,7 +2084,7 @@ namespace CUDAWrappers
          */
         quad_values_in_thread_block[tid] =
           kernel_value *
-          HierBEM::Utilities::CrossPlatform::fixed_power<3>(
+          HierBEM::PlatformShared::Utilities::fixed_power<3>(
             quad_points(quad_no, 0)) *
           bem_values.quad_rule_for_common_vertex.get_weights()[quad_no];
       }
@@ -2240,7 +2240,7 @@ namespace CUDAWrappers
                 component) *
               scratch_data.kx_jacobians_regular(0, quad_no) *
               scratch_data.ky_jacobians_regular(0, quad_no) *
-              HierBEM::CrossPlatform::scalar_product(kx_shape_surface_curl,
+              HierBEM::PlatformShared::scalar_product(kx_shape_surface_curl,
                                                      ky_shape_surface_curl) *
               bem_values.quad_rule_for_regular.get_weights()[quad_no];
           }
@@ -3154,7 +3154,7 @@ namespace CUDAWrappers
                                    kx_normal,
                                    ky_normal) *
                       kx_jacobian * ky_jacobian *
-                      HierBEM::CrossPlatform::scalar_product(
+                      HierBEM::PlatformShared::scalar_product(
                         kx_shape_surface_curl, ky_shape_surface_curl);
                   }
                 else
@@ -3440,7 +3440,7 @@ namespace CUDAWrappers
                                    kx_normal,
                                    ky_normal) *
                       kx_jacobian * ky_jacobian *
-                      HierBEM::CrossPlatform::scalar_product(
+                      HierBEM::PlatformShared::scalar_product(
                         kx_shape_surface_curl, ky_shape_surface_curl) *
                       (k3_index <= 1 ? jacobian_det1 : jacobian_det2);
                   }
@@ -3718,7 +3718,7 @@ namespace CUDAWrappers
                                    kx_normal,
                                    ky_normal) *
                       kx_jacobian * ky_jacobian *
-                      HierBEM::CrossPlatform::scalar_product(
+                      HierBEM::PlatformShared::scalar_product(
                         kx_shape_surface_curl, ky_shape_surface_curl);
                   }
                 else
@@ -3742,7 +3742,7 @@ namespace CUDAWrappers
 
             quad_value +=
               kernel_value *
-              HierBEM::Utilities::CrossPlatform::fixed_power<3>(
+              HierBEM::PlatformShared::Utilities::fixed_power<3>(
                 quad_points(quad_no, 0)) *
               bem_values.quad_rule_for_common_vertex.get_weights()[quad_no];
           }
@@ -3955,7 +3955,7 @@ namespace CUDAWrappers
                                kx_normal,
                                ky_normal) *
                   kx_jacobian * ky_jacobian *
-                  HierBEM::CrossPlatform::scalar_product(
+                  HierBEM::PlatformShared::scalar_product(
                     kx_shape_surface_curl, ky_shape_surface_curl) *
                   bem_values.quad_rule_for_regular.get_weights()[quad_no];
               }
@@ -4162,7 +4162,7 @@ namespace CUDAWrappers
             quad_value =
               kernel.value(kx_quad_point, ky_quad_point, kx_normal, ky_normal) *
               kx_jacobian * ky_jacobian *
-              HierBEM::CrossPlatform::scalar_product(kx_shape_surface_curl,
+              HierBEM::PlatformShared::scalar_product(kx_shape_surface_curl,
                                                      ky_shape_surface_curl) *
               bem_values.quad_rule_for_regular.get_weights()[quad_no];
           }
@@ -9628,4 +9628,4 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
 
 HBEM_NS_CLOSE
 
-#endif /* INCLUDE_SAUTER_QUADRATURE_HCU_ */
+#endif // HIERBEM_INCLUDE_SAUTER_QUADRATURE_H_
