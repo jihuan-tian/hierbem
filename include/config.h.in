@@ -44,7 +44,13 @@
  * Maximum concurrency used for TBB arena in update tasks for H-LU and
  * H-Cholesky
  */
-#define ARENA_MAX_CONCURRENCY_IN_LU_AND_CHOL \
-  @HBEM_ARENA_MAX_CONCURRENCY_IN_LU_AND_CHOL@
+#define ARENA_MAX_CONCURRENCY_IN_LU_AND_CHOL @HBEM_ARENA_MAX_CONCURRENCY_IN_LU_AND_CHOL@
+/**
+ * Select the solution space for Laplace problem with Neumann boundary
+ * condition.
+ * - 1: H_{\ast}^{1/2}(\Gamma)
+ * - 2: H_{\ast \ast}^{1/2}(\Gamma)
+ */
+#define HBEM_NEUMANN_SOLUTION_SPACE @HBEM_NEUMANN_SOLUTION_SPACE@
 
 #endif // HIERBEM_INCLUDE_CONFIG_H_
