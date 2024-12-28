@@ -121,7 +121,8 @@ run_dirichlet_hmatrix_two_spheres()
 
   timer.start();
 
-  read_msh(HBEM_TEST_MODEL_DIR "two-spheres.msh", bem.get_triangulation());
+  std::ifstream mesh_in(HBEM_TEST_MODEL_DIR "two-spheres.msh");
+  read_msh(mesh_in, bem.get_triangulation());
   bem.get_subdomain_topology().generate_topology(HBEM_TEST_MODEL_DIR
                                                  "two-spheres.brep",
                                                  HBEM_TEST_MODEL_DIR

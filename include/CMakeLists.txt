@@ -17,6 +17,11 @@ if(NOT DEFINED HBEM_ENABLE_MATRIX_EXPORT)
   set(HBEM_ENABLE_MATRIX_EXPORT 0)
 endif()
 
+# Enable print out component matrices involved during building an operator preconditioner.
+if(NOT DEFINED HBEM_ENABLE_PRECONDITIONER_MATRIX_EXPORT)
+  set(HBEM_ENABLE_PRECONDITIONER_MATRIX_EXPORT 0)
+endif()
+
 if(NOT DEFINED HBEM_ENABLE_NVTX)
   set(HBEM_ENABLE_NVTX 0)
 endif()

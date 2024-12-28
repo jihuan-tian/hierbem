@@ -1,0 +1,176 @@
+#include <deal.II/base/logstream.h>
+#include <deal.II/base/quadrature_lib.h>
+
+#include <deal.II/fe/fe_dgq.h>
+#include <deal.II/fe/fe_q.h>
+
+#include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/manifold_lib.h>
+
+#include <catch2/catch_all.hpp>
+#include <cuda_runtime.h>
+
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <vector>
+
+#include "debug_tools.hcu"
+#include "grid_in_ext.h"
+#include "grid_out_ext.h"
+#include "preconditioners/preconditioner_for_laplace_dirichlet.h"
+
+using namespace Catch::Matchers;
+using namespace HierBEM;
+
+class OutwardSurfaceNormalDetector
+{
+public:
+  bool
+  is_normal_vector_inward([[maybe_unused]] const types::material_id m) const
+  {
+    return false;
+  }
+};
+
+namespace HierBEM
+{
+  namespace CUDAWrappers
+  {
+    extern cudaDeviceProp device_properties;
+  }
+} // namespace HierBEM
+
+void
+run_op_precond_hmatrix_for_dirichlet()
+{
+  std::ofstream ofs("op-precond-hmatrix-for-dirichlet.log");
+  deallog.pop();
+  deallog.depth_console(0);
+  deallog.depth_file(5);
+  deallog.attach(ofs);
+
+  // Initialize CUDA device parameters.
+  const size_t stack_size = 1024 * 10;
+  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));
+  deallog << "CUDA stack size has been set to " << stack_size << std::endl;
+
+  /**
+   * @internal Get GPU device properties.
+   */
+  AssertCuda(
+    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
+
+  const unsigned int dim      = 2;
+  const unsigned int spacedim = 3;
+
+  const Point<spacedim> center(0, 0, 0);
+  const double          radius(1);
+
+  Triangulation<dim, spacedim> tria;
+  GridGenerator::hyper_sphere(tria, center, radius);
+  tria.refine_global(1);
+  std::string   mesh_file("surface-mesh.msh");
+  std::ofstream mesh_out(mesh_file);
+  write_msh_correct(tria, mesh_out);
+  mesh_out.close();
+
+  // Reread the mesh as a single level triangulation.
+  tria.clear();
+  tria.set_mesh_smoothing(
+    Triangulation<dim,
+                  spacedim>::MeshSmoothing::limit_level_difference_at_vertices);
+  std::ifstream mesh_in(mesh_file);
+  read_msh(mesh_in, tria, false, true, false);
+  mesh_in.close();
+
+  // Create the map from material id to manifold id.
+  std::map<EntityTag, types::manifold_id> manifold_description;
+  manifold_description[0] = 0;
+
+  // Create and assign manifold.
+  std::map<types::manifold_id, Manifold<dim, spacedim> *> manifolds;
+  SphericalManifold<dim, spacedim>                       *spherical_manifold =
+    new SphericalManifold<dim, spacedim>(center);
+  manifolds[0] = spherical_manifold;
+  tria.set_manifold(0, *spherical_manifold);
+
+  // Create different orders of mapping.
+  std::vector<MappingInfo<dim, spacedim> *> mappings;
+  const unsigned                            max_mapping_order = 2;
+  mappings.reserve(max_mapping_order);
+  for (unsigned int i = 1; i <= max_mapping_order; i++)
+    {
+      mappings.push_back(new MappingInfo<dim, spacedim>(i));
+    }
+
+  // Construct the map from material ids to mapping indices.
+  std::map<types::material_id, unsigned int> material_id_to_mapping_index;
+  material_id_to_mapping_index[0] = 1;
+
+  // Define the primal space and dual space with respect to the single layer
+  // potential operator.
+  FE_DGQ<dim, spacedim> fe_primal_space(0);
+  FE_Q<dim, spacedim>   fe_dual_space(1);
+
+  // Create the preconditioner. Since we do not apply the preconditioner to the
+  // system matrix in this case, the conversion between internal and external
+  // DoF numberings is not needed. Therefore, we pass a dummy numbering to the
+  // preconditioner's constructor.
+  std::vector<types::global_dof_index>                     dummy_numbering;
+  PreconditionerForLaplaceDirichlet<dim, spacedim, double> precond(
+    fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
+
+  precond.get_triangulation().copy_triangulation(tria);
+  precond.get_triangulation().refine_global();
+
+  // Build the mass matrix on the refined mesh first, because it
+  // is needed by the preconditioner matrix, which involves the regularization
+  // of the hypersingular bilinear form.
+  precond.initialize_dof_handlers();
+  precond.build_dof_to_cell_topology();
+  precond.build_mass_matrix_on_refined_mesh(QGauss<dim>(2));
+
+  // Build the preconditioner matrix on the refined mesh.
+  HMatrixParameters hmat_params(64,  // Minimum cluster node size
+                                64,  // Minimum block cluster node size
+                                1.0, // Admissibility constant eta
+                                2,   // Maximum H-matrix rank
+                                0.1  // Relative error for ACA iteration
+  );
+  precond.build_cluster_and_block_cluster_trees(hmat_params, mappings);
+  precond.build_preconditioner_hmat_on_refined_mesh(
+    MultithreadInfo::n_threads(),
+    hmat_params,
+    mappings,
+    material_id_to_mapping_index,
+    OutwardSurfaceNormalDetector(),
+    SauterQuadratureRule<dim>(5, 4, 4, 3));
+
+  // Print out the preconditioner matrix on the refined mesh as full matrix.
+  const HMatrixSymm<spacedim, double> &Br =
+    precond.get_preconditioner_hmatrix();
+  Br.print_leaf_set_info(ofs);
+  std::ofstream out("op-precond-hmatrix-for-dirichlet.output");
+  Br.print_as_formatted_full_matrix(out, "Br", 15, true, 25);
+  out.close();
+
+  // We also build the averaging matrix for matrix size compatibility checking.
+  precond.build_averaging_matrix();
+  const SparseMatrix<double> &Cd = precond.get_averaging_matrix();
+  REQUIRE(Cd.n() == Br.get_m());
+
+  // Release manifold objects.
+  for (auto &m : manifolds)
+    {
+      delete m.second;
+    }
+
+  // Release mapping objects.
+  for (auto m : mappings)
+    {
+      delete m;
+    }
+
+  ofs.close();
+}

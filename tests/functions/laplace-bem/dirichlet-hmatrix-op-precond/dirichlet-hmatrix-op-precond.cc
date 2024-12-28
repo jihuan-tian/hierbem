@@ -27,7 +27,7 @@ TEST_CASE(
   inst.add_path(HBEM_ROOT_DIR "/scripts");
   inst.add_path(SOURCE_DIR);
 
-  run_dirichlet_hmatrix_op_precond(2);
+  run_dirichlet_hmatrix_op_precond(1);
 
   try
     {

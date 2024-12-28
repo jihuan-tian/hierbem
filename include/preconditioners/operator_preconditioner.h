@@ -38,6 +38,7 @@
 #include "aca_plus.hcu"
 #include "bem_general.h"
 #include "bem_kernels.hcu"
+#include "bem_tools.hcu"
 #include "block_cluster_tree.h"
 #include "debug_tools.hcu"
 #include "dof_tools_ext.h"
@@ -74,6 +75,8 @@ namespace HierBEM
     OperatorPreconditioner(FiniteElement<dim, spacedim>       &fe_primal_space,
                            FiniteElement<dim, spacedim>       &fe_dual_space,
                            const Triangulation<dim, spacedim> &primal_tria,
+                           const std::vector<types::global_dof_index>
+                             &primal_space_dof_i2e_numbering,
                            const std::vector<types::global_dof_index>
                                              &primal_space_dof_e2i_numbering,
                            const unsigned int max_iter    = 1000,
@@ -142,10 +145,6 @@ namespace HierBEM
     /**
      * @brief Build the cluster and block cluster trees for the \hmat to be
      * constructed on the refined mesh.
-     *
-     * \alert{This function should be called before building the averaging
-     * matrix, because the column indices of the coupling matrix depends on the
-     * DoF external-to-internal numbering for the row DoFs of the \hmat.}
      */
     void
     build_cluster_and_block_cluster_trees(
@@ -543,11 +542,13 @@ namespace HierBEM
     BlockClusterTree<spacedim> bct;
 
     /**
+     * The internal-to-external DoF numbering for the primal space on the primal
+     * mesh.
+     */
+    const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering;
+    /**
      * The external-to-internal DoF numbering for the primal space on the primal
      * mesh.
-     *
-     * This is crucial for matching the DoF indices of the inverse of the
-     * preconditioning matrix with those of the system matrix.
      */
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering;
 
@@ -586,24 +587,47 @@ namespace HierBEM
      */
     DoFToolsExt::DoFToCellTopology<dim, spacedim> dof_to_cell_topo_dual_space;
 
-    // Intermediate vectors during @p vmult.
+    // Intermediate vectors during @p vmult. The input vector is @p x and the
+    // final output vector is @p y. Both @p x and @p y adopt the internal DoF
+    // numbering.
+    /**
+     * The input vector @p x of @p vmult in the external DoF numbering.
+     */
+    Vector<RangeNumberType> *x_external_dof_numbering;
     /**
      * The result vector of \f$\(C_d M_r C_p^{\mathrm{T}}\)^{-\mathrm{T}}x\f$,
      * which is equivalent to solve \f$\(C_d M_r C_p^{\mathrm{T}}\)y=x\f$ for
-     * \f$y\f$.
+     * \f$y\f$. This vector adopts the external DoF numbering.
      *
-     * It also stores the result vector of \f$C_d v_3\f$.
+     * It is also used to store the result vector of \f$C_d v_3\f$.
      */
     Vector<RangeNumberType> *v1;
     /**
-     * @brief The result vector of \f$C_d^{\mathrm{T}} v_1\f$.
+     * The result vector of \f$C_d^{\mathrm{T}} v_1\f$. It adtops the external
+     * DoF numbering.
      */
     Vector<RangeNumberType> *v2;
     /**
+     * The result vector of \f$C_d^{\mathrm{T}} v_1\f$ in the internal DoF
+     * numbering, which is to be multiplied by \f$B_r\f$.
+     */
+    Vector<RangeNumberType> *v2_internal_dof_numbering;
+    /**
      * @brief The result vector of \f$B_r v_2\f$, where \f$B_r\f$ is the \hmat
-     * of the preconditioner on the refined mesh.
+     * of the preconditioner on the refined mesh. It adopts the internal DoF
+     * numbering.
      */
     Vector<RangeNumberType> *v3;
+    /**
+     * The result vector of \f$B_r v_2\f$ in the external DoF numbering, which
+     * is to be multiplied by \f$C_d\f$.
+     */
+    Vector<RangeNumberType> *v3_external_dof_numbering;
+    /**
+     * The result vector of the whole @p vmult in the external DoF numbering,
+     * which should be further converted to the internal DoF numbering.
+     */
+    Vector<RangeNumberType> *y_external_dof_numbering;
 
     // Diagonal entries in @p mass_matrix_triple.
     Vector<RangeNumberType> mass_matrix_triple_diag_reciprocal;
@@ -627,6 +651,8 @@ namespace HierBEM
                            FiniteElement<dim, spacedim>       &fe_dual_space,
                            const Triangulation<dim, spacedim> &primal_tria,
                            const std::vector<types::global_dof_index>
+                             &primal_space_dof_i2e_numbering,
+                           const std::vector<types::global_dof_index>
                                              &primal_space_dof_e2i_numbering,
                            const unsigned int max_iter,
                            const double       tol,
@@ -634,6 +660,7 @@ namespace HierBEM
                            const bool         log_history,
                            const bool         log_result)
     : orig_tria(primal_tria)
+    , primal_space_dof_i2e_numbering(primal_space_dof_i2e_numbering)
     , primal_space_dof_e2i_numbering(primal_space_dof_e2i_numbering)
     , fe_primal_space(fe_primal_space)
     , fe_dual_space(fe_dual_space)
@@ -651,9 +678,13 @@ namespace HierBEM
     , solve_mass_matrix_log_history(log_history)
     , solve_mass_matrix_log_result(log_result)
   {
-    v1 = new Vector<RangeNumberType>();
-    v2 = new Vector<RangeNumberType>();
-    v3 = new Vector<RangeNumberType>();
+    x_external_dof_numbering  = new Vector<RangeNumberType>();
+    v1                        = new Vector<RangeNumberType>();
+    v2                        = new Vector<RangeNumberType>();
+    v2_internal_dof_numbering = new Vector<RangeNumberType>();
+    v3                        = new Vector<RangeNumberType>();
+    v3_external_dof_numbering = new Vector<RangeNumberType>();
+    y_external_dof_numbering  = new Vector<RangeNumberType>();
   }
 
 
@@ -667,9 +698,13 @@ namespace HierBEM
     dof_handler_primal_space.clear();
     dof_handler_dual_space.clear();
 
+    delete x_external_dof_numbering;
     delete v1;
     delete v2;
+    delete v2_internal_dof_numbering;
     delete v3;
+    delete v3_external_dof_numbering;
+    delete y_external_dof_numbering;
   }
 
 
@@ -681,26 +716,19 @@ namespace HierBEM
   OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
     build_mass_matrix_on_refined_mesh(const Quadrature<dim> &quad_rule)
   {
-    // External-to-internal DoF numbering to be used for the column indices of
-    // the averaging matrix.
-    const std::vector<types::global_dof_index> &dof_e2i_numbering =
-      ct.get_external_to_internal_dof_numbering();
-
     // Generate the sparsity pattern for the mass matrix.
     DynamicSparsityPattern dsp(dof_handler_dual_space.n_dofs(1),
                                dof_handler_primal_space.n_dofs(1));
     // N.B. DoFTools::make_sparsity_pattern operates on active cells, which just
     // corresponds to the refined mesh that we desire.
-    DoFToolsExt::make_sparsity_pattern(dof_handler_dual_space,
-                                       dof_e2i_numbering,
-                                       dof_handler_primal_space,
-                                       dsp);
+    DoFTools::make_sparsity_pattern(dof_handler_dual_space,
+                                    dof_handler_primal_space,
+                                    dsp);
     mass_matrix_sp.copy_from(dsp);
     mass_matrix.reinit(mass_matrix_sp);
 
     // Assemble the mass matrix.
     assemble_fem_scaled_mass_matrix(dof_handler_dual_space,
-                                    dof_e2i_numbering,
                                     dof_handler_primal_space,
                                     1.0,
                                     quad_rule,
@@ -958,10 +986,10 @@ namespace HierBEM
 
     initialize_dof_handlers();
     build_dof_to_cell_topology();
-    build_cluster_and_block_cluster_trees(hmat_params, mappings);
     build_coupling_matrix();
     build_averaging_matrix();
     build_mass_matrix_on_refined_mesh(quad_rule_for_mass);
+    build_cluster_and_block_cluster_trees(hmat_params, mappings);
     build_preconditioner_hmat_on_refined_mesh(thread_num,
                                               hmat_params,
                                               mappings,
@@ -977,18 +1005,33 @@ namespace HierBEM
     // used in the Jacobi precondition.
     compute_mass_matrix_triple_diag_reciprocal();
 
-    // DEBUG debug_tools.hcu: Print out the matrices.
-    print_sparse_matrix_to_mat(
-      deallog.get_file_stream(), "Cp", coupling_matrix, 15, true, 25);
-    print_sparse_matrix_to_mat(
-      deallog.get_file_stream(), "Cd", averaging_matrix, 15, true, 25);
-    print_sparse_matrix_to_mat(
-      deallog.get_file_stream(), "Mr", mass_matrix, 15, true, 25);
+    // Print out the matrices.
+#if ENABLE_PRECONDITIONER_MATRIX_EXPORT == 1
+    std::ofstream out_mat("preconditioner-matrices.dat");
+
+    print_sparse_matrix_to_mat(out_mat, "Cp", coupling_matrix, 15, true, 25);
+    print_sparse_matrix_to_mat(out_mat, "Cd", averaging_matrix, 15, true, 25);
+    print_sparse_matrix_to_mat(out_mat, "Mr", mass_matrix, 15, true, 25);
     preconditioner_hmat.print_as_formatted_full_matrix(
-      deallog.get_file_stream(), "Br", 15, true, 25);
-    print_vector_to_mat(deallog.get_file_stream(),
+      out_mat, "Br", 15, true, 25);
+    print_vector_to_mat(out_mat,
                         "M_diag_reciprocal",
                         mass_matrix_triple_diag_reciprocal);
+    print_vector_to_mat(out_mat,
+                        "primal_space_dof_i2e_numbering",
+                        primal_space_dof_i2e_numbering);
+    print_vector_to_mat(out_mat,
+                        "primal_space_dof_e2i_numbering",
+                        primal_space_dof_e2i_numbering);
+    print_vector_to_mat(out_mat,
+                        "Br_ct_i2e_numbering",
+                        ct.get_internal_to_external_dof_numbering());
+    print_vector_to_mat(out_mat,
+                        "Br_ct_e2i_numbering",
+                        ct.get_external_to_internal_dof_numbering());
+
+    out_mat.close();
+#endif
   }
 
 
@@ -1050,9 +1093,13 @@ namespace HierBEM
   OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
     reinit()
   {
+    x_external_dof_numbering->reinit(coupling_matrix.m());
     v1->reinit(averaging_matrix.m());
     v2->reinit(averaging_matrix.n());
+    v2_internal_dof_numbering->reinit(averaging_matrix.n());
     v3->reinit(averaging_matrix.n());
+    v3_external_dof_numbering->reinit(averaging_matrix.n());
+    y_external_dof_numbering->reinit(coupling_matrix.m());
 
     mass_matrix_triple_diag_reciprocal.reinit(averaging_matrix.m());
   }
@@ -1108,11 +1155,23 @@ namespace HierBEM
   OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
     vmult(Vector<RangeNumberType> &y, const Vector<RangeNumberType> &x) const
   {
-    solve_mass_matrix_transpose_triple(*v1, x);
+    permute_vector(x,
+                   primal_space_dof_e2i_numbering,
+                   *x_external_dof_numbering);
+    solve_mass_matrix_transpose_triple(*v1, *x_external_dof_numbering);
     averaging_matrix.Tvmult(*v2, *v1);
-    preconditioner_hmat.vmult(*v3, *v2);
-    averaging_matrix.vmult(*v1, *v3);
-    solve_mass_matrix_triple(y, *v1);
+    permute_vector(*v2,
+                   ct.get_internal_to_external_dof_numbering(),
+                   *v2_internal_dof_numbering);
+    preconditioner_hmat.vmult(*v3, *v2_internal_dof_numbering);
+    permute_vector(*v3,
+                   ct.get_external_to_internal_dof_numbering(),
+                   *v3_external_dof_numbering);
+    averaging_matrix.vmult(*v1, *v3_external_dof_numbering);
+    solve_mass_matrix_triple(*y_external_dof_numbering, *v1);
+    permute_vector(*y_external_dof_numbering,
+                   primal_space_dof_i2e_numbering,
+                   y);
   }
 } // namespace HierBEM
 

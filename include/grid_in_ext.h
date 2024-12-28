@@ -80,9 +80,9 @@ namespace HierBEM
   void
   read_msh(std::istream                 &in,
            Triangulation<dim, spacedim> &tria,
-           const bool                    read_lines_as_subcelldata = true,
+           const bool                    read_lines_as_subcelldata = false,
            const bool                    reorder_cell_vertices     = true,
-           const bool                    check_cell_orientation    = true)
+           const bool                    check_cell_orientation    = false)
   {
     AssertThrow(in.fail() == false, ExcIO());
 

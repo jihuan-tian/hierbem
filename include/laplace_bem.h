@@ -1051,6 +1051,8 @@ namespace HierBEM
         fe_for_dirichlet_space,
         tria,
         ct_for_neumann_space_on_dirichlet_domain
+          .get_internal_to_external_dof_numbering(),
+        ct_for_neumann_space_on_dirichlet_domain
           .get_external_to_internal_dof_numbering())
   {
     initialize_memory_consumption_table_headers();
@@ -1096,6 +1098,8 @@ namespace HierBEM
         fe_for_neumann_space,
         fe_for_dirichlet_space,
         tria,
+        ct_for_neumann_space_on_dirichlet_domain
+          .get_internal_to_external_dof_numbering(),
         ct_for_neumann_space_on_dirichlet_domain
           .get_external_to_internal_dof_numbering())
   {
@@ -1151,6 +1155,8 @@ namespace HierBEM
         fe_for_neumann_space,
         fe_for_dirichlet_space,
         tria,
+        ct_for_neumann_space_on_dirichlet_domain
+          .get_internal_to_external_dof_numbering(),
         ct_for_neumann_space_on_dirichlet_domain
           .get_external_to_internal_dof_numbering())
   {
@@ -4154,7 +4160,7 @@ namespace HierBEM
         switch (problem_type)
           {
               case DirichletBCProblem: {
-                SolverControl solver_control(1000, 1e-12, true, true);
+                SolverControl solver_control(1000, 1e-8, true, true);
                 SolverCG<>    solver(solver_control);
 
                 solver.solve(V1_matrix,
@@ -4165,7 +4171,7 @@ namespace HierBEM
                 break;
               }
               case NeumannBCProblem: {
-                SolverControl solver_control(1000, 1e-12, true, true);
+                SolverControl solver_control(1000, 1e-8, true, true);
                 SolverCG<>    solver(solver_control);
 
                 solver.solve(D1_matrix,
@@ -4240,7 +4246,7 @@ namespace HierBEM
                 break;
               }
               case NeumannBCProblem: {
-                SolverControl solver_control(1000, 1e-12, true, true);
+                SolverControl            solver_control(1000, 1e-8, true, true);
                 SolverCG<Vector<double>> solver(solver_control);
 
                 solver.solve(
@@ -4261,7 +4267,7 @@ namespace HierBEM
                 break;
               }
               case MixedBCProblem: {
-                SolverControl solver_control(1000, 1e-12, true, true);
+                SolverControl solver_control(1000, 1e-8, true, true);
                 SolverBicgstab<Vector<double>> solver(solver_control);
 
                 solver.solve(M_hmat,

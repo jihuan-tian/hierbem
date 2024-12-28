@@ -1,6 +1,6 @@
 clear all;
 ## Load reference solution.
-load "/home/jihuan/Projects/hierbem/tests/units/op-precond-hmatrix-for-dirichlet/reference.output";
+load "@CMAKE_CURRENT_SOURCE_DIR@/reference.output";
 Br_ref = Br;
 ## Load computation results.
 load "op-precond-hmatrix-for-dirichlet.output";

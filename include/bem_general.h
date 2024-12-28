@@ -181,31 +181,6 @@ namespace HierBEM
   template <int dim,
             int spacedim,
             typename RangeNumberType,
-            typename MatrixType>
-  void
-  copy_cell_local_to_global_for_fem_matrix_with_row_internal_numbering(
-    const CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType> &data,
-    const std::vector<types::global_dof_index> &dof_row_e2i_numbering,
-    MatrixType                                 &target_matrix)
-  {
-    const unsigned int dofs_per_cell_for_test_space  = data.local_matrix.m();
-    const unsigned int dofs_per_cell_for_trial_space = data.local_matrix.n();
-
-    for (unsigned int i = 0; i < dofs_per_cell_for_test_space; i++)
-      {
-        for (unsigned int j = 0; j < dofs_per_cell_for_trial_space; j++)
-          {
-            target_matrix.add(
-              dof_row_e2i_numbering[data.local_dof_indices_for_test_space[i]],
-              data.local_dof_indices_for_trial_space[j],
-              data.local_matrix(i, j));
-          }
-      }
-  }
-
-  template <int dim,
-            int spacedim,
-            typename RangeNumberType,
             typename VectorType>
   void
   assemble_fem_mass_matrix_vmult_on_one_cell(
@@ -476,67 +451,6 @@ namespace HierBEM
                                                           MatrixType>,
                 std::placeholders::_1,
                 std::ref(target_matrix)),
-      CellWiseScratchDataForMassMatrix<dim, spacedim>(
-        dof_handler_for_test_space.get_fe(),
-        dof_handler_for_trial_space.get_fe(),
-        quad_rule,
-        update_values | update_JxW_values),
-      CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType>(
-        dof_handler_for_test_space.get_fe(),
-        dof_handler_for_trial_space.get_fe()));
-  }
-
-
-  template <int dim,
-            int spacedim,
-            typename RangeNumberType,
-            typename MatrixType>
-  void
-  assemble_fem_scaled_mass_matrix(
-    const DoFHandler<dim, spacedim>            &dof_handler_for_test_space,
-    const std::vector<types::global_dof_index> &dof_row_e2i_numbering,
-    const DoFHandler<dim, spacedim>            &dof_handler_for_trial_space,
-    const RangeNumberType                       factor,
-    const Quadrature<dim>                      &quad_rule,
-    MatrixType                                 &target_matrix)
-  {
-    // Because the test and ansatz function spaces related to the mass matrix
-    // are on a same spatial domain, here we make an assertion about the
-    // equality of the number of cells in their respective triangulations.
-    AssertDimension(
-      dof_handler_for_test_space.get_triangulation().n_active_cells(),
-      dof_handler_for_trial_space.get_triangulation().n_active_cells());
-
-    std::vector<
-      std::pair<typename DoFHandler<dim, spacedim>::active_cell_iterator,
-                typename DoFHandler<dim, spacedim>::active_cell_iterator>>
-      cell_iterator_pairs_for_mass_matrix(
-        dof_handler_for_test_space.get_triangulation().n_active_cells());
-
-    initialize_cell_iterator_pairs_for_mass_matrix(
-      dof_handler_for_test_space,
-      dof_handler_for_trial_space,
-      cell_iterator_pairs_for_mass_matrix);
-
-    WorkStream::run(
-      cell_iterator_pairs_for_mass_matrix.begin(),
-      cell_iterator_pairs_for_mass_matrix.end(),
-      std::bind(&assemble_fem_scaled_mass_matrix_on_one_cell<dim,
-                                                             spacedim,
-                                                             RangeNumberType>,
-                factor,
-                std::placeholders::_1,
-                std::placeholders::_2,
-                std::placeholders::_3),
-      std::bind(
-        &copy_cell_local_to_global_for_fem_matrix_with_row_internal_numbering<
-          dim,
-          spacedim,
-          RangeNumberType,
-          MatrixType>,
-        std::placeholders::_1,
-        std::cref(dof_row_e2i_numbering),
-        std::ref(target_matrix)),
       CellWiseScratchDataForMassMatrix<dim, spacedim>(
         dof_handler_for_test_space.get_fe(),
         dof_handler_for_trial_space.get_fe(),
