@@ -1,5 +1,5 @@
 #include "cu_sbb.impl.h"
-#include "build/template_instantiator.h"
+#include "build_tools/template_instantiator.h"
 
 #define INST_CLASSES (CuSbb)
 

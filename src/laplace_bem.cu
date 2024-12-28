@@ -1,6 +1,6 @@
 #include "config.h"
 #include "laplace_bem.impl.hcu"
-#include "build/template_instantiator.h"
+#include "build_tools/template_instantiator.h"
 
 HBEM_NS_OPEN
 
