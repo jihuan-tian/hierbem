@@ -7,8 +7,8 @@
  * @author Jihuan Tian
  */
 
-#ifndef INCLUDE_QUADRATURE_TEMPLATES_H_
-#define INCLUDE_QUADRATURE_TEMPLATES_H_
+#ifndef HIERBEM_INCLUDE_QUADRATURE_TEMPLATES_H_
+#define HIERBEM_INCLUDE_QUADRATURE_TEMPLATES_H_
 
 #include <deal.II/base/memory_consumption.h>
 #include <deal.II/base/quadrature.h>
@@ -239,4 +239,4 @@ QGauss<dim>::QGauss(const unsigned int n)
 DEAL_II_NAMESPACE_CLOSE
 
 
-#endif /* INCLUDE_QUADRATURE_TEMPLATES_H_ */
+#endif // HIERBEM_INCLUDE_QUADRATURE_TEMPLATES_H_

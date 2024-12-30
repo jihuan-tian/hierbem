@@ -10,8 +10,8 @@
  * \date 2021-10-13
  * \author Jihuan Tian
  */
-#ifndef INCLUDE_LAPACK_TEMPLATES_EXT_H_
-#define INCLUDE_LAPACK_TEMPLATES_EXT_H_
+#ifndef HIERBEM_INCLUDE_LAPACK_TEMPLATES_EXT_H_
+#define HIERBEM_INCLUDE_LAPACK_TEMPLATES_EXT_H_
 
 #include <deal.II/lac/lapack_support.h>
 
@@ -303,4 +303,4 @@ trsv(const char                    *uplo,
 #endif
 }
 
-#endif /* INCLUDE_LAPACK_TEMPLATES_EXT_H_ */
+#endif // HIERBEM_INCLUDE_LAPACK_TEMPLATES_EXT_H_

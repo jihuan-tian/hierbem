@@ -6,7 +6,7 @@ set(_target test-hmatrix-transpose-forward-substitution-matrix-valued)
 
 add_executable(
   ${_target} hmatrix-transpose-forward-substitution-matrix-valued.cc
-             run-hmatrix-transpose-forward-substitution-matrix-valued.cu)
+             run-hmatrix-transpose-forward-substitution-matrix-valued.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})

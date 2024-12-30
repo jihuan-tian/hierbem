@@ -7,7 +7,7 @@
  * \date 2021-06-23
  */
 
-#include "hmatrix.h"
+#include "hmatrix/hmatrix.h"
 
 using namespace HierBEM;
 

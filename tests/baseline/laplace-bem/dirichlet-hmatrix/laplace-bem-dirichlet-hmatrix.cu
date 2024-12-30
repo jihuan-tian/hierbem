@@ -12,7 +12,8 @@
 
 #include <deal.II/fe/mapping_manifold.h>
 
-#include <deal.II/grid/manifold.h>
+#include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/manifold_lib.h>
 
 #include <boost/program_options.hpp>
 
@@ -22,7 +23,7 @@
 #include <iostream>
 
 #include "cu_profile.hcu"
-#include "debug_tools.hcu"
+#include "debug_tools.h"
 #include "hbem_test_config.h"
 #include "laplace_bem.h"
 

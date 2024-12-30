@@ -18,7 +18,7 @@ macro(HBEM_STD_COMPILE_FLAGS)
   set(CMAKE_CUDA_STANDARD_REQUIRED ON)
   set(CMAKE_CUDA_EXTENSIONS OFF)
 
-  set(_common_flags -Wall -Wextra)
+  set(_common_flags -Wall -Wextra -Wno-unknown-pragmas)
   set(_is_cxx "$<COMPILE_LANGUAGE:CXX>")
   set(_is_cuda "$<COMPILE_LANGUAGE:CUDA>")
   set(_is_gcc "$<STREQUAL:${CMAKE_CXX_COMPILER_ID},GNU>")

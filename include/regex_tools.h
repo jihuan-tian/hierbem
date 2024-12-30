@@ -5,27 +5,29 @@
  * @date 2022-03-16
  * @author Jihuan Tian
  */
-#ifndef INCLUDE_REGEX_TOOLS_H_
-#define INCLUDE_REGEX_TOOLS_H_
+#ifndef HIERBEM_INCLUDE_REGEX_TOOLS_H_
+#define HIERBEM_INCLUDE_REGEX_TOOLS_H_
 
 #include <regex>
 
-namespace HierBEM
+#include "config.h"
+
+HBEM_NS_OPEN
+
+namespace RegexTools
 {
-  namespace RegexTools
-  {
-    using namespace std;
+  using namespace std;
 
-    extern const regex reg_for_file_base_and_ext1;
-    extern const regex reg_for_file_base_and_ext2;
+  extern const regex reg_for_file_base_and_ext1;
+  extern const regex reg_for_file_base_and_ext2;
 
-    string
-    file_basename(const string &filename);
+  string
+  file_basename(const string &filename);
 
-    string
-    file_ext(const string &filename);
-  } // namespace RegexTools
-} // namespace HierBEM
+  string
+  file_ext(const string &filename);
+} // namespace RegexTools
 
+HBEM_NS_CLOSE
 
-#endif /* INCLUDE_REGEX_TOOLS_H_ */
+#endif // HIERBEM_INCLUDE_REGEX_TOOLS_H_

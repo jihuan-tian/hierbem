@@ -1,86 +1,32 @@
-=== Volume mesh information ===
-Manifold dimension: 3
-Space dimension: 3
-No. of cells: 63
-No. of active cells: 56
-No. of faces: 204
-No. of active faces: 180
-No. of vertices: 79
-=== Surface mesh information ===
-Manifold dimension: 2
-Space dimension: 3
-No. of cells: 30
-No. of active cells: 24
-No. of faces: 60
-No. of active faces: 48
-No. of vertices: 26
-=== DoF information ===
-Number of DoFs in Dirichlet space: 26
-Number of DoFs in Neumann space: 24
-=== Leaf set information of D1_hmat ===
-Number of H-matrix nodes in the leaf set: 46
-Number of H-matrix nodes in the near field set: 46
-Number of H-matrix nodes in the far field set: 0
-Number of matrix entries in the near field set: 383
-Maximum number of matrix entries in the far field set: 0
-=== Leaf set information of K_prime2_hmat_with_mass_matrix ===
-Number of H-matrix nodes in the leaf set: 52
-Number of H-matrix nodes in the near field set: 52
-Number of H-matrix nodes in the far field set: 0
-Number of matrix entries in the near field set: 624
-Maximum number of matrix entries in the far field set: 0
-=== Leaf set information of V1_hmat ===
-Number of H-matrix nodes in the leaf set: 64
-Number of H-matrix nodes in the near field set: 64
-Number of H-matrix nodes in the far field set: 0
-Number of matrix entries in the near field set: 324
-Maximum number of matrix entries in the far field set: 0
-=== Assemble -sigma*I-K' ===
-=== Assemble the RHS vector ===
-=== Release K' ===
-=== Solve the natural density weq ===
-=== Assemble V for solving the natural density ===
-=== Assemble the RHS vector for natural density ===
-=== Assemble preconditioner for the V matrix ===
-=== Cholesky factorization of V ===
-=== Release V and its preconditioner ===
-Neumann stabilization factor: 0.0216644
-=== Release the RHS vector for solving natural density ===
-=== Calculate the vector a=M*weq ===
-=== Assemble D ===
-=== Assemble preconditioner for D ===
-=== Cholesky factorization of D ===
-=== Solve problem ===
-=== Output results ===
 # name: solution
 # type: matrix
 # rows: 26
 # columns: 1
-      -0.0323374719739908
-      -0.0293236249374337
-      -0.0293238904026027
-       -0.025252693504055
-      -0.0209538584590381
-      -0.0124858970372012
-      -0.0209538321516976
-      -0.0124856048818466
-     -0.00259731460048395
-       -0.012485937349634
-        0.022840795135725
-       0.0484177579614782
-     -0.00259727803217294
-        0.048417706312817
-        0.081003887548314
-      -0.0209538532766213
-      -0.0124859366588015
-      -0.0124856347926118
-       0.0228408602995919
-     -0.00259770419933461
-       0.0484177091972296
-      -0.0293236129103728
-      -0.0252526872024524
-      -0.0124855981329665
-      -0.0252529228304304
-       0.0228405290971566
+      -0.0323352780018312
+      -0.0293214309652741
+      -0.0293216964304432
+      -0.0252504995318955
+      -0.0209516644868785
+      -0.0124837030650417
+      -0.0209516381795381
+      -0.0124834109096871
+     -0.00259512062832438
+      -0.0124837433774745
+       0.0228429891078846
+       0.0484199519336377
+      -0.0025950840600134
+       0.0484199002849766
+       0.0810060815204735
+      -0.0209516593044617
+       -0.012483742686642
+      -0.0124834408204523
+       0.0228430542717515
+     -0.00259551022717509
+       0.0484199031693891
+      -0.0293214189382133
+      -0.0252504932302928
+       -0.012483404160807
+      -0.0252507288582708
+       0.0228427230693161
 
 

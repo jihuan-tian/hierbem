@@ -14,8 +14,8 @@
  * \author Jihuan Tian
  */
 
-#ifndef INCLUDE_LAPACK_HELPERS_H_
-#define INCLUDE_LAPACK_HELPERS_H_
+#ifndef HIERBEM_INCLUDE_LAPACK_HELPERS_H_
+#define HIERBEM_INCLUDE_LAPACK_HELPERS_H_
 
 #include <deal.II/base/numbers.h>
 
@@ -57,9 +57,9 @@ namespace LAPACKHelpers
               const T                 alpha,
               const types::blas_int   n_rows,
               const AlignedVector<T> &matrix,
-              const T *               x_pointer,
+              const T                *x_pointer,
               const T                 beta,
-              T *                     y_pointer,
+              T                      *y_pointer,
               const types::blas_int   incx = 1,
               const types::blas_int   incy = 1)
   {
@@ -100,7 +100,7 @@ namespace LAPACKHelpers
               const char              diag,
               const types::blas_int   n_rows,
               const AlignedVector<T> &matrix,
-              T *                     x_pointer,
+              T                      *x_pointer,
               const types::blas_int   incx = 1)
   {
     Assert(uplo == 'U' || uplo == 'u' || uplo == 'L' || uplo == 'l',
@@ -120,16 +120,16 @@ namespace LAPACKHelpers
   void
   geev_helper(const char            vl,
               const char            vr,
-              AlignedVector<T> &    matrix,
+              AlignedVector<T>     &matrix,
               const types::blas_int n_rows,
-              std::vector<T> &      real_part_eigenvalues,
-              std::vector<T> &      imag_part_eigenvalues,
-              std::vector<T> &      left_eigenvectors,
-              std::vector<T> &      right_eigenvectors,
-              std::vector<T> &      real_work,
+              std::vector<T>       &real_part_eigenvalues,
+              std::vector<T>       &imag_part_eigenvalues,
+              std::vector<T>       &left_eigenvectors,
+              std::vector<T>       &right_eigenvectors,
+              std::vector<T>       &real_work,
               std::vector<T> & /*complex_work*/,
               const types::blas_int work_flag,
-              types::blas_int &     info)
+              types::blas_int      &info)
   {
     static_assert(std::is_same<T, double>::value ||
                     std::is_same<T, float>::value,
@@ -180,9 +180,9 @@ namespace LAPACKHelpers
               std::vector<std::complex<T>> &left_eigenvectors,
               std::vector<std::complex<T>> &right_eigenvectors,
               std::vector<std::complex<T>> &complex_work,
-              std::vector<T> &              real_work,
+              std::vector<T>               &real_work,
               const types::blas_int         work_flag,
-              types::blas_int &             info)
+              types::blas_int              &info)
   {
     static_assert(
       std::is_same<T, double>::value || std::is_same<T, float>::value,
@@ -242,15 +242,15 @@ namespace LAPACKHelpers
   gesdd_helper(const char            job,
                const types::blas_int n_rows,
                const types::blas_int n_cols,
-               AlignedVector<T> &    matrix,
-               std::vector<T> &      singular_values,
-               AlignedVector<T> &    left_vectors,
-               AlignedVector<T> &    right_vectors,
-               std::vector<T> &      real_work,
+               AlignedVector<T>     &matrix,
+               std::vector<T>       &singular_values,
+               AlignedVector<T>     &left_vectors,
+               AlignedVector<T>     &right_vectors,
+               std::vector<T>       &real_work,
                std::vector<T> & /*complex work*/,
                std::vector<types::blas_int> &integer_work,
                const types::blas_int         work_flag,
-               types::blas_int &             info)
+               types::blas_int              &info)
   {
     Assert(job == 'A' || job == 'S' || job == 'O' || job == 'N',
            ExcInternalError());
@@ -302,14 +302,14 @@ namespace LAPACKHelpers
                const types::blas_int           n_rows,
                const types::blas_int           n_cols,
                AlignedVector<std::complex<T>> &matrix,
-               std::vector<T> &                singular_values,
+               std::vector<T>                 &singular_values,
                AlignedVector<std::complex<T>> &left_vectors,
                AlignedVector<std::complex<T>> &right_vectors,
-               std::vector<std::complex<T>> &  work,
-               std::vector<T> &                real_work,
-               std::vector<types::blas_int> &  integer_work,
-               const types::blas_int &         work_flag,
-               types::blas_int &               info)
+               std::vector<std::complex<T>>   &work,
+               std::vector<T>                 &real_work,
+               std::vector<types::blas_int>   &integer_work,
+               const types::blas_int          &work_flag,
+               types::blas_int                &info)
   {
     Assert(job == 'A' || job == 'S' || job == 'O' || job == 'N',
            ExcInternalError());
@@ -348,11 +348,11 @@ namespace LAPACKHelpers
   void
   geqrf_helper(const types::blas_int n_rows,
                const types::blas_int n_cols,
-               AlignedVector<T> &    matrix,
-               std::vector<T> &      tau,
-               std::vector<T> &      work,
+               AlignedVector<T>     &matrix,
+               std::vector<T>       &tau,
+               std::vector<T>       &work,
                const types::blas_int work_flag,
-               types::blas_int &     info)
+               types::blas_int      &info)
   {
     Assert(static_cast<std::size_t>(n_rows * n_cols) == matrix.size(),
            ExcInternalError());
@@ -404,7 +404,7 @@ namespace LAPACKHelpers
               const bool              is_unit_diagonal,
               const types::blas_int   n_rows,
               const AlignedVector<T> &matrix,
-              T *                     right_vector_pointer,
+              T                      *right_vector_pointer,
               const types::blas_int   incx = 1)
   {
     // The matrix should be square.
@@ -449,7 +449,7 @@ namespace LAPACKHelpers
               const bool                            is_unit_diagonal,
               const types::blas_int                 n_rows,
               const AlignedVector<std::complex<T>> &matrix,
-              std::complex<T> *                     right_vector_pointer,
+              std::complex<T>                      *right_vector_pointer,
               const types::blas_int                 incx = 1)
   {
     Assert(uplo == 'U' || uplo == 'u' || uplo == 'L' || uplo == 'l',
@@ -476,4 +476,5 @@ namespace LAPACKHelpers
 } // namespace LAPACKHelpers
 
 DEAL_II_NAMESPACE_CLOSE
-#endif /* INCLUDE_LAPACK_HELPERS_H_ */
+
+#endif // HIERBEM_INCLUDE_LAPACK_HELPERS_H_

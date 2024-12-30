@@ -1,6 +1,7 @@
 #include <deal.II/base/logstream.h>
 
 #include <deal.II/grid/grid_in.h>
+#include <deal.II/grid/manifold_lib.h>
 
 #include <cuda_runtime.h>
 #include <openblas-pthread/cblas.h>
@@ -8,7 +9,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "debug_tools.hcu"
+#include "debug_tools.h"
 #include "hbem_test_config.h"
 #include "laplace_bem.h"
 

@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-#include "hmatrix.h"
+#include "hmatrix/hmatrix.h"
 #include "lapack_full_matrix_ext.h"
 #include "rkmatrix.h"
 

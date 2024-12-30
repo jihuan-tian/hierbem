@@ -19,7 +19,7 @@
 
 #include <iostream>
 
-#include "bem_values.h"
+#include "bem_values.hcu"
 #include "cu_bem_values.hcu"
 #include "debug_tools.hcu"
 #include "mapping/mapping_q_generic_ext.h"

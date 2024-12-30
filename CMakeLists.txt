@@ -8,7 +8,7 @@ endif()
 # Project name
 project("hierbem" LANGUAGES CUDA CXX)
 
-# External depedencies
+# External dependencies
 find_package(
   deal.II
   9.4.0

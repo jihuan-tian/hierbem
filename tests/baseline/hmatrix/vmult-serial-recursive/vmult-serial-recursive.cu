@@ -8,6 +8,11 @@
  * @date 2024-03-19
  */
 
+#include <deal.II/fe/fe.h>
+#include <deal.II/fe/fe_dgq.h>
+
+#include <deal.II/grid/manifold_lib.h>
+
 #include <boost/program_options.hpp>
 
 #include <cuda_runtime.h>
@@ -16,11 +21,14 @@
 #include <iostream>
 #include <random>
 
+#include "hmatrix/aca_plus/aca_plus.hcu"
 #include "grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "laplace_bem.h"
 #include "mapping/mapping_info.h"
+#include "sauter_quadrature.hcu"
 #include "subdomain_topology.h"
+#include "platform_shared/laplace_kernels.h"
 
 using namespace dealii;
 using namespace HierBEM;
@@ -136,7 +144,7 @@ main(int argc, char *argv[])
   FE_DGQ<dim, spacedim>     fe(0);
   DoFHandler<dim, spacedim> dof_handler(tria);
 
-  HierBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<spacedim>
+  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim>
     single_layer_kernel;
 
   const unsigned int n_min    = 32;
