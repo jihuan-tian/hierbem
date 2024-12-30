@@ -1,0 +1,13 @@
+#ifndef HIERBEM_SRC_HBEM_LAPLACE_CU_RELATED_H
+#define HIERBEM_SRC_HBEM_LAPLACE_CU_RELATED_H
+
+#include "config.h"
+
+HBEM_NS_OPEN
+
+void
+init_cuda_runtime();
+
+HBEM_NS_CLOSE
+
+#endif // HIERBEM_SRC_HBEM_LAPLACE_CU_RELATED_H

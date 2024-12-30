@@ -3,11 +3,11 @@
  */
 
 #include <deal.II/base/logstream.h>
+#include <deal.II/base/timer.h>
 
 #include <deal.II/grid/grid_in.h>
 
 #include <cpptrace/from_current.hpp>
-#include <cuda_runtime.h>
 #include <fmt/core.h>
 #include <openblas-pthread/cblas.h>
 
@@ -18,6 +18,8 @@
 #include <system_error>
 
 #include "config_file/config_file.h"
+#include "cu_related.h"
+#include "debug_tools.h"
 #include "laplace_bem.h"
 
 using namespace dealii;
@@ -28,6 +30,7 @@ class LaplaceWorkbench
 public:
   LaplaceWorkbench()
     : log_file_os_()
+    , bem_(nullptr)
   {}
 
   void
@@ -72,15 +75,7 @@ public:
      */
     openblas_set_num_threads(1);
 
-    const size_t stack_size = 1024 * 10;
-    AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));
-    deallog << "CUDA stack size has been set to " << stack_size << std::endl;
-
-    /**
-     * @internal Get GPU device properties.
-     */
-    AssertCuda(
-      cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
+    init_cuda_runtime();
   }
 
   void
@@ -111,7 +106,7 @@ public:
   startup()
   {
     init_workdir(); // Make working directory hierarchies if it doesn't
-                          // exist
+                    // exist
     init_logger();  // Initialize deal.ii logger
     LogStream::Prefix prefix_string("HierBEM");
 
@@ -135,18 +130,19 @@ public:
 
     timer.start();
     run_solver_and_output(); // Assemble and solve BEM system, output
-                                   // results
+                             // results
     timer.stop();
     print_wall_time(deallog, timer, "run the solver");
 
     // Final summary log
     deallog << "Program exits with a total wall time " << timer.wall_time()
             << "s" << std::endl;
-    bem.print_memory_consumption_table(deallog.get_file_stream());
+    bem_->print_memory_consumption_table(deallog.get_file_stream());
   }
 
 protected:
-  std::shared_ptr<std::ofstream> log_file_os_;
+  std::shared_ptr<std::ofstream>    log_file_os_;
+  std::unique_ptr<LaplaceBEM<2, 3>> bem_;
 };
 
 
