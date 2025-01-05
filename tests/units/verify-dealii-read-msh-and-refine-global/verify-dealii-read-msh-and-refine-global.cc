@@ -30,7 +30,11 @@ enum ReadMSHFunction
   DEAL_II_FILENAME,
   DEAL_II_FILESTREAM,
   HIERBEM_FILENAME,
-  HIERBEM_FILESTREAM
+  HIERBEM_FILESTREAM,
+  HIERBEM_FILESTREAM_WITH_CORRECT_OPTIONS // i.e.
+                                          // read_lines_as_subcelldata=false,
+                                          // reorder_cell_vertices=true,
+                                          // check_cell_orientation=false
 };
 
 struct CmdOpts
@@ -56,8 +60,8 @@ parse_cmdline(int argc, const char *argv[])
   // clang-format off
   desc.add_options()
     ("help,h", "show help message")
-    ("function,f", po::value<std::string>()->default_value("hierbem-filename"), "Function for reading MSH file")
-    ("mesh-file,m", po::value<std::string>(), "Mesh file")
+    ("function,f", po::value<std::string>()->default_value("hierbem-filestream-with-correct-options"), "Function for reading MSH file")
+    ("mesh-file,m", po::value<std::string>()->default_value(HBEM_TEST_MODEL_DIR "sphere2d-quasi-structured-quad.msh"), "Mesh file")
     ("read-lines,l", po::bool_switch(&opts.read_lines_as_subcelldata), "Read lines as subcelldata")
     ("reorder-vertices,v", po::bool_switch(&opts.reorder_cell_vertices), "Reorder cell vertices to make lines aligned")
     ("check-orient,o", po::bool_switch(&opts.check_cell_orientation), "Check cell orientation in manifold");
@@ -81,6 +85,10 @@ parse_cmdline(int argc, const char *argv[])
   else if (func == "hierbem-filestream")
     {
       opts.func = ReadMSHFunction::HIERBEM_FILESTREAM;
+    }
+  else if (func == "hierbem-filestream-with-correct-options")
+    {
+      opts.func = ReadMSHFunction::HIERBEM_FILESTREAM_WITH_CORRECT_OPTIONS;
     }
   else if (func == "dealii-filename")
     {
@@ -155,6 +163,12 @@ main(int argc, const char *argv[])
                    opts.read_lines_as_subcelldata,
                    opts.reorder_cell_vertices,
                    opts.check_cell_orientation);
+
+          break;
+        }
+        case ReadMSHFunction::HIERBEM_FILESTREAM_WITH_CORRECT_OPTIONS: {
+          ifstream in(opts.mesh_file);
+          read_msh(in, tria);
 
           break;
         }

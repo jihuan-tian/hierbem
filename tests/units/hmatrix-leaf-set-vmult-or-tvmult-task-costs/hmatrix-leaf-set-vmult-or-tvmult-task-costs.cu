@@ -8,16 +8,25 @@
  * @date 2024-03-14
  */
 
+#include <deal.II/fe/fe.h>
+#include <deal.II/fe/fe_dgq.h>
+
+#include <deal.II/grid/manifold_lib.h>
+
 #include <cuda_runtime.h>
 
+#include <fstream>
 #include <iostream>
 
 #include "grid_in_ext.h"
 #include "hbem_test_config.h"
+#include "hmatrix/aca_plus/aca_plus.hcu"
 #include "laplace_bem.h"
 #include "mapping/mapping_info.h"
+#include "sauter_quadrature.hcu"
 #include "sequence_partition/sequence_partition.h"
 #include "subdomain_topology.h"
+#include "unary_template_arg_containers.h"
 
 using namespace dealii;
 using namespace HierBEM;
@@ -56,7 +65,9 @@ main()
   SubdomainTopology<dim, spacedim> subdomain_topology;
 
   Triangulation<dim, spacedim> tria;
-  read_msh(HBEM_TEST_MODEL_DIR "two-spheres-fine.msh", tria);
+  std::ifstream mesh_in(HBEM_TEST_MODEL_DIR "two-spheres-fine.msh");
+  read_msh(mesh_in, tria);
+  mesh_in.close();
   subdomain_topology.generate_topology(HBEM_TEST_MODEL_DIR "two-spheres.brep",
                                        HBEM_TEST_MODEL_DIR "two-spheres.msh");
 
@@ -99,7 +110,7 @@ main()
   FE_DGQ<dim, spacedim>     fe(0);
   DoFHandler<dim, spacedim> dof_handler(tria);
 
-  HierBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<spacedim>
+  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim>
     single_layer_kernel;
 
   const unsigned int n_min    = 32;
@@ -117,7 +128,7 @@ main()
       cell_iterators.push_back(cell);
     }
 
-  DoFToolsExt::DoFToCellTopology<dim, spacedim> dof_to_cell_topo;
+  DoFToCellTopology<dim, spacedim> dof_to_cell_topo;
   DoFToolsExt::build_dof_to_cell_topology(dof_to_cell_topo,
                                           cell_iterators,
                                           dof_handler);

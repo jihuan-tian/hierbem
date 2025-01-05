@@ -11,23 +11,15 @@
 
 #include <fstream>
 
-#include "debug_tools.hcu"
 #include "electric_field/ddm_efield.h"
 #include "grid_in_ext.h"
 #include "grid_out_ext.h"
 #include "hbem_test_config.h"
+#include "sauter_quadrature.hcu"
 
 using namespace dealii;
 using namespace HierBEM;
 using namespace Catch::Matchers;
-
-namespace HierBEM
-{
-  namespace CUDAWrappers
-  {
-    extern cudaDeviceProp device_properties;
-  }
-} // namespace HierBEM
 
 TEST_CASE("Create subdomain H-hmatrices", "[ddm_efield]")
 {

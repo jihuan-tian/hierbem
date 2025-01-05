@@ -15,9 +15,10 @@
 #include <map>
 #include <vector>
 
-#include "debug_tools.hcu"
+#include "debug_tools.h"
 #include "grid_in_ext.h"
 #include "grid_out_ext.h"
+#include "hmatrix/hmatrix_parameters.h"
 #include "preconditioners/preconditioner_for_laplace_dirichlet.h"
 
 using namespace Catch::Matchers;

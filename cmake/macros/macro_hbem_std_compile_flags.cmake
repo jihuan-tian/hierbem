@@ -18,7 +18,7 @@ macro(HBEM_STD_COMPILE_FLAGS)
   set(CMAKE_CUDA_STANDARD_REQUIRED ON)
   set(CMAKE_CUDA_EXTENSIONS OFF)
 
-  set(_common_flags -Wall -Wextra)
+  set(_common_flags -Wall -Wextra -Wno-unknown-pragmas)
   set(_is_cxx "$<COMPILE_LANGUAGE:CXX>")
   set(_is_cuda "$<COMPILE_LANGUAGE:CUDA>")
   set(_is_gcc "$<STREQUAL:${CMAKE_CXX_COMPILER_ID},GNU>")
@@ -28,6 +28,7 @@ macro(HBEM_STD_COMPILE_FLAGS)
 
   # Enable precompiled headers for GCC
   set(_pch_if_gcc "$<IF:${_is_gcc},-fpch-preprocess,>")
+  set(_werror_if_not_relaxed "$<IF:${_is_relaxed},,-Werror>")
   # Do not report pedantic errors if relaxed (such as trailing extra semicolon,
   # etc.)
   set(_pedantic_if_not_relaxed "$<IF:${_is_relaxed},,-pedantic-errors>")
@@ -43,12 +44,7 @@ macro(HBEM_STD_COMPILE_FLAGS)
 
   add_compile_options(
     "${_common_flags}"
-    "$<${_is_cxx}:-Werror;${_pedantic_if_not_relaxed};${_disable_deprecated_warning};${_pch_if_gcc}>"
+    "$<${_is_cxx}:${_werror_if_not_relaxed};${_pedantic_if_not_relaxed};${_disable_deprecated_warning};${_pch_if_gcc}>"
     "$<${_is_cuda}:-Werror=all-warnings;${_stack_size_opts}>")
-
-  #
-  # Add bundled reflect-cpp library
-  #
-  include_directories("${CMAKE_SOURCE_DIR}/extern/reflect-cpp-0.9.0/include")
 
 endmacro()

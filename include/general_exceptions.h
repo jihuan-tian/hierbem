@@ -4,43 +4,46 @@
  * \date 2021-06-10
  * \author Jihuan Tian
  */
-#ifndef INCLUDE_GENERAL_EXCEPTIONS_H_
-#define INCLUDE_GENERAL_EXCEPTIONS_H_
+#ifndef HIERBEM_INCLUDE_GENERAL_EXCEPTIONS_H_
+#define HIERBEM_INCLUDE_GENERAL_EXCEPTIONS_H_
 
 
 #include <deal.II/base/exceptions.h>
 
-namespace HierBEM
-{
-  using namespace dealii;
+#include "config.h"
 
-  DeclException3(ExcOpenIntervalRange,
-                 double,
-                 double,
-                 double,
-                 << arg1 << " is not in the range (" << arg2 << ", " << arg3
-                 << ").");
+HBEM_NS_OPEN
 
-  DeclException3(ExcLeftOpenIntervalRange,
-                 double,
-                 double,
-                 double,
-                 << arg1 << " is not in the range (" << arg2 << ", " << arg3
-                 << "].");
+using namespace dealii;
 
-  DeclException3(ExcRightOpenIntervalRange,
-                 double,
-                 double,
-                 double,
-                 << arg1 << " is not in the range [" << arg2 << ", " << arg3
-                 << ").");
+DeclException3(ExcOpenIntervalRange,
+               double,
+               double,
+               double,
+               << arg1 << " is not in the range (" << arg2 << ", " << arg3
+               << ").");
 
-  DeclException3(ExcClosedIntervalRange,
-                 double,
-                 double,
-                 double,
-                 << arg1 << " is not in the range [" << arg2 << ", " << arg3
-                 << "].");
-} // namespace HierBEM
+DeclException3(ExcLeftOpenIntervalRange,
+               double,
+               double,
+               double,
+               << arg1 << " is not in the range (" << arg2 << ", " << arg3
+               << "].");
 
-#endif /* INCLUDE_GENERAL_EXCEPTIONS_H_ */
+DeclException3(ExcRightOpenIntervalRange,
+               double,
+               double,
+               double,
+               << arg1 << " is not in the range [" << arg2 << ", " << arg3
+               << ").");
+
+DeclException3(ExcClosedIntervalRange,
+               double,
+               double,
+               double,
+               << arg1 << " is not in the range [" << arg2 << ", " << arg3
+               << "].");
+
+HBEM_NS_CLOSE
+
+#endif // HIERBEM_INCLUDE_GENERAL_EXCEPTIONS_H_

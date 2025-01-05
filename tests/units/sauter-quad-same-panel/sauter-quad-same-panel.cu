@@ -7,12 +7,14 @@
  * @author Jihuan Tian
  */
 
+#include <deal.II/fe/fe.h>
+#include <deal.II/fe/fe_dgq.h>
+
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_out.h>
 
 #include <fstream>
 
-#include "laplace_bem.h"
 #include "sauter_quadrature.hcu"
 
 using namespace dealii;
@@ -112,11 +114,11 @@ main()
     /**
      * Create different Laplace kernel functions.
      */
-    HierBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<spacedim> slp;
-    HierBEM::CUDAWrappers::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
-    HierBEM::CUDAWrappers::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
-                                                                        adlp;
-    HierBEM::CUDAWrappers::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
+    HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim> slp;
+    HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
+    HierBEM::PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
+                                                                         adlp;
+    HierBEM::PlatformShared::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
 
 
     /**
@@ -311,11 +313,11 @@ main()
     /**
      * Create different Laplace kernel functions.
      */
-    HierBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<spacedim> slp;
-    HierBEM::CUDAWrappers::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
-    HierBEM::CUDAWrappers::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
-                                                                        adlp;
-    HierBEM::CUDAWrappers::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
+    HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim> slp;
+    HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
+    HierBEM::PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
+                                                                         adlp;
+    HierBEM::PlatformShared::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
 
     /**
      * Generate 4D Gauss-Legendre quadrature rules for various cell neighboring

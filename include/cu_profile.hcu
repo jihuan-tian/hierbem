@@ -5,32 +5,34 @@
  * @date 2023-06-14
  * @author Jihuan Tian
  */
-#ifndef INCLUDE_CU_PROFILE_HCU_
-#define INCLUDE_CU_PROFILE_HCU_
+#ifndef HIERBEM_INCLUDE_CU_PROFILE_H_
+#define HIERBEM_INCLUDE_CU_PROFILE_H_
 
 #include <nvtx3/nvToolsExt.h>
 
 #include <string>
 
-namespace HierBEM
+#include "config.h"
+
+HBEM_NS_OPEN
+
+namespace CUDAWrappers
 {
-  namespace CUDAWrappers
+  class NVTXRange
   {
-    class NVTXRange
+  public:
+    NVTXRange(const std::string &message)
     {
-    public:
-      NVTXRange(const std::string &message)
-      {
-        nvtxRangePush(message.c_str());
-      }
+      nvtxRangePush(message.c_str());
+    }
 
-      ~NVTXRange()
-      {
-        nvtxRangePop();
-      }
-    };
-  } // namespace CUDAWrappers
-} // namespace HierBEM
+    ~NVTXRange()
+    {
+      nvtxRangePop();
+    }
+  };
+} // namespace CUDAWrappers
 
+HBEM_NS_CLOSE
 
-#endif /* INCLUDE_CU_PROFILE_HCU_ */
+#endif // HIERBEM_INCLUDE_CU_PROFILE_H_

@@ -5,8 +5,24 @@
  * @date 2022-12-16
  * @author Jihuan Tian
  */
-#ifndef INCLUDE_CONFIG_H_
-#define INCLUDE_CONFIG_H_
+#ifndef HIERBEM_INCLUDE_CONFIG_H_
+#define HIERBEM_INCLUDE_CONFIG_H_
+
+#define HBEM_NS_OPEN \
+  namespace HierBEM            \
+  {
+#define HBEM_NS_CLOSE }
+
+// Define host-device attribute macro for different platforms
+#ifdef __CUDACC__
+// in CUDA compiler
+#define HBEM_ATTR_HOST __host__
+#define HBEM_ATTR_DEV __device__
+#else
+// in host compiler
+#define HBEM_ATTR_HOST
+#define HBEM_ATTR_DEV
+#endif
 
 #define ENABLE_DEBUG @HBEM_ENABLE_DEBUG@
 /**
@@ -38,4 +54,4 @@
  */
 #define HBEM_NEUMANN_SOLUTION_SPACE @HBEM_NEUMANN_SOLUTION_SPACE@
 
-#endif /* INCLUDE_CONFIG_H_ */
+#endif // HIERBEM_INCLUDE_CONFIG_H_

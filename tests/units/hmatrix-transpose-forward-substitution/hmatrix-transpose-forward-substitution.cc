@@ -12,7 +12,7 @@
 #include <iostream>
 
 #include "debug_tools.h"
-#include "hmatrix.h"
+#include "hmatrix/hmatrix.h"
 #include "lapack_full_matrix_ext.h"
 #include "read_octave_data.h"
 

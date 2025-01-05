@@ -24,8 +24,8 @@
 #include <set>
 #include <vector>
 
-#include "bem_tools.hcu"
-#include "debug_tools.hcu"
+#include "bem_tools.h"
+#include "debug_tools.h"
 
 using namespace dealii;
 using namespace HierBEM;

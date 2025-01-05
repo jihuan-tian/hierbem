@@ -21,7 +21,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "debug_tools.hcu"
+#include "debug_tools.h"
 #include "preconditioners/preconditioner_for_laplace_dirichlet.h"
 #include "subdomain_topology.h"
 

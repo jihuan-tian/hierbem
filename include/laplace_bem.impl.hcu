@@ -1,0 +1,456 @@
+/** \file laplace_bem.h
+ * \brief Implementation of BEM involving kernel functions and singular
+ * numerical quadratures.
+ *
+ * \ingroup sauter_quadrature
+ * \date 2020-11-02
+ * \author Jihuan Tian
+ */
+
+#ifndef HIERBEM_INCLUDE_LAPLACE_BEM_IMPL_H_
+#define HIERBEM_INCLUDE_LAPLACE_BEM_IMPL_H_
+
+#include <deal.II/base/function.h>
+
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/grid/tria.h>
+
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "config.h"
+#include "dof_tools_ext.h"
+#include "gmsh_manipulation.h"
+#include "laplace_bem.h"
+#include "laplace_bem.priv.hcu"
+#include "mapping/mapping_info.h"
+#include "sauter_quadrature_tools.h"
+#include "subdomain_topology.h"
+
+HBEM_NS_OPEN
+
+using namespace dealii;
+
+#pragma region **** LaplaceBEM ctor and dtor impls ****
+
+template <int dim, int spacedim>
+LaplaceBEM<dim, spacedim>::LaplaceBEM()
+  : priv_(std::make_unique<Priv>())
+{
+  priv_->initialize_memory_consumption_table_headers();
+}
+
+template <int dim, int spacedim>
+LaplaceBEM<dim, spacedim>::LaplaceBEM(unsigned int fe_order_for_dirichlet_space,
+                                      unsigned int fe_order_for_neumann_space,
+                                      ProblemType  problem_type,
+                                      bool         is_interior_problem,
+                                      unsigned int thread_num)
+  : priv_(std::make_unique<Priv>(fe_order_for_dirichlet_space,
+                                 fe_order_for_neumann_space,
+                                 problem_type,
+                                 is_interior_problem,
+                                 thread_num))
+{
+  priv_->initialize_memory_consumption_table_headers();
+}
+
+
+template <int dim, int spacedim>
+LaplaceBEM<dim, spacedim>::LaplaceBEM(
+  unsigned int fe_order_for_dirichlet_space,
+  unsigned int fe_order_for_neumann_space,
+  ProblemType  problem_type,
+  bool         is_interior_problem,
+  unsigned int n_min_for_ct,
+  unsigned int n_min_for_bct,
+  double       eta,
+  unsigned int max_hmat_rank,
+  double       aca_relative_error,
+  double       eta_for_preconditioner,
+  unsigned int max_hmat_rank_for_preconditioner,
+  double       aca_relative_error_for_preconditioner,
+  unsigned int thread_num)
+  : priv_(std::make_unique<Priv>(fe_order_for_dirichlet_space,
+                                 fe_order_for_neumann_space,
+                                 problem_type,
+                                 is_interior_problem,
+                                 n_min_for_ct,
+                                 n_min_for_bct,
+                                 eta,
+                                 max_hmat_rank,
+                                 aca_relative_error,
+                                 eta_for_preconditioner,
+                                 max_hmat_rank_for_preconditioner,
+                                 aca_relative_error_for_preconditioner,
+                                 thread_num))
+{
+  priv_->initialize_memory_consumption_table_headers();
+}
+
+
+template <int dim, int spacedim>
+LaplaceBEM<dim, spacedim>::~LaplaceBEM()
+{}
+
+#pragma endregion
+#pragma region **** LaplaceBEM accessors ****
+
+template <int dim, int spacedim>
+inline bool
+LaplaceBEM<dim, spacedim>::is_cpu_serial() const
+{
+  return priv_->cpu_serial_;
+}
+
+template <int dim, int spacedim>
+inline void
+LaplaceBEM<dim, spacedim>::set_cpu_serial(bool cpuSerial)
+{
+  priv_->cpu_serial_ = cpuSerial;
+}
+
+template <int dim, int spacedim>
+inline bool
+LaplaceBEM<dim, spacedim>::is_use_hmat() const
+{
+  return priv_->use_hmat_;
+}
+
+template <int dim, int spacedim>
+inline void
+LaplaceBEM<dim, spacedim>::set_use_hmat(bool useHmat)
+{
+  priv_->use_hmat_ = useHmat;
+}
+
+template <int dim, int spacedim>
+inline void
+LaplaceBEM<dim, spacedim>::set_preconditioner_type(
+  const PreconditionerType type)
+{
+  priv_->preconditioner_type_ = type;
+}
+
+template <int dim, int spacedim>
+inline const std::string &
+LaplaceBEM<dim, spacedim>::get_project_name() const
+{
+  return priv_->project_name_;
+}
+
+template <int dim, int spacedim>
+inline void
+LaplaceBEM<dim, spacedim>::set_project_name(const std::string &projectName)
+{
+  priv_->project_name_ = projectName;
+}
+
+template <int dim, int spacedim>
+double
+LaplaceBEM<dim, spacedim>::get_alpha_for_neumann() const
+{
+  return priv_->alpha_for_neumann_;
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::set_alpha_for_neumann(double alphaForNeumann)
+{
+  priv_->alpha_for_neumann_ = alphaForNeumann;
+}
+
+template <int dim, int spacedim>
+const SubdomainTopology<dim, spacedim> &
+LaplaceBEM<dim, spacedim>::get_subdomain_topology() const
+{
+  return priv_->subdomain_topology_;
+}
+
+template <int dim, int spacedim>
+SubdomainTopology<dim, spacedim> &
+LaplaceBEM<dim, spacedim>::get_subdomain_topology()
+{
+  return priv_->subdomain_topology_;
+}
+
+template <int dim, int spacedim>
+const std::map<EntityTag, types::manifold_id> &
+LaplaceBEM<dim, spacedim>::get_manifold_description() const
+{
+  return priv_->manifold_description_;
+}
+
+template <int dim, int spacedim>
+std::map<EntityTag, types::manifold_id> &
+LaplaceBEM<dim, spacedim>::get_manifold_description()
+{
+  return priv_->manifold_description_;
+}
+
+template <int dim, int spacedim>
+const std::map<types::manifold_id, unsigned int> &
+LaplaceBEM<dim, spacedim>::get_manifold_id_to_mapping_order() const
+{
+  return priv_->manifold_id_to_mapping_order_;
+}
+
+template <int dim, int spacedim>
+std::map<types::manifold_id, unsigned int> &
+LaplaceBEM<dim, spacedim>::get_manifold_id_to_mapping_order()
+{
+  return priv_->manifold_id_to_mapping_order_;
+}
+
+template <int dim, int spacedim>
+const std::map<types::manifold_id, Manifold<dim, spacedim> *> &
+LaplaceBEM<dim, spacedim>::get_manifolds() const
+{
+  return priv_->manifolds_;
+}
+
+template <int dim, int spacedim>
+std::map<types::manifold_id, Manifold<dim, spacedim> *> &
+LaplaceBEM<dim, spacedim>::get_manifolds()
+{
+  return priv_->manifolds_;
+}
+
+template <int dim, int spacedim>
+const Triangulation<dim, spacedim> &
+LaplaceBEM<dim, spacedim>::get_triangulation() const
+{
+  return priv_->tria_;
+}
+
+template <int dim, int spacedim>
+Triangulation<dim, spacedim> &
+LaplaceBEM<dim, spacedim>::get_triangulation()
+{
+  return priv_->tria_;
+}
+
+template <int dim, int spacedim>
+const std::vector<MappingInfo<dim, spacedim> *> &
+LaplaceBEM<dim, spacedim>::get_mappings() const
+{
+  return priv_->mappings_;
+}
+
+template <int dim, int spacedim>
+std::vector<MappingInfo<dim, spacedim> *> &
+LaplaceBEM<dim, spacedim>::get_mappings()
+{
+  return priv_->mappings_;
+}
+
+template <int dim, int spacedim>
+const DoFHandler<dim, spacedim> &
+LaplaceBEM<dim, spacedim>::get_dof_handler_dirichlet() const
+{
+  return priv_->dof_handler_for_dirichlet_space_;
+}
+
+template <int dim, int spacedim>
+DoFHandler<dim, spacedim> &
+LaplaceBEM<dim, spacedim>::get_dof_handler_dirichlet()
+{
+  return priv_->dof_handler_for_dirichlet_space_;
+}
+
+template <int dim, int spacedim>
+const DoFHandler<dim, spacedim> &
+LaplaceBEM<dim, spacedim>::get_dof_handler_neumann() const
+{
+  return priv_->dof_handler_for_neumann_space_;
+}
+
+template <int dim, int spacedim>
+DoFHandler<dim, spacedim> &
+LaplaceBEM<dim, spacedim>::get_dof_handler_neumann()
+{
+  return priv_->dof_handler_for_neumann_space_;
+}
+
+template <int dim, int spacedim>
+const Vector<double> &
+LaplaceBEM<dim, spacedim>::get_dirichlet_data() const
+{
+  return priv_->dirichlet_data_;
+}
+
+template <int dim, int spacedim>
+Vector<double> &
+LaplaceBEM<dim, spacedim>::get_dirichlet_data()
+{
+  return priv_->dirichlet_data_;
+}
+
+template <int dim, int spacedim>
+const Vector<double> &
+LaplaceBEM<dim, spacedim>::get_neumann_data() const
+{
+  return priv_->neumann_data_;
+}
+template <int dim, int spacedim>
+Vector<double> &
+LaplaceBEM<dim, spacedim>::get_neumann_data()
+{
+  return priv_->neumann_data_;
+}
+
+#pragma endregion
+#pragma region **** LaplaceBEM public member function impls (wrapper to internals) ****
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::run()
+{
+  priv_->run();
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::verify_neumann_solution_in_space()
+{
+  priv_->verify_neumann_solution_in_space();
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::print_memory_consumption_table(
+  std::ostream &out) const
+{
+  priv_->print_memory_consumption_table(out);
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::output_potential_at_target_points() const
+{
+  priv_->output_potential_at_target_points();
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::extract_surface_triangulation(
+  const Triangulation<dim + 1, spacedim> &volume_triangulation,
+  Triangulation<dim, spacedim>          &&surf_tria,
+  const bool                              debug)
+{
+  priv_->extract_surface_triangulation(volume_triangulation,
+                                       std::move(surf_tria),
+                                       debug);
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::setup_system()
+{
+  priv_->setup_system();
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::assign_dirichlet_bc(Function<spacedim, double> &f,
+                                               const EntityTag surface_tag)
+{
+  priv_->assign_dirichlet_bc(f, surface_tag);
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::assign_dirichlet_bc(
+  Function<spacedim, double>   &f,
+  const std::vector<EntityTag> &surface_tags)
+{
+  priv_->assign_dirichlet_bc(f, surface_tags);
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::assign_neumann_bc(Function<spacedim, double> &f,
+                                             const EntityTag surface_tag)
+{
+  priv_->assign_neumann_bc(f, surface_tag);
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::assign_neumann_bc(
+  Function<spacedim, double>   &f,
+  const std::vector<EntityTag> &surface_tags)
+{
+  priv_->assign_neumann_bc(f, surface_tags);
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::initialize_manifolds_from_manifold_description()
+{
+  priv_->initialize_manifolds_from_manifold_description();
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::initialize_mappings()
+{
+  priv_->initialize_mappings();
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::interpolate_dirichlet_bc()
+{
+  priv_->interpolate_dirichlet_bc();
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::interpolate_neumann_bc()
+{
+  priv_->interpolate_neumann_bc();
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::assemble_full_matrix_system()
+{
+  priv_->assemble_full_matrix_system();
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::assemble_hmatrix_system()
+{
+  priv_->assemble_hmatrix_system();
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::assemble_hmatrix_preconditioner()
+{
+  priv_->assemble_hmatrix_preconditioner();
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::solve()
+{
+  priv_->solve();
+}
+
+template <int dim, int spacedim>
+void
+LaplaceBEM<dim, spacedim>::output_results() const
+{
+  priv_->output_results();
+}
+
+#pragma endregion
+
+HBEM_NS_CLOSE
+
+#endif // HIERBEM_INCLUDE_LAPLACE_BEM_IMPL_H_

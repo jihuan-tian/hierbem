@@ -7,8 +7,15 @@
  * @date 2024-05-23
  */
 #include <catch2/catch_all.hpp>
+
+// XXX This is a workaround to suppress warnings from reflect-cpp headers
+// #pragma GCC diagnostic push
+// #pragma GCC diagnostic ignored "-Wunused-parameter"
+// #pragma GCC diagnostic ignored "-Wtype-limits"
+// #pragma GCC diagnostic ignored "-Wmissing-braces"
 #include <rfl.hpp>
 #include <rfl/toml.hpp>
+// #pragma GCC diagnostic pop
 
 #include <cstdint>
 #include <optional>

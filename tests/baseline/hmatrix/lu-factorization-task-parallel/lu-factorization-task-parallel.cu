@@ -8,6 +8,11 @@
 
 #include <deal.II/base/table_handler.h>
 
+#include <deal.II/fe/fe.h>
+#include <deal.II/fe/fe_dgq.h>
+
+#include <deal.II/grid/manifold_lib.h>
+
 #include <boost/program_options.hpp>
 
 #include <cuda_runtime.h>
@@ -18,9 +23,12 @@
 
 #include "grid_in_ext.h"
 #include "hbem_test_config.h"
+#include "hmatrix/aca_plus/aca_plus.hcu"
 #include "laplace_bem.h"
 #include "mapping/mapping_info.h"
+#include "sauter_quadrature.hcu"
 #include "subdomain_topology.h"
+#include "unary_template_arg_containers.h"
 
 using namespace dealii;
 using namespace HierBEM;
@@ -138,7 +146,7 @@ main(int argc, char *argv[])
   FE_DGQ<dim, spacedim>     fe(0);
   DoFHandler<dim, spacedim> dof_handler(tria);
 
-  HierBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<spacedim>
+  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim>
     single_layer_kernel;
 
   const unsigned int n_min    = 32;
@@ -162,7 +170,7 @@ main(int argc, char *argv[])
           cell_iterators.push_back(cell);
         }
 
-      DoFToolsExt::DoFToCellTopology<dim, spacedim> dof_to_cell_topo;
+      DoFToCellTopology<dim, spacedim> dof_to_cell_topo;
       DoFToolsExt::build_dof_to_cell_topology(dof_to_cell_topo,
                                               cell_iterators,
                                               dof_handler);

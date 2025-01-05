@@ -35,17 +35,18 @@
 #include <map>
 #include <vector>
 
-#include "aca_plus.hcu"
-#include "bem_general.h"
+#include "bem_general.hcu"
 #include "bem_kernels.hcu"
-#include "bem_tools.hcu"
 #include "block_cluster_tree.h"
-#include "debug_tools.hcu"
+#include "debug_tools.h"
+#include "dof_to_cell_topology.h"
 #include "dof_tools_ext.h"
 #include "generic_functors.h"
 #include "grid_out_ext.h"
-#include "hmatrix.h"
-#include "hmatrix_symm.h"
+#include "hmatrix/aca_plus/aca_plus.hcu"
+#include "hmatrix/hmatrix.h"
+#include "hmatrix/hmatrix_parameters.h"
+#include "hmatrix/hmatrix_symm.h"
 #include "mapping/mapping_info.h"
 #include "sauter_quadrature_tools.h"
 #include "subdomain_topology.h"
@@ -585,7 +586,7 @@ namespace HierBEM
     /**
      * DoF-to-cell topology for the dual space on the refined mesh.
      */
-    DoFToolsExt::DoFToCellTopology<dim, spacedim> dof_to_cell_topo_dual_space;
+    DoFToCellTopology<dim, spacedim> dof_to_cell_topo_dual_space;
 
     // Intermediate vectors during @p vmult. The input vector is @p x and the
     // final output vector is @p y. Both @p x and @p y adopt the internal DoF

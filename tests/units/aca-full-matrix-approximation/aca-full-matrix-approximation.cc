@@ -6,12 +6,12 @@
  * \date 2022-03-16
  */
 
-#include <aca_plus.hcu>
 #include <boost/program_options.hpp>
 
 #include <fstream>
 #include <iostream>
 
+#include "hmatrix/aca_plus/aca_plus.hcu"
 #include "read_octave_data.h"
 
 using namespace HierBEM;

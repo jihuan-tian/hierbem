@@ -8,14 +8,11 @@ add_executable(${_target} reflectcpp-usage.cc)
 target_compile_definitions(${_target}
                            PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(tomlplusplus REQUIRED IMPORTED_TARGET tomlplusplus)
-
 target_link_libraries(
   ${_target}
-  generic_tools
   boost_program_options
   dl # Lazy way: always link with libdl no matter if CUDA is used or not
+  reflectcpp::reflectcpp
   Catch2::Catch2WithMain
   PkgConfig::tomlplusplus)
 

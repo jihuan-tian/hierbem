@@ -6,10 +6,10 @@
  * @author Jihuan Tian
  */
 
-#ifndef INCLUDE_PRECONDITIONER_FOR_LAPLACE_DIRICHLET_H_
-#define INCLUDE_PRECONDITIONER_FOR_LAPLACE_DIRICHLET_H_
+#ifndef HIERBEM_INCLUDE_PRECONDITIONERS_PRECONDITIONER_FOR_LAPLACE_DIRICHLET_H_
+#define HIERBEM_INCLUDE_PRECONDITIONERS_PRECONDITIONER_FOR_LAPLACE_DIRICHLET_H_
 
-#include "laplace_kernels.hcu"
+#include "platform_shared/laplace_kernels.h"
 #include "preconditioners/operator_preconditioner.h"
 
 namespace HierBEM
@@ -21,7 +21,7 @@ namespace HierBEM
     : public OperatorPreconditioner<
         dim,
         spacedim,
-        HierBEM::CUDAWrappers::LaplaceKernel::
+        HierBEM::PlatformShared::LaplaceKernel::
           HyperSingularKernelRegular<spacedim, RangeNumberType>,
         RangeNumberType>
   {
@@ -69,7 +69,7 @@ namespace HierBEM
     : OperatorPreconditioner<
         dim,
         spacedim,
-        HierBEM::CUDAWrappers::LaplaceKernel::
+        HierBEM::PlatformShared::LaplaceKernel::
           HyperSingularKernelRegular<spacedim, RangeNumberType>,
         RangeNumberType>(fe_primal_space,
                          fe_dual_space,

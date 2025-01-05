@@ -25,6 +25,7 @@
 #include <gmsh.h>
 
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -220,7 +221,9 @@ main(int argc, char *argv[])
 
   // Read the mesh.
   Triangulation<dim, spacedim> tria;
-  read_msh(opts.mesh_file, tria);
+  std::ifstream                mesh_in(opts.mesh_file);
+  read_msh(mesh_in, tria);
+  mesh_in.close();
 
   // Initialize Gmsh.
   gmsh::initialize();
