@@ -21,15 +21,15 @@
 #include <iostream>
 #include <random>
 
-#include "hmatrix/aca_plus/aca_plus.hcu"
 #include "grid_in_ext.h"
 #include "hbem_test_config.h"
+#include "hmatrix/aca_plus/aca_plus.hcu"
 #include "laplace_bem.h"
 #include "mapping/mapping_info.h"
+#include "platform_shared/laplace_kernels.h"
 #include "sauter_quadrature.hcu"
 #include "subdomain_topology.h"
 #include "unary_template_arg_containers.h"
-#include "platform_shared/laplace_kernels.h"
 
 using namespace dealii;
 using namespace HierBEM;
@@ -102,7 +102,7 @@ main(int argc, char *argv[])
   SubdomainTopology<dim, spacedim> subdomain_topology;
 
   Triangulation<dim, spacedim> tria;
-  read_skeleton_mesh(HBEM_TEST_MODEL_DIR "two-spheres-fine.msh", tria);
+  read_msh(HBEM_TEST_MODEL_DIR "two-spheres-fine.msh", tria);
   subdomain_topology.generate_topology(HBEM_TEST_MODEL_DIR "two-spheres.brep",
                                        HBEM_TEST_MODEL_DIR "two-spheres.msh");
 
@@ -168,8 +168,10 @@ main(int argc, char *argv[])
           cell_iterators.push_back(cell);
         }
 
-      DofToCellTopology<dim, spacedim> dof_to_cell_topo;
-      build_dof_to_cell_topology(dof_to_cell_topo, cell_iterators, dof_handler);
+      DoFToCellTopology<dim, spacedim> dof_to_cell_topo;
+      DoFToolsExt::build_dof_to_cell_topology(dof_to_cell_topo,
+                                              cell_iterators,
+                                              dof_handler);
 
       // Generate lists of DoF indices.
       std::vector<types::global_dof_index> dof_indices(dof_handler.n_dofs());
@@ -229,7 +231,7 @@ main(int argc, char *argv[])
         ct.get_internal_to_external_dof_numbering(),
         mappings,
         material_id_to_mapping_index,
-        LaplaceBEM<dim, spacedim>::SurfaceNormalDetector(subdomain_topology),
+        SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
         true);
 
       // Generate a random vector as @p x.

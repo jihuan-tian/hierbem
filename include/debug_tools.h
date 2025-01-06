@@ -300,6 +300,28 @@ print_matrix_to_mat(std::ostream      &out,
   out << "\n\n";
 }
 
+template <typename MatrixType>
+void
+print_sparse_matrix_to_mat(std::ostream      &out,
+                           const std::string &name,
+                           const MatrixType  &values,
+                           const unsigned int precision   = 8,
+                           const bool         scientific  = true,
+                           const unsigned int width       = 0,
+                           const char        *zero_string = "0",
+                           const double       denominator = 1.)
+{
+  out << "# name: " << name << "\n";
+  out << "# type: matrix\n";
+  out << "# rows: " << values.m() << "\n";
+  out << "# columns: " << values.n() << "\n";
+
+  values.print_formatted(
+    out, precision, scientific, width, zero_string, denominator);
+
+  out << "\n\n";
+}
+
 template <typename T>
 void
 print_2d_table_to_mat(std::ostream      &out,

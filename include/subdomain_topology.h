@@ -175,6 +175,64 @@ SubdomainTopology<dim, spacedim>::print(std::ostream &out) const
   out << std::endl;
 }
 
+
+/**
+ * A class for detecting if a surface normal vector points into a volume.
+ *
+ * If so, the surface normal vector computed for a cell should be negated,
+ * because we assume an outward normal vector adopted for the problem
+ * domain, whether we're solving an interior BEM problem or exterior
+ * problem.
+ */
+template <int dim, int spacedim>
+class SurfaceNormalDetector
+{
+public:
+  SurfaceNormalDetector() = delete;
+
+  SurfaceNormalDetector(SubdomainTopology<dim, spacedim> &subdomain_topology)
+    : subdomain_topology(subdomain_topology)
+  {}
+
+  /**
+   * Given a material id of a cell, this function checks if its normal
+   * vector points into a corresponding domain by checking the
+   * surface-to-subdomain relationship.
+   *
+   * \mynote{In the Laplace solver, a domain (with a non-zero subdomain tag)
+   * must be fully in contact with the surrounding space (whose subdomain
+   * tag is zero). This still holds if there are several subdomains in the
+   * model, because they are all well separated from each other. This leads
+   * to the fact the in a record in the surface-to-subdomain relationship,
+   * there should be only one non-zero value. We use this fact to check the
+   * direction of the surface normal vector.}
+   *
+   * @pre
+   * @post
+   * @param m
+   * @return
+   */
+  bool
+  is_normal_vector_inward(const types::material_id m) const
+  {
+    if (subdomain_topology.get_surface_to_subdomain()[m][0] > 0)
+      {
+        Assert(subdomain_topology.get_surface_to_subdomain()[m][1] == 0,
+               ExcInternalError());
+        return false;
+      }
+    else
+      {
+        Assert(subdomain_topology.get_surface_to_subdomain()[m][1] > 0,
+               ExcInternalError());
+        return true;
+      }
+  }
+
+private:
+  SubdomainTopology<dim, spacedim> &subdomain_topology;
+};
+
 HBEM_NS_CLOSE
 
 #endif // HIERBEM_INCLUDE_SUBDOMAIN_TOPOLOGY_H_

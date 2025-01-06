@@ -127,6 +127,14 @@ LaplaceBEM<dim, spacedim>::set_use_hmat(bool useHmat)
 }
 
 template <int dim, int spacedim>
+inline void
+LaplaceBEM<dim, spacedim>::set_preconditioner_type(
+  const PreconditionerType type)
+{
+  priv_->preconditioner_type_ = type;
+}
+
+template <int dim, int spacedim>
 inline const std::string &
 LaplaceBEM<dim, spacedim>::get_project_name() const
 {

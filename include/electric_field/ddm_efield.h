@@ -55,10 +55,10 @@
 #include "grid_out_ext.h"
 #include "hmatrix/aca_plus/aca_config.h"
 #include "mapping/mapping_info.h"
+#include "platform_shared/laplace_kernels.h"
 #include "subdomain_steklov_poincare_hmatrix.h"
 #include "subdomain_topology.h"
 #include "unary_template_arg_containers.h"
-#include "platform_shared/laplace_kernels.h"
 
 HBEM_NS_OPEN
 
@@ -424,7 +424,7 @@ public:
   initialize_subdomain_hmatrices();
 
   void
-  generate_cell_iterators();
+  collect_cell_iterators();
 
   void
   setup_system();
@@ -531,8 +531,8 @@ private:
    * DoF-to-cell topologies for various DoF handlers, which are used for
    * matrix assembly on a pair of DoFs.
    */
-  DofToCellTopology<dim, spacedim> dof_to_cell_topo_for_dirichlet_space;
-  DofToCellTopology<dim, spacedim> dof_to_cell_topo_for_neumann_space;
+  DoFToCellTopology<dim, spacedim> dof_to_cell_topo_for_dirichlet_space;
+  DoFToCellTopology<dim, spacedim> dof_to_cell_topo_for_neumann_space;
 
   /**
    * Minimum cluster size. At present, assume all \bcts share this same
@@ -1094,13 +1094,13 @@ DDMEfield<dim, spacedim>::initialize_subdomain_hmatrices()
    * \mynote{Access of this topology for the Dirichlet space
    * requires the map from local to full DoF indices.}
    */
-  generate_cell_iterators();
-  build_dof_to_cell_topology(dof_to_cell_topo_for_dirichlet_space,
-                             cell_iterators_for_dirichlet_space,
-                             dof_handler_for_dirichlet_space);
-  build_dof_to_cell_topology(dof_to_cell_topo_for_neumann_space,
-                             cell_iterators_for_neumann_space,
-                             dof_handler_for_neumann_space);
+  collect_cell_iterators();
+  DoFToolsExt::build_dof_to_cell_topology(dof_to_cell_topo_for_dirichlet_space,
+                                          cell_iterators_for_dirichlet_space,
+                                          dof_handler_for_dirichlet_space);
+  DoFToolsExt::build_dof_to_cell_topology(dof_to_cell_topo_for_neumann_space,
+                                          cell_iterators_for_neumann_space,
+                                          dof_handler_for_neumann_space);
 
   // Iterate over each dielectric subdomain.
   for (const auto subdomain : domain.get_dielectric_subdomains())
@@ -1356,7 +1356,7 @@ DDMEfield<dim, spacedim>::initialize_subdomain_hmatrices()
 
 template <int dim, int spacedim>
 void
-DDMEfield<dim, spacedim>::generate_cell_iterators()
+DDMEfield<dim, spacedim>::collect_cell_iterators()
 {
   cell_iterators_for_dirichlet_space.reserve(
     dof_handler_for_dirichlet_space.get_triangulation().n_active_cells());
@@ -1421,8 +1421,7 @@ DDMEfield<dim, spacedim>::assemble_system()
   ACAConfig aca_config(max_hmat_rank, aca_relative_error, eta);
 
   for (auto &steklov_poincare_hmat : system_matrix.get_subdomain_hmatrices())
-    {
-    }
+    {}
 }
 
 

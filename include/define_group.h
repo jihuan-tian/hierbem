@@ -60,3 +60,8 @@
  * \defgroup support_points_manip Manipulation of support points
  * @}
  */
+
+/**
+ * \defgroup preconditioner Preconditioner
+ * \brief Various types of preconditioners, such as operator preconditioning.
+ */

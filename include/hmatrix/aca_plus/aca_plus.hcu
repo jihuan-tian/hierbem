@@ -38,8 +38,8 @@
 #include "cu_table.hcu"
 #include "debug_tools.h"
 #include "generic_functors.h"
-#include "hmatrix/hmatrix.h"
 #include "hmatrix/aca_plus/aca_config.h"
+#include "hmatrix/hmatrix.h"
 #include "lapack_full_matrix_ext.h"
 #include "linalg.h"
 #include "mapping/mapping_info.h"
@@ -2276,8 +2276,8 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   const RangeNumberType                                kernel_factor,
   const std::array<types::global_dof_index, 2>        &row_dof_index_range,
   const std::array<types::global_dof_index, 2>        &col_dof_index_range,
-  const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
-  const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
   const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
     &bem_values_gpu,
   const std::vector<types::global_dof_index>
@@ -2933,8 +2933,8 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   const RangeNumberType                                stabilization_factor,
   const std::array<types::global_dof_index, 2>        &row_dof_index_range,
   const std::array<types::global_dof_index, 2>        &col_dof_index_range,
-  const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
-  const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
   const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
     &bem_values_gpu,
   const std::vector<types::global_dof_index>
@@ -3573,8 +3573,8 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   const RangeNumberType                                kernel_factor,
   const std::array<types::global_dof_index, 2>        &row_dof_index_range,
   const std::array<types::global_dof_index, 2>        &col_dof_index_range,
-  const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
-  const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
   const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
   const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
     &bem_values_gpu,
@@ -4259,8 +4259,8 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   const RangeNumberType                                stabilization_factor,
   const std::array<types::global_dof_index, 2>        &row_dof_index_range,
   const std::array<types::global_dof_index, 2>        &col_dof_index_range,
-  const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
-  const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
   const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
   const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
     &bem_values_gpu,
@@ -5464,8 +5464,8 @@ fill_hmatrix_leaf_node_with_aca_plus(
   const ACAConfig                                     &aca_config,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
-  const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
   const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                   &bem_values_gpu,
   const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -5868,8 +5868,8 @@ fill_hmatrix_leaf_node_with_aca_plus(
   const RangeNumberType                                kernel_factor,
   const Vector<RangeNumberType>                       &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
-  const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
-  const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
   const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                   &bem_values_gpu,
   const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -6265,8 +6265,8 @@ fill_hmatrix_leaf_node_with_aca_plus(
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
   const RangeNumberType                                mass_matrix_factor,
-  const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
-  const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
   const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                   &bem_values_gpu,
   const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -6582,8 +6582,8 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
   const ACAConfig                                     &aca_config,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
-  const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
   const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
   const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
     &bem_values_gpu,
@@ -6738,8 +6738,8 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
   const RangeNumberType                                kernel_factor,
   const Vector<RangeNumberType>                       &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
-  const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
-  const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
   const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
   const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
     &bem_values_gpu,
@@ -6908,8 +6908,8 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
   const ACAConfig                                     &aca_config,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
-  const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
   const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
   const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                   &bem_values_gpu,
@@ -7020,8 +7020,8 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
   const RangeNumberType                                kernel_factor,
   const Vector<RangeNumberType>                       &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
-  const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
-  const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
   const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
   const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                   &bem_values_gpu,
@@ -7275,8 +7275,8 @@ fill_hmatrix_with_aca_plus_serial(
   const ACAConfig                                     &aca_config,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
-  const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
   const SauterQuadratureRule<dim>                     &sauter_quad_rule,
   const DoFHandler<dim, spacedim>                     &kx_dof_handler,
   const DoFHandler<dim, spacedim>                     &ky_dof_handler,
@@ -7450,8 +7450,8 @@ fill_hmatrix_with_aca_plus_serial(
   const RangeNumberType                                kernel_factor,
   const Vector<RangeNumberType>                       &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
-  const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
-  const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
   const SauterQuadratureRule<dim>                     &sauter_quad_rule,
   const DoFHandler<dim, spacedim>                     &kx_dof_handler,
   const DoFHandler<dim, spacedim>                     &ky_dof_handler,
@@ -7613,8 +7613,8 @@ fill_hmatrix_with_aca_plus_serial(
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
   const RangeNumberType                                mass_matrix_factor,
-  const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
-  const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
   const SauterQuadratureRule<dim>                     &sauter_quad_rule,
   const QGauss<dim>               &mass_matrix_quadrature_formula,
   const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -7790,8 +7790,8 @@ fill_hmatrix_with_aca_plus_smp(
   const ACAConfig                                     &aca_config,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
-  const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
   const SauterQuadratureRule<dim>                     &sauter_quad_rule,
   const DoFHandler<dim, spacedim>                     &kx_dof_handler,
   const DoFHandler<dim, spacedim>                     &ky_dof_handler,
@@ -8161,8 +8161,8 @@ fill_hmatrix_with_aca_plus_smp(
                     const ACAConfig &,
                     const KernelFunctionType<spacedim, RangeNumberType> &,
                     const RangeNumberType,
-                    const DofToCellTopology<dim, spacedim> &,
-                    const DofToCellTopology<dim, spacedim> &,
+                    const DoFToCellTopology<dim, spacedim> &,
+                    const DoFToCellTopology<dim, spacedim> &,
                     const BEMValues<dim, spacedim, RangeNumberType> &,
                     const HierBEM::CUDAWrappers::
                       CUDABEMValues<dim, spacedim, RangeNumberType> &,
@@ -8270,8 +8270,8 @@ fill_hmatrix_with_aca_plus_smp(
   const RangeNumberType                                kernel_factor,
   const Vector<RangeNumberType>                       &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
-  const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
-  const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
   const SauterQuadratureRule<dim>                     &sauter_quad_rule,
   const DoFHandler<dim, spacedim>                     &kx_dof_handler,
   const DoFHandler<dim, spacedim>                     &ky_dof_handler,
@@ -8676,8 +8676,8 @@ fill_hmatrix_with_aca_plus_smp(
                     const RangeNumberType,
                     const Vector<RangeNumberType> &,
                     const RangeNumberType,
-                    const DofToCellTopology<dim, spacedim> &,
-                    const DofToCellTopology<dim, spacedim> &,
+                    const DoFToCellTopology<dim, spacedim> &,
+                    const DoFToCellTopology<dim, spacedim> &,
                     const BEMValues<dim, spacedim, RangeNumberType> &,
                     const HierBEM::CUDAWrappers::
                       CUDABEMValues<dim, spacedim, RangeNumberType> &,
@@ -8786,8 +8786,8 @@ fill_hmatrix_with_aca_plus_smp(
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
   const RangeNumberType                                mass_matrix_factor,
-  const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
-  const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
   const SauterQuadratureRule<dim>                     &sauter_quad_rule,
   const QGauss<dim>               &mass_matrix_quadrature_formula,
   const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -9164,8 +9164,8 @@ fill_hmatrix_with_aca_plus_smp(
                     const ACAConfig &,
                     const KernelFunctionType<spacedim, RangeNumberType> &,
                     const RangeNumberType,
-                    const DofToCellTopology<dim, spacedim> &,
-                    const DofToCellTopology<dim, spacedim> &,
+                    const DoFToCellTopology<dim, spacedim> &,
+                    const DoFToCellTopology<dim, spacedim> &,
                     const BEMValues<dim, spacedim, RangeNumberType> &,
                     const HierBEM::CUDAWrappers::
                       CUDABEMValues<dim, spacedim, RangeNumberType> &,

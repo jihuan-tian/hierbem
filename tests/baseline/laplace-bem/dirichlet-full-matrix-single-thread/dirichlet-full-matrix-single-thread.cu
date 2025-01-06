@@ -277,7 +277,7 @@ main(int argc, char *argv[])
         {
           // When OCC model is used, Gmsh API can be used to detect the
           // surface-to-subdomain topology.
-          read_skeleton_mesh(opts.mesh_file, bem.get_triangulation());
+          read_msh(opts.mesh_file, bem.get_triangulation());
           bem.get_subdomain_topology().generate_topology(opts.cad_file,
                                                          opts.mesh_file);
 
@@ -301,7 +301,7 @@ main(int argc, char *argv[])
                 {0, 30}};
             }
 
-          read_skeleton_mesh(opts.mesh_file, bem.get_triangulation());
+          read_msh(opts.mesh_file, bem.get_triangulation());
 
           // Create the map from material ids to manifold ids.
           for (EntityTag e = 21; e <= 28; e++)

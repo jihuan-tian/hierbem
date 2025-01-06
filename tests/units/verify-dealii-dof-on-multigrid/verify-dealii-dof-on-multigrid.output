@@ -1,0 +1,47 @@
+Number of active DoFs: 81
+Number of DoFs on level 0: 25
+Number of DoFs on level 1: 81
+=== Cellwise DoF indices on level 0 ===
+Cell #0: 0 1 2 3 4 5 6 7 8 
+Cell #1: 1 9 3 10 5 11 12 13 14 
+Cell #2: 2 3 15 16 17 18 7 19 20 
+Cell #3: 3 10 16 21 18 22 13 23 24 
+=== Cellwise DoF indices on level 1 ===
+Cell #0: 0 1 2 3 4 5 6 7 8 
+Cell #1: 1 9 3 10 5 11 12 13 14 
+Cell #2: 2 3 15 16 17 18 7 19 20 
+Cell #3: 3 10 16 21 18 22 13 23 24 
+Cell #4: 9 25 10 26 11 27 28 29 30 
+Cell #5: 25 31 26 32 27 33 34 35 36 
+Cell #6: 10 26 21 37 22 38 29 39 40 
+Cell #7: 26 32 37 41 38 42 35 43 44 
+Cell #8: 15 16 45 46 47 48 19 49 50 
+Cell #9: 16 21 46 51 48 52 23 53 54 
+Cell #10: 45 46 55 56 57 58 49 59 60 
+Cell #11: 46 51 56 61 58 62 53 63 64 
+Cell #12: 21 37 51 65 52 66 39 67 68 
+Cell #13: 37 41 65 69 66 70 43 71 72 
+Cell #14: 51 65 61 73 62 74 67 75 76 
+Cell #15: 65 69 73 77 74 78 71 79 80 
+=== Cellwise vertex DoF indices on level 0 ===
+Cell #0: 0 1 2 3 
+Cell #1: 1 9 3 10 
+Cell #2: 2 3 15 16 
+Cell #3: 3 10 16 21 
+=== Cellwise vertex DoF indices on level 1 ===
+Cell #0: 0 1 2 3 
+Cell #1: 1 9 3 10 
+Cell #2: 2 3 15 16 
+Cell #3: 3 10 16 21 
+Cell #4: 9 25 10 26 
+Cell #5: 25 31 26 32 
+Cell #6: 10 26 21 37 
+Cell #7: 26 32 37 41 
+Cell #8: 15 16 45 46 
+Cell #9: 16 21 46 51 
+Cell #10: 45 46 55 56 
+Cell #11: 46 51 56 61 
+Cell #12: 21 37 51 65 
+Cell #13: 37 41 65 69 
+Cell #14: 51 65 61 73 
+Cell #15: 65 69 73 77 

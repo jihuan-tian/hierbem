@@ -15,11 +15,12 @@
 
 #include <cuda_runtime.h>
 
+#include <fstream>
 #include <iostream>
 
-#include "hmatrix/aca_plus/aca_plus.hcu"
 #include "grid_in_ext.h"
 #include "hbem_test_config.h"
+#include "hmatrix/aca_plus/aca_plus.hcu"
 #include "laplace_bem.h"
 #include "mapping/mapping_info.h"
 #include "sauter_quadrature.hcu"
@@ -64,7 +65,9 @@ main()
   SubdomainTopology<dim, spacedim> subdomain_topology;
 
   Triangulation<dim, spacedim> tria;
-  read_skeleton_mesh(HBEM_TEST_MODEL_DIR "two-spheres-fine.msh", tria);
+  std::ifstream mesh_in(HBEM_TEST_MODEL_DIR "two-spheres-fine.msh");
+  read_msh(mesh_in, tria);
+  mesh_in.close();
   subdomain_topology.generate_topology(HBEM_TEST_MODEL_DIR "two-spheres.brep",
                                        HBEM_TEST_MODEL_DIR "two-spheres.msh");
 
@@ -125,8 +128,10 @@ main()
       cell_iterators.push_back(cell);
     }
 
-  DofToCellTopology<dim, spacedim> dof_to_cell_topo;
-  build_dof_to_cell_topology(dof_to_cell_topo, cell_iterators, dof_handler);
+  DoFToCellTopology<dim, spacedim> dof_to_cell_topo;
+  DoFToolsExt::build_dof_to_cell_topology(dof_to_cell_topo,
+                                          cell_iterators,
+                                          dof_handler);
 
   // Generate lists of DoF indices.
   std::vector<types::global_dof_index> dof_indices(dof_handler.n_dofs());
@@ -204,46 +209,46 @@ main()
                       V_symm_far_field_set_storage);
 
   // Assemble the general \hmatrix using ACA.
-  fill_hmatrix_with_aca_plus_smp(
-    MultithreadInfo::n_threads(),
-    V,
-    ACAConfig(max_rank, epsilon, eta),
-    single_layer_kernel,
-    1.0,
-    dof_to_cell_topo,
-    dof_to_cell_topo,
-    SauterQuadratureRule<dim>(5, 4, 4, 3),
-    dof_handler,
-    dof_handler,
-    nullptr,
-    nullptr,
-    ct.get_internal_to_external_dof_numbering(),
-    ct.get_internal_to_external_dof_numbering(),
-    mappings,
-    material_id_to_mapping_index,
-    LaplaceBEM<dim, spacedim>::SurfaceNormalDetector(subdomain_topology),
-    false);
+  fill_hmatrix_with_aca_plus_smp(MultithreadInfo::n_threads(),
+                                 V,
+                                 ACAConfig(max_rank, epsilon, eta),
+                                 single_layer_kernel,
+                                 1.0,
+                                 dof_to_cell_topo,
+                                 dof_to_cell_topo,
+                                 SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                 dof_handler,
+                                 dof_handler,
+                                 nullptr,
+                                 nullptr,
+                                 ct.get_internal_to_external_dof_numbering(),
+                                 ct.get_internal_to_external_dof_numbering(),
+                                 mappings,
+                                 material_id_to_mapping_index,
+                                 SurfaceNormalDetector<dim, spacedim>(
+                                   subdomain_topology),
+                                 false);
 
   // Assemble the symmetric \hmatrix using ACA.
-  fill_hmatrix_with_aca_plus_smp(
-    MultithreadInfo::n_threads(),
-    V_symm,
-    ACAConfig(max_rank, epsilon, eta),
-    single_layer_kernel,
-    1.0,
-    dof_to_cell_topo,
-    dof_to_cell_topo,
-    SauterQuadratureRule<dim>(5, 4, 4, 3),
-    dof_handler,
-    dof_handler,
-    nullptr,
-    nullptr,
-    ct.get_internal_to_external_dof_numbering(),
-    ct.get_internal_to_external_dof_numbering(),
-    mappings,
-    material_id_to_mapping_index,
-    LaplaceBEM<dim, spacedim>::SurfaceNormalDetector(subdomain_topology),
-    true);
+  fill_hmatrix_with_aca_plus_smp(MultithreadInfo::n_threads(),
+                                 V_symm,
+                                 ACAConfig(max_rank, epsilon, eta),
+                                 single_layer_kernel,
+                                 1.0,
+                                 dof_to_cell_topo,
+                                 dof_to_cell_topo,
+                                 SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                 dof_handler,
+                                 dof_handler,
+                                 nullptr,
+                                 nullptr,
+                                 ct.get_internal_to_external_dof_numbering(),
+                                 ct.get_internal_to_external_dof_numbering(),
+                                 mappings,
+                                 material_id_to_mapping_index,
+                                 SurfaceNormalDetector<dim, spacedim>(
+                                   subdomain_topology),
+                                 true);
 
   // Write out the leaf set information.
   std::ofstream bct_out("V-bct.dat");

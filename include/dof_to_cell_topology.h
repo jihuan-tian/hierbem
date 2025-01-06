@@ -1,12 +1,16 @@
 #ifndef HIERBEM_INCLUDE_DOF_TO_CELL_TOPOLOGY_H_
 #define HIERBEM_INCLUDE_DOF_TO_CELL_TOPOLOGY_H_
 
+#include <deal.II/dofs/dof_handler.h>
+
 #include "config.h"
 
 HBEM_NS_OPEN
 
+using namespace dealii;
+
 template <int dim, int spacedim>
-class DofToCellTopology
+class DoFToCellTopology
 {
 public:
   /**

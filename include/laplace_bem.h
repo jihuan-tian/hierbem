@@ -36,63 +36,7 @@ template <int dim, int spacedim = dim>
 class LaplaceBEM
 {
 public:
-#pragma region ==== Typedefs ====
-
-  /**
-   * A class for detecting if a surface normal vector points into a volume.
-   *
-   * If so, the surface normal vector computed for a cell should be negated,
-   * because we assume an outward normal vector adopted for the problem
-   * domain, whether we're solving an interior BEM problem or exterior
-   * problem.
-   */
-  class SurfaceNormalDetector
-  {
-  public:
-    SurfaceNormalDetector() = delete;
-    SurfaceNormalDetector(SubdomainTopology<dim, spacedim> &subdomain_topology)
-      : subdom_topo_(subdomain_topology)
-    {}
-
-    /**
-     * Given a material id of a cell, this function checks if its normal
-     * vector points into a corresponding domain by checking the
-     * surface-to-subdomain relationship.
-     *
-     * \mynote{In the Laplace solver, a domain (with a non-zero subdomain tag)
-     * must be fully in contact with the surrounding space (whose subdomain
-     * tag is zero). This still holds if there are several subdomains in the
-     * model, because they are all well separated from each other. This leads
-     * to the fact the in a record in the surface-to-subdomain relationship,
-     * there should be only one non-zero value. We use this fact to check the
-     * direction of the surface normal vector.}
-     *
-     * @pre
-     * @post
-     * @param m
-     * @return
-     */
-    bool
-    is_normal_vector_inward(const types::material_id m) const
-    {
-      if (subdom_topo_.get_surface_to_subdomain()[m][0] > 0)
-        {
-          Assert(subdom_topo_.get_surface_to_subdomain()[m][1] == 0,
-                 ExcInternalError());
-          return false;
-        }
-      else
-        {
-          Assert(subdom_topo_.get_surface_to_subdomain()[m][1] > 0,
-                 ExcInternalError());
-          return true;
-        }
-    }
-
-  private:
-    SubdomainTopology<dim, spacedim> &subdom_topo_;
-  };
-
+#pragma region == == Typedefs == ==
   /**
    * Enum for various types of Laplace problem
    */
@@ -104,8 +48,19 @@ public:
     UndefinedProblem
   };
 
+  /**
+   * Enum for types of preconditioners.
+   */
+  enum PreconditionerType
+  {
+    HMatrixFactorization,
+    OperatorPreconditioning,
+    Identity,
+    Jacobi
+  };
+
 #pragma endregion
-#pragma region ==== Constants ====
+#pragma region == == Constants == ==
   /**
    * Maximum mapping order.
    */
@@ -117,7 +72,7 @@ public:
    */
   const static types::material_id material_id_shift_for_interfacial_domain;
 #pragma endregion
-#pragma region ==== Ctor and Dtor ====
+#pragma region == == Ctor and Dtor == ==
 
   /**
    * Default constructor
@@ -177,7 +132,7 @@ public:
   ~LaplaceBEM();
 
 #pragma endregion
-#pragma region ==== Public member functions ====
+#pragma region == == Public member functions == ==
 
   /**
    * Extract the surface mesh from the given volume mesh.
@@ -307,7 +262,7 @@ public:
   print_memory_consumption_table(std::ostream &out) const;
 
 #pragma endregion
-#pragma region ==== Accessors =====
+#pragma region == == Accessors == == =
 
   double
   get_alpha_for_neumann() const;
@@ -326,6 +281,9 @@ public:
 
   void
   set_use_hmat(bool useHmat);
+
+  void
+  set_preconditioner_type(const PreconditionerType type);
 
   const std::string &
   get_project_name() const;

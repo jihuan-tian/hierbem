@@ -167,8 +167,7 @@ main(int argc, char *argv[])
 
   timer.start();
 
-  read_skeleton_mesh(HBEM_TEST_MODEL_DIR "two-spheres-fine.msh",
-                     bem.get_triangulation());
+  read_msh(HBEM_TEST_MODEL_DIR "two-spheres-fine.msh", bem.get_triangulation());
   bem.get_subdomain_topology().generate_topology(HBEM_TEST_MODEL_DIR
                                                  "two-spheres.brep",
                                                  HBEM_TEST_MODEL_DIR

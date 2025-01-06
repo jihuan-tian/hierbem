@@ -20,8 +20,9 @@ main(int argc, const char *argv[])
   (void)argv;
 
   DDMEfield<2, 3> efield;
-  read_skeleton_mesh(HBEM_TEST_MODEL_DIR "sphere-immersed-in-two-boxes.msh",
-                     efield.get_triangulation());
+  read_msh(HBEM_TEST_MODEL_DIR "sphere-immersed-in-two-boxes.msh",
+           efield.get_triangulation(),
+           false);
 
   return 0;
 }

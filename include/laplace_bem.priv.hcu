@@ -52,12 +52,14 @@
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "hmatrix/hblockmatrix_skew_symm.h"
 #include "hmatrix/hmatrix.h"
+#include "hmatrix/hmatrix_parameters.h"
 #include "hmatrix/hmatrix_symm.h"
 #include "hmatrix/preconditioner/hblockmatrix_skew_symm_preconditioner.h"
 #include "hmatrix/preconditioner/hmatrix_symm_preconditioner.h"
 #include "laplace_bem.h"
 #include "mapping/mapping_info.h"
 #include "platform_shared/laplace_kernels.h"
+#include "preconditioners/preconditioner_for_laplace_dirichlet.h"
 #include "quadrature.templates.h"
 #include "read_octave_data.h"
 #include "subdomain_topology.h"
@@ -176,7 +178,7 @@ private:
 #pragma region ==== Internal class private member function decls ====
 
   void
-  generate_cell_iterators();
+  collect_cell_iterators();
 
   /**
    * Solve the equation \f$Vw_{\rm eq}=1\f$ for the natural density \f$w_{\rm
@@ -356,8 +358,8 @@ private:
    * DoF-to-cell topologies for various DoF handlers, which are used for
    * matrix assembly on a pair of DoFs.
    */
-  DofToCellTopology<dim, spacedim> dof_to_cell_topo_for_dirichlet_space_;
-  DofToCellTopology<dim, spacedim> dof_to_cell_topo_for_neumann_space_;
+  DoFToCellTopology<dim, spacedim> dof_to_cell_topo_for_dirichlet_space_;
+  DoFToCellTopology<dim, spacedim> dof_to_cell_topo_for_neumann_space_;
 
   /**
    * Kernel function for the single layer potential.
@@ -664,6 +666,14 @@ private:
   Vector<double> analytical_solution_on_neumann_domain_;
 
   /**
+   * Type of the preconditioner.
+   */
+  PreconditionerType preconditioner_type_;
+
+  PreconditionerForLaplaceDirichlet<dim, spacedim, double>
+    operator_preconditioner_dirichlet_;
+
+  /**
    * Memory consumption table
    */
   TableHandler memory_consumption_table_;
@@ -767,6 +777,15 @@ LaplaceBEM<dim, spacedim>::Priv::Priv()
   , max_hmat_rank_for_preconditioner_(0)
   , aca_relative_error_for_preconditioner_(0)
   , alpha_for_neumann_(1.0)
+  , preconditioner_type_(PreconditionerType::HMatrixFactorization)
+  , operator_preconditioner_dirichlet_(
+      fe_for_neumann_space_,
+      fe_for_dirichlet_space_,
+      tria_,
+      ct_for_neumann_space_on_dirichlet_domain_
+        .get_internal_to_external_dof_numbering(),
+      ct_for_neumann_space_on_dirichlet_domain_
+        .get_external_to_internal_dof_numbering())
 {}
 
 template <int dim, int spacedim>
@@ -802,6 +821,15 @@ LaplaceBEM<dim, spacedim>::Priv::Priv(unsigned int fe_order_for_dirichlet_space,
   , max_hmat_rank_for_preconditioner_(0)
   , aca_relative_error_for_preconditioner_(0)
   , alpha_for_neumann_(1.0)
+  , preconditioner_type_(PreconditionerType::HMatrixFactorization)
+  , operator_preconditioner_dirichlet_(
+      fe_for_neumann_space_,
+      fe_for_dirichlet_space_,
+      tria_,
+      ct_for_neumann_space_on_dirichlet_domain_
+        .get_internal_to_external_dof_numbering(),
+      ct_for_neumann_space_on_dirichlet_domain_
+        .get_external_to_internal_dof_numbering())
 {}
 
 template <int dim, int spacedim>
@@ -848,6 +876,15 @@ LaplaceBEM<dim, spacedim>::Priv::Priv(
   , aca_relative_error_for_preconditioner_(
       aca_relative_error_for_preconditioner)
   , alpha_for_neumann_(1.0)
+  , preconditioner_type_(PreconditionerType::HMatrixFactorization)
+  , operator_preconditioner_dirichlet_(
+      fe_for_neumann_space_,
+      fe_for_dirichlet_space_,
+      tria_,
+      ct_for_neumann_space_on_dirichlet_domain_
+        .get_internal_to_external_dof_numbering(),
+      ct_for_neumann_space_on_dirichlet_domain_
+        .get_external_to_internal_dof_numbering())
 {}
 
 template <int dim, int spacedim>
@@ -888,7 +925,7 @@ LaplaceBEM<dim, spacedim>::Priv::~Priv()
 
 template <int dim, int spacedim>
 void
-LaplaceBEM<dim, spacedim>::Priv::generate_cell_iterators()
+LaplaceBEM<dim, spacedim>::Priv::collect_cell_iterators()
 {
   cell_iterators_for_dirichlet_space_.reserve(
     dof_handler_for_dirichlet_space_.get_triangulation().n_active_cells());
@@ -929,7 +966,8 @@ LaplaceBEM<dim, spacedim>::Priv::solve_natural_density()
                                dof_handler_for_neumann_space_,
                                mappings_,
                                material_id_to_mapping_index_,
-                               SurfaceNormalDetector(subdomain_topology_),
+                               SurfaceNormalDetector<dim, spacedim>(
+                                 subdomain_topology_),
                                SauterQuadratureRule<dim>(5, 4, 4, 3),
                                V1_matrix_);
     }
@@ -960,7 +998,7 @@ LaplaceBEM<dim, spacedim>::Priv::solve_natural_density()
         *dof_i2e_numbering_for_neumann_space_on_neumann_domain_,
         mappings_,
         material_id_to_mapping_index_,
-        SurfaceNormalDetector(subdomain_topology_),
+        SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
         true);
 
       add_memory_consumption_row("V1 H-matrix", V1_hmat_, "After assembly");
@@ -1115,7 +1153,6 @@ LaplaceBEM<dim, spacedim>::Priv::extract_surface_triangulation(
 }
 
 
-
 template <int dim, int spacedim>
 void
 LaplaceBEM<dim, spacedim>::Priv::setup_system()
@@ -1173,13 +1210,15 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
                */
               timer.start();
 
-              generate_cell_iterators();
-              build_dof_to_cell_topology(dof_to_cell_topo_for_dirichlet_space_,
-                                         cell_iterators_for_dirichlet_space_,
-                                         dof_handler_for_dirichlet_space_);
-              build_dof_to_cell_topology(dof_to_cell_topo_for_neumann_space_,
-                                         cell_iterators_for_neumann_space_,
-                                         dof_handler_for_neumann_space_);
+              collect_cell_iterators();
+              DoFToolsExt::build_dof_to_cell_topology(
+                dof_to_cell_topo_for_dirichlet_space_,
+                cell_iterators_for_dirichlet_space_,
+                dof_handler_for_dirichlet_space_);
+              DoFToolsExt::build_dof_to_cell_topology(
+                dof_to_cell_topo_for_neumann_space_,
+                cell_iterators_for_neumann_space_,
+                dof_handler_for_neumann_space_);
 
               timer.stop();
               print_wall_time(deallog, timer, "build dof-to-cell topology");
@@ -1600,13 +1639,15 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
                */
               timer.start();
 
-              generate_cell_iterators();
-              build_dof_to_cell_topology(dof_to_cell_topo_for_dirichlet_space_,
-                                         cell_iterators_for_dirichlet_space_,
-                                         dof_handler_for_dirichlet_space_);
-              build_dof_to_cell_topology(dof_to_cell_topo_for_neumann_space_,
-                                         cell_iterators_for_neumann_space_,
-                                         dof_handler_for_neumann_space_);
+              collect_cell_iterators();
+              DoFToolsExt::build_dof_to_cell_topology(
+                dof_to_cell_topo_for_dirichlet_space_,
+                cell_iterators_for_dirichlet_space_,
+                dof_handler_for_dirichlet_space_);
+              DoFToolsExt::build_dof_to_cell_topology(
+                dof_to_cell_topo_for_neumann_space_,
+                cell_iterators_for_neumann_space_,
+                dof_handler_for_neumann_space_);
 
               timer.stop();
               print_wall_time(deallog, timer, "build dof-to-cell topology");
@@ -1995,13 +2036,15 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
            */
           timer.start();
 
-          generate_cell_iterators();
-          build_dof_to_cell_topology(dof_to_cell_topo_for_dirichlet_space_,
-                                     cell_iterators_for_dirichlet_space_,
-                                     dof_handler_for_dirichlet_space_);
-          build_dof_to_cell_topology(dof_to_cell_topo_for_neumann_space_,
-                                     cell_iterators_for_neumann_space_,
-                                     dof_handler_for_neumann_space_);
+          collect_cell_iterators();
+          DoFToolsExt::build_dof_to_cell_topology(
+            dof_to_cell_topo_for_dirichlet_space_,
+            cell_iterators_for_dirichlet_space_,
+            dof_handler_for_dirichlet_space_);
+          DoFToolsExt::build_dof_to_cell_topology(
+            dof_to_cell_topo_for_neumann_space_,
+            cell_iterators_for_neumann_space_,
+            dof_handler_for_neumann_space_);
 
           timer.stop();
           print_wall_time(deallog, timer, "build dof-to-cell topology");
@@ -2753,7 +2796,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
                 dof_handler_for_dirichlet_space_,
                 mappings_,
                 material_id_to_mapping_index_,
-                SurfaceNormalDetector(subdomain_topology_),
+                SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
                 K2_matrix_with_mass_matrix_);
             }
@@ -2765,7 +2808,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
                                        dof_handler_for_dirichlet_space_,
                                        mappings_,
                                        material_id_to_mapping_index_,
-                                       SurfaceNormalDetector(
+                                       SurfaceNormalDetector<dim, spacedim>(
                                          subdomain_topology_),
                                        SauterQuadratureRule<dim>(5, 4, 4, 3),
                                        K2_matrix_with_mass_matrix_);
@@ -2788,7 +2831,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
                 dof_handler_for_neumann_space_,
                 mappings_,
                 material_id_to_mapping_index_,
-                SurfaceNormalDetector(subdomain_topology_),
+                SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
                 V1_matrix_);
             }
@@ -2800,7 +2843,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
                                        dof_handler_for_neumann_space_,
                                        mappings_,
                                        material_id_to_mapping_index_,
-                                       SurfaceNormalDetector(
+                                       SurfaceNormalDetector<dim, spacedim>(
                                          subdomain_topology_),
                                        SauterQuadratureRule<dim>(5, 4, 4, 3),
                                        V1_matrix_);
@@ -2858,7 +2901,8 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
                                    dof_handler_for_neumann_space_,
                                    mappings_,
                                    material_id_to_mapping_index_,
-                                   SurfaceNormalDetector(subdomain_topology_),
+                                   SurfaceNormalDetector<dim, spacedim>(
+                                     subdomain_topology_),
                                    SauterQuadratureRule<dim>(5, 4, 4, 3),
                                    K_prime2_matrix_with_mass_matrix_);
 
@@ -2874,7 +2918,8 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
                                    dof_handler_for_dirichlet_space_,
                                    mappings_,
                                    material_id_to_mapping_index_,
-                                   SurfaceNormalDetector(subdomain_topology_),
+                                   SurfaceNormalDetector<dim, spacedim>(
+                                     subdomain_topology_),
                                    SauterQuadratureRule<dim>(5, 4, 4, 3),
                                    D1_matrix_);
 
@@ -2978,7 +3023,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
                 *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain_,
                 mappings_,
                 material_id_to_mapping_index_,
-                SurfaceNormalDetector(subdomain_topology_),
+                SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 false);
 
               timer.stop();
@@ -3012,7 +3057,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
                 *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain_,
                 mappings_,
                 material_id_to_mapping_index_,
-                SurfaceNormalDetector(subdomain_topology_),
+                SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 false);
 
               timer.stop();
@@ -3086,7 +3131,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
               *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain_,
               mappings_,
               material_id_to_mapping_index_,
-              SurfaceNormalDetector(subdomain_topology_),
+              SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
               true);
 
             timer.stop();
@@ -3138,7 +3183,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
                 *dof_i2e_numbering_for_neumann_space_on_neumann_domain_,
                 mappings_,
                 material_id_to_mapping_index_,
-                SurfaceNormalDetector(subdomain_topology_),
+                SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 false);
 
               timer.stop();
@@ -3167,7 +3212,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
                 *dof_i2e_numbering_for_neumann_space_on_neumann_domain_,
                 mappings_,
                 material_id_to_mapping_index_,
-                SurfaceNormalDetector(subdomain_topology_),
+                SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 false);
 
               timer.stop();
@@ -3276,7 +3321,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
             *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain_,
             mappings_,
             material_id_to_mapping_index_,
-            SurfaceNormalDetector(subdomain_topology_),
+            SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
             true);
 
           timer.stop();
@@ -3333,7 +3378,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
                 *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain_,
                 mappings_,
                 material_id_to_mapping_index_,
-                SurfaceNormalDetector(subdomain_topology_),
+                SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 false);
 
               timer.stop();
@@ -3362,7 +3407,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
                 *dof_i2e_numbering_for_neumann_space_on_neumann_domain_,
                 mappings_,
                 material_id_to_mapping_index_,
-                SurfaceNormalDetector(subdomain_topology_),
+                SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 false);
 
               timer.stop();
@@ -3391,7 +3436,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
                 *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain_,
                 mappings_,
                 material_id_to_mapping_index_,
-                SurfaceNormalDetector(subdomain_topology_),
+                SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 false);
 
               timer.stop();
@@ -3420,7 +3465,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
                 *dof_i2e_numbering_for_neumann_space_on_neumann_domain_,
                 mappings_,
                 material_id_to_mapping_index_,
-                SurfaceNormalDetector(subdomain_topology_),
+                SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 false);
 
               timer.stop();
@@ -3455,7 +3500,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
             *dof_i2e_numbering_for_neumann_space_on_neumann_domain_,
             mappings_,
             material_id_to_mapping_index_,
-            SurfaceNormalDetector(subdomain_topology_),
+            SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
             false);
 
           timer.stop();
@@ -3484,7 +3529,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
             *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain_,
             mappings_,
             material_id_to_mapping_index_,
-            SurfaceNormalDetector(subdomain_topology_),
+            SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
             false);
 
           timer.stop();
@@ -3618,7 +3663,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
             *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain_,
             mappings_,
             material_id_to_mapping_index_,
-            SurfaceNormalDetector(subdomain_topology_),
+            SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
             true);
 
           timer.stop();
@@ -3647,7 +3692,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
             *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain_,
             mappings_,
             material_id_to_mapping_index_,
-            SurfaceNormalDetector(subdomain_topology_),
+            SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
             false);
 
           timer.stop();
@@ -3676,7 +3721,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
             *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain_,
             mappings_,
             material_id_to_mapping_index_,
-            SurfaceNormalDetector(subdomain_topology_),
+            SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
             true);
 
           timer.stop();
@@ -3736,57 +3781,91 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_preconditioner()
         case DirichletBCProblem: {
           std::cout << "=== Assemble preconditioner for V ===" << std::endl;
 
-          // Directly make a copy of the existing \hmat and then truncate
-          // its rank.
-          V1_hmat_preconditioner_ = V1_hmat_;
-
-          // Only when the \hmat actually has a hierarchical structure, the
-          // SPD preserving rank truncation will be performed. This excludes
-          // the case when @p V1 has a single root node, which is a full
-          // matrix.
-          if (V1_hmat_preconditioner_.get_type() ==
-              HMatrixType::HierarchicalMatrixType)
+          switch (preconditioner_type_)
             {
-              V1_hmat_preconditioner_
-                .truncate_to_rank_preserve_positive_definite(
-                  max_hmat_rank_for_preconditioner_);
+                case PreconditionerType::HMatrixFactorization: {
+                  // Directly make a copy of the existing \hmat and then
+                  // truncate its rank.
+                  V1_hmat_preconditioner_ = V1_hmat_;
+
+                  // Only when the \hmat actually has a hierarchical
+                  // structure, the SPD preserving rank truncation will be
+                  // performed. This excludes
+                  // the case when @p V1 has a single root node, which is a full
+                  // matrix.
+                  if (V1_hmat_preconditioner_.get_type() ==
+                      HMatrixType::HierarchicalMatrixType)
+                    {
+                      V1_hmat_preconditioner_
+                        .truncate_to_rank_preserve_positive_definite(
+                          max_hmat_rank_for_preconditioner_);
+                    }
+
+                  timer.stop();
+                  print_wall_time(deallog, timer, "truncate V");
+
+                  add_memory_consumption_row("V1 H-matrix preconditioner",
+                                             V1_hmat_preconditioner_,
+                                             "After assembly");
+
+                  /**
+                   * Perform Cholesky factorization of the preconditioner.
+                   */
+                  std::cout
+                    << "=== Cholesky factorization of the preconditioner for V ==="
+                    << std::endl;
+
+                  timer.start();
+
+                  // Only when the \hmat actually has a hierarchical
+                  // structure, the task parallel Cholesky factorization will
+                  // be performed. This
+                  // excludes the case when @p V1 has a single root node, which is a
+                  // full matrix.
+                  if (V1_hmat_preconditioner_.get_type() ==
+                      HMatrixType::HierarchicalMatrixType)
+                    {
+                      V1_hmat_preconditioner_
+                        .compute_cholesky_factorization_task_parallel(
+                          max_hmat_rank_for_preconditioner_);
+                    }
+                  else
+                    {
+                      V1_hmat_preconditioner_.compute_cholesky_factorization(
+                        max_hmat_rank_for_preconditioner_);
+                    }
+
+                  timer.stop();
+                  print_wall_time(deallog,
+                                  timer,
+                                  "Cholesky factorization of V");
+
+                  break;
+                }
+                case PreconditionerType::OperatorPreconditioning: {
+                  operator_preconditioner_dirichlet_.setup_preconditioner(
+                    thread_num_,
+                    HMatrixParameters(n_min_for_ct_,
+                                      n_min_for_bct_,
+                                      eta_,
+                                      max_hmat_rank_,
+                                      aca_relative_error_),
+                    mappings_,
+                    material_id_to_mapping_index_,
+                    SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+                    SauterQuadratureRule<dim>(5, 4, 4, 3),
+                    QGauss<2>(fe_for_dirichlet_space_.degree + 1));
+
+                  break;
+                }
+                case PreconditionerType::Identity: {
+                  break;
+                }
+                default: {
+                  Assert(false, ExcInternalError());
+                  break;
+                }
             }
-
-          timer.stop();
-          print_wall_time(deallog, timer, "truncate V");
-
-          add_memory_consumption_row("V1 H-matrix preconditioner",
-                                     V1_hmat_preconditioner_,
-                                     "After assembly");
-
-          /**
-           * Perform Cholesky factorization of the preconditioner.
-           */
-          std::cout
-            << "=== Cholesky factorization of the preconditioner for V ==="
-            << std::endl;
-
-          timer.start();
-
-          // Only when the \hmat actually has a hierarchical structure, the
-          // task parallel Cholesky factorization will be performed. This
-          // excludes the case when @p V1 has a single root node, which is a
-          // full matrix.
-          if (V1_hmat_preconditioner_.get_type() ==
-              HMatrixType::HierarchicalMatrixType)
-            {
-              V1_hmat_preconditioner_
-                .compute_cholesky_factorization_task_parallel(
-                  max_hmat_rank_for_preconditioner_);
-            }
-          else
-            {
-              V1_hmat_preconditioner_.compute_cholesky_factorization(
-                max_hmat_rank_for_preconditioner_);
-            }
-
-          timer.stop();
-          print_wall_time(deallog, timer, "Cholesky factorization of V");
 
           break;
         }
@@ -3959,7 +4038,7 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
       switch (problem_type_)
         {
             case DirichletBCProblem: {
-              SolverControl solver_control(1000, 1e-12, true, true);
+              SolverControl solver_control(1000, 1e-8, true, true);
               SolverCG<>    solver(solver_control);
 
               solver.solve(V1_matrix_,
@@ -3970,7 +4049,7 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
               break;
             }
             case NeumannBCProblem: {
-              SolverControl solver_control(1000, 1e-12, true, true);
+              SolverControl solver_control(1000, 1e-8, true, true);
               SolverCG<>    solver(solver_control);
 
               solver.solve(D1_matrix_,
@@ -3995,14 +4074,43 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
       switch (problem_type_)
         {
             case DirichletBCProblem: {
-              SolverControl            solver_control(1000, 1e-12, true, true);
+              SolverControl            solver_control(1000, 1e-8, true, true);
               SolverCG<Vector<double>> solver(solver_control);
 
-              solver.solve(
-                V1_hmat_,
-                neumann_data_on_dirichlet_domain_internal_dof_numbering_,
-                system_rhs_on_dirichlet_domain_,
-                V1_hmat_preconditioner_);
+              switch (preconditioner_type_)
+                {
+                    case PreconditionerType::HMatrixFactorization: {
+                      solver.solve(
+                        V1_hmat_,
+                        neumann_data_on_dirichlet_domain_internal_dof_numbering_,
+                        system_rhs_on_dirichlet_domain_,
+                        V1_hmat_preconditioner_);
+
+                      break;
+                    }
+                    case PreconditionerType::OperatorPreconditioning: {
+                      solver.solve(
+                        V1_hmat_,
+                        neumann_data_on_dirichlet_domain_internal_dof_numbering_,
+                        system_rhs_on_dirichlet_domain_,
+                        operator_preconditioner_dirichlet_);
+
+                      break;
+                    }
+                    case PreconditionerType::Identity: {
+                      solver.solve(
+                        V1_hmat_,
+                        neumann_data_on_dirichlet_domain_internal_dof_numbering_,
+                        system_rhs_on_dirichlet_domain_,
+                        PreconditionIdentity());
+
+                      break;
+                    }
+                    case PreconditionerType::Jacobi: {
+                      Assert(false, ExcNotImplemented());
+                      break;
+                    }
+                }
 
               /**
                * Permute the solution vector by following the mapping
@@ -4016,7 +4124,7 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
               break;
             }
             case NeumannBCProblem: {
-              SolverControl            solver_control(1000, 1e-12, true, true);
+              SolverControl            solver_control(1000, 1e-8, true, true);
               SolverCG<Vector<double>> solver(solver_control);
 
               solver.solve(
@@ -4037,7 +4145,7 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
               break;
             }
             case MixedBCProblem: {
-              SolverControl solver_control(1000, 1e-12, true, true);
+              SolverControl solver_control(1000, 1e-8, true, true);
               SolverBicgstab<Vector<double>> solver(solver_control);
 
               solver.solve(M_hmat_,
