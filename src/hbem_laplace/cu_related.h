@@ -6,7 +6,7 @@
 HBEM_NS_OPEN
 
 void
-init_cuda_runtime();
+initCudaRuntime();
 
 HBEM_NS_CLOSE
 

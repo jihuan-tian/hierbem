@@ -28,15 +28,22 @@ using namespace HierBEM;
 class LaplaceWorkbench
 {
 public:
+  using SolverType = LaplaceBEM<2, 3>;
+  using TriaType = Triangulation<3>;
+  using GridInType = GridIn<3>;
+
+  static constexpr const char *LOG_PREFIX       = "HierBEM";
+  static constexpr const char *RUNTIME_LOG_FILE = "hierbem_laplace.log";
+
   LaplaceWorkbench()
     : log_file_os_()
     , bem_(nullptr)
   {}
 
   void
-  init_workdir()
+  initWorkDir()
   {
-    const auto &conf_inst  = ConfigFile::instance().get_config();
+    const auto &conf_inst  = ConfigFile::instance().getConfig();
     const auto &output_dir = conf_inst.project.output_dir;
     const auto &proj_name  = conf_inst.project.project_name.value();
     const auto &work_dir   = std::filesystem::path(output_dir) / proj_name;
@@ -56,10 +63,10 @@ public:
   }
 
   void
-  init_logger()
+  initLogger()
   {
     // Write run-time logs to file
-    log_file_os_ = std::make_shared<std::ofstream>("hierbem_laplace.log");
+    log_file_os_ = std::make_shared<std::ofstream>(RUNTIME_LOG_FILE);
 
     deallog.pop();
     deallog.depth_console(0);
@@ -68,36 +75,65 @@ public:
   }
 
   void
-  init_runtime()
+  initRuntime()
   {
     /**
      * @internal Set number of threads used for OpenBLAS.
      */
     openblas_set_num_threads(1);
 
-    init_cuda_runtime();
+    initCudaRuntime();
   }
 
   void
-  setup_hierbem_solver()
+  setupHierBEMSolver()
+  {
+    const auto &conf_inst = ConfigFile::instance().getConfig();
+
+    std::int32_t num_threads = conf_inst.misc.aca_thread_num;
+    if (num_threads < 0)
+      {
+        num_threads = MultithreadInfo::n_threads();
+      }
+
+    // Initialize HierBEM Laplace solver
+    bem_ =
+      std::make_unique<SolverType>(conf_inst.bem.fe_order_for_dirichlet_space,
+                                   conf_inst.bem.fe_order_for_neumann_space,
+                                   problemTypeLiteralToEnum(
+                                     conf_inst.bem.problem_type),
+                                   conf_inst.bem.is_interior_problem,
+                                   conf_inst.cluster_tree.n_min_for_ct,
+                                   conf_inst.cluster_tree.n_min_for_bct,
+                                   conf_inst.hmatrix.eta,
+                                   conf_inst.hmatrix.max_rank,
+                                   conf_inst.hmatrix.aca_relative_err,
+                                   conf_inst.precond.eta,
+                                   conf_inst.precond.max_rank,
+                                   conf_inst.precond.aca_relative_err,
+                                   num_threads);
+
+    // Set project name
+    bem_->set_project_name(conf_inst.project.project_name.value());
+  }
+
+  void
+  setupMeshAndManifold()
+  {
+    // Read mesh file
+    const auto &conf_inst = ConfigFile::instance().getConfig();
+    std::ifstream mesh_file(conf_inst.project.mesh_file);
+
+  }
+
+  void
+  setupBoundaryConds()
   {
     // TBD
   }
 
   void
-  setup_mesh_and_manifold()
-  {
-    // TBD
-  }
-
-  void
-  setup_boundary_conditions()
-  {
-    // TBD
-  }
-
-  void
-  run_solver_and_output()
+  runSolverAndOutput()
   {
     // TBD
   }
@@ -105,32 +141,32 @@ public:
   void
   startup()
   {
-    init_workdir(); // Make working directory hierarchies if it doesn't
-                    // exist
-    init_logger();  // Initialize deal.ii logger
-    LogStream::Prefix prefix_string("HierBEM");
+    initWorkDir(); // Make working directory hierarchies if it doesn't
+                   // exist
+    initLogger();  // Initialize deal.ii logger
+    LogStream::Prefix prefix_string(LOG_PREFIX);
 
-    init_runtime(); // Initialize OpenBLAS/CUDA runtimes
+    initRuntime(); // Initialize OpenBLAS/CUDA runtimes
 
     Timer timer; // Create and start the timer
 
-    setup_hierbem_solver(); // Prepare HierBEM Laplace solver
+    setupHierBEMSolver(); // Prepare HierBEM Laplace solver
     timer.stop();
     print_wall_time(deallog, timer, "program preparation");
 
     timer.start();
-    setup_mesh_and_manifold(); // Read in mesh and assign manifolds if any
+    setupMeshAndManifold(); // Read in mesh and assign manifolds if any
     timer.stop();
     print_wall_time(deallog, timer, "read mesh");
 
     timer.start();
-    setup_boundary_conditions(); // Setup boundary conditions if any
+    setupBoundaryConds(); // Setup boundary conditions if any
     timer.stop();
     print_wall_time(deallog, timer, "assign boundary conditions");
 
     timer.start();
-    run_solver_and_output(); // Assemble and solve BEM system, output
-                             // results
+    runSolverAndOutput(); // Assemble and solve BEM system, output
+                          // results
     timer.stop();
     print_wall_time(deallog, timer, "run the solver");
 
@@ -141,8 +177,24 @@ public:
   }
 
 protected:
-  std::shared_ptr<std::ofstream>    log_file_os_;
-  std::unique_ptr<LaplaceBEM<2, 3>> bem_;
+  SolverType::ProblemType
+  problemTypeLiteralToEnum(const ProblemType &literal)
+  {
+    switch (literal.value())
+      {
+        case ProblemType::value_of<"neumann">():
+          return SolverType::ProblemType::NeumannBCProblem;
+        case ProblemType::value_of<"dirichlet">():
+          return SolverType::ProblemType::DirichletBCProblem;
+        case ProblemType::value_of<"mixed">():
+          return SolverType::ProblemType::MixedBCProblem;
+        default:
+          throw std::runtime_error("Unknown problem type");
+      }
+  }
+
+  std::shared_ptr<std::ofstream> log_file_os_;
+  std::unique_ptr<SolverType>    bem_;
 };
 
 

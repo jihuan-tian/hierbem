@@ -107,3 +107,6 @@ tests/functions/laplace-bem/mixed-l-shape/process.m
 tests/functions/laplace-bem/neumann-hmatrix/process.m
 tests/functions/laplace-bem/dirichlet-full-matrix/process.m
 tests/functions/laplace-bem/neumann-full-matrix/process.m
+tests/functions/laplace-bem/dirichlet-hmatrix-op-precond/process.m
+tests/units/op-precond-hmatrix-for-dirichlet/process.m
+

@@ -119,13 +119,14 @@ public:
     std::lock_guard<std::mutex> lock(lock_);
     if (!initialized_)
       {
-        conf_        = load_config(file_path);
+        conf_ = loadConf(file_path);
+        validateConf(conf_);
         initialized_ = true;
       }
   }
 
   const ConfHierBEM &
-  get_config() const
+  getConfig() const
   {
     if (!initialized_)
       {
@@ -143,21 +144,23 @@ private:
   operator=(const ConfigFile &) = delete;
 
   ConfHierBEM
-  load_config(const std::string &file_path)
+  loadConf(const std::string &file_path)
   {
     auto &conf =
       rfl::toml::load<ConfHierBEM, rfl::DefaultIfMissing, rfl::NoExtraFields>(
         file_path)
         .value();
-
-    validate_conf(conf);
     return conf;
   }
 
   void
-  validate_conf(const ConfHierBEM &conf)
+  validateConf(const ConfHierBEM &conf)
   {
-    // Space dimension must be greater than boundary dimension
+    if (conf.bem.space_dim.value() != 3 || conf.bem.boundary_dim.value() != 2)
+      {
+        throw std::runtime_error("Currently only 3D/2D problems are supported");
+      }
+
     if (conf.bem.space_dim.value() <= conf.bem.boundary_dim.value())
       {
         throw std::runtime_error(

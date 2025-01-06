@@ -11,7 +11,7 @@ using namespace HierBEM;
 HBEM_NS_OPEN
 
 void
-init_cuda_runtime()
+initCudaRuntime()
 {
   const size_t stack_size = 1024 * 10;
   AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));
