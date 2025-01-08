@@ -60,6 +60,7 @@
 #include "mapping/mapping_info.h"
 #include "platform_shared/laplace_kernels.h"
 #include "preconditioners/preconditioner_for_laplace_dirichlet.h"
+#include "preconditioners/preconditioner_for_laplace_neumann.h"
 #include "quadrature.templates.h"
 #include "read_octave_data.h"
 #include "subdomain_topology.h"
@@ -673,6 +674,9 @@ private:
   PreconditionerForLaplaceDirichlet<dim, spacedim, double>
     operator_preconditioner_dirichlet_;
 
+  PreconditionerForLaplaceNeumann<dim, spacedim, double>
+    operator_preconditioner_neumann_;
+
   /**
    * Memory consumption table
    */
@@ -786,6 +790,14 @@ LaplaceBEM<dim, spacedim>::Priv::Priv()
         .get_internal_to_external_dof_numbering(),
       ct_for_neumann_space_on_dirichlet_domain_
         .get_external_to_internal_dof_numbering())
+  , operator_preconditioner_neumann_(
+      fe_for_dirichlet_space_,
+      fe_for_neumann_space_,
+      tria_,
+      ct_for_dirichlet_space_on_neumann_domain_
+        .get_internal_to_external_dof_numbering(),
+      ct_for_dirichlet_space_on_neumann_domain_
+        .get_external_to_internal_dof_numbering())
 {}
 
 template <int dim, int spacedim>
@@ -829,6 +841,14 @@ LaplaceBEM<dim, spacedim>::Priv::Priv(unsigned int fe_order_for_dirichlet_space,
       ct_for_neumann_space_on_dirichlet_domain_
         .get_internal_to_external_dof_numbering(),
       ct_for_neumann_space_on_dirichlet_domain_
+        .get_external_to_internal_dof_numbering())
+  , operator_preconditioner_neumann_(
+      fe_for_dirichlet_space_,
+      fe_for_neumann_space_,
+      tria_,
+      ct_for_dirichlet_space_on_neumann_domain_
+        .get_internal_to_external_dof_numbering(),
+      ct_for_dirichlet_space_on_neumann_domain_
         .get_external_to_internal_dof_numbering())
 {}
 
@@ -884,6 +904,14 @@ LaplaceBEM<dim, spacedim>::Priv::Priv(
       ct_for_neumann_space_on_dirichlet_domain_
         .get_internal_to_external_dof_numbering(),
       ct_for_neumann_space_on_dirichlet_domain_
+        .get_external_to_internal_dof_numbering())
+  , operator_preconditioner_neumann_(
+      fe_for_dirichlet_space_,
+      fe_for_neumann_space_,
+      tria_,
+      ct_for_dirichlet_space_on_neumann_domain_
+        .get_internal_to_external_dof_numbering(),
+      ct_for_dirichlet_space_on_neumann_domain_
         .get_external_to_internal_dof_numbering())
 {}
 
@@ -3861,6 +3889,11 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_preconditioner()
                 case PreconditionerType::Identity: {
                   break;
                 }
+                case PreconditionerType::Jacobi: {
+                  // TODO
+                  Assert(false, ExcNotImplemented());
+                  break;
+                }
                 default: {
                   Assert(false, ExcInternalError());
                   break;
@@ -3872,55 +3905,95 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_preconditioner()
         case NeumannBCProblem: {
           std::cout << "=== Assemble preconditioner for D ===" << std::endl;
 
-          // Directly make a copy of the existing \hmat and then truncate
-          // its rank.
-          D1_hmat_preconditioner_ = D1_hmat_;
-
-          // Only when the \hmat actually has a hierarchical structure, the
-          // SPD preserving rank truncation will be performed. This excludes
-          // the case when @p D1 has a single root node, which is a full
-          // matrix.
-          if (D1_hmat_preconditioner_.get_type() ==
-              HMatrixType::HierarchicalMatrixType)
+          switch (preconditioner_type_)
             {
-              D1_hmat_preconditioner_
-                .truncate_to_rank_preserve_positive_definite(
-                  max_hmat_rank_for_preconditioner_);
+                case PreconditionerType::HMatrixFactorization: {
+                  // Directly make a copy of the existing \hmat and then
+                  // truncate its rank.
+                  D1_hmat_preconditioner_ = D1_hmat_;
+
+                  // Only when the \hmat actually has a hierarchical structure,
+                  // the SPD preserving rank truncation will be performed. This
+                  // excludes
+                  // the case when @p D1 has a single root node, which is a full
+                  // matrix.
+                  if (D1_hmat_preconditioner_.get_type() ==
+                      HMatrixType::HierarchicalMatrixType)
+                    {
+                      D1_hmat_preconditioner_
+                        .truncate_to_rank_preserve_positive_definite(
+                          max_hmat_rank_for_preconditioner_);
+                    }
+
+                  timer.stop();
+                  print_wall_time(deallog, timer, "truncate D");
+
+                  add_memory_consumption_row("D1 H-matrix preconditioner",
+                                             D1_hmat_preconditioner_,
+                                             "After assembly");
+
+                  /**
+                   * Perform Cholesky factorization of the preconditioner.
+                   */
+                  std::cout << "=== Cholesky factorization of D ==="
+                            << std::endl;
+
+                  timer.start();
+
+                  // Only when the \hmat actually has a hierarchical structure,
+                  // the task parallel Cholesky factorization will be performed.
+                  // This
+                  // excludes the case when @p D1 has a single root node, which is a
+                  // full matrix.
+                  if (D1_hmat_preconditioner_.get_type() ==
+                      HMatrixType::HierarchicalMatrixType)
+                    {
+                      D1_hmat_preconditioner_
+                        .compute_cholesky_factorization_task_parallel(
+                          max_hmat_rank_for_preconditioner_);
+                    }
+                  else
+                    {
+                      D1_hmat_preconditioner_.compute_cholesky_factorization(
+                        max_hmat_rank_for_preconditioner_);
+                    }
+
+                  timer.stop();
+                  print_wall_time(deallog,
+                                  timer,
+                                  "Cholesky factorization of D");
+
+                  break;
+                }
+                case PreconditionerType::OperatorPreconditioning: {
+                  operator_preconditioner_neumann_.setup_preconditioner(
+                    thread_num_,
+                    HMatrixParameters(n_min_for_ct_,
+                                      n_min_for_bct_,
+                                      eta_,
+                                      max_hmat_rank_,
+                                      aca_relative_error_),
+                    mappings_,
+                    material_id_to_mapping_index_,
+                    SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+                    SauterQuadratureRule<dim>(5, 4, 4, 3),
+                    QGauss<2>(fe_for_dirichlet_space_.degree + 1));
+
+                  break;
+                }
+                case PreconditionerType::Identity: {
+                  break;
+                }
+                case PreconditionerType::Jacobi: {
+                  // TODO
+                  Assert(false, ExcNotImplemented());
+                  break;
+                }
+                default: {
+                  Assert(false, ExcInternalError());
+                  break;
+                }
             }
-
-          timer.stop();
-          print_wall_time(deallog, timer, "truncate D");
-
-          add_memory_consumption_row("D1 H-matrix preconditioner",
-                                     D1_hmat_preconditioner_,
-                                     "After assembly");
-
-          /**
-           * Perform Cholesky factorization of the preconditioner.
-           */
-          std::cout << "=== Cholesky factorization of D ===" << std::endl;
-
-          timer.start();
-
-          // Only when the \hmat actually has a hierarchical structure, the
-          // task parallel Cholesky factorization will be performed. This
-          // excludes the case when @p D1 has a single root node, which is a
-          // full matrix.
-          if (D1_hmat_preconditioner_.get_type() ==
-              HMatrixType::HierarchicalMatrixType)
-            {
-              D1_hmat_preconditioner_
-                .compute_cholesky_factorization_task_parallel(
-                  max_hmat_rank_for_preconditioner_);
-            }
-          else
-            {
-              D1_hmat_preconditioner_.compute_cholesky_factorization(
-                max_hmat_rank_for_preconditioner_);
-            }
-
-          timer.stop();
-          print_wall_time(deallog, timer, "Cholesky factorization of D");
 
           break;
         }
@@ -4061,11 +4134,11 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
             }
             case MixedBCProblem: {
               Assert(false, ExcNotImplemented());
-
               break;
             }
             default: {
               Assert(false, ExcInternalError());
+              break;
             }
         }
     }
@@ -4107,7 +4180,12 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
                       break;
                     }
                     case PreconditionerType::Jacobi: {
+                      // TODO
                       Assert(false, ExcNotImplemented());
+                      break;
+                    }
+                    default: {
+                      Assert(false, ExcInternalError());
                       break;
                     }
                 }
@@ -4127,11 +4205,45 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
               SolverControl            solver_control(1000, 1e-8, true, true);
               SolverCG<Vector<double>> solver(solver_control);
 
-              solver.solve(
-                D1_hmat_,
-                dirichlet_data_on_neumann_domain_internal_dof_numbering_,
-                system_rhs_on_neumann_domain_,
-                D1_hmat_preconditioner_);
+              switch (preconditioner_type_)
+                {
+                    case PreconditionerType::HMatrixFactorization: {
+                      solver.solve(
+                        D1_hmat_,
+                        dirichlet_data_on_neumann_domain_internal_dof_numbering_,
+                        system_rhs_on_neumann_domain_,
+                        D1_hmat_preconditioner_);
+
+                      break;
+                    }
+                    case PreconditionerType::OperatorPreconditioning: {
+                      solver.solve(
+                        D1_hmat_,
+                        dirichlet_data_on_neumann_domain_internal_dof_numbering_,
+                        system_rhs_on_neumann_domain_,
+                        operator_preconditioner_neumann_);
+
+                      break;
+                    }
+                    case PreconditionerType::Identity: {
+                      solver.solve(
+                        D1_hmat_,
+                        dirichlet_data_on_neumann_domain_internal_dof_numbering_,
+                        system_rhs_on_neumann_domain_,
+                        PreconditionIdentity());
+
+                      break;
+                    }
+                    case PreconditionerType::Jacobi: {
+                      // TODO
+                      Assert(false, ExcNotImplemented());
+                      break;
+                    }
+                    default: {
+                      Assert(false, ExcInternalError());
+                      break;
+                    }
+                }
 
               /**
                * Permute the solution vector by following the mapping

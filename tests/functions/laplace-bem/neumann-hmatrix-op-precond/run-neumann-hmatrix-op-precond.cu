@@ -21,32 +21,41 @@ using namespace dealii;
 using namespace HierBEM;
 
 /**
- * Function object for the Dirichlet boundary condition data, which is
- * also the solution of the Neumann problem. The analytical expression is:
+ * Function object for the Neumann boundary condition data, which is also
+ * the solution of the Dirichlet problem. The analytical expression is
  * \f[
- * u=\frac{1}{4\pi\norm{x-x_0}}
+ * \frac{\pdiff u}{\pdiff n}\Big\vert_{\Gamma} = \frac{\langle x-x_c,x_0-x
+ * \rangle}{4\pi\norm{x_0-x}^3\rho}
  * \f]
  */
-class DirichletBC : public Function<3>
+class NeumannBC : public Function<3>
 {
 public:
-  // N.B. This function should be defined outside class NeumannBC or class
-  // Example2, if no inline.
-  DirichletBC()
+  // N.B. This function should be defined outside class NeumannBC and
+  // class Example2, if not inline.
+  NeumannBC()
     : Function<3>()
     , x0(0.25, 0.25, 0.25)
+    , model_sphere_center(0.0, 0.0, 0.0)
+    , model_sphere_radius(1.0)
   {}
 
-  DirichletBC(const Point<3> &x0)
+  NeumannBC(const Point<3> &x0, const Point<3> &center, double radius)
     : Function<3>()
     , x0(x0)
+    , model_sphere_center(center)
+    , model_sphere_radius(radius)
   {}
 
   double
   value(const Point<3> &p, const unsigned int component = 0) const
   {
     (void)component;
-    return 1.0 / 4.0 / numbers::PI / (p - x0).norm();
+
+    Tensor<1, 3> diff_vector = x0 - p;
+
+    return ((p - model_sphere_center) * diff_vector) / 4.0 / numbers::PI /
+           std::pow(diff_vector.norm(), 3) / model_sphere_radius;
   }
 
 private:
@@ -54,6 +63,8 @@ private:
    * Location of the Dirac point source \f$\delta(x-x_0)\f$.
    */
   Point<3> x0;
+  Point<3> model_sphere_center;
+  double   model_sphere_radius;
 };
 
 
@@ -66,13 +77,13 @@ namespace HierBEM
 } // namespace HierBEM
 
 void
-run_dirichlet_hmatrix_op_precond(const unsigned int refinement)
+run_neumann_hmatrix_op_precond(const unsigned int refinement)
 {
   /**
    * @internal Pop out the default "DEAL" prefix string.
    */
   // Write run-time logs to file
-  std::ofstream ofs("dirichlet-hmatrix-op-precond.log");
+  std::ofstream ofs("neumann-hmatrix-op-precond.log");
   deallog.pop();
   deallog.depth_console(0);
   deallog.depth_file(5);
@@ -113,11 +124,11 @@ run_dirichlet_hmatrix_op_precond(const unsigned int refinement)
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  const bool                is_interior_problem = true;
+  const bool                is_interior_problem = false;
   LaplaceBEM<dim, spacedim> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
-    LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
+    LaplaceBEM<dim, spacedim>::ProblemType::NeumannBCProblem,
     is_interior_problem,         // is interior problem
     4,                           // n_min for cluster tree
     4,                           // n_min for block cluster tree
@@ -129,7 +140,7 @@ run_dirichlet_hmatrix_op_precond(const unsigned int refinement)
     0.1,                         // aca epsilon for preconditioner
     MultithreadInfo::n_threads() // Number of threads used for ACA
   );
-  bem.set_project_name("dirichlet-hmatrix-op-precond");
+  bem.set_project_name("neumann-hmatrix-op-precond");
   bem.set_preconditioner_type(
     LaplaceBEM<dim, spacedim>::PreconditionerType::OperatorPreconditioning);
 
@@ -168,9 +179,6 @@ run_dirichlet_hmatrix_op_precond(const unsigned int refinement)
   // function in GridGenerator.
   bem.get_manifold_description()[0] = 0;
 
-  // Create the map from manifold ids to manifold objects. Because in the
-  // destructor of LaplaceBEM the manifold objects will be released, the
-  // manifold object here is created on the heap.
   SphericalManifold<dim, spacedim> *ball_surface_manifold =
     new SphericalManifold<dim, spacedim>(center);
   bem.get_manifolds()[0] = ball_surface_manifold;
@@ -210,8 +218,8 @@ run_dirichlet_hmatrix_op_precond(const unsigned int refinement)
 
   timer.start();
 
-  DirichletBC dirichlet_bc(source_loc);
-  bem.assign_dirichlet_bc(dirichlet_bc);
+  NeumannBC neumann_bc(source_loc, center, radius);
+  bem.assign_neumann_bc(neumann_bc);
 
   timer.stop();
   print_wall_time(deallog, timer, "assign boundary conditions");
