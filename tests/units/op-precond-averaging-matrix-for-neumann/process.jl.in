@@ -1,0 +1,15 @@
+using CSV, DataFrames
+using LinearAlgebra
+
+# Load the data.
+Cd = CSV.read("Cd.dat", DataFrame; delim=' ', header=false, ignorerepeated=true)
+support_points_in_dual_mesh = CSV.read("support-points-in-dual-space-on-dual-mesh.dat", DataFrame; delim=' ', header=false)
+support_points_in_refined_mesh = CSV.read("support-points-in-dual-space-on-refined-mesh.dat", DataFrame; delim=' ', header=false)
+
+Cd_ref = CSV.read("@CMAKE_CURRENT_SOURCE_DIR@/Cd.dat", DataFrame; delim=' ', header=false, ignorerepeated=true)
+support_points_in_dual_mesh_ref = CSV.read("@CMAKE_CURRENT_SOURCE_DIR@/support-points-in-dual-space-on-dual-mesh.dat", DataFrame; delim=' ', header=false)
+support_points_in_refined_mesh_ref = CSV.read("@CMAKE_CURRENT_SOURCE_DIR@/support-points-in-dual-space-on-refined-mesh.dat", DataFrame; delim=' ', header=false)
+
+Cd_err = norm(Matrix(Cd_ref) - Matrix(Cd))
+support_points_in_dual_mesh_err = norm(Matrix(support_points_in_dual_mesh_ref) - Matrix(support_points_in_dual_mesh))
+support_points_in_refined_mesh_err = norm(Matrix(support_points_in_refined_mesh_ref) - Matrix(support_points_in_refined_mesh))
