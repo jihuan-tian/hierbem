@@ -32,9 +32,9 @@ function read_msh(file_name)
 end
 
 # Load the data.
-Cp = CSV.read("Cp.dat", DataFrame; delim=' ', header=false, ignorerepeated=true)
-level0_support_points = CSV.read("level0-support-points.dat", DataFrame; delim=' ', header=false)
-level1_support_points = CSV.read("level1-support-points.dat", DataFrame; delim=' ', header=false)
+Cp = CSV.read("Cp.output", DataFrame; delim=' ', header=false, ignorerepeated=true)
+level0_support_points = CSV.read("level0-support-points.output", DataFrame; delim=' ', header=false)
+level1_support_points = CSV.read("level1-support-points.output", DataFrame; delim=' ', header=false)
 
 # Generate dictionaries for the support points, since if we iterate over the
 # cells to access those DoFs, the DoFs will be visited multiple times.

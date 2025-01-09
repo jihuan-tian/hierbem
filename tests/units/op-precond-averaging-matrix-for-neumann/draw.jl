@@ -3,9 +3,9 @@ using Meshes, Gmsh, GLMakie
 using CSV, DataFrames
 
 # Load the data.
-Cd = CSV.read("Cd.dat", DataFrame; delim=' ', header=false, ignorerepeated=true)
-support_points_in_dual_mesh = CSV.read("support-points-in-dual-space-on-dual-mesh.dat", DataFrame; delim=' ', header=false)
-support_points_in_refined_mesh = CSV.read("support-points-in-dual-space-on-refined-mesh.dat", DataFrame; delim=' ', header=false)
+Cd = CSV.read("Cd.output", DataFrame; delim=' ', header=false, ignorerepeated=true)
+support_points_in_dual_mesh = CSV.read("support-points-in-dual-space-on-dual-mesh.output", DataFrame; delim=' ', header=false)
+support_points_in_refined_mesh = CSV.read("support-points-in-dual-space-on-refined-mesh.output", DataFrame; delim=' ', header=false)
 
 # Read the mesh
 Gmsh.initialize()

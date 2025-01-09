@@ -2,13 +2,13 @@ using CSV, DataFrames
 using LinearAlgebra
 
 # Load the data.
-Cp = CSV.read("Cp.dat", DataFrame; delim=' ', header=false, ignorerepeated=true)
-level0_support_points = CSV.read("level0-support-points.dat", DataFrame; delim=' ', header=false)
-level1_support_points = CSV.read("level1-support-points.dat", DataFrame; delim=' ', header=false)
+Cp = CSV.read("Cp.output", DataFrame; delim=' ', header=false, ignorerepeated=true)
+level0_support_points = CSV.read("level0-support-points.output", DataFrame; delim=' ', header=false)
+level1_support_points = CSV.read("level1-support-points.output", DataFrame; delim=' ', header=false)
 
-Cp_ref = CSV.read("@CMAKE_CURRENT_SOURCE_DIR@/Cp.dat", DataFrame; delim=' ', header=false, ignorerepeated=true)
-level0_support_points_ref = CSV.read("@CMAKE_CURRENT_SOURCE_DIR@/level0-support-points.dat", DataFrame; delim=' ', header=false)
-level1_support_points_ref = CSV.read("@CMAKE_CURRENT_SOURCE_DIR@/level1-support-points.dat", DataFrame; delim=' ', header=false)
+Cp_ref = CSV.read("@CMAKE_CURRENT_SOURCE_DIR@/Cp.output", DataFrame; delim=' ', header=false, ignorerepeated=true)
+level0_support_points_ref = CSV.read("@CMAKE_CURRENT_SOURCE_DIR@/level0-support-points.output", DataFrame; delim=' ', header=false)
+level1_support_points_ref = CSV.read("@CMAKE_CURRENT_SOURCE_DIR@/level1-support-points.output", DataFrame; delim=' ', header=false)
 
 Cp_err = norm(Matrix(Cp_ref) - Matrix(Cp))
 level0_support_points_err = norm(Matrix(level0_support_points_ref) - Matrix(level0_support_points))

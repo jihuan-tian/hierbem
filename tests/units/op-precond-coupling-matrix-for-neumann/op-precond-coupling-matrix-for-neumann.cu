@@ -79,13 +79,13 @@ TEST_CASE(
   precond.get_coupling_matrix().get_sparsity_pattern().print_svg(sp_pattern);
 
   // Print the coupling matrix.
-  ofstream out("Cp.dat");
+  ofstream out("Cp.output");
   precond.get_coupling_matrix().print_formatted(out, 3, false, 0, "0");
   out.close();
 
   // Print the DoF indices and support points of the primal space on level 0,
   MappingQ<2, 3> mapping(1);
-  out.open("level0-support-points.dat");
+  out.open("level0-support-points.output");
 
   std::vector<types::global_dof_index> dof_indices_in_primal_cell(
     fe_primal_space.dofs_per_cell);
@@ -111,7 +111,7 @@ TEST_CASE(
   out.close();
 
   // Print the DoF indices and support points of the primal space on level 1,
-  out.open("level1-support-points.dat");
+  out.open("level1-support-points.output");
   for (const auto &cell :
        precond.get_dof_handler_primal_space().mg_cell_iterators_on_level(1))
     {

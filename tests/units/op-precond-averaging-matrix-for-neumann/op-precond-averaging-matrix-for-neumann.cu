@@ -80,14 +80,14 @@ TEST_CASE(
   precond.get_averaging_matrix().get_sparsity_pattern().print_svg(sp_pattern);
 
   // Print the averaging matrix.
-  ofstream out("Cd.dat");
+  ofstream out("Cd.output");
   precond.get_averaging_matrix().print_formatted(out, 3, false, 0, "0");
   out.close();
 
   // Print the DoF indices and support points of the primal space on level 0,
   // which is equivalent to DoFs in the dual space on the dual mesh.
   MappingQ<2, 3> mapping(1);
-  out.open("support-points-in-dual-space-on-dual-mesh.dat");
+  out.open("support-points-in-dual-space-on-dual-mesh.output");
 
   std::vector<types::global_dof_index> dof_indices_in_primal_cell(
     fe_primal_space.dofs_per_cell);
@@ -114,7 +114,7 @@ TEST_CASE(
 
   // Print the DoF indices and support points of the dual space on the refined
   // mesh.
-  out.open("support-points-in-dual-space-on-refined-mesh.dat");
+  out.open("support-points-in-dual-space-on-refined-mesh.output");
   std::vector<types::global_dof_index> dof_indices_in_refined_cell(
     fe_dual_space.dofs_per_cell);
   const std::vector<Point<2>> &unit_support_points_in_refined_cell =
