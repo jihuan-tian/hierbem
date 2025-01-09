@@ -1,11 +1,11 @@
 /**
- * @file op-precond-averaging-matrix-for-neumann.cc
- * @brief Verify building the averaging matrix for operator preconditioning used
+ * @file op-precond-coupling-matrix-for-neumann.cu
+ * @brief Verify building the coupling matrix for operator preconditioning used
  * in Laplace Neumann problem.
  *
  * @ingroup preconditioner
  * @author Jihuan Tian
- * @date 2025-01-08
+ * @date 2025-01-09
  */
 #include <deal.II/base/point.h>
 
@@ -31,13 +31,12 @@ using namespace dealii;
 using namespace std;
 
 TEST_CASE(
-  "Verify averaging matrix for operator preconditioning in Laplace Neumann",
+  "Verify coupling matrix for operator preconditioning in Laplace Neumann",
   "[preconditioner]")
 {
   INFO("*** test start");
   // Start Julia for postprocessing.
   jl_init();
-
 
   // Define the primal space and dual space with respect to the hyper singular
   // operator.
@@ -69,7 +68,7 @@ TEST_CASE(
 
   // Build the averaging matrix.
   precond.initialize_dof_handlers();
-  precond.build_averaging_matrix();
+  precond.build_coupling_matrix();
 
   // Export the refined mesh.
   ofstream refined_mesh_out("refined-mesh.msh");
@@ -77,17 +76,16 @@ TEST_CASE(
 
   // Print the sparsity pattern.
   ofstream sp_pattern("sparsity-pattern.svg");
-  precond.get_averaging_matrix().get_sparsity_pattern().print_svg(sp_pattern);
+  precond.get_coupling_matrix().get_sparsity_pattern().print_svg(sp_pattern);
 
-  // Print the averaging matrix.
-  ofstream out("Cd.dat");
-  precond.get_averaging_matrix().print_formatted(out, 3, false, 0, "0");
+  // Print the coupling matrix.
+  ofstream out("Cp.dat");
+  precond.get_coupling_matrix().print_formatted(out, 3, false, 0, "0");
   out.close();
 
   // Print the DoF indices and support points of the primal space on level 0,
-  // which is equivalent to DoFs in the dual space on the dual mesh.
   MappingQ<2, 3> mapping(1);
-  out.open("support-points-in-dual-space-on-dual-mesh.dat");
+  out.open("level0-support-points.dat");
 
   std::vector<types::global_dof_index> dof_indices_in_primal_cell(
     fe_primal_space.dofs_per_cell);
@@ -112,26 +110,20 @@ TEST_CASE(
 
   out.close();
 
-  // Print the DoF indices and support points of the dual space on the refined
-  // mesh.
-  out.open("support-points-in-dual-space-on-refined-mesh.dat");
-  std::vector<types::global_dof_index> dof_indices_in_refined_cell(
-    fe_dual_space.dofs_per_cell);
-  const std::vector<Point<2>> &unit_support_points_in_refined_cell =
-    fe_dual_space.get_unit_support_points();
-
+  // Print the DoF indices and support points of the primal space on level 1,
+  out.open("level1-support-points.dat");
   for (const auto &cell :
-       precond.get_dof_handler_dual_space().mg_cell_iterators_on_level(1))
+       precond.get_dof_handler_primal_space().mg_cell_iterators_on_level(1))
     {
-      cell->get_mg_dof_indices(dof_indices_in_refined_cell);
+      cell->get_mg_dof_indices(dof_indices_in_primal_cell);
 
       // Iterate over each DoF index in the current cell.
       unsigned int d = 0;
-      for (auto dof_index : dof_indices_in_refined_cell)
+      for (auto dof_index : dof_indices_in_primal_cell)
         {
           Point<3> support_point = mapping.transform_unit_to_real_cell(
-            cell, unit_support_points_in_refined_cell[d]);
-          out << dof_indices_in_refined_cell[d] << " " << support_point << "\n";
+            cell, unit_support_points_in_primal_cell[d]);
+          out << dof_indices_in_primal_cell[d] << " " << support_point << "\n";
           d++;
         }
     }
@@ -140,13 +132,13 @@ TEST_CASE(
 
   (void)jl_eval_string("include(\"process.jl\")");
 
-  jl_value_t *ret = jl_eval_string("Cd_err");
+  jl_value_t *ret = jl_eval_string("Cp_err");
   REQUIRE(jl_unbox_float64(ret) == 0.0);
 
-  ret = jl_eval_string("support_points_in_dual_mesh_err");
+  ret = jl_eval_string("level0_support_points_err");
   REQUIRE(jl_unbox_float64(ret) == 0.0);
 
-  ret = jl_eval_string("support_points_in_refined_mesh_err");
+  ret = jl_eval_string("level1_support_points_err");
   REQUIRE(jl_unbox_float64(ret) == 0.0);
 
   // Finalize Julia before exit.
