@@ -99,7 +99,7 @@ public:
 
 #pragma endregion
 
-#pragma region ==== Internal class public member function decls ====
+#pragma region == == Internal class public member function decls == ==
   /*
   The actual implementations of LaplaceBEM public member functions are placed
   here instead of in the LaplaceBEM class itself, in order to prevent redudant
@@ -606,12 +606,19 @@ private:
   /**
    * Natural density \f$w_{rm eq}\f$, which is an intermediate solution used
    * in the Neumann boundary problem.
+   *
+   * \alert{It adopts the external DoF numbering, since it will be multiplied by
+   * the mass matrix, which is also built with this numbering.}
    */
   Vector<double> natural_density_;
 
   /**
    * The result vector for the multiplication of the mass matrix and the
-   * natural density \f$w_{\rm eq}\f$
+   * natural density \f$w_{\rm eq}\f$.
+   *
+   * \alert{Because the outer product of this vector with itself will be added
+   * to the hyper singular matrix \f$\mathcal{D}\f$, when \f$\mathcal{D}\f$ is
+   * an \hmat, it adopts the internal DoF numbering.}
    */
   Vector<double> mass_vmult_weq_;
 
@@ -620,6 +627,8 @@ private:
    * w_{\rm eq} = 1\f$ for solving the natural density \f$w_{\rm eq}\f$. Each
    * component in this vector is actually an integration of each test
    * function.
+   *
+   * \alert{This vector adopts the internal DoF numbering.}
    */
   Vector<double> system_rhs_for_natural_density_;
 
@@ -1039,10 +1048,30 @@ LaplaceBEM<dim, spacedim>::Priv::solve_natural_density()
   std::cout << "=== Assemble the RHS vector for natural density ==="
             << std::endl;
 
-  assemble_rhs_linear_form_vector(1.0,
-                                  dof_handler_for_neumann_space_,
-                                  QGauss<2>(fe_for_neumann_space_.degree + 1),
-                                  system_rhs_for_natural_density_);
+  if (!use_hmat_)
+    {
+      // When the full matrix version is used, directly assemble the RHS vector
+      // in the external DoF numbering.
+      assemble_rhs_linear_form_vector(1.0,
+                                      dof_handler_for_neumann_space_,
+                                      QGauss<2>(fe_for_neumann_space_.degree +
+                                                1),
+                                      system_rhs_for_natural_density_);
+    }
+  else
+    {
+      // When the \hmat version is used, the assembled RHS vector in the
+      // external DoF numbering should be converted to the internal numbering.
+      Vector<double> system_rhs_for_natural_density_external_dof_numbering;
+      assemble_rhs_linear_form_vector(
+        1.0,
+        dof_handler_for_neumann_space_,
+        QGauss<2>(fe_for_neumann_space_.degree + 1),
+        system_rhs_for_natural_density_external_dof_numbering);
+      permute_vector(system_rhs_for_natural_density_external_dof_numbering,
+                     *dof_i2e_numbering_for_neumann_space_on_neumann_domain_,
+                     system_rhs_for_natural_density_);
+    }
 
   /**
    * Solve the natural density \f$w_{\rm eq}\f$.
@@ -1056,6 +1085,14 @@ LaplaceBEM<dim, spacedim>::Priv::solve_natural_density()
                    natural_density_,
                    system_rhs_for_natural_density_,
                    PreconditionIdentity());
+
+      /**
+       * Calculate the stabilization factor \f$\alpha\f$, which is the inner
+       * product of \f$w_{\rm eq}\f$ and the RHS vector \f$\langle 1, \psi_i
+       * \rangle\f$.
+       */
+      alpha_for_neumann_ =
+        1.0 / 4.0 / (natural_density_ * system_rhs_for_natural_density_);
     }
   else
     {
@@ -1089,23 +1126,32 @@ LaplaceBEM<dim, spacedim>::Priv::solve_natural_density()
             max_hmat_rank_for_preconditioner_);
         }
 
+      Vector<double> natural_density_internal_dof_numbering(
+        natural_density_.size());
       solver.solve(V1_hmat_,
-                   natural_density_,
+                   natural_density_internal_dof_numbering,
                    system_rhs_for_natural_density_,
                    V1_hmat_preconditioner_);
+      // Convert the natural density from the internal DoF numbering to
+      // external, since it is to be multiplied by the mass matrix, which also
+      // adopts the external numbering.
+      permute_vector(natural_density_internal_dof_numbering,
+                     *dof_e2i_numbering_for_neumann_space_on_neumann_domain_,
+                     natural_density_);
+
+      /**
+       * Calculate the stabilization factor \f$\alpha\f$, which is the inner
+       * product of \f$w_{\rm eq}\f$ and the RHS vector \f$\langle 1, \psi_i
+       * \rangle\f$.
+       */
+      alpha_for_neumann_ = 1.0 / 4.0 /
+                           (natural_density_internal_dof_numbering *
+                            system_rhs_for_natural_density_);
 
       std::cout << "=== Release V and its preconditioner ===" << std::endl;
       V1_hmat_.release();
       V1_hmat_preconditioner_.release();
     }
-
-  /**
-   * Calculate the stabilization factor \f$\alpha\f$, which is the inner
-   * product of \f$w_{\rm eq}\f$ and the RHS vector \f$\langle 1, \psi_i
-   * \rangle\f$.
-   */
-  alpha_for_neumann_ =
-    1.0 / 4.0 / (natural_density_ * system_rhs_for_natural_density_);
 
   std::cout << "=== Release the RHS vector for solving natural density ==="
             << std::endl;
@@ -1921,7 +1967,9 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
 
           /**
            * Allocate memory for the natural density \f$w_{\rm eq}\in
-           * H^{-1/2}(\Gamma)\f$ and its associated right hand side vector.
+           * H^{-1/2}(\Gamma)\f$ and its associated right hand side vector. N.B.
+           * This RHS vector is only needed when the solution space is
+           * \f$H^{-1/2}_{\ast}\f$.
            */
           natural_density_.reinit(n_dofs_for_neumann_space);
 
@@ -3312,11 +3360,20 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
 
           timer.start();
 
+          Vector<double> mass_vmult_weq_external_dof_numbering(
+            mass_vmult_weq_.size());
           assemble_fem_mass_matrix_vmult<dim, spacedim, double, Vector<double>>(
             dof_handler_for_dirichlet_space_,
             dof_handler_for_neumann_space_,
             natural_density_,
             QGauss<2>(fe_order_for_dirichlet_space_ + 1),
+            mass_vmult_weq_external_dof_numbering);
+          // We should convert the result vector \f$a\f$ to the internal
+          // numbering, so that \f$\alpha a a^{\mathrm{T}}\f$ can be added into
+          // the hyper singular matrix \f$\mathcal{D}\f$.
+          permute_vector(
+            mass_vmult_weq_external_dof_numbering,
+            *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain_,
             mass_vmult_weq_);
 
           timer.stop();

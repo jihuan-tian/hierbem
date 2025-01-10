@@ -869,8 +869,14 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
        * size of the input vector @p natural_density and the output vector
        * @p mass_vmult_weq.
        */
-      Vector<RangeNumberType> mass_vmult_weq(dof_handler_dual_space.n_dofs(1));
-      mass_matrix.vmult(mass_vmult_weq, natural_density);
+      Vector<RangeNumberType> mass_vmult_weq_external_dof_numbering(
+        dof_handler_dual_space.n_dofs(1));
+      Vector<RangeNumberType> mass_vmult_weq_internal_dof_numbering(
+        dof_handler_dual_space.n_dofs(1));
+      mass_matrix.vmult(mass_vmult_weq_external_dof_numbering, natural_density);
+      permute_vector(mass_vmult_weq_external_dof_numbering,
+                     ct.get_internal_to_external_dof_numbering(),
+                     mass_vmult_weq_internal_dof_numbering);
 
       /**
        * Assemble the preconditioning matrix.
@@ -880,7 +886,7 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
                                      aca_config,
                                      preconditioner_kernel,
                                      1.0,
-                                     mass_vmult_weq,
+                                     mass_vmult_weq_internal_dof_numbering,
                                      alpha_for_neumann,
                                      dof_to_cell_topo_dual_space,
                                      dof_to_cell_topo_dual_space,
