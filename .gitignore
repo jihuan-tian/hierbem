@@ -6,6 +6,10 @@ cmake_install.cmake
 CMakeFiles/
 Testing/
 fontconfig/
+DartConfiguration.tcl
+
+# Ignore clang cache
+.cache
 
 # Ignore binary directory
 *.debug
@@ -15,6 +19,7 @@ build
 # Ignore backup files
 *.bak
 *.output.new
+*.FCBak
 
 # Ignore data files
 *.dat
@@ -63,6 +68,7 @@ core
 # Ignore generated documentation
 latex/
 html/
+doc/theory-and-implementation/hierbem.pdf
 
 # Ignore mesh files
 *.msh
@@ -78,6 +84,7 @@ scripts/init-test*.sh
 
 # Ignore Visual Studio Code settings
 .vscode
+hierbem.code-workspace
 
 # Ignore vcpkg files
 vcpkg_installed
@@ -107,3 +114,9 @@ tests/functions/laplace-bem/mixed-l-shape/process.m
 tests/functions/laplace-bem/neumann-hmatrix/process.m
 tests/functions/laplace-bem/dirichlet-full-matrix/process.m
 tests/functions/laplace-bem/neumann-full-matrix/process.m
+tests/units/op-precond-hmatrix-for-dirichlet/process.m
+tests/functions/laplace-bem/dirichlet-hmatrix-op-precond/process.m
+tests/functions/laplace-bem/dirichlet-hmatrix-two-spheres-op-precond/process.m
+tests/functions/laplace-bem/neumann-hmatrix-op-precond/process.m
+tests/units/op-precond-averaging-matrix-for-neumann/process.jl
+tests/units/op-precond-coupling-matrix-for-neumann/process.jl

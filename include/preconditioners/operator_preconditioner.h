@@ -10,7 +10,6 @@
 #define HIERBEM_INCLUDE_PRECONDITIONERS_OPERATOR_PRECONDITIONER_H_
 
 #include <deal.II/base/logstream.h>
-#include <deal.II/base/parallel.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature.h>
 #include <deal.II/base/subscriptor.h>
@@ -99,6 +98,7 @@ public:
   setup_preconditioner(
     const unsigned int                               thread_num,
     const HMatrixParameters                         &hmat_params,
+    const SubdomainTopology<dim, spacedim>          &subdomain_topology,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                     &material_id_to_mapping_index,
@@ -174,6 +174,7 @@ public:
   build_preconditioner_hmat_on_refined_mesh(
     const unsigned int                               thread_num,
     const HMatrixParameters                         &hmat_params,
+    const SubdomainTopology<dim, spacedim>          &subdomain_topology,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                     &material_id_to_mapping_index,
@@ -817,6 +818,7 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
   build_preconditioner_hmat_on_refined_mesh(
     const unsigned int                               thread_num,
     const HMatrixParameters                         &hmat_params,
+    const SubdomainTopology<dim, spacedim>          &subdomain_topology,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                     &material_id_to_mapping_index,
@@ -838,26 +840,28 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
 
   /**
    * When the kernel function is the hyper-singular function, which has a
-   * non-trival kernel space \f$\mathrm{span}\{1\}\f$, we need to add a
-   * regularization term to the bilinear form. In other cases, regularization
+   * non-trival kernel space, e.g. \f$\mathrm{span}\{1\}\f$, we need to add a
+   * stabilization term to the bilinear form. In other cases, stabilization
    * is not needed.
    */
   if (preconditioner_kernel.kernel_type == KernelType::HyperSingularRegular)
     {
       /**
-       * Set natural density as constant vector 1 and set the alpha factor
-       * as 1.
+       * Set natural density as constant vector 1 on each subdomain and set the
+       * alpha factor as 1.
        */
-      Vector<RangeNumberType> natural_density(
-        dof_handler_primal_space.n_dofs(1));
-      dealii::internal::VectorOperations::Vector_set<double> setter(
-        1.0, natural_density.begin());
-      auto partitioner =
-        std::make_shared<dealii::parallel::internal::TBBPartitioner>();
-      dealii::internal::VectorOperations::parallel_for(setter,
-                                                       0,
-                                                       natural_density.size(),
-                                                       partitioner);
+      const unsigned int n_subdomains =
+        subdomain_topology.get_subdomain_to_surface().size();
+      std::vector<Vector<RangeNumberType>> natural_densities(n_subdomains);
+      for (auto &vec : natural_densities)
+        vec.reinit(dof_handler_primal_space.n_dofs(1));
+
+      assemble_indicator_vectors_for_subdomains(dof_handler_primal_space,
+                                                subdomain_topology,
+                                                mappings,
+                                                material_id_to_mapping_index,
+                                                natural_densities);
+
       const double alpha_for_neumann = 1.0;
 
       /**
@@ -869,14 +873,20 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
        * size of the input vector @p natural_density and the output vector
        * @p mass_vmult_weq.
        */
+      std::vector<Vector<RangeNumberType>> mass_vmult_weq(n_subdomains);
+      for (auto &vec : mass_vmult_weq)
+        vec.reinit(dof_handler_dual_space.n_dofs(1));
+
       Vector<RangeNumberType> mass_vmult_weq_external_dof_numbering(
         dof_handler_dual_space.n_dofs(1));
-      Vector<RangeNumberType> mass_vmult_weq_internal_dof_numbering(
-        dof_handler_dual_space.n_dofs(1));
-      mass_matrix.vmult(mass_vmult_weq_external_dof_numbering, natural_density);
-      permute_vector(mass_vmult_weq_external_dof_numbering,
-                     ct.get_internal_to_external_dof_numbering(),
-                     mass_vmult_weq_internal_dof_numbering);
+      for (unsigned int i = 0; i < n_subdomains; i++)
+        {
+          mass_matrix.vmult(mass_vmult_weq_external_dof_numbering,
+                            natural_densities[i]);
+          permute_vector(mass_vmult_weq_external_dof_numbering,
+                         dof_i2e_numbering,
+                         mass_vmult_weq[i]);
+        }
 
       /**
        * Assemble the preconditioning matrix.
@@ -886,7 +896,7 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
                                      aca_config,
                                      preconditioner_kernel,
                                      1.0,
-                                     mass_vmult_weq_internal_dof_numbering,
+                                     mass_vmult_weq,
                                      alpha_for_neumann,
                                      dof_to_cell_topo_dual_space,
                                      dof_to_cell_topo_dual_space,
@@ -976,6 +986,7 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
   setup_preconditioner(
     const unsigned int                               thread_num,
     const HMatrixParameters                         &hmat_params,
+    const SubdomainTopology<dim, spacedim>          &subdomain_topology,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                     &material_id_to_mapping_index,
@@ -996,6 +1007,7 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
   build_cluster_and_block_cluster_trees(hmat_params, mappings);
   build_preconditioner_hmat_on_refined_mesh(thread_num,
                                             hmat_params,
+                                            subdomain_topology,
                                             mappings,
                                             material_id_to_mapping_index,
                                             normal_detector,

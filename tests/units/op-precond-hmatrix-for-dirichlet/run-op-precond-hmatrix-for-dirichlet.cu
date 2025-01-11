@@ -20,6 +20,7 @@
 #include "grid_out_ext.h"
 #include "hmatrix/hmatrix_parameters.h"
 #include "preconditioners/preconditioner_for_laplace_dirichlet.h"
+#include "subdomain_topology.h"
 
 using namespace Catch::Matchers;
 using namespace HierBEM;
@@ -109,6 +110,9 @@ run_op_precond_hmatrix_for_dirichlet()
   std::map<types::material_id, unsigned int> material_id_to_mapping_index;
   material_id_to_mapping_index[0] = 1;
 
+  SubdomainTopology<dim, spacedim> subdomain_topology;
+  subdomain_topology.generate_single_domain_topology_for_dealii_model({0});
+
   // Define the primal space and dual space with respect to the single layer
   // potential operator.
   FE_DGQ<dim, spacedim> fe_primal_space(0);
@@ -126,7 +130,7 @@ run_op_precond_hmatrix_for_dirichlet()
   precond.get_triangulation().refine_global();
 
   // Build the mass matrix on the refined mesh first, because it
-  // is needed by the preconditioner matrix, which involves the regularization
+  // is needed by the preconditioner matrix, which involves the stabilization
   // of the hypersingular bilinear form.
   precond.initialize_dof_handlers();
   precond.build_dof_to_cell_topology();
@@ -143,6 +147,7 @@ run_op_precond_hmatrix_for_dirichlet()
   precond.build_preconditioner_hmat_on_refined_mesh(
     MultithreadInfo::n_threads(),
     hmat_params,
+    subdomain_topology,
     mappings,
     material_id_to_mapping_index,
     OutwardSurfaceNormalDetector(),

@@ -1,7 +1,8 @@
 /**
- * \file dirichlet-hmatrix-two-spheres.cc
+ * \file dirichlet-hmatrix-two-spheres-op-precond.cc
  * \brief
- * \ingroup testers
+ * \ingroup preconditioner
+ *
  * \author Jihuan Tian
  * \date 2022-09-23
  */
@@ -18,7 +19,7 @@ extern void
 run_dirichlet_hmatrix_two_spheres();
 
 TEST_CASE(
-  "Solve Laplace problem with Dirichlet boundary condition for the two sphere model",
+  "Solve Laplace problem with Dirichlet boundary condition for the two sphere model using operator preconditioning",
   "[laplace]")
 {
   HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();

@@ -313,13 +313,6 @@ LaplaceBEM<dim, spacedim>::run()
 
 template <int dim, int spacedim>
 void
-LaplaceBEM<dim, spacedim>::verify_neumann_solution_in_space()
-{
-  priv_->verify_neumann_solution_in_space();
-}
-
-template <int dim, int spacedim>
-void
 LaplaceBEM<dim, spacedim>::print_memory_consumption_table(
   std::ostream &out) const
 {
@@ -384,6 +377,13 @@ LaplaceBEM<dim, spacedim>::assign_neumann_bc(
   const std::vector<EntityTag> &surface_tags)
 {
   priv_->assign_neumann_bc(f, surface_tags);
+}
+
+template <int dim, int spacedim>
+bool
+LaplaceBEM<dim, spacedim>::validate_subdomain_topology() const
+{
+  return priv_->validate_subdomain_topology();
 }
 
 template <int dim, int spacedim>

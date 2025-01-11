@@ -6,6 +6,11 @@
   ```octave
   octave> pkg install -forge matgeom
   ```
+* Install Julia and the following packages to run tests:
+  * `CSV` and `DataFrames` for reading data files
+  * `Gmsh` for reading Gmsh MSH files
+  * `GLMakie` and `Colors` for visualization
+  * `Meshes` for visualizing mesh
 * Clone `vcpkg` into some directory (assume the directory is `<SRC>`) and initialize it:
   ```bash
   cd <SRC>
