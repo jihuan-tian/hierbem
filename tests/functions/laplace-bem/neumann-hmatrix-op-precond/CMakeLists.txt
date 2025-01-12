@@ -31,6 +31,26 @@ include(CTest)
 include(Catch)
 catch_discover_tests(${_target})
 
+# Copy the reference result file depending on the solution space adopted for the
+# Neumann problem.
+if(HBEM_NEUMANN_SOLUTION_SPACE EQUAL 1)
+  add_custom_command(
+    TARGET ${_target}
+    POST_BUILD
+    COMMAND
+      ${CMAKE_COMMAND} -E copy
+      ${CMAKE_CURRENT_SOURCE_DIR}/reference-solution-space1.output
+      ${CMAKE_CURRENT_SOURCE_DIR}/reference.output)
+elseif(HBEM_NEUMANN_SOLUTION_SPACE EQUAL 2)
+  add_custom_command(
+    TARGET ${_target}
+    POST_BUILD
+    COMMAND
+      ${CMAKE_COMMAND} -E copy
+      ${CMAKE_CURRENT_SOURCE_DIR}/reference-solution-space2.output
+      ${CMAKE_CURRENT_SOURCE_DIR}/reference.output)
+endif()
+
 add_custom_command(
   TARGET ${_target}
   POST_BUILD

@@ -120,3 +120,6 @@ tests/functions/laplace-bem/dirichlet-hmatrix-two-spheres-op-precond/process.m
 tests/functions/laplace-bem/neumann-hmatrix-op-precond/process.m
 tests/units/op-precond-averaging-matrix-for-neumann/process.jl
 tests/units/op-precond-coupling-matrix-for-neumann/process.jl
+tests/functions/laplace-bem/neumann-full-matrix/reference.output
+tests/functions/laplace-bem/neumann-hmatrix/reference.output
+tests/functions/laplace-bem/neumann-hmatrix-op-precond/reference.output

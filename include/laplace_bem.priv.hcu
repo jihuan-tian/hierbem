@@ -1074,7 +1074,8 @@ LaplaceBEM<dim, spacedim>::Priv::solve_natural_density()
     {
       // When the \hmat version is used, the assembled RHS vector in the
       // external DoF numbering should be converted to the internal numbering.
-      Vector<double> system_rhs_for_natural_density_external_dof_numbering;
+      Vector<double> system_rhs_for_natural_density_external_dof_numbering(
+        system_rhs_for_natural_density_.size());
       assemble_rhs_linear_form_vector(
         1.0,
         dof_handler_for_neumann_space_,
