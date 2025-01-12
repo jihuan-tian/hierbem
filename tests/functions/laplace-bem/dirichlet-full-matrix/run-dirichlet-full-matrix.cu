@@ -120,7 +120,16 @@ run_dirichlet_full_matrix()
   DirichletBC dirichlet_bc(source_loc);
   bem.assign_dirichlet_bc(dirichlet_bc);
 
-  bem.run();
+  if (bem.validate_subdomain_topology())
+    {
+      bem.run();
 
-  bem.print_memory_consumption_table(deallog.get_file_stream());
+      bem.print_memory_consumption_table(deallog.get_file_stream());
+    }
+  else
+    {
+      deallog << "Invalid subdomains!" << std::endl;
+    }
+
+  ofs.close();
 }
