@@ -210,7 +210,7 @@ assemble_kernel_row(
   Vector<RangeNumberType>                             &row_vector,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const Vector<RangeNumberType>                       &mass_vmult_weq,
+  const std::vector<Vector<RangeNumberType>>          &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
   const types::global_dof_index                        row_dof_index,
   const std::vector<types::global_dof_index>          &column_dof_indices,
@@ -276,8 +276,9 @@ assemble_kernel_row(
         scratch_data_gpu,
         copy_data);
 
-      row_vector(j) += stabilization_factor * mass_vmult_weq(row_dof_index) *
-                       mass_vmult_weq(column_dof_indices[j]);
+      for (const auto &vec : mass_vmult_weq)
+        row_vector(j) += stabilization_factor * vec(row_dof_index) *
+                         vec(column_dof_indices[j]);
     }
 }
 
@@ -397,7 +398,7 @@ assemble_kernel_row(
   Vector<RangeNumberType>                             &row_vector,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const Vector<RangeNumberType>                       &mass_vmult_weq,
+  const std::vector<Vector<RangeNumberType>>          &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
   const types::global_dof_index                        row_dof_index,
   const std::vector<types::global_dof_index>          &column_dof_indices,
@@ -443,8 +444,9 @@ assemble_kernel_row(
 
   for (size_type j = 0; j < column_dof_indices.size(); j++)
     {
-      row_vector(j) += stabilization_factor * mass_vmult_weq(row_dof_index) *
-                       mass_vmult_weq(column_dof_indices[j]);
+      for (const auto &vec : mass_vmult_weq)
+        row_vector(j) += stabilization_factor * vec(row_dof_index) *
+                         vec(column_dof_indices[j]);
     }
 }
 
@@ -589,7 +591,7 @@ assemble_kernel_column(
   Vector<RangeNumberType>                             &col_vector,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const Vector<RangeNumberType>                       &mass_vmult_weq,
+  const std::vector<Vector<RangeNumberType>>          &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
   const std::vector<types::global_dof_index>          &row_dof_indices,
   const types::global_dof_index                        col_dof_index,
@@ -651,9 +653,9 @@ assemble_kernel_column(
         scratch_data_gpu,
         copy_data);
 
-      col_vector(i) += stabilization_factor *
-                       mass_vmult_weq(row_dof_indices[i]) *
-                       mass_vmult_weq(col_dof_index);
+      for (const auto &vec : mass_vmult_weq)
+        col_vector(i) +=
+          stabilization_factor * vec(row_dof_indices[i]) * vec(col_dof_index);
     }
 }
 
@@ -770,7 +772,7 @@ assemble_kernel_column(
   Vector<RangeNumberType>                             &col_vector,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const Vector<RangeNumberType>                       &mass_vmult_weq,
+  const std::vector<Vector<RangeNumberType>>          &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
   const std::vector<types::global_dof_index>          &row_dof_indices,
   const types::global_dof_index                        col_dof_index,
@@ -816,9 +818,9 @@ assemble_kernel_column(
 
   for (size_type i = 0; i < row_dof_indices.size(); i++)
     {
-      col_vector(i) += stabilization_factor *
-                       mass_vmult_weq(row_dof_indices[i]) *
-                       mass_vmult_weq(col_dof_index);
+      for (const auto &vec : mass_vmult_weq)
+        col_vector(i) +=
+          stabilization_factor * vec(row_dof_indices[i]) * vec(col_dof_index);
     }
 }
 
@@ -1034,7 +1036,7 @@ random_select_ref_row(
   Vector<RangeNumberType>                             &row_vector,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const Vector<RangeNumberType>                       &mass_vmult_weq,
+  const std::vector<Vector<RangeNumberType>>          &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
   std::forward_list<size_type>                        &remaining_row_indices,
   const size_type                                      current_ref_row_index,
@@ -1311,7 +1313,7 @@ random_select_ref_row(
   Vector<RangeNumberType>                             &row_vector,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const Vector<RangeNumberType>                       &mass_vmult_weq,
+  const std::vector<Vector<RangeNumberType>>          &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
   std::forward_list<size_type>                        &remaining_row_indices,
   const size_type                                      current_ref_row_index,
@@ -1739,7 +1741,7 @@ random_select_ref_column(
   Vector<RangeNumberType>                             &col_vector,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const Vector<RangeNumberType>                       &mass_vmult_weq,
+  const std::vector<Vector<RangeNumberType>>          &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
   std::forward_list<size_type>                        &remaining_col_indices,
   const size_type                                      current_ref_col_index,
@@ -2018,7 +2020,7 @@ random_select_ref_column(
   Vector<RangeNumberType>                             &col_vector,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const Vector<RangeNumberType>                       &mass_vmult_weq,
+  const std::vector<Vector<RangeNumberType>>          &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
   std::forward_list<size_type>                        &remaining_col_indices,
   const size_type                                      current_ref_col_index,
@@ -2929,7 +2931,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   const ACAConfig                                     &aca_config,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const Vector<RangeNumberType>                       &mass_vmult_weq,
+  const std::vector<Vector<RangeNumberType>>          &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
   const std::array<types::global_dof_index, 2>        &row_dof_index_range,
   const std::array<types::global_dof_index, 2>        &col_dof_index_range,
@@ -4255,7 +4257,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   const ACAConfig                                     &aca_config,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const Vector<RangeNumberType>                       &mass_vmult_weq,
+  const std::vector<Vector<RangeNumberType>>          &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
   const std::array<types::global_dof_index, 2>        &row_dof_index_range,
   const std::array<types::global_dof_index, 2>        &col_dof_index_range,
@@ -5866,7 +5868,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
   const ACAConfig                                     &aca_config,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const Vector<RangeNumberType>                       &mass_vmult_weq,
+  const std::vector<Vector<RangeNumberType>>          &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
   const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
   const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
@@ -5975,10 +5977,11 @@ fill_hmatrix_leaf_node_with_aca_plus(
                               // N.B. The internal and local DoF indices are
                               // used directly to access the result vector
                               // of \f$M w_{\rm eq}\f$.
-                              (*fullmat)(i, j) +=
-                                stabilization_factor *
-                                mass_vmult_weq((*row_index_range)[0] + i) *
-                                mass_vmult_weq((*col_index_range)[0] + j);
+                              for (const auto &vec : mass_vmult_weq)
+                                (*fullmat)(i, j) +=
+                                  stabilization_factor *
+                                  vec((*row_index_range)[0] + i) *
+                                  vec((*col_index_range)[0] + j);
                             }
                         }
 
@@ -6037,10 +6040,11 @@ fill_hmatrix_leaf_node_with_aca_plus(
                               // N.B. The internal and local DoF indices are
                               // used directly to access the result vector
                               // of \f$M w_{\rm eq}\f$.
-                              (*fullmat)(i, j) +=
-                                stabilization_factor *
-                                mass_vmult_weq((*row_index_range)[0] + i) *
-                                mass_vmult_weq((*col_index_range)[0] + j);
+                              for (const auto &vec : mass_vmult_weq)
+                                (*fullmat)(i, j) +=
+                                  stabilization_factor *
+                                  vec((*row_index_range)[0] + i) *
+                                  vec((*col_index_range)[0] + j);
                             }
                         }
 
@@ -6094,10 +6098,10 @@ fill_hmatrix_leaf_node_with_aca_plus(
                       // N.B. The internal and local DoF indices are
                       // used directly to access the result vector of
                       // \f$M w_{\rm eq}\f$.
-                      (*fullmat)(i, j) +=
-                        stabilization_factor *
-                        mass_vmult_weq((*row_index_range)[0] + i) *
-                        mass_vmult_weq((*col_index_range)[0] + j);
+                      for (const auto &vec : mass_vmult_weq)
+                        (*fullmat)(i, j) += stabilization_factor *
+                                            vec((*row_index_range)[0] + i) *
+                                            vec((*col_index_range)[0] + j);
                     }
                 }
             }
@@ -6736,7 +6740,7 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
   const ACAConfig                                     &aca_config,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const Vector<RangeNumberType>                       &mass_vmult_weq,
+  const std::vector<Vector<RangeNumberType>>          &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
   const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
   const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
@@ -7018,7 +7022,7 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
   const ACAConfig                                     &aca_config,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const Vector<RangeNumberType>                       &mass_vmult_weq,
+  const std::vector<Vector<RangeNumberType>>          &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
   const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
   const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
@@ -7095,8 +7099,8 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
 
 
 /**
- * Add the regularization matrix for the bilinear form of the hyper-singular
- * kernel to the range of near field matrices. The regularization matrix is
+ * Add the stabilization matrix for the bilinear form of the hyper-singular
+ * kernel to the range of near field matrices. The stabilization matrix is
  * \f$\alpha a a^T\f$, where \f$a = M w_{\rm eq}\f$ as a column vector is the
  * multiplication of FEM mass matrix and the natural density.
  *
@@ -7109,13 +7113,13 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
  */
 template <int spacedim, typename RangeNumberType = double>
 void
-regularize_near_field_hmatrices_for_hypersingular_kernel(
+stabilize_near_field_hmatrices_for_hypersingular_kernel(
   const tbb::blocked_range<
     typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
-                                &range,
-  const Vector<RangeNumberType> &mass_vmult_weq,
-  const RangeNumberType          stabilization_factor,
-  const bool                     enable_build_symmetric_hmat = true)
+                                             &range,
+  const std::vector<Vector<RangeNumberType>> &mass_vmult_weq,
+  const RangeNumberType                       stabilization_factor,
+  const bool enable_build_symmetric_hmat = true)
 {
   for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
          iter = range.begin();
@@ -7162,10 +7166,10 @@ regularize_near_field_hmatrices_for_hypersingular_kernel(
                            * accessed using the global DoF indices in the
                            * internal numbering.
                            */
-                          (*fullmat)(i, j) +=
-                            stabilization_factor *
-                            mass_vmult_weq((*row_index_range)[0] + i) *
-                            mass_vmult_weq((*col_index_range)[0] + j);
+                          for (const auto &vec : mass_vmult_weq)
+                            (*fullmat)(i, j) += stabilization_factor *
+                                                vec((*row_index_range)[0] + i) *
+                                                vec((*col_index_range)[0] + j);
                         }
                     }
 
@@ -7189,10 +7193,10 @@ regularize_near_field_hmatrices_for_hypersingular_kernel(
                     {
                       for (size_t j = 0; j < fullmat->n(); j++)
                         {
-                          (*fullmat)(i, j) +=
-                            stabilization_factor *
-                            mass_vmult_weq((*row_index_range)[0] + i) *
-                            mass_vmult_weq((*col_index_range)[0] + j);
+                          for (const auto &vec : mass_vmult_weq)
+                            (*fullmat)(i, j) += stabilization_factor *
+                                                vec((*row_index_range)[0] + i) *
+                                                vec((*col_index_range)[0] + j);
                         }
                     }
 
@@ -7217,10 +7221,10 @@ regularize_near_field_hmatrices_for_hypersingular_kernel(
             {
               for (size_t j = 0; j < fullmat->n(); j++)
                 {
-                  (*fullmat)(i, j) +=
-                    stabilization_factor *
-                    mass_vmult_weq((*row_index_range)[0] + i) *
-                    mass_vmult_weq((*col_index_range)[0] + j);
+                  for (const auto &vec : mass_vmult_weq)
+                    (*fullmat)(i, j) += stabilization_factor *
+                                        vec((*row_index_range)[0] + i) *
+                                        vec((*col_index_range)[0] + j);
                 }
             }
         }
@@ -7448,7 +7452,7 @@ fill_hmatrix_with_aca_plus_serial(
   const ACAConfig                                     &aca_config,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const Vector<RangeNumberType>                       &mass_vmult_weq,
+  const std::vector<Vector<RangeNumberType>>          &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
   const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
   const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
@@ -8268,7 +8272,7 @@ fill_hmatrix_with_aca_plus_smp(
   const ACAConfig                                     &aca_config,
   const KernelFunctionType<spacedim, RangeNumberType> &kernel,
   const RangeNumberType                                kernel_factor,
-  const Vector<RangeNumberType>                       &mass_vmult_weq,
+  const std::vector<Vector<RangeNumberType>>          &mass_vmult_weq,
   const RangeNumberType                                stabilization_factor,
   const DoFToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
   const DoFToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
@@ -8287,10 +8291,10 @@ fill_hmatrix_with_aca_plus_smp(
   const SurfaceNormalDetector &normal_detector,
   const bool                   enable_build_symmetric_hmat = false)
 {
-  LogStream::Prefix prefix_string("build_hmatrix_aca with regularization");
+  LogStream::Prefix prefix_string("build_hmatrix_aca with stabilization");
 #if ENABLE_NVTX == 1
   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-    "build_hmatrix_aca with regularization");
+    "build_hmatrix_aca with stabilization");
 #endif
 
   Timer timer;
@@ -8607,7 +8611,7 @@ fill_hmatrix_with_aca_plus_smp(
   ring_buffer_for_regular.release();
 
   /**
-   * @internal Perform regularization to the kernel.
+   * @internal Perform stabilization to the kernel.
    */
   unsigned int grain_size = near_field_set_size / thread_num;
   if (grain_size == 0)
@@ -8627,10 +8631,10 @@ fill_hmatrix_with_aca_plus_smp(
       std::bind(static_cast<
                   void (*)(const tbb::blocked_range<typename std::vector<
                              HMatrix<spacedim, RangeNumberType> *>::iterator> &,
-                           const Vector<RangeNumberType> &,
+                           const std::vector<Vector<RangeNumberType>> &,
                            const RangeNumberType,
                            const bool)>(
-                  regularize_near_field_hmatrices_for_hypersingular_kernel<
+                  stabilize_near_field_hmatrices_for_hypersingular_kernel<
                     spacedim,
                     RangeNumberType>),
                 std::placeholders::_1,
@@ -8674,7 +8678,7 @@ fill_hmatrix_with_aca_plus_smp(
                     const ACAConfig &,
                     const KernelFunctionType<spacedim, RangeNumberType> &,
                     const RangeNumberType,
-                    const Vector<RangeNumberType> &,
+                    const std::vector<Vector<RangeNumberType>> &,
                     const RangeNumberType,
                     const DoFToCellTopology<dim, spacedim> &,
                     const DoFToCellTopology<dim, spacedim> &,

@@ -161,15 +161,24 @@ run_dirichlet_hmatrix_two_spheres()
   timer.stop();
   print_wall_time(deallog, timer, "assign boundary conditions");
 
-  timer.start();
+  if (bem.validate_subdomain_topology())
+    {
+      timer.start();
 
-  bem.run();
+      bem.run();
 
-  timer.stop();
-  print_wall_time(deallog, timer, "run the solver");
+      timer.stop();
+      print_wall_time(deallog, timer, "run the solver");
 
-  deallog << "Program exits with a total wall time " << timer.wall_time() << "s"
-          << std::endl;
+      deallog << "Program exits with a total wall time " << timer.wall_time()
+              << "s" << std::endl;
 
-  bem.print_memory_consumption_table(deallog.get_file_stream());
+      bem.print_memory_consumption_table(deallog.get_file_stream());
+    }
+  else
+    {
+      deallog << "Invalid subdomains!" << std::endl;
+    }
+
+  ofs.close();
 }

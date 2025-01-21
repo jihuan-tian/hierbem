@@ -20,10 +20,10 @@
 
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 #include "debug_tools.h"
 #include "preconditioners/preconditioner_for_laplace_dirichlet.h"
-#include "subdomain_topology.h"
 
 using namespace HierBEM;
 using namespace dealii;
@@ -91,7 +91,9 @@ main(int argc, const char *argv[])
   FE_DGQ<2, 3> fe_primal_space(0);
   FE_Q<2, 3>   fe_dual_space(1);
 
-  // Generate the mesh.
+  // Generate the mesh. Because we are going to distribute DoFs on the two-level
+  // multigrid required by the operator preconditioner, the triangulation object
+  // should be constructed with a level difference limitation at vertices.
   Triangulation<2, 3> tria(
     Triangulation<2, 3>::MeshSmoothing::limit_level_difference_at_vertices);
   GridGenerator::subdivided_hyper_cube(tria, 3, 0, 10);
@@ -123,7 +125,7 @@ main(int argc, const char *argv[])
   ofstream sp_pattern("sparsity-pattern.svg");
   precond.get_averaging_matrix().get_sparsity_pattern().print_svg(sp_pattern);
 
-  // Print matrix.
+  // Print the averaging matrix.
   print_sparse_matrix_to_mat(
     std::cout, "Cd", precond.get_averaging_matrix(), 15, true, 25);
 

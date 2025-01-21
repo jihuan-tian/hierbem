@@ -8,7 +8,9 @@
 #include <fstream>
 #include <iostream>
 
-#include "cu_profile.hcu"
+#if ENABLE_NVTX == 1
+#  include "cu_profile.hcu"
+#endif
 #include "debug_tools.h"
 #include "grid_in_ext.h"
 #include "grid_out_ext.h"
@@ -199,12 +201,12 @@ run_dirichlet_hmatrix_op_precond(const unsigned int refinement)
   // Create the map from manifold id to mapping order.
   bem.get_manifold_id_to_mapping_order()[0] = 1;
 
-  timer.stop();
-  print_wall_time(deallog, timer, "read mesh");
-
   // Build surface-to-volume and volume-to-surface relationship.
   bem.get_subdomain_topology().generate_single_domain_topology_for_dealii_model(
     {0});
+
+  timer.stop();
+  print_wall_time(deallog, timer, "read mesh");
 
   timer.start();
 
@@ -214,15 +216,24 @@ run_dirichlet_hmatrix_op_precond(const unsigned int refinement)
   timer.stop();
   print_wall_time(deallog, timer, "assign boundary conditions");
 
-  timer.start();
+  if (bem.validate_subdomain_topology())
+    {
+      timer.start();
 
-  bem.run();
+      bem.run();
 
-  timer.stop();
-  print_wall_time(deallog, timer, "run the solver");
+      timer.stop();
+      print_wall_time(deallog, timer, "run the solver");
 
-  deallog << "Program exits with a total wall time " << timer.wall_time() << "s"
-          << std::endl;
+      deallog << "Program exits with a total wall time " << timer.wall_time()
+              << "s" << std::endl;
 
-  bem.print_memory_consumption_table(deallog.get_file_stream());
+      bem.print_memory_consumption_table(deallog.get_file_stream());
+    }
+  else
+    {
+      deallog << "Invalid subdomains!" << std::endl;
+    }
+
+  ofs.close();
 }

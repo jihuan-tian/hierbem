@@ -200,6 +200,14 @@ public:
   assign_neumann_bc(Function<spacedim, double>   &f,
                     const std::vector<EntityTag> &surface_tags);
 
+  /**
+   * Validate the subdomain topology.
+   *
+   * This function should be called before @p setup_system.
+   */
+  bool
+  validate_subdomain_topology() const;
+
   void
   initialize_manifolds_from_manifold_description();
 
@@ -247,13 +255,6 @@ public:
 
   void
   run();
-
-  /**
-   * Verify if the calculated Neumann solution is in the space
-   * \f$H^{1/2}_*(\Gamma)\f$.
-   */
-  void
-  verify_neumann_solution_in_space();
 
   /**
    * Print out the memory consumption table.

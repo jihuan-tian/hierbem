@@ -12,6 +12,7 @@
 
 #include <gmsh.h>
 
+#include <algorithm>
 #include <array>
 #include <iostream>
 #include <map>
@@ -126,6 +127,7 @@ SubdomainTopology<dim, spacedim>::generate_topology(
         surface_to_subdomain,
         eps_for_orientation_detection);
 
+      std::sort(oriented_surface_tags.begin(), oriented_surface_tags.end());
       subdomain_to_surface[volume_dimtag.second] = oriented_surface_tags;
     }
 
@@ -146,6 +148,8 @@ SubdomainTopology<dim, spacedim>::
       subdomain_to_surface[1].push_back(s);
       surface_to_subdomain[s] = subdomains;
     }
+
+  std::sort(subdomain_to_surface[1].begin(), subdomain_to_surface[1].end());
 }
 
 

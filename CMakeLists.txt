@@ -177,10 +177,11 @@ add_custom_target(
   VERBATIM)
 
 # Include directories
-include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/include ${JULIA_DIR}/include/julia)
 
 # Directories for searching libraries to link
-link_directories(${CMAKE_BINARY_DIR}/src /usr/lib/x86_64-linux-gnu)
+link_directories(${CMAKE_BINARY_DIR}/src /usr/lib/x86_64-linux-gnu
+                 ${JULIA_DIR}/lib)
 
 # Folder for header files and source code
 add_subdirectory(include)

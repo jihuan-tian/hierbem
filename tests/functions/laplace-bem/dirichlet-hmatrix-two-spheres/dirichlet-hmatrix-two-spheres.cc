@@ -1,5 +1,5 @@
 /**
- * \file laplace-bem-dirichlet-hmatrix.cc
+ * \file dirichlet-hmatrix-two-spheres.cc
  * \brief
  * \ingroup testers
  * \author Jihuan Tian

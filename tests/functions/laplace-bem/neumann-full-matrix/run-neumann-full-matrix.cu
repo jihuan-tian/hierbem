@@ -130,7 +130,16 @@ run_neumann_full_matrix()
   NeumannBC neumann_bc(source_loc, center, radius);
   bem.assign_neumann_bc(neumann_bc);
 
-  bem.run();
+  if (bem.validate_subdomain_topology())
+    {
+      bem.run();
 
-  bem.print_memory_consumption_table(deallog.get_file_stream());
+      bem.print_memory_consumption_table(deallog.get_file_stream());
+    }
+  else
+    {
+      deallog << "Invalid subdomains!" << std::endl;
+    }
+
+  ofs.close();
 }
