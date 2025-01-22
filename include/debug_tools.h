@@ -24,6 +24,7 @@
 
 #include <deal.II/grid/tria.h>
 
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -719,6 +720,9 @@ print_point_vector_to_mat(
 
   out << "\n\n";
 }
+
+void
+read_file_lines(const std::string &file_name, std::vector<std::string> &lines);
 
 HBEM_NS_CLOSE
 

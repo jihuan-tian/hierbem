@@ -173,7 +173,7 @@ namespace DoFToolsExt
           {
             const unsigned int dofs_per_cell = cell->get_fe().dofs_per_cell;
             cell_dof_indices.resize(dofs_per_cell);
-            cell->get_dof_indices(cell_dof_indices);
+            cell->get_mg_dof_indices(cell_dof_indices);
             for (unsigned int i = 0; i < dofs_per_cell; ++i)
               {
                 selected_dofs[cell_dof_indices[i]] = true;
@@ -220,7 +220,7 @@ namespace DoFToolsExt
           {
             const unsigned int dofs_per_cell = cell->get_fe().dofs_per_cell;
             cell_dof_indices.resize(dofs_per_cell);
-            cell->get_dof_indices(cell_dof_indices);
+            cell->get_mg_dof_indices(cell_dof_indices);
             for (unsigned int i = 0; i < dofs_per_cell; ++i)
               {
                 selected_dofs[cell_dof_indices[i]] = false;

@@ -301,11 +301,11 @@ PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
 {
   // Generate the dynamic sparsity pattern. N.B. The row size of this matrix
   // is the number of DoFs in the dual space on the dual mesh, which is the
-  // same as the number of primal cells, when the domain is full. When subdomain
-  // is considered, it is equivalent to the number of primal space DoFs on the
-  // primal mesh, because @p FE_DGQ is used.
+  // same as the number of primal cells.
   AssertDimension(
-    this->primal_space_local_to_full_dof_id_map_on_primal_mesh.size(),
+    this->is_full_domain ?
+      this->tria.n_cells(0) :
+      this->primal_space_local_to_full_dof_id_map_on_primal_mesh.size(),
     this->primal_space_dof_i2e_numbering.size());
   DynamicSparsityPattern dsp(
     this->is_full_domain ?

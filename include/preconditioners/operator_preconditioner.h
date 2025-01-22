@@ -318,6 +318,42 @@ public:
     return dof_handler_dual_space;
   }
 
+  std::set<types::material_id> &
+  get_subdomain_material_ids()
+  {
+    return subdomain_material_ids;
+  }
+
+  const std::set<types::material_id> &
+  get_subdomain_material_ids() const
+  {
+    return subdomain_material_ids;
+  }
+
+  std::vector<bool> &
+  get_dual_space_dof_selectors_on_refined_mesh()
+  {
+    return dual_space_dof_selectors_on_refined_mesh;
+  }
+
+  const std::vector<bool> &
+  get_dual_space_dof_selectors_on_refined_mesh() const
+  {
+    return dual_space_dof_selectors_on_refined_mesh;
+  }
+
+  std::vector<types::global_dof_index> &
+  get_dual_space_full_to_local_dof_id_map_on_refined_mesh()
+  {
+    return dual_space_full_to_local_dof_id_map_on_refined_mesh;
+  }
+
+  const std::vector<types::global_dof_index> &
+  get_dual_space_full_to_local_dof_id_map_on_refined_mesh() const
+  {
+    return dual_space_full_to_local_dof_id_map_on_refined_mesh;
+  }
+
 protected:
   /**
    * @brief This class encapsulates the product of three matrices: \f$C_d M_r
@@ -1149,7 +1185,6 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
     dof_handler_primal_space.n_dofs(0));
   primal_space_dof_selectors_on_refined_mesh.resize(
     dof_handler_primal_space.n_dofs(1));
-
   dual_space_dof_selectors_on_refined_mesh.resize(
     dof_handler_dual_space.n_dofs(1));
 
