@@ -21,15 +21,16 @@
 
 #include <algorithm>
 #include <map>
+#include <set>
 #include <vector>
 
 #include "config.h"
 #include "dof_to_cell_topology.h"
 #include "gmsh_manipulation.h"
 
-HBEM_NS_OPEN
-
 using namespace dealii;
+
+HBEM_NS_OPEN
 
 namespace DoFToolsExt
 {
@@ -135,6 +136,143 @@ namespace DoFToolsExt
           }
       }
   }
+
+
+  /**
+   * Mark the DoFs in cells on the specified level which have a material id
+   * belonging to the given collection.
+   */
+  template <int dim, int spacedim>
+  void
+  extract_material_domain_mg_dofs(
+    const DoFHandler<dim, spacedim>    &dof_handler,
+    const unsigned int                  level,
+    const std::set<types::material_id> &material_ids,
+    std::vector<bool>                  &selected_dofs,
+    const bool                          reset_selectors_to_false = true)
+  {
+    AssertDimension(selected_dofs.size(), dof_handler.n_dofs(level));
+
+    if (reset_selectors_to_false)
+      // preset all values by false
+      std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(level), false);
+
+    // Global DoF indices for the current cell.
+    std::vector<types::global_dof_index> cell_dof_indices;
+    cell_dof_indices.reserve(
+      dof_handler.get_fe_collection().max_dofs_per_cell());
+
+    // this function is similar to the make_sparsity_pattern function, see
+    // there for more information
+    for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
+      {
+        // Find the current cell's material id in the given list.
+        auto found_iter = material_ids.find(cell->material_id());
+
+        if (found_iter != material_ids.end())
+          {
+            const unsigned int dofs_per_cell = cell->get_fe().dofs_per_cell;
+            cell_dof_indices.resize(dofs_per_cell);
+            cell->get_dof_indices(cell_dof_indices);
+            for (unsigned int i = 0; i < dofs_per_cell; ++i)
+              {
+                selected_dofs[cell_dof_indices[i]] = true;
+              }
+          }
+      }
+  }
+
+
+  /**
+   * Mark the DoFs in cells on the specified level by excluding those DoFs in
+   * cells in the complement subdomain. The complement subdomain is specified by
+   * a set of material ids.
+   */
+  template <int dim, int spacedim>
+  void
+  extract_material_domain_mg_dofs_by_excluding_complement_subdomain(
+    const DoFHandler<dim, spacedim>    &dof_handler,
+    const unsigned int                  level,
+    const std::set<types::material_id> &complement_subdomain_material_ids,
+    std::vector<bool>                  &selected_dofs,
+    const bool                          reset_selectors_to_true = true)
+  {
+    AssertDimension(selected_dofs.size(), dof_handler.n_dofs(level));
+
+    if (reset_selectors_to_true)
+      // preset all values by true
+      std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(level), true);
+
+    // Global DoF indices for the current cell.
+    std::vector<types::global_dof_index> cell_dof_indices;
+    cell_dof_indices.reserve(
+      dof_handler.get_fe_collection().max_dofs_per_cell());
+
+    // this function is similar to the make_sparsity_pattern function, see
+    // there for more information
+    for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
+      {
+        // Find the current cell's material id in the given list.
+        auto found_iter =
+          complement_subdomain_material_ids.find(cell->material_id());
+
+        if (found_iter != complement_subdomain_material_ids.end())
+          {
+            const unsigned int dofs_per_cell = cell->get_fe().dofs_per_cell;
+            cell_dof_indices.resize(dofs_per_cell);
+            cell->get_dof_indices(cell_dof_indices);
+            for (unsigned int i = 0; i < dofs_per_cell; ++i)
+              {
+                selected_dofs[cell_dof_indices[i]] = false;
+              }
+          }
+      }
+  }
+
+
+  /**
+   * Generate the full-to-local DoF index map based on the DoF selectors.
+   *
+   * @param dof_selectors
+   * @param full_to_local_map The memory for this vector should be preallocated.
+   * The number of elements is the total number of DoFs in the DoF handler.
+   */
+  void
+  generate_full_to_local_dof_id_map(
+    const std::vector<bool>              &dof_selectors,
+    std::vector<types::global_dof_index> &full_to_local_map);
+
+
+  /**
+   * Generate the local-to-full DoF index map based on the DoF selectors.
+   *
+   * @param dof_selectors
+   * @param local_to_full_map The memory for this vector should be reserved. The
+   * maximum possible number of elements is the total number of DoFs in the DoF
+   * handler.
+   */
+  void
+  generate_local_to_full_dof_id_map(
+    const std::vector<bool>              &dof_selectors,
+    std::vector<types::global_dof_index> &local_to_full_map);
+
+
+  /**
+   * Generate the full-to-local and local-to-full DoF index maps based on the
+   * DoF selectors.
+   *
+   * @param dof_selectors
+   * @param full_to_local_map The memory for this vector should be preallocated.
+   * The number of elements is the total number of DoFs in the DoF handler.
+   * @param local_to_full_map The memory for this vector should be reserved. The
+   * maximum possible number of elements is the total number of DoFs in the DoF
+   * handler.
+   */
+  void
+  generate_maps_between_full_and_local_dof_ids(
+    const std::vector<bool>              &dof_selectors,
+    std::vector<types::global_dof_index> &full_to_local_map,
+    std::vector<types::global_dof_index> &local_to_full_map);
 
 
   /**
@@ -249,6 +387,8 @@ namespace DoFToolsExt
    * Return a list of support points for the local DoFs selected from the full
    * list of DoFs handled by the DoF handler.
    *
+   * The result is a vector of support points.
+   *
    * @pre
    * @post
    * @tparam dim
@@ -348,6 +488,9 @@ namespace DoFToolsExt
    * @brief Return a list of support points for DoFs on the specified level in
    * the DoF handler.
    *
+   * The results is a vector of support points and its memory should be
+   * preallocated.
+   *
    * @tparam dim
    * @tparam spacedim
    * @param mapping
@@ -384,6 +527,120 @@ namespace DoFToolsExt
             support_points[dof_indices_in_cell[i]] =
               mapping.transform_unit_to_real_cell(cell, p);
             i++;
+          }
+      }
+  }
+
+
+  /**
+   * Return a list of support points for DoFs in a subdomain on the specified
+   * level in the DoF handler.
+   *
+   * The result is a map from local DoF indices to support points, which can be
+   * passed to DoFTools::write_gnuplot_dof_support_point_info for visualizing
+   * the distribution of support points.
+   */
+  template <int dim, int spacedim>
+  void
+  map_mg_dofs_to_support_points(
+    const Mapping<dim, spacedim>               &mapping,
+    const DoFHandler<dim, spacedim>            &dof_handler,
+    const unsigned int                          level,
+    const std::set<types::material_id>         &subdomain_material_ids,
+    const std::vector<bool>                    &dof_selectors,
+    const std::vector<types::global_dof_index> &full_to_local_dof_id_map,
+    std::map<types::global_dof_index, Point<spacedim>> &support_points)
+  {
+    support_points.clear();
+
+    // Get the unit support point coordinates.
+    const std::vector<Point<dim>> &unit_supports =
+      dof_handler.get_fe().get_unit_support_points();
+
+    std::vector<types::global_dof_index> dof_indices_in_cell(
+      dof_handler.get_fe().dofs_per_cell);
+
+    // Iterate over each cell on the specified level.
+    for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
+      {
+        auto found_iter = subdomain_material_ids.find(cell->material_id());
+
+        if (found_iter != subdomain_material_ids.end())
+          {
+            // Get the DoF indices in the current cell.
+            cell->get_mg_dof_indices(dof_indices_in_cell);
+
+            // Transform each selected unit support point to real cell and added
+            // to the result map.
+            unsigned int i = 0;
+            for (const auto &p : unit_supports)
+              {
+                if (dof_selectors.at(dof_indices_in_cell[i]))
+                  support_points[full_to_local_dof_id_map.at(
+                    dof_indices_in_cell[i])] =
+                    mapping.transform_unit_to_real_cell(cell, p);
+
+                i++;
+              }
+          }
+      }
+  }
+
+
+  /**
+   * @brief Return a list of support points for DoFs in a subdomain on the
+   * specified level in the DoF handler.
+   *
+   * The result is a vector of support points and its memory should be
+   * preallocated.
+   *
+   * @tparam dim
+   * @tparam spacedim
+   * @param mapping
+   * @param dof_handler
+   * @param level
+   * @param support_points The memory of the list of support points should be
+   * preallocated.
+   */
+  template <int dim, int spacedim>
+  void
+  map_mg_dofs_to_support_points(
+    const Mapping<dim, spacedim>               &mapping,
+    const DoFHandler<dim, spacedim>            &dof_handler,
+    const unsigned int                          level,
+    const std::set<types::material_id>         &subdomain_material_ids,
+    const std::vector<bool>                    &dof_selectors,
+    const std::vector<types::global_dof_index> &full_to_local_dof_id_map,
+    std::vector<Point<spacedim>>               &support_points)
+  {
+    // Get the unit support point coordinates.
+    const std::vector<Point<dim>> &unit_supports =
+      dof_handler.get_fe().get_unit_support_points();
+
+    std::vector<types::global_dof_index> dof_indices_in_cell(
+      dof_handler.get_fe().dofs_per_cell);
+
+    // Iterate over each cell on the specified level.
+    for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
+      {
+        auto found_iter = subdomain_material_ids.find(cell->material_id());
+
+        if (found_iter != subdomain_material_ids.end())
+          {
+            // Get the DoF indices in the current cell.
+            cell->get_mg_dof_indices(dof_indices_in_cell);
+
+            // Transform each unit support point to real cell.
+            unsigned int i = 0;
+            for (const auto &p : unit_supports)
+              {
+                if (dof_selectors.at(dof_indices_in_cell[i]))
+                  support_points[full_to_local_dof_id_map.at(
+                    dof_indices_in_cell[i])] =
+                    mapping.transform_unit_to_real_cell(cell, p);
+
+                i++;
+              }
           }
       }
   }
@@ -453,7 +710,9 @@ namespace DoFToolsExt
    * @tparam spacedim
    * @param dof_handler
    * @param level
-   * @param dof_average_cell_size
+   * @param dof_average_cell_size The returned list of average cell sizes. The
+   * memory for this vector should be preallocated and initialized to zero
+   * before calling this function.
    */
   template <int dim, int spacedim, typename Number = double>
   void
@@ -518,7 +777,7 @@ namespace DoFToolsExt
    * vector is used as a map from local to global DoF indices.
    * @param dof_average_cell_size The returned list of average cell sizes
    * which corresponds to the selected DoFs. The memory for this vector should
-   * be preallocated before calling this function.
+   * be preallocated and initialized to zero before calling this function.
    */
   template <int dim, int spacedim, typename Number = double>
   void
@@ -552,14 +811,16 @@ namespace DoFToolsExt
    * @param dof_handler
    * @param map_from_local_to_full_dof_indices
    * @param level
-   * @param dof_average_cell_size
+   * @param dof_average_cell_size The returned list of average cell sizes. The
+   * memory for this vector should be preallocated and initialized to zero
+   * before calling this function.
    */
   template <int dim, int spacedim, typename Number = double>
   void
   map_mg_dofs_to_average_cell_size(const DoFHandler<dim, spacedim> &dof_handler,
+                                   const unsigned int               level,
                                    const std::vector<types::global_dof_index>
                                      &map_from_local_to_full_dof_indices,
-                                   const unsigned int   level,
                                    std::vector<Number> &dof_average_cell_size)
   {
     const types::global_dof_index n_dofs =
@@ -627,6 +888,12 @@ namespace DoFToolsExt
   /**
    * Calculate the maximum cell sizes associated with those DoFs on a specific
    * level in the given DoF handler object.
+   *
+   * @param dof_handler
+   * @param level
+   * @param dof_max_cell_size The returned list of maximum cell sizes. The
+   * memory for this vector should be preallocated and initialized to zero
+   * before calling this function.
    */
   template <typename DoFHandlerType, typename Number = double>
   void
@@ -665,6 +932,12 @@ namespace DoFToolsExt
   /**
    * Calculate the maximum cell sizes associated with a subset of DoFs
    * selected from all those DoFs in the DoF handler.
+   *
+   * @param dof_handler
+   * @param map_from_local_to_full_dof_indices
+   * @param dof_max_cell_size The returned list of maximum cell sizes. The
+   * memory for this vector should be preallocated and initialized to zero
+   * before calling this function.
    */
   template <int dim, int spacedim, typename Number = double>
   void
@@ -698,14 +971,16 @@ namespace DoFToolsExt
    * @param dof_handler
    * @param map_from_local_to_full_dof_indices
    * @param level
-   * @param dof_max_cell_size
+   * @param dof_max_cell_size The returned list of maximum cell sizes. The
+   * memory for this vector should be preallocated and initialized to zero
+   * before calling this function.
    */
   template <int dim, int spacedim, typename Number = double>
   void
   map_mg_dofs_to_max_cell_size(const DoFHandler<dim, spacedim> &dof_handler,
+                               const unsigned int               level,
                                const std::vector<types::global_dof_index>
                                  &map_from_local_to_full_dof_indices,
-                               const unsigned int   level,
                                std::vector<Number> &dof_max_cell_size)
   {
     const types::global_dof_index n_dofs =
@@ -730,7 +1005,7 @@ namespace DoFToolsExt
    * The value doubled is used as an estimate for the diameter of the support
    * set of each DoF.
    *
-   * @param dof_min_cell_size The returned list of average cell sizes. The
+   * @param dof_min_cell_size The returned list of minimum cell sizes. The
    * memory for this vector should be preallocated and initialized to zero
    * before calling this function.
    */
@@ -771,6 +1046,10 @@ namespace DoFToolsExt
   /**
    * Calculate the minimum cell sizes associated with those DoFs on a specific
    * level in the given DoF handler object.
+   *
+   * @param dof_min_cell_size The returned list of minimum cell sizes. The
+   * memory for this vector should be preallocated and initialized to zero
+   * before calling this function.
    */
   template <typename DoFHandlerType, typename Number = double>
   void
@@ -816,7 +1095,9 @@ namespace DoFToolsExt
    * @tparam spacedim
    * @param dof_handler
    * @param map_from_local_to_full_dof_indices
-   * @param dof_min_cell_size
+   * @param dof_min_cell_size The returned list of minimum cell sizes. The
+   * memory for this vector should be preallocated and initialized to zero
+   * before calling this function.
    */
   template <int dim, int spacedim, typename Number = double>
   void
@@ -850,14 +1131,16 @@ namespace DoFToolsExt
    * @param dof_handler
    * @param map_from_local_to_full_dof_indices
    * @param level
-   * @param dof_min_cell_size
+   * @param dof_min_cell_size The returned list of minimum cell sizes. The
+   * memory for this vector should be preallocated and initialized to zero
+   * before calling this function.
    */
   template <int dim, int spacedim, typename Number = double>
   void
   map_mg_dofs_to_min_cell_size(const DoFHandler<dim, spacedim> &dof_handler,
+                               const unsigned int               level,
                                const std::vector<types::global_dof_index>
                                  &map_from_local_to_full_dof_indices,
-                               const unsigned int   level,
                                std::vector<Number> &dof_min_cell_size)
   {
     const types::global_dof_index n_dofs =
@@ -975,14 +1258,14 @@ namespace DoFToolsExt
     const types::global_dof_index        n_dofs = dof_handler.n_dofs();
     const FiniteElement<dim, spacedim>  &fe     = dof_handler.get_fe(fe_index);
     const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
-    std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+    std::vector<types::global_dof_index> cell_full_dof_indices(dofs_per_cell);
 
     dof_to_cell_topo.resize(n_dofs);
 
     for (const auto &cell : cell_iterators_in_dof_handler)
       {
-        cell->get_dof_indices(local_dof_indices);
-        for (auto dof_index : local_dof_indices)
+        cell->get_dof_indices(cell_full_dof_indices);
+        for (auto dof_index : cell_full_dof_indices)
           {
             dof_to_cell_topo[dof_index].push_back(&cell);
           }
@@ -993,17 +1276,11 @@ namespace DoFToolsExt
   /**
    * @brief Build the topology for "DoF support point-to-cell" relation.
    *
-   * This function is similar to \ref
-   * build_dof_to_cell_topology(std::vector<std::vector<const typename
-   * DoFHandler<dim, spacedim>::cell_iterator *>> &, const
-   * std::vector<typename DoFHandler<dim, spacedim>::cell_iterator> &, const
-   * DoFHandler<dim, spacedim> &, const unsigned int), but the result is
-   * returned in the object DoFToCellTopology, which also stores the maximum
-   * number of cells associated with a DoF.
-   *
    * @tparam dim
    * @tparam spacedim
-   * @param dof_to_cell_topo
+   * @param dof_to_cell_topo The result is returned in this object of type
+   * @p DoFToCellTopology, which also stores the maximum number of cells
+   * associated with a DoF.
    * @param cell_iterators_in_dof_handler
    * @param dof_handler
    * @param fe_index
@@ -1020,15 +1297,15 @@ namespace DoFToolsExt
     const types::global_dof_index        n_dofs = dof_handler.n_dofs();
     const FiniteElement<dim, spacedim>  &fe     = dof_handler.get_fe(fe_index);
     const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
-    std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+    std::vector<types::global_dof_index> cell_full_dof_indices(dofs_per_cell);
 
     dof_to_cell_topo.topology.resize(n_dofs);
     dof_to_cell_topo.max_cells_per_dof = 0;
 
     for (const auto &cell : cell_iterators_in_dof_handler)
       {
-        cell->get_dof_indices(local_dof_indices);
-        for (auto dof_index : local_dof_indices)
+        cell->get_dof_indices(cell_full_dof_indices);
+        for (auto dof_index : cell_full_dof_indices)
           {
             dof_to_cell_topo.topology[dof_index].push_back(&cell);
           }
@@ -1071,14 +1348,14 @@ namespace DoFToolsExt
     const types::global_dof_index        n_dofs = dof_handler.n_dofs(level);
     const FiniteElement<dim, spacedim>  &fe     = dof_handler.get_fe(fe_index);
     const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
-    std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+    std::vector<types::global_dof_index> cell_full_dof_indices(dofs_per_cell);
 
     dof_to_cell_topo.resize(n_dofs);
 
     for (const auto &cell : mg_cell_iterators_in_dof_handler)
       {
-        cell->get_mg_dof_indices(local_dof_indices);
-        for (auto dof_index : local_dof_indices)
+        cell->get_mg_dof_indices(cell_full_dof_indices);
+        for (auto dof_index : cell_full_dof_indices)
           {
             dof_to_cell_topo[dof_index].push_back(&cell);
           }
@@ -1090,17 +1367,11 @@ namespace DoFToolsExt
    * @brief Build the topology for "DoF support point-to-cell" relation. The
    * DoFs are on a specific level in the multigrid.
    *
-   * This function is similar to \ref
-   * build_dof_to_cell_topology(std::vector<std::vector<const typename
-   * DoFHandler<dim, spacedim>::cell_iterator *>> &, const
-   * std::vector<typename DoFHandler<dim, spacedim>::cell_iterator> &, const
-   * DoFHandler<dim, spacedim> &, const unsigned int, const unsigned int), but
-   * the result is returned in the object DoFToCellTopology, which also stores
-   * the maximum number of cells associated with a DoF.
-   *
    * @tparam dim
    * @tparam spacedim
-   * @param dof_to_cell_topo
+   * @param dof_to_cell_topo The result is returned in this object of type
+   * @p DoFToCellTopology, which also stores the maximum number of cells
+   * associated with a DoF.
    * @param mg_cell_iterators_in_dof_handler
    * @param dof_handler
    * @param level
@@ -1119,15 +1390,15 @@ namespace DoFToolsExt
     const types::global_dof_index        n_dofs = dof_handler.n_dofs(level);
     const FiniteElement<dim, spacedim>  &fe     = dof_handler.get_fe(fe_index);
     const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
-    std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+    std::vector<types::global_dof_index> cell_full_dof_indices(dofs_per_cell);
 
     dof_to_cell_topo.topology.resize(n_dofs);
     dof_to_cell_topo.max_cells_per_dof = 0;
 
     for (const auto &cell : mg_cell_iterators_in_dof_handler)
       {
-        cell->get_mg_dof_indices(local_dof_indices);
-        for (auto dof_index : local_dof_indices)
+        cell->get_mg_dof_indices(cell_full_dof_indices);
+        for (auto dof_index : cell_full_dof_indices)
           {
             dof_to_cell_topo.topology[dof_index].push_back(&cell);
           }
@@ -1144,53 +1415,162 @@ namespace DoFToolsExt
 
 
   /**
-   * @brief Make a sparsity pattern where the row indices of the matrix should
-   * be converted from external DoF numbering to internal.
+   * @brief Build the topology for "DoF support point-to-cell" relation. Only
+   * selected DoFs on a specific level in the multigrid are considered.
+   *
+   * @tparam dim
+   * @tparam spacedim
+   * @param dof_to_cell_topo The result is returned in this object of type
+   * @p DoFToCellTopology, which also stores the maximum number of cells
+   * associated with a DoF.
+   * @param mg_cell_iterators_in_dof_handler
+   * @param dof_handler
+   * @param level
+   * @param fe_index
+   */
+  template <int dim, int spacedim>
+  void
+  build_mg_dof_to_cell_topology(
+    DoFToCellTopology<dim, spacedim> &dof_to_cell_topo,
+    const std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
+                                    &mg_cell_iterators_in_dof_handler,
+    const DoFHandler<dim, spacedim> &dof_handler,
+    const std::vector<bool>         &dof_selectors,
+    const unsigned int               level    = 0,
+    const unsigned int               fe_index = 0)
+  {
+    const types::global_dof_index        n_dofs = dof_handler.n_dofs(level);
+    const FiniteElement<dim, spacedim>  &fe     = dof_handler.get_fe(fe_index);
+    const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
+    std::vector<types::global_dof_index> cell_full_dof_indices(dofs_per_cell);
+
+    // N.B. Because external and full DoF indices are adopted in the DoF-to-cell
+    // topology data, here the @p topology is resized to the total number of DoFs
+    // on the given level, instead of the selected ones.
+    dof_to_cell_topo.topology.resize(n_dofs);
+    dof_to_cell_topo.max_cells_per_dof = 0;
+
+    for (const auto &cell : mg_cell_iterators_in_dof_handler)
+      {
+        cell->get_mg_dof_indices(cell_full_dof_indices);
+        for (auto dof_index : cell_full_dof_indices)
+          {
+            if (dof_selectors.at(dof_index))
+              dof_to_cell_topo.topology[dof_index].push_back(&cell);
+          }
+      }
+
+    for (const auto &dof_to_cells : dof_to_cell_topo.topology)
+      {
+        if (dof_to_cells.size() > dof_to_cell_topo.max_cells_per_dof)
+          {
+            dof_to_cell_topo.max_cells_per_dof = dof_to_cells.size();
+          }
+      }
+  }
+
+
+  /**
+   * Make sparsity pattern on subdomain for active cells.
+   *
+   * The shape functions may extend over the boundary of the subdomain, so that
+   * we iterate over each cell in the triangulation, without checking if the
+   * cell is within the subdomain.
    */
   template <int dim, int spacedim, typename SparsityPatternType>
   void
   make_sparsity_pattern(
-    const DoFHandler<dim, spacedim>            &dof_row,
-    const std::vector<types::global_dof_index> &dof_row_e2i_numbering,
-    const DoFHandler<dim, spacedim>            &dof_col,
-    SparsityPatternType                        &sparsity)
+    const DoFHandler<dim, spacedim> &dof_handler_test_space,
+    const DoFHandler<dim, spacedim> &dof_handler_trial_space,
+    const std::vector<bool>         &dof_selectors_test_space,
+    const std::vector<types::global_dof_index>
+                            &full_to_local_dof_id_map_test_space,
+    const std::vector<bool> &dof_selectors_trial_space,
+    const std::vector<types::global_dof_index>
+                        &full_to_local_dof_id_map_trial_space,
+    SparsityPatternType &sparsity)
   {
-    const types::global_dof_index n_dofs_row = dof_row.n_dofs();
-    const types::global_dof_index n_dofs_col = dof_col.n_dofs();
-    (void)n_dofs_row;
-    (void)n_dofs_col;
+    auto cell_test_space  = dof_handler_test_space.begin_active();
+    auto cell_trial_space = dof_handler_trial_space.begin_active();
 
-    Assert(sparsity.n_rows() == n_dofs_row,
-           ExcDimensionMismatch(sparsity.n_rows(), n_dofs_row));
-    Assert(sparsity.n_cols() == n_dofs_col,
-           ExcDimensionMismatch(sparsity.n_cols(), n_dofs_col));
-
-    using cell_iterator = typename DoFHandler<dim, spacedim>::cell_iterator;
-    std::list<std::pair<cell_iterator, cell_iterator>> cell_list =
-      GridTools::get_finest_common_cells(dof_row, dof_col);
-
-    for (const auto &cell_pair : cell_list)
+    for (; cell_test_space != dof_handler_test_space.end();
+         cell_test_space++, cell_trial_space++)
       {
-        const cell_iterator cell_row = cell_pair.first;
-        const cell_iterator cell_col = cell_pair.second;
+        const unsigned int dofs_per_cell_test_space =
+          cell_test_space->get_fe().n_dofs_per_cell();
+        const unsigned int dofs_per_cell_trial_space =
+          cell_trial_space->get_fe().n_dofs_per_cell();
+        std::vector<types::global_dof_index> cell_full_dof_indices_test_space(
+          dofs_per_cell_test_space);
+        std::vector<types::global_dof_index> cell_full_dof_indices_trial_space(
+          dofs_per_cell_trial_space);
+        cell_test_space->get_dof_indices(cell_full_dof_indices_test_space);
+        cell_trial_space->get_dof_indices(cell_full_dof_indices_trial_space);
+        for (unsigned int i = 0; i < dofs_per_cell_test_space; ++i)
+          for (unsigned int j = 0; j < dofs_per_cell_trial_space; ++j)
+            if (dof_selectors_test_space.at(
+                  cell_full_dof_indices_test_space[i]) &&
+                dof_selectors_trial_space.at(
+                  cell_full_dof_indices_trial_space[j]))
+              sparsity.add(full_to_local_dof_id_map_test_space.at(
+                             cell_full_dof_indices_test_space[i]),
+                           full_to_local_dof_id_map_trial_space.at(
+                             cell_full_dof_indices_trial_space[j]));
+      }
+  }
 
-        if (cell_row->is_active() && cell_col->is_active())
+
+  /**
+   * Make sparsity pattern on subdomain for active cells.
+   *
+   * The shape functions are assumed to be truncated within the subdomain, so
+   * we iterate over each cell in the subdomain.
+   */
+  template <int dim, int spacedim, typename SparsityPatternType>
+  void
+  make_sparsity_pattern(
+    const DoFHandler<dim, spacedim>    &dof_handler_test_space,
+    const DoFHandler<dim, spacedim>    &dof_handler_trial_space,
+    const std::set<types::material_id> &subdomain_material_ids,
+    const std::vector<bool>            &dof_selectors_test_space,
+    const std::vector<types::global_dof_index>
+                            &full_to_local_dof_id_map_test_space,
+    const std::vector<bool> &dof_selectors_trial_space,
+    const std::vector<types::global_dof_index>
+                        &full_to_local_dof_id_map_trial_space,
+    SparsityPatternType &sparsity)
+  {
+    auto cell_test_space  = dof_handler_test_space.begin_active();
+    auto cell_trial_space = dof_handler_trial_space.begin_active();
+
+    for (; cell_test_space != dof_handler_test_space.end();
+         cell_test_space++, cell_trial_space++)
+      {
+        auto found_iter =
+          subdomain_material_ids.find(cell_test_space->material_id());
+        if (found_iter != subdomain_material_ids.end())
           {
-            const unsigned int dofs_per_cell_row =
-              cell_row->get_fe().n_dofs_per_cell();
-            const unsigned int dofs_per_cell_col =
-              cell_col->get_fe().n_dofs_per_cell();
-            std::vector<types::global_dof_index> local_dof_indices_row(
-              dofs_per_cell_row);
-            std::vector<types::global_dof_index> local_dof_indices_col(
-              dofs_per_cell_col);
-            cell_row->get_dof_indices(local_dof_indices_row);
-            cell_col->get_dof_indices(local_dof_indices_col);
-            for (unsigned int i = 0; i < dofs_per_cell_row; ++i)
-              sparsity.add_entries(
-                dof_row_e2i_numbering[local_dof_indices_row[i]],
-                local_dof_indices_col.begin(),
-                local_dof_indices_col.end());
+            const unsigned int dofs_per_cell_test_space =
+              cell_test_space->get_fe().n_dofs_per_cell();
+            const unsigned int dofs_per_cell_trial_space =
+              cell_trial_space->get_fe().n_dofs_per_cell();
+            std::vector<types::global_dof_index>
+              cell_full_dof_indices_test_space(dofs_per_cell_test_space);
+            std::vector<types::global_dof_index>
+              cell_full_dof_indices_trial_space(dofs_per_cell_trial_space);
+            cell_test_space->get_dof_indices(cell_full_dof_indices_test_space);
+            cell_trial_space->get_dof_indices(
+              cell_full_dof_indices_trial_space);
+            for (unsigned int i = 0; i < dofs_per_cell_test_space; ++i)
+              for (unsigned int j = 0; j < dofs_per_cell_trial_space; ++j)
+                if (dof_selectors_test_space.at(
+                      cell_full_dof_indices_test_space[i]) &&
+                    dof_selectors_trial_space.at(
+                      cell_full_dof_indices_trial_space[j]))
+                  sparsity.add(full_to_local_dof_id_map_test_space.at(
+                                 cell_full_dof_indices_test_space[i]),
+                               full_to_local_dof_id_map_trial_space.at(
+                                 cell_full_dof_indices_trial_space[j]));
           }
       }
   }

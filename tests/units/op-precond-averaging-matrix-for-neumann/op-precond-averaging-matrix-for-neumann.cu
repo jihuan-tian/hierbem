@@ -69,6 +69,7 @@ TEST_CASE(
 
   // Build the averaging matrix.
   precond.initialize_dof_handlers();
+  precond.build_dof_to_cell_topology();
   precond.build_averaging_matrix();
 
   // Export the refined mesh.

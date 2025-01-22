@@ -14,7 +14,11 @@ class DoFToCellTopology
 {
 public:
   /**
-   * The core structure describing the DoF-to-cell topology.
+   * The core structure describing the DoF-to-cell topology. The index for the
+   * outer vector is a full and external DoF index, i.e. the original DoF
+   * indices defined in a DoF handler. Each element in the outer vector is
+   * another vector of cell iterator pointers. The related cells share this
+   * common DoF.
    */
   std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
