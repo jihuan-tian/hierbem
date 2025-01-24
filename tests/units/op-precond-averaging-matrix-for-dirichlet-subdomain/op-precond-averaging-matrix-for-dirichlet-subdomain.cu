@@ -16,7 +16,6 @@
 #include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/grid/grid_generator.h>
-#include <deal.II/grid/grid_out.h>
 #include <deal.II/grid/tria.h>
 
 #include <catch2/catch_all.hpp>
@@ -28,6 +27,7 @@
 #include <vector>
 
 #include "debug_tools.h"
+#include "grid_out_ext.h"
 #include "preconditioners/preconditioner_for_laplace_dirichlet.h"
 
 using namespace Catch::Matchers;
@@ -63,9 +63,6 @@ setup_preconditioner(PreconditionerForLaplaceDirichlet<2, 3, double> &precond,
   precond.build_dof_to_cell_topology();
 }
 
-// Even though the effective DoFs are confined to the subdomain, here we still
-// iterate overall cells in the triangulation, just to show that we've actually
-// selected subdomain.
 void
 print_weights_at_support_points_in_refined_mesh(
   ostream                                               &out,
@@ -179,8 +176,7 @@ TEST_CASE(
   assign_material_ids(tria, width);
 
   ofstream mesh_out("mesh.msh");
-  GridOut  grid_out;
-  grid_out.write_msh(tria, mesh_out);
+  write_msh_correct(tria, mesh_out);
 
   // Create the preconditioner. Since we do not apply the preconditioner to the
   // system matrix in this case, the conversion between internal and external
@@ -202,7 +198,7 @@ TEST_CASE(
 
   // Export the refined mesh.
   ofstream refined_mesh_out("refined-mesh.msh");
-  grid_out.write_msh(precond.get_triangulation(), refined_mesh_out);
+  write_msh_correct(precond.get_triangulation(), refined_mesh_out);
 
   // Print the sparsity pattern.
   ofstream sp_pattern("sparsity-pattern.svg");

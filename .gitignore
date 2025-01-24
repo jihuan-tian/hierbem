@@ -124,3 +124,4 @@ tests/functions/laplace-bem/neumann-full-matrix/reference.output
 tests/functions/laplace-bem/neumann-hmatrix/reference.output
 tests/functions/laplace-bem/neumann-hmatrix-op-precond/reference.output
 tests/units/op-precond-averaging-matrix-for-dirichlet-subdomain/draw.jl
+tests/units/op-precond-coupling-matrix-for-dirichlet-subdomain/draw.jl

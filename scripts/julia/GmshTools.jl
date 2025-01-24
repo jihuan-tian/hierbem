@@ -11,6 +11,12 @@ function read_msh(file_name)
     spacedim = 3
     nodes = transpose(reshape(nodes, (spacedim, node_num)))
 
+    # N.B. The nodes and their tags directly read via Gmsh API may not be
+    # ordered. We need to reorder them.
+    perm_indices = sortperm(nodeTags)
+    nodeTags = nodeTags[perm_indices]
+    nodes = nodes[perm_indices, :]
+
     # Extract surface mesh, where @p element_node_indices stores the node indices for all cells,
     # the value type of which is UInt64.
     elementTypes, elementTags, element_node_indices = gmsh.model.mesh.get_elements(2)

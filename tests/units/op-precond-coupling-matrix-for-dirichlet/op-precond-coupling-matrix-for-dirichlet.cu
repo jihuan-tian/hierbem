@@ -93,7 +93,9 @@ main(int argc, const char *argv[])
   FE_DGQ<2, 3> fe_primal_space(0);
   FE_Q<2, 3>   fe_dual_space(1);
 
-  // Generate the mesh.
+  // Generate the mesh. Because we are going to distribute DoFs on the two-level
+  // multigrid required by the operator preconditioner, the triangulation object
+  // should be constructed with a level difference limitation at vertices.
   Triangulation<2, 3> tria(
     Triangulation<2, 3>::MeshSmoothing::limit_level_difference_at_vertices);
   GridGenerator::subdivided_hyper_cube(tria, 3, 0, 10);

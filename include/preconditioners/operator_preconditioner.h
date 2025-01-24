@@ -331,6 +331,30 @@ public:
   }
 
   std::vector<bool> &
+  get_primal_space_dof_selectors_on_primal_mesh()
+  {
+    return primal_space_dof_selectors_on_primal_mesh;
+  }
+
+  const std::vector<bool> &
+  get_primal_space_dof_selectors_on_primal_mesh() const
+  {
+    return primal_space_dof_selectors_on_primal_mesh;
+  }
+
+  std::vector<bool> &
+  get_primal_space_dof_selectors_on_refined_mesh()
+  {
+    return primal_space_dof_selectors_on_refined_mesh;
+  }
+
+  const std::vector<bool> &
+  get_primal_space_dof_selectors_on_refined_mesh() const
+  {
+    return primal_space_dof_selectors_on_refined_mesh;
+  }
+
+  std::vector<bool> &
   get_dual_space_dof_selectors_on_refined_mesh()
   {
     return dual_space_dof_selectors_on_refined_mesh;
@@ -340,6 +364,30 @@ public:
   get_dual_space_dof_selectors_on_refined_mesh() const
   {
     return dual_space_dof_selectors_on_refined_mesh;
+  }
+
+  std::vector<types::global_dof_index> &
+  get_primal_space_full_to_local_dof_id_map_on_primal_mesh()
+  {
+    return primal_space_full_to_local_dof_id_map_on_primal_mesh;
+  }
+
+  const std::vector<types::global_dof_index> &
+  get_primal_space_full_to_local_dof_id_map_on_primal_mesh() const
+  {
+    return primal_space_full_to_local_dof_id_map_on_primal_mesh;
+  }
+
+  std::vector<types::global_dof_index> &
+  get_primal_space_full_to_local_dof_id_map_on_refined_mesh()
+  {
+    return primal_space_full_to_local_dof_id_map_on_refined_mesh;
+  }
+
+  const std::vector<types::global_dof_index> &
+  get_primal_space_full_to_local_dof_id_map_on_refined_mesh() const
+  {
+    return primal_space_full_to_local_dof_id_map_on_refined_mesh;
   }
 
   std::vector<types::global_dof_index> &
