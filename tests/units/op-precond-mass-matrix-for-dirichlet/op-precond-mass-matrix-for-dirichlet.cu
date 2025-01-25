@@ -57,7 +57,7 @@ main(int argc, const char *argv[])
   precond.get_triangulation().copy_triangulation(tria);
   precond.get_triangulation().refine_global();
 
-  // Build the averaging matrix.
+  // Build the mass averaging matrix.
   precond.initialize_dof_handlers();
   precond.build_dof_to_cell_topology();
   precond.build_mass_matrix_on_refined_mesh(QGauss<2>(2));
@@ -70,7 +70,7 @@ main(int argc, const char *argv[])
   ofstream sp_pattern("sparsity-pattern.svg");
   precond.get_mass_matrix().get_sparsity_pattern().print_svg(sp_pattern);
 
-  // Print matrix.
+  // Print the mass matrix.
   precond.get_mass_matrix().print_formatted(std::cout, 15, true, 25, "0");
 
   return 0;

@@ -8,7 +8,6 @@
  * @date 2025-12-24
  */
 
-#include <deal.II/base/exceptions.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/types.h>
 
