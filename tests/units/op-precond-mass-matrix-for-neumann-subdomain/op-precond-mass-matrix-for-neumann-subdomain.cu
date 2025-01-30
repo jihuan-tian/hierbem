@@ -1,14 +1,16 @@
 /**
- * @file op-precond-mass-matrix-for-dirichlet-subdomain.cu
+ * @file op-precond-mass-matrix-for-neumann-subdomain.cu
  * @brief Verify building the mass matrix for operator preconditioning on a
- * subdomain used in Laplace Dirichlet problem.
+ * subdomain used in Laplace Neumann problem.
  *
  * @ingroup preconditioner
  * @author Jihuan Tian
- * @date 2025-01-25
+ * @date 2025-01-29
  */
 
+#include <deal.II/base/point.h>
 #include <deal.II/base/quadrature_lib.h>
+#include <deal.II/base/types.h>
 
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
@@ -20,13 +22,12 @@
 #include <catch2/catch_all.hpp>
 
 #include <fstream>
-#include <iostream>
 #include <set>
 #include <string>
 #include <vector>
 
 #include "grid_out_ext.h"
-#include "preconditioners/preconditioner_for_laplace_dirichlet.h"
+#include "preconditioners/preconditioner_for_laplace_neumann.h"
 
 using namespace Catch::Matchers;
 using namespace HierBEM;
@@ -50,8 +51,8 @@ assign_material_ids(Triangulation<2, 3> &tria, const double width)
 }
 
 void
-setup_preconditioner(PreconditionerForLaplaceDirichlet<2, 3, double> &precond,
-                     const Triangulation<2, 3>                       &tria)
+setup_preconditioner(PreconditionerForLaplaceNeumann<2, 3, double> &precond,
+                     const Triangulation<2, 3>                     &tria)
 {
   precond.get_triangulation().copy_triangulation(tria);
   precond.get_triangulation().refine_global();
@@ -80,19 +81,22 @@ compare_two_files(const string &file1, const string &file2)
 }
 
 TEST_CASE(
-  "Verify mass matrix for operator preconditioning in Laplace Dirichlet on subdomain",
+  "Verify mass matrix for operator preconditioning in Laplace Neumann on subdomain",
   "[preconditioner]")
 {
   INFO("*** test start");
 
-  // Define the primal space and dual space with respect to the single layer
-  // potential operator.
-  FE_DGQ<2, 3> fe_primal_space(0);
-  FE_Q<2, 3>   fe_dual_space(1);
+  // Define the primal space and dual space with respect to the hyper singular
+  // operator.
+  FE_Q<2, 3>   fe_primal_space(1);
+  FE_DGQ<2, 3> fe_dual_space(0);
 
-  // Generate the mesh. Because we are going to distribute DoFs on the two-level
-  // multigrid required by the operator preconditioner, the triangulation object
-  // should be constructed with a level difference limitation at vertices.
+  REQUIRE(fe_dual_space.has_support_points());
+
+  // Generate the mesh. Because we are going to distribute DoFs on the
+  // two-level multigrid required by the operator preconditioner, the
+  // triangulation object should be constructed with a level difference
+  // limitation at vertices.
   const double        width        = 12.0;
   const double        height       = 6.0;
   const unsigned int  x_repetition = 6;
@@ -111,18 +115,23 @@ TEST_CASE(
   // Create the preconditioner. Since we do not apply the preconditioner to the
   // system matrix in this case, the conversion between internal and external
   // DoF numberings is not needed. Therefore, we pass a dummy numbering to the
-  // preconditioner's constructor.
-  std::vector<types::global_dof_index> dummy_numbering(tria.n_cells() / 2);
-  std::set<types::material_id>         subdomain_material_ids = {1};
-  PreconditionerForLaplaceDirichlet<2, 3, double> precond(
+  // preconditioner's constructor. Its size is initialized to be the number of
+  // nodes on the right of the interface between Dirichlet and Neumann domains.
+  const unsigned int n_dofs_dual_space_dual_mesh =
+    (tria.n_vertices() - y_repetition - 1) / 2;
+  std::vector<types::global_dof_index> dummy_numbering(
+    n_dofs_dual_space_dual_mesh);
+  std::set<types::material_id> subdomain_material_ids            = {2};
+  std::set<types::material_id> complement_subdomain_material_ids = {1};
+  PreconditionerForLaplaceNeumann<2, 3, double> precond(
     fe_primal_space,
     fe_dual_space,
     tria,
     dummy_numbering,
     dummy_numbering,
-    subdomain_material_ids);
+    subdomain_material_ids,
+    complement_subdomain_material_ids);
 
-  // Setup the preconditioner and build matrices.
   setup_preconditioner(precond, tria);
   precond.build_coupling_matrix();
   precond.build_averaging_matrix();
@@ -138,7 +147,7 @@ TEST_CASE(
 
   // Print the mass matrix.
   ofstream out("Mr.output");
-  precond.get_mass_matrix().print_formatted(out, 15, true, 25, "0");
+  precond.get_mass_matrix().print_formatted(out, 15, false, 25, "0");
   out.close();
 
   REQUIRE(precond.get_averaging_matrix().n() == precond.get_mass_matrix().m());

@@ -132,7 +132,7 @@ print_weights_at_support_points_in_refined_mesh(
 }
 
 void
-compare_two_files(const string file1, const string file2)
+compare_two_files(const string &file1, const string &file2)
 {
   vector<string> file1_lines, file2_lines;
   read_file_lines(file1, file1_lines);

@@ -19,7 +19,7 @@
 #include "grid_in_ext.h"
 #include "grid_out_ext.h"
 #include "hmatrix/hmatrix_parameters.h"
-#include "preconditioners/preconditioner_for_laplace_dirichlet.h"
+#include "preconditioners/preconditioner_for_laplace_neumann.h"
 #include "subdomain_topology.h"
 
 using namespace Catch::Matchers;
@@ -44,9 +44,9 @@ namespace HierBEM
 } // namespace HierBEM
 
 void
-run_op_precond_hmatrix_for_dirichlet()
+run_op_precond_hmatrix_for_neumann()
 {
-  std::ofstream ofs("op-precond-hmatrix-for-dirichlet.log");
+  std::ofstream ofs("op-precond-hmatrix-for-neumann.log");
   deallog.pop();
   deallog.depth_console(0);
   deallog.depth_file(5);
@@ -113,29 +113,23 @@ run_op_precond_hmatrix_for_dirichlet()
   SubdomainTopology<dim, spacedim> subdomain_topology;
   subdomain_topology.generate_single_domain_topology_for_dealii_model({0});
 
-  // Define the primal space and dual space with respect to the single layer
-  // potential operator.
-  FE_DGQ<dim, spacedim> fe_primal_space(0);
-  FE_Q<dim, spacedim>   fe_dual_space(1);
+  // Define the primal space and dual space with respect to the hyper singular
+  // layer potential operator.
+  FE_Q<dim, spacedim>   fe_primal_space(1);
+  FE_DGQ<dim, spacedim> fe_dual_space(0);
 
   // Create the preconditioner. Since we do not apply the preconditioner to the
   // system matrix in this case, the conversion between internal and external
   // DoF numberings is not needed. Therefore, we pass a dummy numbering to the
-  // preconditioner's constructor. Its size is initialized to the number of
-  // cells in the primal mesh.
-  std::vector<types::global_dof_index> dummy_numbering(tria.n_cells());
-  PreconditionerForLaplaceDirichlet<dim, spacedim, double> precond(
+  // preconditioner's constructor.
+  std::vector<types::global_dof_index>                   dummy_numbering;
+  PreconditionerForLaplaceNeumann<dim, spacedim, double> precond(
     fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
 
   precond.get_triangulation().copy_triangulation(tria);
   precond.get_triangulation().refine_global();
-
-  // Build the mass matrix on the refined mesh first, because it
-  // is needed by the preconditioner matrix, which involves the stabilization
-  // of the hypersingular bilinear form.
   precond.initialize_dof_handlers();
   precond.build_dof_to_cell_topology();
-  precond.build_mass_matrix_on_refined_mesh(QGauss<dim>(2));
 
   // Build the preconditioner matrix on the refined mesh.
   HMatrixParameters hmat_params(64,  // Minimum cluster node size
@@ -158,7 +152,7 @@ run_op_precond_hmatrix_for_dirichlet()
   const HMatrixSymm<spacedim, double> &Br =
     precond.get_preconditioner_hmatrix();
   Br.print_leaf_set_info(ofs);
-  std::ofstream out("op-precond-hmatrix-for-dirichlet.output");
+  std::ofstream out("op-precond-hmatrix-for-neumann.output");
   Br.print_as_formatted_full_matrix(out, "Br", 15, true, 25);
   out.close();
 

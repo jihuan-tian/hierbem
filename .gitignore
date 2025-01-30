@@ -125,3 +125,12 @@ tests/functions/laplace-bem/neumann-hmatrix/reference.output
 tests/functions/laplace-bem/neumann-hmatrix-op-precond/reference.output
 tests/units/op-precond-averaging-matrix-for-dirichlet-subdomain/draw.jl
 tests/units/op-precond-coupling-matrix-for-dirichlet-subdomain/draw.jl
+tests/units/op-precond-averaging-matrix-for-neumann/draw.jl
+tests/units/op-precond-coupling-matrix-for-neumann/draw.jl
+tests/units/op-precond-averaging-matrix-for-neumann-subdomain/draw.jl
+tests/units/op-precond-averaging-matrix-for-neumann-subdomain/process.jl
+tests/units/op-precond-coupling-matrix-for-neumann-subdomain/draw.jl
+tests/units/op-precond-coupling-matrix-for-neumann-subdomain/process.jl
+tests/units/op-precond-hmatrix-for-dirichlet-subdomain/process.m
+tests/units/op-precond-hmatrix-for-neumann/process.m
+tests/units/op-precond-hmatrix-for-neumann-subdomain/process.m

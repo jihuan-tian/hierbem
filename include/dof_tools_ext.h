@@ -92,16 +92,17 @@ namespace DoFToolsExt
    * @param selected_dofs
    * @param reset_selectors_to_false If preset all selectors to false at the
    * beginning of this function.
+   * @return Effective number of DoFs.
    */
   template <int dim, int spacedim>
-  void
+  types::global_dof_index
   extract_material_domain_dofs(const DoFHandler<dim, spacedim>    &dof_handler,
                                const std::set<types::material_id> &material_ids,
                                std::vector<bool> &selected_dofs,
                                const bool reset_selectors_to_false = true)
   {
-    Assert(selected_dofs.size() == dof_handler.n_dofs(),
-           ExcDimensionMismatch(selected_dofs.size(), dof_handler.n_dofs()));
+    AssertDimension(selected_dofs.size(), dof_handler.n_dofs());
+    types::global_dof_index effective_n_dofs = 0;
 
     if (reset_selectors_to_false)
       {
@@ -131,19 +132,81 @@ namespace DoFToolsExt
             cell->get_dof_indices(cell_dof_indices);
             for (unsigned int i = 0; i < dofs_per_cell; ++i)
               {
-                selected_dofs[cell_dof_indices[i]] = true;
+                if (!selected_dofs[cell_dof_indices[i]])
+                  {
+                    selected_dofs[cell_dof_indices[i]] = true;
+                    effective_n_dofs++;
+                  }
               }
           }
       }
+
+    return effective_n_dofs;
+  }
+
+
+  /**
+   * Mark the DoFs in cells by excluding those DoFs in cells in the complement
+   * subdomain. The complement subdomain is specified by a set of material ids.
+   *
+   * @return Effective number of DoFs.
+   */
+  template <int dim, int spacedim>
+  types::global_dof_index
+  extract_material_domain_dofs_by_excluding_complement_subdomain(
+    const DoFHandler<dim, spacedim>    &dof_handler,
+    const std::set<types::material_id> &complement_subdomain_material_ids,
+    std::vector<bool>                  &selected_dofs,
+    const bool                          reset_selectors_to_true = true)
+  {
+    AssertDimension(selected_dofs.size(), dof_handler.n_dofs());
+    types::global_dof_index effective_n_dofs = dof_handler.n_dofs();
+
+    if (reset_selectors_to_true)
+      // preset all values by true
+      std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(), true);
+
+    // Global DoF indices for the current cell.
+    std::vector<types::global_dof_index> cell_dof_indices;
+    cell_dof_indices.reserve(
+      dof_handler.get_fe_collection().max_dofs_per_cell());
+
+    // this function is similar to the make_sparsity_pattern function, see
+    // there for more information
+    for (const auto &cell : dof_handler.active_cell_iterators())
+      {
+        // Find the current cell's material id in the given list.
+        auto found_iter =
+          complement_subdomain_material_ids.find(cell->material_id());
+
+        if (found_iter != complement_subdomain_material_ids.end())
+          {
+            const unsigned int dofs_per_cell = cell->get_fe().dofs_per_cell;
+            cell_dof_indices.resize(dofs_per_cell);
+            cell->get_dof_indices(cell_dof_indices);
+            for (unsigned int i = 0; i < dofs_per_cell; ++i)
+              {
+                if (selected_dofs[cell_dof_indices[i]])
+                  {
+                    selected_dofs[cell_dof_indices[i]] = false;
+                    effective_n_dofs--;
+                  }
+              }
+          }
+      }
+
+    return effective_n_dofs;
   }
 
 
   /**
    * Mark the DoFs in cells on the specified level which have a material id
    * belonging to the given collection.
+   *
+   * @return Effective number of DoFs.
    */
   template <int dim, int spacedim>
-  void
+  types::global_dof_index
   extract_material_domain_mg_dofs(
     const DoFHandler<dim, spacedim>    &dof_handler,
     const unsigned int                  level,
@@ -152,6 +215,7 @@ namespace DoFToolsExt
     const bool                          reset_selectors_to_false = true)
   {
     AssertDimension(selected_dofs.size(), dof_handler.n_dofs(level));
+    types::global_dof_index effective_n_dofs = 0;
 
     if (reset_selectors_to_false)
       // preset all values by false
@@ -176,10 +240,16 @@ namespace DoFToolsExt
             cell->get_mg_dof_indices(cell_dof_indices);
             for (unsigned int i = 0; i < dofs_per_cell; ++i)
               {
-                selected_dofs[cell_dof_indices[i]] = true;
+                if (!selected_dofs[cell_dof_indices[i]])
+                  {
+                    selected_dofs[cell_dof_indices[i]] = true;
+                    effective_n_dofs++;
+                  }
               }
           }
       }
+
+    return effective_n_dofs;
   }
 
 
@@ -187,9 +257,11 @@ namespace DoFToolsExt
    * Mark the DoFs in cells on the specified level by excluding those DoFs in
    * cells in the complement subdomain. The complement subdomain is specified by
    * a set of material ids.
+   *
+   * @return Effective number of DoFs.
    */
   template <int dim, int spacedim>
-  void
+  types::global_dof_index
   extract_material_domain_mg_dofs_by_excluding_complement_subdomain(
     const DoFHandler<dim, spacedim>    &dof_handler,
     const unsigned int                  level,
@@ -198,6 +270,7 @@ namespace DoFToolsExt
     const bool                          reset_selectors_to_true = true)
   {
     AssertDimension(selected_dofs.size(), dof_handler.n_dofs(level));
+    types::global_dof_index effective_n_dofs = dof_handler.n_dofs(level);
 
     if (reset_selectors_to_true)
       // preset all values by true
@@ -223,10 +296,16 @@ namespace DoFToolsExt
             cell->get_mg_dof_indices(cell_dof_indices);
             for (unsigned int i = 0; i < dofs_per_cell; ++i)
               {
-                selected_dofs[cell_dof_indices[i]] = false;
+                if (selected_dofs[cell_dof_indices[i]])
+                  {
+                    selected_dofs[cell_dof_indices[i]] = false;
+                    effective_n_dofs--;
+                  }
               }
           }
       }
+
+    return effective_n_dofs;
   }
 
 
@@ -332,14 +411,14 @@ namespace DoFToolsExt
 
 
   template <int dim, int spacedim>
-  void
+  types::global_dof_index
   extract_material_domain_dofs_excluding_boundary_dofs(
     const DoFHandler<dim, spacedim>    &dof_handler,
     const std::set<types::material_id> &boundary_cell_material_ids,
     std::vector<bool>                  &selected_dofs)
   {
-    Assert(selected_dofs.size() == dof_handler.n_dofs(),
-           ExcDimensionMismatch(selected_dofs.size(), dof_handler.n_dofs()));
+    AssertDimension(selected_dofs.size(), dof_handler.n_dofs());
+    types::global_dof_index effective_n_dofs = dof_handler.n_dofs();
 
     // preset all values by true.
     std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(), true);
@@ -374,12 +453,18 @@ namespace DoFToolsExt
                          d < dof_handler.get_fe().dofs_per_face;
                          d++)
                       {
-                        selected_dofs[face_dof_indices[d]] = false;
+                        if (selected_dofs[face_dof_indices[d]])
+                          {
+                            selected_dofs[face_dof_indices[d]] = false;
+                            effective_n_dofs--;
+                          }
                       }
                   }
               }
           }
       }
+
+    return effective_n_dofs;
   }
 
 

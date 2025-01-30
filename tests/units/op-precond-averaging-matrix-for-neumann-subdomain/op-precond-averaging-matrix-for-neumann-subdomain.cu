@@ -1,13 +1,15 @@
 /**
- * @file op-precond-averaging-matrix-for-neumann.cu
- * @brief Verify building the averaging matrix for operator preconditioning used
- * in Laplace Neumann problem.
+ * @file op-precond-averaging-matrix-for-neumann-subdomain.cu
+ * @brief Verify building the averaging matrix for operator preconditioning on a
+ * subdomain used in Laplace Neumann problem.
  *
  * @ingroup preconditioner
  * @author Jihuan Tian
- * @date 2025-01-08
+ * @date 2025-01-26
  */
+
 #include <deal.II/base/point.h>
+#include <deal.II/base/types.h>
 
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
@@ -20,6 +22,7 @@
 #include <julia.h>
 
 #include <fstream>
+#include <set>
 #include <vector>
 
 #include "grid_out_ext.h"
@@ -30,8 +33,36 @@ using namespace HierBEM;
 using namespace dealii;
 using namespace std;
 
+// For the 6x3 subdivided rectangle, we assign material id 1 to the left half
+// 3x3 grid and 2 to the right half 3x3 grid. The former is assigned the
+// Dirichlet boundary condition and the latter is assigned the Neumann boundary
+// condition.
+void
+assign_material_ids(Triangulation<2, 3> &tria, const double width)
+{
+  for (auto &cell : tria.active_cell_iterators())
+    {
+      if (cell->center()(0) < width / 2.0)
+        cell->set_material_id(1);
+      else
+        cell->set_material_id(2);
+    }
+}
+
+void
+setup_preconditioner(PreconditionerForLaplaceNeumann<2, 3, double> &precond,
+                     const Triangulation<2, 3>                     &tria)
+{
+  precond.get_triangulation().copy_triangulation(tria);
+  precond.get_triangulation().refine_global();
+  precond.initialize_dof_handlers();
+  precond.generate_dof_selectors();
+  precond.generate_maps_between_full_and_local_dof_ids();
+  precond.build_dof_to_cell_topology();
+}
+
 TEST_CASE(
-  "Verify averaging matrix for operator preconditioning in Laplace Neumann",
+  "Verify averaging matrix for operator preconditioning in Laplace Neumann on subdomain",
   "[preconditioner]")
 {
   INFO("*** test start");
@@ -50,26 +81,42 @@ TEST_CASE(
   // two-level multigrid required by the operator preconditioner, the
   // triangulation object should be constructed with a level difference
   // limitation at vertices.
+  const double        width        = 12.0;
+  const double        height       = 6.0;
+  const unsigned int  x_repetition = 6;
+  const unsigned int  y_repetition = 3;
   Triangulation<2, 3> tria(
     Triangulation<2, 3>::MeshSmoothing::limit_level_difference_at_vertices);
-  GridGenerator::subdivided_hyper_cube(tria, 3, 0, 10);
+  GridGenerator::subdivided_hyper_rectangle(tria,
+                                            {x_repetition, y_repetition},
+                                            Point<2>(0, 0),
+                                            Point<2>(width, height));
+  assign_material_ids(tria, width);
+
   ofstream mesh_out("mesh.msh");
   write_msh_correct(tria, mesh_out);
 
   // Create the preconditioner. Since we do not apply the preconditioner to the
   // system matrix in this case, the conversion between internal and external
   // DoF numberings is not needed. Therefore, we pass a dummy numbering to the
-  // preconditioner's constructor.
-  std::vector<types::global_dof_index>          dummy_numbering;
+  // preconditioner's constructor. Its size is initialized to be the number of
+  // nodes on the right of the interface between Dirichlet and Neumann domains.
+  const unsigned int n_dofs_dual_space_dual_mesh =
+    (tria.n_vertices() - y_repetition - 1) / 2;
+  std::vector<types::global_dof_index> dummy_numbering(
+    n_dofs_dual_space_dual_mesh);
+  std::set<types::material_id> subdomain_material_ids            = {2};
+  std::set<types::material_id> complement_subdomain_material_ids = {1};
   PreconditionerForLaplaceNeumann<2, 3, double> precond(
-    fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
+    fe_primal_space,
+    fe_dual_space,
+    tria,
+    dummy_numbering,
+    dummy_numbering,
+    subdomain_material_ids,
+    complement_subdomain_material_ids);
 
-  precond.get_triangulation().copy_triangulation(tria);
-  precond.get_triangulation().refine_global();
-
-  // Build the averaging matrix.
-  precond.initialize_dof_handlers();
-  precond.build_dof_to_cell_topology();
+  setup_preconditioner(precond, tria);
   precond.build_averaging_matrix();
 
   // Export the refined mesh.
@@ -103,9 +150,17 @@ TEST_CASE(
       // Iterate over each DoF index in the current cell.
       for (unsigned int d = 0; d < dof_indices_in_primal_cell.size(); d++)
         {
-          Point<3> support_point = mapping.transform_unit_to_real_cell(
-            cell, unit_support_points_in_primal_cell[d]);
-          out << dof_indices_in_primal_cell[d] << " " << support_point << "\n";
+          if (precond.get_primal_space_dof_selectors_on_primal_mesh()
+                [dof_indices_in_primal_cell[d]])
+            {
+              Point<3> support_point = mapping.transform_unit_to_real_cell(
+                cell, unit_support_points_in_primal_cell[d]);
+              out
+                << precond
+                     .get_primal_space_full_to_local_dof_id_map_on_primal_mesh()
+                       [dof_indices_in_primal_cell[d]]
+                << " " << support_point << "\n";
+            }
         }
     }
 
@@ -127,9 +182,17 @@ TEST_CASE(
       // Iterate over each DoF index in the current cell.
       for (unsigned int d = 0; d < dof_indices_in_refined_cell.size(); d++)
         {
-          Point<3> support_point = mapping.transform_unit_to_real_cell(
-            cell, unit_support_points_in_refined_cell[d]);
-          out << dof_indices_in_refined_cell[d] << " " << support_point << "\n";
+          if (precond.get_dual_space_dof_selectors_on_refined_mesh()
+                [dof_indices_in_refined_cell[d]])
+            {
+              Point<3> support_point = mapping.transform_unit_to_real_cell(
+                cell, unit_support_points_in_refined_cell[d]);
+              out
+                << precond
+                     .get_dual_space_full_to_local_dof_id_map_on_refined_mesh()
+                       [dof_indices_in_refined_cell[d]]
+                << " " << support_point << "\n";
+            }
         }
     }
 

@@ -104,8 +104,9 @@ main(int argc, const char *argv[])
   // Create the preconditioner. Since we do not apply the preconditioner to the
   // system matrix in this case, the conversion between internal and external
   // DoF numberings is not needed. Therefore, we pass a dummy numbering to the
-  // preconditioner's constructor.
-  std::vector<types::global_dof_index>            dummy_numbering;
+  // preconditioner's constructor. Its size is initialized to the number of
+  // cells in the primal mesh.
+  std::vector<types::global_dof_index> dummy_numbering(tria.n_cells());
   PreconditionerForLaplaceDirichlet<2, 3, double> precond(
     fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
 

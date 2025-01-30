@@ -13,6 +13,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <set>
 #include <vector>
 
 #include "debug_tools.h"
@@ -24,6 +25,46 @@
 
 using namespace Catch::Matchers;
 using namespace HierBEM;
+
+// Assign Dirichlet boundary condition to the left half sphere and Neumann
+// boundary condition to the right half. Left and right is defined with respect
+// to the X coordinate of the sphere center.
+void
+assign_material_ids(Triangulation<2, 3> &tria, const Point<3> &sphere_center)
+{
+  for (auto &cell : tria.active_cell_iterators())
+    {
+      if (cell->center()(0) <= sphere_center(0))
+        cell->set_material_id(1);
+      else
+        cell->set_material_id(2);
+    }
+}
+
+unsigned int
+count_number_of_cells_with_material_id(Triangulation<2, 3>     &tria,
+                                       const types::material_id id)
+{
+  unsigned int n = 0;
+  for (const auto &cell : tria.active_cell_iterators())
+    if (cell->material_id() == id)
+      n++;
+
+  return n;
+}
+
+void
+setup_preconditioner(PreconditionerForLaplaceDirichlet<2, 3, double> &precond,
+                     const Triangulation<2, 3>                       &tria)
+{
+  precond.get_triangulation().copy_triangulation(tria);
+  precond.get_triangulation().refine_global();
+  precond.initialize_dof_handlers();
+  precond.generate_dof_selectors();
+  precond.generate_maps_between_full_and_local_dof_ids();
+  precond.build_dof_to_cell_topology();
+  precond.build_mass_matrix_on_refined_mesh(QGauss<2>(2));
+}
 
 class OutwardSurfaceNormalDetector
 {
@@ -46,7 +87,7 @@ namespace HierBEM
 void
 run_op_precond_hmatrix_for_dirichlet()
 {
-  std::ofstream ofs("op-precond-hmatrix-for-dirichlet.log");
+  std::ofstream ofs("op-precond-hmatrix-for-dirichlet-subdomain.log");
   deallog.pop();
   deallog.depth_console(0);
   deallog.depth_file(5);
@@ -71,7 +112,7 @@ run_op_precond_hmatrix_for_dirichlet()
 
   Triangulation<dim, spacedim> tria;
   GridGenerator::hyper_sphere(tria, center, radius);
-  tria.refine_global(1);
+  tria.refine_global(2);
   std::string   mesh_file("surface-mesh.msh");
   std::ofstream mesh_out(mesh_file);
   write_msh_correct(tria, mesh_out);
@@ -86,9 +127,15 @@ run_op_precond_hmatrix_for_dirichlet()
   read_msh(mesh_in, tria, false, true, false);
   mesh_in.close();
 
+  assign_material_ids(tria, center);
+  mesh_out.open("surface-mesh-with-materials.msh");
+  write_msh_correct(tria, mesh_out);
+  mesh_out.close();
+
   // Create the map from material id to manifold id.
   std::map<EntityTag, types::manifold_id> manifold_description;
-  manifold_description[0] = 0;
+  manifold_description[1] = 0;
+  manifold_description[2] = 0;
 
   // Create and assign manifold.
   std::map<types::manifold_id, Manifold<dim, spacedim> *> manifolds;
@@ -108,10 +155,11 @@ run_op_precond_hmatrix_for_dirichlet()
 
   // Construct the map from material ids to mapping indices.
   std::map<types::material_id, unsigned int> material_id_to_mapping_index;
-  material_id_to_mapping_index[0] = 1;
+  material_id_to_mapping_index[1] = 1;
+  material_id_to_mapping_index[2] = 1;
 
   SubdomainTopology<dim, spacedim> subdomain_topology;
-  subdomain_topology.generate_single_domain_topology_for_dealii_model({0});
+  subdomain_topology.generate_single_domain_topology_for_dealii_model({1, 2});
 
   // Define the primal space and dual space with respect to the single layer
   // potential operator.
@@ -122,20 +170,19 @@ run_op_precond_hmatrix_for_dirichlet()
   // system matrix in this case, the conversion between internal and external
   // DoF numberings is not needed. Therefore, we pass a dummy numbering to the
   // preconditioner's constructor. Its size is initialized to the number of
-  // cells in the primal mesh.
-  std::vector<types::global_dof_index> dummy_numbering(tria.n_cells());
+  // cells having material id 1.
+  std::vector<types::global_dof_index> dummy_numbering(
+    count_number_of_cells_with_material_id(tria, 1));
+  std::set<types::material_id> subdomain_material_ids = {1};
   PreconditionerForLaplaceDirichlet<dim, spacedim, double> precond(
-    fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
+    fe_primal_space,
+    fe_dual_space,
+    tria,
+    dummy_numbering,
+    dummy_numbering,
+    subdomain_material_ids);
 
-  precond.get_triangulation().copy_triangulation(tria);
-  precond.get_triangulation().refine_global();
-
-  // Build the mass matrix on the refined mesh first, because it
-  // is needed by the preconditioner matrix, which involves the stabilization
-  // of the hypersingular bilinear form.
-  precond.initialize_dof_handlers();
-  precond.build_dof_to_cell_topology();
-  precond.build_mass_matrix_on_refined_mesh(QGauss<dim>(2));
+  setup_preconditioner(precond, tria);
 
   // Build the preconditioner matrix on the refined mesh.
   HMatrixParameters hmat_params(64,  // Minimum cluster node size
@@ -158,7 +205,7 @@ run_op_precond_hmatrix_for_dirichlet()
   const HMatrixSymm<spacedim, double> &Br =
     precond.get_preconditioner_hmatrix();
   Br.print_leaf_set_info(ofs);
-  std::ofstream out("op-precond-hmatrix-for-dirichlet.output");
+  std::ofstream out("op-precond-hmatrix-for-dirichlet-subdomain.output");
   Br.print_as_formatted_full_matrix(out, "Br", 15, true, 25);
   out.close();
 

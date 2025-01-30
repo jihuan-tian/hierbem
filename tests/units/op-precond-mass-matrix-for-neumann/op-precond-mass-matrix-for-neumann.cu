@@ -1,11 +1,11 @@
 /**
- * @file op-precond-mass-matrix-for-dirichlet-subdomain.cu
- * @brief Verify building the mass matrix for operator preconditioning on a
- * subdomain used in Laplace Dirichlet problem.
+ * @file op-precond-mass-matrix-for-neumann.cu
+ * @brief Verify building the mass matrix for operator preconditioning used
+ * in Laplace Neumann problem.
  *
  * @ingroup preconditioner
  * @author Jihuan Tian
- * @date 2025-01-25
+ * @date 2025-01-29
  */
 
 #include <deal.II/base/quadrature_lib.h>
@@ -20,44 +20,24 @@
 #include <catch2/catch_all.hpp>
 
 #include <fstream>
-#include <iostream>
-#include <set>
 #include <string>
 #include <vector>
 
 #include "grid_out_ext.h"
-#include "preconditioners/preconditioner_for_laplace_dirichlet.h"
+#include "preconditioners/preconditioner_for_laplace_neumann.h"
 
 using namespace Catch::Matchers;
 using namespace HierBEM;
 using namespace dealii;
 using namespace std;
 
-// For the 6x3 subdivided rectangle, we assign material id 1 to the left half
-// 3x3 grid and 2 to the right half 3x3 grid. The former is assigned the
-// Dirichlet boundary condition and the latter is assigned the Neumann boundary
-// condition.
 void
-assign_material_ids(Triangulation<2, 3> &tria, const double width)
-{
-  for (auto &cell : tria.active_cell_iterators())
-    {
-      if (cell->center()(0) < width / 2.0)
-        cell->set_material_id(1);
-      else
-        cell->set_material_id(2);
-    }
-}
-
-void
-setup_preconditioner(PreconditionerForLaplaceDirichlet<2, 3, double> &precond,
-                     const Triangulation<2, 3>                       &tria)
+setup_preconditioner(PreconditionerForLaplaceNeumann<2, 3, double> &precond,
+                     const Triangulation<2, 3>                     &tria)
 {
   precond.get_triangulation().copy_triangulation(tria);
   precond.get_triangulation().refine_global();
   precond.initialize_dof_handlers();
-  precond.generate_dof_selectors();
-  precond.generate_maps_between_full_and_local_dof_ids();
   precond.build_dof_to_cell_topology();
 }
 
@@ -79,32 +59,23 @@ compare_two_files(const string &file1, const string &file2)
     }
 }
 
-TEST_CASE(
-  "Verify mass matrix for operator preconditioning in Laplace Dirichlet on subdomain",
-  "[preconditioner]")
+TEST_CASE("Verify mass matrix for operator preconditioning in Laplace Neumann",
+          "[preconditioner]")
 {
   INFO("*** test start");
 
-  // Define the primal space and dual space with respect to the single layer
-  // potential operator.
-  FE_DGQ<2, 3> fe_primal_space(0);
-  FE_Q<2, 3>   fe_dual_space(1);
+  // Define the primal space and dual space with respect to the hyper singular
+  // operator.
+  FE_Q<2, 3>   fe_primal_space(1);
+  FE_DGQ<2, 3> fe_dual_space(0);
 
-  // Generate the mesh. Because we are going to distribute DoFs on the two-level
-  // multigrid required by the operator preconditioner, the triangulation object
-  // should be constructed with a level difference limitation at vertices.
-  const double        width        = 12.0;
-  const double        height       = 6.0;
-  const unsigned int  x_repetition = 6;
-  const unsigned int  y_repetition = 3;
+  // Generate the mesh. Because we are going to distribute DoFs on the
+  // two-level multigrid required by the operator preconditioner, the
+  // triangulation object should be constructed with a level difference
+  // limitation at vertices.
   Triangulation<2, 3> tria(
     Triangulation<2, 3>::MeshSmoothing::limit_level_difference_at_vertices);
-  GridGenerator::subdivided_hyper_rectangle(tria,
-                                            {x_repetition, y_repetition},
-                                            Point<2>(0, 0),
-                                            Point<2>(width, height));
-  assign_material_ids(tria, width);
-
+  GridGenerator::subdivided_hyper_cube(tria, 3, 0, 10);
   ofstream mesh_out("mesh.msh");
   write_msh_correct(tria, mesh_out);
 
@@ -112,15 +83,9 @@ TEST_CASE(
   // system matrix in this case, the conversion between internal and external
   // DoF numberings is not needed. Therefore, we pass a dummy numbering to the
   // preconditioner's constructor.
-  std::vector<types::global_dof_index> dummy_numbering(tria.n_cells() / 2);
-  std::set<types::material_id>         subdomain_material_ids = {1};
-  PreconditionerForLaplaceDirichlet<2, 3, double> precond(
-    fe_primal_space,
-    fe_dual_space,
-    tria,
-    dummy_numbering,
-    dummy_numbering,
-    subdomain_material_ids);
+  std::vector<types::global_dof_index>          dummy_numbering;
+  PreconditionerForLaplaceNeumann<2, 3, double> precond(
+    fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
 
   // Setup the preconditioner and build matrices.
   setup_preconditioner(precond, tria);

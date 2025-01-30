@@ -57,7 +57,7 @@ main(int argc, const char *argv[])
   precond.get_triangulation().copy_triangulation(tria);
   precond.get_triangulation().refine_global();
 
-  // Build the mass averaging matrix.
+  // Build the mass matrix.
   precond.initialize_dof_handlers();
   precond.build_dof_to_cell_topology();
   precond.build_mass_matrix_on_refined_mesh(QGauss<2>(2));

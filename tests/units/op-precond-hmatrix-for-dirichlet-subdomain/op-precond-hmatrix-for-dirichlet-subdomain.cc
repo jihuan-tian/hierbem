@@ -1,11 +1,11 @@
 /**
- * @file op-precond-hmatrix-for-dirichlet.cu
+ * @file op-precond-hmatrix-for-dirichlet-subdomain-.cu
  * @brief Verify building the preconditioner matrix on refined mesh for
- * operator preconditioning used in Laplace Dirichlet problem.
+ * operator preconditioning on a subdomain used in Laplace Dirichlet problem.
  *
  * @ingroup preconditioner
  * @author Jihuan Tian
- * @date 2024-12-07
+ * @date 2025-01-27
  */
 
 #include <catch2/catch_all.hpp>
@@ -19,7 +19,7 @@ using namespace HierBEM;
 extern void
 run_op_precond_hmatrix_for_dirichlet();
 
-TEST_CASE("Build preconditioner matrix for Laplace Dirichlet",
+TEST_CASE("Build preconditioner matrix for Laplace Dirichlet on subdomain",
           "[preconditioner]")
 {
   HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();

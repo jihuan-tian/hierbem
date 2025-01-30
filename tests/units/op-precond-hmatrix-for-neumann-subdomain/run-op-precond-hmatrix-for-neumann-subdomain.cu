@@ -13,17 +13,61 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <set>
 #include <vector>
 
 #include "debug_tools.h"
+#include "dof_tools_ext.h"
 #include "grid_in_ext.h"
 #include "grid_out_ext.h"
 #include "hmatrix/hmatrix_parameters.h"
-#include "preconditioners/preconditioner_for_laplace_dirichlet.h"
+#include "preconditioners/preconditioner_for_laplace_neumann.h"
 #include "subdomain_topology.h"
 
 using namespace Catch::Matchers;
 using namespace HierBEM;
+
+// Assign Dirichlet boundary condition to the left half sphere and Neumann
+// boundary condition to the right half. Left and right is defined with respect
+// to the X coordinate of the sphere center.
+void
+assign_material_ids(Triangulation<2, 3> &tria, const Point<3> &sphere_center)
+{
+  for (auto &cell : tria.active_cell_iterators())
+    {
+      if (cell->center()(0) <= sphere_center(0))
+        cell->set_material_id(1);
+      else
+        cell->set_material_id(2);
+    }
+}
+
+unsigned int
+count_number_of_nodes_in_neumann_boundary(
+  const FiniteElement<2, 3>          &fe,
+  const Triangulation<2, 3>          &tria,
+  const std::set<types::material_id> &complement_subdomain_material_ids)
+{
+  DoFHandler<2, 3> dof_handler(tria);
+  dof_handler.distribute_dofs(fe);
+
+  std::vector<bool> dof_selectors(dof_handler.n_dofs());
+  return DoFToolsExt::
+    extract_material_domain_dofs_by_excluding_complement_subdomain(
+      dof_handler, complement_subdomain_material_ids, dof_selectors);
+}
+
+void
+setup_preconditioner(PreconditionerForLaplaceNeumann<2, 3, double> &precond,
+                     const Triangulation<2, 3>                     &tria)
+{
+  precond.get_triangulation().copy_triangulation(tria);
+  precond.get_triangulation().refine_global();
+  precond.initialize_dof_handlers();
+  precond.generate_dof_selectors();
+  precond.generate_maps_between_full_and_local_dof_ids();
+  precond.build_dof_to_cell_topology();
+}
 
 class OutwardSurfaceNormalDetector
 {
@@ -44,9 +88,9 @@ namespace HierBEM
 } // namespace HierBEM
 
 void
-run_op_precond_hmatrix_for_dirichlet()
+run_op_precond_hmatrix_for_neumann()
 {
-  std::ofstream ofs("op-precond-hmatrix-for-dirichlet.log");
+  std::ofstream ofs("op-precond-hmatrix-for-neumann-subdomain.log");
   deallog.pop();
   deallog.depth_console(0);
   deallog.depth_file(5);
@@ -71,7 +115,7 @@ run_op_precond_hmatrix_for_dirichlet()
 
   Triangulation<dim, spacedim> tria;
   GridGenerator::hyper_sphere(tria, center, radius);
-  tria.refine_global(1);
+  tria.refine_global(2);
   std::string   mesh_file("surface-mesh.msh");
   std::ofstream mesh_out(mesh_file);
   write_msh_correct(tria, mesh_out);
@@ -86,9 +130,15 @@ run_op_precond_hmatrix_for_dirichlet()
   read_msh(mesh_in, tria, false, true, false);
   mesh_in.close();
 
+  assign_material_ids(tria, center);
+  mesh_out.open("surface-mesh-with-materials.msh");
+  write_msh_correct(tria, mesh_out);
+  mesh_out.close();
+
   // Create the map from material id to manifold id.
   std::map<EntityTag, types::manifold_id> manifold_description;
-  manifold_description[0] = 0;
+  manifold_description[1] = 0;
+  manifold_description[2] = 0;
 
   // Create and assign manifold.
   std::map<types::manifold_id, Manifold<dim, spacedim> *> manifolds;
@@ -108,34 +158,39 @@ run_op_precond_hmatrix_for_dirichlet()
 
   // Construct the map from material ids to mapping indices.
   std::map<types::material_id, unsigned int> material_id_to_mapping_index;
-  material_id_to_mapping_index[0] = 1;
+  material_id_to_mapping_index[1] = 1;
+  material_id_to_mapping_index[2] = 1;
 
   SubdomainTopology<dim, spacedim> subdomain_topology;
-  subdomain_topology.generate_single_domain_topology_for_dealii_model({0});
+  subdomain_topology.generate_single_domain_topology_for_dealii_model({1, 2});
 
-  // Define the primal space and dual space with respect to the single layer
+  // Define the primal space and dual space with respect to the hyper singular
   // potential operator.
-  FE_DGQ<dim, spacedim> fe_primal_space(0);
-  FE_Q<dim, spacedim>   fe_dual_space(1);
+  FE_Q<dim, spacedim>   fe_primal_space(1);
+  FE_DGQ<dim, spacedim> fe_dual_space(0);
 
   // Create the preconditioner. Since we do not apply the preconditioner to the
   // system matrix in this case, the conversion between internal and external
   // DoF numberings is not needed. Therefore, we pass a dummy numbering to the
   // preconditioner's constructor. Its size is initialized to the number of
-  // cells in the primal mesh.
-  std::vector<types::global_dof_index> dummy_numbering(tria.n_cells());
-  PreconditionerForLaplaceDirichlet<dim, spacedim, double> precond(
-    fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
+  // cells having material id 1.
+  std::set<types::material_id>  subdomain_material_ids            = {2};
+  std::set<types::material_id>  complement_subdomain_material_ids = {1};
+  const types::global_dof_index n_selected_dofs =
+    count_number_of_nodes_in_neumann_boundary(
+      fe_primal_space, tria, complement_subdomain_material_ids);
+  deallog << "Number of selected DoFs: " << n_selected_dofs << std::endl;
+  std::vector<types::global_dof_index> dummy_numbering(n_selected_dofs);
+  PreconditionerForLaplaceNeumann<dim, spacedim, double> precond(
+    fe_primal_space,
+    fe_dual_space,
+    tria,
+    dummy_numbering,
+    dummy_numbering,
+    subdomain_material_ids,
+    complement_subdomain_material_ids);
 
-  precond.get_triangulation().copy_triangulation(tria);
-  precond.get_triangulation().refine_global();
-
-  // Build the mass matrix on the refined mesh first, because it
-  // is needed by the preconditioner matrix, which involves the stabilization
-  // of the hypersingular bilinear form.
-  precond.initialize_dof_handlers();
-  precond.build_dof_to_cell_topology();
-  precond.build_mass_matrix_on_refined_mesh(QGauss<dim>(2));
+  setup_preconditioner(precond, tria);
 
   // Build the preconditioner matrix on the refined mesh.
   HMatrixParameters hmat_params(64,  // Minimum cluster node size
@@ -158,7 +213,7 @@ run_op_precond_hmatrix_for_dirichlet()
   const HMatrixSymm<spacedim, double> &Br =
     precond.get_preconditioner_hmatrix();
   Br.print_leaf_set_info(ofs);
-  std::ofstream out("op-precond-hmatrix-for-dirichlet.output");
+  std::ofstream out("op-precond-hmatrix-for-neumann-subdomain.output");
   Br.print_as_formatted_full_matrix(out, "Br", 15, true, 25);
   out.close();
 
