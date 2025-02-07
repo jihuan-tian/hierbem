@@ -88,11 +88,10 @@ run_hmatrix_tvmult_tril()
    * Perform transposed \hmatrix/vector multiplication.
    */
   Vector<double> y(n);
-  H.Tvmult(y, x, H.get_property());
+  H.Tvmult(y, x);
   print_vector_to_mat(ofs, "y1", y, false);
 
-  y = 0.;
-  H.Tvmult(y, 0.5, x, H.get_property());
+  H.Tvmult(y, 0.5, x);
   print_vector_to_mat(ofs, "y2", y, false);
 
   ofs.close();

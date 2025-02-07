@@ -115,7 +115,8 @@ PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
                            spacedim,
                            HierBEM::PlatformShared::LaplaceKernel::
                              SingleLayerKernel<spacedim, RangeNumberType>,
-                           RangeNumberType>(fe_primal_space,
+                           RangeNumberType>("neumann",
+                                            fe_primal_space,
                                             fe_dual_space,
                                             primal_tria,
                                             primal_space_dof_i2e_numbering,
@@ -162,7 +163,8 @@ PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
                            spacedim,
                            HierBEM::PlatformShared::LaplaceKernel::
                              SingleLayerKernel<spacedim, RangeNumberType>,
-                           RangeNumberType>(fe_primal_space,
+                           RangeNumberType>("neumann-subdomain",
+                                            fe_primal_space,
                                             fe_dual_space,
                                             primal_tria,
                                             primal_space_dof_i2e_numbering,

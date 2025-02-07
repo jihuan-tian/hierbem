@@ -174,6 +174,7 @@ main(int argc, const char *argv[])
         }
         default: {
           AssertThrow(false, ExcInternalError());
+          break;
         }
     }
 

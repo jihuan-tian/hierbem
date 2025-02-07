@@ -184,14 +184,14 @@ HBlockMatrixSkewSymmPreconditioner<spacedim, Number>::vmult(
   Vector<Number> y2(n2);
 
   M11->solve_cholesky_by_forward_substitution(y1, b1);
-  M12->Tvmult(b2, y1);
+  M12->Tvmult_add(b2, y1);
   M22->solve_cholesky_by_forward_substitution(y2, b2);
 
   // Solve \f$Ux=y\f$.
   Vector<Number> x1(n1);
   Vector<Number> x2(n2);
   M22->solve_cholesky_by_backward_substitution(x2, y2);
-  M12->vmult(y1, -1.0, x2);
+  M12->vmult_add(y1, -1.0, x2);
   M11->solve_cholesky_by_backward_substitution(x1, y1);
 
   // Merge the result vector.

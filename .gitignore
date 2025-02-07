@@ -20,6 +20,7 @@ build
 *.bak
 *.output.new
 *.FCBak
+*~
 
 # Ignore data files
 *.dat
@@ -53,6 +54,12 @@ texfrag
 *.synctex.gz
 *.toc
 *.prv
+_region_.tex
+ltximg/
+auto/
+
+# Ignore file explorer directory description files
+.directory
 
 # Ignore Eclipse preference files
 *.prefs
@@ -134,3 +141,4 @@ tests/units/op-precond-coupling-matrix-for-neumann-subdomain/process.jl
 tests/units/op-precond-hmatrix-for-dirichlet-subdomain/process.m
 tests/units/op-precond-hmatrix-for-neumann/process.m
 tests/units/op-precond-hmatrix-for-neumann-subdomain/process.m
+tests/functions/laplace-bem/mixed-hmatrix-op-precond/process.m

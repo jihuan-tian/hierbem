@@ -34,6 +34,7 @@
 #include <fstream>
 #include <map>
 #include <set>
+#include <string>
 #include <vector>
 
 #include "bem_general.hcu"
@@ -48,7 +49,6 @@
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "hmatrix/hmatrix.h"
 #include "hmatrix/hmatrix_parameters.h"
-#include "hmatrix/hmatrix_symm.h"
 #include "mapping/mapping_info.h"
 #include "sauter_quadrature_tools.h"
 #include "subdomain_topology.h"
@@ -76,6 +76,7 @@ public:
    * Constructor.
    */
   OperatorPreconditioner(
+    const std::string                          &type_,
     FiniteElement<dim, spacedim>               &fe_primal_space_,
     FiniteElement<dim, spacedim>               &fe_dual_space_,
     const Triangulation<dim, spacedim>         &primal_tria,
@@ -93,7 +94,7 @@ public:
     const bool         log_history        = true,
     const bool         log_result         = true);
 
-  ~OperatorPreconditioner();
+  virtual ~OperatorPreconditioner();
 
   /**
    * Initialize primal and dual space DoF handlers on the multigrid.
@@ -121,6 +122,18 @@ public:
    *
    * DoF-to-cell topology will be used for building the \hmat inolving the dual
    * space on the refined mesh.
+   *
+   * \alert{2025-02-07 According to \myref{Hiptmair, Ralf, and Carolina
+   * Urzua-Torres. 2016. “Dual Mesh Operator Preconditioning On 3D Screens:
+   * Low-Order Boundary Element Discretization.” 2016–14. CH-8092 Zürich,
+   * Switzerland: Seminar für Angewandte Mathematik, Eidgenössische Technische
+   * Hochschule.}, the dual space is \f$H^{1/2}(\Gamma_{\mathrm{D}})\f$ in
+   * Dirichlet problem, which means the finite element basis functions do not
+   * penetrate into the adjacent subdomain \f$\Gamma_{\mathrm{N}}\f$. If we
+   * enforce this condition by restricting the related DoF-to-cell topology
+   * within \f$\Gamma_{\mathrm{D}}\f$, the preconditioned matrix will be
+   * ill-posed. Therefore, we remove this restriction and construct the
+   * DoF-to-cell topology by iterating over all cells in the triangulation.}
    */
   virtual void
   build_dof_to_cell_topology();
@@ -258,13 +271,13 @@ public:
     return mass_matrix;
   }
 
-  HMatrixSymm<spacedim, RangeNumberType> &
+  HMatrix<spacedim, RangeNumberType> &
   get_preconditioner_hmatrix()
   {
     return preconditioner_hmat;
   }
 
-  const HMatrixSymm<spacedim, RangeNumberType> &
+  const HMatrix<spacedim, RangeNumberType> &
   get_preconditioner_hmatrix() const
   {
     return preconditioner_hmat;
@@ -590,6 +603,11 @@ protected:
   compute_mass_matrix_triple_diag_reciprocal();
 
   /**
+   * Preconditioner type string.
+   */
+  std::string type;
+
+  /**
    * Original triangulation.
    */
   const Triangulation<dim, spacedim> &orig_tria;
@@ -704,7 +722,7 @@ protected:
    * The Galerkin matrix for the preconditioner. This matrix maps from the
    * dual space on the refined mesh \f$\bar{\Gamma}_h\f$ to itself.
    */
-  HMatrixSymm<spacedim, RangeNumberType> preconditioner_hmat;
+  HMatrix<spacedim, RangeNumberType> preconditioner_hmat;
 
   /**
    * Cluster tree for the preconditioning \hmat.
@@ -823,6 +841,7 @@ template <int dim,
           typename RangeNumberType>
 OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
   OperatorPreconditioner(
+    const std::string                          &type_,
     FiniteElement<dim, spacedim>               &fe_primal_space_,
     FiniteElement<dim, spacedim>               &fe_dual_space_,
     const Triangulation<dim, spacedim>         &primal_tria,
@@ -837,7 +856,8 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
     const double                        omega,
     const bool                          log_history,
     const bool                          log_result)
-  : orig_tria(primal_tria)
+  : type(type_)
+  , orig_tria(primal_tria)
   , is_full_domain(is_full_domain_)
   , is_subdomain_open(is_subdomain_open_)
   , subdomain_material_ids(subdomain_material_ids_)
@@ -1064,8 +1084,11 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
   std::vector<types::global_dof_index> &dof_i2e_numbering =
     ct.get_internal_to_external_dof_numbering();
 
-  preconditioner_hmat =
-    HMatrixSymm<spacedim, RangeNumberType>(bct, hmat_params.max_hmat_rank);
+  preconditioner_hmat = HMatrix<spacedim, RangeNumberType>(
+    bct,
+    hmat_params.max_hmat_rank,
+    HMatrixSupport::Property::symmetric,
+    HMatrixSupport::BlockType::diagonal_block);
 
   ACAConfig aca_config(hmat_params.max_hmat_rank,
                        hmat_params.aca_relative_error,
@@ -1357,12 +1380,11 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
   // Generate DoF-to-cell topologies for the dual function space on the
   // refined mesh.
   cell_iterators_dual_space.reserve(tria.n_cells(1));
+  for (const auto &cell : dof_handler_dual_space.mg_cell_iterators_on_level(1))
+    cell_iterators_dual_space.push_back(cell);
+
   if (is_full_domain)
     {
-      for (const auto &cell :
-           dof_handler_dual_space.mg_cell_iterators_on_level(1))
-        cell_iterators_dual_space.push_back(cell);
-
       DoFToolsExt::build_mg_dof_to_cell_topology(dof_to_cell_topo_dual_space,
                                                  cell_iterators_dual_space,
                                                  dof_handler_dual_space,
@@ -1370,15 +1392,6 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
     }
   else
     {
-      for (const auto &cell :
-           dof_handler_dual_space.mg_cell_iterators_on_level(1))
-        {
-          auto found_iter = subdomain_material_ids.find(cell->material_id());
-
-          if (found_iter != subdomain_material_ids.end())
-            cell_iterators_dual_space.push_back(cell);
-        }
-
       DoFToolsExt::build_mg_dof_to_cell_topology(
         dof_to_cell_topo_dual_space,
         cell_iterators_dual_space,
@@ -1443,7 +1456,7 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
 
   // Print out the matrices.
 #if ENABLE_PRECONDITIONER_MATRIX_EXPORT == 1
-  std::ofstream out_mat("preconditioner-matrices.dat");
+  std::ofstream out_mat(type + std::string("-preconditioner-matrices.dat"));
 
   print_sparse_matrix_to_mat(out_mat, "Cp", coupling_matrix, 15, true, 25);
   print_sparse_matrix_to_mat(out_mat, "Cd", averaging_matrix, 15, true, 25);

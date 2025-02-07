@@ -85,7 +85,6 @@ run_hmatrix_tvmult()
   H.Tvmult(y, x);
   print_vector_to_mat(ofs, "y1", y);
 
-  y = 0.;
   H.Tvmult(y, 0.5, x);
   print_vector_to_mat(ofs, "y2", y);
 

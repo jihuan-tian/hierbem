@@ -290,6 +290,7 @@ main(int argc, char *argv[])
                   std::cerr << "Invalid manifold type: " << opts.manifold_type
                             << std::endl;
                   std::exit(EXIT_FAILURE);
+                  break;
                 }
             }
         }
@@ -315,6 +316,7 @@ main(int argc, char *argv[])
           std::cerr << "Invalid mapping type: " << opts.mapping_type
                     << std::endl;
           std::exit(EXIT_FAILURE);
+          break;
         }
     }
 

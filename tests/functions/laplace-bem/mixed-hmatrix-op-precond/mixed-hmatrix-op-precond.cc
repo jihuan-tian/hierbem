@@ -1,11 +1,11 @@
 /**
- * \file neumann-hmatrix-op-precond.cc
- * \brief Verify solving the Laplace problem with Neumann boundary condition
- * using H-matrix based BEM. Operator preconditioning is used.
+ * \file laplace-bem-mixed-hmatrix-op-precond.cc
+ * \brief Verify solve Laplace mixed boundary value problem using \hmat based
+ * BEM. Operator preconditioning is used.
  *
  * \ingroup preconditioner
  * \author Jihuan Tian
- * \date 2025-01-07
+ * \date 2025-02-04
  */
 
 #include <catch2/catch_all.hpp>
@@ -17,17 +17,17 @@ using namespace Catch::Matchers;
 using namespace HierBEM;
 
 extern void
-run_neumann_hmatrix_op_precond(const unsigned int refinement);
+run_mixed_hmatrix_op_precond();
 
 TEST_CASE(
-  "Solve Laplace problem with Neumann boundary condition using operator preconditioning",
+  "Solve Laplace problem with mixed boundary condition using operator preconditioning",
   "[laplace]")
 {
   HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
   inst.add_path(HBEM_ROOT_DIR "/scripts");
   inst.add_path(SOURCE_DIR);
 
-  run_neumann_hmatrix_op_precond(1);
+  run_mixed_hmatrix_op_precond();
 
   try
     {
@@ -41,8 +41,8 @@ TEST_CASE(
   // Check relative error
   HBEMOctaveValue out;
   out = inst.eval_string("solution_l2_rel_err");
-  REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+  REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-2));
 
   out = inst.eval_string("solution_inf_rel_err");
-  REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+  REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-2));
 }

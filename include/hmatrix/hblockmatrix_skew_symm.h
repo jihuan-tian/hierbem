@@ -68,8 +68,44 @@ public:
   HBlockMatrixSkewSymm<spacedim, Number> &
   operator=(const HBlockMatrixSkewSymm<spacedim, Number> &block_mat);
 
+  HMatrix<spacedim, Number> &
+  get_M11()
+  {
+    return *M11;
+  }
+
+  const HMatrix<spacedim, Number> &
+  get_M11() const
+  {
+    return *M11;
+  }
+
+  HMatrix<spacedim, Number> &
+  get_M12()
+  {
+    return *M12;
+  }
+
+  const HMatrix<spacedim, Number> &
+  get_M12() const
+  {
+    return *M12;
+  }
+
+  HMatrix<spacedim, Number> &
+  get_M22()
+  {
+    return *M22;
+  }
+
+  const HMatrix<spacedim, Number> &
+  get_M22() const
+  {
+    return *M22;
+  }
+
   /**
-   * Matrix-vector multiplication
+   * Calculte the \hmat/vector multiplication \f$y = M \cdot x\f$.
    *
    * @param y
    * @param x
@@ -141,10 +177,10 @@ HBlockMatrixSkewSymm<spacedim, Number>::vmult(Vector<Number>       &y,
   Vector<Number> y1(n1);
   Vector<Number> y2(n2);
 
-  M11->vmult(y1, x1, HMatrixSupport::Property::symmetric);
-  M12->vmult(y1, x2);
+  M11->vmult(y1, x1);
+  M12->vmult_add(y1, x2);
   M12->Tvmult(y2, -1.0, x1);
-  M22->vmult(y2, x2, HMatrixSupport::Property::symmetric);
+  M22->vmult_add(y2, x2);
 
   // Merge @p y1 and @p y2 into the result vector @p y.
   copy_vector(y, 0, y1, 0, n1);

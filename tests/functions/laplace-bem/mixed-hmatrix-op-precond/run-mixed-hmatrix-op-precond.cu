@@ -69,13 +69,13 @@ namespace HierBEM
 } // namespace HierBEM
 
 void
-run_mixed_hmatrix()
+run_mixed_hmatrix_op_precond()
 {
   /**
    * @internal Pop out the default "DEAL" prefix string.
    */
   // Write run-time logs to file
-  std::ofstream ofs("mixed-hmatrix.log");
+  std::ofstream ofs("mixed-hmatrix-op-precond.log");
   deallog.pop();
   deallog.depth_console(0);
   deallog.depth_file(5);
@@ -134,13 +134,18 @@ run_mixed_hmatrix()
     0.1,                         // aca epsilon for preconditioner
     MultithreadInfo::n_threads() // Number of threads used for ACA
   );
-  bem.set_project_name("mixed-hmatrix");
+  bem.set_project_name("mixed-hmatrix-op-precond");
+  bem.set_preconditioner_type(
+    LaplaceBEM<dim, spacedim>::PreconditionerType::OperatorPreconditioning);
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");
 
   timer.start();
 
+  bem.get_triangulation().set_mesh_smoothing(
+    Triangulation<dim,
+                  spacedim>::MeshSmoothing::limit_level_difference_at_vertices);
   std::ifstream mesh_in(HBEM_TEST_MODEL_DIR "bar.msh");
   read_msh(mesh_in, bem.get_triangulation());
   bem.get_subdomain_topology().generate_topology(HBEM_TEST_MODEL_DIR "bar.brep",

@@ -98,7 +98,8 @@ PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
       spacedim,
       HierBEM::PlatformShared::LaplaceKernel::
         HyperSingularKernelRegular<spacedim, RangeNumberType>,
-      RangeNumberType>(fe_primal_space,
+      RangeNumberType>("dirichlet",
+                       fe_primal_space,
                        fe_dual_space,
                        primal_tria,
                        primal_space_dof_i2e_numbering,
@@ -145,7 +146,8 @@ PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
       spacedim,
       HierBEM::PlatformShared::LaplaceKernel::
         HyperSingularKernelRegular<spacedim, RangeNumberType>,
-      RangeNumberType>(fe_primal_space,
+      RangeNumberType>("dirichlet-subdomain",
+                       fe_primal_space,
                        fe_dual_space,
                        primal_tria,
                        primal_space_dof_i2e_numbering,
@@ -391,6 +393,7 @@ PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
                 }
                 default: {
                   Assert(false, ExcInternalError());
+                  break;
                 }
             }
 
@@ -497,6 +500,7 @@ PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
                         }
                         default: {
                           Assert(false, ExcInternalError());
+                          break;
                         }
                     }
 
@@ -531,6 +535,7 @@ PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
                         }
                         default: {
                           Assert(false, ExcInternalError());
+                          break;
                         }
                     }
 
@@ -587,6 +592,7 @@ PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
                         }
                         default: {
                           Assert(false, ExcInternalError());
+                          break;
                         }
                     }
 
@@ -636,6 +642,7 @@ PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
                         }
                         default: {
                           Assert(false, ExcInternalError());
+                          break;
                         }
                     }
 
@@ -658,6 +665,7 @@ PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
                 }
                 default: {
                   Assert(false, ExcInternalError());
+                  break;
                 }
             }
 

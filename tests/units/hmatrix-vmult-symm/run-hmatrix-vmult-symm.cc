@@ -92,11 +92,10 @@ run_hmatrix_vmult_symm()
    * passed as the third argument to @p vmult.}
    */
   Vector<double> y(n);
-  H.vmult(y, x, H.get_property());
+  H.vmult(y, x);
   print_vector_to_mat(ofs, "y1", y, false);
 
-  y = 0.;
-  H.vmult(y, 0.5, x, H.get_property());
+  H.vmult(y, 0.5, x);
   print_vector_to_mat(ofs, "y2", y, false);
 
   ofs.close();

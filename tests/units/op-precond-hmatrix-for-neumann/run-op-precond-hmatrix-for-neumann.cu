@@ -149,8 +149,7 @@ run_op_precond_hmatrix_for_neumann()
     SauterQuadratureRule<dim>(5, 4, 4, 3));
 
   // Print out the preconditioner matrix on the refined mesh as full matrix.
-  const HMatrixSymm<spacedim, double> &Br =
-    precond.get_preconditioner_hmatrix();
+  const HMatrix<spacedim, double> &Br = precond.get_preconditioner_hmatrix();
   Br.print_leaf_set_info(ofs);
   std::ofstream out("op-precond-hmatrix-for-neumann.output");
   Br.print_as_formatted_full_matrix(out, "Br", 15, true, 25);

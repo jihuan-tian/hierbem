@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-#include "hmatrix/hmatrix_symm.h"
+#include "hmatrix/hmatrix.h"
 #include "lapack_full_matrix_ext.h"
 #include "read_octave_data.h"
 
@@ -64,10 +64,10 @@ run_hmatrix_symm_vmult_symm()
 
   /**
    * Generate the \hmatrix from the symmetric full matrix. Its property will
-   * automatically be set to @p HMatrixSupport::Property::symmetric.
+   * be automatically set to @p HMatrixSupport::Property::symmetric.
    */
-  const unsigned int     fixed_rank_k = n / 4;
-  HMatrixSymm<3, double> H(block_cluster_tree, M, fixed_rank_k);
+  const unsigned int fixed_rank_k = n / 4;
+  HMatrix<3, double> H(block_cluster_tree, M, fixed_rank_k);
   REQUIRE(H.get_m() == M.size()[0]);
   REQUIRE(H.get_n() == M.size()[1]);
 
@@ -88,7 +88,6 @@ run_hmatrix_symm_vmult_symm()
   H.vmult(y, x);
   print_vector_to_mat(ofs, "y1", y, false);
 
-  y = 0.;
   H.vmult(y, 0.5, x);
   print_vector_to_mat(ofs, "y2", y, false);
 
