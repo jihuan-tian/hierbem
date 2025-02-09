@@ -49,7 +49,7 @@ public:
   PreconditionerForLaplaceNeumann(
     FiniteElement<dim, spacedim>               &fe_primal_space,
     FiniteElement<dim, spacedim>               &fe_dual_space,
-    const Triangulation<dim, spacedim>         &primal_tria,
+    const Triangulation<dim, spacedim>         &tria,
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
     const unsigned int                          max_iter    = 1000,
@@ -64,7 +64,7 @@ public:
   PreconditionerForLaplaceNeumann(
     FiniteElement<dim, spacedim>               &fe_primal_space,
     FiniteElement<dim, spacedim>               &fe_dual_space,
-    const Triangulation<dim, spacedim>         &primal_tria,
+    const Triangulation<dim, spacedim>         &tria,
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
     const std::set<types::material_id>         &subdomain_material_ids,
@@ -103,7 +103,7 @@ PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
   PreconditionerForLaplaceNeumann(
     FiniteElement<dim, spacedim>               &fe_primal_space,
     FiniteElement<dim, spacedim>               &fe_dual_space,
-    const Triangulation<dim, spacedim>         &primal_tria,
+    const Triangulation<dim, spacedim>         &tria,
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
     const unsigned int                          max_iter,
@@ -118,12 +118,13 @@ PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
                            RangeNumberType>("neumann",
                                             fe_primal_space,
                                             fe_dual_space,
-                                            primal_tria,
+                                            tria,
                                             primal_space_dof_i2e_numbering,
                                             primal_space_dof_e2i_numbering,
                                             std::set<types::material_id>(),
                                             std::set<types::material_id>(),
                                             true,
+                                            false,
                                             false,
                                             max_iter,
                                             tol,
@@ -149,7 +150,7 @@ PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
   PreconditionerForLaplaceNeumann(
     FiniteElement<dim, spacedim>               &fe_primal_space,
     FiniteElement<dim, spacedim>               &fe_dual_space,
-    const Triangulation<dim, spacedim>         &primal_tria,
+    const Triangulation<dim, spacedim>         &tria,
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
     const std::set<types::material_id>         &subdomain_material_ids,
@@ -166,13 +167,14 @@ PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
                            RangeNumberType>("neumann-subdomain",
                                             fe_primal_space,
                                             fe_dual_space,
-                                            primal_tria,
+                                            tria,
                                             primal_space_dof_i2e_numbering,
                                             primal_space_dof_e2i_numbering,
                                             subdomain_material_ids,
                                             subdomain_complement_material_ids,
                                             false,
                                             true,
+                                            false,
                                             max_iter,
                                             tol,
                                             omega,
@@ -220,13 +222,22 @@ PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
     }
   else
     {
-      for (const auto &cell :
-           this->dof_handler_primal_space.mg_cell_iterators_on_level(0))
+      if (this->truncate_function_space_dof_support_within_subdomain)
         {
-          auto found_iter =
-            this->subdomain_material_ids.find(cell->material_id());
+          for (const auto &cell :
+               this->dof_handler_primal_space.mg_cell_iterators_on_level(0))
+            {
+              auto found_iter =
+                this->subdomain_material_ids.find(cell->material_id());
 
-          if (found_iter != this->subdomain_material_ids.end())
+              if (found_iter != this->subdomain_material_ids.end())
+                cell_iterators_primal_space.push_back(cell);
+            }
+        }
+      else
+        {
+          for (const auto &cell :
+               this->dof_handler_primal_space.mg_cell_iterators_on_level(0))
             cell_iterators_primal_space.push_back(cell);
         }
 

@@ -79,20 +79,21 @@ public:
     const std::string                          &type_,
     FiniteElement<dim, spacedim>               &fe_primal_space_,
     FiniteElement<dim, spacedim>               &fe_dual_space_,
-    const Triangulation<dim, spacedim>         &primal_tria,
+    const Triangulation<dim, spacedim>         &tria_,
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering_,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering_,
     const std::set<types::material_id>         &subdomain_material_ids_ =
       std::set<types::material_id>(),
     const std::set<types::material_id> &subdomain_complement_material_ids_ =
       std::set<types::material_id>(),
-    const bool         is_full_domain_    = true,
-    const bool         is_subdomain_open_ = false,
-    const unsigned int max_iter           = 1000,
-    const double       tol                = 1e-8,
-    const double       omega              = 1.0,
-    const bool         log_history        = true,
-    const bool         log_result         = true);
+    const bool is_full_domain_                                       = true,
+    const bool is_subdomain_open_                                    = false,
+    const bool truncate_function_space_dof_support_within_subdomain_ = false,
+    const unsigned int max_iter                                      = 1000,
+    const double       tol                                           = 1e-8,
+    const double       omega                                         = 1.0,
+    const bool         log_history                                   = true,
+    const bool         log_result                                    = true);
 
   virtual ~OperatorPreconditioner();
 
@@ -293,12 +294,6 @@ public:
   get_mass_matrix_triple_diag_reciprocal() const
   {
     return mass_matrix_triple_diag_reciprocal;
-  }
-
-  Triangulation<dim, spacedim> &
-  get_triangulation()
-  {
-    return tria;
   }
 
   const Triangulation<dim, spacedim> &
@@ -608,14 +603,9 @@ protected:
   std::string type;
 
   /**
-   * Original triangulation.
-   */
-  const Triangulation<dim, spacedim> &orig_tria;
-
-  /**
    * Triangulation with two levels, i.e. orginal mesh and its refinement.
    */
-  Triangulation<dim, spacedim> tria;
+  const Triangulation<dim, spacedim> &tria;
 
   /**
    * If the preconditioner is built on the full domain.
@@ -635,6 +625,13 @@ protected:
    * This variable is effective when @p is_full_domain is false.
    */
   bool is_subdomain_open;
+
+  /**
+   * This flag controls whether we truncate the support of basis functions
+   * within the subdomain by constructing the DoF-to-cell topology without
+   * those cells not in the current subdomain.
+   */
+  bool truncate_function_space_dof_support_within_subdomain;
 
   // Maps between full and local DoF indices, when the preconditioner is on a
   // subdomain. Because this is not a bijective map, in the current
@@ -844,22 +841,25 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
     const std::string                          &type_,
     FiniteElement<dim, spacedim>               &fe_primal_space_,
     FiniteElement<dim, spacedim>               &fe_dual_space_,
-    const Triangulation<dim, spacedim>         &primal_tria,
+    const Triangulation<dim, spacedim>         &tria_,
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering_,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering_,
     const std::set<types::material_id>         &subdomain_material_ids_,
     const std::set<types::material_id> &subdomain_complement_material_ids_,
     const bool                          is_full_domain_,
     const bool                          is_subdomain_open_,
-    const unsigned int                  max_iter,
-    const double                        tol,
-    const double                        omega,
-    const bool                          log_history,
-    const bool                          log_result)
+    const bool         truncate_function_space_dof_support_within_subdomain_,
+    const unsigned int max_iter,
+    const double       tol,
+    const double       omega,
+    const bool         log_history,
+    const bool         log_result)
   : type(type_)
-  , orig_tria(primal_tria)
+  , tria(tria_)
   , is_full_domain(is_full_domain_)
   , is_subdomain_open(is_subdomain_open_)
+  , truncate_function_space_dof_support_within_subdomain(
+      truncate_function_space_dof_support_within_subdomain_)
   , subdomain_material_ids(subdomain_material_ids_)
   , subdomain_complement_material_ids(subdomain_complement_material_ids_)
   , primal_space_dof_i2e_numbering(primal_space_dof_i2e_numbering_)
@@ -1380,11 +1380,13 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
   // Generate DoF-to-cell topologies for the dual function space on the
   // refined mesh.
   cell_iterators_dual_space.reserve(tria.n_cells(1));
-  for (const auto &cell : dof_handler_dual_space.mg_cell_iterators_on_level(1))
-    cell_iterators_dual_space.push_back(cell);
 
   if (is_full_domain)
     {
+      for (const auto &cell :
+           dof_handler_dual_space.mg_cell_iterators_on_level(1))
+        cell_iterators_dual_space.push_back(cell);
+
       DoFToolsExt::build_mg_dof_to_cell_topology(dof_to_cell_topo_dual_space,
                                                  cell_iterators_dual_space,
                                                  dof_handler_dual_space,
@@ -1392,6 +1394,25 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
     }
   else
     {
+      if (truncate_function_space_dof_support_within_subdomain)
+        {
+          for (const auto &cell :
+               dof_handler_dual_space.mg_cell_iterators_on_level(1))
+            {
+              auto found_iter =
+                subdomain_material_ids.find(cell->material_id());
+
+              if (found_iter != subdomain_material_ids.end())
+                cell_iterators_dual_space.push_back(cell);
+            }
+        }
+      else
+        {
+          for (const auto &cell :
+               dof_handler_dual_space.mg_cell_iterators_on_level(1))
+            cell_iterators_dual_space.push_back(cell);
+        }
+
       DoFToolsExt::build_mg_dof_to_cell_topology(
         dof_to_cell_topo_dual_space,
         cell_iterators_dual_space,
@@ -1420,11 +1441,6 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
     const SauterQuadratureRule<dim> &sauter_quad_rule,
     const Quadrature<dim>           &quad_rule_for_mass)
 {
-  // Make a copy of the existing triangulation and perform a global
-  // refinement.
-  tria.copy_triangulation(orig_tria);
-  tria.refine_global();
-
   initialize_dof_handlers();
 
   if (!is_full_domain)

@@ -143,9 +143,6 @@ run_mixed_hmatrix_op_precond()
 
   timer.start();
 
-  bem.get_triangulation().set_mesh_smoothing(
-    Triangulation<dim,
-                  spacedim>::MeshSmoothing::limit_level_difference_at_vertices);
   std::ifstream mesh_in(HBEM_TEST_MODEL_DIR "bar.msh");
   read_msh(mesh_in, bem.get_triangulation());
   bem.get_subdomain_topology().generate_topology(HBEM_TEST_MODEL_DIR "bar.brep",

@@ -32,11 +32,8 @@ using namespace dealii;
 using namespace std;
 
 void
-setup_preconditioner(PreconditionerForLaplaceNeumann<2, 3, double> &precond,
-                     const Triangulation<2, 3>                     &tria)
+setup_preconditioner(PreconditionerForLaplaceNeumann<2, 3, double> &precond)
 {
-  precond.get_triangulation().copy_triangulation(tria);
-  precond.get_triangulation().refine_global();
   precond.initialize_dof_handlers();
   precond.build_dof_to_cell_topology();
 }
@@ -78,6 +75,13 @@ TEST_CASE("Verify mass matrix for operator preconditioning in Laplace Neumann",
   GridGenerator::subdivided_hyper_cube(tria, 3, 0, 10);
   ofstream mesh_out("mesh.msh");
   write_msh_correct(tria, mesh_out);
+  mesh_out.close();
+
+  // Refine the triangulation which is needed by the preconditioner.
+  tria.refine_global();
+  mesh_out.open("refined-mesh.msh");
+  write_msh_correct(tria, mesh_out);
+  mesh_out.close();
 
   // Create the preconditioner. Since we do not apply the preconditioner to the
   // system matrix in this case, the conversion between internal and external
@@ -88,14 +92,10 @@ TEST_CASE("Verify mass matrix for operator preconditioning in Laplace Neumann",
     fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
 
   // Setup the preconditioner and build matrices.
-  setup_preconditioner(precond, tria);
+  setup_preconditioner(precond);
   precond.build_coupling_matrix();
   precond.build_averaging_matrix();
   precond.build_mass_matrix_on_refined_mesh(QGauss<2>(2));
-
-  // Export the refined mesh.
-  ofstream refined_mesh_out("refined-mesh.msh");
-  write_msh_correct(precond.get_triangulation(), refined_mesh_out);
 
   // Print the sparsity pattern.
   ofstream sp_pattern("sparsity-pattern.svg");

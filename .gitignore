@@ -118,6 +118,7 @@ tests/functions/laplace-bem/dirichlet-hmatrix-two-spheres/process.m
 tests/functions/laplace-bem/dirichlet-hmatrix/process.m
 tests/functions/laplace-bem/mixed-hmatrix/process.m
 tests/functions/laplace-bem/mixed-l-shape/process.m
+tests/functions/laplace-bem/mixed-l-shape-op-precond/process.m
 tests/functions/laplace-bem/neumann-hmatrix/process.m
 tests/functions/laplace-bem/dirichlet-full-matrix/process.m
 tests/functions/laplace-bem/neumann-full-matrix/process.m

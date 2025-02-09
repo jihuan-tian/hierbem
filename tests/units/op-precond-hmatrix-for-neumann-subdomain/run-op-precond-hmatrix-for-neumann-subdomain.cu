@@ -50,19 +50,17 @@ count_number_of_nodes_in_neumann_boundary(
 {
   DoFHandler<2, 3> dof_handler(tria);
   dof_handler.distribute_dofs(fe);
+  dof_handler.distribute_mg_dofs();
 
-  std::vector<bool> dof_selectors(dof_handler.n_dofs());
+  std::vector<bool> dof_selectors(dof_handler.n_dofs(0));
   return DoFToolsExt::
-    extract_material_domain_dofs_by_excluding_complement_subdomain(
-      dof_handler, complement_subdomain_material_ids, dof_selectors);
+    extract_material_domain_mg_dofs_by_excluding_complement_subdomain(
+      dof_handler, 0, complement_subdomain_material_ids, dof_selectors);
 }
 
 void
-setup_preconditioner(PreconditionerForLaplaceNeumann<2, 3, double> &precond,
-                     const Triangulation<2, 3>                     &tria)
+setup_preconditioner(PreconditionerForLaplaceNeumann<2, 3, double> &precond)
 {
-  precond.get_triangulation().copy_triangulation(tria);
-  precond.get_triangulation().refine_global();
   precond.initialize_dof_handlers();
   precond.generate_dof_selectors();
   precond.generate_maps_between_full_and_local_dof_ids();
@@ -169,6 +167,12 @@ run_op_precond_hmatrix_for_neumann()
   FE_Q<dim, spacedim>   fe_primal_space(1);
   FE_DGQ<dim, spacedim> fe_dual_space(0);
 
+  // Refine the triangulation which is needed by the preconditioner.
+  tria.refine_global();
+  mesh_out.open("refined-mesh.msh");
+  write_msh_correct(tria, mesh_out);
+  mesh_out.close();
+
   // Create the preconditioner. Since we do not apply the preconditioner to the
   // system matrix in this case, the conversion between internal and external
   // DoF numberings is not needed. Therefore, we pass a dummy numbering to the
@@ -190,7 +194,7 @@ run_op_precond_hmatrix_for_neumann()
     subdomain_material_ids,
     complement_subdomain_material_ids);
 
-  setup_preconditioner(precond, tria);
+  setup_preconditioner(precond);
 
   // Build the preconditioner matrix on the refined mesh.
   HMatrixParameters hmat_params(64,  // Minimum cluster node size

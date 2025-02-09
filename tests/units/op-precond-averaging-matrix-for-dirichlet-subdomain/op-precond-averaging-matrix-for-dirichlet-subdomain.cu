@@ -52,11 +52,8 @@ assign_material_ids(Triangulation<2, 3> &tria, const double width)
 }
 
 void
-setup_preconditioner(PreconditionerForLaplaceDirichlet<2, 3, double> &precond,
-                     const Triangulation<2, 3>                       &tria)
+setup_preconditioner(PreconditionerForLaplaceDirichlet<2, 3, double> &precond)
 {
-  precond.get_triangulation().copy_triangulation(tria);
-  precond.get_triangulation().refine_global();
   precond.initialize_dof_handlers();
   precond.generate_dof_selectors();
   precond.generate_maps_between_full_and_local_dof_ids();
@@ -177,13 +174,20 @@ TEST_CASE(
 
   ofstream mesh_out("mesh.msh");
   write_msh_correct(tria, mesh_out);
+  mesh_out.close();
+
+  // Refine the triangulation which is needed by the preconditioner.
+  tria.refine_global();
+  mesh_out.open("refined-mesh.msh");
+  write_msh_correct(tria, mesh_out);
+  mesh_out.close();
 
   // Create the preconditioner. Since we do not apply the preconditioner to the
   // system matrix in this case, the conversion between internal and external
   // DoF numberings is not needed. Therefore, we pass a dummy numbering to the
   // preconditioner's constructor. Its size is initialized to be half of the
   // number of cells in the triangulation.
-  std::vector<types::global_dof_index> dummy_numbering(tria.n_cells() / 2);
+  std::vector<types::global_dof_index> dummy_numbering(tria.n_cells(0) / 2);
   std::set<types::material_id>         subdomain_material_ids = {1};
   PreconditionerForLaplaceDirichlet<2, 3, double> precond(
     fe_primal_space,
@@ -193,12 +197,8 @@ TEST_CASE(
     dummy_numbering,
     subdomain_material_ids);
 
-  setup_preconditioner(precond, tria);
+  setup_preconditioner(precond);
   precond.build_averaging_matrix();
-
-  // Export the refined mesh.
-  ofstream refined_mesh_out("refined-mesh.msh");
-  write_msh_correct(precond.get_triangulation(), refined_mesh_out);
 
   // Print the sparsity pattern.
   ofstream sp_pattern("sparsity-pattern.svg");

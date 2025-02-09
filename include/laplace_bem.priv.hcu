@@ -249,6 +249,11 @@ private:
   Triangulation<dim, spacedim> tria_;
 
   /**
+   * Multigrid triangulation used in operator preconditioners.
+   */
+  Triangulation<dim, spacedim> mg_tria_for_preconditioner_;
+
+  /**
    * A list of mapping objects from 1st to 3rd order.
    */
   std::vector<MappingInfo<dim, spacedim> *> mappings_;
@@ -695,42 +700,18 @@ private:
   PreconditionerType preconditioner_type_;
 
   /**
-   * Operator preconditioner for Laplace Dirichlet problems.
+   * Operator preconditioner for Dirichlet problem, either on the whole domain
+   * or a subdomain.
    */
   PreconditionerForLaplaceDirichlet<dim, spacedim, double>
-    operator_preconditioner_dirichlet_;
+    *operator_preconditioner_dirichlet_;
 
   /**
-   * Operator preconditioner for Laplace Neumann problems.
+   * Operator preconditioner for Neumann problem, either on the whole domain or
+   * a subdomain.
    */
   PreconditionerForLaplaceNeumann<dim, spacedim, double>
-    operator_preconditioner_neumann_;
-
-  /**
-   * Operator preconditioner on the Dirichlet domain for Laplace mixed BC
-   * problems.
-   *
-   * Because the constructor of an operator preconditioner on a subdomain
-   * requires reference types which are not ready when the LaplaceBEM object is
-   * constructed, we define the operator preconditioner member variable as a
-   * pointer type, whose initialization is delayed until when the data are
-   * ready.
-   */
-  PreconditionerForLaplaceDirichlet<dim, spacedim, double>
-    *operator_preconditioner_on_dirichlet_domain_;
-
-  /**
-   * Operator preconditioner on the Neumann domain for Laplace mixed BC
-   * problems.
-   *
-   * Because the constructor of an operator preconditioner on a subdomain
-   * requires reference types which are not ready when the LaplaceBEM object is
-   * constructed, we define the operator preconditioner member variable as a
-   * pointer type, whose initialization is delayed until when the data are
-   * ready.
-   */
-  PreconditionerForLaplaceNeumann<dim, spacedim, double>
-    *operator_preconditioner_on_neumann_domain_;
+    *operator_preconditioner_neumann_;
 
   /**
    * Memory consumption table
@@ -813,6 +794,10 @@ LaplaceBEM<dim, spacedim>::Priv::Priv()
   , problem_type_(UndefinedProblem)
   , is_interior_problem_(true)
   , thread_num_(0)
+  , tria_(Triangulation<dim, spacedim>::MeshSmoothing::
+            limit_level_difference_at_vertices)
+  , mg_tria_for_preconditioner_(Triangulation<dim, spacedim>::MeshSmoothing::
+                                  limit_level_difference_at_vertices)
   , fe_for_dirichlet_space_(0)
   , fe_for_neumann_space_(0)
   , dof_e2i_numbering_for_dirichlet_space_on_dirichlet_domain_(nullptr)
@@ -835,22 +820,8 @@ LaplaceBEM<dim, spacedim>::Priv::Priv()
   , aca_relative_error_for_preconditioner_(0)
   , alpha_for_neumann_(1.0)
   , preconditioner_type_(PreconditionerType::HMatrixFactorization)
-  , operator_preconditioner_dirichlet_(
-      fe_for_neumann_space_,
-      fe_for_dirichlet_space_,
-      tria_,
-      ct_for_neumann_space_on_dirichlet_domain_
-        .get_internal_to_external_dof_numbering(),
-      ct_for_neumann_space_on_dirichlet_domain_
-        .get_external_to_internal_dof_numbering())
-  , operator_preconditioner_neumann_(
-      fe_for_dirichlet_space_,
-      fe_for_neumann_space_,
-      tria_,
-      ct_for_dirichlet_space_on_neumann_domain_
-        .get_internal_to_external_dof_numbering(),
-      ct_for_dirichlet_space_on_neumann_domain_
-        .get_external_to_internal_dof_numbering())
+  , operator_preconditioner_dirichlet_(nullptr)
+  , operator_preconditioner_neumann_(nullptr)
 {}
 
 template <int dim, int spacedim>
@@ -865,6 +836,10 @@ LaplaceBEM<dim, spacedim>::Priv::Priv(unsigned int fe_order_for_dirichlet_space,
   , problem_type_(problem_type)
   , is_interior_problem_(is_interior_problem)
   , thread_num_(thread_num)
+  , tria_(Triangulation<dim, spacedim>::MeshSmoothing::
+            limit_level_difference_at_vertices)
+  , mg_tria_for_preconditioner_(Triangulation<dim, spacedim>::MeshSmoothing::
+                                  limit_level_difference_at_vertices)
   , fe_for_dirichlet_space_(fe_order_for_dirichlet_space)
   , fe_for_neumann_space_(fe_order_for_neumann_space)
   , dof_e2i_numbering_for_dirichlet_space_on_dirichlet_domain_(nullptr)
@@ -887,22 +862,8 @@ LaplaceBEM<dim, spacedim>::Priv::Priv(unsigned int fe_order_for_dirichlet_space,
   , aca_relative_error_for_preconditioner_(0)
   , alpha_for_neumann_(1.0)
   , preconditioner_type_(PreconditionerType::HMatrixFactorization)
-  , operator_preconditioner_dirichlet_(
-      fe_for_neumann_space_,
-      fe_for_dirichlet_space_,
-      tria_,
-      ct_for_neumann_space_on_dirichlet_domain_
-        .get_internal_to_external_dof_numbering(),
-      ct_for_neumann_space_on_dirichlet_domain_
-        .get_external_to_internal_dof_numbering())
-  , operator_preconditioner_neumann_(
-      fe_for_dirichlet_space_,
-      fe_for_neumann_space_,
-      tria_,
-      ct_for_dirichlet_space_on_neumann_domain_
-        .get_internal_to_external_dof_numbering(),
-      ct_for_dirichlet_space_on_neumann_domain_
-        .get_external_to_internal_dof_numbering())
+  , operator_preconditioner_dirichlet_(nullptr)
+  , operator_preconditioner_neumann_(nullptr)
 {}
 
 template <int dim, int spacedim>
@@ -926,6 +887,10 @@ LaplaceBEM<dim, spacedim>::Priv::Priv(
   , problem_type_(problem_type)
   , is_interior_problem_(is_interior_problem)
   , thread_num_(thread_num)
+  , tria_(Triangulation<dim, spacedim>::MeshSmoothing::
+            limit_level_difference_at_vertices)
+  , mg_tria_for_preconditioner_(Triangulation<dim, spacedim>::MeshSmoothing::
+                                  limit_level_difference_at_vertices)
   , fe_for_dirichlet_space_(fe_order_for_dirichlet_space)
   , fe_for_neumann_space_(fe_order_for_neumann_space)
   , dof_e2i_numbering_for_dirichlet_space_on_dirichlet_domain_(nullptr)
@@ -950,22 +915,8 @@ LaplaceBEM<dim, spacedim>::Priv::Priv(
       aca_relative_error_for_preconditioner)
   , alpha_for_neumann_(1.0)
   , preconditioner_type_(PreconditionerType::HMatrixFactorization)
-  , operator_preconditioner_dirichlet_(
-      fe_for_neumann_space_,
-      fe_for_dirichlet_space_,
-      tria_,
-      ct_for_neumann_space_on_dirichlet_domain_
-        .get_internal_to_external_dof_numbering(),
-      ct_for_neumann_space_on_dirichlet_domain_
-        .get_external_to_internal_dof_numbering())
-  , operator_preconditioner_neumann_(
-      fe_for_dirichlet_space_,
-      fe_for_neumann_space_,
-      tria_,
-      ct_for_dirichlet_space_on_neumann_domain_
-        .get_internal_to_external_dof_numbering(),
-      ct_for_dirichlet_space_on_neumann_domain_
-        .get_external_to_internal_dof_numbering())
+  , operator_preconditioner_dirichlet_(nullptr)
+  , operator_preconditioner_neumann_(nullptr)
 {}
 
 template <int dim, int spacedim>
@@ -987,6 +938,18 @@ LaplaceBEM<dim, spacedim>::Priv::~Priv()
   dof_i2e_numbering_for_neumann_space_on_dirichlet_domain_   = nullptr;
   dof_e2i_numbering_for_neumann_space_on_neumann_domain_     = nullptr;
   dof_i2e_numbering_for_neumann_space_on_neumann_domain_     = nullptr;
+
+  if (operator_preconditioner_dirichlet_ != nullptr)
+    {
+      delete operator_preconditioner_dirichlet_;
+      operator_preconditioner_dirichlet_ = nullptr;
+    }
+
+  if (operator_preconditioner_neumann_ != nullptr)
+    {
+      delete operator_preconditioner_neumann_;
+      operator_preconditioner_neumann_ = nullptr;
+    }
 
   // Release manifold objects.
   for (auto &m : manifolds_)
@@ -4038,7 +4001,27 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_preconditioner()
                   break;
                 }
                 case PreconditionerType::OperatorPreconditioning: {
-                  operator_preconditioner_dirichlet_.setup_preconditioner(
+                  // Generate the multigrid.
+                  mg_tria_for_preconditioner_.copy_triangulation(tria_);
+                  mg_tria_for_preconditioner_.refine_global();
+
+                  if (operator_preconditioner_dirichlet_ != nullptr)
+                    {
+                      delete operator_preconditioner_dirichlet_;
+                      operator_preconditioner_dirichlet_ = nullptr;
+                    }
+
+                  operator_preconditioner_dirichlet_ =
+                    new PreconditionerForLaplaceDirichlet<dim,
+                                                          spacedim,
+                                                          double>(
+                      fe_for_neumann_space_,
+                      fe_for_dirichlet_space_,
+                      mg_tria_for_preconditioner_,
+                      *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain_,
+                      *dof_e2i_numbering_for_neumann_space_on_dirichlet_domain_);
+
+                  operator_preconditioner_dirichlet_->setup_preconditioner(
                     thread_num_,
                     HMatrixParameters(n_min_for_ct_,
                                       n_min_for_bct_,
@@ -4134,7 +4117,25 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_preconditioner()
                   break;
                 }
                 case PreconditionerType::OperatorPreconditioning: {
-                  operator_preconditioner_neumann_.setup_preconditioner(
+                  // Generate the multigrid.
+                  mg_tria_for_preconditioner_.copy_triangulation(tria_);
+                  mg_tria_for_preconditioner_.refine_global();
+
+                  if (operator_preconditioner_neumann_ != nullptr)
+                    {
+                      delete operator_preconditioner_neumann_;
+                      operator_preconditioner_neumann_ = nullptr;
+                    }
+
+                  operator_preconditioner_neumann_ =
+                    new PreconditionerForLaplaceNeumann<dim, spacedim, double>(
+                      fe_for_dirichlet_space_,
+                      fe_for_neumann_space_,
+                      mg_tria_for_preconditioner_,
+                      *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain_,
+                      *dof_e2i_numbering_for_dirichlet_space_on_neumann_domain_);
+
+                  operator_preconditioner_neumann_->setup_preconditioner(
                     thread_num_,
                     HMatrixParameters(n_min_for_ct_,
                                       n_min_for_bct_,
@@ -4264,6 +4265,10 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_preconditioner()
                   break;
                 }
                 case PreconditionerType::OperatorPreconditioning: {
+                  // Generate the multigrid.
+                  mg_tria_for_preconditioner_.copy_triangulation(tria_);
+                  mg_tria_for_preconditioner_.refine_global();
+
                   // Collect material ids into sets.
                   std::set<types::material_id> dirichlet_domain_material_ids;
                   for (const auto &bc : dirichlet_bc_definition_)
@@ -4277,54 +4282,66 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_preconditioner()
                       neumann_domain_material_ids.insert(bc.first);
                     }
 
-                  operator_preconditioner_on_dirichlet_domain_ =
+                  if (operator_preconditioner_dirichlet_ != nullptr)
+                    {
+                      delete operator_preconditioner_dirichlet_;
+                      operator_preconditioner_dirichlet_ = nullptr;
+                    }
+
+                  operator_preconditioner_dirichlet_ =
                     new PreconditionerForLaplaceDirichlet<dim,
                                                           spacedim,
                                                           double>(
                       fe_for_neumann_space_,
                       fe_for_dirichlet_space_,
-                      tria_,
+                      mg_tria_for_preconditioner_,
                       *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain_,
                       *dof_e2i_numbering_for_neumann_space_on_dirichlet_domain_,
                       dirichlet_domain_material_ids);
-                  operator_preconditioner_on_neumann_domain_ =
+
+                  if (operator_preconditioner_neumann_ != nullptr)
+                    {
+                      delete operator_preconditioner_neumann_;
+                      operator_preconditioner_neumann_ = nullptr;
+                    }
+
+                  operator_preconditioner_neumann_ =
                     new PreconditionerForLaplaceNeumann<dim, spacedim, double>(
                       fe_for_dirichlet_space_,
                       fe_for_neumann_space_,
-                      tria_,
+                      mg_tria_for_preconditioner_,
                       *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain_,
                       *dof_e2i_numbering_for_dirichlet_space_on_neumann_domain_,
                       neumann_domain_material_ids,
                       dirichlet_domain_material_ids);
 
-                  operator_preconditioner_on_dirichlet_domain_
-                    ->setup_preconditioner(
-                      thread_num_,
-                      HMatrixParameters(n_min_for_ct_,
-                                        n_min_for_bct_,
-                                        eta_,
-                                        max_hmat_rank_,
-                                        aca_relative_error_),
-                      subdomain_topology_,
-                      mappings_,
-                      material_id_to_mapping_index_,
-                      SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-                      SauterQuadratureRule<dim>(5, 4, 4, 3),
-                      QGauss<2>(fe_for_dirichlet_space_.degree + 1));
-                  operator_preconditioner_on_neumann_domain_
-                    ->setup_preconditioner(
-                      thread_num_,
-                      HMatrixParameters(n_min_for_ct_,
-                                        n_min_for_bct_,
-                                        eta_,
-                                        max_hmat_rank_,
-                                        aca_relative_error_),
-                      subdomain_topology_,
-                      mappings_,
-                      material_id_to_mapping_index_,
-                      SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-                      SauterQuadratureRule<dim>(5, 4, 4, 3),
-                      QGauss<2>(fe_for_dirichlet_space_.degree + 1));
+                  operator_preconditioner_dirichlet_->setup_preconditioner(
+                    thread_num_,
+                    HMatrixParameters(n_min_for_ct_,
+                                      n_min_for_bct_,
+                                      eta_,
+                                      max_hmat_rank_,
+                                      aca_relative_error_),
+                    subdomain_topology_,
+                    mappings_,
+                    material_id_to_mapping_index_,
+                    SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+                    SauterQuadratureRule<dim>(5, 4, 4, 3),
+                    QGauss<2>(fe_for_dirichlet_space_.degree + 1));
+
+                  operator_preconditioner_neumann_->setup_preconditioner(
+                    thread_num_,
+                    HMatrixParameters(n_min_for_ct_,
+                                      n_min_for_bct_,
+                                      eta_,
+                                      max_hmat_rank_,
+                                      aca_relative_error_),
+                    subdomain_topology_,
+                    mappings_,
+                    material_id_to_mapping_index_,
+                    SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+                    SauterQuadratureRule<dim>(5, 4, 4, 3),
+                    QGauss<2>(fe_for_dirichlet_space_.degree + 1));
 
                   break;
                 }
@@ -4422,7 +4439,14 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
                         V1_hmat_,
                         neumann_data_on_dirichlet_domain_internal_dof_numbering_,
                         system_rhs_on_dirichlet_domain_,
-                        operator_preconditioner_dirichlet_);
+                        *operator_preconditioner_dirichlet_);
+
+                      mg_tria_for_preconditioner_.clear();
+                      if (operator_preconditioner_dirichlet_ != nullptr)
+                        {
+                          delete operator_preconditioner_dirichlet_;
+                          operator_preconditioner_dirichlet_ = nullptr;
+                        }
 
                       break;
                     }
@@ -4477,7 +4501,14 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
                         D1_hmat_,
                         dirichlet_data_on_neumann_domain_internal_dof_numbering_,
                         system_rhs_on_neumann_domain_,
-                        operator_preconditioner_neumann_);
+                        *operator_preconditioner_neumann_);
+
+                      mg_tria_for_preconditioner_.clear();
+                      if (operator_preconditioner_neumann_ != nullptr)
+                        {
+                          delete operator_preconditioner_neumann_;
+                          operator_preconditioner_neumann_ = nullptr;
+                        }
 
                       break;
                     }
@@ -4558,16 +4589,24 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
                         dirichlet_data_on_neumann_domain_internal_dof_numbering_,
                         system_rhs_on_dirichlet_domain_,
                         system_rhs_on_neumann_domain_,
-                        *operator_preconditioner_on_dirichlet_domain_,
-                        *operator_preconditioner_on_neumann_domain_,
+                        *operator_preconditioner_dirichlet_,
+                        *operator_preconditioner_neumann_,
                         1000,
                         1e-8,
                         true,
                         true);
 
-                      // Release the two operator preconditioners.
-                      delete operator_preconditioner_on_dirichlet_domain_;
-                      delete operator_preconditioner_on_neumann_domain_;
+                      mg_tria_for_preconditioner_.clear();
+                      if (operator_preconditioner_dirichlet_ != nullptr)
+                        {
+                          delete operator_preconditioner_dirichlet_;
+                          operator_preconditioner_dirichlet_ = nullptr;
+                        }
+                      if (operator_preconditioner_neumann_ != nullptr)
+                        {
+                          delete operator_preconditioner_neumann_;
+                          operator_preconditioner_neumann_ = nullptr;
+                        }
 
                       // Combine the two block vectors into one vector.
                       copy_vector(
@@ -4604,7 +4643,8 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
                         true,
                         true);
 
-                      // Combine the two block vectors into one vector.
+                      // Combine the two block vectors in the internal DoF
+                      // numbering into one vector.
                       copy_vector(
                         solution_on_combined_domain_internal_dof_numbering_,
                         0,

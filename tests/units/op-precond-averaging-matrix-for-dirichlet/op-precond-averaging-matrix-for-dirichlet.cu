@@ -15,7 +15,6 @@
 #include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/grid/grid_generator.h>
-#include <deal.II/grid/grid_out.h>
 #include <deal.II/grid/tria.h>
 
 #include <fstream>
@@ -23,6 +22,7 @@
 #include <vector>
 
 #include "debug_tools.h"
+#include "grid_out_ext.h"
 #include "preconditioners/preconditioner_for_laplace_dirichlet.h"
 
 using namespace HierBEM;
@@ -98,29 +98,28 @@ main(int argc, const char *argv[])
     Triangulation<2, 3>::MeshSmoothing::limit_level_difference_at_vertices);
   GridGenerator::subdivided_hyper_cube(tria, 3, 0, 10);
   ofstream mesh_out("mesh.msh");
-  GridOut  grid_out;
-  grid_out.write_msh(tria, mesh_out);
+  write_msh_correct(tria, mesh_out);
+  mesh_out.close();
+
+  // Refine the triangulation which is needed by the preconditioner.
+  tria.refine_global();
+  mesh_out.open("refined-mesh.msh");
+  write_msh_correct(tria, mesh_out);
+  mesh_out.close();
 
   // Create the preconditioner. Since we do not apply the preconditioner to the
   // system matrix in this case, the conversion between internal and external
   // DoF numberings is not needed. Therefore, we pass a dummy numbering to the
   // preconditioner's constructor. Its size is initialized to the number of
   // cells in the primal mesh.
-  std::vector<types::global_dof_index> dummy_numbering(tria.n_cells());
+  std::vector<types::global_dof_index> dummy_numbering(tria.n_cells(0));
   PreconditionerForLaplaceDirichlet<2, 3, double> precond(
     fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
-
-  precond.get_triangulation().copy_triangulation(tria);
-  precond.get_triangulation().refine_global();
 
   // Build the averaging matrix.
   precond.initialize_dof_handlers();
   precond.build_dof_to_cell_topology();
   precond.build_averaging_matrix();
-
-  // Export the refined mesh.
-  ofstream refined_mesh_out("refined-mesh.msh");
-  grid_out.write_msh(precond.get_triangulation(), refined_mesh_out);
 
   // Print the sparsity pattern.
   ofstream sp_pattern("sparsity-pattern.svg");

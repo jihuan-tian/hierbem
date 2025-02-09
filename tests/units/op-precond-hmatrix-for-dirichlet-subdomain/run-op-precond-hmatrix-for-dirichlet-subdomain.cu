@@ -46,7 +46,7 @@ count_number_of_cells_with_material_id(Triangulation<2, 3>     &tria,
                                        const types::material_id id)
 {
   unsigned int n = 0;
-  for (const auto &cell : tria.active_cell_iterators())
+  for (const auto &cell : tria.cell_iterators_on_level(0))
     if (cell->material_id() == id)
       n++;
 
@@ -54,11 +54,8 @@ count_number_of_cells_with_material_id(Triangulation<2, 3>     &tria,
 }
 
 void
-setup_preconditioner(PreconditionerForLaplaceDirichlet<2, 3, double> &precond,
-                     const Triangulation<2, 3>                       &tria)
+setup_preconditioner(PreconditionerForLaplaceDirichlet<2, 3, double> &precond)
 {
-  precond.get_triangulation().copy_triangulation(tria);
-  precond.get_triangulation().refine_global();
   precond.initialize_dof_handlers();
   precond.generate_dof_selectors();
   precond.generate_maps_between_full_and_local_dof_ids();
@@ -166,6 +163,12 @@ run_op_precond_hmatrix_for_dirichlet()
   FE_DGQ<dim, spacedim> fe_primal_space(0);
   FE_Q<dim, spacedim>   fe_dual_space(1);
 
+  // Refine the triangulation which is needed by the preconditioner.
+  tria.refine_global();
+  mesh_out.open("refined-mesh.msh");
+  write_msh_correct(tria, mesh_out);
+  mesh_out.close();
+
   // Create the preconditioner. Since we do not apply the preconditioner to the
   // system matrix in this case, the conversion between internal and external
   // DoF numberings is not needed. Therefore, we pass a dummy numbering to the
@@ -182,7 +185,7 @@ run_op_precond_hmatrix_for_dirichlet()
     dummy_numbering,
     subdomain_material_ids);
 
-  setup_preconditioner(precond, tria);
+  setup_preconditioner(precond);
 
   // Build the preconditioner matrix on the refined mesh.
   HMatrixParameters hmat_params(64,  // Minimum cluster node size

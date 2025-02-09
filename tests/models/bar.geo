@@ -7,5 +7,5 @@ Mesh.MeshSizeFromCurvature = 0;
 Mesh.MeshSizeFromPoints = 0;
 
 Field[1] = MathEval;
-Field[1].F = "0.5";
+Field[1].F = "1.3";
 Background Field = 1;
