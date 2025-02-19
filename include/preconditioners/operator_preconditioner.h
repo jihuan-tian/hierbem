@@ -18,6 +18,7 @@
 #include <deal.II/dofs/dof_tools.h>
 
 #include <deal.II/fe/fe.h>
+#include <deal.II/fe/fe_data.h>
 
 #include <deal.II/grid/tria.h>
 
@@ -32,6 +33,8 @@
 
 #include <fstream>
 #include <map>
+#include <set>
+#include <string>
 #include <vector>
 
 #include "bem_general.hcu"
@@ -46,7 +49,6 @@
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "hmatrix/hmatrix.h"
 #include "hmatrix/hmatrix_parameters.h"
-#include "hmatrix/hmatrix_symm.h"
 #include "mapping/mapping_info.h"
 #include "sauter_quadrature_tools.h"
 #include "subdomain_topology.h"
@@ -74,23 +76,67 @@ public:
    * Constructor.
    */
   OperatorPreconditioner(
-    FiniteElement<dim, spacedim>               &fe_primal_space,
-    FiniteElement<dim, spacedim>               &fe_dual_space,
-    const Triangulation<dim, spacedim>         &primal_tria,
-    const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
-    const unsigned int                          max_iter    = 1000,
-    const double                                tol         = 1e-8,
-    const double                                omega       = 1.0,
-    const bool                                  log_history = true,
-    const bool                                  log_result  = true);
+    const std::string                          &type_,
+    FiniteElement<dim, spacedim>               &fe_primal_space_,
+    FiniteElement<dim, spacedim>               &fe_dual_space_,
+    const Triangulation<dim, spacedim>         &tria_,
+    const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering_,
+    const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering_,
+    const std::set<types::material_id>         &subdomain_material_ids_ =
+      std::set<types::material_id>(),
+    const std::set<types::material_id> &subdomain_complement_material_ids_ =
+      std::set<types::material_id>(),
+    const bool is_full_domain_                                       = true,
+    const bool is_subdomain_open_                                    = false,
+    const bool truncate_function_space_dof_support_within_subdomain_ = false,
+    const unsigned int max_iter                                      = 1000,
+    const double       tol                                           = 1e-8,
+    const double       omega                                         = 1.0,
+    const bool         log_history                                   = true,
+    const bool         log_result                                    = true);
 
-  ~OperatorPreconditioner();
+  virtual ~OperatorPreconditioner();
 
+  /**
+   * Initialize primal and dual space DoF handlers on the multigrid.
+   */
   void
   initialize_dof_handlers();
 
+  /**
+   * Generate DoF selectors. This function is used when the preconditioner is
+   * defined on a subdomain.
+   */
   void
+  generate_dof_selectors();
+
+  /**
+   * Generate maps between full and local DoF indices for primal and dual
+   * spaces, on either refined or primal mesh. This function is used when the
+   * preconditioner is defined on a subdomain.
+   */
+  void
+  generate_maps_between_full_and_local_dof_ids();
+
+  /**
+   * Build DoF-to-cell topology for the dual space on the refined mesh.
+   *
+   * DoF-to-cell topology will be used for building the \hmat inolving the dual
+   * space on the refined mesh.
+   *
+   * \alert{2025-02-07 According to \myref{Hiptmair, Ralf, and Carolina
+   * Urzua-Torres. 2016. “Dual Mesh Operator Preconditioning On 3D Screens:
+   * Low-Order Boundary Element Discretization.” 2016–14. CH-8092 Zürich,
+   * Switzerland: Seminar für Angewandte Mathematik, Eidgenössische Technische
+   * Hochschule.}, the dual space is \f$H^{1/2}(\Gamma_{\mathrm{D}})\f$ in
+   * Dirichlet problem, which means the finite element basis functions do not
+   * penetrate into the adjacent subdomain \f$\Gamma_{\mathrm{N}}\f$. If we
+   * enforce this condition by restricting the related DoF-to-cell topology
+   * within \f$\Gamma_{\mathrm{D}}\f$, the preconditioned matrix will be
+   * ill-posed. Therefore, we remove this restriction and construct the
+   * DoF-to-cell topology by iterating over all cells in the triangulation.}
+   */
+  virtual void
   build_dof_to_cell_topology();
 
   template <typename SurfaceNormalDetector>
@@ -145,7 +191,7 @@ public:
 
   /**
    * @brief Build the cluster and block cluster trees for the \hmat to be
-   * constructed on the refined mesh.
+   * constructed involving the dual space on the refined mesh.
    */
   void
   build_cluster_and_block_cluster_trees(
@@ -164,7 +210,8 @@ public:
    * @param hmat_params \hmat parameters
    * @param mappings A list of pointers for MappingInfo objects of different
    * orders.
-   * @param material_id_to_mapping_index Map from @p material_id to index for accessing @p mappings.
+   * @param material_id_to_mapping_index Map from @p material_id to index for accessing
+   * @p mappings.
    * @param normal_detector Object for detecting the surface normal direction
    * of a cell.
    * @param sauter_quad_rule Sauter quadrature rule
@@ -225,13 +272,13 @@ public:
     return mass_matrix;
   }
 
-  HMatrixSymm<spacedim, RangeNumberType> &
+  HMatrix<spacedim, RangeNumberType> &
   get_preconditioner_hmatrix()
   {
     return preconditioner_hmat;
   }
 
-  const HMatrixSymm<spacedim, RangeNumberType> &
+  const HMatrix<spacedim, RangeNumberType> &
   get_preconditioner_hmatrix() const
   {
     return preconditioner_hmat;
@@ -247,12 +294,6 @@ public:
   get_mass_matrix_triple_diag_reciprocal() const
   {
     return mass_matrix_triple_diag_reciprocal;
-  }
-
-  Triangulation<dim, spacedim> &
-  get_triangulation()
-  {
-    return tria;
   }
 
   const Triangulation<dim, spacedim> &
@@ -283,6 +324,90 @@ public:
   get_dof_handler_dual_space() const
   {
     return dof_handler_dual_space;
+  }
+
+  std::set<types::material_id> &
+  get_subdomain_material_ids()
+  {
+    return subdomain_material_ids;
+  }
+
+  const std::set<types::material_id> &
+  get_subdomain_material_ids() const
+  {
+    return subdomain_material_ids;
+  }
+
+  std::vector<bool> &
+  get_primal_space_dof_selectors_on_primal_mesh()
+  {
+    return primal_space_dof_selectors_on_primal_mesh;
+  }
+
+  const std::vector<bool> &
+  get_primal_space_dof_selectors_on_primal_mesh() const
+  {
+    return primal_space_dof_selectors_on_primal_mesh;
+  }
+
+  std::vector<bool> &
+  get_primal_space_dof_selectors_on_refined_mesh()
+  {
+    return primal_space_dof_selectors_on_refined_mesh;
+  }
+
+  const std::vector<bool> &
+  get_primal_space_dof_selectors_on_refined_mesh() const
+  {
+    return primal_space_dof_selectors_on_refined_mesh;
+  }
+
+  std::vector<bool> &
+  get_dual_space_dof_selectors_on_refined_mesh()
+  {
+    return dual_space_dof_selectors_on_refined_mesh;
+  }
+
+  const std::vector<bool> &
+  get_dual_space_dof_selectors_on_refined_mesh() const
+  {
+    return dual_space_dof_selectors_on_refined_mesh;
+  }
+
+  std::vector<types::global_dof_index> &
+  get_primal_space_full_to_local_dof_id_map_on_primal_mesh()
+  {
+    return primal_space_full_to_local_dof_id_map_on_primal_mesh;
+  }
+
+  const std::vector<types::global_dof_index> &
+  get_primal_space_full_to_local_dof_id_map_on_primal_mesh() const
+  {
+    return primal_space_full_to_local_dof_id_map_on_primal_mesh;
+  }
+
+  std::vector<types::global_dof_index> &
+  get_primal_space_full_to_local_dof_id_map_on_refined_mesh()
+  {
+    return primal_space_full_to_local_dof_id_map_on_refined_mesh;
+  }
+
+  const std::vector<types::global_dof_index> &
+  get_primal_space_full_to_local_dof_id_map_on_refined_mesh() const
+  {
+    return primal_space_full_to_local_dof_id_map_on_refined_mesh;
+  }
+
+  std::vector<types::global_dof_index> &
+  get_dual_space_full_to_local_dof_id_map_on_refined_mesh()
+  {
+    return dual_space_full_to_local_dof_id_map_on_refined_mesh;
+  }
+
+  const std::vector<types::global_dof_index> &
+  get_dual_space_full_to_local_dof_id_map_on_refined_mesh() const
+  {
+    return dual_space_full_to_local_dof_id_map_on_refined_mesh;
   }
 
 protected:
@@ -473,14 +598,77 @@ protected:
   compute_mass_matrix_triple_diag_reciprocal();
 
   /**
-   * Original triangulation.
+   * Preconditioner type string.
    */
-  const Triangulation<dim, spacedim> &orig_tria;
+  std::string type;
 
   /**
    * Triangulation with two levels, i.e. orginal mesh and its refinement.
    */
-  Triangulation<dim, spacedim> tria;
+  const Triangulation<dim, spacedim> &tria;
+
+  /**
+   * If the preconditioner is built on the full domain.
+   */
+  bool is_full_domain;
+
+  /**
+   * When the preconditioner is not built on the full domain but a part of it,
+   * this flag indicates if the subdomain is an open set. If so, the DoFs at the
+   * interface (of course the finite element should have support points there)
+   * between \f$\Gamma_{\mathrm{D}}\f$ and \f$\Gamma_{\mathrm{N}}\f$ are not
+   * included.
+   *
+   * If the finite element is \f$L_2\f$ conforming, @p is_subdomain_open
+   * being true or false has no influence.
+   *
+   * This variable is effective when @p is_full_domain is false.
+   */
+  bool is_subdomain_open;
+
+  /**
+   * This flag controls whether we truncate the support of basis functions
+   * within the subdomain by constructing the DoF-to-cell topology without
+   * those cells not in the current subdomain.
+   */
+  bool truncate_function_space_dof_support_within_subdomain;
+
+  // Maps between full and local DoF indices, when the preconditioner is on a
+  // subdomain. Because this is not a bijective map, in the current
+  // implementation, the number of elements in the vector that maps from the
+  // full to local DoF indices is equal to the total number of DoFs in the DoF
+  // handler, while the number of elements in the vector that maps from the
+  // local to full DoF indies is just the actual number of DoFs selected in the
+  // subdomain.
+  std::vector<types::global_dof_index>
+    primal_space_full_to_local_dof_id_map_on_primal_mesh;
+  std::vector<types::global_dof_index>
+    primal_space_local_to_full_dof_id_map_on_primal_mesh;
+  std::vector<types::global_dof_index>
+    primal_space_full_to_local_dof_id_map_on_refined_mesh;
+  std::vector<types::global_dof_index>
+    primal_space_local_to_full_dof_id_map_on_refined_mesh;
+  std::vector<types::global_dof_index>
+    dual_space_full_to_local_dof_id_map_on_refined_mesh;
+  std::vector<types::global_dof_index>
+    dual_space_local_to_full_dof_id_map_on_refined_mesh;
+
+  /**
+   * A set of material ids in the subdomain. When @p is_full_domain is true, this
+   * set is empty.
+   */
+  std::set<types::material_id> subdomain_material_ids;
+
+  /**
+   * A set of material ids in the complement of the subdomain. When
+   * @p is_full_domain is true, this set is empty.
+   */
+  std::set<types::material_id> subdomain_complement_material_ids;
+
+  // DoF selectors
+  std::vector<bool> primal_space_dof_selectors_on_primal_mesh;
+  std::vector<bool> primal_space_dof_selectors_on_refined_mesh;
+  std::vector<bool> dual_space_dof_selectors_on_refined_mesh;
 
   /**
    * Coupling matrix \f$C_p\f$, which maps from the primal space on the
@@ -531,7 +719,7 @@ protected:
    * The Galerkin matrix for the preconditioner. This matrix maps from the
    * dual space on the refined mesh \f$\bar{\Gamma}_h\f$ to itself.
    */
-  HMatrixSymm<spacedim, RangeNumberType> preconditioner_hmat;
+  HMatrix<spacedim, RangeNumberType> preconditioner_hmat;
 
   /**
    * Cluster tree for the preconditioning \hmat.
@@ -650,21 +838,34 @@ template <int dim,
           typename RangeNumberType>
 OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
   OperatorPreconditioner(
-    FiniteElement<dim, spacedim>               &fe_primal_space,
-    FiniteElement<dim, spacedim>               &fe_dual_space,
-    const Triangulation<dim, spacedim>         &primal_tria,
-    const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
-    const unsigned int                          max_iter,
-    const double                                tol,
-    const double                                omega,
-    const bool                                  log_history,
-    const bool                                  log_result)
-  : orig_tria(primal_tria)
-  , primal_space_dof_i2e_numbering(primal_space_dof_i2e_numbering)
-  , primal_space_dof_e2i_numbering(primal_space_dof_e2i_numbering)
-  , fe_primal_space(fe_primal_space)
-  , fe_dual_space(fe_dual_space)
+    const std::string                          &type_,
+    FiniteElement<dim, spacedim>               &fe_primal_space_,
+    FiniteElement<dim, spacedim>               &fe_dual_space_,
+    const Triangulation<dim, spacedim>         &tria_,
+    const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering_,
+    const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering_,
+    const std::set<types::material_id>         &subdomain_material_ids_,
+    const std::set<types::material_id> &subdomain_complement_material_ids_,
+    const bool                          is_full_domain_,
+    const bool                          is_subdomain_open_,
+    const bool         truncate_function_space_dof_support_within_subdomain_,
+    const unsigned int max_iter,
+    const double       tol,
+    const double       omega,
+    const bool         log_history,
+    const bool         log_result)
+  : type(type_)
+  , tria(tria_)
+  , is_full_domain(is_full_domain_)
+  , is_subdomain_open(is_subdomain_open_)
+  , truncate_function_space_dof_support_within_subdomain(
+      truncate_function_space_dof_support_within_subdomain_)
+  , subdomain_material_ids(subdomain_material_ids_)
+  , subdomain_complement_material_ids(subdomain_complement_material_ids_)
+  , primal_space_dof_i2e_numbering(primal_space_dof_i2e_numbering_)
+  , primal_space_dof_e2i_numbering(primal_space_dof_e2i_numbering_)
+  , fe_primal_space(fe_primal_space_)
+  , fe_dual_space(fe_dual_space_)
   , mass_matrix_triple(coupling_matrix,
                        averaging_matrix,
                        mass_matrix,
@@ -718,22 +919,56 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
   build_mass_matrix_on_refined_mesh(const Quadrature<dim> &quad_rule)
 {
   // Generate the sparsity pattern for the mass matrix.
-  DynamicSparsityPattern dsp(dof_handler_dual_space.n_dofs(1),
-                             dof_handler_primal_space.n_dofs(1));
-  // N.B. DoFTools::make_sparsity_pattern operates on active cells, which just
-  // corresponds to the refined mesh that we desire.
-  DoFTools::make_sparsity_pattern(dof_handler_dual_space,
-                                  dof_handler_primal_space,
-                                  dsp);
-  mass_matrix_sp.copy_from(dsp);
-  mass_matrix.reinit(mass_matrix_sp);
+  if (is_full_domain)
+    {
+      DynamicSparsityPattern dsp(dof_handler_dual_space.n_dofs(1),
+                                 dof_handler_primal_space.n_dofs(1));
+      // N.B. DoFTools::make_sparsity_pattern operates on active cells, which
+      // just corresponds to the refined mesh that we desire.
+      DoFTools::make_sparsity_pattern(dof_handler_dual_space,
+                                      dof_handler_primal_space,
+                                      dsp);
+      mass_matrix_sp.copy_from(dsp);
+      mass_matrix.reinit(mass_matrix_sp);
 
-  // Assemble the mass matrix.
-  assemble_fem_scaled_mass_matrix(dof_handler_dual_space,
-                                  dof_handler_primal_space,
-                                  1.0,
-                                  quad_rule,
-                                  mass_matrix);
+      // Assemble the mass matrix.
+      assemble_fem_scaled_mass_matrix(dof_handler_dual_space,
+                                      dof_handler_primal_space,
+                                      1.0,
+                                      quad_rule,
+                                      mass_matrix);
+    }
+  else
+    {
+      DynamicSparsityPattern dsp(
+        dual_space_local_to_full_dof_id_map_on_refined_mesh.size(),
+        primal_space_local_to_full_dof_id_map_on_refined_mesh.size());
+      DoFToolsExt::make_sparsity_pattern(
+        dof_handler_dual_space,
+        dof_handler_primal_space,
+        subdomain_material_ids,
+        dual_space_dof_selectors_on_refined_mesh,
+        dual_space_full_to_local_dof_id_map_on_refined_mesh,
+        primal_space_dof_selectors_on_refined_mesh,
+        primal_space_full_to_local_dof_id_map_on_refined_mesh,
+        dsp);
+      mass_matrix_sp.copy_from(dsp);
+      mass_matrix.reinit(mass_matrix_sp);
+
+      // Assemble the mass matrix. Only cells within the subdomain are
+      // considered.
+      assemble_fem_scaled_mass_matrix(
+        dof_handler_dual_space,
+        dof_handler_primal_space,
+        subdomain_material_ids,
+        dual_space_dof_selectors_on_refined_mesh,
+        dual_space_full_to_local_dof_id_map_on_refined_mesh,
+        primal_space_dof_selectors_on_refined_mesh,
+        primal_space_full_to_local_dof_id_map_on_refined_mesh,
+        1.0,
+        quad_rule,
+        mass_matrix);
+    }
 }
 
 
@@ -750,27 +985,45 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
   /**
    * Generate lists of DoF indices.
    */
-  const unsigned int n_dofs = dof_handler_dual_space.n_dofs(1);
+  const unsigned int n_dofs =
+    is_full_domain ? dof_handler_dual_space.n_dofs(1) :
+                     dual_space_local_to_full_dof_id_map_on_refined_mesh.size();
   std::vector<types::global_dof_index> dof_indices_in_dual_space(n_dofs);
   gen_linear_indices<vector_uta, types::global_dof_index>(
     dof_indices_in_dual_space);
 
   /**
-   * Get the spatial coordinates of the support points.
+   * Get the spatial coordinates of the support points and calculate the average
+   * mesh cell size at each support point.
    */
   std::vector<Point<spacedim>> support_points_in_dual_space(n_dofs);
-  DoFToolsExt::map_mg_dofs_to_support_points(mappings[0]->get_mapping(),
-                                             dof_handler_dual_space,
-                                             1,
-                                             support_points_in_dual_space);
-
-  /**
-   * Calculate the average mesh cell size at each support point.
-   */
-  std::vector<double> dof_average_cell_size_list(n_dofs, 0.0);
-  DoFToolsExt::map_mg_dofs_to_average_cell_size(dof_handler_dual_space,
-                                                1,
-                                                dof_average_cell_size_list);
+  std::vector<double>          dof_average_cell_size_list(n_dofs, 0.0);
+  if (is_full_domain)
+    {
+      DoFToolsExt::map_mg_dofs_to_support_points(mappings[0]->get_mapping(),
+                                                 dof_handler_dual_space,
+                                                 1,
+                                                 support_points_in_dual_space);
+      DoFToolsExt::map_mg_dofs_to_average_cell_size(dof_handler_dual_space,
+                                                    1,
+                                                    dof_average_cell_size_list);
+    }
+  else
+    {
+      DoFToolsExt::map_mg_dofs_to_support_points(
+        mappings[0]->get_mapping(),
+        dof_handler_dual_space,
+        1,
+        subdomain_material_ids,
+        dual_space_dof_selectors_on_refined_mesh,
+        dual_space_full_to_local_dof_id_map_on_refined_mesh,
+        support_points_in_dual_space);
+      DoFToolsExt::map_mg_dofs_to_average_cell_size(
+        dof_handler_dual_space,
+        1,
+        dual_space_local_to_full_dof_id_map_on_refined_mesh,
+        dof_average_cell_size_list);
+    }
 
   /**
    * Initialize the cluster tree.
@@ -831,8 +1084,11 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
   std::vector<types::global_dof_index> &dof_i2e_numbering =
     ct.get_internal_to_external_dof_numbering();
 
-  preconditioner_hmat =
-    HMatrixSymm<spacedim, RangeNumberType>(bct, hmat_params.max_hmat_rank);
+  preconditioner_hmat = HMatrix<spacedim, RangeNumberType>(
+    bct,
+    hmat_params.max_hmat_rank,
+    HMatrixSupport::Property::symmetric,
+    HMatrixSupport::BlockType::diagonal_block);
 
   ACAConfig aca_config(hmat_params.max_hmat_rank,
                        hmat_params.aca_relative_error,
@@ -847,92 +1103,250 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
   if (preconditioner_kernel.kernel_type == KernelType::HyperSingularRegular)
     {
       /**
-       * Set natural density as constant vector 1 on each subdomain and set the
-       * alpha factor as 1.
-       */
-      const unsigned int n_subdomains =
-        subdomain_topology.get_subdomain_to_surface().size();
-      std::vector<Vector<RangeNumberType>> natural_densities(n_subdomains);
-      for (auto &vec : natural_densities)
-        vec.reinit(dof_handler_primal_space.n_dofs(1));
-
-      assemble_indicator_vectors_for_subdomains(dof_handler_primal_space,
-                                                subdomain_topology,
-                                                mappings,
-                                                material_id_to_mapping_index,
-                                                natural_densities);
-
-      const double alpha_for_neumann = 1.0;
-
-      /**
-       * Calculate the vector \f$a\f$ in \f$\alpha a a^T\f$, where \f$a\f$
-       * is the multiplication of the mass matrix and the natural density.
-       *
-       * N.B. The mass matrix on the refined mesh maps from the primal
-       * function space to the dual space, which is consistent with the vector
-       * size of the input vector @p natural_density and the output vector
-       * @p mass_vmult_weq.
-       */
-      std::vector<Vector<RangeNumberType>> mass_vmult_weq(n_subdomains);
-      for (auto &vec : mass_vmult_weq)
-        vec.reinit(dof_handler_dual_space.n_dofs(1));
-
-      Vector<RangeNumberType> mass_vmult_weq_external_dof_numbering(
-        dof_handler_dual_space.n_dofs(1));
-      for (unsigned int i = 0; i < n_subdomains; i++)
-        {
-          mass_matrix.vmult(mass_vmult_weq_external_dof_numbering,
-                            natural_densities[i]);
-          permute_vector(mass_vmult_weq_external_dof_numbering,
-                         dof_i2e_numbering,
-                         mass_vmult_weq[i]);
-        }
-
-      /**
        * Assemble the preconditioning matrix.
        */
-      fill_hmatrix_with_aca_plus_smp(thread_num,
-                                     preconditioner_hmat,
-                                     aca_config,
-                                     preconditioner_kernel,
-                                     1.0,
-                                     mass_vmult_weq,
-                                     alpha_for_neumann,
-                                     dof_to_cell_topo_dual_space,
-                                     dof_to_cell_topo_dual_space,
-                                     sauter_quad_rule,
-                                     dof_handler_dual_space,
-                                     dof_handler_dual_space,
-                                     nullptr,
-                                     nullptr,
-                                     dof_i2e_numbering,
-                                     dof_i2e_numbering,
-                                     mappings,
-                                     material_id_to_mapping_index,
-                                     normal_detector,
-                                     true);
+      if (is_full_domain)
+        {
+          // When the preconditioner is on the full domain, the hyper singular
+          // bilinear form should be stabilized.
+
+          /**
+           * Set natural density as constant vector 1 on each subdomain and set
+           * the alpha factor as 1.
+           */
+          const unsigned int n_subdomains =
+            subdomain_topology.get_subdomain_to_surface().size();
+          std::vector<Vector<RangeNumberType>> natural_densities(n_subdomains);
+          for (auto &vec : natural_densities)
+            vec.reinit(dof_handler_primal_space.n_dofs(1));
+
+          assemble_indicator_vectors_for_subdomains(
+            dof_handler_primal_space,
+            subdomain_topology,
+            mappings,
+            material_id_to_mapping_index,
+            natural_densities);
+
+          const double alpha_for_neumann = 1.0;
+
+          /**
+           * Calculate the vector \f$a\f$ in \f$\alpha a a^T\f$, where \f$a\f$
+           * is the multiplication of the mass matrix and the natural density.
+           *
+           * N.B. The mass matrix on the refined mesh maps from the primal
+           * function space to the dual space, which is consistent with the
+           * vector
+           * size of the input vector @p natural_density and the output vector
+           * @p mass_vmult_weq.
+           */
+          std::vector<Vector<RangeNumberType>> mass_vmult_weq(n_subdomains);
+          for (auto &vec : mass_vmult_weq)
+            vec.reinit(dof_handler_dual_space.n_dofs(1));
+
+          Vector<RangeNumberType> mass_vmult_weq_external_dof_numbering(
+            dof_handler_dual_space.n_dofs(1));
+          for (unsigned int i = 0; i < n_subdomains; i++)
+            {
+              mass_matrix.vmult(mass_vmult_weq_external_dof_numbering,
+                                natural_densities[i]);
+              permute_vector(mass_vmult_weq_external_dof_numbering,
+                             dof_i2e_numbering,
+                             mass_vmult_weq[i]);
+            }
+
+          fill_hmatrix_with_aca_plus_smp(thread_num,
+                                         preconditioner_hmat,
+                                         aca_config,
+                                         preconditioner_kernel,
+                                         1.0,
+                                         mass_vmult_weq,
+                                         alpha_for_neumann,
+                                         dof_to_cell_topo_dual_space,
+                                         dof_to_cell_topo_dual_space,
+                                         sauter_quad_rule,
+                                         dof_handler_dual_space,
+                                         dof_handler_dual_space,
+                                         nullptr,
+                                         nullptr,
+                                         dof_i2e_numbering,
+                                         dof_i2e_numbering,
+                                         mappings,
+                                         material_id_to_mapping_index,
+                                         normal_detector,
+                                         true);
+        }
+      else
+        // When the preconditioner is on a subdomain, there is no need to
+        // stablize the hyper singular bilinear form.
+        fill_hmatrix_with_aca_plus_smp(
+          thread_num,
+          preconditioner_hmat,
+          aca_config,
+          preconditioner_kernel,
+          1.0,
+          dof_to_cell_topo_dual_space,
+          dof_to_cell_topo_dual_space,
+          sauter_quad_rule,
+          dof_handler_dual_space,
+          dof_handler_dual_space,
+          &dual_space_local_to_full_dof_id_map_on_refined_mesh,
+          &dual_space_local_to_full_dof_id_map_on_refined_mesh,
+          dof_i2e_numbering,
+          dof_i2e_numbering,
+          mappings,
+          material_id_to_mapping_index,
+          normal_detector,
+          true);
     }
   else
     {
-      fill_hmatrix_with_aca_plus_smp(thread_num,
-                                     preconditioner_hmat,
-                                     aca_config,
-                                     preconditioner_kernel,
-                                     1.0,
-                                     dof_to_cell_topo_dual_space,
-                                     dof_to_cell_topo_dual_space,
-                                     sauter_quad_rule,
-                                     dof_handler_dual_space,
-                                     dof_handler_dual_space,
-                                     nullptr,
-                                     nullptr,
-                                     dof_i2e_numbering,
-                                     dof_i2e_numbering,
-                                     mappings,
-                                     material_id_to_mapping_index,
-                                     normal_detector,
-                                     true);
+      if (is_full_domain)
+        fill_hmatrix_with_aca_plus_smp(thread_num,
+                                       preconditioner_hmat,
+                                       aca_config,
+                                       preconditioner_kernel,
+                                       1.0,
+                                       dof_to_cell_topo_dual_space,
+                                       dof_to_cell_topo_dual_space,
+                                       sauter_quad_rule,
+                                       dof_handler_dual_space,
+                                       dof_handler_dual_space,
+                                       nullptr,
+                                       nullptr,
+                                       dof_i2e_numbering,
+                                       dof_i2e_numbering,
+                                       mappings,
+                                       material_id_to_mapping_index,
+                                       normal_detector,
+                                       true);
+      else
+        fill_hmatrix_with_aca_plus_smp(
+          thread_num,
+          preconditioner_hmat,
+          aca_config,
+          preconditioner_kernel,
+          1.0,
+          dof_to_cell_topo_dual_space,
+          dof_to_cell_topo_dual_space,
+          sauter_quad_rule,
+          dof_handler_dual_space,
+          dof_handler_dual_space,
+          &dual_space_local_to_full_dof_id_map_on_refined_mesh,
+          &dual_space_local_to_full_dof_id_map_on_refined_mesh,
+          dof_i2e_numbering,
+          dof_i2e_numbering,
+          mappings,
+          material_id_to_mapping_index,
+          normal_detector,
+          true);
     }
+}
+
+
+template <int dim,
+          int spacedim,
+          typename KernelFunctionType,
+          typename RangeNumberType>
+void
+OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
+  generate_dof_selectors()
+{
+  // Allocate memory for DoF selectors..
+  primal_space_dof_selectors_on_primal_mesh.resize(
+    dof_handler_primal_space.n_dofs(0));
+  primal_space_dof_selectors_on_refined_mesh.resize(
+    dof_handler_primal_space.n_dofs(1));
+  dual_space_dof_selectors_on_refined_mesh.resize(
+    dof_handler_dual_space.n_dofs(1));
+
+  if (is_subdomain_open && dof_handler_primal_space.get_fe().conforms(
+                             FiniteElementData<dim>::Conformity::H1))
+    {
+      // Select DoFs by excluding those in complement subdomain.
+      DoFToolsExt::
+        extract_material_domain_mg_dofs_by_excluding_complement_subdomain(
+          dof_handler_primal_space,
+          0,
+          subdomain_complement_material_ids,
+          primal_space_dof_selectors_on_primal_mesh);
+      DoFToolsExt::
+        extract_material_domain_mg_dofs_by_excluding_complement_subdomain(
+          dof_handler_primal_space,
+          1,
+          subdomain_complement_material_ids,
+          primal_space_dof_selectors_on_refined_mesh);
+    }
+  else
+    {
+      // Select DoFs in the subdomain.
+      DoFToolsExt::extract_material_domain_mg_dofs(
+        dof_handler_primal_space,
+        0,
+        subdomain_material_ids,
+        primal_space_dof_selectors_on_primal_mesh);
+      DoFToolsExt::extract_material_domain_mg_dofs(
+        dof_handler_primal_space,
+        1,
+        subdomain_material_ids,
+        primal_space_dof_selectors_on_refined_mesh);
+    }
+
+  if (is_subdomain_open && dof_handler_dual_space.get_fe().conforms(
+                             FiniteElementData<dim>::Conformity::H1))
+    {
+      // Select DoFs by excluding those in complement subdomain.
+      DoFToolsExt::
+        extract_material_domain_mg_dofs_by_excluding_complement_subdomain(
+          dof_handler_dual_space,
+          1,
+          subdomain_complement_material_ids,
+          dual_space_dof_selectors_on_refined_mesh);
+    }
+  else
+    {
+      // Select DoFs in the subdomain.
+      DoFToolsExt::extract_material_domain_mg_dofs(
+        dof_handler_dual_space,
+        1,
+        subdomain_material_ids,
+        dual_space_dof_selectors_on_refined_mesh);
+    }
+}
+
+
+template <int dim,
+          int spacedim,
+          typename KernelFunctionType,
+          typename RangeNumberType>
+void
+OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
+  generate_maps_between_full_and_local_dof_ids()
+{
+  primal_space_full_to_local_dof_id_map_on_primal_mesh.resize(
+    dof_handler_primal_space.n_dofs(0));
+  primal_space_local_to_full_dof_id_map_on_primal_mesh.reserve(
+    dof_handler_primal_space.n_dofs(0));
+  primal_space_full_to_local_dof_id_map_on_refined_mesh.resize(
+    dof_handler_primal_space.n_dofs(1));
+  primal_space_local_to_full_dof_id_map_on_refined_mesh.reserve(
+    dof_handler_primal_space.n_dofs(1));
+  dual_space_full_to_local_dof_id_map_on_refined_mesh.resize(
+    dof_handler_dual_space.n_dofs(1));
+  dual_space_local_to_full_dof_id_map_on_refined_mesh.reserve(
+    dof_handler_dual_space.n_dofs(1));
+
+  DoFToolsExt::generate_maps_between_full_and_local_dof_ids(
+    primal_space_dof_selectors_on_primal_mesh,
+    primal_space_full_to_local_dof_id_map_on_primal_mesh,
+    primal_space_local_to_full_dof_id_map_on_primal_mesh);
+  DoFToolsExt::generate_maps_between_full_and_local_dof_ids(
+    primal_space_dof_selectors_on_refined_mesh,
+    primal_space_full_to_local_dof_id_map_on_refined_mesh,
+    primal_space_local_to_full_dof_id_map_on_refined_mesh);
+  DoFToolsExt::generate_maps_between_full_and_local_dof_ids(
+    dual_space_dof_selectors_on_refined_mesh,
+    dual_space_full_to_local_dof_id_map_on_refined_mesh,
+    dual_space_local_to_full_dof_id_map_on_refined_mesh);
 }
 
 
@@ -963,16 +1377,49 @@ void
 OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
   build_dof_to_cell_topology()
 {
-  cell_iterators_dual_space.reserve(dof_handler_dual_space.n_dofs(1));
-  for (const auto &cell : dof_handler_dual_space.mg_cell_iterators_on_level(1))
-    cell_iterators_dual_space.push_back(cell);
-
   // Generate DoF-to-cell topologies for the dual function space on the
   // refined mesh.
-  DoFToolsExt::build_mg_dof_to_cell_topology(dof_to_cell_topo_dual_space,
-                                             cell_iterators_dual_space,
-                                             dof_handler_dual_space,
-                                             1);
+  cell_iterators_dual_space.reserve(tria.n_cells(1));
+
+  if (is_full_domain)
+    {
+      for (const auto &cell :
+           dof_handler_dual_space.mg_cell_iterators_on_level(1))
+        cell_iterators_dual_space.push_back(cell);
+
+      DoFToolsExt::build_mg_dof_to_cell_topology(dof_to_cell_topo_dual_space,
+                                                 cell_iterators_dual_space,
+                                                 dof_handler_dual_space,
+                                                 1);
+    }
+  else
+    {
+      if (truncate_function_space_dof_support_within_subdomain)
+        {
+          for (const auto &cell :
+               dof_handler_dual_space.mg_cell_iterators_on_level(1))
+            {
+              auto found_iter =
+                subdomain_material_ids.find(cell->material_id());
+
+              if (found_iter != subdomain_material_ids.end())
+                cell_iterators_dual_space.push_back(cell);
+            }
+        }
+      else
+        {
+          for (const auto &cell :
+               dof_handler_dual_space.mg_cell_iterators_on_level(1))
+            cell_iterators_dual_space.push_back(cell);
+        }
+
+      DoFToolsExt::build_mg_dof_to_cell_topology(
+        dof_to_cell_topo_dual_space,
+        cell_iterators_dual_space,
+        dof_handler_dual_space,
+        dual_space_dof_selectors_on_refined_mesh,
+        1);
+    }
 }
 
 
@@ -994,12 +1441,14 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
     const SauterQuadratureRule<dim> &sauter_quad_rule,
     const Quadrature<dim>           &quad_rule_for_mass)
 {
-  // Make a copy of the existing triangulation and perform a global
-  // refinement.
-  tria.copy_triangulation(orig_tria);
-  tria.refine_global();
-
   initialize_dof_handlers();
+
+  if (!is_full_domain)
+    {
+      generate_dof_selectors();
+      generate_maps_between_full_and_local_dof_ids();
+    }
+
   build_dof_to_cell_topology();
   build_coupling_matrix();
   build_averaging_matrix();
@@ -1023,7 +1472,7 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
 
   // Print out the matrices.
 #if ENABLE_PRECONDITIONER_MATRIX_EXPORT == 1
-  std::ofstream out_mat("preconditioner-matrices.dat");
+  std::ofstream out_mat(type + std::string("-preconditioner-matrices.dat"));
 
   print_sparse_matrix_to_mat(out_mat, "Cp", coupling_matrix, 15, true, 25);
   print_sparse_matrix_to_mat(out_mat, "Cd", averaging_matrix, 15, true, 25);

@@ -20,6 +20,7 @@ build
 *.bak
 *.output.new
 *.FCBak
+*~
 
 # Ignore data files
 *.dat
@@ -53,6 +54,12 @@ texfrag
 *.synctex.gz
 *.toc
 *.prv
+_region_.tex
+ltximg/
+auto/
+
+# Ignore file explorer directory description files
+.directory
 
 # Ignore Eclipse preference files
 *.prefs
@@ -111,6 +118,7 @@ tests/functions/laplace-bem/dirichlet-hmatrix-two-spheres/process.m
 tests/functions/laplace-bem/dirichlet-hmatrix/process.m
 tests/functions/laplace-bem/mixed-hmatrix/process.m
 tests/functions/laplace-bem/mixed-l-shape/process.m
+tests/functions/laplace-bem/mixed-l-shape-op-precond/process.m
 tests/functions/laplace-bem/neumann-hmatrix/process.m
 tests/functions/laplace-bem/dirichlet-full-matrix/process.m
 tests/functions/laplace-bem/neumann-full-matrix/process.m
@@ -123,3 +131,15 @@ tests/units/op-precond-coupling-matrix-for-neumann/process.jl
 tests/functions/laplace-bem/neumann-full-matrix/reference.output
 tests/functions/laplace-bem/neumann-hmatrix/reference.output
 tests/functions/laplace-bem/neumann-hmatrix-op-precond/reference.output
+tests/units/op-precond-averaging-matrix-for-dirichlet-subdomain/draw.jl
+tests/units/op-precond-coupling-matrix-for-dirichlet-subdomain/draw.jl
+tests/units/op-precond-averaging-matrix-for-neumann/draw.jl
+tests/units/op-precond-coupling-matrix-for-neumann/draw.jl
+tests/units/op-precond-averaging-matrix-for-neumann-subdomain/draw.jl
+tests/units/op-precond-averaging-matrix-for-neumann-subdomain/process.jl
+tests/units/op-precond-coupling-matrix-for-neumann-subdomain/draw.jl
+tests/units/op-precond-coupling-matrix-for-neumann-subdomain/process.jl
+tests/units/op-precond-hmatrix-for-dirichlet-subdomain/process.m
+tests/units/op-precond-hmatrix-for-neumann/process.m
+tests/units/op-precond-hmatrix-for-neumann-subdomain/process.m
+tests/functions/laplace-bem/mixed-hmatrix-op-precond/process.m

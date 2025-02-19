@@ -13,6 +13,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <string>
 #include <vector>
 
 #include "debug_tools.h"
@@ -118,16 +119,20 @@ run_op_precond_hmatrix_for_dirichlet()
   FE_DGQ<dim, spacedim> fe_primal_space(0);
   FE_Q<dim, spacedim>   fe_dual_space(1);
 
+  // Refine the triangulation which is needed by the preconditioner.
+  tria.refine_global();
+  mesh_out.open("refined-mesh.msh");
+  write_msh_correct(tria, mesh_out);
+  mesh_out.close();
+
   // Create the preconditioner. Since we do not apply the preconditioner to the
   // system matrix in this case, the conversion between internal and external
   // DoF numberings is not needed. Therefore, we pass a dummy numbering to the
-  // preconditioner's constructor.
-  std::vector<types::global_dof_index>                     dummy_numbering;
+  // preconditioner's constructor. Its size is initialized to the number of
+  // cells in the primal mesh.
+  std::vector<types::global_dof_index> dummy_numbering(tria.n_cells(0));
   PreconditionerForLaplaceDirichlet<dim, spacedim, double> precond(
     fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
-
-  precond.get_triangulation().copy_triangulation(tria);
-  precond.get_triangulation().refine_global();
 
   // Build the mass matrix on the refined mesh first, because it
   // is needed by the preconditioner matrix, which involves the stabilization
@@ -154,8 +159,7 @@ run_op_precond_hmatrix_for_dirichlet()
     SauterQuadratureRule<dim>(5, 4, 4, 3));
 
   // Print out the preconditioner matrix on the refined mesh as full matrix.
-  const HMatrixSymm<spacedim, double> &Br =
-    precond.get_preconditioner_hmatrix();
+  const HMatrix<spacedim, double> &Br = precond.get_preconditioner_hmatrix();
   Br.print_leaf_set_info(ofs);
   std::ofstream out("op-precond-hmatrix-for-dirichlet.output");
   Br.print_as_formatted_full_matrix(out, "Br", 15, true, 25);

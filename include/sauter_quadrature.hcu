@@ -585,6 +585,7 @@ permute_dofs_and_mapping_support_points_for_sauter_quad(
         }
         default: {
           Assert(false, ExcInternalError());
+          break;
         }
     }
 
@@ -1371,8 +1372,7 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType = double>
   __global__ void
   ApplyQuadratureUsingBEMValuesSamePanel(
@@ -1583,8 +1583,7 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType = double>
   __global__ void
   ApplyQuadratureUsingBEMValuesCommonEdge(
@@ -1797,8 +1796,7 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType = double>
   __global__ void
   ApplyQuadratureUsingBEMValuesCommonVertex(
@@ -2007,8 +2005,7 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType = double>
   __global__ void
   ApplyQuadratureUsingBEMValuesRegular(
@@ -2787,8 +2784,7 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType = double>
   __global__ void
   process_sauter_task_on_one_pair_of_dofs_same_panel(
@@ -3063,8 +3059,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType = double>
   __global__ void
   process_sauter_task_on_one_pair_of_dofs_common_edge(
@@ -3349,8 +3344,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType = double>
   __global__ void
   process_sauter_task_on_one_pair_of_dofs_common_vertex(
@@ -3627,8 +3621,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType = double>
   __global__ void
   process_sauter_task_on_one_pair_of_dofs_regular(
@@ -3863,8 +3856,7 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType = double>
   __global__ void
   process_sauter_tasks_in_buffer_for_far_field_hmat_vector(
@@ -6000,8 +5992,7 @@ namespace CUDAWrappers
   template <int capacity,
             int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType = double>
   void
   sauter_quadrature_for_near_field_matrix_entries_consumer(
@@ -7289,6 +7280,7 @@ calc_jacobian_normals_for_sauter_quad(
         }
         default: {
           Assert(false, ExcNotImplemented());
+          break;
         }
     }
 }
@@ -7447,6 +7439,7 @@ calc_covariant_transformations(
         }
         default: {
           Assert(false, ExcNotImplemented());
+          break;
         }
     }
 }
@@ -7467,8 +7460,7 @@ calc_covariant_transformations(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType = double>
 HBEM_ATTR_HOST RangeNumberType
 ApplyQuadratureUsingBEMValues(
@@ -7579,8 +7571,7 @@ select_sauter_quad_rule_from_bem_values(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename SurfaceNormalDetector>
 void
@@ -7752,8 +7743,7 @@ sauter_quadrature_on_one_pair_of_cells(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename SurfaceNormalDetector>
 void
@@ -7792,8 +7782,7 @@ sauter_quadrature_on_one_pair_of_cells_parallel_over_ky(
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename SurfaceNormalDetector>
 RangeNumberType
@@ -7983,8 +7972,7 @@ sauter_quadrature_on_one_pair_of_shape_functions(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename SurfaceNormalDetector>
 RangeNumberType
@@ -8558,8 +8546,7 @@ sauter_quadrature_on_one_pair_of_dofs(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename SurfaceNormalDetector>
 RangeNumberType
@@ -9203,8 +9190,7 @@ sauter_quadrature_on_one_pair_of_dofs(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename SurfaceNormalDetector>
 RangeNumberType

@@ -8,6 +8,9 @@
 
 #include "debug_tools.h"
 
+#include <fstream>
+#include <string>
+
 namespace HierBEM
 {
   void
@@ -51,5 +54,17 @@ namespace HierBEM
     out << "Elapsed cpu time for " << activity_name << " is "
         << timer.last_cpu_time() << "s, total elapsed cpu time is "
         << timer.cpu_time() << "s" << std::endl;
+  }
+
+  void
+  read_file_lines(const std::string &file_name, std::vector<std::string> &lines)
+  {
+    std::ifstream in(file_name);
+
+    std::string line;
+    while (std::getline(in, line))
+      lines.push_back(line);
+
+    in.close();
   }
 } // namespace HierBEM

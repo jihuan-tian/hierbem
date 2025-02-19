@@ -18,7 +18,6 @@
 
 #include "config.h"
 #include "hmatrix/hmatrix.h"
-#include "hmatrix/hmatrix_symm.h"
 #include "hmatrix/preconditioner/hmatrix_symm_preconditioner.h"
 
 HBEM_NS_OPEN
@@ -99,7 +98,7 @@ public:
     return ct_for_subdomain_neumann_space;
   }
 
-  const HMatrixSymm<spacedim, Number> &
+  const HMatrix<spacedim, Number> &
   get_D() const
   {
     return D;
@@ -123,7 +122,7 @@ public:
     return subdomain_to_skeleton_neumann_dof_index_map;
   }
 
-  const HMatrixSymm<spacedim, Number> &
+  const HMatrix<spacedim, Number> &
   get_V() const
   {
     return V;
@@ -165,7 +164,7 @@ public:
     return ct_for_subdomain_neumann_space;
   }
 
-  HMatrixSymm<spacedim, Number> &
+  HMatrix<spacedim, Number> &
   get_D()
   {
     return D;
@@ -189,7 +188,7 @@ public:
     return subdomain_to_skeleton_neumann_dof_index_map;
   }
 
-  HMatrixSymm<spacedim, Number> &
+  HMatrix<spacedim, Number> &
   get_V()
   {
     return V;
@@ -286,9 +285,9 @@ public:
   }
 
 private:
-  HMatrixSymm<spacedim, Number>               D;
+  HMatrix<spacedim, Number>                   D;
   HMatrix<spacedim, Number>                   K_with_mass_matrix;
-  HMatrixSymm<spacedim, Number>               V;
+  HMatrix<spacedim, Number>                   V;
   HMatrixSymmPreconditioner<spacedim, Number> V_preconditioner;
 
   std::vector<types::global_dof_index>

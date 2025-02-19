@@ -145,6 +145,7 @@ write_msh_correct(const Triangulation<dim, spacedim> &tria, std::ostream &out)
         break;
       default:
         Assert(false, ExcNotImplemented());
+        break;
     }
 
   // write cells. Enumerate cells

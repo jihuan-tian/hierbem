@@ -2014,6 +2014,7 @@ namespace BEMTools
         default:
           cell_neighboring_type = None;
           Assert(false, ExcInternalError());
+          break;
       }
 
     return cell_neighboring_type;
@@ -2263,6 +2264,7 @@ namespace BEMTools
         default:
           cell_neighboring_type = None;
           Assert(false, ExcInternalError());
+          break;
       }
 
     return cell_neighboring_type;
@@ -2659,6 +2661,7 @@ namespace BEMTools
         default:
           cell_neighboring_type = None;
           Assert(false, ExcInternalError());
+          break;
       }
 
     return cell_neighboring_type;
@@ -2738,6 +2741,7 @@ namespace BEMTools
         default:
           Assert(false, ExcInternalError());
           cell_neighboring_type = None;
+          break;
       }
 
     return cell_neighboring_type;
@@ -2848,6 +2852,7 @@ namespace BEMTools
             default:
               cell_neighboring_type = None;
               Assert(false, ExcInternalError());
+              break;
           }
 
         return cell_neighboring_type;
@@ -3290,6 +3295,7 @@ namespace BEMTools
           break;
         default:
           Assert(false, ExcInternalError());
+          break;
       }
 
     return dof_permutation;
@@ -3386,6 +3392,7 @@ namespace BEMTools
           break;
         default:
           Assert(false, ExcInternalError());
+          break;
       }
   }
 
@@ -3466,6 +3473,7 @@ namespace BEMTools
           break;
         default:
           Assert(false, ExcInternalError());
+          break;
       }
 
     return support_point_permutation;
@@ -3550,6 +3558,7 @@ namespace BEMTools
           break;
         default:
           Assert(false, ExcInternalError());
+          break;
       }
   }
 
@@ -3650,6 +3659,7 @@ namespace BEMTools
           break;
         default:
           Assert(false, ExcInternalError());
+          break;
       }
 
     return dof_permutation;
@@ -3754,6 +3764,7 @@ namespace BEMTools
           break;
         default:
           Assert(false, ExcInternalError());
+          break;
       }
   }
 
@@ -3843,6 +3854,7 @@ namespace BEMTools
           break;
         default:
           Assert(false, ExcInternalError());
+          break;
       }
 
     return support_point_permutation;
@@ -3936,6 +3948,7 @@ namespace BEMTools
           break;
         default:
           Assert(false, ExcInternalError());
+          break;
       }
   }
 } // namespace BEMTools

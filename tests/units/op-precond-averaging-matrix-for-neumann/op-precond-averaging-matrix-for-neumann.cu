@@ -1,5 +1,5 @@
 /**
- * @file op-precond-averaging-matrix-for-neumann.cc
+ * @file op-precond-averaging-matrix-for-neumann.cu
  * @brief Verify building the averaging matrix for operator preconditioning used
  * in Laplace Neumann problem.
  *
@@ -55,6 +55,13 @@ TEST_CASE(
   GridGenerator::subdivided_hyper_cube(tria, 3, 0, 10);
   ofstream mesh_out("mesh.msh");
   write_msh_correct(tria, mesh_out);
+  mesh_out.close();
+
+  // Refine the triangulation which is needed by the preconditioner.
+  tria.refine_global();
+  mesh_out.open("refined-mesh.msh");
+  write_msh_correct(tria, mesh_out);
+  mesh_out.close();
 
   // Create the preconditioner. Since we do not apply the preconditioner to the
   // system matrix in this case, the conversion between internal and external
@@ -64,16 +71,10 @@ TEST_CASE(
   PreconditionerForLaplaceNeumann<2, 3, double> precond(
     fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
 
-  precond.get_triangulation().copy_triangulation(tria);
-  precond.get_triangulation().refine_global();
-
   // Build the averaging matrix.
   precond.initialize_dof_handlers();
+  precond.build_dof_to_cell_topology();
   precond.build_averaging_matrix();
-
-  // Export the refined mesh.
-  ofstream refined_mesh_out("refined-mesh.msh");
-  write_msh_correct(precond.get_triangulation(), refined_mesh_out);
 
   // Print the sparsity pattern.
   ofstream sp_pattern("sparsity-pattern.svg");
@@ -100,13 +101,11 @@ TEST_CASE(
       cell->get_mg_dof_indices(dof_indices_in_primal_cell);
 
       // Iterate over each DoF index in the current cell.
-      unsigned int d = 0;
-      for (auto dof_index : dof_indices_in_primal_cell)
+      for (unsigned int d = 0; d < dof_indices_in_primal_cell.size(); d++)
         {
           Point<3> support_point = mapping.transform_unit_to_real_cell(
             cell, unit_support_points_in_primal_cell[d]);
           out << dof_indices_in_primal_cell[d] << " " << support_point << "\n";
-          d++;
         }
     }
 
@@ -126,13 +125,11 @@ TEST_CASE(
       cell->get_mg_dof_indices(dof_indices_in_refined_cell);
 
       // Iterate over each DoF index in the current cell.
-      unsigned int d = 0;
-      for (auto dof_index : dof_indices_in_refined_cell)
+      for (unsigned int d = 0; d < dof_indices_in_refined_cell.size(); d++)
         {
           Point<3> support_point = mapping.transform_unit_to_real_cell(
             cell, unit_support_points_in_refined_cell[d]);
           out << dof_indices_in_refined_cell[d] << " " << support_point << "\n";
-          d++;
         }
     }
 

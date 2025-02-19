@@ -170,6 +170,7 @@ sauter_same_panel_parametric_coords_to_unit_cells(
         break;
       default:
         Assert(false, ExcInternalError());
+        break;
     }
 }
 
@@ -251,6 +252,7 @@ sauter_common_edge_parametric_coords_to_unit_cells(
         break;
       default:
         Assert(false, ExcInternalError());
+        break;
     }
 }
 
@@ -310,6 +312,7 @@ sauter_common_vertex_parametric_coords_to_unit_cells(
         break;
       default:
         Assert(false, ExcInternalError());
+        break;
     }
 }
 

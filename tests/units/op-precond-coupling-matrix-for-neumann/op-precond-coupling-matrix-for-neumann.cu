@@ -54,6 +54,13 @@ TEST_CASE(
   GridGenerator::subdivided_hyper_cube(tria, 3, 0, 10);
   ofstream mesh_out("mesh.msh");
   write_msh_correct(tria, mesh_out);
+  mesh_out.close();
+
+  // Refine the triangulation which is needed by the preconditioner.
+  tria.refine_global();
+  mesh_out.open("refined-mesh.msh");
+  write_msh_correct(tria, mesh_out);
+  mesh_out.close();
 
   // Create the preconditioner. Since we do not apply the preconditioner to the
   // system matrix in this case, the conversion between internal and external
@@ -63,16 +70,9 @@ TEST_CASE(
   PreconditionerForLaplaceNeumann<2, 3, double> precond(
     fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
 
-  precond.get_triangulation().copy_triangulation(tria);
-  precond.get_triangulation().refine_global();
-
   // Build the averaging matrix.
   precond.initialize_dof_handlers();
   precond.build_coupling_matrix();
-
-  // Export the refined mesh.
-  ofstream refined_mesh_out("refined-mesh.msh");
-  write_msh_correct(precond.get_triangulation(), refined_mesh_out);
 
   // Print the sparsity pattern.
   ofstream sp_pattern("sparsity-pattern.svg");
@@ -87,24 +87,23 @@ TEST_CASE(
   MappingQ<2, 3> mapping(1);
   out.open("level0-support-points.output");
 
-  std::vector<types::global_dof_index> dof_indices_in_primal_cell(
+  std::vector<types::global_dof_index> dof_indices_in_cell(
     fe_primal_space.dofs_per_cell);
-  const std::vector<Point<2>> &unit_support_points_in_primal_cell =
+  const std::vector<Point<2>> &unit_support_points_in_cell =
     fe_primal_space.get_unit_support_points();
 
   for (const auto &cell :
        precond.get_dof_handler_primal_space().mg_cell_iterators_on_level(0))
     {
-      cell->get_mg_dof_indices(dof_indices_in_primal_cell);
+      cell->get_mg_dof_indices(dof_indices_in_cell);
 
       // Iterate over each DoF index in the current cell.
-      unsigned int d = 0;
-      for (auto dof_index : dof_indices_in_primal_cell)
+      for (unsigned int d = 0; d < dof_indices_in_cell.size(); d++)
         {
-          Point<3> support_point = mapping.transform_unit_to_real_cell(
-            cell, unit_support_points_in_primal_cell[d]);
-          out << dof_indices_in_primal_cell[d] << " " << support_point << "\n";
-          d++;
+          Point<3> support_point =
+            mapping.transform_unit_to_real_cell(cell,
+                                                unit_support_points_in_cell[d]);
+          out << dof_indices_in_cell[d] << " " << support_point << "\n";
         }
     }
 
@@ -115,16 +114,15 @@ TEST_CASE(
   for (const auto &cell :
        precond.get_dof_handler_primal_space().mg_cell_iterators_on_level(1))
     {
-      cell->get_mg_dof_indices(dof_indices_in_primal_cell);
+      cell->get_mg_dof_indices(dof_indices_in_cell);
 
       // Iterate over each DoF index in the current cell.
-      unsigned int d = 0;
-      for (auto dof_index : dof_indices_in_primal_cell)
+      for (unsigned int d = 0; d < dof_indices_in_cell.size(); d++)
         {
-          Point<3> support_point = mapping.transform_unit_to_real_cell(
-            cell, unit_support_points_in_primal_cell[d]);
-          out << dof_indices_in_primal_cell[d] << " " << support_point << "\n";
-          d++;
+          Point<3> support_point =
+            mapping.transform_unit_to_real_cell(cell,
+                                                unit_support_points_in_cell[d]);
+          out << dof_indices_in_cell[d] << " " << support_point << "\n";
         }
     }
 

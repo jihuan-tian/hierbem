@@ -1,6 +1,5 @@
 #include <deal.II/base/logstream.h>
 
-#include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/manifold_lib.h>
 
 #include <cuda_runtime.h>
@@ -10,6 +9,7 @@
 #include <iostream>
 
 #include "debug_tools.h"
+#include "grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "laplace_bem.h"
 
@@ -141,30 +141,22 @@ run_mixed_hmatrix()
 
   timer.start();
 
-  std::ifstream           mesh_file(HBEM_TEST_MODEL_DIR "bar.msh");
-  Triangulation<spacedim> tria;
-  GridIn<spacedim>        grid_in;
-  grid_in.attach_triangulation(tria);
-  grid_in.read_msh(mesh_file);
+  std::ifstream mesh_in(HBEM_TEST_MODEL_DIR "bar.msh");
+  read_msh(mesh_in, bem.get_triangulation());
+  bem.get_subdomain_topology().generate_topology(HBEM_TEST_MODEL_DIR "bar.brep",
+                                                 HBEM_TEST_MODEL_DIR "bar.msh");
+
+  // Generate flat manifold.
+  FlatManifold<dim, spacedim> *flat_manifold =
+    new FlatManifold<dim, spacedim>();
+  bem.get_manifolds()[0] = flat_manifold;
 
   // Create the map from material ids to manifold ids.
   for (types::material_id i = 1; i <= 6; i++)
     bem.get_manifold_description()[i] = 0;
 
-  FlatManifold<dim, spacedim> *flat_manifold =
-    new FlatManifold<dim, spacedim>();
-  bem.get_manifolds()[0] = flat_manifold;
-
-  Triangulation<dim, spacedim> surface_tria;
-  surface_tria.set_manifold(0, *flat_manifold);
-  bem.extract_surface_triangulation(tria, std::move(surface_tria), true);
-
   // Create the map from manifold id to mapping order.
   bem.get_manifold_id_to_mapping_order()[0] = 1;
-
-  // Build surface-to-volume and volume-to-surface relationship.
-  bem.get_subdomain_topology().generate_single_domain_topology_for_dealii_model(
-    {1, 2, 3, 4, 5, 6});
 
   timer.stop();
   print_wall_time(deallog, timer, "read mesh");
@@ -174,21 +166,30 @@ run_mixed_hmatrix()
   DirichletBC dirichlet_bc;
   NeumannBC   neumann_bc;
 
-  bem.assign_dirichlet_bc(dirichlet_bc, {1, 2});
-  bem.assign_neumann_bc(neumann_bc, {3, 4, 5, 6});
+  bem.assign_dirichlet_bc(dirichlet_bc, {5, 6});
+  bem.assign_neumann_bc(neumann_bc, {1, 2, 3, 4});
 
   timer.stop();
   print_wall_time(deallog, timer, "assign boundary conditions");
 
-  timer.start();
+  if (bem.validate_subdomain_topology())
+    {
+      timer.start();
 
-  bem.run();
+      bem.run();
 
-  timer.stop();
-  print_wall_time(deallog, timer, "run the solver");
+      timer.stop();
+      print_wall_time(deallog, timer, "run the solver");
 
-  deallog << "Program exits with a total wall time " << timer.wall_time() << "s"
-          << std::endl;
+      deallog << "Program exits with a total wall time " << timer.wall_time()
+              << "s" << std::endl;
 
-  bem.print_memory_consumption_table(deallog.get_file_stream());
+      bem.print_memory_consumption_table(deallog.get_file_stream());
+    }
+  else
+    {
+      deallog << "Invalid subdomains!" << std::endl;
+    }
+
+  ofs.close();
 }

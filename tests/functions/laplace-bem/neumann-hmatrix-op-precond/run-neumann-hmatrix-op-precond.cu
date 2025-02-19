@@ -8,6 +8,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <string>
 
 #if ENABLE_NVTX == 1
 #  include "cu_profile.hcu"
@@ -173,44 +174,28 @@ run_neumann_hmatrix_op_precond(const unsigned int refinement)
   const Point<spacedim> center(0, 0, 0);
   const double          radius(1);
 
-  Triangulation<spacedim> tria;
+  Triangulation<dim, spacedim> tria;
   // The manifold_id is set to 0 on the boundary faces in @p hyper_ball.
-  GridGenerator::hyper_ball(tria, center, radius);
+  GridGenerator::hyper_sphere(tria, center, radius);
   tria.refine_global(refinement);
+  std::string   mesh_file("surface-mesh.msh");
+  std::ofstream mesh_out(mesh_file);
+  write_msh_correct(tria, mesh_out);
+  mesh_out.close();
 
-  Triangulation<dim, spacedim> surface_tria;
+  // Reread the mesh as a single level triangulation.
+  std::ifstream mesh_in(mesh_file);
+  read_msh(mesh_in, bem.get_triangulation(), false, true, false);
+  mesh_in.close();
 
   // Create the map from material ids to manifold ids. By default, the material
   // ids of all cells are zero, if the triangulation is created by a deal.ii
   // function in GridGenerator.
   bem.get_manifold_description()[0] = 0;
 
-  SphericalManifold<dim, spacedim> *ball_surface_manifold =
+  SphericalManifold<dim, spacedim> *spherical_manifold =
     new SphericalManifold<dim, spacedim>(center);
-  bem.get_manifolds()[0] = ball_surface_manifold;
-
-  // We should first assign manifold objects to the empty surface triangulation,
-  // then perform surface mesh extraction.
-  surface_tria.set_manifold(0, *ball_surface_manifold);
-  bem.extract_surface_triangulation(tria, std::move(surface_tria), true);
-
-  // When using operator preconditioning, primal-dual two-level mesh is required
-  // and we need the refined surface mesh without any levels. Therefore, we
-  // write out the mesh then read it again into the @p LaplaceBEM object.
-  std::ofstream mesh_out("surface-mesh.msh");
-  write_msh_correct(bem.get_triangulation(), mesh_out);
-  mesh_out.close();
-  // Clear the triangulation and set its smoothing parameter for subsequent mesh
-  // reading.
-  bem.get_triangulation().clear();
-  bem.get_triangulation().set_mesh_smoothing(
-    Triangulation<dim,
-                  spacedim>::MeshSmoothing::limit_level_difference_at_vertices);
-
-  std::ifstream mesh_in("surface-mesh.msh");
-  read_msh(mesh_in, bem.get_triangulation(), false, true, false);
-  // Reassign the manifold to material_id=0.
-  bem.get_triangulation().set_manifold(0, *ball_surface_manifold);
+  bem.get_manifolds()[0] = spherical_manifold;
 
   // Create the map from manifold id to mapping order.
   bem.get_manifold_id_to_mapping_order()[0] = 1;

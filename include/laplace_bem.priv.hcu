@@ -8,6 +8,7 @@
 #include <deal.II/base/subscriptor.h>
 #include <deal.II/base/table_handler.h>
 #include <deal.II/base/timer.h>
+#include <deal.II/base/types.h>
 
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_handler.h>
@@ -39,6 +40,7 @@
 #include <array>
 #include <cmath>
 #include <iterator>
+#include <set>
 #include <vector>
 
 #include "bem_general.hcu"
@@ -55,7 +57,6 @@
 #include "hmatrix/hblockmatrix_skew_symm.h"
 #include "hmatrix/hmatrix.h"
 #include "hmatrix/hmatrix_parameters.h"
-#include "hmatrix/hmatrix_symm.h"
 #include "hmatrix/preconditioner/hblockmatrix_skew_symm_preconditioner.h"
 #include "hmatrix/preconditioner/hmatrix_symm_preconditioner.h"
 #include "laplace_bem.h"
@@ -65,6 +66,7 @@
 #include "preconditioners/preconditioner_for_laplace_neumann.h"
 #include "quadrature.templates.h"
 #include "read_octave_data.h"
+#include "solvers/solve_hblockmatrix_skew_symm.h"
 #include "subdomain_topology.h"
 #include "triangulation_tools.h"
 #include "unary_template_arg_containers.h"
@@ -77,7 +79,7 @@ template <int dim, int spacedim>
 class LaplaceBEM<dim, spacedim>::Priv
 {
 public:
-#pragma region ==== Internal class ctor and dtor decls ====
+#pragma region == == Internal class ctor and dtor decls == ==
   Priv();
   Priv(unsigned int fe_order_for_dirichlet_space,
        unsigned int fe_order_for_neumann_space,
@@ -178,7 +180,7 @@ public:
 #pragma endregion
 
 private:
-#pragma region ==== Internal class private member function decls ====
+#pragma region == == Internal class private member function decls == ==
 
   void
   collect_cell_iterators();
@@ -211,7 +213,7 @@ private:
                              const std::string &comment = std::string(""));
 #pragma endregion
 
-#pragma region ==== Internal class private member variable decls ====
+#pragma region == == Internal class private member variable decls == ==
   friend class LaplaceBEM<dim, spacedim>;
 
   std::string project_name_;
@@ -245,6 +247,11 @@ private:
    * Triangulation for the surface mesh.
    */
   Triangulation<dim, spacedim> tria_;
+
+  /**
+   * Multigrid triangulation used in operator preconditioners.
+   */
+  Triangulation<dim, spacedim> mg_tria_for_preconditioner_;
 
   /**
    * A list of mapping objects from 1st to 3rd order.
@@ -445,10 +452,10 @@ private:
    * \hmatrices corresponding to discretized bilinear forms in the
    * mixed boundary value problem, which contain all possible cases.
    */
-  HMatrixSymm<spacedim>          V1_hmat_;
+  HMatrix<spacedim>              V1_hmat_;
   HMatrix<spacedim>              K1_hmat_;
   HMatrix<spacedim>              K_prime1_hmat_;
-  HMatrixSymm<spacedim>          D1_hmat_;
+  HMatrix<spacedim>              D1_hmat_;
   HMatrix<spacedim>              V2_hmat_;
   HMatrix<spacedim>              K2_hmat_with_mass_matrix_;
   HMatrix<spacedim>              K_prime2_hmat_with_mass_matrix_;
@@ -692,11 +699,19 @@ private:
    */
   PreconditionerType preconditioner_type_;
 
+  /**
+   * Operator preconditioner for Dirichlet problem, either on the whole domain
+   * or a subdomain.
+   */
   PreconditionerForLaplaceDirichlet<dim, spacedim, double>
-    operator_preconditioner_dirichlet_;
+    *operator_preconditioner_dirichlet_;
 
+  /**
+   * Operator preconditioner for Neumann problem, either on the whole domain or
+   * a subdomain.
+   */
   PreconditionerForLaplaceNeumann<dim, spacedim, double>
-    operator_preconditioner_neumann_;
+    *operator_preconditioner_neumann_;
 
   /**
    * Memory consumption table
@@ -704,7 +719,7 @@ private:
   TableHandler memory_consumption_table_;
 #pragma endregion
 
-#pragma region ==== Internal class friend function decls ====
+#pragma region == == Internal class friend function decls == ==
   template <int dim1,
             int spacedim1,
             typename RangeNumberType,
@@ -731,8 +746,7 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -751,8 +765,7 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -771,7 +784,7 @@ private:
 #pragma endregion
 };
 
-#pragma region **** Internal ctor and dtor impls ****
+#pragma region ****Internal ctor and dtor impls ****
 
 template <int dim, int spacedim>
 LaplaceBEM<dim, spacedim>::Priv::Priv()
@@ -781,6 +794,10 @@ LaplaceBEM<dim, spacedim>::Priv::Priv()
   , problem_type_(UndefinedProblem)
   , is_interior_problem_(true)
   , thread_num_(0)
+  , tria_(Triangulation<dim, spacedim>::MeshSmoothing::
+            limit_level_difference_at_vertices)
+  , mg_tria_for_preconditioner_(Triangulation<dim, spacedim>::MeshSmoothing::
+                                  limit_level_difference_at_vertices)
   , fe_for_dirichlet_space_(0)
   , fe_for_neumann_space_(0)
   , dof_e2i_numbering_for_dirichlet_space_on_dirichlet_domain_(nullptr)
@@ -803,22 +820,8 @@ LaplaceBEM<dim, spacedim>::Priv::Priv()
   , aca_relative_error_for_preconditioner_(0)
   , alpha_for_neumann_(1.0)
   , preconditioner_type_(PreconditionerType::HMatrixFactorization)
-  , operator_preconditioner_dirichlet_(
-      fe_for_neumann_space_,
-      fe_for_dirichlet_space_,
-      tria_,
-      ct_for_neumann_space_on_dirichlet_domain_
-        .get_internal_to_external_dof_numbering(),
-      ct_for_neumann_space_on_dirichlet_domain_
-        .get_external_to_internal_dof_numbering())
-  , operator_preconditioner_neumann_(
-      fe_for_dirichlet_space_,
-      fe_for_neumann_space_,
-      tria_,
-      ct_for_dirichlet_space_on_neumann_domain_
-        .get_internal_to_external_dof_numbering(),
-      ct_for_dirichlet_space_on_neumann_domain_
-        .get_external_to_internal_dof_numbering())
+  , operator_preconditioner_dirichlet_(nullptr)
+  , operator_preconditioner_neumann_(nullptr)
 {}
 
 template <int dim, int spacedim>
@@ -833,6 +836,10 @@ LaplaceBEM<dim, spacedim>::Priv::Priv(unsigned int fe_order_for_dirichlet_space,
   , problem_type_(problem_type)
   , is_interior_problem_(is_interior_problem)
   , thread_num_(thread_num)
+  , tria_(Triangulation<dim, spacedim>::MeshSmoothing::
+            limit_level_difference_at_vertices)
+  , mg_tria_for_preconditioner_(Triangulation<dim, spacedim>::MeshSmoothing::
+                                  limit_level_difference_at_vertices)
   , fe_for_dirichlet_space_(fe_order_for_dirichlet_space)
   , fe_for_neumann_space_(fe_order_for_neumann_space)
   , dof_e2i_numbering_for_dirichlet_space_on_dirichlet_domain_(nullptr)
@@ -855,22 +862,8 @@ LaplaceBEM<dim, spacedim>::Priv::Priv(unsigned int fe_order_for_dirichlet_space,
   , aca_relative_error_for_preconditioner_(0)
   , alpha_for_neumann_(1.0)
   , preconditioner_type_(PreconditionerType::HMatrixFactorization)
-  , operator_preconditioner_dirichlet_(
-      fe_for_neumann_space_,
-      fe_for_dirichlet_space_,
-      tria_,
-      ct_for_neumann_space_on_dirichlet_domain_
-        .get_internal_to_external_dof_numbering(),
-      ct_for_neumann_space_on_dirichlet_domain_
-        .get_external_to_internal_dof_numbering())
-  , operator_preconditioner_neumann_(
-      fe_for_dirichlet_space_,
-      fe_for_neumann_space_,
-      tria_,
-      ct_for_dirichlet_space_on_neumann_domain_
-        .get_internal_to_external_dof_numbering(),
-      ct_for_dirichlet_space_on_neumann_domain_
-        .get_external_to_internal_dof_numbering())
+  , operator_preconditioner_dirichlet_(nullptr)
+  , operator_preconditioner_neumann_(nullptr)
 {}
 
 template <int dim, int spacedim>
@@ -894,6 +887,10 @@ LaplaceBEM<dim, spacedim>::Priv::Priv(
   , problem_type_(problem_type)
   , is_interior_problem_(is_interior_problem)
   , thread_num_(thread_num)
+  , tria_(Triangulation<dim, spacedim>::MeshSmoothing::
+            limit_level_difference_at_vertices)
+  , mg_tria_for_preconditioner_(Triangulation<dim, spacedim>::MeshSmoothing::
+                                  limit_level_difference_at_vertices)
   , fe_for_dirichlet_space_(fe_order_for_dirichlet_space)
   , fe_for_neumann_space_(fe_order_for_neumann_space)
   , dof_e2i_numbering_for_dirichlet_space_on_dirichlet_domain_(nullptr)
@@ -918,22 +915,8 @@ LaplaceBEM<dim, spacedim>::Priv::Priv(
       aca_relative_error_for_preconditioner)
   , alpha_for_neumann_(1.0)
   , preconditioner_type_(PreconditionerType::HMatrixFactorization)
-  , operator_preconditioner_dirichlet_(
-      fe_for_neumann_space_,
-      fe_for_dirichlet_space_,
-      tria_,
-      ct_for_neumann_space_on_dirichlet_domain_
-        .get_internal_to_external_dof_numbering(),
-      ct_for_neumann_space_on_dirichlet_domain_
-        .get_external_to_internal_dof_numbering())
-  , operator_preconditioner_neumann_(
-      fe_for_dirichlet_space_,
-      fe_for_neumann_space_,
-      tria_,
-      ct_for_dirichlet_space_on_neumann_domain_
-        .get_internal_to_external_dof_numbering(),
-      ct_for_dirichlet_space_on_neumann_domain_
-        .get_external_to_internal_dof_numbering())
+  , operator_preconditioner_dirichlet_(nullptr)
+  , operator_preconditioner_neumann_(nullptr)
 {}
 
 template <int dim, int spacedim>
@@ -956,6 +939,18 @@ LaplaceBEM<dim, spacedim>::Priv::~Priv()
   dof_e2i_numbering_for_neumann_space_on_neumann_domain_     = nullptr;
   dof_i2e_numbering_for_neumann_space_on_neumann_domain_     = nullptr;
 
+  if (operator_preconditioner_dirichlet_ != nullptr)
+    {
+      delete operator_preconditioner_dirichlet_;
+      operator_preconditioner_dirichlet_ = nullptr;
+    }
+
+  if (operator_preconditioner_neumann_ != nullptr)
+    {
+      delete operator_preconditioner_neumann_;
+      operator_preconditioner_neumann_ = nullptr;
+    }
+
   // Release manifold objects.
   for (auto &m : manifolds_)
     {
@@ -970,7 +965,7 @@ LaplaceBEM<dim, spacedim>::Priv::~Priv()
 }
 
 #pragma endregion
-#pragma region **** Internal private member function impls ****
+#pragma region ****Internal private member function impls ****
 
 template <int dim, int spacedim>
 void
@@ -1218,7 +1213,7 @@ LaplaceBEM<dim, spacedim>::Priv::add_memory_consumption_row(
 }
 
 #pragma endregion
-#pragma region **** Internal public member function impls ****
+#pragma region ****Internal public member function impls ****
 
 template <int dim, int spacedim>
 void
@@ -1607,8 +1602,11 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
                */
               timer.start();
 
-              V1_hmat_ = HMatrixSymm<spacedim>(bct_for_bilinear_form_V1_,
-                                               max_hmat_rank_);
+              V1_hmat_ =
+                HMatrix<spacedim>(bct_for_bilinear_form_V1_,
+                                  max_hmat_rank_,
+                                  HMatrixSupport::Property::symmetric,
+                                  HMatrixSupport::BlockType::diagonal_block);
 
               std::cout << "=== Leaf set information of V1_hmat ==="
                         << std::endl;
@@ -1905,8 +1903,11 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
                */
               timer.start();
 
-              D1_hmat_ = HMatrixSymm<spacedim>(bct_for_bilinear_form_D1_,
-                                               max_hmat_rank_);
+              D1_hmat_ =
+                HMatrix<spacedim>(bct_for_bilinear_form_D1_,
+                                  max_hmat_rank_,
+                                  HMatrixSupport::Property::symmetric,
+                                  HMatrixSupport::BlockType::diagonal_block);
 
               std::cout << "=== Leaf set information of D1_hmat ==="
                         << std::endl;
@@ -1927,8 +1928,11 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
               /**
                * SLP matrix for solving the natural density \f$w_{\rm eq}\f$.
                */
-              V1_hmat_ = HMatrixSymm<spacedim>(bct_for_bilinear_form_V1_,
-                                               max_hmat_rank_);
+              V1_hmat_ =
+                HMatrix<spacedim>(bct_for_bilinear_form_V1_,
+                                  max_hmat_rank_,
+                                  HMatrixSupport::Property::symmetric,
+                                  HMatrixSupport::BlockType::diagonal_block);
 
               std::cout << "=== Leaf set information of V1_hmat ==="
                         << std::endl;
@@ -2434,7 +2438,10 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
           timer.start();
 
           V1_hmat_ =
-            HMatrixSymm<spacedim>(bct_for_bilinear_form_V1_, max_hmat_rank_);
+            HMatrix<spacedim>(bct_for_bilinear_form_V1_,
+                              max_hmat_rank_,
+                              HMatrixSupport::Property::symmetric,
+                              HMatrixSupport::BlockType::diagonal_block);
 
           std::cout << "=== Leaf set information of V1_hmat ===" << std::endl;
           V1_hmat_.print_leaf_set_info(std::cout);
@@ -2449,7 +2456,10 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
           K1_hmat_.print_leaf_set_info(std::cout);
 
           D1_hmat_ =
-            HMatrixSymm<spacedim>(bct_for_bilinear_form_D1_, max_hmat_rank_);
+            HMatrix<spacedim>(bct_for_bilinear_form_D1_,
+                              max_hmat_rank_,
+                              HMatrixSupport::Property::symmetric,
+                              HMatrixSupport::BlockType::diagonal_block);
 
           std::cout << "=== Leaf set information of D1_hmat ===" << std::endl;
           D1_hmat_.print_leaf_set_info(std::cout);
@@ -2628,7 +2638,6 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
         }
         default: {
           Assert(false, ExcInternalError());
-
           break;
         }
     }
@@ -3111,12 +3120,10 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
         }
         case MixedBCProblem: {
           Assert(false, ExcNotImplemented());
-
           break;
         }
         default: {
           Assert(false, ExcInternalError());
-
           break;
         }
     }
@@ -3239,8 +3246,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
 
           timer.start();
           K2_hmat_with_mass_matrix_.vmult(system_rhs_on_dirichlet_domain_,
-                                          dirichlet_bc_internal_dof_numbering_,
-                                          HMatrixSupport::Property::general);
+                                          dirichlet_bc_internal_dof_numbering_);
 
           timer.stop();
           print_wall_time(deallog, timer, "assemble RHS vector");
@@ -3399,9 +3405,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
           timer.start();
 
           K_prime2_hmat_with_mass_matrix_.vmult(
-            system_rhs_on_neumann_domain_,
-            neumann_bc_internal_dof_numbering_,
-            HMatrixSupport::Property::general);
+            system_rhs_on_neumann_domain_, neumann_bc_internal_dof_numbering_);
 
           timer.stop();
           print_wall_time(deallog, timer, "assemble RHS vector");
@@ -3732,11 +3736,9 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
           timer.start();
 
           K2_hmat_with_mass_matrix_.vmult(system_rhs_on_dirichlet_domain_,
-                                          dirichlet_bc_internal_dof_numbering_,
-                                          HMatrixSupport::Property::general);
-          V2_hmat_.vmult(system_rhs_on_dirichlet_domain_,
-                         neumann_bc_internal_dof_numbering_,
-                         HMatrixSupport::Property::general);
+                                          dirichlet_bc_internal_dof_numbering_);
+          V2_hmat_.vmult_add(system_rhs_on_dirichlet_domain_,
+                             neumann_bc_internal_dof_numbering_);
 
           timer.stop();
           print_wall_time(deallog,
@@ -3746,12 +3748,9 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
           timer.start();
 
           D2_hmat_.vmult(system_rhs_on_neumann_domain_,
-                         dirichlet_bc_internal_dof_numbering_,
-                         HMatrixSupport::Property::general);
-          K_prime2_hmat_with_mass_matrix_.vmult(
-            system_rhs_on_neumann_domain_,
-            neumann_bc_internal_dof_numbering_,
-            HMatrixSupport::Property::general);
+                         dirichlet_bc_internal_dof_numbering_);
+          K_prime2_hmat_with_mass_matrix_.vmult_add(
+            system_rhs_on_neumann_domain_, neumann_bc_internal_dof_numbering_);
 
           timer.stop();
           print_wall_time(deallog,
@@ -3919,7 +3918,6 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
         }
         default: {
           Assert(false, ExcInternalError());
-
           break;
         }
     }
@@ -4003,7 +4001,27 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_preconditioner()
                   break;
                 }
                 case PreconditionerType::OperatorPreconditioning: {
-                  operator_preconditioner_dirichlet_.setup_preconditioner(
+                  // Generate the multigrid.
+                  mg_tria_for_preconditioner_.copy_triangulation(tria_);
+                  mg_tria_for_preconditioner_.refine_global();
+
+                  if (operator_preconditioner_dirichlet_ != nullptr)
+                    {
+                      delete operator_preconditioner_dirichlet_;
+                      operator_preconditioner_dirichlet_ = nullptr;
+                    }
+
+                  operator_preconditioner_dirichlet_ =
+                    new PreconditionerForLaplaceDirichlet<dim,
+                                                          spacedim,
+                                                          double>(
+                      fe_for_neumann_space_,
+                      fe_for_dirichlet_space_,
+                      mg_tria_for_preconditioner_,
+                      *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain_,
+                      *dof_e2i_numbering_for_neumann_space_on_dirichlet_domain_);
+
+                  operator_preconditioner_dirichlet_->setup_preconditioner(
                     thread_num_,
                     HMatrixParameters(n_min_for_ct_,
                                       n_min_for_bct_,
@@ -4099,7 +4117,25 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_preconditioner()
                   break;
                 }
                 case PreconditionerType::OperatorPreconditioning: {
-                  operator_preconditioner_neumann_.setup_preconditioner(
+                  // Generate the multigrid.
+                  mg_tria_for_preconditioner_.copy_triangulation(tria_);
+                  mg_tria_for_preconditioner_.refine_global();
+
+                  if (operator_preconditioner_neumann_ != nullptr)
+                    {
+                      delete operator_preconditioner_neumann_;
+                      operator_preconditioner_neumann_ = nullptr;
+                    }
+
+                  operator_preconditioner_neumann_ =
+                    new PreconditionerForLaplaceNeumann<dim, spacedim, double>(
+                      fe_for_dirichlet_space_,
+                      fe_for_neumann_space_,
+                      mg_tria_for_preconditioner_,
+                      *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain_,
+                      *dof_e2i_numbering_for_dirichlet_space_on_neumann_domain_);
+
+                  operator_preconditioner_neumann_->setup_preconditioner(
                     thread_num_,
                     HMatrixParameters(n_min_for_ct_,
                                       n_min_for_bct_,
@@ -4137,88 +4173,191 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_preconditioner()
             << "=== Assemble preconditioner for the system block matrix ==="
             << std::endl;
 
-          // Directly make copies of existing \hmatrices and then truncate
-          // their ranks.
-          M11_in_preconditioner_ = V1_hmat_;
-          M12_in_preconditioner_ = K1_hmat_;
-          M22_in_preconditioner_ = D1_hmat_;
-
-          // Only when the \hmat actually has a hierarchical structure, the
-          // SPD preserving rank truncation will be performed. This excludes
-          // the case when @p M11 has a single root node, which is a full
-          // matrix.
-          if (M11_in_preconditioner_.get_type() ==
-              HMatrixType::HierarchicalMatrixType)
+          switch (preconditioner_type_)
             {
-              M11_in_preconditioner_
-                .truncate_to_rank_preserve_positive_definite(
-                  max_hmat_rank_for_preconditioner_);
+                case PreconditionerType::HMatrixFactorization: {
+                  // Directly make copies of existing \hmatrices and then
+                  // truncate their ranks.
+                  M11_in_preconditioner_ = V1_hmat_;
+                  M12_in_preconditioner_ = K1_hmat_;
+                  M22_in_preconditioner_ = D1_hmat_;
+
+                  // Only when the \hmat actually has a hierarchical structure,
+                  // the SPD preserving rank truncation will be performed. This
+                  // excludes
+                  // the case when @p M11 has a single root node, which is a full
+                  // matrix.
+                  if (M11_in_preconditioner_.get_type() ==
+                      HMatrixType::HierarchicalMatrixType)
+                    {
+                      M11_in_preconditioner_
+                        .truncate_to_rank_preserve_positive_definite(
+                          max_hmat_rank_for_preconditioner_);
+                    }
+
+                  timer.stop();
+                  print_wall_time(deallog, timer, "truncate M11(==V1)");
+
+                  add_memory_consumption_row("M11(V1) H-matrix preconditioner",
+                                             M11_in_preconditioner_,
+                                             "After assembly");
+
+                  timer.start();
+
+                  // Only when the \hmat actually has a hierarchical structure,
+                  // the rank truncation will be performed. This excludes
+                  // the case when @p M12 has a single root node, which is a full
+                  // matrix.
+                  if (M12_in_preconditioner_.get_type() ==
+                      HMatrixType::HierarchicalMatrixType)
+                    {
+                      M12_in_preconditioner_.truncate_to_rank(
+                        max_hmat_rank_for_preconditioner_);
+                    }
+
+                  timer.stop();
+                  print_wall_time(deallog, timer, "truncate M12(==K1)");
+
+                  add_memory_consumption_row("M12(K1) H-matrix preconditioner",
+                                             M12_in_preconditioner_,
+                                             "After assembly");
+
+                  timer.start();
+
+                  // Only when the \hmat actually has a hierarchical structure,
+                  // the SPD preserving rank truncation will be performed. This
+                  // excludes
+                  // the case when @p M22 has a single root node, which is a full
+                  // matrix.
+                  if (M22_in_preconditioner_.get_type() ==
+                      HMatrixType::HierarchicalMatrixType)
+                    {
+                      M22_in_preconditioner_
+                        .truncate_to_rank_preserve_positive_definite(
+                          max_hmat_rank_for_preconditioner_);
+                    }
+
+                  timer.stop();
+                  print_wall_time(deallog, timer, "truncate M22(==D1)");
+
+                  add_memory_consumption_row("M22(D1) H-matrix preconditioner",
+                                             M22_in_preconditioner_,
+                                             "After assembly");
+
+                  M_hmat_preconditioner_ =
+                    HBlockMatrixSkewSymmPreconditioner<spacedim>(
+                      &M11_in_preconditioner_,
+                      &M12_in_preconditioner_,
+                      &M22_in_preconditioner_);
+
+                  // Perform \hmat-LU factorization to the block preconditioner.
+                  std::cout << "=== LU factorization of system block matrix ==="
+                            << std::endl;
+
+                  timer.start();
+
+                  M_hmat_preconditioner_.compute_lu_factorization(
+                    max_hmat_rank_for_preconditioner_);
+
+                  timer.stop();
+                  print_wall_time(deallog, timer, "LU factorization of M");
+
+                  break;
+                }
+                case PreconditionerType::OperatorPreconditioning: {
+                  // Generate the multigrid.
+                  mg_tria_for_preconditioner_.copy_triangulation(tria_);
+                  mg_tria_for_preconditioner_.refine_global();
+
+                  // Collect material ids into sets.
+                  std::set<types::material_id> dirichlet_domain_material_ids;
+                  for (const auto &bc : dirichlet_bc_definition_)
+                    {
+                      dirichlet_domain_material_ids.insert(bc.first);
+                    }
+
+                  std::set<types::material_id> neumann_domain_material_ids;
+                  for (const auto &bc : neumann_bc_definition_)
+                    {
+                      neumann_domain_material_ids.insert(bc.first);
+                    }
+
+                  if (operator_preconditioner_dirichlet_ != nullptr)
+                    {
+                      delete operator_preconditioner_dirichlet_;
+                      operator_preconditioner_dirichlet_ = nullptr;
+                    }
+
+                  operator_preconditioner_dirichlet_ =
+                    new PreconditionerForLaplaceDirichlet<dim,
+                                                          spacedim,
+                                                          double>(
+                      fe_for_neumann_space_,
+                      fe_for_dirichlet_space_,
+                      mg_tria_for_preconditioner_,
+                      *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain_,
+                      *dof_e2i_numbering_for_neumann_space_on_dirichlet_domain_,
+                      dirichlet_domain_material_ids);
+
+                  if (operator_preconditioner_neumann_ != nullptr)
+                    {
+                      delete operator_preconditioner_neumann_;
+                      operator_preconditioner_neumann_ = nullptr;
+                    }
+
+                  operator_preconditioner_neumann_ =
+                    new PreconditionerForLaplaceNeumann<dim, spacedim, double>(
+                      fe_for_dirichlet_space_,
+                      fe_for_neumann_space_,
+                      mg_tria_for_preconditioner_,
+                      *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain_,
+                      *dof_e2i_numbering_for_dirichlet_space_on_neumann_domain_,
+                      neumann_domain_material_ids,
+                      dirichlet_domain_material_ids);
+
+                  operator_preconditioner_dirichlet_->setup_preconditioner(
+                    thread_num_,
+                    HMatrixParameters(n_min_for_ct_,
+                                      n_min_for_bct_,
+                                      eta_,
+                                      max_hmat_rank_,
+                                      aca_relative_error_),
+                    subdomain_topology_,
+                    mappings_,
+                    material_id_to_mapping_index_,
+                    SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+                    SauterQuadratureRule<dim>(5, 4, 4, 3),
+                    QGauss<2>(fe_for_dirichlet_space_.degree + 1));
+
+                  operator_preconditioner_neumann_->setup_preconditioner(
+                    thread_num_,
+                    HMatrixParameters(n_min_for_ct_,
+                                      n_min_for_bct_,
+                                      eta_,
+                                      max_hmat_rank_,
+                                      aca_relative_error_),
+                    subdomain_topology_,
+                    mappings_,
+                    material_id_to_mapping_index_,
+                    SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+                    SauterQuadratureRule<dim>(5, 4, 4, 3),
+                    QGauss<2>(fe_for_dirichlet_space_.degree + 1));
+
+                  break;
+                }
+                case PreconditionerType::Identity: {
+                  break;
+                }
+                case PreconditionerType::Jacobi: {
+                  // TODO
+                  Assert(false, ExcNotImplemented());
+                  break;
+                }
+                default: {
+                  Assert(false, ExcInternalError());
+                  break;
+                }
             }
-
-          timer.stop();
-          print_wall_time(deallog, timer, "truncate M11(==V1)");
-
-          add_memory_consumption_row("M11(V1) H-matrix preconditioner",
-                                     M11_in_preconditioner_,
-                                     "After assembly");
-
-          timer.start();
-
-          // Only when the \hmat actually has a hierarchical structure, the
-          // rank truncation will be performed. This excludes
-          // the case when @p M12 has a single root node, which is a full
-          // matrix.
-          if (M12_in_preconditioner_.get_type() ==
-              HMatrixType::HierarchicalMatrixType)
-            {
-              M12_in_preconditioner_.truncate_to_rank(
-                max_hmat_rank_for_preconditioner_);
-            }
-
-          timer.stop();
-          print_wall_time(deallog, timer, "truncate M12(==K1)");
-
-          add_memory_consumption_row("M12(K1) H-matrix preconditioner",
-                                     M12_in_preconditioner_,
-                                     "After assembly");
-
-          timer.start();
-
-          // Only when the \hmat actually has a hierarchical structure, the
-          // SPD preserving rank truncation will be performed. This excludes
-          // the case when @p M22 has a single root node, which is a full
-          // matrix.
-          if (M22_in_preconditioner_.get_type() ==
-              HMatrixType::HierarchicalMatrixType)
-            {
-              M22_in_preconditioner_
-                .truncate_to_rank_preserve_positive_definite(
-                  max_hmat_rank_for_preconditioner_);
-            }
-
-          timer.stop();
-          print_wall_time(deallog, timer, "truncate M22(==D1)");
-
-          add_memory_consumption_row("M22(D1) H-matrix preconditioner",
-                                     M22_in_preconditioner_,
-                                     "After assembly");
-
-          M_hmat_preconditioner_ = HBlockMatrixSkewSymmPreconditioner<spacedim>(
-            &M11_in_preconditioner_,
-            &M12_in_preconditioner_,
-            &M22_in_preconditioner_);
-
-          // Perform \hmat-LU factorization to the block preconditioner.
-          std::cout << "=== LU factorization of system block matrix ==="
-                    << std::endl;
-
-          timer.start();
-
-          M_hmat_preconditioner_.compute_lu_factorization(
-            max_hmat_rank_for_preconditioner_);
-
-          timer.stop();
-          print_wall_time(deallog, timer, "LU factorization of M");
 
           break;
         }
@@ -4300,7 +4439,14 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
                         V1_hmat_,
                         neumann_data_on_dirichlet_domain_internal_dof_numbering_,
                         system_rhs_on_dirichlet_domain_,
-                        operator_preconditioner_dirichlet_);
+                        *operator_preconditioner_dirichlet_);
+
+                      mg_tria_for_preconditioner_.clear();
+                      if (operator_preconditioner_dirichlet_ != nullptr)
+                        {
+                          delete operator_preconditioner_dirichlet_;
+                          operator_preconditioner_dirichlet_ = nullptr;
+                        }
 
                       break;
                     }
@@ -4355,7 +4501,14 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
                         D1_hmat_,
                         dirichlet_data_on_neumann_domain_internal_dof_numbering_,
                         system_rhs_on_neumann_domain_,
-                        operator_preconditioner_neumann_);
+                        *operator_preconditioner_neumann_);
+
+                      mg_tria_for_preconditioner_.clear();
+                      if (operator_preconditioner_neumann_ != nullptr)
+                        {
+                          delete operator_preconditioner_neumann_;
+                          operator_preconditioner_neumann_ = nullptr;
+                        }
 
                       break;
                     }
@@ -4394,29 +4547,135 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
               SolverControl solver_control(1000, 1e-8, true, true);
               SolverBicgstab<Vector<double>> solver(solver_control);
 
-              solver.solve(M_hmat_,
-                           solution_on_combined_domain_internal_dof_numbering_,
-                           system_rhs_on_combined_domain_,
-                           M_hmat_preconditioner_);
+              // Solve the system of equations and obtain the solution in two
+              // block vectors in the internal DoF numbering.
+              switch (preconditioner_type_)
+                {
+                    case PreconditionerType::HMatrixFactorization: {
+                      // In this case, H-LU for skew symmetric block H-matrix is
+                      // adopted to solve the system of equations.
+                      solver.solve(
+                        M_hmat_,
+                        solution_on_combined_domain_internal_dof_numbering_,
+                        system_rhs_on_combined_domain_,
+                        M_hmat_preconditioner_);
 
-              // Split the solution vector
-              copy_vector(
-                neumann_data_on_dirichlet_domain_internal_dof_numbering_,
-                0,
-                solution_on_combined_domain_internal_dof_numbering_,
-                0,
-                neumann_data_on_dirichlet_domain_internal_dof_numbering_
-                  .size());
-              copy_vector(
-                dirichlet_data_on_neumann_domain_internal_dof_numbering_,
-                0,
-                solution_on_combined_domain_internal_dof_numbering_,
-                neumann_data_on_dirichlet_domain_internal_dof_numbering_.size(),
-                dirichlet_data_on_neumann_domain_internal_dof_numbering_
-                  .size());
+                      // Split the solution vector into two parts.
+                      copy_vector(
+                        neumann_data_on_dirichlet_domain_internal_dof_numbering_,
+                        0,
+                        solution_on_combined_domain_internal_dof_numbering_,
+                        0,
+                        neumann_data_on_dirichlet_domain_internal_dof_numbering_
+                          .size());
+                      copy_vector(
+                        dirichlet_data_on_neumann_domain_internal_dof_numbering_,
+                        0,
+                        solution_on_combined_domain_internal_dof_numbering_,
+                        neumann_data_on_dirichlet_domain_internal_dof_numbering_
+                          .size(),
+                        dirichlet_data_on_neumann_domain_internal_dof_numbering_
+                          .size());
 
-              // Permute the solution vector by following the mapping from
-              // external to internal DoF numbering.
+                      break;
+                    }
+                    case PreconditionerType::OperatorPreconditioning: {
+                      // In this case, Schur complement method is adopted to
+                      // solve the system of equations, which is different from
+                      // using the H-matrix factorization method.
+                      solve_hblockmatrix_skew_symm_using_schur_complement(
+                        M_hmat_,
+                        neumann_data_on_dirichlet_domain_internal_dof_numbering_,
+                        dirichlet_data_on_neumann_domain_internal_dof_numbering_,
+                        system_rhs_on_dirichlet_domain_,
+                        system_rhs_on_neumann_domain_,
+                        *operator_preconditioner_dirichlet_,
+                        *operator_preconditioner_neumann_,
+                        1000,
+                        1e-8,
+                        true,
+                        true);
+
+                      mg_tria_for_preconditioner_.clear();
+                      if (operator_preconditioner_dirichlet_ != nullptr)
+                        {
+                          delete operator_preconditioner_dirichlet_;
+                          operator_preconditioner_dirichlet_ = nullptr;
+                        }
+                      if (operator_preconditioner_neumann_ != nullptr)
+                        {
+                          delete operator_preconditioner_neumann_;
+                          operator_preconditioner_neumann_ = nullptr;
+                        }
+
+                      // Combine the two block vectors into one vector.
+                      copy_vector(
+                        solution_on_combined_domain_internal_dof_numbering_,
+                        0,
+                        neumann_data_on_dirichlet_domain_internal_dof_numbering_,
+                        0,
+                        neumann_data_on_dirichlet_domain_internal_dof_numbering_
+                          .size());
+                      copy_vector(
+                        solution_on_combined_domain_internal_dof_numbering_,
+                        neumann_data_on_dirichlet_domain_internal_dof_numbering_
+                          .size(),
+                        dirichlet_data_on_neumann_domain_internal_dof_numbering_,
+                        0,
+                        dirichlet_data_on_neumann_domain_internal_dof_numbering_
+                          .size());
+
+                      break;
+                    }
+                    case PreconditionerType::Identity: {
+                      // In this case, Schur complement method is adopted to
+                      // solve the system of equations.
+                      solve_hblockmatrix_skew_symm_using_schur_complement(
+                        M_hmat_,
+                        neumann_data_on_dirichlet_domain_internal_dof_numbering_,
+                        dirichlet_data_on_neumann_domain_internal_dof_numbering_,
+                        system_rhs_on_dirichlet_domain_,
+                        system_rhs_on_neumann_domain_,
+                        PreconditionIdentity(),
+                        PreconditionIdentity(),
+                        1000,
+                        1e-8,
+                        true,
+                        true);
+
+                      // Combine the two block vectors in the internal DoF
+                      // numbering into one vector.
+                      copy_vector(
+                        solution_on_combined_domain_internal_dof_numbering_,
+                        0,
+                        neumann_data_on_dirichlet_domain_internal_dof_numbering_,
+                        0,
+                        neumann_data_on_dirichlet_domain_internal_dof_numbering_
+                          .size());
+                      copy_vector(
+                        solution_on_combined_domain_internal_dof_numbering_,
+                        neumann_data_on_dirichlet_domain_internal_dof_numbering_
+                          .size(),
+                        dirichlet_data_on_neumann_domain_internal_dof_numbering_,
+                        0,
+                        dirichlet_data_on_neumann_domain_internal_dof_numbering_
+                          .size());
+
+                      break;
+                    }
+                    case PreconditionerType::Jacobi: {
+                      // TODO
+                      Assert(false, ExcNotImplemented());
+                      break;
+                    }
+                    default: {
+                      Assert(false, ExcInternalError());
+                      break;
+                    }
+                }
+
+              // Convert the two block vectors from internal to external DoF
+              // numbering.
               permute_vector(
                 neumann_data_on_dirichlet_domain_internal_dof_numbering_,
                 *dof_e2i_numbering_for_neumann_space_on_dirichlet_domain_,
@@ -4426,8 +4685,9 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
                 *dof_e2i_numbering_for_dirichlet_space_on_neumann_domain_,
                 dirichlet_data_on_neumann_domain_);
 
-              // Combine the solution vector and the boundary condition vector
-              // to form a complete Cauchy data.
+              // Combine the Dirichlet solution on the Neumann domain in the
+              // external DoF numbering and the Dirichlet boundary condition
+              // vector to form the complete Dirichlet data.
               DoFToolsExt::extend_selected_dof_values_to_full_dofs(
                 dirichlet_data_,
                 dirichlet_data_on_neumann_domain_,
@@ -4437,6 +4697,9 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
                 dirichlet_bc_on_selected_dofs_,
                 local_to_full_dirichlet_dof_indices_on_dirichlet_domain_);
 
+              // Combine the Neumann solution on the Dirichlet domain in the
+              // external DoF numbering and the Neumann boundary condition
+              // vector to form the complete Neumann data.
               DoFToolsExt::extend_selected_dof_values_to_full_dofs(
                 neumann_data_,
                 neumann_data_on_dirichlet_domain_,
@@ -4450,6 +4713,7 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
             }
             default: {
               Assert(false, ExcInternalError());
+              break;
             }
         }
     }
@@ -4524,25 +4788,16 @@ LaplaceBEM<dim, spacedim>::Priv::output_results() const
             false,
             15,
             25);
-
-          print_vector_to_mat(data_file,
-                              "solution_on_dirichlet_domain",
-                              neumann_data_,
-                              false,
-                              15,
-                              25);
-
-          print_vector_to_mat(data_file,
-                              "solution_on_neumann_domain",
-                              dirichlet_data_,
-                              false,
-                              15,
-                              25);
+          print_vector_to_mat(
+            data_file, "neumann_data", neumann_data_, false, 15, 25);
+          print_vector_to_mat(
+            data_file, "dirichlet_data", dirichlet_data_, false, 15, 25);
 
           break;
         }
         default: {
           Assert(false, ExcInternalError());
+          break;
         }
     }
 

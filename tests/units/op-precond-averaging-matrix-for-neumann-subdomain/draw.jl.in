@@ -2,41 +2,24 @@ using Colors
 using Meshes, Gmsh, GLMakie
 using CSV, DataFrames
 
+include("@HBEM_ROOT_DIR@scripts/julia/GmshTools.jl")
+
+# Read the mesh
+points, connectivity, mesh_viz = read_msh("mesh.msh")
+refined_points, refined_connectivity, refined_mesh_viz = read_msh("refined-mesh.msh")
+
+fig = Figure(size = (1920,1080))
+azimuth = -π / 2
+elevation = π / 2
+ax = Axis3(fig[1, 1], aspect=:data, azimuth=azimuth, elevation=elevation, title="Relationship between primal DoFs on primal mesh and refined mesh")
+viz!(ax, refined_mesh_viz, showsegments=true, segmentcolor=:red, segmentsize=1, color=:burlywood)
+viz!(ax, mesh_viz, showsegments=true, segmentcolor=:black, segmentsize=3, color=:burlywood, alpha=0)
+display(fig)
+
 # Load the data.
 Cd = CSV.read("Cd.output", DataFrame; delim=' ', header=false, ignorerepeated=true)
 support_points_in_dual_mesh = CSV.read("support-points-in-dual-space-on-dual-mesh.output", DataFrame; delim=' ', header=false)
 support_points_in_refined_mesh = CSV.read("support-points-in-dual-space-on-refined-mesh.output", DataFrame; delim=' ', header=false)
-
-# Read the mesh
-Gmsh.initialize()
-
-mesh = gmsh.open("refined-mesh.msh")
-
-# Extract all vertices.
-nodeTags, nodes = gmsh.model.mesh.get_nodes()
-node_num = length(nodeTags)
-spacedim = 3
-nodes = transpose(reshape(nodes, (spacedim, node_num)))
-
-# Extract surface mesh, where @p element_node_indices stores the node indices for all cells,
-# the value type of which is UInt64.
-elementTypes, elementTags, element_node_indices = gmsh.model.mesh.get_elements(2)
-# Now convert the node indices 
-cell_num = length(elementTags[1])
-node_num_per_cell = 4
-cells = transpose(reshape(Int64.(element_node_indices[1]), (node_num_per_cell, cell_num)))
-
-Gmsh.finalize()
-
-# Connect indices into a quadrangles for visualization in Meshes.
-connectivity = connect.([(cells[i, 1], cells[i, 2], cells[i, 3], cells[i, 4]) for i = 1:cell_num], Quadrangle)
-points = Meshes.Point.(nodes[:, 1], nodes[:, 2], nodes[:, 3])
-mesh_viz = SimpleMesh(points, connectivity);
-
-fig = Figure(size = (1920,1080))
-ax = Axis3(fig[1, 1], azimuth=-π / 2, elevation=π / 2)
-viz!(ax, mesh_viz, showsegments=true, color=:burlywood)
-display(fig)
 
 scatter!(ax, Matrix(support_points_in_dual_mesh[:, 2:4]), color=:red, markersize=10)
 text!(ax, Matrix(support_points_in_dual_mesh[:, 2:4]), text=string.(support_points_in_dual_mesh[:,1]), align=(:left, :bottom), fontsize=20, color=:black)

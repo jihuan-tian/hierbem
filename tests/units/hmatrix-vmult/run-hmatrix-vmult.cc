@@ -85,7 +85,6 @@ run_hmatrix_vmult()
   H.vmult(y, x);
   print_vector_to_mat(ofs, "y1", y);
 
-  y = 0.;
   H.vmult(y, 0.5, x);
   print_vector_to_mat(ofs, "y2", y);
 

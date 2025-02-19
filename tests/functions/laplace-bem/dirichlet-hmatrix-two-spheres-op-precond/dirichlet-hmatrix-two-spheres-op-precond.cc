@@ -16,7 +16,7 @@ using namespace Catch::Matchers;
 using namespace HierBEM;
 
 extern void
-run_dirichlet_hmatrix_two_spheres();
+run_dirichlet_hmatrix_two_spheres_op_precond();
 
 TEST_CASE(
   "Solve Laplace problem with Dirichlet boundary condition for the two sphere model using operator preconditioning",
@@ -26,7 +26,7 @@ TEST_CASE(
   inst.add_path(HBEM_ROOT_DIR "/scripts");
   inst.add_path(SOURCE_DIR);
 
-  run_dirichlet_hmatrix_two_spheres();
+  run_dirichlet_hmatrix_two_spheres_op_precond();
 
   try
     {

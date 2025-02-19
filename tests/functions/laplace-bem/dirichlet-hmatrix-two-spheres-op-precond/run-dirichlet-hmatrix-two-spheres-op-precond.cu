@@ -45,7 +45,7 @@ namespace HierBEM
 } // namespace HierBEM
 
 void
-run_dirichlet_hmatrix_two_spheres()
+run_dirichlet_hmatrix_two_spheres_op_precond()
 {
   /**
    * @internal Pop out the default "DEAL" prefix string.
@@ -119,9 +119,6 @@ run_dirichlet_hmatrix_two_spheres()
 
   timer.start();
 
-  bem.get_triangulation().set_mesh_smoothing(
-    Triangulation<dim,
-                  spacedim>::MeshSmoothing::limit_level_difference_at_vertices);
   std::ifstream mesh_in(HBEM_TEST_MODEL_DIR "two-spheres.msh");
   read_msh(mesh_in, bem.get_triangulation());
   bem.get_subdomain_topology().generate_topology(HBEM_TEST_MODEL_DIR

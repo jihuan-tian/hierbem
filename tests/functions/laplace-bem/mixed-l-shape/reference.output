@@ -249,7 +249,7 @@ Maximum number of matrix entries in the far field set: 0
          9.32947129244947
 
 
-# name: solution_on_dirichlet_domain
+# name: neumann_data
 # type: matrix
 # rows: 192
 # columns: 1
@@ -447,7 +447,7 @@ Maximum number of matrix entries in the far field set: 0
                         0
 
 
-# name: solution_on_neumann_domain
+# name: dirichlet_data
 # type: matrix
 # rows: 194
 # columns: 1

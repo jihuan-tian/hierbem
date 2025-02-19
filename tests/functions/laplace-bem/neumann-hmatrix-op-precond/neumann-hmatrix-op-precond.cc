@@ -3,7 +3,7 @@
  * \brief Verify solving the Laplace problem with Neumann boundary condition
  * using H-matrix based BEM. Operator preconditioning is used.
  *
- * \ingroup testers
+ * \ingroup preconditioner
  * \author Jihuan Tian
  * \date 2025-01-07
  */

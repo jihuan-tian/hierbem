@@ -54,6 +54,7 @@
 #include "generic_functors.h"
 #include "grid_out_ext.h"
 #include "hmatrix/aca_plus/aca_config.h"
+#include "hmatrix/hmatrix.h"
 #include "mapping/mapping_info.h"
 #include "platform_shared/laplace_kernels.h"
 #include "subdomain_steklov_poincare_hmatrix.h"
@@ -950,6 +951,7 @@ DDMEfield<dim, spacedim>::create_efield_subdomains_and_surfaces()
             default: {
               surface_of_from_subdomain = nullptr;
               Assert(false, ExcInternalError());
+              break;
             }
         }
 
@@ -1009,6 +1011,7 @@ DDMEfield<dim, spacedim>::create_efield_subdomains_and_surfaces()
             default: {
               surface_of_to_subdomain = nullptr;
               Assert(false, ExcInternalError());
+              break;
             }
         }
 
@@ -1326,15 +1329,21 @@ DDMEfield<dim, spacedim>::initialize_subdomain_hmatrices()
         cell_sizes_for_local_neumann_space);
 
       // Initialize subdomain local \hmatrices.
-      steklov_poincare_hmat.get_D() = HMatrixSymm<spacedim>(
-        steklov_poincare_hmat.get_bct_for_bilinear_form_D(), max_hmat_rank);
+      steklov_poincare_hmat.get_D() =
+        HMatrix<spacedim>(steklov_poincare_hmat.get_bct_for_bilinear_form_D(),
+                          max_hmat_rank,
+                          HMatrixSupport::Property::symmetric,
+                          HMatrixSupport::BlockType::diagonal_block);
       steklov_poincare_hmat.get_K_with_mass_matrix() =
         HMatrix<spacedim>(steklov_poincare_hmat.get_bct_for_bilinear_form_K(),
                           max_hmat_rank,
                           HMatrixSupport::Property::general,
                           HMatrixSupport::BlockType::diagonal_block);
-      steklov_poincare_hmat.get_V() = HMatrixSymm<spacedim>(
-        steklov_poincare_hmat.get_bct_for_bilinear_form_V(), max_hmat_rank);
+      steklov_poincare_hmat.get_V() =
+        HMatrix<spacedim>(steklov_poincare_hmat.get_bct_for_bilinear_form_V(),
+                          max_hmat_rank,
+                          HMatrixSupport::Property::symmetric,
+                          HMatrixSupport::BlockType::diagonal_block);
 
       // Create the two wrapper classes for transmission equation and charge
       // neutrality equation.

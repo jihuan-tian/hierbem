@@ -1,0 +1,38 @@
+using Colors
+using Meshes, Gmsh, GLMakie
+using CSV, DataFrames
+
+include("@HBEM_ROOT_DIR@scripts/julia/GmshTools.jl")
+
+points, connectivity, mesh_viz = read_msh("mesh.msh")
+refined_points, refined_connectivity, refined_mesh_viz = read_msh("refined-mesh.msh")
+
+fig = Figure(size = (1920,1080))
+azimuth = -π / 2
+elevation = π / 2
+ax = Axis3(fig[1, 1], aspect=:data, azimuth=azimuth, elevation=elevation, title="Relationship between primal DoFs on primal mesh and refined mesh")
+viz!(ax, refined_mesh_viz, showsegments=true, segmentcolor=:red, segmentsize=1, color=:burlywood)
+viz!(ax, mesh_viz, showsegments=true, segmentcolor=:black, segmentsize=3, color=:burlywood, alpha=0)
+display(fig)
+
+# Read data file.
+df = CSV.read("primal-space-dofs-on-multigrid.output", DataFrame; delim=' ', header=false, comment="#")
+df_rows = size(df)[1]
+# Connect support points in the parent cell in the primal mesh and those in its child cells in the refined mesh.
+for i = 1:5:df_rows
+  lines!(ax, Matrix(df[i:i+4, 2:4]), color=:white, linestyle=:dash, linewidth=2)
+end
+# Plot the support points in the primal mesh.
+scatter!(ax, Matrix(df[1:5:df_rows, 2:4]), color=:red, markersize=10)
+text!(ax, Matrix(df[1:5:df_rows, 2:4]), text=string.(df[1:5:df_rows, 1]), align=(:left, :bottom), fontsize=25, color=:cyan)
+# Plot the support points in child cells in the refined mesh.
+scatter!(ax, Matrix(df[2:5:df_rows, 2:4]), color=:green, markersize=10)
+text!(ax, Matrix(df[2:5:df_rows, 2:4]), text="#(" .* string.(df[2:5:df_rows, 1]) .* "," .* string.(df[2:5:df_rows, 5]) .* ")", align=(:left, :bottom), fontsize=20, color=:white)
+scatter!(ax, Matrix(df[3:5:df_rows, 2:4]), color=:yellow, markersize=10)
+text!(ax, Matrix(df[3:5:df_rows, 2:4]), text="#(" .* string.(df[3:5:df_rows, 1]) .* "," .* string.(df[3:5:df_rows, 5]) .* ")", align=(:left, :bottom), fontsize=20, color=:white)
+scatter!(ax, Matrix(df[4:5:df_rows, 2:4]), color=:blue, markersize=10)
+text!(ax, Matrix(df[4:5:df_rows, 2:4]), text="#(" .* string.(df[4:5:df_rows, 1]) .* "," .* string.(df[4:5:df_rows, 5]) .* ")", align=(:left, :bottom), fontsize=20, color=:white)
+scatter!(ax, Matrix(df[5:5:df_rows, 2:4]), color=:purple, markersize=10)
+text!(ax, Matrix(df[5:5:df_rows, 2:4]), text="#(" .* string.(df[5:5:df_rows, 1]) .* "," .* string.(df[5:5:df_rows, 5]) .* ")", align=(:left, :bottom), fontsize=20, color=:white)
+
+GLMakie.save("primal-space-dofs-on-multigrid.png", fig)

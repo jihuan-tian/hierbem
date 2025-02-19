@@ -13,6 +13,8 @@ target_compile_definitions(${_target}
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/process.jl.in
                ${CMAKE_CURRENT_SOURCE_DIR}/process.jl)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/draw.jl.in
+               ${CMAKE_CURRENT_SOURCE_DIR}/draw.jl)
 
 target_link_libraries(
   ${_target}

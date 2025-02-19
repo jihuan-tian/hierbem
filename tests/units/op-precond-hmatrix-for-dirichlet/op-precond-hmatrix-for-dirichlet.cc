@@ -19,7 +19,8 @@ using namespace HierBEM;
 extern void
 run_op_precond_hmatrix_for_dirichlet();
 
-TEST_CASE("Build preconditioner matrix for Laplace Dirichlet", "[op-precond]")
+TEST_CASE("Build preconditioner matrix for Laplace Dirichlet",
+          "[preconditioner]")
 {
   HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
   inst.add_path(HBEM_ROOT_DIR "/scripts");

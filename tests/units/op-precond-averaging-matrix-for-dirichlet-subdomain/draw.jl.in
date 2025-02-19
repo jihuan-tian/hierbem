@@ -1,0 +1,31 @@
+using Colors
+using Meshes, Gmsh, GLMakie
+using CSV, DataFrames
+
+include("@HBEM_ROOT_DIR@scripts/julia/GmshTools.jl")
+
+points, connectivity, mesh_viz = read_msh("mesh.msh")
+refined_points, refined_connectivity, refined_mesh_viz = read_msh("refined-mesh.msh")
+
+fig = Figure(size = (1920,1080))
+azimuth = -π / 2
+elevation = π / 2
+ax = Axis3(fig[1, 1], aspect=:data, azimuth=azimuth, elevation=elevation, title="Weight for basis functions on refined mesh: #(full DoF index,local DoF index):weight")
+viz!(ax, refined_mesh_viz, showsegments=true, segmentcolor=:red, segmentsize=1, color=:burlywood)
+viz!(ax, mesh_viz, showsegments=true, segmentcolor=:black, segmentsize=3, color=:burlywood, alpha=0)
+display(fig)
+
+# Read the support point data and their weights.
+df = CSV.read("dual-space-dofs-on-refined-mesh.output", DataFrame; delim=' ', header=false, comment="#")
+
+df_rows = size(df)[1]
+# Mark DoF ids and weights in the first child cell of each primal cell.
+text!(ax, Matrix(df[1:4:df_rows, 4:6]), text="#(" .* string.(df[1:4:df_rows, 2]) .* "," .* string.(df[1:4:df_rows, 3]) .* "):" .* string.(df[1:4:df_rows, 7]), align=(:left, :bottom), fontsize=12, color=:white)
+# Mark DoF ids and weights in the second child cell of each primal cell.
+text!(ax, Matrix(df[2:4:df_rows, 4:6]), text="#(" .* string.(df[2:4:df_rows, 2]) .* "," .* string.(df[2:4:df_rows, 3]) .* "):" .* string.(df[2:4:df_rows, 7]), align=(:right, :bottom), fontsize=12, color=:white)
+# Mark DoF ids and weights in the third child cell of each primal cell.
+text!(ax, Matrix(df[3:4:df_rows, 4:6]), text="#(" .* string.(df[3:4:df_rows, 2]) .* "," .* string.(df[3:4:df_rows, 3]) .* "):" .* string.(df[3:4:df_rows, 7]), align=(:left, :top), fontsize=12, color=:white)
+# Mark DoF ids and weights in the fourth child cell of each primal cell.
+text!(ax, Matrix(df[4:4:df_rows, 4:6]), text="#(" .* string.(df[4:4:df_rows, 2]) .* "," .* string.(df[4:4:df_rows, 3]) .* "):" .* string.(df[4:4:df_rows, 7]), align=(:right, :top), fontsize=12, color=:white)
+
+GLMakie.save("dual-space-dofs-on-refined-mesh.png", fig)

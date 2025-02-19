@@ -1624,8 +1624,7 @@ public:
   void
   vmult(Vector<Number>                &y,
         const Vector<Number>          &x,
-        const HMatrixSupport::Property top_hmat_property =
-          HMatrixSupport::general) const;
+        const HMatrixSupport::Property top_hmat_property) const;
 
   /**
    * Perform task parallel \hmatrix/vector multiplication as \f$y = y + M
@@ -1673,8 +1672,7 @@ public:
   vmult(Vector<Number>                &y,
         const Number                   alpha,
         const Vector<Number>          &x,
-        const HMatrixSupport::Property top_hmat_property =
-          HMatrixSupport::general) const;
+        const HMatrixSupport::Property top_hmat_property) const;
 
   /**
    * Perform task parallel \hmatrix/vector multiplication as \f$y = \beta y +
@@ -1728,13 +1726,12 @@ public:
   vmult(Vector<Number>                  &y,
         const Vector<Number>            &x,
         const HMatrix<spacedim, Number> &starting_hmat,
-        const HMatrixSupport::Property   top_hmat_property =
-          HMatrixSupport::general) const;
+        const HMatrixSupport::Property   top_hmat_property) const;
 
   /**
    * Calculate \hmatrix/vector multiplication as \f$y = y + \alpha \cdot M
    * \cdot x\f$ by starting from a block in the matrix and vector. Therefore,
-   * the starting should be explicitly specified.
+   * the starting \hmat should be explicitly specified.
    *
    * @param y Result vector as a section of the corresponding global vector
    * @param alpha Scalar factor before \f$x\f$
@@ -1749,8 +1746,35 @@ public:
         const Number                     alpha,
         const Vector<Number>            &x,
         const HMatrix<spacedim, Number> &starting_hmat,
-        const HMatrixSupport::Property   top_hmat_property =
-          HMatrixSupport::general) const;
+        const HMatrixSupport::Property   top_hmat_property) const;
+
+  /**
+   * Calculate the top level \hmat/vector multiplication \f$y= M \cdot x\f$.
+   */
+  void
+  vmult(Vector<Number> &y, const Vector<Number> &x) const;
+
+  /**
+   * Calculate the top level \hmat/vector multiplication \f$y= \alpha \cdot M
+   * \cdot x\f$.
+   */
+  void
+  vmult(Vector<Number> &y, const Number alpha, const Vector<Number> &x) const;
+
+  /**
+   * Calculate the top level \hmat/vector multiplication \f$y= y + M \cdot x\f$.
+   */
+  void
+  vmult_add(Vector<Number> &y, const Vector<Number> &x) const;
+
+  /**
+   * Calculate the top level \hmat/vector multiplication \f$y= y + \alpha \cdot
+   * M \cdot x\f$.
+   */
+  void
+  vmult_add(Vector<Number>       &y,
+            const Number          alpha,
+            const Vector<Number> &x) const;
 
   /**
    * Calculate \hmatrix/vector multiplication as \f$y = y + M^T \cdot x\f$,
@@ -1772,8 +1796,7 @@ public:
   void
   Tvmult(Vector<Number>                &y,
          const Vector<Number>          &x,
-         const HMatrixSupport::Property top_hmat_property =
-           HMatrixSupport::Property::general) const;
+         const HMatrixSupport::Property top_hmat_property) const;
 
   /**
    * Perform task parallel \hmatrix/vector multiplication as \f$y = y + M^T
@@ -1819,8 +1842,7 @@ public:
   Tvmult(Vector<Number>                &y,
          const Number                   alpha,
          const Vector<Number>          &x,
-         const HMatrixSupport::Property top_hmat_property =
-           HMatrixSupport::Property::general) const;
+         const HMatrixSupport::Property top_hmat_property) const;
 
   /**
    * Perform task parallel \hmatrix/vector multiplication as \f$y = y + \alpha
@@ -1877,8 +1899,7 @@ public:
   Tvmult(Vector<Number>                  &y,
          const Vector<Number>            &x,
          const HMatrix<spacedim, Number> &starting_hmat,
-         const HMatrixSupport::Property   top_hmat_property =
-           HMatrixSupport::Property::general) const;
+         const HMatrixSupport::Property   top_hmat_property) const;
 
   /**
    * Calculate \hmatrix/vector multiplication as \f$y = y + \alpha \cdot M^T
@@ -1898,8 +1919,37 @@ public:
          const Number                     alpha,
          const Vector<Number>            &x,
          const HMatrix<spacedim, Number> &starting_hmat,
-         const HMatrixSupport::Property   top_hmat_property =
-           HMatrixSupport::Property::general) const;
+         const HMatrixSupport::Property   top_hmat_property) const;
+
+  /**
+   * Calculate the top level \hmat/vector multiplication \f$y= M^{\mathrm{T}}
+   * \cdot x\f$.
+   */
+  void
+  Tvmult(Vector<Number> &y, const Vector<Number> &x) const;
+
+  /**
+   * Calculate the top level \hmat/vector multiplication \f$y= \alpha \cdot
+   * M^{\mathrm{T}} \cdot x\f$.
+   */
+  void
+  Tvmult(Vector<Number> &y, const Number alpha, const Vector<Number> &x) const;
+
+  /**
+   * Calculate the top level \hmat/vector multiplication \f$y= y +
+   * M^{\mathrm{T}} \cdot x\f$.
+   */
+  void
+  Tvmult_add(Vector<Number> &y, const Vector<Number> &x) const;
+
+  /**
+   * Calculate the top level \hmat/vector multiplication \f$y= y + \alpha \cdot
+   * M^{\mathrm{T}} \cdot x\f$.
+   */
+  void
+  Tvmult_add(Vector<Number>       &y,
+             const Number          alpha,
+             const Vector<Number> &x) const;
 
   /**
    * Perform \hmatrix MM multiplication reduction. This is
@@ -4418,6 +4468,7 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
                         }
                         default: {
                           Assert(false, ExcNotImplemented());
+                          break;
                         }
                     }
 
@@ -4446,6 +4497,7 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
                          ExcMessage(
                            std::string("Invalid H-matrix block type: ") +
                            std::to_string(hmat->block_type)));
+                  break;
                 }
             }
 
@@ -4521,6 +4573,7 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
                   Assert(false,
                          ExcMessage("Invalid H-matrix property: " +
                                     std::to_string(hmat->property)));
+                  break;
                 }
             }
 
@@ -4595,6 +4648,7 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
                       Assert(false,
                              ExcMessage("Invalid H-matrix property: " +
                                         std::to_string(hmat->property)));
+                      break;
                     }
                 }
             }
@@ -4736,6 +4790,7 @@ InitAndCreateHMatrixChildren(
                         }
                         default: {
                           Assert(false, ExcNotImplemented());
+                          break;
                         }
                     }
 
@@ -4763,6 +4818,7 @@ InitAndCreateHMatrixChildren(
                   Assert(false,
                          ExcMessage("Invalid H-matrix block type: " +
                                     std::to_string(hmat->block_type)));
+                  break;
                 }
             }
 
@@ -4838,6 +4894,7 @@ InitAndCreateHMatrixChildren(
                   Assert(false,
                          ExcMessage("Invalid H-matrix property: " +
                                     std::to_string(hmat->property)));
+                  break;
                 }
             }
 
@@ -4990,6 +5047,7 @@ InitAndCreateHMatrixChildren(
                                std::string("Invalid H-matrix block type: ") +
                                std::string(HMatrixSupport::block_type_name(
                                  hmat->block_type))));
+                      break;
                     }
                 }
 
@@ -5091,6 +5149,7 @@ InitAndCreateHMatrixChildren(
                                std::string("Invalid H-matrix block type: ") +
                                std::string(HMatrixSupport::block_type_name(
                                  hmat->block_type))));
+                      break;
                     }
                 }
 
@@ -5192,6 +5251,7 @@ InitAndCreateHMatrixChildren(
                                std::string("Invalid H-matrix block type: ") +
                                std::string(HMatrixSupport::block_type_name(
                                  hmat->block_type))));
+                      break;
                     }
                 }
 
@@ -5204,6 +5264,7 @@ InitAndCreateHMatrixChildren(
                          "Invalid property of the top level H-matrix node: ") +
                        std::string(HMatrixSupport::property_name(
                          top_hmat_node_property))));
+              break;
             }
         }
     }
@@ -5346,6 +5407,7 @@ InitAndCreateHMatrixChildren(
                         }
                         default: {
                           Assert(false, ExcNotImplemented());
+                          break;
                         }
                     }
 
@@ -5371,6 +5433,7 @@ InitAndCreateHMatrixChildren(
                 }
                 default: {
                   Assert(false, ExcInvalidHMatrixBlockType(hmat->block_type));
+                  break;
                 }
             }
 
@@ -5444,6 +5507,7 @@ InitAndCreateHMatrixChildren(
                 }
                 default: {
                   Assert(false, ExcInvalidHMatrixProperty(hmat->property));
+                  break;
                 }
             }
 
@@ -5641,6 +5705,7 @@ InitAndCreateHMatrixChildren(
                                std::string("Invalid H-matrix block type: ") +
                                std::string(HMatrixSupport::block_type_name(
                                  hmat->block_type))));
+                      break;
                     }
                 }
 
@@ -5770,6 +5835,7 @@ InitAndCreateHMatrixChildren(
                                std::string("Invalid H-matrix block type: ") +
                                std::string(HMatrixSupport::block_type_name(
                                  hmat->block_type))));
+                      break;
                     }
                 }
 
@@ -5899,6 +5965,7 @@ InitAndCreateHMatrixChildren(
                                std::string("Invalid H-matrix block type: ") +
                                std::string(HMatrixSupport::block_type_name(
                                  hmat->block_type))));
+                      break;
                     }
                 }
 
@@ -5911,6 +5978,7 @@ InitAndCreateHMatrixChildren(
                          "Invalid property of the top level H-matrix node: ") +
                        std::string(HMatrixSupport::property_name(
                          top_hmat_node_property))));
+              break;
             }
         }
     }
@@ -6053,6 +6121,7 @@ InitAndCreateHMatrixChildren(
                         }
                         default: {
                           Assert(false, ExcNotImplemented());
+                          break;
                         }
                     }
 
@@ -6080,6 +6149,7 @@ InitAndCreateHMatrixChildren(
                   Assert(false,
                          ExcMessage("Invalid H-matrix block type: " +
                                     std::to_string(hmat->block_type)));
+                  break;
                 }
             }
 
@@ -6155,6 +6225,7 @@ InitAndCreateHMatrixChildren(
                   Assert(false,
                          ExcMessage("Invalid H-matrix property: " +
                                     std::to_string(hmat->property)));
+                  break;
                 }
             }
 
@@ -6346,6 +6417,7 @@ InitAndCreateHMatrixChildren(
                     default: {
                       Assert(false,
                              ExcInvalidHMatrixBlockType(hmat->block_type));
+                      break;
                     }
                 }
 
@@ -6471,6 +6543,7 @@ InitAndCreateHMatrixChildren(
                     default: {
                       Assert(false,
                              ExcInvalidHMatrixBlockType(hmat->block_type));
+                      break;
                     }
                 }
 
@@ -6596,6 +6669,7 @@ InitAndCreateHMatrixChildren(
                     default: {
                       Assert(false,
                              ExcInvalidHMatrixBlockType(hmat->block_type));
+                      break;
                     }
                 }
 
@@ -6603,6 +6677,7 @@ InitAndCreateHMatrixChildren(
             }
             default: {
               Assert(false, ExcInvalidHMatrixProperty(top_hmat_node_property));
+              break;
             }
         }
     }
@@ -6730,6 +6805,7 @@ InitAndCreateHMatrixChildren(
                         }
                         default: {
                           Assert(false, ExcNotImplemented());
+                          break;
                         }
                     }
 
@@ -6755,6 +6831,7 @@ InitAndCreateHMatrixChildren(
                 }
                 default: {
                   Assert(false, ExcInvalidHMatrixBlockType(hmat->block_type));
+                  break;
                 }
             }
 
@@ -6828,6 +6905,7 @@ InitAndCreateHMatrixChildren(
                 }
                 default: {
                   Assert(false, ExcInvalidHMatrixProperty(hmat->property));
+                  break;
                 }
             }
 
@@ -7034,6 +7112,7 @@ InitAndCreateHMatrixChildren(
                     default: {
                       Assert(false,
                              ExcInvalidHMatrixBlockType(hmat->block_type));
+                      break;
                     }
                 }
 
@@ -7166,6 +7245,7 @@ InitAndCreateHMatrixChildren(
                     default: {
                       Assert(false,
                              ExcInvalidHMatrixBlockType(hmat->block_type));
+                      break;
                     }
                 }
 
@@ -7298,6 +7378,7 @@ InitAndCreateHMatrixChildren(
                     default: {
                       Assert(false,
                              ExcInvalidHMatrixBlockType(hmat->block_type));
+                      break;
                     }
                 }
 
@@ -7305,6 +7386,7 @@ InitAndCreateHMatrixChildren(
             }
             default: {
               Assert(false, ExcInvalidHMatrixProperty(top_hmat_node_property));
+              break;
             }
         }
     }
@@ -7440,6 +7522,7 @@ InitAndCreateHMatrixChildren(
                         }
                         default: {
                           Assert(false, ExcNotImplemented());
+                          break;
                         }
                     }
 
@@ -7465,6 +7548,7 @@ InitAndCreateHMatrixChildren(
                 }
                 default: {
                   Assert(false, ExcInvalidHMatrixBlockType(hmat->block_type));
+                  break;
                 }
             }
 
@@ -7538,6 +7622,7 @@ InitAndCreateHMatrixChildren(
                 }
                 default: {
                   Assert(false, ExcInvalidHMatrixProperty(hmat->property));
+                  break;
                 }
             }
 
@@ -7741,6 +7826,7 @@ InitAndCreateHMatrixChildren(
                     default: {
                       Assert(false,
                              ExcInvalidHMatrixBlockType(hmat->block_type));
+                      break;
                     }
                 }
 
@@ -7872,6 +7958,7 @@ InitAndCreateHMatrixChildren(
                     default: {
                       Assert(false,
                              ExcInvalidHMatrixBlockType(hmat->block_type));
+                      break;
                     }
                 }
 
@@ -8003,6 +8090,7 @@ InitAndCreateHMatrixChildren(
                     default: {
                       Assert(false,
                              ExcInvalidHMatrixBlockType(hmat->block_type));
+                      break;
                     }
                 }
 
@@ -8010,6 +8098,7 @@ InitAndCreateHMatrixChildren(
             }
             default: {
               Assert(false, ExcInvalidHMatrixProperty(top_hmat_node_property));
+              break;
             }
         }
     }
@@ -8142,6 +8231,7 @@ InitAndCreateHMatrixChildren(
                         }
                         default: {
                           Assert(false, ExcNotImplemented());
+                          break;
                         }
                     }
 
@@ -8167,6 +8257,7 @@ InitAndCreateHMatrixChildren(
                 }
                 default: {
                   Assert(false, ExcInvalidHMatrixBlockType(hmat->block_type));
+                  break;
                 }
             }
 
@@ -8240,6 +8331,7 @@ InitAndCreateHMatrixChildren(
                 }
                 default: {
                   Assert(false, ExcInvalidHMatrixProperty(hmat->property));
+                  break;
                 }
             }
 
@@ -8407,6 +8499,7 @@ RefineHMatrixWrtExtendedBlockClusterTree(
                         }
                         default: {
                           Assert(false, ExcNotImplemented());
+                          break;
                         }
                     }
 
@@ -8434,6 +8527,7 @@ RefineHMatrixWrtExtendedBlockClusterTree(
                   Assert(false,
                          ExcMessage("Invalid H-matrix block type: " +
                                     std::to_string(current_hmat->block_type)));
+                  break;
                 }
             }
 
@@ -8509,6 +8603,7 @@ RefineHMatrixWrtExtendedBlockClusterTree(
                   Assert(false,
                          ExcMessage("Invalid H-matrix property: " +
                                     std::to_string(current_hmat->property)));
+                  break;
                 }
             }
 
@@ -8678,6 +8773,7 @@ RefineHMatrixWrtExtendedBlockClusterTree(
                                  ExcMessage(
                                    "Invalid H-matrix property: " +
                                    std::to_string(current_hmat->property)));
+                          break;
                         }
                     }
                 }
@@ -8957,6 +9053,7 @@ convertHMatBlockToRkMatrix(
                     ExcMessage(
                       std::string("Invalid block cluster splitting mode: ") +
                       std::to_string(hmat_block->bc_node->get_split_mode())));
+                  break;
                 }
             }
 
@@ -9146,6 +9243,7 @@ convertHMatBlockToRkMatrix(
                     ExcMessage(
                       std::string("Invalid block cluster splitting mode: ") +
                       std::to_string(hmat_block->bc_node->get_split_mode())));
+                  break;
                 }
             }
 
@@ -16948,6 +17046,7 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
         break;
       default:
         Assert(false, ExcInvalidHMatrixType(type));
+        break;
     }
 }
 
@@ -17691,6 +17790,7 @@ HMatrix<spacedim, Number>::set_current_matrix_property(
         }
         default: {
           Assert(false, ExcNotImplemented());
+          break;
         }
     }
 }
@@ -17967,6 +18067,7 @@ HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
                  ExcMessage(
                    std::string("Invalid H-matrix property: ") +
                    std::string(HMatrixSupport::property_name(property))));
+          break;
         }
     }
 }
@@ -18148,6 +18249,7 @@ HMatrix<spacedim, Number>::set_block_type(
                     }
                     default: {
                       Assert(false, ExcNotImplemented());
+                      break;
                     }
                 }
 
@@ -18176,6 +18278,7 @@ HMatrix<spacedim, Number>::set_block_type(
                      ExcMessage(std::string("Invalid block type ") +
                                 std::string(HMatrixSupport::block_type_name(
                                   block_type))));
+              break;
             }
         }
     }
@@ -18657,6 +18760,7 @@ HMatrix<spacedim, Number>::set_property_for_converted_fullmatrix(
         }
         default: {
           Assert(false, ExcInvalidHMatrixProperty(property));
+          break;
         }
     }
 }
@@ -22677,6 +22781,46 @@ HMatrix<spacedim, Number>::vmult(
 
 template <int spacedim, typename Number>
 void
+HMatrix<spacedim, Number>::vmult(Vector<Number>       &y,
+                                 const Vector<Number> &x) const
+{
+  y = 0.;
+  this->vmult(y, x, this->property);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::vmult_add(Vector<Number>       &y,
+                                     const Vector<Number> &x) const
+{
+  this->vmult(y, x, this->property);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::vmult(Vector<Number>       &y,
+                                 const Number          alpha,
+                                 const Vector<Number> &x) const
+{
+  y = 0.;
+  this->vmult(y, alpha, x, this->property);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::vmult_add(Vector<Number>       &y,
+                                     const Number          alpha,
+                                     const Vector<Number> &x) const
+{
+  this->vmult(y, alpha, x, this->property);
+}
+
+
+template <int spacedim, typename Number>
+void
 HMatrix<spacedim, Number>::Tvmult(
   Vector<Number>                &y,
   const Vector<Number>          &x,
@@ -25733,6 +25877,46 @@ HMatrix<spacedim, Number>::Tvmult(
 
 template <int spacedim, typename Number>
 void
+HMatrix<spacedim, Number>::Tvmult(Vector<Number>       &y,
+                                  const Vector<Number> &x) const
+{
+  y = 0.;
+  this->Tvmult(y, x, this->property);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::Tvmult_add(Vector<Number>       &y,
+                                      const Vector<Number> &x) const
+{
+  this->Tvmult(y, x, this->property);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::Tvmult(Vector<Number>       &y,
+                                  const Number          alpha,
+                                  const Vector<Number> &x) const
+{
+  y = 0.;
+  this->Tvmult(y, alpha, x, this->property);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::Tvmult_add(Vector<Number>       &y,
+                                      const Number          alpha,
+                                      const Vector<Number> &x) const
+{
+  this->Tvmult(y, alpha, x, this->property);
+}
+
+
+template <int spacedim, typename Number>
+void
 HMatrix<spacedim, Number>::h_h_mmult_reduction()
 {
   std::vector<
@@ -27306,7 +27490,8 @@ HMatrix<spacedim, Number>::solve_by_forward_substitution(
            */
           for (size_type j = 0; j < i; j++)
             {
-              submatrices[i * n_col_blocks + j]->vmult(b, -1.0, b);
+              submatrices[i * n_col_blocks + j]->vmult(
+                b, -1.0, b, HMatrixSupport::Property::general);
             }
 
           /**
@@ -27406,10 +27591,8 @@ HMatrix<spacedim, Number>::solve_by_forward_substitution(
            */
           for (size_type j = 0; j < i; j++)
             {
-              submatrices[i * n_col_blocks + j]->vmult(b,
-                                                       -1.0,
-                                                       b,
-                                                       starting_hmat);
+              submatrices[i * n_col_blocks + j]->vmult(
+                b, -1.0, b, starting_hmat, HMatrixSupport::Property::general);
             }
 
           /**
@@ -27827,7 +28010,8 @@ HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
            */
           for (size_type i = 0; i < j; i++)
             {
-              submatrices[i * n_col_blocks + j]->Tvmult(b, -1.0, b);
+              submatrices[i * n_col_blocks + j]->Tvmult(
+                b, -1.0, b, HMatrixSupport::Property::general);
             }
 
           /**
@@ -27917,10 +28101,8 @@ HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
            */
           for (size_type i = 0; i < j; i++)
             {
-              submatrices[i * n_col_blocks + j]->Tvmult(b,
-                                                        -1.0,
-                                                        b,
-                                                        starting_hmat);
+              submatrices[i * n_col_blocks + j]->Tvmult(
+                b, -1.0, b, starting_hmat, HMatrixSupport::Property::general);
             }
 
           /**
@@ -28626,7 +28808,8 @@ HMatrix<spacedim, Number>::solve_block_triangular_by_forward_substitution(
            */
           for (size_type j = 0; j < i; j++)
             {
-              submatrices[i * n_col_blocks + j]->vmult(b, -1.0, b);
+              submatrices[i * n_col_blocks + j]->vmult(
+                b, -1.0, b, HMatrixSupport::Property::general);
             }
 
           /**
@@ -28736,10 +28919,8 @@ HMatrix<spacedim, Number>::solve_block_triangular_by_forward_substitution(
            */
           for (size_type j = 0; j < i; j++)
             {
-              submatrices[i * n_col_blocks + j]->vmult(b,
-                                                       -1.0,
-                                                       b,
-                                                       starting_hmat);
+              submatrices[i * n_col_blocks + j]->vmult(
+                b, -1.0, b, starting_hmat, HMatrixSupport::Property::general);
             }
 
           /**
@@ -28886,7 +29067,8 @@ HMatrix<spacedim, Number>::solve_by_backward_substitution(
            */
           for (size_type j = i + 1; j < n_col_blocks; j++)
             {
-              submatrices[i * n_col_blocks + j]->vmult(b, -1.0, b);
+              submatrices[i * n_col_blocks + j]->vmult(
+                b, -1.0, b, HMatrixSupport::Property::general);
             }
 
           /**
@@ -28984,10 +29166,8 @@ HMatrix<spacedim, Number>::solve_by_backward_substitution(
            */
           for (size_type j = i + 1; j < n_col_blocks; j++)
             {
-              submatrices[i * n_col_blocks + j]->vmult(b,
-                                                       -1.0,
-                                                       b,
-                                                       starting_hmat);
+              submatrices[i * n_col_blocks + j]->vmult(
+                b, -1.0, b, starting_hmat, HMatrixSupport::Property::general);
             }
 
           /**
@@ -29099,7 +29279,8 @@ HMatrix<spacedim, Number>::solve_block_triangular_by_backward_substitution(
            */
           for (size_type j = i + 1; j < n_col_blocks; j++)
             {
-              submatrices[i * n_col_blocks + j]->vmult(b, -1.0, b);
+              submatrices[i * n_col_blocks + j]->vmult(
+                b, -1.0, b, HMatrixSupport::Property::general);
             }
 
           /**
@@ -29214,10 +29395,8 @@ HMatrix<spacedim, Number>::solve_block_triangular_by_backward_substitution(
            */
           for (size_type j = i + 1; j < n_col_blocks; j++)
             {
-              submatrices[i * n_col_blocks + j]->vmult(b,
-                                                       -1.0,
-                                                       b,
-                                                       starting_hmat);
+              submatrices[i * n_col_blocks + j]->vmult(
+                b, -1.0, b, starting_hmat, HMatrixSupport::Property::general);
             }
 
           /**
@@ -29320,7 +29499,8 @@ HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
                * Since the transpose of the current matrix is to be
                * solved, \p Tvmult is used here instead of \p vmult.
                */
-              submatrices[i * n_col_blocks + j]->Tvmult(b, -1.0, b);
+              submatrices[i * n_col_blocks + j]->Tvmult(
+                b, -1.0, b, HMatrixSupport::Property::general);
             }
 
           /**
@@ -29418,10 +29598,8 @@ HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
                * Since the transpose of the current matrix is to be
                * solved, \p Tvmult is used here instead of \p vmult.
                */
-              submatrices[i * n_col_blocks + j]->Tvmult(b,
-                                                        -1.0,
-                                                        b,
-                                                        starting_hmat);
+              submatrices[i * n_col_blocks + j]->Tvmult(
+                b, -1.0, b, starting_hmat, HMatrixSupport::Property::general);
             }
 
           /**

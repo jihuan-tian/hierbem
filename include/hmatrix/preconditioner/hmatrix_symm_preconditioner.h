@@ -140,38 +140,6 @@ public:
   operator=(HMatrixSymmPreconditioner<spacedim, Number> &&H) noexcept;
 
   /**
-   * Deep copy constructor, copy from a @p HMatrixSymm.
-   *
-   * @param H
-   */
-  HMatrixSymmPreconditioner(const HMatrixSymm<spacedim, Number> &H);
-
-  /**
-   * Shallow copy constructor, copy from a @p HMatrixSymm.
-   *
-   * @param H
-   */
-  HMatrixSymmPreconditioner(HMatrixSymm<spacedim, Number> &&H) noexcept;
-
-  /**
-   * Deep assignment operator, assign from a @p HMatrixSymm.
-   *
-   * @param H
-   * @return
-   */
-  HMatrixSymmPreconditioner<spacedim, Number> &
-  operator=(const HMatrixSymm<spacedim, Number> &H);
-
-  /**
-   * Shallow assignment operator, assign from a @p HMatrixSymm.
-   *
-   * @param H
-   * @return
-   */
-  HMatrixSymmPreconditioner<spacedim, Number> &
-  operator=(HMatrixSymm<spacedim, Number> &&H) noexcept;
-
-  /**
    * Deep copy constructor, copy from a @p HMatrix.
    *
    * @param H
@@ -210,7 +178,7 @@ public:
    * @param y
    * @param x
    */
-  void
+  virtual void
   vmult(Vector<Number> &y, const Vector<Number> &x) const;
 };
 
@@ -337,42 +305,6 @@ HMatrixSymmPreconditioner<spacedim, Number>::operator=(
 
 template <int spacedim, typename Number>
 HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
-  const HMatrixSymm<spacedim, Number> &H)
-  : HMatrix<spacedim, Number>(H)
-{}
-
-
-template <int spacedim, typename Number>
-HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
-  HMatrixSymm<spacedim, Number> &&H) noexcept
-  : HMatrix<spacedim, Number>(std::move(H))
-{}
-
-
-template <int spacedim, typename Number>
-HMatrixSymmPreconditioner<spacedim, Number> &
-HMatrixSymmPreconditioner<spacedim, Number>::operator=(
-  const HMatrixSymm<spacedim, Number> &H)
-{
-  HMatrix<spacedim, Number>::operator=(H);
-
-  return (*this);
-}
-
-
-template <int spacedim, typename Number>
-HMatrixSymmPreconditioner<spacedim, Number> &
-HMatrixSymmPreconditioner<spacedim, Number>::operator=(
-  HMatrixSymm<spacedim, Number> &&H) noexcept
-{
-  HMatrix<spacedim, Number>::operator=(std::move(H));
-
-  return (*this);
-}
-
-
-template <int spacedim, typename Number>
-HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
   const HMatrix<spacedim, Number> &H)
   : HMatrix<spacedim, Number>(H)
 {}
@@ -418,4 +350,5 @@ HMatrixSymmPreconditioner<spacedim, Number>::vmult(
 
 HBEM_NS_CLOSE
 
-#endif /* HIERBEM_INCLUDE_HMATRIX_PRECONDITIONER_HMATRIX_SYMM_PRECONDITIONER_H_ */
+#endif /* HIERBEM_INCLUDE_HMATRIX_PRECONDITIONER_HMATRIX_SYMM_PRECONDITIONER_H_ \
+        */
