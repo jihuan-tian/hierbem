@@ -9,12 +9,14 @@
 #define HIERBEM_INCLUDE_LAPACK_FULL_MATRIX_EXT_H_
 
 #include <deal.II/base/memory_consumption.h>
+#include <deal.II/base/numbers.h>
 
 #include <fstream>
 #include <limits>
 #include <regex>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "config.h"
@@ -71,6 +73,11 @@ public:
    * Declare the type for container size.
    */
   using size_type = std::make_unsigned<types::blas_int>::type;
+
+  /**
+   * Declare the type for the underlying scalar value.
+   */
+  using real_type = typename numbers::NumberTraits<Number>::real_type;
 
   // Friend function declaration.
   /**
@@ -135,6 +142,15 @@ public:
   Reshape(const size_type              rows,
           const size_type              cols,
           const std::vector<Number>   &values,
+          LAPACKFullMatrixExt<Number> &matrix);
+
+  /**
+   * Reshape an array of values into a LAPACKFullMatrixExt in column major.
+   */
+  static void
+  Reshape(const size_type              rows,
+          const size_type              cols,
+          const Number                *values,
           LAPACKFullMatrixExt<Number> &matrix);
 
   /**
@@ -576,17 +592,21 @@ public:
   rank(Number threshold = 0.) const;
 
   /**
-   * Perform QR decomposition of the matrix.
-   * @param Q
-   * @param R
+   * Perform QR decomposition of the matrix. The current matrix belongs to
+   * \f$\mathbb{K}^{m\times n}\f$
+   *
+   * @param Q It belongs to \f$\mathbb{K}^{m\times m}\f$.
+   * @param R It belongs to \f$\mathbb{K}^{m\times n}\f$.
    */
   void
   qr(LAPACKFullMatrixExt<Number> &Q, LAPACKFullMatrixExt<Number> &R);
 
   /**
-   * Perform reduced QR decomposition of the matrix.
-   * @param Q
-   * @param R
+   * Perform reduced QR decomposition of the matrix. The number of rows @p m of the
+   * current matrix should be larger than the number of columns @p n.
+   *
+   * @param Q It belongs to \f$\mathbb{K}^{m\times n}\f$.
+   * @param R It belongs to \f$\mathbb{K}^{n\times n}\f$.
    */
   void
   reduced_qr(LAPACKFullMatrixExt<Number> &Q, LAPACKFullMatrixExt<Number> &R);
@@ -892,9 +912,10 @@ public:
    * Add two matrix into a new matrix \f$C = A + b*B\f$ with a factor \f$b\f$
    * multiplied with \f$B\f$, where \f$A\f$ is the current matrix.
    */
+  template <typename Number2>
   void
   add(LAPACKFullMatrixExt<Number>       &C,
-      const Number                       b,
+      const Number2                      b,
       const LAPACKFullMatrixExt<Number> &B,
       const bool is_result_matrix_symm_apriori = false) const;
 
@@ -911,8 +932,9 @@ public:
    * multiplied with \f$B\f$.
    * @param B
    */
+  template <typename Number2>
   void
-  add(const Number                       b,
+  add(const Number2                      b,
       const LAPACKFullMatrixExt<Number> &B,
       const bool is_result_matrix_store_tril_only = false);
 
@@ -923,12 +945,28 @@ public:
    * @param j
    * @param value
    */
+  template <typename Number2>
   void
-  add(const size_type i, const size_type j, const Number value);
+  add(const size_type i, const size_type j, const Number2 value);
+
+  /**
+   * @brief Compute the formal outer product of the two vectors and store the
+   * results into the current matrix.
+   *
+   * In the complex valued case, this outer product is formal and there is no
+   * complex conjugation applied to @p w.
+   *
+   * @param v
+   * @param w
+   */
+  void
+  outer_product_formal(const Vector<Number> &v, const Vector<Number> &w);
 
   /**
    * @brief Compute the outer product of the two vectors and store the results
    * into the current matrix.
+   *
+   * In the complex valued case, complex conjugation is applied to @p w.
    *
    * @param v
    * @param w
@@ -997,9 +1035,10 @@ public:
    * @param B
    * @param adding
    */
+  template <typename Number2>
   void
   mmult(LAPACKFullMatrixExt<Number>       &C,
-        const Number                       alpha,
+        const Number2                      alpha,
         const LAPACKFullMatrixExt<Number> &B,
         const bool                         adding = false) const;
 
@@ -1026,9 +1065,10 @@ public:
    * @param B
    * @param adding
    */
+  template <typename Number2>
   void
   mTmult(LAPACKFullMatrixExt<Number>       &C,
-         const Number                       alpha,
+         const Number2                      alpha,
          const LAPACKFullMatrixExt<Number> &B,
          const bool                         adding = false) const;
 
@@ -1037,9 +1077,10 @@ public:
          const LAPACKFullMatrixExt<Number> &B,
          const bool                         adding = false) const;
 
+  template <typename Number2>
   void
   Tmmult(LAPACKFullMatrixExt<Number>       &C,
-         const Number                       alpha,
+         const Number2                      alpha,
          const LAPACKFullMatrixExt<Number> &B,
          const bool                         adding = false) const;
 
@@ -1249,9 +1290,10 @@ private:
   LAPACKSupport::Property property;
 
   /**
-   * The scalar factors of the elementary reflectors.
+   * The scalar factors of the elementary reflectors, which are used in QR
+   * decomposition.
    */
-  std::vector<typename numbers::NumberTraits<Number>::real_type> tau;
+  std::vector<Number> tau;
 
   /**
    * Work space used by LAPACK routines.
@@ -1280,13 +1322,7 @@ balance_frobenius_norm(LAPACKFullMatrixExt<Number> &A,
   Number norm_B = B.frobenius_norm();
   Number factor = std::sqrt(norm_A / norm_B);
 
-  if (factor < std::numeric_limits<double>::epsilon())
-    {
-      /**
-       * The factor is almost zero, do nothing to the matrix @p A.
-       */
-    }
-  else
+  if (std::abs(factor) >= std::numeric_limits<double>::epsilon())
     {
       A /= factor;
     }
@@ -1375,6 +1411,23 @@ LAPACKFullMatrixExt<Number>::Reshape(const size_type              rows,
 
 
 template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::Reshape(const size_type              rows,
+                                     const size_type              cols,
+                                     const Number                *values,
+                                     LAPACKFullMatrixExt<Number> &matrix)
+{
+  matrix.reinit(rows, cols);
+  for (typename LAPACKFullMatrixExt<Number>::iterator it = matrix.begin();
+       it != matrix.end();
+       it++, values++)
+    {
+      (*it) = (*values);
+    }
+}
+
+
+template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
 LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
   LAPACKFullMatrixExt<Number>                                    &A,
@@ -1417,8 +1470,7 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
       /**
        * When both \p A and \p B are long matrices, i.e. they have more rows
        * than columns, perform the reduced QR decomposition to component
-       * matrix
-       * \p A, which has a dimension of \f$m \times r\f$.
+       * matrix \p A, which has a dimension of \f$m \times r\f$.
        */
       LAPACKFullMatrixExt<Number> QA, RA;
       A.reduced_qr(QA, RA);
@@ -2393,8 +2445,8 @@ LAPACKFullMatrixExt<Number>::operator=(
   const LAPACKFullMatrixExt<Number> &matrix)
 {
   LAPACKFullMatrix<Number>::operator=(matrix);
-  state    = matrix.state;
-  property = matrix.property;
+  state                             = matrix.state;
+  property                          = matrix.property;
   /**
    * Since \p ipiv contains the crucial permutation data if the matrix has been
    * factorized by LU, it needs to be copied.
@@ -3456,7 +3508,7 @@ LAPACKFullMatrixExt<Number>::qr(LAPACKFullMatrixExt<Number> &Q,
   const types::blas_int nn = this->n();
 
   tau.resize(std::min(mm, nn));
-  std::fill(tau.begin(), tau.end(), 0.);
+  std::fill(tau.begin(), tau.end(), Number());
 
   /**
    * Set work space size as 1 and \p lwork as -1 for the determination of
@@ -3493,7 +3545,7 @@ LAPACKFullMatrixExt<Number>::qr(LAPACKFullMatrixExt<Number> &Q,
    */
   R.reinit(mm, nn);
 
-  for (types::blas_int i = 0; i < mm; i++)
+  for (types::blas_int i = 0; i < std::min(mm, nn); i++)
     {
       for (types::blas_int j = i; j < nn; j++)
         {
@@ -3516,8 +3568,7 @@ LAPACKFullMatrixExt<Number>::qr(LAPACKFullMatrixExt<Number> &Q,
       /**
        * Construct the vector \p v. Values in \p v before the i'th component are
        * all zeros. The i'th component is 1. Values after the i'th component
-       * are
-       * stored in the current matrix \p A(i+1:m,i).
+       * are stored in the current matrix \p A(i+1:m,i).
        */
       Vector<Number> v(mm);
       v(i) = 1.;
@@ -3533,7 +3584,17 @@ LAPACKFullMatrixExt<Number>::qr(LAPACKFullMatrixExt<Number> &Q,
         {
           for (types::blas_int k = 0; k < mm; k++)
             {
-              H(j, k) = ((j == k) ? 1.0 : 0.) - tau[i] * v(j) * v(k);
+              if constexpr (std::is_same<Number,
+                                         std::complex<real_type>>::value)
+                {
+                  // Conjugation is needed when in the complex valued case.
+                  H(j, k) =
+                    ((j == k) ? 1.0 : 0.) - tau[i] * v(j) * std::conj(v(k));
+                }
+              else
+                {
+                  H(j, k) = ((j == k) ? 1.0 : 0.) - tau[i] * v(j) * v(k);
+                }
             }
         }
 
@@ -3562,20 +3623,124 @@ void
 LAPACKFullMatrixExt<Number>::reduced_qr(LAPACKFullMatrixExt<Number> &Q,
                                         LAPACKFullMatrixExt<Number> &R)
 {
-  /**
-   * Perform the standard QR decomposition.
-   */
-  qr(Q, R);
+  const types::blas_int mm = this->m();
+  const types::blas_int nn = this->n();
 
-  if (this->m() > this->n())
+  Assert(mm > nn, ExcInternalError());
+
+  tau.resize(nn);
+  std::fill(tau.begin(), tau.end(), Number());
+
+  /**
+   * Set work space size as 1 and \p lwork as -1 for the determination of
+   * optimal work space size.
+   */
+  work.resize(1);
+  types::blas_int lwork = -1;
+
+  /**
+   * Make sure that the first entry in the work space is clear, in case the
+   * routine does not completely overwrite the memory:
+   */
+  types::blas_int info = 0;
+  work[0]              = Number();
+
+  LAPACKHelpers::geqrf_helper(mm, nn, this->values, tau, work, lwork, info);
+  AssertThrow(info == 0, LAPACKSupport::ExcErrorCode("geqrf", info));
+
+  /**
+   * Resize the work space and add one to the size computed by LAPACK to be on
+   * the safe side.
+   */
+  lwork = static_cast<types::blas_int>(std::abs(work[0]) + 1);
+  work.resize(lwork);
+
+  /**
+   * Perform the actual QR decomposition.
+   */
+  LAPACKHelpers::geqrf_helper(mm, nn, this->values, tau, work, lwork, info);
+  AssertThrow(info == 0, LAPACKSupport::ExcErrorCode("geqrf", info));
+
+  /**
+   * Collect results for the square upper triangular matrix \p R'.
+   */
+  R.reinit(nn, nn);
+
+  for (types::blas_int i = 0; i < nn; i++)
+    {
+      for (types::blas_int j = i; j < nn; j++)
+        {
+          R(i, j) = (*this)(i, j);
+        }
+    }
+
+  /**
+   * Collect results for the orthogonal matrix \p Q with a dimension \f$m \times
+   * m\f$. It is represented as a product of elementary reflectors
+   * (Householder transformation) as \f[ Q = H_1 H_2 \cdots H_k, \f] where
+   * \f$k = \min\{m, n\}\f$.
+   */
+  Q.reinit(mm, mm);
+  LAPACKFullMatrixExt<Number> Q_work(mm, mm);
+  LAPACKFullMatrixExt<Number> H(mm, mm);
+
+  for (types::blas_int i = 0; i < nn; i++)
     {
       /**
-       * Perform the reduced QR decomposition by keeping the first \p n columns
-       * of Q and the first \p n rows of R.
+       * Construct the vector \p v. Values in \p v before the i'th component are
+       * all zeros. The i'th component is 1. Values after the i'th component
+       * are stored in the current matrix \p A(i+1:m,i).
        */
-      Q.keep_first_n_columns(this->n());
-      R.keep_first_n_rows(this->n());
+      Vector<Number> v(mm);
+      v(i) = 1.;
+      for (types::blas_int j = i + 1; j < mm; j++)
+        {
+          v(j) = (*this)(j, i);
+        }
+
+      /**
+       * Construct the Householder matrix.
+       */
+      for (types::blas_int j = 0; j < mm; j++)
+        {
+          for (types::blas_int k = 0; k < mm; k++)
+            {
+              if constexpr (std::is_same<Number,
+                                         std::complex<real_type>>::value)
+                {
+                  // Conjugation is needed when in the complex valued case.
+                  H(j, k) =
+                    ((j == k) ? 1.0 : 0.) - tau[i] * v(j) * std::conj(v(k));
+                }
+              else
+                {
+                  H(j, k) = ((j == k) ? 1.0 : 0.) - tau[i] * v(j) * v(k);
+                }
+            }
+        }
+
+      if (i == 0)
+        {
+          Q      = H;
+          Q_work = H;
+        }
+      else
+        {
+          Q_work.mmult(Q, H);
+          Q_work = Q;
+        }
     }
+
+  /**
+   * Release the work space used.
+   */
+  work.resize(0);
+  tau.resize(0);
+
+  /**
+   * Keep the first \p nn columns of Q.
+   */
+  Q.keep_first_n_columns(nn);
 }
 
 
@@ -4148,9 +4313,10 @@ LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number>       &C,
 
 
 template <typename Number>
+template <typename Number2>
 void
 LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number>       &C,
-                                 const Number                       b,
+                                 const Number2                      b,
                                  const LAPACKFullMatrixExt<Number> &B,
                                  const bool is_result_matrix_symm_apriori) const
 {
@@ -4237,8 +4403,9 @@ LAPACKFullMatrixExt<Number>::add(const LAPACKFullMatrixExt<Number> &B,
 
 
 template <typename Number>
+template <typename Number2>
 void
-LAPACKFullMatrixExt<Number>::add(const Number                       b,
+LAPACKFullMatrixExt<Number>::add(const Number2                      b,
                                  const LAPACKFullMatrixExt<Number> &B,
                                  const bool is_result_matrix_store_tril_only)
 {
@@ -4280,12 +4447,32 @@ LAPACKFullMatrixExt<Number>::add(const Number                       b,
 
 
 template <typename Number>
+template <typename Number2>
 void
 LAPACKFullMatrixExt<Number>::add(const size_type i,
                                  const size_type j,
-                                 const Number    value)
+                                 const Number2   value)
 {
   (*this)(i, j) += value;
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::outer_product_formal(const Vector<Number> &v,
+                                                  const Vector<Number> &w)
+{
+  Assert(v.size() == w.size(),
+         ExcMessage("Vectors v, w must be the same size."));
+  this->reinit(v.size(), v.size());
+
+  for (size_type i = 0; i < this->n(); ++i)
+    {
+      for (size_type j = 0; j < this->n(); ++j)
+        {
+          (*this)(i, j) = v(i) * w(j);
+        }
+    }
 }
 
 
@@ -4302,7 +4489,10 @@ LAPACKFullMatrixExt<Number>::outer_product(const Vector<Number> &v,
     {
       for (size_type j = 0; j < this->n(); ++j)
         {
-          (*this)(i, j) = v(i) * w(j);
+          if constexpr (std::is_same<Number, std::complex<real_type>>::value)
+            (*this)(i, j) = v(i) * std::conj(w(j));
+          else
+            (*this)(i, j) = v(i) * w(j);
         }
     }
 }
@@ -4439,9 +4629,10 @@ LAPACKFullMatrixExt<Number>::mmult(LAPACKFullMatrixExt<Number>       &C,
 
 
 template <typename Number>
+template <typename Number2>
 void
 LAPACKFullMatrixExt<Number>::mmult(LAPACKFullMatrixExt<Number>       &C,
-                                   const Number                       alpha,
+                                   const Number2                      alpha,
                                    const LAPACKFullMatrixExt<Number> &B,
                                    const bool adding) const
 {
@@ -4459,7 +4650,7 @@ LAPACKFullMatrixExt<Number>::mmult(LAPACKFullMatrixExt<Number>       &C,
    * Make a local copy of the matrix \p B and scale it.
    */
   LAPACKFullMatrixExt<Number> B_scaled(B);
-  B_scaled *= alpha;
+  B_scaled *= Number(alpha);
 
   // Call the \p mmult function in the parent class which operates on \p
   // LAPACKFullMatrix<Number>.
@@ -4492,9 +4683,10 @@ LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number>       &C,
 
 
 template <typename Number>
+template <typename Number2>
 void
 LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number>       &C,
-                                    const Number                       alpha,
+                                    const Number2                      alpha,
                                     const LAPACKFullMatrixExt<Number> &B,
                                     const bool adding) const
 {
@@ -4512,7 +4704,7 @@ LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number>       &C,
    * Make a local copy of the matrix \p B and scale it.
    */
   LAPACKFullMatrixExt<Number> B_scaled(B);
-  B_scaled *= alpha;
+  B_scaled *= Number(alpha);
 
   // Call the \p mTmult function in the parent class which operates on \p
   // LAPACKFullMatrix<Number>.
@@ -4545,9 +4737,10 @@ LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number>       &C,
 
 
 template <typename Number>
+template <typename Number2>
 void
 LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number>       &C,
-                                    const Number                       alpha,
+                                    const Number2                      alpha,
                                     const LAPACKFullMatrixExt<Number> &B,
                                     const bool adding) const
 {
@@ -4565,7 +4758,7 @@ LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number>       &C,
    * Make a local copy of the matrix \p B and scale it.
    */
   LAPACKFullMatrixExt<Number> B_scaled(B);
-  B_scaled *= alpha;
+  B_scaled *= Number(alpha);
 
   // Call the \p Tmmult function in the parent class which operates on \p
   // LAPACKFullMatrix<Number>.

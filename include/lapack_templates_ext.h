@@ -13,7 +13,11 @@
 #ifndef HIERBEM_INCLUDE_LAPACK_TEMPLATES_EXT_H_
 #define HIERBEM_INCLUDE_LAPACK_TEMPLATES_EXT_H_
 
+#include <deal.II/base/config.h>
+
 #include <deal.II/lac/lapack_support.h>
+
+#include <complex>
 
 #ifdef DEAL_II_HAVE_FP_EXCEPTIONS
 #  include <cfenv>
@@ -38,29 +42,53 @@ extern "C"
    * @param y
    * @param incx
    */
-  void
-  ssymv_(const char                    *uplo,
-         const dealii::types::blas_int *n,
-         const float                   *alpha,
-         const float                   *a,
-         const dealii::types::blas_int *lda,
-         const float                   *x,
-         const dealii::types::blas_int *incx,
-         const float                   *beta,
-         float                         *y,
-         const dealii::types::blas_int *incy);
+  void DEAL_II_FORTRAN_MANGLE(ssymv,
+                              SSYMV)(const char                    *uplo,
+                                     const dealii::types::blas_int *n,
+                                     const float                   *alpha,
+                                     const float                   *a,
+                                     const dealii::types::blas_int *lda,
+                                     const float                   *x,
+                                     const dealii::types::blas_int *incx,
+                                     const float                   *beta,
+                                     float                         *y,
+                                     const dealii::types::blas_int *incy);
 
-  void
-  dsymv_(const char                    *uplo,
-         const dealii::types::blas_int *n,
-         const double                  *alpha,
-         const double                  *a,
-         const dealii::types::blas_int *lda,
-         const double                  *x,
-         const dealii::types::blas_int *incx,
-         const double                  *beta,
-         double                        *y,
-         const dealii::types::blas_int *incy);
+  void DEAL_II_FORTRAN_MANGLE(dsymv,
+                              DSYMV)(const char                    *uplo,
+                                     const dealii::types::blas_int *n,
+                                     const double                  *alpha,
+                                     const double                  *a,
+                                     const dealii::types::blas_int *lda,
+                                     const double                  *x,
+                                     const dealii::types::blas_int *incx,
+                                     const double                  *beta,
+                                     double                        *y,
+                                     const dealii::types::blas_int *incy);
+
+  void DEAL_II_FORTRAN_MANGLE(csymv,
+                              CSYMV)(const char                    *uplo,
+                                     const dealii::types::blas_int *n,
+                                     const std::complex<float>     *alpha,
+                                     const std::complex<float>     *a,
+                                     const dealii::types::blas_int *lda,
+                                     const std::complex<float>     *x,
+                                     const dealii::types::blas_int *incx,
+                                     const std::complex<float>     *beta,
+                                     std::complex<float>           *y,
+                                     const dealii::types::blas_int *incy);
+
+  void DEAL_II_FORTRAN_MANGLE(zsymv,
+                              ZSYMV)(const char                    *uplo,
+                                     const dealii::types::blas_int *n,
+                                     const std::complex<double>    *alpha,
+                                     const std::complex<double>    *a,
+                                     const dealii::types::blas_int *lda,
+                                     const std::complex<double>    *x,
+                                     const dealii::types::blas_int *incx,
+                                     const std::complex<double>    *beta,
+                                     std::complex<double>          *y,
+                                     const dealii::types::blas_int *incy);
 
   /**
    * Solve a triangular system.
@@ -76,45 +104,76 @@ extern "C"
    * @param x
    * @param incx
    */
-  void
-  strsv_(const char                    *uplo,
-         const char                    *trans,
-         const char                    *diag,
-         const dealii::types::blas_int *n,
-         const float                   *a,
-         const dealii::types::blas_int *lda,
-         float                         *x,
-         const dealii::types::blas_int *incx);
+  void DEAL_II_FORTRAN_MANGLE(strsv,
+                              STRSV)(const char                    *uplo,
+                                     const char                    *trans,
+                                     const char                    *diag,
+                                     const dealii::types::blas_int *n,
+                                     const float                   *a,
+                                     const dealii::types::blas_int *lda,
+                                     float                         *x,
+                                     const dealii::types::blas_int *incx);
 
-  void
-  dtrsv_(const char                    *uplo,
-         const char                    *trans,
-         const char                    *diag,
-         const dealii::types::blas_int *n,
-         const double                  *a,
-         const dealii::types::blas_int *lda,
-         double                        *x,
-         const dealii::types::blas_int *incx);
+  void DEAL_II_FORTRAN_MANGLE(dtrsv,
+                              DTRSV)(const char                    *uplo,
+                                     const char                    *trans,
+                                     const char                    *diag,
+                                     const dealii::types::blas_int *n,
+                                     const double                  *a,
+                                     const dealii::types::blas_int *lda,
+                                     double                        *x,
+                                     const dealii::types::blas_int *incx);
 
-  void
-  ctrsv_(const char                    *uplo,
-         const char                    *trans,
-         const char                    *diag,
-         const dealii::types::blas_int *n,
-         const std::complex<float>     *a,
-         const dealii::types::blas_int *lda,
-         std::complex<float>           *x,
-         const dealii::types::blas_int *incx);
+  void DEAL_II_FORTRAN_MANGLE(ctrsv,
+                              CTRSV)(const char                    *uplo,
+                                     const char                    *trans,
+                                     const char                    *diag,
+                                     const dealii::types::blas_int *n,
+                                     const std::complex<float>     *a,
+                                     const dealii::types::blas_int *lda,
+                                     std::complex<float>           *x,
+                                     const dealii::types::blas_int *incx);
 
-  void
-  ztrsv_(const char                    *uplo,
-         const char                    *trans,
-         const char                    *diag,
-         const dealii::types::blas_int *n,
-         const std::complex<double>    *a,
-         const dealii::types::blas_int *lda,
-         std::complex<double>          *x,
-         const dealii::types::blas_int *incx);
+  void DEAL_II_FORTRAN_MANGLE(ztrsv,
+                              ZTRSV)(const char                    *uplo,
+                                     const char                    *trans,
+                                     const char                    *diag,
+                                     const dealii::types::blas_int *n,
+                                     const std::complex<double>    *a,
+                                     const dealii::types::blas_int *lda,
+                                     std::complex<double>          *x,
+                                     const dealii::types::blas_int *incx);
+}
+
+
+template <typename number1,
+          typename number2,
+          typename number3,
+          typename number4,
+          typename number5>
+inline void
+symv(const char                    *uplo,
+     const dealii::types::blas_int *n,
+     const number1                 *alpha,
+     const number2                 *a,
+     const dealii::types::blas_int *lda,
+     const number3                 *x,
+     const dealii::types::blas_int *incx,
+     const number4                 *beta,
+     number5                       *y,
+     const dealii::types::blas_int *incy)
+{
+  (void)uplo;
+  (void)n;
+  (void)alpha;
+  (void)a;
+  (void)lda;
+  (void)x;
+  (void)incx;
+  (void)beta;
+  (void)y;
+  (void)incy;
+  Assert(false, ExcNotImplemented());
 }
 
 
@@ -131,7 +190,8 @@ symv(const char                    *uplo,
      const dealii::types::blas_int *incy)
 {
 #ifdef DEAL_II_WITH_LAPACK
-  ssymv_(uplo, n, alpha, a, lda, x, incx, beta, y, incy);
+  DEAL_II_FORTRAN_MANGLE(ssymv, SSYMV)
+  (uplo, n, alpha, a, lda, x, incx, beta, y, incy);
 #else
   (void)uplo;
   (void)n;
@@ -161,7 +221,8 @@ symv(const char                    *uplo,
      const dealii::types::blas_int *incy)
 {
 #ifdef DEAL_II_WITH_LAPACK
-  dsymv_(uplo, n, alpha, a, lda, x, incx, beta, y, incy);
+  DEAL_II_FORTRAN_MANGLE(dsymv, DSYMV)
+  (uplo, n, alpha, a, lda, x, incx, beta, y, incy);
 #else
   (void)uplo;
   (void)n;
@@ -176,6 +237,69 @@ symv(const char                    *uplo,
   Assert(false, LAPACKSupport::ExcMissing("dsymv"));
 #endif
 }
+
+
+inline void
+symv(const char                    *uplo,
+     const dealii::types::blas_int *n,
+     const std::complex<float>     *alpha,
+     const std::complex<float>     *a,
+     const dealii::types::blas_int *lda,
+     const std::complex<float>     *x,
+     const dealii::types::blas_int *incx,
+     const std::complex<float>     *beta,
+     std::complex<float>           *y,
+     const dealii::types::blas_int *incy)
+{
+#ifdef DEAL_II_WITH_LAPACK
+  DEAL_II_FORTRAN_MANGLE(csymv, CSYMV)
+  (uplo, n, alpha, a, lda, x, incx, beta, y, incy);
+#else
+  (void)uplo;
+  (void)n;
+  (void)alpha;
+  (void)a;
+  (void)lda;
+  (void)x;
+  (void)incx;
+  (void)beta;
+  (void)y;
+  (void)incy;
+  Assert(false, LAPACKSupport::ExcMissing("csymv"));
+#endif
+}
+
+
+inline void
+symv(const char                    *uplo,
+     const dealii::types::blas_int *n,
+     const std::complex<double>    *alpha,
+     const std::complex<double>    *a,
+     const dealii::types::blas_int *lda,
+     const std::complex<double>    *x,
+     const dealii::types::blas_int *incx,
+     const std::complex<double>    *beta,
+     std::complex<double>          *y,
+     const dealii::types::blas_int *incy)
+{
+#ifdef DEAL_II_WITH_LAPACK
+  DEAL_II_FORTRAN_MANGLE(zsymv, ZSYMV)
+  (uplo, n, alpha, a, lda, x, incx, beta, y, incy);
+#else
+  (void)uplo;
+  (void)n;
+  (void)alpha;
+  (void)a;
+  (void)lda;
+  (void)x;
+  (void)incx;
+  (void)beta;
+  (void)y;
+  (void)incy;
+  Assert(false, LAPACKSupport::ExcMissing("zsymv"));
+#endif
+}
+
 
 template <typename number1, typename number2>
 inline void
@@ -211,7 +335,7 @@ trsv(const char                    *uplo,
      const dealii::types::blas_int *incx)
 {
 #ifdef DEAL_II_WITH_LAPACK
-  strsv_(uplo, trans, diag, n, a, lda, x, incx);
+  DEAL_II_FORTRAN_MANGLE(strsv, STRSV)(uplo, trans, diag, n, a, lda, x, incx);
 #else
   (void)uplo;
   (void)trans;
@@ -237,7 +361,7 @@ trsv(const char                    *uplo,
      const dealii::types::blas_int *incx)
 {
 #ifdef DEAL_II_WITH_LAPACK
-  dtrsv_(uplo, trans, diag, n, a, lda, x, incx);
+  DEAL_II_FORTRAN_MANGLE(dtrsv, DTRSV)(uplo, trans, diag, n, a, lda, x, incx);
 #else
   (void)uplo;
   (void)trans;
@@ -263,7 +387,7 @@ trsv(const char                    *uplo,
      const dealii::types::blas_int *incx)
 {
 #ifdef DEAL_II_WITH_LAPACK
-  ctrsv_(uplo, trans, diag, n, a, lda, x, incx);
+  DEAL_II_FORTRAN_MANGLE(ctrsv, CTRSV)(uplo, trans, diag, n, a, lda, x, incx);
 #else
   (void)uplo;
   (void)trans;
@@ -289,7 +413,7 @@ trsv(const char                    *uplo,
      const dealii::types::blas_int *incx)
 {
 #ifdef DEAL_II_WITH_LAPACK
-  ztrsv_(uplo, trans, diag, n, a, lda, x, incx);
+  DEAL_II_FORTRAN_MANGLE(ztrsv, ZTRSV)(uplo, trans, diag, n, a, lda, x, incx);
 #else
   (void)uplo;
   (void)trans;

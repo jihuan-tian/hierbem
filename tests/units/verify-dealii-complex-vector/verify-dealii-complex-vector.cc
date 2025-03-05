@@ -13,13 +13,9 @@
 
 #include <cmath>
 #include <complex>
-#include <iostream>
-
-#include "debug_tools.h"
 
 using namespace Catch::Matchers;
 using namespace dealii;
-using namespace HierBEM;
 
 // The constructor and reinit function should initialize a vector with zeros.
 void

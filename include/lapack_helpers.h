@@ -29,6 +29,9 @@
 #include <deal.II/lac/utilities.h>
 #include <deal.II/lac/vector.h>
 
+#include <complex>
+#include <type_traits>
+
 #include "lapack_templates_ext.h"
 
 DEAL_II_NAMESPACE_OPEN
@@ -63,6 +66,11 @@ namespace LAPACKHelpers
               const types::blas_int   incx = 1,
               const types::blas_int   incy = 1)
   {
+    static_assert(
+      std::is_same<T, double>::value || std::is_same<T, float>::value ||
+        std::is_same<T, std::complex<double>>::value ||
+        std::is_same<T, std::complex<float>>::value,
+      "Only implemented for double, float, std::complex<double> and std::complex<float>");
     Assert(uplo == 'U' || uplo == 'u' || uplo == 'L' || uplo == 'l',
            ExcInternalError());
     // The matrix should be square.
@@ -103,7 +111,17 @@ namespace LAPACKHelpers
               T                      *x_pointer,
               const types::blas_int   incx = 1)
   {
+    static_assert(
+      std::is_same<T, double>::value || std::is_same<T, float>::value ||
+        std::is_same<T, std::complex<double>>::value ||
+        std::is_same<T, std::complex<float>>::value,
+      "Only implemented for double, float, std::complex<double> and std::complex<float>");
     Assert(uplo == 'U' || uplo == 'u' || uplo == 'L' || uplo == 'l',
+           ExcInternalError());
+    Assert(trans == 'N' || trans == 'n' || trans == 'T' || trans == 't' ||
+             trans == 'C' || trans == 'c',
+           ExcInternalError());
+    Assert(diag == 'U' || diag == 'u' || diag == 'N' || diag == 'n',
            ExcInternalError());
     trmv(
       &uplo, &trans, &diag, &n_rows, matrix.data(), &n_rows, x_pointer, &incx);
@@ -252,6 +270,9 @@ namespace LAPACKHelpers
                const types::blas_int         work_flag,
                types::blas_int              &info)
   {
+    static_assert(std::is_same<T, double>::value ||
+                    std::is_same<T, float>::value,
+                  "Only implemented for double and float");
     Assert(job == 'A' || job == 'S' || job == 'O' || job == 'N',
            ExcInternalError());
     Assert(static_cast<std::size_t>(n_rows * n_cols) == matrix.size(),
@@ -311,6 +332,9 @@ namespace LAPACKHelpers
                const types::blas_int          &work_flag,
                types::blas_int                &info)
   {
+    static_assert(
+      std::is_same<T, double>::value || std::is_same<T, float>::value,
+      "Only implemented for std::complex<double> and std::complex<float>");
     Assert(job == 'A' || job == 'S' || job == 'O' || job == 'N',
            ExcInternalError());
     Assert(static_cast<std::size_t>(n_rows * n_cols) == matrix.size(),
@@ -342,7 +366,7 @@ namespace LAPACKHelpers
   }
 
   /**
-   * Helper function for real valued QR decomposition.
+   * Helper function for QR decomposition.
    */
   template <typename T>
   void

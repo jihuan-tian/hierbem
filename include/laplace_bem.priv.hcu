@@ -3107,12 +3107,14 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
                             mass_vmult_weq_);
 
           /**
-           * Add the matrix \f$\alpha a a^T\f$ into \f$D\f$.
+           * Add the matrix \f$\alpha a a^T\f$ into \f$D\f$. N.B. The outer
+           * product here is only formal and there is no complex conjugation on
+           * the second operand in the complex valued case.
            */
           LAPACKFullMatrixExt<double> aaT(D1_matrix_.m(), D1_matrix_.n());
           for (const auto &vec : mass_vmult_weq_)
             {
-              aaT.outer_product(vec, vec);
+              aaT.outer_product_formal(vec, vec);
               D1_matrix_.add(alpha_for_neumann_, aaT);
             }
 
