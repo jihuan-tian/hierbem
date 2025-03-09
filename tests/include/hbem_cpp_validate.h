@@ -1,0 +1,109 @@
+/**
+ * @file hbem_cpp_validate.h
+ * @brief Validate C++ computation.
+ *
+ * @date 2025-03-08
+ * @author Jihuan Tian
+ */
+
+#ifndef HIERBEM_TESTS_INCLUDE_HBEM_CPP_VALIDATE_H_
+#define HIERBEM_TESTS_INCLUDE_HBEM_CPP_VALIDATE_H_
+
+#include <deal.II/base/numbers.h>
+
+#include <catch2/catch_all.hpp>
+
+#include "config.h"
+#include "lapack_full_matrix_ext.h"
+
+HBEM_NS_OPEN
+
+using namespace Catch::Matchers;
+using namespace dealii;
+
+template <typename Number>
+void
+compare_lapack_matrices(
+  const LAPACKFullMatrixExt<Number>                      &mat_ref,
+  const LAPACKFullMatrixExt<Number>                      &mat,
+  const typename numbers::NumberTraits<Number>::real_type abs_error = 1e-15,
+  const typename numbers::NumberTraits<Number>::real_type rel_error = 1e-15)
+{
+  const size_t m = mat.m();
+  const size_t n = mat.n();
+  REQUIRE(mat_ref.m() == m);
+  REQUIRE(mat_ref.n() == n);
+
+  for (size_t j = 0; j < n; j++)
+    for (size_t i = 0; i < m; i++)
+      {
+        if constexpr (numbers::NumberTraits<Number>::is_complex)
+          {
+            REQUIRE_THAT(mat(i, j).real(),
+                         WithinAbs(mat_ref(i, j).real(), abs_error) ||
+                           WithinRel(mat_ref(i, j).real(), rel_error));
+            REQUIRE_THAT(mat(i, j).imag(),
+                         WithinAbs(mat_ref(i, j).imag(), abs_error) ||
+                           WithinRel(mat_ref(i, j).imag(), rel_error));
+          }
+        else
+          {
+            REQUIRE_THAT(mat(i, j),
+                         WithinAbs(mat_ref(i, j), abs_error) ||
+                           WithinRel(mat_ref(i, j), rel_error));
+          }
+      }
+}
+
+
+template <typename Number>
+void
+check_svd_self_consistency(
+  const LAPACKFullMatrixExt<Number>                                    &A,
+  const LAPACKFullMatrixExt<Number>                                    &U,
+  const LAPACKFullMatrixExt<Number>                                    &VT,
+  const std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
+  const typename numbers::NumberTraits<Number>::real_type abs_error = 1e-15,
+  const typename numbers::NumberTraits<Number>::real_type rel_error = 1e-15)
+{
+  // Check <code>A == U*Sigma_r*VT</code>. Assume there are @p k singular values in
+  // the vector @p Sigma_r, before the computation, we need to keep only the
+  // first @p k columns in @p U and the first @p k rows in @p VT.
+  const size_t                n = Sigma_r.size();
+  LAPACKFullMatrixExt<Number> U_copy(U), VT_copy(VT);
+  U_copy.keep_first_n_columns(n);
+  VT_copy.keep_first_n_rows(n);
+  // The multiplication of @p Sigma_r*VT is computed by scaling the rows of @p VT
+  // using @p Sigma_r .
+  VT_copy.scale_rows(Sigma_r);
+
+  LAPACKFullMatrixExt<Number> A_tmp;
+  U_copy.mmult(A_tmp, VT_copy);
+
+  compare_lapack_matrices(A, A_tmp, abs_error, rel_error);
+
+  // Check <code>U*U^T == I</code> or <code>U*U^H == I</code>.
+  LAPACKFullMatrixExt<Number> Iu;
+  LAPACKFullMatrixExt<Number>::IdentityMatrix(U.m(), Iu);
+  LAPACKFullMatrixExt<Number> Iu_tmp;
+
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
+    U.mHmult(Iu_tmp, U);
+  else
+    U.mTmult(Iu_tmp, U);
+  compare_lapack_matrices(Iu, Iu_tmp, abs_error, rel_error);
+
+  // Check <code>V*V^T == I</code> or <code>V*V^H == I</code>.
+  LAPACKFullMatrixExt<Number> Iv;
+  LAPACKFullMatrixExt<Number>::IdentityMatrix(VT.n(), Iv);
+  LAPACKFullMatrixExt<Number> Iv_tmp;
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
+    VT.Hmmult(Iv_tmp, VT);
+  else
+    VT.Tmmult(Iv_tmp, VT);
+  compare_lapack_matrices(Iv, Iv_tmp, abs_error, rel_error);
+}
+
+HBEM_NS_CLOSE
+
+#endif

@@ -228,11 +228,10 @@ if(NOT DEFINED HBEM_NEUMANN_SOLUTION_SPACE)
 endif()
 
 # Include directories
-include_directories(${CMAKE_SOURCE_DIR}/include ${JULIA_DIR}/include/julia)
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Directories for searching libraries to link
-link_directories(${CMAKE_BINARY_DIR}/src /usr/lib/x86_64-linux-gnu
-                 ${JULIA_DIR}/lib)
+link_directories(${CMAKE_BINARY_DIR}/src /usr/lib/x86_64-linux-gnu)
 
 # Folder for header files and source code
 add_subdirectory(include)

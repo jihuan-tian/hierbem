@@ -1,1 +1,2 @@
-ADD_SUBDIRECTORY(hbem_octave_wrapper)
+add_subdirectory(hbem_octave_wrapper)
+add_subdirectory(hbem_julia_wrapper)

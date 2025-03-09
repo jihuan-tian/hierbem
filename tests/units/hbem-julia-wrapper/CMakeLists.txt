@@ -1,0 +1,19 @@
+# Target should contains 'test' substring in any cases in order to be found by
+# Visual Studio Code's TestMate extension
+set(_target test-hbem-julia-wrapper)
+
+add_executable(${_target} hbem-julia-wrapper.cc)
+
+# Define SOURCE_DIR macro to be used in the source files
+target_compile_definitions(${_target}
+                           PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
+target_link_libraries(
+  ${_target} hbem_julia_wrapper generic_tools boost_program_options
+  dl # Lazy way: always link with libdl no matter if CUDA is used or not
+  Catch2::Catch2WithMain)
+
+# Discover Catch2 testcases
+include(CTest)
+include(Catch)
+catch_discover_tests(${_target})

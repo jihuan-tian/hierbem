@@ -1,19 +1,33 @@
 /**
  * \file svd.cc
- * \brief Test singular value decomposition (SVD) and reduced SVD.
+ * \brief Test singular value decomposition (SVD)
+ *
  * \ingroup linalg
  * \author Jihuan Tian
  * \date 2021-06-19
  */
 
+#include <cmath>
+#include <complex>
+#include <iostream>
+#include <vector>
+
 #include "debug_tools.h"
+#include "hbem_cpp_validate.h"
+#include "hbem_julia_cpp_compare.h"
+#include "hbem_julia_wrapper.h"
 #include "lapack_full_matrix_ext.h"
 
+using namespace Catch::Matchers;
 using namespace dealii;
+using namespace HierBEM;
 
-int
-main()
+TEST_CASE("Verify matrix SVD decomposition for LAPACKFullMatrixExt", "[linalg]")
 {
+  INFO("*** test start");
+  HBEMJuliaWrapper &inst = HBEMJuliaWrapper::get_instance();
+  inst.source_file("process.jl");
+
   const unsigned int m = 3;
   const unsigned int n = 5;
 
@@ -33,6 +47,16 @@ main()
 
   A_original.print_formatted_to_mat(std::cout, "A", 8, false, 16, "0");
 
+  LAPACKFullMatrixExt<std::complex<double>> A_complex_original(m, n);
+  LAPACKFullMatrixExt<std::complex<double>> U_complex, VT_comlex;
+  std::vector<double>                       Sigma_r_complex;
+
+  for (unsigned int i = 0; i < m; i++)
+    for (unsigned int j = 0; j < n; j++)
+      A_complex_original(i, j) = {sin(i + 1.0), cos(j + 1.0)};
+
+  A_complex_original.print_formatted_to_mat(std::cout, "Ac", 8, false, 25, "0");
+
   {
     LAPACKFullMatrixExt<double> A(A_original);
 
@@ -42,6 +66,36 @@ main()
     U.print_formatted_to_mat(std::cout, "U1", 8, false, 16, "0");
     VT.print_formatted_to_mat(std::cout, "VT1", 8, false, 16, "0");
     print_vector_to_mat(std::cout, "Sigma_r1", Sigma_r);
+
+    // N.B. The unitary matrices U and VT computed from LAPACK cannot be
+    // compared with Julia, due to the non-uniqueness of the column vectors
+    // corresponding to singular values. Therefore, we check the
+    // self-consistency, i.e. A == U * Sigma_r * VT.
+    check_svd_self_consistency(A_original, U, VT, Sigma_r, 1e-15, 1e-15);
+
+    // Compare the singular values with Julia results.
+    compare_with_jl_array(Sigma_r, "Sigma_r", 1e-15, 1e-15);
+
+    LAPACKFullMatrixExt<std::complex<double>> A_complex(A_complex_original);
+
+    std::cout << "Original complex valued SVD without rank truncation\n";
+    A_complex.svd(U_complex, Sigma_r_complex, VT_comlex);
+
+    U_complex.print_formatted_to_mat(
+      std::cout, "U_complex1", 8, false, 25, "0");
+    VT_comlex.print_formatted_to_mat(
+      std::cout, "VT_complex1", 8, false, 25, "0");
+    print_vector_to_mat(std::cout, "Sigma_r_complex1", Sigma_r_complex);
+
+    // N.B. The unitary matrices U and VT computed from LAPACK cannot be
+    // compared with Julia, due to the non-uniqueness of the column vectors
+    // corresponding to singular values. Therefore, we check the
+    // self-consistency, i.e. A == U * Sigma_r * VT.
+    check_svd_self_consistency(
+      A_complex_original, U_complex, VT_comlex, Sigma_r_complex, 1e-15, 1e-15);
+
+    // Compare the singular values with Julia results.
+    compare_with_jl_array(Sigma_r_complex, "Sigma_r_complex", 1e-15, 1e-15);
   }
 
   {
@@ -92,5 +146,6 @@ main()
     print_vector_to_mat(std::cout, "Sigma_r5", Sigma_r);
   }
 
-  return 0;
+  jl_atexit_hook(0);
+  INFO("*** test end");
 }

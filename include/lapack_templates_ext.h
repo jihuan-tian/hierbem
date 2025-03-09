@@ -143,6 +143,33 @@ extern "C"
                                      const dealii::types::blas_int *lda,
                                      std::complex<double>          *x,
                                      const dealii::types::blas_int *incx);
+
+  /**
+   * Perform Hermitian matrix multiplication: <code>C := alpha*A*A**H +
+   * beta*C</code> or <code>C := alpha*A**H*A + beta*C</code>. Only complexed
+   * value versions are available.
+   */
+  void DEAL_II_FORTRAN_MANGLE(cherk, CHERK)(const char *uplo,
+                                            const char *trans,
+                                            const dealii::types::blas_int *n,
+                                            const dealii::types::blas_int *k,
+                                            const float               *alpha,
+                                            const std::complex<float> *a,
+                                            const dealii::types::blas_int *lda,
+                                            const float                   *beta,
+                                            std::complex<float>           *c,
+                                            const dealii::types::blas_int *ldc);
+
+  void DEAL_II_FORTRAN_MANGLE(zherk, ZHERK)(const char *uplo,
+                                            const char *trans,
+                                            const dealii::types::blas_int *n,
+                                            const dealii::types::blas_int *k,
+                                            const double               *alpha,
+                                            const std::complex<double> *a,
+                                            const dealii::types::blas_int *lda,
+                                            const double                  *beta,
+                                            std::complex<double>          *c,
+                                            const dealii::types::blas_int *ldc);
 }
 
 
@@ -424,6 +451,68 @@ trsv(const char                    *uplo,
   (void)x;
   (void)incx;
   Assert(false, LAPACKSupport::ExcMissing("ztrsv"));
+#endif
+}
+
+
+inline void
+herk(const char                    *uplo,
+     const char                    *trans,
+     const dealii::types::blas_int *n,
+     const dealii::types::blas_int *k,
+     const float                   *alpha,
+     const std::complex<float>     *a,
+     const dealii::types::blas_int *lda,
+     const float                   *beta,
+     std::complex<float>           *c,
+     const dealii::types::blas_int *ldc)
+{
+#ifdef DEAL_II_WITH_LAPACK
+  DEAL_II_FORTRAN_MANGLE(cherk, CHERK)
+  (uplo, trans, n, k, alpha, a, lda, beta, c, ldc);
+#else
+  (void)uplo;
+  (void)trans;
+  (void)n;
+  (void)k;
+  (void)alpha;
+  (void)a;
+  (void)lda;
+  (void)beta;
+  (void)c;
+  (void)ldc;
+  Assert(false, LAPACKSupport::ExcMissing("cherk"));
+#endif
+}
+
+
+inline void
+herk(const char                    *uplo,
+     const char                    *trans,
+     const dealii::types::blas_int *n,
+     const dealii::types::blas_int *k,
+     const double                  *alpha,
+     const std::complex<double>    *a,
+     const dealii::types::blas_int *lda,
+     const double                  *beta,
+     std::complex<double>          *c,
+     const dealii::types::blas_int *ldc)
+{
+#ifdef DEAL_II_WITH_LAPACK
+  DEAL_II_FORTRAN_MANGLE(zherk, ZHERK)
+  (uplo, trans, n, k, alpha, a, lda, beta, c, ldc);
+#else
+  (void)uplo;
+  (void)trans;
+  (void)n;
+  (void)k;
+  (void)alpha;
+  (void)a;
+  (void)lda;
+  (void)beta;
+  (void)c;
+  (void)ldc;
+  Assert(false, LAPACKSupport::ExcMissing("zherk"));
 #endif
 }
 

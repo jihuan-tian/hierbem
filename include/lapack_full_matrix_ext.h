@@ -10,7 +10,11 @@
 
 #include <deal.II/base/memory_consumption.h>
 #include <deal.II/base/numbers.h>
+#include <deal.II/base/template_constraints.h>
 
+#include <deal.II/lac/lapack_support.h>
+
+#include <cstring>
 #include <fstream>
 #include <limits>
 #include <regex>
@@ -36,7 +40,7 @@ DeclException1(ExcInvalidLAPACKFullMatrixState,
                << "Invalid LAPACKFullMatrix state: " << arg1);
 
 /**
- * Exception for invalid LAPACKFullMatrix property (@p LAPACKSupport::Property).
+ * Exception for invalid LAPACKFullMatrix property.
  */
 DeclException1(ExcInvalidLAPACKFullMatrixProperty,
                LAPACKSupport::Property,
@@ -53,10 +57,9 @@ DeclException1(ExcInvalidLAPACKFullMatrixProperty,
  */
 template <typename Number = double>
 Number
-calc_singular_value_threshold(
-  const size_t                                                          m,
-  const size_t                                                          n,
-  const std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r)
+calc_singular_value_threshold(const size_t               m,
+                              const size_t               n,
+                              const std::vector<Number> &Sigma_r)
 {
   return std::max(m, n) * Sigma_r[0] * std::numeric_limits<double>::epsilon();
 }
@@ -454,9 +457,9 @@ public:
    * @param VT with a dimension \f$n \times n\f$
    */
   void
-  svd(LAPACKFullMatrixExt<Number>                                    &U,
-      std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-      LAPACKFullMatrixExt<Number>                                    &VT);
+  svd(LAPACKFullMatrixExt<Number> &U,
+      std::vector<real_type>      &Sigma_r,
+      LAPACKFullMatrixExt<Number> &VT);
 
   /**
    * Perform the standard singular value decomposition (SVD) with rank
@@ -473,10 +476,10 @@ public:
    * @param VT with a dimension \f$n \times n\f$.
    */
   void
-  svd(LAPACKFullMatrixExt<Number>                                    &U,
-      std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-      LAPACKFullMatrixExt<Number>                                    &VT,
-      const size_type truncation_rank);
+  svd(LAPACKFullMatrixExt<Number> &U,
+      std::vector<real_type>      &Sigma_r,
+      LAPACKFullMatrixExt<Number> &VT,
+      const size_type              truncation_rank);
 
   /**
    * Perform the reduced singular value decomposition (SVD) with rank
@@ -498,18 +501,22 @@ public:
    * @return Effective rank.
    */
   size_type
-  reduced_svd(
-    LAPACKFullMatrixExt<Number>                                    &U,
-    std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-    LAPACKFullMatrixExt<Number>                                    &VT,
-    size_type truncation_rank,
-    Number    singular_value_threshold = 0.);
+  reduced_svd(LAPACKFullMatrixExt<Number> &U,
+              std::vector<real_type>      &Sigma_r,
+              LAPACKFullMatrixExt<Number> &VT,
+              size_type                    truncation_rank,
+              real_type                    singular_value_threshold = 0.);
 
   /**
    * Perform the reduced singular value decomposition (SVD) with rank
    * truncation. In addition, the components \f$C\f$ and \f$D\f$ of the error
    * matrix due to rank truncation are returned. The error matrix \f$E =
    * CD^T\f$.
+   *
+   * \myref{Bebendorf, Mario. 2008. Hierarchical Matrices: A Means to
+   * Efficiently Solve Elliptic Boundary Value Problems. Lecture Notes in
+   * Computational Science and Engineering 63. Berlin, Heidelberg: Springer,
+   * Section 2.5.1, p66-69.}
    *
    * <dl class="section note">
    *   <dt>Note</dt>
@@ -529,14 +536,13 @@ public:
    * @return Effective rank.
    */
   size_type
-  reduced_svd(
-    LAPACKFullMatrixExt<Number>                                    &U,
-    std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-    LAPACKFullMatrixExt<Number>                                    &VT,
-    LAPACKFullMatrixExt<Number>                                    &C,
-    LAPACKFullMatrixExt<Number>                                    &D,
-    size_type truncation_rank,
-    Number    singular_value_threshold = 0.);
+  reduced_svd(LAPACKFullMatrixExt<Number> &U,
+              std::vector<real_type>      &Sigma_r,
+              LAPACKFullMatrixExt<Number> &VT,
+              LAPACKFullMatrixExt<Number> &C,
+              LAPACKFullMatrixExt<Number> &D,
+              size_type                    truncation_rank,
+              real_type                    singular_value_threshold = 0.);
 
   /**
    * Compute the LU factorization of the full matrix.
@@ -614,75 +620,88 @@ public:
   /**
    * Left multiply the current matrix with a diagonal matrix \p V, which is
    * equivalent to scale the rows of the current matrix with the corresponding
-   * scalar elements in @p V. The result is stored in a @p std::vector.
+   * scalar elements in @p V. The scaling factors are stored in a @p std::vector .
    *
    * @param V
    */
+  template <typename Number2>
   void
-  scale_rows(
-    const std::vector<typename numbers::NumberTraits<Number>::real_type> &V);
+  scale_rows(const std::vector<Number2> &V);
 
   /**
    * Left multiply the current matrix with a diagonal matrix \p V, which is
    * equivalent to scale the rows of the current matrix with the corresponding
-   * scalar elements in @p V. The result is stored in a new matrix @p A.
+   * scalar elements in @p V. The scaling factors are stored in a @p std::vector .
+   * The result is stored in a new matrix @p A.
    *
    * @param A
    * @param V
    */
+  template <typename Number2>
   void
-  scale_rows(
-    LAPACKFullMatrixExt<Number>                                          &A,
-    const std::vector<typename numbers::NumberTraits<Number>::real_type> &V)
-    const;
+  scale_rows(LAPACKFullMatrixExt<Number> &A,
+             const std::vector<Number2>  &V) const;
 
   /**
-   * Right multiply the current matrix with a diagonal matrix \p V, which is
-   * equivalent to scale the columns of the current matrix with the
-   * corresponding scalar elements in @p V. The result is stored in a
-   * @p std::vector.
+   * Left multiply the current matrix with a diagonal matrix \p V, which is
+   * equivalent to scale the rows of the current matrix with the corresponding
+   * scalar elements in @p V. The scaling factors are stored in a @p dealii::Vector .
    *
    * @param V
    */
+  template <typename Number2>
   void
-  scale_columns(
-    const std::vector<typename numbers::NumberTraits<Number>::real_type> &V);
+  scale_rows(const Vector<Number2> &V);
 
   /**
    * Right multiply the current matrix with a diagonal matrix \p V, which is
    * equivalent to scale the columns of the current matrix with the
-   * corresponding scalar elements in @p V. The result is stored in a new
-   * matrix @p A.
+   * corresponding scalar elements in @p V. The scaling factors are stored in a
+   * @p std::vector .
+   *
+   * @param V
+   */
+  template <typename Number2>
+  void
+  scale_columns(const std::vector<Number2> &V);
+
+  /**
+   * Right multiply the current matrix with a diagonal matrix \p V, which is
+   * equivalent to scale the columns of the current matrix with the
+   * corresponding scalar elements in @p V. The scaling factors are stored in a
+   * @p std::vector . The result is stored in a new matrix @p A.
    *
    * @param A
    * @param V
    */
+  template <typename Number2>
   void
-  scale_columns(
-    LAPACKFullMatrixExt<Number>                                          &A,
-    const std::vector<typename numbers::NumberTraits<Number>::real_type> &V)
-    const;
+  scale_columns(LAPACKFullMatrixExt<Number> &A,
+                const std::vector<Number2>  &V) const;
 
   /**
    * Right multiply the current matrix with a diagonal matrix \p V, which is
    * equivalent to scale the columns of the current matrix with the
-   * corresponding scalar elements in @p V. The result is stored in a
-   * @p Vector.
+   * corresponding scalar elements in @p V. The scaling factors are stored in a
+   * @p dealii::Vector .
    *
    * @param V
    */
+  template <typename Number2>
   void
-  scale_columns(
-    const Vector<typename numbers::NumberTraits<Number>::real_type> &V);
+  scale_columns(const Vector<Number2> &V);
 
   /**
-   * Perform in-place transpose of the matrix.
+   * Perform in-place transpose of the matrix. When in the complex valued case,
+   * we perform Hermite transpose.
    */
   void
   transpose();
 
   /**
-   * Get the transpose of the current matrix into a new matrix \p AT.
+   * Get the transpose of the current matrix into a new matrix \p AT. When in the
+   * complex valued case, we perform Hermite transpose.
+   *
    * @param AT
    */
   void
@@ -698,16 +717,17 @@ public:
    * @param src_offset_i
    * @param src_offset_j
    * @param factor
-   * @param transpose
+   * @param transpose When this flag is true, the block in the source matrix
+   * will be transposed.
    */
-  template <typename MatrixType>
+  template <typename MatrixType, typename Number2 = double>
   void
   fill(const MatrixType &src,
        const size_type   dst_offset_i = 0,
        const size_type   dst_offset_j = 0,
        const size_type   src_offset_i = 0,
        const size_type   src_offset_j = 0,
-       const Number      factor       = 1.,
+       const Number2     factor       = 1.,
        const bool        transpose    = false,
        const bool        is_adding    = false);
 
@@ -1053,7 +1073,7 @@ public:
   void
   mTmult(LAPACKFullMatrixExt<Number>       &C,
          const LAPACKFullMatrixExt<Number> &B,
-         const bool                         adding = false) const;
+         bool                               adding = false) const;
 
   /**
    * Multiply two matrices with the second operand transposed and with the
@@ -1070,19 +1090,98 @@ public:
   mTmult(LAPACKFullMatrixExt<Number>       &C,
          const Number2                      alpha,
          const LAPACKFullMatrixExt<Number> &B,
-         const bool                         adding = false) const;
+         bool                               adding = false) const;
 
+  /**
+   * Multiply two matrices with the first operand transposed, i.e. \f$C =
+   * A^T B\f$ or \f$C = C + A^T B\f$.
+   *
+   * @param C
+   * @param B
+   * @param adding
+   */
   void
   Tmmult(LAPACKFullMatrixExt<Number>       &C,
          const LAPACKFullMatrixExt<Number> &B,
-         const bool                         adding = false) const;
+         bool                               adding = false) const;
 
+  /**
+   * Multiply two matrices with the first operand transposed and with the
+   * product scaled by a factor, i.e. \f$C = \alpha \cdot A^T B\f$ or \f$C = C
+   * + \alpha \cdot A^T B\f$.
+   *
+   * @param C
+   * @param alpha
+   * @param B
+   * @param adding
+   */
   template <typename Number2>
   void
   Tmmult(LAPACKFullMatrixExt<Number>       &C,
          const Number2                      alpha,
          const LAPACKFullMatrixExt<Number> &B,
-         const bool                         adding = false) const;
+         bool                               adding = false) const;
+
+  /**
+   * Multiply two matrices with the second operand Hermite transposed, i.e. \f$C
+   * = AB^H\f$ or \f$C = C + AB^H\f$.
+   *
+   * @param C
+   * @param B
+   * @param adding
+   */
+  void
+  mHmult(LAPACKFullMatrixExt<Number>       &C,
+         const LAPACKFullMatrixExt<Number> &B,
+         bool                               adding = false) const;
+
+  /**
+   * Multiply two matrices with the second operand Hermite transposed and with
+   * the product scaled by a factor, i.e. \f$C = \alpha \cdot AB^H\f$ or \f$C =
+   * C
+   * + \alpha \cdot AB^H\f$.
+   *
+   * @param C
+   * @param alpha
+   * @param B
+   * @param adding
+   */
+  template <typename Number2>
+  void
+  mHmult(LAPACKFullMatrixExt<Number>       &C,
+         const Number2                      alpha,
+         const LAPACKFullMatrixExt<Number> &B,
+         bool                               adding = false) const;
+
+  /**
+   * Multiply two matrices with the first operand Hermite transposed, i.e. \f$C
+   * = A^H B\f$ or \f$C = C + A^H B\f$.
+   *
+   * @param C
+   * @param B
+   * @param adding
+   */
+  void
+  Hmmult(LAPACKFullMatrixExt<Number>       &C,
+         const LAPACKFullMatrixExt<Number> &B,
+         bool                               adding = false) const;
+
+  /**
+   * Multiply two matrices with the first operand Hermite transposed and with
+   * the product scaled by a factor, i.e. \f$C = \alpha \cdot A^H B\f$ or \f$C =
+   * C + \alpha \cdot A^H B\f$.
+   *
+   * @param C
+   * @param alpha
+   * @param B
+   * @param adding
+   */
+  template <typename Number2>
+  void
+  Hmmult(LAPACKFullMatrixExt<Number>       &C,
+         const Number2                      alpha,
+         const LAPACKFullMatrixExt<Number> &B,
+         bool                               adding = false) const;
 
   /**
    * Calculate the determinant of a \f$2\times 2\f$ matrix.
@@ -1384,7 +1483,7 @@ LAPACKFullMatrixExt<Number>::IdentityMatrix(const size_type      dim,
 
   for (size_type i = 0; i < dim; i++)
     {
-      matrix(i, i) = 1.;
+      matrix(i, i) = Number(1.);
     }
 }
 
@@ -2648,42 +2747,56 @@ LAPACKFullMatrixExt<Number>::keep_first_n_rows(const size_type n,
 {
   AssertIndexRange(n, this->m() + 1);
 
-  const size_type nrows = this->m();
-  const size_type ncols = this->n();
-
-  if (n > 0)
+  if (n < this->m())
     {
-      if (other_rows_removed)
-        {
-          // Make a shallow copy of the current matrix via rvalue reference by
-          // using std::move.
-          TransposeTable<Number> copy(std::move(*this));
-          // Allocate memory and reinitialize the current matrix with several
-          // rows deleted.
-          this->TransposeTable<Number>::reinit(n, ncols);
+      const size_type nrows = this->m();
+      const size_type ncols = this->n();
 
-          for (size_type j = 0; j < ncols; j++)
+      if (n > 0)
+        {
+          if (other_rows_removed)
             {
-              for (size_type i = 0; i < n; i++)
+              // Make a shallow copy of the current matrix via rvalue reference
+              // by using std::move.
+              TransposeTable<Number> copy(std::move(*this));
+              // Allocate memory and reinitialize the current matrix with
+              // several rows deleted.
+              this->TransposeTable<Number>::reinit(n, ncols);
+
+              for (size_type j = 0; j < ncols; j++)
                 {
-                  (*this)(i, j) = copy(i, j);
+                  for (size_type i = 0; i < n; i++)
+                    {
+                      (*this)(i, j) = copy(i, j);
+                    }
+                }
+            }
+          else
+            {
+              for (size_type j = 0; j < ncols; j++)
+                {
+                  for (size_type i = n; i < nrows; i++)
+                    {
+                      (*this)(i, j) = Number();
+                    }
                 }
             }
         }
       else
         {
-          for (size_type j = 0; j < ncols; j++)
+          if (other_rows_removed)
             {
-              for (size_type i = n; i < nrows; i++)
-                {
-                  (*this)(i, j) = Number();
-                }
+              // When n==0, the matrix degenerates to a null matrix.
+              this->reinit(0, 0);
+            }
+          else
+            {
+              // Clear all rows.
+              std::memset(this->values.data(),
+                          0,
+                          ncols * nrows * sizeof(Number));
             }
         }
-    }
-  else
-    {
-      this->reinit(0, 0);
     }
 }
 
@@ -2782,11 +2895,7 @@ LAPACKFullMatrixExt<Number>::keep_first_n_columns(const size_type n,
 {
   AssertIndexRange(n, this->n() + 1);
 
-  if (n == this->n())
-    {
-      // Do nothing
-    }
-  else
+  if (n < this->n())
     {
       const size_type nrows = this->m();
       const size_type ncols = this->n();
@@ -2836,14 +2945,14 @@ LAPACKFullMatrixExt<Number>::keep_first_n_columns(const size_type n,
 template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::svd(
-  LAPACKFullMatrixExt<Number>                                    &U,
-  std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-  LAPACKFullMatrixExt<Number>                                    &VT)
+  LAPACKFullMatrixExt<Number>                                  &U,
+  std::vector<typename LAPACKFullMatrixExt<Number>::real_type> &Sigma_r,
+  LAPACKFullMatrixExt<Number>                                  &VT)
 {
-  Assert(state == LAPACKSupport::matrix ||
+  Assert(state == LAPACKSupport::State::matrix ||
            state == LAPACKSupport::State::cholesky,
          LAPACKSupport::ExcState(state));
-  state = LAPACKSupport::unusable;
+  state = LAPACKSupport::State::unusable;
 
   const size_type mm      = this->m();
   const size_type nn      = this->n();
@@ -2855,7 +2964,7 @@ LAPACKFullMatrixExt<Number>::svd(
   U.reinit(mm, mm);
   VT.reinit(nn, nn);
   Sigma_r.resize(min_dim);
-  std::fill(Sigma_r.begin(), Sigma_r.end(), 0.);
+  std::fill(Sigma_r.begin(), Sigma_r.end(), real_type());
 
   /**
    * Integer array as the work space for pivoting, which is the \p IWORK
@@ -2873,11 +2982,11 @@ LAPACKFullMatrixExt<Number>::svd(
    * real_work. At the moment, \p work is a scalar which will hold the queried
    * optimal \p lwork. Its first element should be initialized as zero.
    */
-  std::vector<Number> work(1);
-  work[0] = Number();
-  types::blas_int                                                lwork = -1;
-  std::vector<typename numbers::NumberTraits<Number>::real_type> real_work;
-  if (numbers::NumberTraits<Number>::is_complex)
+  work.resize(1);
+  work[0]                      = Number();
+  types::blas_int        lwork = -1;
+  std::vector<real_type> real_work;
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
     {
       // This array is only used by the complex versions.
       std::size_t min = std::min(this->m(), this->n());
@@ -2908,6 +3017,15 @@ LAPACKFullMatrixExt<Number>::svd(
   work.resize(lwork);
 
   /**
+   * Resize the @p real_work vector based on the computed work space size.
+   */
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
+    {
+      real_work.resize(
+        std::max(static_cast<types::blas_int>(real_work.size()), lwork));
+    }
+
+  /**
    * Perform the real SVD.
    */
   LAPACKHelpers::gesdd_helper(LAPACKSupport::A,
@@ -2923,23 +3041,26 @@ LAPACKFullMatrixExt<Number>::svd(
                               lwork,
                               info);
 
+  work.resize(0);
+  ipiv.resize(0);
+
   state = LAPACKSupport::svd;
 }
 
 template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::svd(
-  LAPACKFullMatrixExt<Number>                                    &U,
-  std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-  LAPACKFullMatrixExt<Number>                                    &VT,
-  const size_type truncation_rank)
+  LAPACKFullMatrixExt<Number>                                  &U,
+  std::vector<typename LAPACKFullMatrixExt<Number>::real_type> &Sigma_r,
+  LAPACKFullMatrixExt<Number>                                  &VT,
+  const size_type                                               truncation_rank)
 {
   const size_type mm      = this->m();
   const size_type nn      = this->n();
   const size_type min_dim = std::min(mm, nn);
 
   /**
-   * Perform the full SVD. After the operation,
+   * Perform the full SVD.
    */
   svd(U, Sigma_r, VT);
 
@@ -2955,7 +3076,7 @@ LAPACKFullMatrixExt<Number>::svd(
        */
       for (size_type i = truncation_rank; i < Sigma_r.size(); i++)
         {
-          Sigma_r.at(i) = Number();
+          Sigma_r.at(i) = real_type();
         }
 
       /**
@@ -2970,24 +3091,17 @@ LAPACKFullMatrixExt<Number>::svd(
        */
       VT.keep_first_n_rows(truncation_rank, false);
     }
-  else
-    {
-      /**
-       * Do not thing when the truncation rank is equal to or larger than \p
-       * min_dim. This means the truncation is an identity operator.
-       */
-    }
 }
 
 
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
 LAPACKFullMatrixExt<Number>::reduced_svd(
-  LAPACKFullMatrixExt<Number>                                    &U,
-  std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-  LAPACKFullMatrixExt<Number>                                    &VT,
-  size_type truncation_rank,
-  Number    singular_value_threshold)
+  LAPACKFullMatrixExt<Number>                                  &U,
+  std::vector<typename LAPACKFullMatrixExt<Number>::real_type> &Sigma_r,
+  LAPACKFullMatrixExt<Number>                                  &VT,
+  size_type                                                     truncation_rank,
+  typename LAPACKFullMatrixExt<Number>::real_type singular_value_threshold)
 {
   const size_type mm      = this->m();
   const size_type nn      = this->n();
@@ -3027,7 +3141,6 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
           rank++;
         }
     }
-  AssertIndexRange(rank, min_dim + 1);
 
   /**
    * Limit the value of \p truncation_rank not larger than the actual
@@ -3050,8 +3163,7 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
            * 1. Keep the first \p truncation_rank singular values, while discarding
            * the others.
            */
-          std::vector<typename numbers::NumberTraits<Number>::real_type> copy(
-            std::move(Sigma_r));
+          std::vector<real_type> copy(std::move(Sigma_r));
           Sigma_r.resize(truncation_rank);
           for (size_type i = 0; i < truncation_rank; i++)
             {
@@ -3145,13 +3257,13 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
 LAPACKFullMatrixExt<Number>::reduced_svd(
-  LAPACKFullMatrixExt<Number>                                    &U,
-  std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-  LAPACKFullMatrixExt<Number>                                    &VT,
-  LAPACKFullMatrixExt<Number>                                    &C,
-  LAPACKFullMatrixExt<Number>                                    &D,
-  size_type truncation_rank,
-  Number    singular_value_threshold)
+  LAPACKFullMatrixExt<Number>                                  &U,
+  std::vector<typename LAPACKFullMatrixExt<Number>::real_type> &Sigma_r,
+  LAPACKFullMatrixExt<Number>                                  &VT,
+  LAPACKFullMatrixExt<Number>                                  &C,
+  LAPACKFullMatrixExt<Number>                                  &D,
+  size_type                                                     truncation_rank,
+  typename LAPACKFullMatrixExt<Number>::real_type singular_value_threshold)
 {
   const size_type mm      = this->m();
   const size_type nn      = this->n();
@@ -3191,7 +3303,6 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
           rank++;
         }
     }
-  AssertIndexRange(rank, min_dim + 1);
 
   /**
    * Limit the value of \p truncation_rank not larger than the actual
@@ -3214,8 +3325,7 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
            * 1. Keep the first \p truncation_rank singular values, while discarding
            * the others.
            */
-          std::vector<typename numbers::NumberTraits<Number>::real_type> copy(
-            std::move(Sigma_r));
+          std::vector<real_type> copy(std::move(Sigma_r));
           Sigma_r.resize(truncation_rank);
           for (size_type i = 0; i < truncation_rank; i++)
             {
@@ -3229,8 +3339,7 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
                * Copy the remaining singular values for constructing the error
                * matrices.
                */
-              std::vector<typename numbers::NumberTraits<Number>::real_type>
-                Sigma_r_error(Sigma_r_error_size);
+              std::vector<real_type> Sigma_r_error(Sigma_r_error_size);
               for (size_type i = 0; i < Sigma_r_error_size; i++)
                 {
                   Sigma_r_error.at(i) = copy.at(i + truncation_rank);
@@ -3238,11 +3347,14 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
 
               /**
                * Allocate memory for the error matrices. At the moment,
-               * \f$D\f$ stores its transpose.
+               * \f$D\f$ stores the transpose (real valued case) or Hermite
+               * transpose (complex valued case) version for itself.
                */
               C.reinit(mm, Sigma_r_error_size);
               D.reinit(Sigma_r_error_size, nn);
 
+              // Copy columns from @p truncation_rank to the end of @p U into @p C.
+              // Copy rows from @p truncation_rank to the end of @p VT into @p D.
               C.fill(U, 0, 0, 0, truncation_rank);
               D.fill(VT, 0, 0, truncation_rank, 0);
 
@@ -3250,7 +3362,10 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
                 {
                   /**
                    * When the original full matrix \f$AB^T\f$ is a long
-                   * matrix, perform right association.
+                   * matrix, so is the error matrix. Then we perform the right
+                   * association, i.e.
+                   * \f$C(\Sigma_{r,\epsilon}D^{\mathrm{T}})\f$ or
+                   * \f$C(\Sigma_{r,\epsilon}D^{\mathrm{H}})\f$.
                    */
                   D.scale_rows(Sigma_r_error);
                   D.transpose();
@@ -3259,7 +3374,10 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
                 {
                   /**
                    * When the original full matrix \f$AB^T\f$ is a wide
-                   * matrix, perform left association.
+                   * matrix, so is the error matrix. Then we perform the left
+                   * association, i.e.
+                   * \f$(C\Sigma_{r,\epsilon})D^{\mathrm{T}}\f$ or
+                   * \f$(C\Sigma_{r,\epsilon})D^{\mathrm{H}}\f$
                    */
                   C.scale_columns(Sigma_r_error);
                   D.transpose();
@@ -3272,6 +3390,8 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
             }
           else
             {
+              // When there are no singular values omitted, there are no errors
+              // and we set @p C and @p D as emtpy matrices.
               C.reinit(0, 0);
               D.reinit(0, 0);
             }
@@ -3584,17 +3704,10 @@ LAPACKFullMatrixExt<Number>::qr(LAPACKFullMatrixExt<Number> &Q,
         {
           for (types::blas_int k = 0; k < mm; k++)
             {
-              if constexpr (std::is_same<Number,
-                                         std::complex<real_type>>::value)
-                {
-                  // Conjugation is needed when in the complex valued case.
-                  H(j, k) =
-                    ((j == k) ? 1.0 : 0.) - tau[i] * v(j) * std::conj(v(k));
-                }
-              else
-                {
-                  H(j, k) = ((j == k) ? 1.0 : 0.) - tau[i] * v(j) * v(k);
-                }
+              // N.B. Conjugation is needed when in the complex valued case.
+              H(j, k) =
+                ((j == k) ? 1.0 : 0.) -
+                tau[i] * v(j) * numbers::NumberTraits<Number>::conjugate(v(k));
             }
         }
 
@@ -3705,17 +3818,10 @@ LAPACKFullMatrixExt<Number>::reduced_qr(LAPACKFullMatrixExt<Number> &Q,
         {
           for (types::blas_int k = 0; k < mm; k++)
             {
-              if constexpr (std::is_same<Number,
-                                         std::complex<real_type>>::value)
-                {
-                  // Conjugation is needed when in the complex valued case.
-                  H(j, k) =
-                    ((j == k) ? 1.0 : 0.) - tau[i] * v(j) * std::conj(v(k));
-                }
-              else
-                {
-                  H(j, k) = ((j == k) ? 1.0 : 0.) - tau[i] * v(j) * v(k);
-                }
+              // N.B. Conjugation is needed when in the complex valued case.
+              H(j, k) =
+                ((j == k) ? 1.0 : 0.) -
+                tau[i] * v(j) * numbers::NumberTraits<Number>::conjugate(v(k));
             }
         }
 
@@ -3745,9 +3851,9 @@ LAPACKFullMatrixExt<Number>::reduced_qr(LAPACKFullMatrixExt<Number> &Q,
 
 
 template <typename Number>
+template <typename Number2>
 void
-LAPACKFullMatrixExt<Number>::scale_rows(
-  const std::vector<typename numbers::NumberTraits<Number>::real_type> &V)
+LAPACKFullMatrixExt<Number>::scale_rows(const std::vector<Number2> &V)
 {
   Assert(state == LAPACKSupport::matrix ||
            state == LAPACKSupport::inverse_matrix,
@@ -3768,10 +3874,10 @@ LAPACKFullMatrixExt<Number>::scale_rows(
 
 
 template <typename Number>
+template <typename Number2>
 void
-LAPACKFullMatrixExt<Number>::scale_rows(
-  LAPACKFullMatrixExt<Number>                                          &A,
-  const std::vector<typename numbers::NumberTraits<Number>::real_type> &V) const
+LAPACKFullMatrixExt<Number>::scale_rows(LAPACKFullMatrixExt<Number> &A,
+                                        const std::vector<Number2>  &V) const
 {
   AssertDimension(this->m(), V.size());
 
@@ -3791,9 +3897,32 @@ LAPACKFullMatrixExt<Number>::scale_rows(
 
 
 template <typename Number>
+template <typename Number2>
 void
-LAPACKFullMatrixExt<Number>::scale_columns(
-  const std::vector<typename numbers::NumberTraits<Number>::real_type> &V)
+LAPACKFullMatrixExt<Number>::scale_rows(const Vector<Number2> &V)
+{
+  Assert(state == LAPACKSupport::matrix ||
+           state == LAPACKSupport::inverse_matrix,
+         ExcState(state));
+  AssertDimension(this->m(), V.size());
+
+  size_type nrows = this->m();
+  size_type ncols = this->n();
+
+  for (size_type j = 0; j < ncols; j++)
+    {
+      for (size_type i = 0; i < nrows; i++)
+        {
+          (*this)(i, j) *= V(i);
+        }
+    }
+}
+
+
+template <typename Number>
+template <typename Number2>
+void
+LAPACKFullMatrixExt<Number>::scale_columns(const std::vector<Number2> &V)
 {
   Assert(state == LAPACKSupport::matrix ||
            state == LAPACKSupport::inverse_matrix,
@@ -3814,10 +3943,10 @@ LAPACKFullMatrixExt<Number>::scale_columns(
 
 
 template <typename Number>
+template <typename Number2>
 void
-LAPACKFullMatrixExt<Number>::scale_columns(
-  LAPACKFullMatrixExt<Number>                                          &A,
-  const std::vector<typename numbers::NumberTraits<Number>::real_type> &V) const
+LAPACKFullMatrixExt<Number>::scale_columns(LAPACKFullMatrixExt<Number> &A,
+                                           const std::vector<Number2>  &V) const
 {
   AssertDimension(this->n(), V.size());
 
@@ -3837,9 +3966,9 @@ LAPACKFullMatrixExt<Number>::scale_columns(
 
 
 template <typename Number>
+template <typename Number2>
 void
-LAPACKFullMatrixExt<Number>::scale_columns(
-  const Vector<typename numbers::NumberTraits<Number>::real_type> &V)
+LAPACKFullMatrixExt<Number>::scale_columns(const Vector<Number2> &V)
 {
   Assert(state == LAPACKSupport::matrix ||
            state == LAPACKSupport::inverse_matrix,
@@ -3881,7 +4010,7 @@ LAPACKFullMatrixExt<Number>::transpose()
     {
       for (size_type i = 0; i < nrows; i++)
         {
-          (*this)(j, i) = copy(i, j);
+          (*this)(j, i) = numbers::NumberTraits<Number>::conjugate(copy(i, j));
         }
     }
 }
@@ -3900,21 +4029,21 @@ LAPACKFullMatrixExt<Number>::transpose(LAPACKFullMatrixExt<Number> &AT) const
     {
       for (size_type i = 0; i < nrows; i++)
         {
-          AT(j, i) = (*this)(i, j);
+          AT(j, i) = numbers::NumberTraits<Number>::conjugate((*this)(i, j));
         }
     }
 }
 
 
 template <typename Number>
-template <typename MatrixType>
+template <typename MatrixType, typename Number2>
 void
 LAPACKFullMatrixExt<Number>::fill(const MatrixType &src,
                                   const size_type   dst_offset_i,
                                   const size_type   dst_offset_j,
                                   const size_type   src_offset_i,
                                   const size_type   src_offset_j,
-                                  const Number      factor,
+                                  const Number2     factor,
                                   const bool        transpose,
                                   const bool        is_adding)
 {
@@ -4489,10 +4618,7 @@ LAPACKFullMatrixExt<Number>::outer_product(const Vector<Number> &v,
     {
       for (size_type j = 0; j < this->n(); ++j)
         {
-          if constexpr (std::is_same<Number, std::complex<real_type>>::value)
-            (*this)(i, j) = v(i) * std::conj(w(j));
-          else
-            (*this)(i, j) = v(i) * w(j);
+          (*this)(i, j) = v(i) * numbers::NumberTraits<Number>::conjugate(w(j));
         }
     }
 }
@@ -4508,15 +4634,19 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number>       &w,
     {
         case LAPACKSupport::symmetric: {
           LAPACKHelpers::symv_helper(LAPACKSupport::L,
-                                     1.0,
+                                     Number(1.0),
                                      this->m(),
                                      this->values,
                                      v.data(),
-                                     (adding ? 1.0 : 0.0),
+                                     Number((adding ? 1.0 : 0.0)),
                                      w.data());
 
           break;
         }
+        // In principle, we should have a case for Hermite symmetric matrix
+        // (complex valued), however, deal.ii does not define such a
+        // @p hermite_symmetric matrix property. Luckily, we have not used any
+        // Hermite symmetric matrix up to now in the BEM solver.
         case LAPACKSupport::general: {
           /**
            * Call the normal matrix-vector multiplication member function of
@@ -4570,6 +4700,10 @@ LAPACKFullMatrixExt<Number>::Tvmult(Vector<Number>       &w,
 
           break;
         }
+        // In principle, we should have a case for Hermite symmetric matrix
+        // (complex valued), however, deal.ii does not define such a
+        // @p hermite_symmetric matrix property. Luckily, we have not used any
+        // Hermite symmetric matrix up to now in the BEM solver.
         case LAPACKSupport::general: {
           this->LAPACKFullMatrix<Number>::Tvmult(w, v, adding);
 
@@ -4664,21 +4798,69 @@ template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number>       &C,
                                     const LAPACKFullMatrixExt<Number> &B,
-                                    const bool adding) const
+                                    bool adding) const
 {
-  AssertDimension(this->n(), B.n());
+  const types::blas_int mm = this->m();
+  const types::blas_int nn = B.m();
+  const types::blas_int kk = B.n();
+  AssertDimension(this->n(), kk);
 
-  const size_type nrows = this->m();
-  const size_type ncols = B.m();
-
-  if (C.m() != nrows || C.n() != ncols)
+  if (C.m() != (size_type)mm || C.n() != (size_type)nn)
     {
-      C.reinit(nrows, ncols);
+      C.reinit(mm, nn);
+      adding = false;
     }
 
-  // Call the \p mTmult function in the parent class which operates on \p
-  // LAPACKFullMatrix<Number>.
-  LAPACKFullMatrix<Number>::mTmult(C, (LAPACKFullMatrix<Number>)B, adding);
+  LAPACKSupport::Property C_original_property = C.property;
+
+  const Number alpha = 1.;
+  const Number beta  = (adding ? 1. : 0.);
+
+  if (PointerComparison::equal(this, &B))
+    {
+      syrk(&LAPACKSupport::U,
+           &LAPACKSupport::N,
+           &nn,
+           &kk,
+           &alpha,
+           this->values.data(),
+           &nn,
+           &beta,
+           C.values.data(),
+           &nn);
+
+      // Fill in lower triangular part.
+      for (types::blas_int j = 0; j < nn; ++j)
+        for (types::blas_int i = 0; i < j; ++i)
+          C(j, i) = C(i, j);
+    }
+  else
+    {
+      // Using the general matrix multiplication.
+      gemm(&LAPACKSupport::N,
+           &LAPACKSupport::T,
+           &mm,
+           &nn,
+           &kk,
+           &alpha,
+           this->values.data(),
+           &mm,
+           B.values.data(),
+           &nn,
+           &beta,
+           C.values.data(),
+           &mm);
+    }
+
+  if (PointerComparison::equal(this, &B))
+    if (!adding)
+      C.set_property(LAPACKSupport::Property::symmetric);
+    else if (C_original_property == LAPACKSupport::Property::symmetric)
+      C.set_property(LAPACKSupport::Property::symmetric);
+    else
+      C.set_property(LAPACKSupport::Property::general);
+  else
+    C.set_property(LAPACKSupport::Property::general);
 }
 
 
@@ -4688,29 +4870,69 @@ void
 LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number>       &C,
                                     const Number2                      alpha,
                                     const LAPACKFullMatrixExt<Number> &B,
-                                    const bool adding) const
+                                    bool adding) const
 {
-  AssertDimension(this->n(), B.n());
+  const types::blas_int mm = this->m();
+  const types::blas_int nn = B.m();
+  const types::blas_int kk = B.n();
+  AssertDimension(this->n(), kk);
 
-  const size_type nrows = this->m();
-  const size_type ncols = B.m();
-
-  if (C.m() != nrows || C.n() != ncols)
+  if (C.m() != (size_type)mm || C.n() != (size_type)nn)
     {
-      C.reinit(nrows, ncols);
+      C.reinit(mm, nn);
+      adding = false;
     }
 
-  /**
-   * Make a local copy of the matrix \p B and scale it.
-   */
-  LAPACKFullMatrixExt<Number> B_scaled(B);
-  B_scaled *= Number(alpha);
+  LAPACKSupport::Property C_original_property = C.property;
 
-  // Call the \p mTmult function in the parent class which operates on \p
-  // LAPACKFullMatrix<Number>.
-  LAPACKFullMatrix<Number>::mTmult(C,
-                                   (LAPACKFullMatrix<Number>)B_scaled,
-                                   adding);
+  const Number alpha1 = alpha;
+  const Number beta   = (adding ? 1. : 0.);
+
+  if (PointerComparison::equal(this, &B))
+    {
+      syrk(&LAPACKSupport::U,
+           &LAPACKSupport::N,
+           &nn,
+           &kk,
+           &alpha1,
+           this->values.data(),
+           &nn,
+           &beta,
+           C.values.data(),
+           &nn);
+
+      // Fill in lower triangular part.
+      for (types::blas_int j = 0; j < nn; ++j)
+        for (types::blas_int i = 0; i < j; ++i)
+          C(j, i) = C(i, j);
+    }
+  else
+    {
+      // Using the general matrix multiplication.
+      gemm(&LAPACKSupport::N,
+           &LAPACKSupport::T,
+           &mm,
+           &nn,
+           &kk,
+           &alpha1,
+           this->values.data(),
+           &mm,
+           B.values.data(),
+           &nn,
+           &beta,
+           C.values.data(),
+           &mm);
+    }
+
+  if (PointerComparison::equal(this, &B))
+    if (!adding)
+      C.set_property(LAPACKSupport::Property::symmetric);
+    else if (C_original_property == LAPACKSupport::Property::symmetric)
+      C.set_property(LAPACKSupport::Property::symmetric);
+    else
+      C.set_property(LAPACKSupport::Property::general);
+  else
+    C.set_property(LAPACKSupport::Property::general);
 }
 
 
@@ -4718,21 +4940,69 @@ template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number>       &C,
                                     const LAPACKFullMatrixExt<Number> &B,
-                                    const bool adding) const
+                                    bool adding) const
 {
-  AssertDimension(this->m(), B.m());
+  const types::blas_int mm = this->n();
+  const types::blas_int nn = B.n();
+  const types::blas_int kk = B.m();
+  AssertDimension(this->m(), kk);
 
-  const size_type nrows = this->n();
-  const size_type ncols = B.n();
-
-  if (C.m() != nrows || C.n() != ncols)
+  if (C.m() != (size_type)mm || C.n() != (size_type)nn)
     {
-      C.reinit(nrows, ncols);
+      C.reinit(mm, nn);
+      adding = false;
     }
 
-  // Call the \p Tmmult function in the parent class which operates on \p
-  // LAPACKFullMatrix<Number>.
-  LAPACKFullMatrix<Number>::Tmmult(C, (LAPACKFullMatrix<Number>)B, adding);
+  LAPACKSupport::Property C_original_property = C.property;
+
+  const Number alpha = 1.;
+  const Number beta  = (adding ? 1. : 0.);
+
+  if (PointerComparison::equal(this, &B))
+    {
+      syrk(&LAPACKSupport::U,
+           &LAPACKSupport::T,
+           &nn,
+           &kk,
+           &alpha,
+           this->values.data(),
+           &kk,
+           &beta,
+           C.values.data(),
+           &nn);
+
+      // Fill in lower triangular part.
+      for (types::blas_int j = 0; j < nn; ++j)
+        for (types::blas_int i = 0; i < j; ++i)
+          C(j, i) = C(i, j);
+    }
+  else
+    {
+      // Using the general matrix multiplication.
+      gemm(&LAPACKSupport::T,
+           &LAPACKSupport::N,
+           &mm,
+           &nn,
+           &kk,
+           &alpha,
+           this->values.data(),
+           &kk,
+           B.values.data(),
+           &kk,
+           &beta,
+           C.values.data(),
+           &mm);
+    }
+
+  if (PointerComparison::equal(this, &B))
+    if (!adding)
+      C.set_property(LAPACKSupport::Property::symmetric);
+    else if (C_original_property == LAPACKSupport::Property::symmetric)
+      C.set_property(LAPACKSupport::Property::symmetric);
+    else
+      C.set_property(LAPACKSupport::Property::general);
+  else
+    C.set_property(LAPACKSupport::Property::general);
 }
 
 
@@ -4742,29 +5012,389 @@ void
 LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number>       &C,
                                     const Number2                      alpha,
                                     const LAPACKFullMatrixExt<Number> &B,
-                                    const bool adding) const
+                                    bool adding) const
 {
-  AssertDimension(this->m(), B.m());
+  const types::blas_int mm = this->n();
+  const types::blas_int nn = B.n();
+  const types::blas_int kk = B.m();
+  AssertDimension(this->m(), kk);
 
-  const size_type nrows = this->n();
-  const size_type ncols = B.n();
-
-  if (C.m() != nrows || C.n() != ncols)
+  if (C.m() != (size_type)mm || C.n() != (size_type)nn)
     {
-      C.reinit(nrows, ncols);
+      C.reinit(mm, nn);
+      adding = false;
     }
 
-  /**
-   * Make a local copy of the matrix \p B and scale it.
-   */
-  LAPACKFullMatrixExt<Number> B_scaled(B);
-  B_scaled *= Number(alpha);
+  LAPACKSupport::Property C_original_property = C.property;
 
-  // Call the \p Tmmult function in the parent class which operates on \p
-  // LAPACKFullMatrix<Number>.
-  LAPACKFullMatrix<Number>::Tmmult(C,
-                                   (LAPACKFullMatrix<Number>)B_scaled,
-                                   adding);
+  const Number alpha1 = alpha;
+  const Number beta   = (adding ? 1. : 0.);
+
+  if (PointerComparison::equal(this, &B))
+    {
+      syrk(&LAPACKSupport::U,
+           &LAPACKSupport::T,
+           &nn,
+           &kk,
+           &alpha1,
+           this->values.data(),
+           &kk,
+           &beta,
+           C.values.data(),
+           &nn);
+
+      // Fill in lower triangular part.
+      for (types::blas_int j = 0; j < nn; ++j)
+        for (types::blas_int i = 0; i < j; ++i)
+          C(j, i) = C(i, j);
+    }
+  else
+    {
+      // Using the general matrix multiplication.
+      gemm(&LAPACKSupport::T,
+           &LAPACKSupport::N,
+           &mm,
+           &nn,
+           &kk,
+           &alpha1,
+           this->values.data(),
+           &kk,
+           B.values.data(),
+           &kk,
+           &beta,
+           C.values.data(),
+           &mm);
+    }
+
+  if (PointerComparison::equal(this, &B))
+    if (!adding)
+      C.set_property(LAPACKSupport::Property::symmetric);
+    else if (C_original_property == LAPACKSupport::Property::symmetric)
+      C.set_property(LAPACKSupport::Property::symmetric);
+    else
+      C.set_property(LAPACKSupport::Property::general);
+  else
+    C.set_property(LAPACKSupport::Property::general);
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::mHmult(LAPACKFullMatrixExt<Number>       &C,
+                                    const LAPACKFullMatrixExt<Number> &B,
+                                    bool adding) const
+{
+  static_assert(numbers::NumberTraits<Number>::is_complex,
+                "mHmult should only be used for complex valued matrices.");
+
+  const types::blas_int mm = this->m();
+  const types::blas_int nn = B.m();
+  const types::blas_int kk = B.n();
+  AssertDimension(this->n(), kk);
+
+  if (C.m() != (size_type)mm || C.n() != (size_type)nn)
+    {
+      C.reinit(mm, nn);
+      adding = false;
+    }
+
+  LAPACKSupport::Property C_original_property = C.property;
+
+  if (PointerComparison::equal(this, &B))
+    {
+      // In LAPACK @p herk, the scalar factors are required to be real type.
+      const real_type alpha = 1.;
+      const real_type beta  = (adding ? 1. : 0.);
+
+      herk(&LAPACKSupport::U,
+           &LAPACKSupport::N,
+           &nn,
+           &kk,
+           &alpha,
+           this->values.data(),
+           &nn,
+           &beta,
+           C.values.data(),
+           &nn);
+
+      // Fill in lower triangular part, where complex conjugation is applied,
+      // because the result matrix is Hermite symmetric.
+      for (types::blas_int j = 0; j < nn; ++j)
+        for (types::blas_int i = 0; i < j; ++i)
+          C(j, i) = std::conj(C(i, j));
+    }
+  else
+    {
+      // Using the general matrix multiplication, where the scalar factors
+      // should have the same type as matrix elements.
+      const Number alpha = 1.;
+      const Number beta  = (adding ? 1. : 0.);
+
+      gemm(&LAPACKSupport::N,
+           &LAPACKSupport::C,
+           &mm,
+           &nn,
+           &kk,
+           &alpha,
+           this->values.data(),
+           &mm,
+           B.values.data(),
+           &nn,
+           &beta,
+           C.values.data(),
+           &mm);
+    }
+
+  if (PointerComparison::equal(this, &B))
+    if (!adding)
+      C.set_property(LAPACKSupport::Property::hermite_symmetric);
+    else if (C_original_property == LAPACKSupport::Property::hermite_symmetric)
+      C.set_property(LAPACKSupport::Property::hermite_symmetric);
+    else
+      C.set_property(LAPACKSupport::Property::general);
+  else
+    C.set_property(LAPACKSupport::Property::general);
+}
+
+
+template <typename Number>
+template <typename Number2>
+void
+LAPACKFullMatrixExt<Number>::mHmult(LAPACKFullMatrixExt<Number>       &C,
+                                    const Number2                      alpha,
+                                    const LAPACKFullMatrixExt<Number> &B,
+                                    bool adding) const
+{
+  static_assert(numbers::NumberTraits<Number>::is_complex,
+                "mHmult should only be used for complex valued matrices.");
+
+  const types::blas_int mm = this->m();
+  const types::blas_int nn = B.m();
+  const types::blas_int kk = B.n();
+  AssertDimension(this->n(), kk);
+
+  if (C.m() != (size_type)mm || C.n() != (size_type)nn)
+    {
+      C.reinit(mm, nn);
+      adding = false;
+    }
+
+  LAPACKSupport::Property C_original_property = C.property;
+
+  if (PointerComparison::equal(this, &B) && std::imag(alpha) == 0)
+    {
+      // In LAPACK @p herk, the scalar factors are required to be real type.
+      const real_type alpha1 = alpha;
+      const real_type beta   = (adding ? 1. : 0.);
+
+      herk(&LAPACKSupport::U,
+           &LAPACKSupport::N,
+           &nn,
+           &kk,
+           &alpha1,
+           this->values.data(),
+           &nn,
+           &beta,
+           C.values.data(),
+           &nn);
+
+      // Fill in lower triangular part, where complex conjugation is applied,
+      // because the result matrix is Hermite symmetric.
+      for (types::blas_int j = 0; j < nn; ++j)
+        for (types::blas_int i = 0; i < j; ++i)
+          C(j, i) = std::conj(C(i, j));
+    }
+  else
+    {
+      // Using the general matrix multiplication, where the scalar factors
+      // should have the same type as matrix elements.
+      const Number alpha1 = alpha;
+      const Number beta   = (adding ? 1. : 0.);
+
+      gemm(&LAPACKSupport::N,
+           &LAPACKSupport::C,
+           &mm,
+           &nn,
+           &kk,
+           &alpha1,
+           this->values.data(),
+           &mm,
+           B.values.data(),
+           &nn,
+           &beta,
+           C.values.data(),
+           &mm);
+    }
+
+  if (PointerComparison::equal(this, &B) && std::imag(alpha) == 0)
+    if (!adding)
+      C.set_property(LAPACKSupport::Property::hermite_symmetric);
+    else if (C_original_property == LAPACKSupport::Property::hermite_symmetric)
+      C.set_property(LAPACKSupport::Property::hermite_symmetric);
+    else
+      C.set_property(LAPACKSupport::Property::general);
+  else
+    C.set_property(LAPACKSupport::Property::general);
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::Hmmult(LAPACKFullMatrixExt<Number>       &C,
+                                    const LAPACKFullMatrixExt<Number> &B,
+                                    bool adding) const
+{
+  static_assert(numbers::NumberTraits<Number>::is_complex,
+                "mHmult should only be used for complex valued matrices.");
+
+  const types::blas_int mm = this->n();
+  const types::blas_int nn = B.n();
+  const types::blas_int kk = B.m();
+  AssertDimension(this->m(), kk);
+
+  if (C.m() != (size_type)mm || C.n() != (size_type)nn)
+    {
+      C.reinit(mm, nn);
+      adding = false;
+    }
+
+  LAPACKSupport::Property C_original_property = C.property;
+
+  if (PointerComparison::equal(this, &B))
+    {
+      // In LAPACK @p herk, the scalar factors are required to be real type.
+      const real_type alpha = 1.;
+      const real_type beta  = (adding ? 1. : 0.);
+
+      herk(&LAPACKSupport::U,
+           &LAPACKSupport::C,
+           &nn,
+           &kk,
+           &alpha,
+           this->values.data(),
+           &kk,
+           &beta,
+           C.values.data(),
+           &nn);
+
+      // Fill in lower triangular part, where complex conjugation is applied,
+      // because the result matrix is Hermite symmetric.
+      for (types::blas_int j = 0; j < nn; ++j)
+        for (types::blas_int i = 0; i < j; ++i)
+          C(j, i) = std::conj(C(i, j));
+    }
+  else
+    {
+      // Using the general matrix multiplication, where the scalar factors
+      // should have the same type as matrix elements.
+      const Number alpha = 1.;
+      const Number beta  = (adding ? 1. : 0.);
+
+      gemm(&LAPACKSupport::C,
+           &LAPACKSupport::N,
+           &mm,
+           &nn,
+           &kk,
+           &alpha,
+           this->values.data(),
+           &kk,
+           B.values.data(),
+           &kk,
+           &beta,
+           C.values.data(),
+           &mm);
+    }
+
+  if (PointerComparison::equal(this, &B))
+    if (!adding)
+      C.set_property(LAPACKSupport::Property::hermite_symmetric);
+    else if (C_original_property == LAPACKSupport::Property::hermite_symmetric)
+      C.set_property(LAPACKSupport::Property::hermite_symmetric);
+    else
+      C.set_property(LAPACKSupport::Property::general);
+  else
+    C.set_property(LAPACKSupport::Property::general);
+}
+
+
+template <typename Number>
+template <typename Number2>
+void
+LAPACKFullMatrixExt<Number>::Hmmult(LAPACKFullMatrixExt<Number>       &C,
+                                    const Number2                      alpha,
+                                    const LAPACKFullMatrixExt<Number> &B,
+                                    bool adding) const
+{
+  static_assert(numbers::NumberTraits<Number>::is_complex,
+                "mHmult should only be used for complex valued matrices.");
+
+  const types::blas_int mm = this->n();
+  const types::blas_int nn = B.n();
+  const types::blas_int kk = B.m();
+  AssertDimension(this->m(), kk);
+
+  if (C.m() != (size_type)mm || C.n() != (size_type)nn)
+    {
+      C.reinit(mm, nn);
+      adding = false;
+    }
+
+  LAPACKSupport::Property C_original_property = C.property;
+
+  if (PointerComparison::equal(this, &B) && std::imag(alpha) == 0)
+    {
+      // In LAPACK @p herk, the scalar factors are required to be real type.
+      const real_type alpha1 = alpha;
+      const real_type beta   = (adding ? 1. : 0.);
+
+      herk(&LAPACKSupport::U,
+           &LAPACKSupport::C,
+           &nn,
+           &kk,
+           &alpha1,
+           this->values.data(),
+           &kk,
+           &beta,
+           C.values.data(),
+           &nn);
+
+      // Fill in lower triangular part, where complex conjugation is applied,
+      // because the result matrix is Hermite symmetric.
+      for (types::blas_int j = 0; j < nn; ++j)
+        for (types::blas_int i = 0; i < j; ++i)
+          C(j, i) = std::conj(C(i, j));
+    }
+  else
+    {
+      // Using the general matrix multiplication, where the scalar factors
+      // should have the same type as matrix elements.
+      const Number alpha1 = alpha;
+      const Number beta   = (adding ? 1. : 0.);
+
+      gemm(&LAPACKSupport::C,
+           &LAPACKSupport::N,
+           &mm,
+           &nn,
+           &kk,
+           &alpha1,
+           this->values.data(),
+           &kk,
+           B.values.data(),
+           &kk,
+           &beta,
+           C.values.data(),
+           &mm);
+    }
+
+  if (PointerComparison::equal(this, &B) && std::imag(alpha) == 0)
+    if (!adding)
+      C.set_property(LAPACKSupport::Property::hermite_symmetric);
+    else if (C_original_property == LAPACKSupport::Property::hermite_symmetric)
+      C.set_property(LAPACKSupport::Property::hermite_symmetric);
+    else
+      C.set_property(LAPACKSupport::Property::general);
+  else
+    C.set_property(LAPACKSupport::Property::general);
 }
 
 
@@ -4939,9 +5569,6 @@ LAPACKFullMatrixExt<Number>::set_property(
   const LAPACKSupport::Property property)
 {
   this->property = property;
-  /**
-   * Set the matrix property in the parent class to be the same.
-   */
   this->LAPACKFullMatrix<Number>::set_property(property);
 }
 
@@ -4995,6 +5622,11 @@ LAPACKFullMatrixExt<Number>::solve(Vector<Number> &v,
     }
   else if (state == State::cholesky)
     {
+      // At the moment, we do not have Hermite symmetric matrices in the BEM
+      // solver, so we make an assertion here.
+      static_assert(
+        !numbers::NumberTraits<Number>::is_complex,
+        "Only real valued symmetric matrix is allowed for Cholesky factorization at the moment.");
       potrs(&LAPACKSupport::L, &nn, &n_rhs, values, &nn, v.begin(), &nn, &info);
     }
   else if (property == Property::upper_triangular ||
@@ -5059,9 +5691,17 @@ LAPACKFullMatrixExt<Number>::solve_by_forward_substitution(
    * \alert{The member variable \p values of \p b is private, which cannot be
    * directly accessed. Therefore, the function \p trsv_helper is designed to
    * accept the data pointer of \p b, which can be obtained via \p b.data().}
+   *
+   * Also note when in the complex valued case, if the transposed matrix is to
+   * be solved, we only allow transpose not Hermite transpose at the moment.
    */
-  LAPACKHelpers::trsv_helper(
-    uplo, transposed, is_unit_diagonal, this->m(), this->values, b.data());
+  LAPACKHelpers::trsv_helper(uplo,
+                             transposed,
+                             false,
+                             is_unit_diagonal,
+                             this->m(),
+                             this->values,
+                             b.data());
 }
 
 
@@ -5103,9 +5743,17 @@ LAPACKFullMatrixExt<Number>::solve_by_backward_substitution(
    * \alert{The member variable \p values of \p b is private, which cannot be
    * directly accessed. Therefore, the function \p trsv_helper is designed to
    * accept the data pointer of \p b, which can be obtained via \p b.data().}
+   *
+   * Also note when in the complex valued case, if the transposed matrix is to
+   * be solved, we only allow transpose not Hermite transpose at the moment.
    */
-  LAPACKHelpers::trsv_helper(
-    uplo, transposed, is_unit_diagonal, this->m(), this->values, b.data());
+  LAPACKHelpers::trsv_helper(uplo,
+                             transposed,
+                             false,
+                             is_unit_diagonal,
+                             this->m(),
+                             this->values,
+                             b.data());
 }
 
 

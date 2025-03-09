@@ -284,6 +284,7 @@ namespace LAPACKHelpers
     Assert(work_flag == -1 ||
              static_cast<std::size_t>(work_flag) <= real_work.size(),
            ExcInternalError());
+
     gesdd(&job,
           &n_rows,
           &n_cols,
@@ -415,6 +416,7 @@ namespace LAPACKHelpers
    *
    * @param uplo
    * @param is_transposed
+   * @param is_hermite_transposed
    * @param is_unit_diagonal
    * @param n_rows
    * @param matrix
@@ -425,6 +427,7 @@ namespace LAPACKHelpers
   void
   trsv_helper(const char              uplo,
               const bool              is_transposed,
+              const bool              is_hermite_transposed,
               const bool              is_unit_diagonal,
               const types::blas_int   n_rows,
               const AlignedVector<T> &matrix,
@@ -434,6 +437,8 @@ namespace LAPACKHelpers
     // The matrix should be square.
     Assert(static_cast<size_t>(n_rows * n_rows) == matrix.size(),
            ExcInternalError());
+
+    (void)is_hermite_transposed;
 
     const char trans(is_transposed ? 'T' : 'N');
     const char diag(is_unit_diagonal ? 'U' : 'N');
@@ -460,6 +465,7 @@ namespace LAPACKHelpers
    *
    * @param uplo
    * @param is_transposed
+   * @param is_hermite_transposed
    * @param is_unit_diagonal
    * @param n_rows
    * @param matrix
@@ -470,6 +476,7 @@ namespace LAPACKHelpers
   void
   trsv_helper(const char                            uplo,
               const bool                            is_transposed,
+              const bool                            is_hermite_transposed,
               const bool                            is_unit_diagonal,
               const types::blas_int                 n_rows,
               const AlignedVector<std::complex<T>> &matrix,
@@ -485,7 +492,12 @@ namespace LAPACKHelpers
     // N.B. When the number field \f$\mathbb{K}\f$ for matrix is complex, the
     // transposition of a matrix is Hermitian, i.e. including both the normal
     // transposition and complex conjugation.
-    const char trans(is_transposed ? 'C' : 'N');
+    char trans;
+    if (is_transposed)
+      trans = is_hermite_transposed ? 'C' : 'T';
+    else
+      trans = 'N';
+
     const char diag(is_unit_diagonal ? 'U' : 'N');
 
     trsv(&uplo,
