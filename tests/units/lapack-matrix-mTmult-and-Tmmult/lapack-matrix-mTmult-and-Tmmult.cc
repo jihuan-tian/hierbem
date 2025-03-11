@@ -1,6 +1,7 @@
 /**
- * @file lapack-matrix-mTmult.cc
- * @brief Verify mTmult for both real and complex valued LAPACKFullMatrixExt
+ * @file lapack-matrix-mTmult-and-Tmmult.cc
+ * @brief Verify mTmult and Tmmult for both real and complex valued
+ * LAPACKFullMatrixExt
  * @ingroup linalg
  *
  * @date 2025-03-11
@@ -26,8 +27,9 @@ using namespace Catch::Matchers;
 using namespace dealii;
 using namespace HierBEM;
 
-TEST_CASE("Verify mTmult for both real and complex valued LAPACKFullMatrixExt",
-          "[linalg]")
+TEST_CASE(
+  "Verify mTmult and Tmmult for both real and complex valued LAPACKFullMatrixExt",
+  "[linalg]")
 {
   INFO("*** test start");
   HBEMJuliaWrapper &inst = HBEMJuliaWrapper::get_instance();

@@ -5238,30 +5238,83 @@ LAPACKFullMatrixExt<Number>::mHmult(LAPACKFullMatrixExt<Number>       &C,
       adding = false;
     }
 
-  LAPACKSupport::Property C_original_property = C.property;
-
   if (PointerComparison::equal(this, &B))
     {
-      // In LAPACK @p herk, the scalar factors are required to be real type.
-      const real_type alpha = 1.;
-      const real_type beta  = (adding ? 1. : 0.);
+      if (adding)
+        {
+          if (C.property == LAPACKSupport::Property::hermite_symmetric)
+            {
+              // In LAPACK @p herk, the scalar factors are required to be real type.
+              const real_type alpha = 1.;
+              const real_type beta  = 1.;
 
-      herk(&LAPACKSupport::U,
-           &LAPACKSupport::N,
-           &nn,
-           &kk,
-           &alpha,
-           this->values.data(),
-           &nn,
-           &beta,
-           C.values.data(),
-           &nn);
+              herk(&LAPACKSupport::U,
+                   &LAPACKSupport::N,
+                   &nn,
+                   &kk,
+                   &alpha,
+                   this->values.data(),
+                   &nn,
+                   &beta,
+                   C.values.data(),
+                   &nn);
 
-      // Fill in lower triangular part, where complex conjugation is applied,
-      // because the result matrix is Hermite symmetric.
-      for (types::blas_int j = 0; j < nn; ++j)
-        for (types::blas_int i = 0; i < j; ++i)
-          C(j, i) = std::conj(C(i, j));
+              // Fill in lower triangular part, where complex conjugation is
+              // applied, because the result matrix should be Hermite symmetric.
+              for (types::blas_int j = 0; j < nn; ++j)
+                for (types::blas_int i = 0; i < j; ++i)
+                  C(j, i) = std::conj(C(i, j));
+
+              C.set_property(LAPACKSupport::Property::hermite_symmetric);
+            }
+          else
+            {
+              // Using the general matrix multiplication, where the scalar
+              // factors should have the same type as matrix elements.
+              const Number alpha = 1.;
+              const Number beta  = 1.;
+
+              gemm(&LAPACKSupport::N,
+                   &LAPACKSupport::C,
+                   &mm,
+                   &nn,
+                   &kk,
+                   &alpha,
+                   this->values.data(),
+                   &mm,
+                   B.values.data(),
+                   &nn,
+                   &beta,
+                   C.values.data(),
+                   &mm);
+              C.set_property(LAPACKSupport::Property::general);
+            }
+        }
+      else
+        {
+          // In LAPACK @p herk, the scalar factors are required to be real type.
+          const real_type alpha = 1.;
+          const real_type beta  = 0.;
+
+          herk(&LAPACKSupport::U,
+               &LAPACKSupport::N,
+               &nn,
+               &kk,
+               &alpha,
+               this->values.data(),
+               &nn,
+               &beta,
+               C.values.data(),
+               &nn);
+
+          // Fill in lower triangular part, where complex conjugation is
+          // applied, because the result matrix should be Hermite symmetric.
+          for (types::blas_int j = 0; j < nn; ++j)
+            for (types::blas_int i = 0; i < j; ++i)
+              C(j, i) = std::conj(C(i, j));
+
+          C.set_property(LAPACKSupport::Property::hermite_symmetric);
+        }
     }
   else
     {
@@ -5283,17 +5336,8 @@ LAPACKFullMatrixExt<Number>::mHmult(LAPACKFullMatrixExt<Number>       &C,
            &beta,
            C.values.data(),
            &mm);
-    }
-
-  if (PointerComparison::equal(this, &B))
-    if (!adding)
-      C.set_property(LAPACKSupport::Property::hermite_symmetric);
-    else if (C_original_property == LAPACKSupport::Property::hermite_symmetric)
-      C.set_property(LAPACKSupport::Property::hermite_symmetric);
-    else
       C.set_property(LAPACKSupport::Property::general);
-  else
-    C.set_property(LAPACKSupport::Property::general);
+    }
 }
 
 
@@ -5319,30 +5363,85 @@ LAPACKFullMatrixExt<Number>::mHmult(LAPACKFullMatrixExt<Number>       &C,
       adding = false;
     }
 
-  LAPACKSupport::Property C_original_property = C.property;
-
+  // Only when the two operand matrices are a same object and the scalar factor
+  // @p alpha has a zero imaginary part, we will try to call @p herk.
   if (PointerComparison::equal(this, &B) && std::imag(alpha) == 0)
     {
-      // In LAPACK @p herk, the scalar factors are required to be real type.
-      const real_type alpha1 = alpha;
-      const real_type beta   = (adding ? 1. : 0.);
+      if (adding)
+        {
+          if (C.property == LAPACKSupport::Property::hermite_symmetric)
+            {
+              // In LAPACK @p herk, the scalar factors are required to be real type.
+              const real_type alpha1 = std::real(alpha);
+              const real_type beta   = 1.;
 
-      herk(&LAPACKSupport::U,
-           &LAPACKSupport::N,
-           &nn,
-           &kk,
-           &alpha1,
-           this->values.data(),
-           &nn,
-           &beta,
-           C.values.data(),
-           &nn);
+              herk(&LAPACKSupport::U,
+                   &LAPACKSupport::N,
+                   &nn,
+                   &kk,
+                   &alpha1,
+                   this->values.data(),
+                   &nn,
+                   &beta,
+                   C.values.data(),
+                   &nn);
 
-      // Fill in lower triangular part, where complex conjugation is applied,
-      // because the result matrix is Hermite symmetric.
-      for (types::blas_int j = 0; j < nn; ++j)
-        for (types::blas_int i = 0; i < j; ++i)
-          C(j, i) = std::conj(C(i, j));
+              // Fill in lower triangular part, where complex conjugation is
+              // applied, because the result matrix is Hermite symmetric.
+              for (types::blas_int j = 0; j < nn; ++j)
+                for (types::blas_int i = 0; i < j; ++i)
+                  C(j, i) = std::conj(C(i, j));
+
+              C.set_property(LAPACKSupport::Property::hermite_symmetric);
+            }
+          else
+            {
+              // Using the general matrix multiplication, where the scalar
+              // factors should have the same type as matrix elements.
+              const Number alpha1 = alpha;
+              const Number beta   = 1.;
+
+              gemm(&LAPACKSupport::N,
+                   &LAPACKSupport::C,
+                   &mm,
+                   &nn,
+                   &kk,
+                   &alpha1,
+                   this->values.data(),
+                   &mm,
+                   B.values.data(),
+                   &nn,
+                   &beta,
+                   C.values.data(),
+                   &mm);
+              C.set_property(LAPACKSupport::Property::general);
+            }
+        }
+      else
+        {
+          // In LAPACK @p herk, the scalar factors are required to be real type.
+          const real_type alpha1 = std::real(alpha);
+          const real_type beta   = 0.;
+
+          herk(&LAPACKSupport::U,
+               &LAPACKSupport::N,
+               &nn,
+               &kk,
+               &alpha1,
+               this->values.data(),
+               &nn,
+               &beta,
+               C.values.data(),
+               &nn);
+
+          // Fill in lower triangular part, where complex conjugation is
+          // applied, because the result matrix is Hermite symmetric.
+          for (types::blas_int j = 0; j < nn; ++j)
+            for (types::blas_int i = 0; i < j; ++i)
+              C(j, i) = std::conj(C(i, j));
+
+          C.set_property(LAPACKSupport::Property::hermite_symmetric);
+        }
     }
   else
     {
@@ -5364,17 +5463,8 @@ LAPACKFullMatrixExt<Number>::mHmult(LAPACKFullMatrixExt<Number>       &C,
            &beta,
            C.values.data(),
            &mm);
-    }
-
-  if (PointerComparison::equal(this, &B) && std::imag(alpha) == 0)
-    if (!adding)
-      C.set_property(LAPACKSupport::Property::hermite_symmetric);
-    else if (C_original_property == LAPACKSupport::Property::hermite_symmetric)
-      C.set_property(LAPACKSupport::Property::hermite_symmetric);
-    else
       C.set_property(LAPACKSupport::Property::general);
-  else
-    C.set_property(LAPACKSupport::Property::general);
+    }
 }
 
 
@@ -5398,30 +5488,84 @@ LAPACKFullMatrixExt<Number>::Hmmult(LAPACKFullMatrixExt<Number>       &C,
       adding = false;
     }
 
-  LAPACKSupport::Property C_original_property = C.property;
-
   if (PointerComparison::equal(this, &B))
     {
-      // In LAPACK @p herk, the scalar factors are required to be real type.
-      const real_type alpha = 1.;
-      const real_type beta  = (adding ? 1. : 0.);
+      if (adding)
+        {
+          if (C.property == LAPACKSupport::Property::hermite_symmetric)
+            {
+              // In LAPACK @p herk, the scalar factors are required to be real type.
+              const real_type alpha = 1.;
+              const real_type beta  = 1.;
 
-      herk(&LAPACKSupport::U,
-           &LAPACKSupport::C,
-           &nn,
-           &kk,
-           &alpha,
-           this->values.data(),
-           &kk,
-           &beta,
-           C.values.data(),
-           &nn);
+              herk(&LAPACKSupport::U,
+                   &LAPACKSupport::C,
+                   &nn,
+                   &kk,
+                   &alpha,
+                   this->values.data(),
+                   &kk,
+                   &beta,
+                   C.values.data(),
+                   &nn);
 
-      // Fill in lower triangular part, where complex conjugation is applied,
-      // because the result matrix is Hermite symmetric.
-      for (types::blas_int j = 0; j < nn; ++j)
-        for (types::blas_int i = 0; i < j; ++i)
-          C(j, i) = std::conj(C(i, j));
+              // Fill in lower triangular part, where complex conjugation is
+              // applied, because the result matrix should be Hermite symmetric.
+              for (types::blas_int j = 0; j < nn; ++j)
+                for (types::blas_int i = 0; i < j; ++i)
+                  C(j, i) = std::conj(C(i, j));
+
+              C.set_property(LAPACKSupport::Property::hermite_symmetric);
+            }
+          else
+            {
+              // Using the general matrix multiplication, where the scalar
+              // factors
+              // should have the same type as matrix elements.
+              const Number alpha = 1.;
+              const Number beta  = 1.;
+
+              gemm(&LAPACKSupport::C,
+                   &LAPACKSupport::N,
+                   &mm,
+                   &nn,
+                   &kk,
+                   &alpha,
+                   this->values.data(),
+                   &kk,
+                   B.values.data(),
+                   &kk,
+                   &beta,
+                   C.values.data(),
+                   &mm);
+              C.set_property(LAPACKSupport::Property::general);
+            }
+        }
+      else
+        {
+          // In LAPACK @p herk, the scalar factors are required to be real type.
+          const real_type alpha = 1.;
+          const real_type beta  = 0.;
+
+          herk(&LAPACKSupport::U,
+               &LAPACKSupport::C,
+               &nn,
+               &kk,
+               &alpha,
+               this->values.data(),
+               &kk,
+               &beta,
+               C.values.data(),
+               &nn);
+
+          // Fill in lower triangular part, where complex conjugation is
+          // applied, because the result matrix should be Hermite symmetric.
+          for (types::blas_int j = 0; j < nn; ++j)
+            for (types::blas_int i = 0; i < j; ++i)
+              C(j, i) = std::conj(C(i, j));
+
+          C.set_property(LAPACKSupport::Property::hermite_symmetric);
+        }
     }
   else
     {
@@ -5443,17 +5587,8 @@ LAPACKFullMatrixExt<Number>::Hmmult(LAPACKFullMatrixExt<Number>       &C,
            &beta,
            C.values.data(),
            &mm);
-    }
-
-  if (PointerComparison::equal(this, &B))
-    if (!adding)
-      C.set_property(LAPACKSupport::Property::hermite_symmetric);
-    else if (C_original_property == LAPACKSupport::Property::hermite_symmetric)
-      C.set_property(LAPACKSupport::Property::hermite_symmetric);
-    else
       C.set_property(LAPACKSupport::Property::general);
-  else
-    C.set_property(LAPACKSupport::Property::general);
+    }
 }
 
 
@@ -5479,30 +5614,85 @@ LAPACKFullMatrixExt<Number>::Hmmult(LAPACKFullMatrixExt<Number>       &C,
       adding = false;
     }
 
-  LAPACKSupport::Property C_original_property = C.property;
-
+  // Only when the two operand matrices are a same object and the scalar factor
+  // @p alpha has a zero imaginary part, we will try to call @p herk.
   if (PointerComparison::equal(this, &B) && std::imag(alpha) == 0)
     {
-      // In LAPACK @p herk, the scalar factors are required to be real type.
-      const real_type alpha1 = alpha;
-      const real_type beta   = (adding ? 1. : 0.);
+      if (adding)
+        {
+          if (C.property == LAPACKSupport::Property::hermite_symmetric)
+            {
+              // In LAPACK @p herk, the scalar factors are required to be real type.
+              const real_type alpha1 = std::real(alpha);
+              const real_type beta   = 1.;
 
-      herk(&LAPACKSupport::U,
-           &LAPACKSupport::C,
-           &nn,
-           &kk,
-           &alpha1,
-           this->values.data(),
-           &kk,
-           &beta,
-           C.values.data(),
-           &nn);
+              herk(&LAPACKSupport::U,
+                   &LAPACKSupport::C,
+                   &nn,
+                   &kk,
+                   &alpha1,
+                   this->values.data(),
+                   &kk,
+                   &beta,
+                   C.values.data(),
+                   &nn);
 
-      // Fill in lower triangular part, where complex conjugation is applied,
-      // because the result matrix is Hermite symmetric.
-      for (types::blas_int j = 0; j < nn; ++j)
-        for (types::blas_int i = 0; i < j; ++i)
-          C(j, i) = std::conj(C(i, j));
+              // Fill in lower triangular part, where complex conjugation is
+              // applied, because the result matrix is Hermite symmetric.
+              for (types::blas_int j = 0; j < nn; ++j)
+                for (types::blas_int i = 0; i < j; ++i)
+                  C(j, i) = std::conj(C(i, j));
+
+              C.set_property(LAPACKSupport::Property::hermite_symmetric);
+            }
+          else
+            {
+              // Using the general matrix multiplication, where the scalar
+              // factors should have the same type as matrix elements.
+              const Number alpha1 = alpha;
+              const Number beta   = 1.;
+
+              gemm(&LAPACKSupport::C,
+                   &LAPACKSupport::N,
+                   &mm,
+                   &nn,
+                   &kk,
+                   &alpha1,
+                   this->values.data(),
+                   &kk,
+                   B.values.data(),
+                   &kk,
+                   &beta,
+                   C.values.data(),
+                   &mm);
+              C.set_property(LAPACKSupport::Property::general);
+            }
+        }
+      else
+        {
+          // In LAPACK @p herk, the scalar factors are required to be real type.
+          const real_type alpha1 = std::real(alpha);
+          const real_type beta   = 0.;
+
+          herk(&LAPACKSupport::U,
+               &LAPACKSupport::C,
+               &nn,
+               &kk,
+               &alpha1,
+               this->values.data(),
+               &kk,
+               &beta,
+               C.values.data(),
+               &nn);
+
+          // Fill in lower triangular part, where complex conjugation is
+          // applied, because the result matrix is Hermite symmetric.
+          for (types::blas_int j = 0; j < nn; ++j)
+            for (types::blas_int i = 0; i < j; ++i)
+              C(j, i) = std::conj(C(i, j));
+
+          C.set_property(LAPACKSupport::Property::hermite_symmetric);
+        }
     }
   else
     {
@@ -5524,17 +5714,8 @@ LAPACKFullMatrixExt<Number>::Hmmult(LAPACKFullMatrixExt<Number>       &C,
            &beta,
            C.values.data(),
            &mm);
-    }
-
-  if (PointerComparison::equal(this, &B) && std::imag(alpha) == 0)
-    if (!adding)
-      C.set_property(LAPACKSupport::Property::hermite_symmetric);
-    else if (C_original_property == LAPACKSupport::Property::hermite_symmetric)
-      C.set_property(LAPACKSupport::Property::hermite_symmetric);
-    else
       C.set_property(LAPACKSupport::Property::general);
-  else
-    C.set_property(LAPACKSupport::Property::general);
+    }
 }
 
 
