@@ -1,15 +1,19 @@
 # Target should contains 'test' substring in any cases in order to be found by
 # Visual Studio Code's TestMate extension
-set(_target test-lapack-matrix-qr)
+set(_target test-lapack-matrix-mTmult-and-Tmmult)
 
-add_executable(${_target} lapack-matrix-qr.cc)
+add_executable(${_target} lapack-matrix-mTmult-and-Tmmult.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})
 
 target_link_libraries(
-  ${_target} hbem_julia_wrapper generic_tools boost_program_options
+  ${_target}
+  generic_tools
+  hbem_julia_wrapper
+  boost_program_options
   dl # Lazy way: always link with libdl no matter if CUDA is used or not
+  julia
   Catch2::Catch2WithMain)
 
 # Discover Catch2 testcases

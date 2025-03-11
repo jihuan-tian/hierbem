@@ -4811,28 +4811,72 @@ LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number>       &C,
       adding = false;
     }
 
-  LAPACKSupport::Property C_original_property = C.property;
-
   const Number alpha = 1.;
   const Number beta  = (adding ? 1. : 0.);
 
   if (PointerComparison::equal(this, &B))
     {
-      syrk(&LAPACKSupport::U,
-           &LAPACKSupport::N,
-           &nn,
-           &kk,
-           &alpha,
-           this->values.data(),
-           &nn,
-           &beta,
-           C.values.data(),
-           &nn);
+      if (adding)
+        {
+          if (C.property == LAPACKSupport::Property::symmetric)
+            {
+              syrk(&LAPACKSupport::U,
+                   &LAPACKSupport::N,
+                   &nn,
+                   &kk,
+                   &alpha,
+                   this->values.data(),
+                   &nn,
+                   &beta,
+                   C.values.data(),
+                   &nn);
 
-      // Fill in lower triangular part.
-      for (types::blas_int j = 0; j < nn; ++j)
-        for (types::blas_int i = 0; i < j; ++i)
-          C(j, i) = C(i, j);
+              // Fill in lower triangular part.
+              for (types::blas_int j = 0; j < nn; ++j)
+                for (types::blas_int i = 0; i < j; ++i)
+                  C(j, i) = C(i, j);
+
+              C.set_property(LAPACKSupport::Property::symmetric);
+            }
+          else
+            {
+              // Using the general matrix multiplication.
+              gemm(&LAPACKSupport::N,
+                   &LAPACKSupport::T,
+                   &mm,
+                   &nn,
+                   &kk,
+                   &alpha,
+                   this->values.data(),
+                   &mm,
+                   B.values.data(),
+                   &nn,
+                   &beta,
+                   C.values.data(),
+                   &mm);
+              C.set_property(LAPACKSupport::Property::general);
+            }
+        }
+      else
+        {
+          syrk(&LAPACKSupport::U,
+               &LAPACKSupport::N,
+               &nn,
+               &kk,
+               &alpha,
+               this->values.data(),
+               &nn,
+               &beta,
+               C.values.data(),
+               &nn);
+
+          // Fill in lower triangular part.
+          for (types::blas_int j = 0; j < nn; ++j)
+            for (types::blas_int i = 0; i < j; ++i)
+              C(j, i) = C(i, j);
+
+          C.set_property(LAPACKSupport::Property::symmetric);
+        }
     }
   else
     {
@@ -4850,17 +4894,8 @@ LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number>       &C,
            &beta,
            C.values.data(),
            &mm);
-    }
-
-  if (PointerComparison::equal(this, &B))
-    if (!adding)
-      C.set_property(LAPACKSupport::Property::symmetric);
-    else if (C_original_property == LAPACKSupport::Property::symmetric)
-      C.set_property(LAPACKSupport::Property::symmetric);
-    else
       C.set_property(LAPACKSupport::Property::general);
-  else
-    C.set_property(LAPACKSupport::Property::general);
+    }
 }
 
 
@@ -4883,28 +4918,72 @@ LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number>       &C,
       adding = false;
     }
 
-  LAPACKSupport::Property C_original_property = C.property;
-
   const Number alpha1 = alpha;
   const Number beta   = (adding ? 1. : 0.);
 
   if (PointerComparison::equal(this, &B))
     {
-      syrk(&LAPACKSupport::U,
-           &LAPACKSupport::N,
-           &nn,
-           &kk,
-           &alpha1,
-           this->values.data(),
-           &nn,
-           &beta,
-           C.values.data(),
-           &nn);
+      if (adding)
+        {
+          if (C.property == LAPACKSupport::Property::symmetric)
+            {
+              syrk(&LAPACKSupport::U,
+                   &LAPACKSupport::N,
+                   &nn,
+                   &kk,
+                   &alpha1,
+                   this->values.data(),
+                   &nn,
+                   &beta,
+                   C.values.data(),
+                   &nn);
 
-      // Fill in lower triangular part.
-      for (types::blas_int j = 0; j < nn; ++j)
-        for (types::blas_int i = 0; i < j; ++i)
-          C(j, i) = C(i, j);
+              // Fill in lower triangular part.
+              for (types::blas_int j = 0; j < nn; ++j)
+                for (types::blas_int i = 0; i < j; ++i)
+                  C(j, i) = C(i, j);
+
+              C.set_property(LAPACKSupport::Property::symmetric);
+            }
+          else
+            {
+              // Using the general matrix multiplication.
+              gemm(&LAPACKSupport::N,
+                   &LAPACKSupport::T,
+                   &mm,
+                   &nn,
+                   &kk,
+                   &alpha1,
+                   this->values.data(),
+                   &mm,
+                   B.values.data(),
+                   &nn,
+                   &beta,
+                   C.values.data(),
+                   &mm);
+              C.set_property(LAPACKSupport::Property::general);
+            }
+        }
+      else
+        {
+          syrk(&LAPACKSupport::U,
+               &LAPACKSupport::N,
+               &nn,
+               &kk,
+               &alpha1,
+               this->values.data(),
+               &nn,
+               &beta,
+               C.values.data(),
+               &nn);
+
+          // Fill in lower triangular part.
+          for (types::blas_int j = 0; j < nn; ++j)
+            for (types::blas_int i = 0; i < j; ++i)
+              C(j, i) = C(i, j);
+
+          C.set_property(LAPACKSupport::Property::symmetric);
+        }
     }
   else
     {
@@ -4922,17 +5001,8 @@ LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number>       &C,
            &beta,
            C.values.data(),
            &mm);
-    }
-
-  if (PointerComparison::equal(this, &B))
-    if (!adding)
-      C.set_property(LAPACKSupport::Property::symmetric);
-    else if (C_original_property == LAPACKSupport::Property::symmetric)
-      C.set_property(LAPACKSupport::Property::symmetric);
-    else
       C.set_property(LAPACKSupport::Property::general);
-  else
-    C.set_property(LAPACKSupport::Property::general);
+    }
 }
 
 
@@ -4953,28 +5023,72 @@ LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number>       &C,
       adding = false;
     }
 
-  LAPACKSupport::Property C_original_property = C.property;
-
   const Number alpha = 1.;
   const Number beta  = (adding ? 1. : 0.);
 
   if (PointerComparison::equal(this, &B))
     {
-      syrk(&LAPACKSupport::U,
-           &LAPACKSupport::T,
-           &nn,
-           &kk,
-           &alpha,
-           this->values.data(),
-           &kk,
-           &beta,
-           C.values.data(),
-           &nn);
+      if (adding)
+        {
+          if (C.property == LAPACKSupport::Property::symmetric)
+            {
+              syrk(&LAPACKSupport::U,
+                   &LAPACKSupport::T,
+                   &nn,
+                   &kk,
+                   &alpha,
+                   this->values.data(),
+                   &kk,
+                   &beta,
+                   C.values.data(),
+                   &nn);
 
-      // Fill in lower triangular part.
-      for (types::blas_int j = 0; j < nn; ++j)
-        for (types::blas_int i = 0; i < j; ++i)
-          C(j, i) = C(i, j);
+              // Fill in lower triangular part.
+              for (types::blas_int j = 0; j < nn; ++j)
+                for (types::blas_int i = 0; i < j; ++i)
+                  C(j, i) = C(i, j);
+
+              C.set_property(LAPACKSupport::Property::symmetric);
+            }
+          else
+            {
+              // Using the general matrix multiplication.
+              gemm(&LAPACKSupport::T,
+                   &LAPACKSupport::N,
+                   &mm,
+                   &nn,
+                   &kk,
+                   &alpha,
+                   this->values.data(),
+                   &kk,
+                   B.values.data(),
+                   &kk,
+                   &beta,
+                   C.values.data(),
+                   &mm);
+              C.set_property(LAPACKSupport::Property::general);
+            }
+        }
+      else
+        {
+          syrk(&LAPACKSupport::U,
+               &LAPACKSupport::T,
+               &nn,
+               &kk,
+               &alpha,
+               this->values.data(),
+               &kk,
+               &beta,
+               C.values.data(),
+               &nn);
+
+          // Fill in lower triangular part.
+          for (types::blas_int j = 0; j < nn; ++j)
+            for (types::blas_int i = 0; i < j; ++i)
+              C(j, i) = C(i, j);
+
+          C.set_property(LAPACKSupport::Property::symmetric);
+        }
     }
   else
     {
@@ -4992,17 +5106,8 @@ LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number>       &C,
            &beta,
            C.values.data(),
            &mm);
-    }
-
-  if (PointerComparison::equal(this, &B))
-    if (!adding)
-      C.set_property(LAPACKSupport::Property::symmetric);
-    else if (C_original_property == LAPACKSupport::Property::symmetric)
-      C.set_property(LAPACKSupport::Property::symmetric);
-    else
       C.set_property(LAPACKSupport::Property::general);
-  else
-    C.set_property(LAPACKSupport::Property::general);
+    }
 }
 
 
@@ -5025,28 +5130,72 @@ LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number>       &C,
       adding = false;
     }
 
-  LAPACKSupport::Property C_original_property = C.property;
-
   const Number alpha1 = alpha;
   const Number beta   = (adding ? 1. : 0.);
 
   if (PointerComparison::equal(this, &B))
     {
-      syrk(&LAPACKSupport::U,
-           &LAPACKSupport::T,
-           &nn,
-           &kk,
-           &alpha1,
-           this->values.data(),
-           &kk,
-           &beta,
-           C.values.data(),
-           &nn);
+      if (adding)
+        {
+          if (C.property == LAPACKSupport::Property::symmetric)
+            {
+              syrk(&LAPACKSupport::U,
+                   &LAPACKSupport::T,
+                   &nn,
+                   &kk,
+                   &alpha1,
+                   this->values.data(),
+                   &kk,
+                   &beta,
+                   C.values.data(),
+                   &nn);
 
-      // Fill in lower triangular part.
-      for (types::blas_int j = 0; j < nn; ++j)
-        for (types::blas_int i = 0; i < j; ++i)
-          C(j, i) = C(i, j);
+              // Fill in lower triangular part.
+              for (types::blas_int j = 0; j < nn; ++j)
+                for (types::blas_int i = 0; i < j; ++i)
+                  C(j, i) = C(i, j);
+
+              C.set_property(LAPACKSupport::Property::symmetric);
+            }
+          else
+            {
+              // Using the general matrix multiplication.
+              gemm(&LAPACKSupport::T,
+                   &LAPACKSupport::N,
+                   &mm,
+                   &nn,
+                   &kk,
+                   &alpha1,
+                   this->values.data(),
+                   &kk,
+                   B.values.data(),
+                   &kk,
+                   &beta,
+                   C.values.data(),
+                   &mm);
+              C.set_property(LAPACKSupport::Property::general);
+            }
+        }
+      else
+        {
+          syrk(&LAPACKSupport::U,
+               &LAPACKSupport::T,
+               &nn,
+               &kk,
+               &alpha1,
+               this->values.data(),
+               &kk,
+               &beta,
+               C.values.data(),
+               &nn);
+
+          // Fill in lower triangular part.
+          for (types::blas_int j = 0; j < nn; ++j)
+            for (types::blas_int i = 0; i < j; ++i)
+              C(j, i) = C(i, j);
+
+          C.set_property(LAPACKSupport::Property::symmetric);
+        }
     }
   else
     {
@@ -5064,17 +5213,8 @@ LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number>       &C,
            &beta,
            C.values.data(),
            &mm);
-    }
-
-  if (PointerComparison::equal(this, &B))
-    if (!adding)
-      C.set_property(LAPACKSupport::Property::symmetric);
-    else if (C_original_property == LAPACKSupport::Property::symmetric)
-      C.set_property(LAPACKSupport::Property::symmetric);
-    else
       C.set_property(LAPACKSupport::Property::general);
-  else
-    C.set_property(LAPACKSupport::Property::general);
+    }
 }
 
 

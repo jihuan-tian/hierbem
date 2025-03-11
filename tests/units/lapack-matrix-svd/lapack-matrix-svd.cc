@@ -1,8 +1,8 @@
 /**
  * \file svd.cc
  * \brief Test singular value decomposition (SVD)
- *
  * \ingroup linalg
+ *
  * \author Jihuan Tian
  * \date 2021-06-19
  */
@@ -146,6 +146,5 @@ TEST_CASE("Verify matrix SVD decomposition for LAPACKFullMatrixExt", "[linalg]")
     print_vector_to_mat(std::cout, "Sigma_r5", Sigma_r);
   }
 
-  jl_atexit_hook(0);
   INFO("*** test end");
 }
