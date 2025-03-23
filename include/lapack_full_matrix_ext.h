@@ -158,8 +158,9 @@ public:
 
   /**
    * Perform SVD on the product of two component matrices \f$A\f$ and
-   * \f$B^T\f$ without rank truncation. If the matrix is not of full rank,
-   * truncate it to the effective rank. It returns the effective rank.
+   * \f$B^T\f$ (or \f$B^H\f$ in the complex valued case) without rank
+   * truncation. If the matrix is not of full rank, truncate it to the effective
+   * rank. It returns the effective rank.
    *
    * \alert{The operation of this function has no accuracy loss.}
    * @param A
@@ -1596,13 +1597,13 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
        * matrix should be reinitialized.
        */
       R.reinit(RA.m(), RB.m());
-      RA.mTmult(R, RB);
+      RA.mHmult(R, RB);
       R.svd(U_hat, Sigma_r, VT_hat);
 
       U.reinit(QA.m(), formal_rank);
       QA.mmult(U, U_hat);
       VT.reinit(formal_rank, QB.m());
-      VT_hat.mTmult(VT, QB);
+      VT_hat.mHmult(VT, QB);
     }
   else
     {
@@ -1613,15 +1614,15 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
        * matrix to a full matrix, then perform SVD on this full matrix.
        */
       LAPACKFullMatrixExt<Number> fullmatrix(A.m(), B.m());
-      A.mTmult(fullmatrix, B);
+      A.mHmult(fullmatrix, B);
       fullmatrix.svd(U, Sigma_r, VT);
     }
 
   if (singular_value_threshold == 0.)
     {
       /**
-       * If the singular value threshold is perfect zero, calculate a
-       * threshold value instead.
+       * If the singular value threshold is zero, calculate a threshold value
+       * instead.
        */
       singular_value_threshold = calc_singular_value_threshold(mm, nn, Sigma_r);
     }
@@ -1826,13 +1827,13 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
        * matrix should be reinitialized.
        */
       R.reinit(RA.m(), RB.m());
-      RA.mTmult(R, RB);
+      RA.mHmult(R, RB);
       R.svd(U_hat, Sigma_r, VT_hat);
 
       U.reinit(QA.m(), formal_rank);
       QA.mmult(U, U_hat);
       VT.reinit(formal_rank, QB.m());
-      VT_hat.mTmult(VT, QB);
+      VT_hat.mHmult(VT, QB);
     }
   else
     {
@@ -1843,15 +1844,15 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
        * SVD on this full matrix.
        */
       LAPACKFullMatrixExt<Number> fullmatrix(A.m(), B.m());
-      A.mTmult(fullmatrix, B);
+      A.mHmult(fullmatrix, B);
       fullmatrix.svd(U, Sigma_r, VT);
     }
 
   if (singular_value_threshold == 0.)
     {
       /**
-       * If the singular value threshold is perfect zero, calculate a
-       * threshold value instead.
+       * If the singular value threshold is zero, calculate a threshold value
+       * instead.
        */
       singular_value_threshold = calc_singular_value_threshold(mm, nn, Sigma_r);
     }
@@ -2072,13 +2073,13 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
        * matrix should be reinitialized.
        */
       R.reinit(RA.m(), RB.m());
-      RA.mTmult(R, RB);
+      RA.mHmult(R, RB);
       R.svd(U_hat, Sigma_r, VT_hat);
 
       U.reinit(QA.m(), formal_rank);
       QA.mmult(U, U_hat);
       VT.reinit(formal_rank, QB.m());
-      VT_hat.mTmult(VT, QB);
+      VT_hat.mHmult(VT, QB);
     }
   else
     {
@@ -2089,15 +2090,15 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
        * rank-k matrix to a full matrix, then perform SVD on this full matrix.
        */
       LAPACKFullMatrixExt<Number> fullmatrix(A.m(), B.m());
-      A.mTmult(fullmatrix, B);
+      A.mHmult(fullmatrix, B);
       fullmatrix.svd(U, Sigma_r, VT);
     }
 
   if (singular_value_threshold == 0.)
     {
       /**
-       * If the singular value threshold is perfect zero, calculate a
-       * threshold value instead.
+       * If the singular value threshold is zero, calculate a threshold value
+       * instead.
        */
       singular_value_threshold = calc_singular_value_threshold(mm, nn, Sigma_r);
     }

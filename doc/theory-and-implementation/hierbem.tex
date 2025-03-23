@@ -6513,8 +6513,8 @@ At present, the naming convention for $\mathcal{H}$-matrix related solvers is a 
   zero row vector will not be selected but, but its row index will be added to $Z_{\rm r}$.
 \item $Z_{\rm c}$ is the collection of already selected or checked column indices. N.B. A
   zero column vector will not be selected, but its column index will be added to $Z_{\rm c}$.
-\item $\bar{Z}_{\rm r}$ is the set of remaining row indices, which have not been selected or checked.
-\item $\bar{Z}_{\rm c}$ is the set of remaining column indices, which have not been selected or checked.
+\item $\overline{Z}_{\rm r}$ is the set of remaining row indices, which have not been selected or checked.
+\item $\overline{Z}_{\rm c}$ is the set of remaining column indices, which have not been selected or checked.
 \item $r$ is the current reference row index.
 \item $c$ is the current reference column index.
 \item $row\_approx\_counters\in\mathbb{Z}^m$ and $col\_approx\_counters\in\mathbb{Z}^{n}$ are the arrays of counters recording successful times of approximating rows and columns respectively.
@@ -6533,7 +6533,7 @@ At present, the naming convention for $\mathcal{H}$-matrix related solvers is a 
         j_k}^{-1}(R_{k-1})_{1:m,j_k}(R_{k-1})_{i_k,1:n} = R_{k-1}-u_kv_k^T.
     \end{split}
   \end{equation*}
-\item Since the original matrix $A$ is expensive to compute, which should be prevented, extracting a row or column vector from the original matrix $A$ requires the evaluation of kernel integration.
+\item Since the original matrix $A$ is expensive to compute, which should be prevented. Extracting a row or column vector from the original matrix $A$ requires the evaluation of kernel integration.
 \end{enumerate}
 
 \begin{remark} The cross at the $k$-th step is selected from the remainder matrix $R_{k-1}$ instead of the original matrix $A$.
@@ -6651,20 +6651,20 @@ $k$ does not increase.}
 \begin{breakablealgorithm}
   \caption{Reference row selection in ACA+ proposed in \citep{GrasedyckAdaptive2005}}
   \begin{algorithmic}[1]
-    \Function{select\_ref\_row}{$A$, $\bar{Z}_{\rm r}$, $r$}
-      \While {$\bar{Z}_{\rm r} \neq \Phi$}
-        \State {Randomly select an index $p$ from $\bar{Z}_{\rm r}$.}
+    \Function{select\_ref\_row}{$A$, $\overline{Z}_{\rm r}$, $r$}
+      \While {$\overline{Z}_{\rm r} \neq \Phi$}
+        \State {Randomly select an index $p$ from $\overline{Z}_{\rm r}$.}
         \If {$p \neq r$}
           \State {Compute the $p$-th row of the matrix $A$: $v_p = a_{p,1:n}$.}
           \If {$\norm{v_p} \equiv 0$}
-            \State {Remove the index $p$ from $\bar{Z}_{\rm r}$: $\bar{Z}_{\rm r} =
-\bar{Z}_{\rm r}\backslash\{p\}$.}
+            \State {Remove the index $p$ from $\overline{Z}_{\rm r}$: $\overline{Z}_{\rm r} =
+\overline{Z}_{\rm r}\backslash\{p\}$.}
             \State {Continue to select another non-zero row.}
           \Else
             \State {\Return $p$.}
           \EndIf
         \Else
-          \If {$\abs{\bar{Z}_{\rm r}} \equiv 1$}
+          \If {$\abs{\overline{Z}_{\rm r}} \equiv 1$}
             \State {\emphr{Throw an error that no reference row can be selected!}}
 \Comment {Since there is only the $r$-th row left.}
           \Else
@@ -6681,20 +6681,20 @@ $k$ does not increase.}
 \begin{breakablealgorithm}
   \caption{Reference column selection in ACA+ proposed in \citep{GrasedyckAdaptive2005}}
   \begin{algorithmic}[1]
-    \Function{select\_ref\_col}{$A$, $\bar{Z}_{\rm c}$, $c$}
-      \While {$\bar{Z}_{\rm c} \neq \Phi$}
-        \State {Randomly select an index $p$ from $\bar{Z}_{\rm c}$.}
+    \Function{select\_ref\_col}{$A$, $\overline{Z}_{\rm c}$, $c$}
+      \While {$\overline{Z}_{\rm c} \neq \Phi$}
+        \State {Randomly select an index $p$ from $\overline{Z}_{\rm c}$.}
         \If {$p \neq c$}
           \State {Compute the $p$-th column of the matrix $A$: $v_p = a_{1:m,p}$.}
           \If {$\norm{v_p} \equiv 0$}
-            \State {Remove the index $p$ from $\bar{Z}_{\rm c}$: $\bar{Z}_{\rm c} =
-\bar{Z}_{\rm c}\backslash\{p\}$.}
+            \State {Remove the index $p$ from $\overline{Z}_{\rm c}$: $\overline{Z}_{\rm c} =
+\overline{Z}_{\rm c}\backslash\{p\}$.}
             \State {Continue to select another non-zero column.}
           \Else
             \State {\Return $p$.}
           \EndIf
         \Else
-          \If {$\abs{\bar{Z}_{\rm c}} \equiv 1$}
+          \If {$\abs{\overline{Z}_{\rm c}} \equiv 1$}
             \State {\emphr{Throw an error that no reference column can be selected!}}
 \Comment {Since there is only the $c$-th column left.}
           \Else
@@ -6710,12 +6710,12 @@ $k$ does not increase.}
 \begin{breakablealgorithm}
   \caption{ACA+ proposed in \citep{GrasedyckAdaptive2005}}
   \begin{algorithmic}[1]
-    \State {Start with $k=1$, $\bar{Z}_{\rm r}=\{1:m\}$, $\bar{Z}_{\rm c}=\{1:n\}$,
+    \State {Start with $k=1$, $\overline{Z}_{\rm r}=\{1:m\}$, $\overline{Z}_{\rm c}=\{1:n\}$,
 $S=0$.}
-    \State {Randomly select a reference row index $r$: $r=select\_ref\_row(A, \bar{Z}_{\rm
+    \State {Randomly select a reference row index $r$: $r=select\_ref\_row(A, \overline{Z}_{\rm
 r}, -1)$.} \Comment{Initially, the current reference row index is $-1$.}
     \State {Randomly select a reference column index $c$: $c=select\_ref\_col(A,
-\bar{Z}_{\rm c}, -1)$.} \Comment{Initially, the current reference column index is $-1$.}
+\overline{Z}_{\rm c}, -1)$.} \Comment{Initially, the current reference column index is $-1$.}
     \State {Compute the $r$-th row of $A$ and store it as a column vector: $v_{\rm r} =
 a_{r, 1:n}^T$.} \Comment{In each ACA iteration, $v_{\rm r}$ will be updated.}
     \State {Compute the $c$-th column of $A$: $u_{\rm c} = a_{1:m,c}$.} \Comment{In each
@@ -6789,14 +6789,14 @@ $R_{k-1}$: $v_k = (\widetilde{v}_k)_{j_k}^{-1}\widetilde{v}_k$}
 cross appended to the approximant $S$, so that the approximant matrix gradually approaches
 to the original matrix. Here $v_k$ is the selected row vector but stored as a column
 vector, hence there is a transposition here.}
-      \State {Remove the selected row index from the set of remaining row indices: $\bar{Z}_{\rm
-r}=\bar{Z}_{\rm r}\backslash\{i_k\}$}
+      \State {Remove the selected row index from the set of remaining row indices: $\overline{Z}_{\rm
+r}=\overline{Z}_{\rm r}\backslash\{i_k\}$}
       \State {Remove the selected column index from the set of remaining column indices:
-$\bar{Z}_{\rm c}=\bar{Z}_{\rm c}\backslash\{j_k\}$}
+$\overline{Z}_{\rm c}=\overline{Z}_{\rm c}\backslash\{j_k\}$}
 
       \If {$i_k \equiv r$} \Comment {If the current selected row clashes with the
 reference row, reselect a reference.}
-        \State {$r=select\_ref\_row(A, \bar{Z}_{\rm r}, r)$.}
+        \State {$r=select\_ref\_row(A, \overline{Z}_{\rm r}, r)$.}
         \State {Compute the $r$-th row of $A$ and store it as a column vector: $v_{\rm r}
 = a_{r, 1:n}^T$.}
         \State{\bluecomment{Transform the $r$-th row of $A$ into the $r$-th row of $R_k$
@@ -6812,7 +6812,7 @@ so that the $r$-th row of $R_k$ is obtained.}}
 
       \If {$j_k \equiv c$} \Comment {If the current selected column clashes with the
 reference column, reselect a reference.}
-        \State {$c=select\_ref\_col(A, \bar{Z}_{\rm c}, c)$.}
+        \State {$c=select\_ref\_col(A, \overline{Z}_{\rm c}, c)$.}
         \State {Compute the $c$-th column of $A$: $u_{\rm c} = a_{1:m,c}$.}
         \State{\bluecomment{Transform the $c$-th column of $A$ into the $c$-th column of
 $R_k$ when $k\geq1$, i.e. accumulate the influence of previous steps into the $c$-th
@@ -6832,7 +6832,7 @@ u_k(v_k)_c$.}
       \Else
         \State{$k=k+1$}
       \EndIf
-    \Until{$\bar{Z}_{\rm r} \equiv \Phi$} \Comment{i.e. All rows of $A$ have been tried for selection.}
+    \Until{$\overline{Z}_{\rm r} \equiv \Phi$} \Comment{i.e. All rows of $A$ have been tried for selection.}
   \end{algorithmic}
 \end{breakablealgorithm}
 

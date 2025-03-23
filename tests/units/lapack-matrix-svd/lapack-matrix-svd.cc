@@ -22,7 +22,7 @@ using namespace Catch::Matchers;
 using namespace dealii;
 using namespace HierBEM;
 
-TEST_CASE("Verify matrix SVD decomposition for LAPACKFullMatrixExt", "[linalg]")
+TEST_CASE("Verify SVD decomposition for LAPACKFullMatrixExt", "[linalg]")
 {
   INFO("*** test start");
   HBEMJuliaWrapper &inst = HBEMJuliaWrapper::get_instance();
@@ -48,7 +48,7 @@ TEST_CASE("Verify matrix SVD decomposition for LAPACKFullMatrixExt", "[linalg]")
   A_original.print_formatted_to_mat(std::cout, "A", 8, false, 16, "0");
 
   LAPACKFullMatrixExt<std::complex<double>> A_complex_original(m, n);
-  LAPACKFullMatrixExt<std::complex<double>> U_complex, VT_comlex;
+  LAPACKFullMatrixExt<std::complex<double>> U_complex, VT_complex;
   std::vector<double>                       Sigma_r_complex;
 
   for (unsigned int i = 0; i < m; i++)
@@ -79,11 +79,11 @@ TEST_CASE("Verify matrix SVD decomposition for LAPACKFullMatrixExt", "[linalg]")
     LAPACKFullMatrixExt<std::complex<double>> A_complex(A_complex_original);
 
     std::cout << "Original complex valued SVD without rank truncation\n";
-    A_complex.svd(U_complex, Sigma_r_complex, VT_comlex);
+    A_complex.svd(U_complex, Sigma_r_complex, VT_complex);
 
     U_complex.print_formatted_to_mat(
       std::cout, "U_complex1", 8, false, 25, "0");
-    VT_comlex.print_formatted_to_mat(
+    VT_complex.print_formatted_to_mat(
       std::cout, "VT_complex1", 8, false, 25, "0");
     print_vector_to_mat(std::cout, "Sigma_r_complex1", Sigma_r_complex);
 
@@ -92,7 +92,7 @@ TEST_CASE("Verify matrix SVD decomposition for LAPACKFullMatrixExt", "[linalg]")
     // corresponding to singular values. Therefore, we check the
     // self-consistency, i.e. A == U * Sigma_r * VT.
     check_svd_self_consistency(
-      A_complex_original, U_complex, VT_comlex, Sigma_r_complex, 1e-15, 1e-15);
+      A_complex_original, U_complex, VT_complex, Sigma_r_complex, 1e-15, 1e-15);
 
     // Compare the singular values with Julia results.
     compare_with_jl_array(Sigma_r_complex, "Sigma_r_complex", 1e-15, 1e-15);
