@@ -4329,9 +4329,9 @@ LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
   std::vector<typename numbers::NumberTraits<Number>::real_type> Sigma_r;
 
   /**
-   * Perform RSVD for the matrix and return U and VT into A and B
+   * Perform RSVD for the matrix and return U and V^H into A and B
    * respectively. N.B. After running this function, B actually holds the
-   * transposition of itself at the moment.
+   * transpose or Hermite transpose of itself at the moment.
    */
   const size_type effective_rank = this->reduced_svd(A, Sigma_r, B, k);
 
@@ -4340,7 +4340,7 @@ LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
       if (is_left_associative)
         {
           /**
-           * Let A = A*Sigma_r and B = B^T.
+           * Let A = A*Sigma_r and B = B^H.
            */
           A.scale_columns(Sigma_r);
           B.transpose();
@@ -4348,7 +4348,7 @@ LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
       else
         {
           /**
-           * Let A = A and B = (Sigma_r * B)^T.
+           * Let A = A and B = (Sigma_r * B)^H.
            */
           B.scale_rows(Sigma_r);
           B.transpose();
@@ -4371,9 +4371,9 @@ LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
   std::vector<typename numbers::NumberTraits<Number>::real_type> Sigma_r;
 
   /**
-   * Perform RSVD for the matrix and return U and VT into A and B
+   * Perform RSVD for the matrix and return U and V^H into A and B
    * respectively. N.B. After running this function, B actually holds the
-   * transposition of itself at the moment.
+   * transpose or Hermite transpose of itself at the moment.
    */
   const size_type effective_rank = this->reduced_svd(A, Sigma_r, B, C, D, k);
 
@@ -4382,7 +4382,7 @@ LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
       if (is_left_associative)
         {
           /**
-           * Let A = A*Sigma_r and B = B^T.
+           * Let A = A*Sigma_r and B = B^H.
            */
           A.scale_columns(Sigma_r);
           B.transpose();
@@ -4390,7 +4390,7 @@ LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
       else
         {
           /**
-           * Let A = A and B = (Sigma_r * B)^T.
+           * Let A = A and B = (Sigma_r * B)^H.
            */
           B.scale_rows(Sigma_r);
           B.transpose();
