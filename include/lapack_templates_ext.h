@@ -91,6 +91,34 @@ extern "C"
                                      const dealii::types::blas_int *incy);
 
   /**
+   * Perform matrix-vector multiplication \f$y:=\alpha A x + \beta y\f$, where
+   * the matrix \f$A\f$ is Hermite symmetric.
+   */
+  void DEAL_II_FORTRAN_MANGLE(chemv,
+                              CHEMV)(const char                    *uplo,
+                                     const dealii::types::blas_int *n,
+                                     const std::complex<float>     *alpha,
+                                     const std::complex<float>     *a,
+                                     const dealii::types::blas_int *lda,
+                                     const std::complex<float>     *x,
+                                     const dealii::types::blas_int *incx,
+                                     const std::complex<float>     *beta,
+                                     std::complex<float>           *y,
+                                     const dealii::types::blas_int *incy);
+
+  void DEAL_II_FORTRAN_MANGLE(zhemv,
+                              ZHEMV)(const char                    *uplo,
+                                     const dealii::types::blas_int *n,
+                                     const std::complex<double>    *alpha,
+                                     const std::complex<double>    *a,
+                                     const dealii::types::blas_int *lda,
+                                     const std::complex<double>    *x,
+                                     const dealii::types::blas_int *incx,
+                                     const std::complex<double>    *beta,
+                                     std::complex<double>          *y,
+                                     const dealii::types::blas_int *incy);
+
+  /**
    * Solve a triangular system.
    *
    * \ingroup lapack
@@ -324,6 +352,68 @@ symv(const char                    *uplo,
   (void)y;
   (void)incy;
   Assert(false, LAPACKSupport::ExcMissing("zsymv"));
+#endif
+}
+
+
+inline void
+hemv(const char                    *uplo,
+     const dealii::types::blas_int *n,
+     const std::complex<float>     *alpha,
+     const std::complex<float>     *a,
+     const dealii::types::blas_int *lda,
+     const std::complex<float>     *x,
+     const dealii::types::blas_int *incx,
+     const std::complex<float>     *beta,
+     std::complex<float>           *y,
+     const dealii::types::blas_int *incy)
+{
+#ifdef DEAL_II_WITH_LAPACK
+  DEAL_II_FORTRAN_MANGLE(chemv, CHEMV)
+  (uplo, n, alpha, a, lda, x, incx, beta, y, incy);
+#else
+  (void)uplo;
+  (void)n;
+  (void)alpha;
+  (void)a;
+  (void)lda;
+  (void)x;
+  (void)incx;
+  (void)beta;
+  (void)y;
+  (void)incy;
+  Assert(false, LAPACKSupport::ExcMissing("chemv"));
+#endif
+}
+
+
+inline void
+hemv(const char                    *uplo,
+     const dealii::types::blas_int *n,
+     const std::complex<double>    *alpha,
+     const std::complex<double>    *a,
+     const dealii::types::blas_int *lda,
+     const std::complex<double>    *x,
+     const dealii::types::blas_int *incx,
+     const std::complex<double>    *beta,
+     std::complex<double>          *y,
+     const dealii::types::blas_int *incy)
+{
+#ifdef DEAL_II_WITH_LAPACK
+  DEAL_II_FORTRAN_MANGLE(zhemv, ZHEMV)
+  (uplo, n, alpha, a, lda, x, incx, beta, y, incy);
+#else
+  (void)uplo;
+  (void)n;
+  (void)alpha;
+  (void)a;
+  (void)lda;
+  (void)x;
+  (void)incx;
+  (void)beta;
+  (void)y;
+  (void)incy;
+  Assert(false, LAPACKSupport::ExcMissing("zhemv"));
 #endif
 }
 

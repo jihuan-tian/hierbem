@@ -170,7 +170,7 @@ public:
    * @param VT
    */
   static size_type
-  reduced_svd_on_AxBT(
+  reduced_svd_on_AxBH(
     LAPACKFullMatrixExt<Number>                                    &A,
     LAPACKFullMatrixExt<Number>                                    &B,
     LAPACKFullMatrixExt<Number>                                    &U,
@@ -197,7 +197,7 @@ public:
    * @param truncation_rank
    */
   static size_type
-  reduced_svd_on_AxBT(
+  reduced_svd_on_AxBH(
     LAPACKFullMatrixExt<Number>                                    &A,
     LAPACKFullMatrixExt<Number>                                    &B,
     LAPACKFullMatrixExt<Number>                                    &U,
@@ -229,7 +229,7 @@ public:
    * @param truncation_rank
    */
   static size_type
-  reduced_svd_on_AxBT(
+  reduced_svd_on_AxBH(
     LAPACKFullMatrixExt<Number>                                    &A,
     LAPACKFullMatrixExt<Number>                                    &B,
     LAPACKFullMatrixExt<Number>                                    &U,
@@ -371,6 +371,18 @@ public:
    */
   LAPACKFullMatrixExt<Number> &
   operator=(const Number d);
+
+  /**
+   * Get the lower triangular part of the matrix, including the diagonal.
+   */
+  void
+  lower_triangular(LAPACKFullMatrixExt<Number> &tril);
+
+  /**
+   * Get the upper triangular part of the matrix, including the diagonal.
+   */
+  void
+  upper_triangular(LAPACKFullMatrixExt<Number> &triu);
 
   /**
    * Set a matrix column as zeros.
@@ -1022,14 +1034,7 @@ public:
         const bool            adding = false) const;
 
   /**
-   * Transposed matrix-vector multiplication which also handles the case when
-   * the matrix is symmetric.
-   *
-   * \mynote{1. When the matrix is symmetric, this function simply calls
-   * @p LAPACKFullMatrixExt::vmult, because there is no difference between
-   * \f$Av\f$ and \f$A^T v\f$.
-   * 2. When the matrix is general, it calls the member function in the member
-   * class @p LAPACKFullMatrix::Tvmult.}
+   * Transposed matrix-vector multiplication.
    *
    * @param w
    * @param v
@@ -1037,6 +1042,18 @@ public:
    */
   void
   Tvmult(Vector<Number>       &w,
+         const Vector<Number> &v,
+         const bool            adding = false) const;
+
+  /**
+   * Hermite transposed matrix-vector multiplication.
+   *
+   * @param w
+   * @param v
+   * @param adding
+   */
+  void
+  Hvmult(Vector<Number>       &w,
          const Vector<Number> &v,
          const bool            adding = false) const;
 
@@ -1534,7 +1551,7 @@ LAPACKFullMatrixExt<Number>::Reshape(const size_type              rows,
 
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
-LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
+LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBH(
   LAPACKFullMatrixExt<Number>                                    &A,
   LAPACKFullMatrixExt<Number>                                    &B,
   LAPACKFullMatrixExt<Number>                                    &U,
@@ -1769,7 +1786,7 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
 
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
-LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
+LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBH(
   LAPACKFullMatrixExt<Number>                                    &A,
   LAPACKFullMatrixExt<Number>                                    &B,
   LAPACKFullMatrixExt<Number>                                    &U,
@@ -2012,7 +2029,7 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
 
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
-LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
+LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBH(
   LAPACKFullMatrixExt<Number>                                    &A,
   LAPACKFullMatrixExt<Number>                                    &B,
   LAPACKFullMatrixExt<Number>                                    &U,
@@ -2590,6 +2607,34 @@ LAPACKFullMatrixExt<Number>::operator=(const Number d)
   state = LAPACKSupport::matrix;
 
   return (*this);
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::lower_triangular(LAPACKFullMatrixExt<Number> &tril)
+{
+  tril.reinit(this->m(), this->n());
+
+  for (size_type j = 0; j < this->n(); j++)
+    for (size_type i = j; i < this->m(); i++)
+      tril(i, j) = (*this)(i, j);
+
+  tril.property = LAPACKSupport::Property::lower_triangular;
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::upper_triangular(LAPACKFullMatrixExt<Number> &triu)
+{
+  triu.reinit(this->m(), this->n());
+
+  for (size_type j = 0; j < this->n(); j++)
+    for (size_type i = 0; i <= j; i++)
+      triu(i, j) = (*this)(i, j);
+
+  triu.property = LAPACKSupport::Property::upper_triangular;
 }
 
 
@@ -3530,7 +3575,7 @@ void
 LAPACKFullMatrixExt<Number>::compute_lu_factorization()
 {
   Assert(state == matrix, ExcState(state));
-  state = LAPACKSupport::unusable;
+  state = LAPACKSupport::State::unusable;
 
   const types::blas_int mm     = this->m();
   const types::blas_int nn     = this->n();
@@ -3542,7 +3587,7 @@ LAPACKFullMatrixExt<Number>::compute_lu_factorization()
   Assert(info >= 0, ExcInternalError());
 
   // if info >= 0, the factorization has been completed
-  state = LAPACKSupport::lu;
+  state = LAPACKSupport::State::lu;
 
   AssertThrow(info == 0, LACExceptions::ExcSingular());
 }
@@ -3553,8 +3598,8 @@ void
 LAPACKFullMatrixExt<Number>::compute_cholesky_factorization()
 {
   Assert(state == matrix, ExcState(state));
-  Assert(property == LAPACKSupport::symmetric, ExcProperty(property));
-  state = LAPACKSupport::unusable;
+  Assert(property == LAPACKSupport::Property::symmetric, ExcProperty(property));
+  state = LAPACKSupport::State::unusable;
 
   /**
    * Call the member function in the parent class so that the matrix property
@@ -3562,8 +3607,8 @@ LAPACKFullMatrixExt<Number>::compute_cholesky_factorization()
    */
   LAPACKFullMatrix<Number>::compute_cholesky_factorization();
 
-  state    = LAPACKSupport::cholesky;
-  property = LAPACKSupport::lower_triangular;
+  state    = LAPACKSupport::State::cholesky;
+  property = LAPACKSupport::Property::lower_triangular;
 }
 
 
@@ -4421,10 +4466,10 @@ LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number>       &C,
        * Perform addition for matrix elements in the diagonal part and in the
        * lower triangular part only.
        */
-      Assert(C.get_property() == LAPACKSupport::symmetric,
+      Assert(C.get_property() == LAPACKSupport::Property::symmetric,
              ExcMessage(std::string("The result matrix should be ") +
                         std::string(LAPACKSupport::property_name(
-                          LAPACKSupport::symmetric))));
+                          LAPACKSupport::Property::symmetric))));
 
       for (size_type i = 0; i < nrows; i++)
         {
@@ -4469,10 +4514,10 @@ LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number>       &C,
        * Perform addition for matrix elements in the diagonal part and in the
        * lower triangular part only.
        */
-      Assert(C.get_property() == LAPACKSupport::symmetric,
+      Assert(C.get_property() == LAPACKSupport::Property::symmetric,
              ExcMessage(std::string("The result matrix should be ") +
                         std::string(LAPACKSupport::property_name(
-                          LAPACKSupport::symmetric))));
+                          LAPACKSupport::Property::symmetric))));
 
       for (size_type i = 0; i < nrows; i++)
         {
@@ -4512,8 +4557,9 @@ LAPACKFullMatrixExt<Number>::add(const LAPACKFullMatrixExt<Number> &B,
        * Perform addition for matrix elements in the diagonal part and in the
        * lower triangular part only.
        */
-      Assert(this->get_property() == LAPACKSupport::symmetric ||
-               this->get_property() == LAPACKSupport::lower_triangular,
+      Assert(this->get_property() == LAPACKSupport::Property::symmetric ||
+               this->get_property() ==
+                 LAPACKSupport::Property::lower_triangular,
              ExcInvalidLAPACKFullMatrixProperty(this->get_property()));
 
       for (size_type i = 0; i < nrows; i++)
@@ -4556,8 +4602,9 @@ LAPACKFullMatrixExt<Number>::add(const Number2                      b,
        * Perform addition for matrix elements in the diagonal part and in the
        * lower triangular part only.
        */
-      Assert(this->get_property() == LAPACKSupport::symmetric ||
-               this->get_property() == LAPACKSupport::lower_triangular,
+      Assert(this->get_property() == LAPACKSupport::Property::symmetric ||
+               this->get_property() ==
+                 LAPACKSupport::Property::lower_triangular,
              ExcInvalidLAPACKFullMatrixProperty(this->get_property()));
 
       for (size_type i = 0; i < nrows; i++)
@@ -4636,9 +4683,30 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number>       &w,
                                    const Vector<Number> &v,
                                    const bool            adding) const
 {
-  switch (get_property())
+  switch (this->property)
     {
-        case LAPACKSupport::symmetric: {
+        case LAPACKSupport::Property::hermite_symmetric: {
+          Assert(numbers::NumberTraits<Number>::is_complex,
+                 ExcMessage("Hermite symmetry requires complex valued matrix"));
+
+          if constexpr (numbers::NumberTraits<Number>::is_complex)
+            {
+              AssertDimension(this->m(), this->n());
+
+              LAPACKHelpers::hemv_helper(LAPACKSupport::L,
+                                         Number(1.0),
+                                         this->m(),
+                                         this->values,
+                                         v.data(),
+                                         Number((adding ? 1.0 : 0.0)),
+                                         w.data());
+            }
+
+          break;
+        }
+        case LAPACKSupport::Property::symmetric: {
+          AssertDimension(this->m(), this->n());
+
           LAPACKHelpers::symv_helper(LAPACKSupport::L,
                                      Number(1.0),
                                      this->m(),
@@ -4649,38 +4717,62 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number>       &w,
 
           break;
         }
-        // In principle, we should have a case for Hermite symmetric matrix
-        // (complex valued), however, deal.ii does not define such a
-        // @p hermite_symmetric matrix property. Luckily, we have not used any
-        // Hermite symmetric matrix up to now in the BEM solver.
-        case LAPACKSupport::general: {
+        case LAPACKSupport::Property::general: {
           /**
-           * Call the normal matrix-vector multiplication member function of
-           * the parent class.
+           * Call the matrix-vector multiplication member function of the parent
+           * class.
            */
           this->LAPACKFullMatrix<Number>::vmult(w, v, adding);
 
           break;
         }
         case LAPACKSupport::Property::lower_triangular: {
-          w = v;
-          LAPACKHelpers::trmv_helper(LAPACKSupport::L,
-                                     LAPACKSupport::N,
-                                     LAPACKSupport::N,
-                                     this->m(),
-                                     this->values,
-                                     w.data());
+          if (adding)
+            {
+              Vector<Number> w_tmp(v);
+              LAPACKHelpers::trmv_helper(LAPACKSupport::L,
+                                         LAPACKSupport::N,
+                                         LAPACKSupport::N,
+                                         this->m(),
+                                         this->values,
+                                         w_tmp.data());
+              w += w_tmp;
+            }
+          else
+            {
+              w = v;
+              LAPACKHelpers::trmv_helper(LAPACKSupport::L,
+                                         LAPACKSupport::N,
+                                         LAPACKSupport::N,
+                                         this->m(),
+                                         this->values,
+                                         w.data());
+            }
 
           break;
         }
         case LAPACKSupport::Property::upper_triangular: {
-          w = v;
-          LAPACKHelpers::trmv_helper(LAPACKSupport::U,
-                                     LAPACKSupport::N,
-                                     LAPACKSupport::N,
-                                     this->m(),
-                                     this->values,
-                                     w.data());
+          if (adding)
+            {
+              Vector<Number> w_tmp(v);
+              LAPACKHelpers::trmv_helper(LAPACKSupport::U,
+                                         LAPACKSupport::N,
+                                         LAPACKSupport::N,
+                                         this->m(),
+                                         this->values,
+                                         w_tmp.data());
+              w += w_tmp;
+            }
+          else
+            {
+              w = v;
+              LAPACKHelpers::trmv_helper(LAPACKSupport::U,
+                                         LAPACKSupport::N,
+                                         LAPACKSupport::N,
+                                         this->m(),
+                                         this->values,
+                                         w.data());
+            }
 
           break;
         }
@@ -4699,41 +4791,100 @@ LAPACKFullMatrixExt<Number>::Tvmult(Vector<Number>       &w,
                                     const Vector<Number> &v,
                                     const bool            adding) const
 {
-  switch (get_property())
+  switch (this->property)
     {
-        case LAPACKSupport::symmetric: {
-          this->vmult(w, v, adding);
+        case LAPACKSupport::Property::hermite_symmetric: {
+          Assert(numbers::NumberTraits<Number>::is_complex,
+                 ExcMessage("Hermite symmetry requires complex valued matrix"));
+
+          if constexpr (numbers::NumberTraits<Number>::is_complex)
+            {
+              AssertDimension(this->m(), this->n());
+
+              // Make a copy of the current matrix, apply complex conjugation to
+              // the diagonal and lower triangular part, then multiply it with
+              // the vector.
+              LAPACKFullMatrixExt<Number> M(*this);
+              for (size_type j = 0; j < M.n(); j++)
+                for (size_type i = j; i < M.m(); i++)
+                  M(i, j) = std::conj(M(i, j));
+
+              LAPACKHelpers::hemv_helper(LAPACKSupport::L,
+                                         Number(1.0),
+                                         M.m(),
+                                         M.values,
+                                         v.data(),
+                                         Number((adding ? 1.0 : 0.0)),
+                                         w.data());
+            }
 
           break;
         }
-        // In principle, we should have a case for Hermite symmetric matrix
-        // (complex valued), however, deal.ii does not define such a
-        // @p hermite_symmetric matrix property. Luckily, we have not used any
-        // Hermite symmetric matrix up to now in the BEM solver.
-        case LAPACKSupport::general: {
+        case LAPACKSupport::Property::symmetric: {
+          AssertDimension(this->m(), this->n());
+
+          LAPACKHelpers::symv_helper(LAPACKSupport::L,
+                                     Number(1.0),
+                                     this->m(),
+                                     this->values,
+                                     v.data(),
+                                     Number((adding ? 1.0 : 0.0)),
+                                     w.data());
+
+          break;
+        }
+        case LAPACKSupport::Property::general: {
           this->LAPACKFullMatrix<Number>::Tvmult(w, v, adding);
 
           break;
         }
         case LAPACKSupport::Property::lower_triangular: {
-          w = v;
-          LAPACKHelpers::trmv_helper(LAPACKSupport::L,
-                                     LAPACKSupport::T,
-                                     LAPACKSupport::N,
-                                     this->m(),
-                                     this->values,
-                                     w.data());
+          if (adding)
+            {
+              Vector<Number> w_tmp(v);
+              LAPACKHelpers::trmv_helper(LAPACKSupport::L,
+                                         LAPACKSupport::T,
+                                         LAPACKSupport::N,
+                                         this->m(),
+                                         this->values,
+                                         w_tmp.data());
+              w += w_tmp;
+            }
+          else
+            {
+              w = v;
+              LAPACKHelpers::trmv_helper(LAPACKSupport::L,
+                                         LAPACKSupport::T,
+                                         LAPACKSupport::N,
+                                         this->m(),
+                                         this->values,
+                                         w.data());
+            }
 
           break;
         }
         case LAPACKSupport::Property::upper_triangular: {
-          w = v;
-          LAPACKHelpers::trmv_helper(LAPACKSupport::U,
-                                     LAPACKSupport::T,
-                                     LAPACKSupport::N,
-                                     this->m(),
-                                     this->values,
-                                     w.data());
+          if (adding)
+            {
+              Vector<Number> w_tmp(v);
+              LAPACKHelpers::trmv_helper(LAPACKSupport::U,
+                                         LAPACKSupport::T,
+                                         LAPACKSupport::N,
+                                         this->m(),
+                                         this->values,
+                                         w_tmp.data());
+              w += w_tmp;
+            }
+          else
+            {
+              w = v;
+              LAPACKHelpers::trmv_helper(LAPACKSupport::U,
+                                         LAPACKSupport::T,
+                                         LAPACKSupport::N,
+                                         this->m(),
+                                         this->values,
+                                         w.data());
+            }
 
           break;
         }
@@ -4742,6 +4893,120 @@ LAPACKFullMatrixExt<Number>::Tvmult(Vector<Number>       &w,
 
           break;
         }
+    }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::Hvmult(Vector<Number>       &w,
+                                    const Vector<Number> &v,
+                                    const bool            adding) const
+{
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
+    {
+      switch (this->property)
+        {
+            case LAPACKSupport::Property::hermite_symmetric: {
+              AssertDimension(this->m(), this->n());
+
+              this->vmult(w, v, adding);
+
+              break;
+            }
+            case LAPACKSupport::Property::symmetric: {
+              AssertDimension(this->m(), this->n());
+
+              // Make a copy of the current matrix, apply complex conjugation to
+              // the diagonal and lower triangular part, then multiply it with
+              // the vector.
+              LAPACKFullMatrixExt<Number> M(*this);
+              for (size_type j = 0; j < M.n(); j++)
+                for (size_type i = j; i < M.m(); i++)
+                  M(i, j) = std::conj(M(i, j));
+
+              LAPACKHelpers::symv_helper(LAPACKSupport::L,
+                                         Number(1.0),
+                                         M.m(),
+                                         M.values,
+                                         v.data(),
+                                         Number((adding ? 1.0 : 0.0)),
+                                         w.data());
+
+              break;
+            }
+            case LAPACKSupport::Property::general: {
+              LAPACKHelpers::gemv_helper(LAPACKSupport::C,
+                                         Number(1.0),
+                                         this->m(),
+                                         this->n(),
+                                         this->values,
+                                         v.data(),
+                                         Number((adding ? 1.0 : 0.0)),
+                                         w.data());
+
+              break;
+            }
+            case LAPACKSupport::Property::lower_triangular: {
+              if (adding)
+                {
+                  Vector<Number> w_tmp(v);
+                  LAPACKHelpers::trmv_helper(LAPACKSupport::L,
+                                             LAPACKSupport::C,
+                                             LAPACKSupport::N,
+                                             this->m(),
+                                             this->values,
+                                             w_tmp.data());
+                  w += w_tmp;
+                }
+              else
+                {
+                  w = v;
+                  LAPACKHelpers::trmv_helper(LAPACKSupport::L,
+                                             LAPACKSupport::C,
+                                             LAPACKSupport::N,
+                                             this->m(),
+                                             this->values,
+                                             w.data());
+                }
+
+              break;
+            }
+            case LAPACKSupport::Property::upper_triangular: {
+              if (adding)
+                {
+                  Vector<Number> w_tmp(v);
+                  LAPACKHelpers::trmv_helper(LAPACKSupport::U,
+                                             LAPACKSupport::C,
+                                             LAPACKSupport::N,
+                                             this->m(),
+                                             this->values,
+                                             w_tmp.data());
+                  w += w_tmp;
+                }
+              else
+                {
+                  w = v;
+                  LAPACKHelpers::trmv_helper(LAPACKSupport::U,
+                                             LAPACKSupport::C,
+                                             LAPACKSupport::N,
+                                             this->m(),
+                                             this->values,
+                                             w.data());
+                }
+
+              break;
+            }
+            default: {
+              Assert(false, ExcNotImplemented());
+
+              break;
+            }
+        }
+    }
+  else
+    {
+      this->Tvmult(w, v, adding);
     }
 }
 
@@ -5962,12 +6227,12 @@ LAPACKFullMatrixExt<Number>::solve(Vector<Number> &v,
   const types::blas_int n_rhs  = 1;
   types::blas_int       info   = 0;
 
-  if (state == State::lu)
+  if (state == LAPACKSupport::State::lu)
     {
       getrs(
         trans, &nn, &n_rhs, values, &nn, ipiv.data(), v.begin(), &nn, &info);
     }
-  else if (state == State::cholesky)
+  else if (state == LAPACKSupport::State::cholesky)
     {
       // At the moment, we do not have Hermite symmetric matrices in the BEM
       // solver, so we make an assertion here.
@@ -5976,11 +6241,12 @@ LAPACKFullMatrixExt<Number>::solve(Vector<Number> &v,
         "Only real valued symmetric matrix is allowed for Cholesky factorization at the moment.");
       potrs(&LAPACKSupport::L, &nn, &n_rhs, values, &nn, v.begin(), &nn, &info);
     }
-  else if (property == Property::upper_triangular ||
-           property == Property::lower_triangular)
+  else if (property == LAPACKSupport::Property::upper_triangular ||
+           property == LAPACKSupport::Property::lower_triangular)
     {
-      const char uplo =
-        (property == upper_triangular ? LAPACKSupport::U : LAPACKSupport::L);
+      const char uplo = (property == LAPACKSupport::Property::upper_triangular ?
+                           LAPACKSupport::U :
+                           LAPACKSupport::L);
 
       const types::blas_int lda = nn;
       const types::blas_int ldb = nn;

@@ -18,9 +18,3 @@ target_link_libraries(
 include(CTest)
 include(Catch)
 catch_discover_tests(${_target})
-
-add_custom_command(
-  TARGET ${_target}
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/process.jl
-          ${CMAKE_CURRENT_BINARY_DIR}/process.jl)

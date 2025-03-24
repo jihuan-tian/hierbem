@@ -41,6 +41,56 @@ using namespace LAPACKSupport;
 namespace LAPACKHelpers
 {
   /**
+   * @brief Multiplication of a general matrix and a vector.
+   *
+   * @tparam T
+   * @param trans
+   * @param alpha
+   * @param n_rows
+   * @param n_cols
+   * @param matrix
+   * @param x
+   * @param beta
+   * @param y
+   * @param incx
+   * @param incy
+   */
+  template <typename T>
+  void
+  gemv_helper(const char              trans,
+              const T                 alpha,
+              const types::blas_int   n_rows,
+              const types::blas_int   n_cols,
+              const AlignedVector<T> &matrix,
+              const T                *x_pointer,
+              const T                 beta,
+              T                      *y_pointer,
+              const types::blas_int   incx = 1,
+              const types::blas_int   incy = 1)
+  {
+    static_assert(
+      std::is_same<T, double>::value || std::is_same<T, float>::value ||
+        std::is_same<T, std::complex<double>>::value ||
+        std::is_same<T, std::complex<float>>::value,
+      "Only implemented for double, float, std::complex<double> and std::complex<float>");
+    Assert(trans == 'N' || trans == 'n' || trans == 'T' || trans == 't' ||
+             trans == 'C' || trans == 'c',
+           ExcInternalError());
+
+    gemv(&trans,
+         &n_rows,
+         &n_cols,
+         &alpha,
+         matrix.data(),
+         &n_rows,
+         x_pointer,
+         &incx,
+         &beta,
+         y_pointer,
+         &incy);
+  }
+
+  /**
    * Multiplication of a symmetric matrix and a vector. Only the triangular part
    * of the symmetric matrix is stored.
    *
@@ -78,6 +128,55 @@ namespace LAPACKHelpers
            ExcInternalError());
 
     symv(&uplo,
+         &n_rows,
+         &alpha,
+         matrix.data(),
+         &n_rows,
+         x_pointer,
+         &incx,
+         &beta,
+         y_pointer,
+         &incy);
+  }
+
+
+  /**
+   * Multiplication of an Hermite symmetric matrix and a vector. Only the
+   * triangular part of the symmetric matrix is stored.
+   *
+   * @param uplo
+   * @param alpha
+   * @param n_rows
+   * @param matrix
+   * @param x_pointer
+   * @param beta
+   * @param y_pointer
+   * @param incx
+   * @param incy
+   */
+  template <typename T>
+  void
+  hemv_helper(const char              uplo,
+              const T                 alpha,
+              const types::blas_int   n_rows,
+              const AlignedVector<T> &matrix,
+              const T                *x_pointer,
+              const T                 beta,
+              T                      *y_pointer,
+              const types::blas_int   incx = 1,
+              const types::blas_int   incy = 1)
+  {
+    static_assert(
+      std::is_same<T, std::complex<double>>::value ||
+        std::is_same<T, std::complex<float>>::value,
+      "Only implemented for std::complex<double> and std::complex<float>");
+    Assert(uplo == 'U' || uplo == 'u' || uplo == 'L' || uplo == 'l',
+           ExcInternalError());
+    // The matrix should be square.
+    Assert(static_cast<size_t>(n_rows * n_rows) == matrix.size(),
+           ExcInternalError());
+
+    hemv(&uplo,
          &n_rows,
          &alpha,
          matrix.data(),
