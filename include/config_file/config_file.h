@@ -28,8 +28,17 @@ using BoundaryDim =
 struct ConfProj
 {
   ProjectName project_name;          // The name of the project
-  std::string input_mesh;            // The input mesh file path
+  std::string mesh_file;             // The input mesh file path
+  std::string cad_file   = "";       // The input CAD file path (optional)
   std::string output_dir = "output"; // The output directory
+};
+
+/**
+ * Configuration for boundary manifold reconstruction
+ */
+struct ConfManifold
+{
+  // TBD
 };
 
 /**

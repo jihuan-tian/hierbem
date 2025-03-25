@@ -1,6 +1,6 @@
 [project]
 project_name = 'test'
-input_mesh = 'grid.msh'
+mesh_file = 'grid.msh'
 # output_dir = 'output'
 
 # [bem]

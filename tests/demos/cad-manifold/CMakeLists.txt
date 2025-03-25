@@ -9,11 +9,12 @@ deal_ii_setup_target(${_target})
 
 # Define SOURCE_DIR macro to be used in the source files
 target_compile_definitions(${_target}
-                           PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+  PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_link_libraries(
-  ${_target} dl # Lazy way: always link with libdl no matter if CUDA is used or
-                # not
+  ${_target}
+  dl # Lazy way: always link with libdl no matter if CUDA is used or not
+  fmt::fmt
   Catch2::Catch2WithMain)
 
 # Discover Catch2 testcases

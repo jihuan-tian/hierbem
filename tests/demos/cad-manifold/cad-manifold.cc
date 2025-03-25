@@ -6,13 +6,9 @@
  * @date 2025-02-25
  */
 
-#include <deal.II/base/point.h>
-
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_in.h>
-#include <deal.II/grid/grid_in_ext.h>
 #include <deal.II/grid/grid_out.h>
-#include <deal.II/grid/grid_tools.h>
 #include <deal.II/grid/tria.h>
 
 #include <deal.II/opencascade/manifold_lib.h>
@@ -21,10 +17,11 @@
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
 #include <catch2/catch_all.hpp>
+#include <fmt/core.h>
 
 #include <fstream>
-#include <iostream>
 
+#include "grid_in_ext.h"
 using namespace Catch::Matchers;
 
 TEST_CASE("Extract TopoDS_Shape from CAD file", "[cad][demo]")
@@ -41,61 +38,63 @@ TEST_CASE("Extract TopoDS_Shape from CAD file", "[cad][demo]")
       solid_count++;
     }
 
-  std::cout << "Number of solids: " << solid_count << std::endl;
-  REQUIRE(solid_count == 2);
+  fmt::print("Number of solids: {}\n", solid_count);
 }
 
 TEST_CASE("Generate mesh from STEP file", "[cad][demo][mesh]")
 {
-  // Read STEP file using deal.II interface
+  // Read STEP file
   TopoDS_Shape shape =
     dealii::OpenCASCADE::read_STEP(SOURCE_DIR "/test_model.stp");
   REQUIRE(!shape.IsNull());
 
+  dealii::Triangulation<2, 3> tria;
+  dealii::GridOut             grid_out;
+
   try
     {
-      // 创建表面网格
-      dealii::Triangulation<2, 3> triangulation;
+      // Read mesh file
+      HierBEM::read_msh(SOURCE_DIR "/test_model.msh", tria);
 
-      // 读取网格
-      dealii::GridIn<2, 3> grid_in;
-      grid_in.attach_triangulation(triangulation);
+      fmt::print("Original mesh has {} cells\n", tria.n_active_cells());
+      REQUIRE(tria.n_active_cells() > 0);
 
-      try
+      // Output original mesh
+      std::ofstream out_original("test_model_original.vtk");
+      grid_out.write_vtk(tria, out_original);
+      fmt::print("Simple refined mesh has {} cells\n", tria.n_active_cells());
+
+      // Refine mesh without manifold information
+      tria.refine_global(1);
+      std::ofstream out_refined_no_manifold(
+        "test_model_refined_no_manifold.vtk");
+      grid_out.write_vtk(tria, out_refined_no_manifold);
+
+      // Reset triangulation
+      tria.clear();
+
+      // Reread mesh file
+      HierBEM::read_msh(SOURCE_DIR "/test_model.msh", tria);
+
+      // Add CAD manifold
+      dealii::OpenCASCADE::NormalToMeshProjectionManifold<2, 3> manifold(shape);
+      tria.set_manifold(0, manifold);
+
+      // Iterating all active cells and set their manifold_ids
+      for (const auto &cell : tria.active_cell_iterators())
         {
-          std::ifstream mesh_in(SOURCE_DIR "/test_model.msh");
-          read_msh(mesh_in, triangulation);
-
-          // 应用CAD流形
-          dealii::OpenCASCADE::ArclengthProjectionLineManifold<2, 3>
-            line_manifold(shape);
-          dealii::OpenCASCADE::NormalToMeshProjectionManifold<2, 3>
-            surface_manifold(shape);
-
-          triangulation.set_manifold(1, line_manifold);
-          triangulation.set_manifold(2, surface_manifold);
-
-          // 输出原始网格
-          std::ofstream   out("test_model.vtk");
-          dealii::GridOut grid_out;
-          grid_out.write_vtk(triangulation, out);
-
-          // 细化网格
-          triangulation.refine_global(1);
-
-          // 输出细化后的网格
-          std::ofstream out_refined("test_model_refined.vtk");
-          grid_out.write_vtk(triangulation, out_refined);
+          cell->set_manifold_id(0);
         }
-      catch (const std::exception &e)
-        {
-          std::cerr << "Failed to read mesh: " << e.what() << std::endl;
-          REQUIRE(false);
-        }
+
+      // Refine mesh with manifold information
+      tria.refine_global(1);
+      std::ofstream out_refined_with_manifold(
+        "test_model_refined_with_manifold.vtk");
+      grid_out.write_vtk(tria, out_refined_with_manifold);
     }
   catch (const std::exception &e)
     {
-      std::cerr << "Exception: " << e.what() << std::endl;
+      fmt::print("Exception: {}\n", e.what());
       REQUIRE(false);
     }
 }

@@ -20,6 +20,7 @@
 #include "config_file/config_file.h"
 #include "cu_related.h"
 #include "debug_tools.h"
+#include "grid_in_ext.h"
 #include "laplace_bem.h"
 
 using namespace dealii;
@@ -29,7 +30,7 @@ class LaplaceWorkbench
 {
 public:
   using SolverType = LaplaceBEM<2, 3>;
-  using TriaType = Triangulation<3>;
+  using TriaType   = Triangulation<3>;
   using GridInType = GridIn<3>;
 
   static constexpr const char *LOG_PREFIX       = "HierBEM";
@@ -120,10 +121,17 @@ public:
   void
   setupMeshAndManifold()
   {
-    // Read mesh file
-    const auto &conf_inst = ConfigFile::instance().getConfig();
+    // Load mesh file
+    const auto   &conf_inst = ConfigFile::instance().getConfig();
     std::ifstream mesh_file(conf_inst.project.mesh_file);
+    read_msh(mesh_file, bem_->get_triangulation());
 
+    // Reconstruct boundary-volume entity relationship if the CAD file is given
+    if (!conf_inst.project.cad_file.empty())
+      {
+        bem_->get_subdomain_topology().generate_topology(
+          conf_inst.project.cad_file, conf_inst.project.mesh_file);
+      }
   }
 
   void
@@ -135,7 +143,7 @@ public:
   void
   runSolverAndOutput()
   {
-    // TBD
+    bem_->run();
   }
 
   void
