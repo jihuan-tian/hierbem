@@ -7,7 +7,6 @@
  */
 
 #include <deal.II/grid/grid_generator.h>
-#include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/grid_out.h>
 #include <deal.II/grid/tria.h>
 
@@ -48,13 +47,33 @@ TEST_CASE("Generate mesh from STEP file", "[cad][demo][mesh]")
     dealii::OpenCASCADE::read_STEP(SOURCE_DIR "/test_model.stp");
   REQUIRE(!shape.IsNull());
 
+  const double tolerance = dealii::OpenCASCADE::get_shape_tolerance(shape) * 5;
+  fmt::print("Tolerance: {}\n", tolerance);
+
+  std::vector<TopoDS_Compound>  compounds;
+  std::vector<TopoDS_CompSolid> compsolids;
+  std::vector<TopoDS_Solid>     solids;
+  std::vector<TopoDS_Shell>     shells;
+  std::vector<TopoDS_Wire>      wires;
+  dealii::OpenCASCADE::extract_compound_shapes(
+    shape, compounds, compsolids, solids, shells, wires);
+
+  fmt::print("Number of wires: {}\n", wires.size());
+  fmt::print("Number of shells: {}\n", shells.size());
+  fmt::print("Number of solids: {}\n", solids.size());
+  fmt::print("Number of compsolids: {}\n", compsolids.size());
+  fmt::print("Number of compounds: {}\n", compounds.size());
+
   dealii::Triangulation<2, 3> tria;
   dealii::GridOut             grid_out;
 
   try
     {
       // Read mesh file
-      HierBEM::read_msh(SOURCE_DIR "/test_model.msh", tria);
+      {
+        std::ifstream msh_file(SOURCE_DIR "/test_model.msh");
+        HierBEM::read_msh(msh_file, tria);
+      }
 
       fmt::print("Original mesh has {} cells\n", tria.n_active_cells());
       REQUIRE(tria.n_active_cells() > 0);
@@ -74,17 +93,21 @@ TEST_CASE("Generate mesh from STEP file", "[cad][demo][mesh]")
       tria.clear();
 
       // Reread mesh file
-      HierBEM::read_msh(SOURCE_DIR "/test_model.msh", tria);
-
-      // Add CAD manifold
-      dealii::OpenCASCADE::NormalToMeshProjectionManifold<2, 3> manifold(shape);
-      tria.set_manifold(0, manifold);
+      {
+        std::ifstream msh_file(SOURCE_DIR "/test_model.msh");
+        HierBEM::read_msh(msh_file, tria);
+      }
 
       // Iterating all active cells and set their manifold_ids
       for (const auto &cell : tria.active_cell_iterators())
         {
-          cell->set_manifold_id(0);
+          cell->set_all_manifold_ids(1);
         }
+
+      // Add CAD manifold
+      dealii::OpenCASCADE::NormalProjectionManifold<2, 3> face_manifold(
+        shape, tolerance);
+      tria.set_manifold(1, face_manifold);
 
       // Refine mesh with manifold information
       tria.refine_global(1);
