@@ -13,6 +13,8 @@
 #include <deal.II/lac/lapack_support.h>
 #include <deal.II/lac/vector.h>
 
+#include <catch2/catch_all.hpp>
+
 #include <cmath>
 #include <complex>
 #include <iostream>

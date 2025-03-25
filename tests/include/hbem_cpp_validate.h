@@ -13,6 +13,9 @@
 
 #include <catch2/catch_all.hpp>
 
+#include <functional>
+#include <string>
+
 #include "config.h"
 #include "lapack_full_matrix_ext.h"
 
@@ -20,6 +23,23 @@ HBEM_NS_OPEN
 
 using namespace Catch::Matchers;
 using namespace dealii;
+
+template <typename Func>
+void
+compare_two_files(const std::string &file1,
+                  const std::string &file2,
+                  const Func        &check_equality)
+{
+  std::vector<std::string> file1_lines, file2_lines;
+  read_file_lines(file1, file1_lines);
+  read_file_lines(file2, file2_lines);
+
+  check_equality(file1_lines.size(), file2_lines.size());
+
+  for (size_t i = 0; i < file1_lines.size(); i++)
+    check_equality(file1_lines[i], file2_lines[i]);
+}
+
 
 template <typename Number>
 void
