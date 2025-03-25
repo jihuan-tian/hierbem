@@ -9,6 +9,7 @@
 #ifndef HIERBEM_INCLUDE_RKMATRIX_H_
 #define HIERBEM_INCLUDE_RKMATRIX_H_
 
+#include <deal.II/base/numbers.h>
 #include <deal.II/base/types.h>
 
 #include <deal.II/lac/full_matrix.h>
@@ -17,6 +18,7 @@
 #include <deal.II/lac/lapack_templates.h>
 
 #include <cmath>
+#include <complex>
 #include <map>
 #include <vector>
 
@@ -830,8 +832,8 @@ public:
   calc_rank_upper_bound();
 
   /**
-   * Calculate matrix-vector multiplication as \f$y = A B^T x\f$ or \f$y =
-   * y + A B^T x\f$.
+   * Calculate matrix-vector multiplication.
+   *
    * @param y
    * @param x
    * @param adding
@@ -842,14 +844,22 @@ public:
         const bool            adding = false) const;
 
   /**
-   * Calculate matrix-vector multiplication as \f$y = B A^T x\f$ or \f$y =
-   * y + B A^T x\f$.
+   * Calculate transposed matrix-vector multiplication.
+   *
    * @param y
    * @param x
    * @param adding
    */
   void
   Tvmult(Vector<Number>       &y,
+         const Vector<Number> &x,
+         const bool            adding = false) const;
+
+  /**
+   * Calculate Hermite transposed matrix-vector multiplication.
+   */
+  void
+  Hvmult(Vector<Number>       &y,
          const Vector<Number> &x,
          const bool            adding = false) const;
 
@@ -1221,8 +1231,16 @@ RkMatrix<Number>::RkMatrix(const size_type              fixed_rank_k,
               formal_rank = 1;
               rank        = 1;
 
-              A(0, 0) = std::sqrt(std::abs(M(0, 0)));
-              B(0, 0) = A(0, 0) * (std::signbit(M(0, 0)) ? -1.0 : 1.0);
+              if constexpr (numbers::NumberTraits<Number>::is_complex)
+                {
+                  A(0, 0) = std::sqrt(M(0, 0));
+                  B(0, 0) = A(0, 0);
+                }
+              else
+                {
+                  A(0, 0) = std::sqrt(std::abs(M(0, 0)));
+                  B(0, 0) = A(0, 0) * (std::signbit(M(0, 0)) ? -1.0 : 1.0);
+                }
             }
         }
       else
@@ -1287,8 +1305,16 @@ RkMatrix<Number>::RkMatrix(const size_type              fixed_rank_k,
               formal_rank = 1;
               rank        = 1;
 
-              A(0, 0) = std::sqrt(std::abs(M(0, 0)));
-              B(0, 0) = A(0, 0) * (std::signbit(M(0, 0)) ? -1.0 : 1.0);
+              if constexpr (numbers::NumberTraits<Number>::is_complex)
+                {
+                  A(0, 0) = std::sqrt(M(0, 0));
+                  B(0, 0) = A(0, 0);
+                }
+              else
+                {
+                  A(0, 0) = std::sqrt(std::abs(M(0, 0)));
+                  B(0, 0) = A(0, 0) * (std::signbit(M(0, 0)) ? -1.0 : 1.0);
+                }
             }
 
           /**
@@ -1350,8 +1376,16 @@ RkMatrix<Number>::RkMatrix(LAPACKFullMatrixExt<Number> &M)
               formal_rank = 1;
               rank        = 1;
 
-              A(0, 0) = std::sqrt(std::abs(M(0, 0)));
-              B(0, 0) = A(0, 0) * (std::signbit(M(0, 0)) ? -1.0 : 1.0);
+              if constexpr (numbers::NumberTraits<Number>::is_complex)
+                {
+                  A(0, 0) = std::sqrt(M(0, 0));
+                  B(0, 0) = A(0, 0);
+                }
+              else
+                {
+                  A(0, 0) = std::sqrt(std::abs(M(0, 0)));
+                  B(0, 0) = A(0, 0) * (std::signbit(M(0, 0)) ? -1.0 : 1.0);
+                }
             }
         }
       else
@@ -1422,8 +1456,16 @@ RkMatrix<Number>::RkMatrix(
               formal_rank = 1;
               rank        = 1;
 
-              A(0, 0) = std::sqrt(std::abs(M_b(0, 0)));
-              B(0, 0) = A(0, 0) * (std::signbit(M_b(0, 0)) ? -1.0 : 1.0);
+              if constexpr (numbers::NumberTraits<Number>::is_complex)
+                {
+                  A(0, 0) = std::sqrt(M_b(0, 0));
+                  B(0, 0) = A(0, 0);
+                }
+              else
+                {
+                  A(0, 0) = std::sqrt(std::abs(M_b(0, 0)));
+                  B(0, 0) = A(0, 0) * (std::signbit(M_b(0, 0)) ? -1.0 : 1.0);
+                }
             }
         }
       else
@@ -1493,8 +1535,16 @@ RkMatrix<Number>::RkMatrix(
               formal_rank = 1;
               rank        = 1;
 
-              A(0, 0) = std::sqrt(std::abs(M_b(0, 0)));
-              B(0, 0) = A(0, 0) * (std::signbit(M_b(0, 0)) ? -1.0 : 1.0);
+              if constexpr (numbers::NumberTraits<Number>::is_complex)
+                {
+                  A(0, 0) = std::sqrt(M_b(0, 0));
+                  B(0, 0) = A(0, 0);
+                }
+              else
+                {
+                  A(0, 0) = std::sqrt(std::abs(M_b(0, 0)));
+                  B(0, 0) = A(0, 0) * (std::signbit(M_b(0, 0)) ? -1.0 : 1.0);
+                }
             }
         }
       else
@@ -1570,8 +1620,16 @@ RkMatrix<Number>::RkMatrix(
               formal_rank = 1;
               rank        = 1;
 
-              A(0, 0) = std::sqrt(std::abs(M_b(0, 0)));
-              B(0, 0) = A(0, 0) * (std::signbit(M_b(0, 0)) ? -1.0 : 1.0);
+              if constexpr (numbers::NumberTraits<Number>::is_complex)
+                {
+                  A(0, 0) = std::sqrt(M_b(0, 0));
+                  B(0, 0) = A(0, 0);
+                }
+              else
+                {
+                  A(0, 0) = std::sqrt(std::abs(M_b(0, 0)));
+                  B(0, 0) = A(0, 0) * (std::signbit(M_b(0, 0)) ? -1.0 : 1.0);
+                }
             }
         }
       else
@@ -1649,8 +1707,16 @@ RkMatrix<Number>::RkMatrix(
               formal_rank = 1;
               rank        = 1;
 
-              A(0, 0) = std::sqrt(std::abs(M_b(0, 0)));
-              B(0, 0) = A(0, 0) * (std::signbit(M_b(0, 0)) ? -1.0 : 1.0);
+              if constexpr (numbers::NumberTraits<Number>::is_complex)
+                {
+                  A(0, 0) = std::sqrt(M_b(0, 0));
+                  B(0, 0) = A(0, 0);
+                }
+              else
+                {
+                  A(0, 0) = std::sqrt(std::abs(M_b(0, 0)));
+                  B(0, 0) = A(0, 0) * (std::signbit(M_b(0, 0)) ? -1.0 : 1.0);
+                }
             }
         }
       else
@@ -2449,7 +2515,7 @@ RkMatrix<Number>::convertToFullMatrix(LAPACKFullMatrixExt<Number> &matrix) const
   if (m != 0 && n != 0 && formal_rank > 0)
     {
       matrix.reinit(m, n);
-      A.mTmult(matrix, B);
+      A.mHmult(matrix, B);
 
       return true;
     }
@@ -2622,14 +2688,14 @@ RkMatrix<Number>::truncate_to_rank(size_type new_rank)
       LAPACKFullMatrixExt<Number>                                    U, VT;
       std::vector<typename numbers::NumberTraits<Number>::real_type> Sigma_r;
 
-      rank = LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
+      rank = LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBH(
         A, B, U, Sigma_r, VT, new_rank);
 
       /**
        * \alert{Since the initial matrix may not have the correct rank, even
        * though its \p rank is larger than zero, its actual \p rank may be less
        * or even zero. Therefore, it is possible that the returned \p rank from
-       * the above execution of \p reduced_svd_on_AxBT may be zero. Therefore,
+       * the above execution of \p reduced_svd_on_AxBH may be zero. Therefore,
        * it needs a special treatment here.}
        */
       if (rank > 0)
@@ -2695,14 +2761,14 @@ RkMatrix<Number>::truncate_to_rank(size_type                    new_rank,
       LAPACKFullMatrixExt<Number>                                    U, VT;
       std::vector<typename numbers::NumberTraits<Number>::real_type> Sigma_r;
 
-      rank = LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
+      rank = LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBH(
         A, B, U, Sigma_r, VT, C, D, new_rank);
 
       /**
        * \alert{Since the initial matrix may not have the correct rank, even
        * though its \p rank is larger than zero, its actual \p rank may be less
        * or even zero. Therefore, it is possible that the returned \p rank from
-       * the above execution of \p reduced_svd_on_AxBT may be zero. Therefore,
+       * the above execution of \p reduced_svd_on_AxBH may be zero. Therefore,
        * it needs a special treatment here.}
        */
       if (rank > 0)
@@ -2802,7 +2868,7 @@ RkMatrix<Number>::vmult(Vector<Number>       &y,
        */
       Vector<Number> z(formal_rank);
 
-      B.Tvmult(z, x);
+      B.Hvmult(z, x);
       A.vmult(y, z, adding);
     }
   else
@@ -2832,12 +2898,23 @@ RkMatrix<Number>::Tvmult(Vector<Number>       &y,
        */
 
       /**
-       * The vector storing \f$B^T x\f$
+       * The vector storing \f$A^T x\f$
        */
       Vector<Number> z(formal_rank);
 
       A.Tvmult(z, x);
-      B.vmult(y, z, adding);
+
+      if constexpr (numbers::NumberTraits<Number>::is_complex)
+        {
+          // Make a copy of B and apply complex conjugation.
+          LAPACKFullMatrixExt<Number> B_tmp;
+          B.conjugate(B_tmp);
+          B_tmp.vmult(y, z, adding);
+        }
+      else
+        {
+          B.vmult(y, z, adding);
+        }
     }
   else
     {
@@ -2848,6 +2925,47 @@ RkMatrix<Number>::Tvmult(Vector<Number>       &y,
            */
           y.reinit(y.size());
         }
+    }
+}
+
+
+template <typename Number>
+void
+RkMatrix<Number>::Hvmult(Vector<Number>       &y,
+                         const Vector<Number> &x,
+                         const bool            adding) const
+{
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
+    {
+      if (rank > 0)
+        {
+          /**
+           * \alert{Only when the rank is larger than zero, the multiplication
+           * will be performed.}
+           */
+
+          /**
+           * The vector storing \f$A^H x\f$
+           */
+          Vector<Number> z(formal_rank);
+
+          A.Hvmult(z, x);
+          B.vmult(y, z, adding);
+        }
+      else
+        {
+          if (!adding)
+            {
+              /**
+               * The result vector \f$y\f$ will be overwritten by zeros.
+               */
+              y.reinit(y.size());
+            }
+        }
+    }
+  else
+    {
+      this->Tvmult(y, x, adding);
     }
 }
 

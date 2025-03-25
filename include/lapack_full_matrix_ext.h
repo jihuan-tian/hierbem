@@ -708,6 +708,18 @@ public:
   scale_columns(const Vector<Number2> &V);
 
   /**
+   * @brief Apply complex conjugation to the current matrix.
+   */
+  void
+  conjugate();
+
+  /**
+   * Generate a matrix which is the complex conjugate of the current matrix.
+   */
+  void
+  conjugate(LAPACKFullMatrixExt<Number> &mat) const;
+
+  /**
    * Perform in-place transpose of the matrix. When in the complex valued case,
    * we perform Hermite transpose, which is consistent with deal.ii
    * @p LAPACKFullMatrix::transpose .
@@ -4036,6 +4048,67 @@ LAPACKFullMatrixExt<Number>::scale_columns(const Vector<Number2> &V)
           (*this)(i, j) *= V(j);
         }
     }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::conjugate()
+{
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
+    {
+      const size_type m = this->m();
+      const size_type n = this->n();
+
+      switch (this->property)
+        {
+            case LAPACKSupport::Property::general: {
+              for (size_type j = 0; j < n; j++)
+                for (size_type i = 0; i < m; i++)
+                  (*this)(i, j) = std::conj((*this)(i, j));
+
+              break;
+            }
+          case LAPACKSupport::Property::lower_triangular:
+            case LAPACKSupport::Property::symmetric: {
+              for (size_type j = 0; j < n; j++)
+                for (size_type i = j; i < m; i++)
+                  (*this)(i, j) = std::conj((*this)(i, j));
+
+              break;
+            }
+            case LAPACKSupport::Property::hermite_symmetric: {
+              for (size_type j = 0; j < n; j++)
+                for (size_type i = (j + 1); i < m; i++)
+                  (*this)(i, j) = std::conj((*this)(i, j));
+
+              break;
+            }
+            case LAPACKSupport::Property::upper_triangular: {
+              for (size_type j = 0; j < n; j++)
+                for (size_type i = 0; i <= j; i++)
+                  (*this)(i, j) = std::conj((*this)(i, j));
+
+              break;
+            }
+            default: {
+              Assert(false, ExcNotImplemented());
+
+              break;
+            }
+        }
+    }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::conjugate(LAPACKFullMatrixExt<Number> &mat) const
+{
+  mat = (*this);
+
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
+    mat.conjugate();
 }
 
 

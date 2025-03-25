@@ -1,17 +1,30 @@
 /**
  * \file rkmatrix-truncate-to-rank.cc
  * \brief Verify the truncation of an RkMatrix to a given rank.
- * \ingroup
+ * \ingroup linalg
+ *
  * \author Jihuan Tian
  * \date 2021-06-24
  */
 
-#include "debug_tools.h"
-#include "rkmatrix.h"
+#include <cmath>
+#include <complex>
+#include <iostream>
+#include <vector>
 
-int
-main()
+#include "debug_tools.h"
+#include "hbem_cpp_validate.h"
+#include "lapack_full_matrix_ext.h"
+
+using namespace Catch::Matchers;
+using namespace dealii;
+using namespace HierBEM;
+
+TEST_CASE("Verify reduced SVD decomposition for LAPACKFullMatrixExt",
+          "[linalg]")
 {
+  INFO("*** test start");
+
   /**
    * Create a full matrix with rank=2, which is not of full rank.
    */
@@ -21,12 +34,6 @@ main()
   LAPACKFullMatrixExt<double>::Reshape(4, 5, values, M);
   M.print_formatted_to_mat(std::cout, "M");
 
-  /**
-   * Convert the full matrix into a rank-3 matrix. Even though rank 3 is
-   * required, because it is larger than the effective rank of the full matrix,
-   * the rank-k matrix will actually have rank 2, both the formal rank and its
-   * actual rank.
-   */
   RkMatrix<double> A(3, M);
   A.print_formatted_to_mat(std::cout, "A");
 

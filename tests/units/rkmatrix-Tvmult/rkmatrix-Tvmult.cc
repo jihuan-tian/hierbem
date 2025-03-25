@@ -1,10 +1,10 @@
 /**
- * \file rkmatrix-vmult.cc
- * \brief Verify the multiplication of a rank-k matrix with a vector.
+ * \file rkmatrix-Tvmult.cc
+ * \brief Verify the multiplication of a transposed rank-k matrix with a vector.
  * \ingroup rkmatrices
  *
  * \author Jihuan Tian
- * \date 2021-10-09
+ * \date 2025-03-25
  */
 
 #include <deal.II/base/exceptions.h>
@@ -28,7 +28,7 @@ using namespace Catch::Matchers;
 using namespace dealii;
 using namespace HierBEM;
 
-TEST_CASE("Verify vmult for RkMatrix", "[linalg]")
+TEST_CASE("Verify Tvmult for RkMatrix", "[linalg]")
 {
   INFO("*** test start");
   HBEMJuliaWrapper &inst = HBEMJuliaWrapper::get_instance();
@@ -84,19 +84,19 @@ TEST_CASE("Verify vmult for RkMatrix", "[linalg]")
   y_complex *= std::complex<double>(1.1, 2.3);
 
   Vector<double> y1(n);
-  A_rk.vmult(y1, x);
+  A_rk.Tvmult(y1, x);
   compare_with_jl_array(y1, "y1", 1e-14, 1e-14);
 
   Vector<double> y2(y);
-  A_rk.vmult(y2, x, true);
+  A_rk.Tvmult(y2, x, true);
   compare_with_jl_array(y2, "y2", 1e-14, 1e-14);
 
   Vector<std::complex<double>> y3(n);
-  A_complex_rk.vmult(y3, x_complex);
+  A_complex_rk.Tvmult(y3, x_complex);
   compare_with_jl_array(y3, "y3", 1e-14, 1e-14);
 
   Vector<std::complex<double>> y4(y_complex);
-  A_complex_rk.vmult(y4, x_complex, true);
+  A_complex_rk.Tvmult(y4, x_complex, true);
   compare_with_jl_array(y4, "y4", 1e-14, 1e-14);
 
   INFO("*** test end");
