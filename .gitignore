@@ -78,7 +78,6 @@ html/
 doc/theory-and-implementation/hierbem.pdf
 
 # Ignore mesh files
-*.msh
 *.geo
 *.opt
 
