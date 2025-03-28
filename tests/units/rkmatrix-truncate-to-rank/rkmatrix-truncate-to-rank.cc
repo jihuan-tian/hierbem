@@ -7,8 +7,6 @@
  * \date 2025-03-25
  */
 
-#include <deal.II/base/logstream.h>
-
 #include <catch2/catch_all.hpp>
 
 #include <cmath>

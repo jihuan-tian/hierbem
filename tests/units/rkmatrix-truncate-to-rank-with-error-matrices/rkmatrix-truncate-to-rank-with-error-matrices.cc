@@ -2,110 +2,99 @@
  * \file rkmatrix-truncate-to-rank-with-error-matrices.cc
  * \brief Verify the truncation of an RkMatrix to a given rank with the error
  * matrix returned.
+ * \ingroup rkmatrices
  *
- * \ingroup testers rkmatrices
  * \author Jihuan Tian
- * \date 2021-11-25
+ * \date 2025-03-27
  */
 
+#include <catch2/catch_all.hpp>
+
+#include <cmath>
+#include <complex>
+#include <fstream>
+#include <iostream>
+#include <vector>
+
 #include "debug_tools.h"
+#include "hbem_cpp_validate.h"
+#include "lapack_full_matrix_ext.h"
 #include "rkmatrix.h"
 
-int
-main()
+using namespace Catch::Matchers;
+using namespace dealii;
+using namespace HierBEM;
+
+TEST_CASE(
+  "Verify truncation of an RkMatrix to a given rank with error matrices",
+  "[linalg]")
 {
-  /**
-   * Create a full matrix with the effective rank being 2, which is not of full
-   * rank.
-   */
-  LAPACKFullMatrixExt<double> M;
-  std::vector<double>         values{1,  2,  3,  4,  5,  6,  7,  8,  9,  10,
-                             11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
-  LAPACKFullMatrixExt<double>::Reshape(4, 5, values, M);
-  M.print_formatted_to_mat(std::cout, "M");
+  INFO("*** test start");
 
-  /**
-   * Convert the full matrix into a rank-3 matrix. Even though rank 3 is
-   * required, because it is larger than the effective rank of the full matrix,
-   * the rank-k matrix will actually have rank 2, both the formal rank and its
-   * actual rank.
-   */
-  LAPACKFullMatrixExt<double> C, D;
-  RkMatrix<double>            A(3, M, C, D);
-  A.print_formatted_to_mat(std::cout, "A", 15, false, 25, "0");
-  if (C.m() > 0 && C.n() > 0)
+  std::ofstream ofs("rkmatrix-truncate-to-rank-with-error-matrices.log");
+
+  const unsigned int n = 6;
+
+  // Both full matrices have rank=2.
+  LAPACKFullMatrixExt<double>               A(n, n);
+  LAPACKFullMatrixExt<std::complex<double>> A_complex(n, n);
+
+  unsigned int counter = 1;
+  for (unsigned int i = 0; i < n; i++)
     {
-      C.print_formatted_to_mat(std::cout, "C", 15, false, 25, "0");
+      for (unsigned int j = 0; j < n; j++)
+        {
+          A(i, j) = (double)counter;
+          counter++;
+        }
     }
 
-  if (D.m() > 0 && D.n() > 0)
+  for (unsigned int i = 0; i < n; i++)
     {
-      D.print_formatted_to_mat(std::cout, "D", 15, false, 25, "0");
+      for (unsigned int j = 0; j < n; j++)
+        {
+          A_complex(i, j) = std::complex<double>(std::sin((double)(i + 1)),
+                                                 std::cos((double)(j + 1)));
+        }
     }
 
-  {
-    /**
-     * Truncate the RkMatrix \p A to rank-3. Because the original rank of \p M
-     * is 2 and the created rank-k matrix \p A has a rank 2, no actual rank
-     * truncation will be performed here.
-     */
-    LAPACKFullMatrixExt<double> C, D;
-    RkMatrix<double>            A_trunc(A);
-    A_trunc.truncate_to_rank(3, C, D);
-    A_trunc.print_formatted_to_mat(
-      std::cout, "A_trunc_to_3", 15, false, 25, "0");
-    if (C.m() > 0 && C.n() > 0)
-      {
-        C.print_formatted_to_mat(std::cout, "C_trunc_to_3", 15, false, 25, "0");
-      }
+  for (unsigned int r = 3; r >= 1; r--)
+    {
+      ofs << "=== Truncation rank=" << r << std::endl;
 
-    if (D.m() > 0 && D.n() > 0)
-      {
-        D.print_formatted_to_mat(std::cout, "D_trunc_to_3", 15, false, 25, "0");
-      }
-  }
+      LAPACKFullMatrixExt<double>               A_copy(A);
+      LAPACKFullMatrixExt<std::complex<double>> A_complex_copy(A_complex);
 
-  {
-    /**
-     * Truncate the RkMatrix \p A to rank-2. Because the original rank of \p M
-     * is 2 and the created rank-k matrix \p A has a rank 2, no actual rank
-     * truncation will be performed here.
-     */
-    LAPACKFullMatrixExt<double> C, D;
-    RkMatrix<double>            A_trunc(A);
-    A_trunc.truncate_to_rank(2, C, D);
-    A_trunc.print_formatted_to_mat(std::cout, "A_trunc_to_2");
-    if (C.m() > 0 && C.n() > 0)
-      {
-        C.print_formatted_to_mat(std::cout, "C_trunc_to_2", 15, false, 25, "0");
-      }
+      ofs << "*** Real valued matrix" << std::endl;
+      LAPACKFullMatrixExt<double> C, D;
+      RkMatrix<double>            A_rk(r, A_copy, C, D);
+      A_rk.print_formatted(ofs, 8, false, 15, "0");
+      if (C.m() > 0 && C.n() > 0)
+        C.print_formatted_to_mat(ofs, "C", 8, false, 25, "0");
+      if (D.m() > 0 && D.n() > 0)
+        D.print_formatted_to_mat(ofs, "D", 8, false, 25, "0");
 
-    if (D.m() > 0 && D.n() > 0)
-      {
-        D.print_formatted_to_mat(std::cout, "D_trunc_to_2", 15, false, 25, "0");
-      }
-  }
+      ofs << "*** Complex valued matrix" << std::endl;
+      LAPACKFullMatrixExt<std::complex<double>> C_complex, D_complex;
+      RkMatrix<std::complex<double>>            A_complex_rk(r,
+                                                  A_complex_copy,
+                                                  C_complex,
+                                                  D_complex);
+      A_complex_rk.print_formatted(ofs, 8, false, 25, "0");
+      if (C_complex.m() > 0 && C_complex.n() > 0)
+        C_complex.print_formatted_to_mat(ofs, "C_complex", 8, false, 25, "0");
+      if (D_complex.m() > 0 && D_complex.n() > 0)
+        D_complex.print_formatted_to_mat(ofs, "D_complex", 8, false, 25, "0");
+    }
 
-  {
-    /**
-     * Truncate the RkMatrix \p A to rank-1. Because the original rank of \p M
-     * is 2 and the created rank-k matrix \p A has a rank 2, rank truncation
-     * will be performed.
-     */
-    LAPACKFullMatrixExt<double> C, D;
-    RkMatrix<double>            A_trunc(A);
-    A_trunc.truncate_to_rank(1, C, D);
-    A_trunc.print_formatted_to_mat(std::cout, "A_trunc_to_1");
-    if (C.m() > 0 && C.n() > 0)
-      {
-        C.print_formatted_to_mat(std::cout, "C_trunc_to_1", 15, false, 25, "0");
-      }
+  ofs.close();
 
-    if (D.m() > 0 && D.n() > 0)
-      {
-        D.print_formatted_to_mat(std::cout, "D_trunc_to_1", 15, false, 25, "0");
-      }
-  }
-
-  return 0;
+  auto check_equality = [](const auto &a, const auto &b) {
+    INFO("Operand 1: " << a);
+    INFO("Operand 2: " << b);
+    REQUIRE(a == b);
+  };
+  compare_two_files(SOURCE_DIR "/reference.output",
+                    "rkmatrix-truncate-to-rank-with-error-matrices.log",
+                    check_equality);
 }

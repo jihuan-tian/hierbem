@@ -32,10 +32,12 @@
 #include <complex>
 #include <type_traits>
 
+#include "config.h"
 #include "lapack_templates_ext.h"
 
-DEAL_II_NAMESPACE_OPEN
+HBEM_NS_OPEN
 
+using namespace dealii;
 using namespace LAPACKSupport;
 
 namespace LAPACKHelpers
@@ -610,6 +612,6 @@ namespace LAPACKHelpers
   }
 } // namespace LAPACKHelpers
 
-DEAL_II_NAMESPACE_CLOSE
+HBEM_NS_CLOSE
 
 #endif // HIERBEM_INCLUDE_LAPACK_HELPERS_H_

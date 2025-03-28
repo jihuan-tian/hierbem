@@ -6,6 +6,7 @@
  * \mynote{In this file, LAPACK raw functions are declared as @p extern "C". C++
  * overloaded functions are defined based on the four data types, float, double,
  * complex<float> and complex<double>.}
+ * \ingroup linalg
  *
  * \date 2021-10-13
  * \author Jihuan Tian
@@ -22,6 +23,8 @@
 #ifdef DEAL_II_HAVE_FP_EXCEPTIONS
 #  include <cfenv>
 #endif
+
+#include "config.h"
 
 using namespace dealii;
 
@@ -200,6 +203,7 @@ extern "C"
                                             const dealii::types::blas_int *ldc);
 }
 
+HBEM_NS_OPEN
 
 template <typename number1,
           typename number2,
@@ -605,5 +609,7 @@ herk(const char                    *uplo,
   Assert(false, LAPACKSupport::ExcMissing("zherk"));
 #endif
 }
+
+HBEM_NS_CLOSE
 
 #endif // HIERBEM_INCLUDE_LAPACK_TEMPLATES_EXT_H_

@@ -17,12 +17,14 @@
 #include <cstring>
 #include <fstream>
 #include <limits>
+#include <mutex>
 #include <regex>
 #include <sstream>
 #include <string>
 #include <type_traits>
 #include <vector>
 
+#include "blas_helpers.h"
 #include "config.h"
 #include "general_exceptions.h"
 #include "generic_functors.h"
@@ -371,6 +373,14 @@ public:
    */
   LAPACKFullMatrixExt<Number> &
   operator=(const Number d);
+
+  template <typename Number2>
+  LAPACKFullMatrixExt<Number> &
+  operator*=(const Number2 factor);
+
+  template <typename Number2>
+  LAPACKFullMatrixExt<Number> &
+  operator/=(const Number2 factor);
 
   /**
    * Get the lower triangular part of the matrix, including the diagonal.
@@ -736,6 +746,18 @@ public:
    */
   void
   transpose(LAPACKFullMatrixExt<Number> &AT) const;
+
+  real_type
+  norm(const char type) const;
+
+  real_type
+  l1_norm() const;
+
+  real_type
+  linfty_norm() const;
+
+  real_type
+  frobenius_norm() const;
 
   /**
    * Fill a rectangular block into the current matrix. This function has the
@@ -1444,6 +1466,8 @@ private:
    * LU-factorization.
    */
   std::vector<types::blas_int> ipiv;
+
+  mutable std::mutex mutex;
 };
 
 
@@ -1452,9 +1476,10 @@ void
 balance_frobenius_norm(LAPACKFullMatrixExt<Number> &A,
                        LAPACKFullMatrixExt<Number> &B)
 {
-  Number norm_A = A.frobenius_norm();
-  Number norm_B = B.frobenius_norm();
-  Number factor = std::sqrt(norm_A / norm_B);
+  typename numbers::NumberTraits<Number>::real_type norm_A = A.frobenius_norm();
+  typename numbers::NumberTraits<Number>::real_type norm_B = B.frobenius_norm();
+  typename numbers::NumberTraits<Number>::real_type factor =
+    std::sqrt(norm_A / norm_B);
 
   if (std::abs(factor) >= std::numeric_limits<double>::epsilon())
     {
@@ -2619,6 +2644,161 @@ LAPACKFullMatrixExt<Number>::operator=(const Number d)
   state = LAPACKSupport::matrix;
 
   return (*this);
+}
+
+
+template <typename Number>
+template <typename Number2>
+LAPACKFullMatrixExt<Number> &
+LAPACKFullMatrixExt<Number>::operator*=(const Number2 factor)
+{
+  AssertIsFinite(factor);
+
+  if constexpr (numbers::NumberTraits<Number2>::is_complex)
+    {
+      static_assert(
+        std::is_same<Number, Number2>::value,
+        "When the scaling factor is complex valued, the matrix data type should be the same");
+
+      BLASHelpers::scal_helper(this->m() * this->n(), factor, this->values);
+    }
+  else
+    {
+      // When the scaling factor is real valued, the matrix data type can be
+      // either real or complex valued.
+      static_assert(
+        std::is_same<real_type, Number2>::value,
+        "The scaling factor's type should be the same as the real type associated with the matrix data");
+
+      char type;
+      switch (this->property)
+        {
+          // N.B. For a symmetric or Hermite symmetrix matrix, we still treat it
+          // as a general matrix, in case that both upper triangular and lower
+          // triangular part contain effect data. If users only store the lower
+          // triangular part of the symmetric or Hermite symmetric matrix, they
+          // can manually set its property to @p lower_triangular, then perform
+          // the scaling, finally set its property back to @p symmetric or
+          // @p hermite_symmetric.
+          case LAPACKSupport::Property::general:
+          case LAPACKSupport::Property::symmetric:
+            case LAPACKSupport::Property::hermite_symmetric: {
+              type = 'G';
+              break;
+            }
+            case LAPACKSupport::Property::lower_triangular: {
+              type = 'L';
+              break;
+            }
+            case LAPACKSupport::Property::upper_triangular: {
+              type = 'U';
+              break;
+            }
+            case LAPACKSupport::Property::hessenberg: {
+              type = 'H';
+              break;
+            }
+            default: {
+              Assert(false, ExcInternalError());
+              break;
+            }
+        }
+
+      const real_type       cfrom  = 1.0;
+      const types::blas_int m      = this->m();
+      const types::blas_int n      = this->n();
+      const types::blas_int lda    = m;
+      types::blas_int       info   = 0;
+      const types::blas_int kl     = 0;
+      Number               *values = this->values.data();
+
+      lascl(&type, &kl, &kl, &cfrom, &factor, &m, &n, values, &lda, &info);
+
+      // Negative return value implies a wrong argument. This should be
+      // internal.
+      Assert(info >= 0, ExcInternalError());
+    }
+
+  return *this;
+}
+
+
+template <typename Number>
+template <typename Number2>
+LAPACKFullMatrixExt<Number> &
+LAPACKFullMatrixExt<Number>::operator/=(const Number2 factor)
+{
+  AssertIsFinite(factor);
+  Assert(factor != Number2(0.), ExcZero());
+
+  if constexpr (numbers::NumberTraits<Number2>::is_complex)
+    {
+      static_assert(
+        std::is_same<Number, Number2>::value,
+        "When the scaling factor is complex valued, the matrix data type should be the same");
+
+      BLASHelpers::scal_helper(this->m() * this->n(),
+                               1.0 / factor,
+                               this->values);
+    }
+  else
+    {
+      // When the scaling factor is real valued, the matrix data type can be
+      // either real or complex valued.
+      static_assert(
+        std::is_same<real_type, Number2>::value,
+        "The scaling factor's type should be the same as the real type associated with the matrix data");
+
+      char type;
+      switch (this->property)
+        {
+          // N.B. For a symmetric or Hermite symmetrix matrix, we still treat it
+          // as a general matrix, in case that both upper triangular and lower
+          // triangular part contain effect data. If users only store the lower
+          // triangular part of the symmetric or Hermite symmetric matrix, they
+          // can manually set its property to @p lower_triangular, then perform
+          // the scaling, finally set its property back to @p symmetric or
+          // @p hermite_symmetric.
+          case LAPACKSupport::Property::general:
+          case LAPACKSupport::Property::symmetric:
+            case LAPACKSupport::Property::hermite_symmetric: {
+              type = 'G';
+              break;
+            }
+            case LAPACKSupport::Property::lower_triangular: {
+              type = 'L';
+              break;
+            }
+            case LAPACKSupport::Property::upper_triangular: {
+              type = 'U';
+              break;
+            }
+            case LAPACKSupport::Property::hessenberg: {
+              type = 'H';
+              break;
+            }
+            default: {
+              Assert(false, ExcInternalError());
+              break;
+            }
+        }
+
+      const real_type       cto    = 1.0;
+      const types::blas_int m      = this->m();
+      const types::blas_int n      = this->n();
+      const types::blas_int lda    = m;
+      types::blas_int       info   = 0;
+      const types::blas_int kl     = 0;
+      Number               *values = this->values.data();
+
+      lascl(&type, &kl, &kl, &factor, &cto, &m, &n, values, &lda, &info);
+
+      // Negative return value implies a wrong argument. This should be
+      // internal.
+      Assert(info >= 0, ExcInternalError());
+    }
+
+  return *this;
 }
 
 
@@ -4156,6 +4336,67 @@ LAPACKFullMatrixExt<Number>::transpose(LAPACKFullMatrixExt<Number> &AT) const
           AT(j, i) = numbers::NumberTraits<Number>::conjugate((*this)(i, j));
         }
     }
+}
+
+
+template <typename Number>
+typename numbers::NumberTraits<Number>::real_type
+LAPACKFullMatrixExt<Number>::norm(const char type) const
+{
+  std::lock_guard<std::mutex> lock(mutex);
+
+  Assert(state == LAPACKSupport::State::matrix ||
+           state == LAPACKSupport::State::inverse_matrix,
+         ExcMessage("norms can be called in matrix state only."));
+
+  const types::blas_int N      = this->n();
+  const types::blas_int M      = this->m();
+  const Number *const   values = this->values.data();
+
+  std::vector<real_type> rwork;
+  if (property == LAPACKSupport::Property::symmetric)
+    {
+      const types::blas_int lda = std::max<types::blas_int>(1, N);
+      const types::blas_int lwork =
+        (type == 'I' || type == 'O') ? std::max<types::blas_int>(1, N) : 0;
+      rwork.resize(lwork);
+      return lansy(&type, &LAPACKSupport::L, &N, values, &lda, rwork.data());
+    }
+  else
+    {
+      const types::blas_int lda = std::max<types::blas_int>(1, M);
+      const types::blas_int lwork =
+        (type == 'I') ? std::max<types::blas_int>(1, M) : 0;
+      rwork.resize(lwork);
+      return lange(&type, &M, &N, values, &lda, rwork.data());
+    }
+}
+
+
+template <typename Number>
+typename numbers::NumberTraits<Number>::real_type
+LAPACKFullMatrixExt<Number>::l1_norm() const
+{
+  const char type('O');
+  return norm(type);
+}
+
+
+template <typename Number>
+typename numbers::NumberTraits<Number>::real_type
+LAPACKFullMatrixExt<Number>::linfty_norm() const
+{
+  const char type('I');
+  return norm(type);
+}
+
+
+template <typename Number>
+typename numbers::NumberTraits<Number>::real_type
+LAPACKFullMatrixExt<Number>::frobenius_norm() const
+{
+  const char type('F');
+  return norm(type);
 }
 
 

@@ -1,8 +1,8 @@
 # Target should contains 'test' substring in any cases in order to be found by
 # Visual Studio Code's TestMate extension
-set(_target test-lapack-matrix-scale-matrix)
+set(_target test-lapack-matrix-norm)
 
-add_executable(${_target} lapack-matrix-scale-matrix.cc)
+add_executable(${_target} lapack-matrix-norm.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})

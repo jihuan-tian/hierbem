@@ -56,7 +56,11 @@ TEST_CASE("Verify Hvmult for LAPACKFullMatrixExt", "[linalg]")
   Assert(A_symm.get_property() == LAPACKSupport::Property::symmetric,
          ExcInternalError());
   A.lower_triangular(A_tril);
+  Assert(A_tril.get_property() == LAPACKSupport::Property::lower_triangular,
+         ExcInternalError());
   A.upper_triangular(A_triu);
+  Assert(A_triu.get_property() == LAPACKSupport::Property::upper_triangular,
+         ExcInternalError());
 
   LAPACKFullMatrixExt<std::complex<double>> A_complex(n, n);
   LAPACKFullMatrixExt<std::complex<double>> A_complex_symm(n, n);
@@ -81,7 +85,13 @@ TEST_CASE("Verify Hvmult for LAPACKFullMatrixExt", "[linalg]")
            LAPACKSupport::Property::hermite_symmetric,
          ExcInternalError());
   A_complex.lower_triangular(A_complex_tril);
+  Assert(A_complex_tril.get_property() ==
+           LAPACKSupport::Property::lower_triangular,
+         ExcInternalError());
   A_complex.upper_triangular(A_complex_triu);
+  Assert(A_complex_triu.get_property() ==
+           LAPACKSupport::Property::upper_triangular,
+         ExcInternalError());
 
   Vector<double> x(n);
   double         step_real = 1.0 / (n - 1);
