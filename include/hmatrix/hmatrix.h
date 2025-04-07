@@ -10,6 +10,7 @@
 #define HIERBEM_INCLUDE_HMATRIX_HMATRIX_H_
 
 #include <deal.II/base/logstream.h>
+#include <deal.II/base/numbers.h>
 #include <deal.II/base/thread_management.h>
 
 #include <deal.II/lac/full_matrix.h>
@@ -88,7 +89,9 @@ public:
   /**
    * Declare the type for container size.
    */
-  using size_type = std::make_unsigned<types::blas_int>::type;
+  using size_type  = std::make_unsigned<types::blas_int>::type;
+  using value_type = Number;
+  using real_type  = typename numbers::NumberTraits<Number>::real_type;
 
   /**
    * Space-filling curve used for traversing the leaf nodes of the \hmatrix.
@@ -286,50 +289,56 @@ public:
   template <int spacedim1, typename Number1>
   friend void
   InitHMatrixWrtBlockClusterNode(
-    HMatrix<spacedim1, Number1> &hmat,
-    typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
-      bc_node);
+    HMatrix<spacedim1, Number1>                                    &hmat,
+    typename BlockClusterTree<spacedim1,
+                              typename numbers::NumberTraits<Number1>::
+                                real_type>::node_const_pointer_type bc_node);
 
   template <int spacedim1, typename Number1>
   friend void
   InitHMatrixWrtBlockClusterNode(
-    HMatrix<spacedim1, Number1> &hmat,
-    typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
-                                                                 bc_node,
+    HMatrix<spacedim1, Number1>                                    &hmat,
+    typename BlockClusterTree<spacedim1,
+                              typename numbers::NumberTraits<Number1>::
+                                real_type>::node_const_pointer_type bc_node,
     const std::vector<std::pair<HMatrix<spacedim1, Number1> *,
-                                HMatrix<spacedim1, Number1> *>> &Sigma_P);
+                                HMatrix<spacedim1, Number1> *>>    &Sigma_P);
 
   template <int spacedim1, typename Number1>
   friend void
   InitHMatrixWrtBlockClusterNode(
-    HMatrix<spacedim1, Number1> &hmat,
-    typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
-                                                    bc_node,
+    HMatrix<spacedim1, Number1>                                    &hmat,
+    typename BlockClusterTree<spacedim1,
+                              typename numbers::NumberTraits<Number1>::
+                                real_type>::node_const_pointer_type bc_node,
     const std::pair<HMatrix<spacedim1, Number1> *,
-                    HMatrix<spacedim1, Number1> *> &hmat_pair);
+                    HMatrix<spacedim1, Number1> *>                 &hmat_pair);
 
   template <int spacedim1, typename Number1>
   friend void
   InitAndCreateHMatrixChildrenWithoutAlloc(
-    HMatrix<spacedim1, Number1> *hmat,
-    typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
-      bc_node);
+    HMatrix<spacedim1, Number1>                                    *hmat,
+    typename BlockClusterTree<spacedim1,
+                              typename numbers::NumberTraits<Number1>::
+                                real_type>::node_const_pointer_type bc_node);
 
   template <int spacedim1, typename Number1>
   friend void
   InitAndCreateHMatrixChildren(
-    HMatrix<spacedim1, Number1> *hmat,
-    typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
-                                   bc_node,
+    HMatrix<spacedim1, Number1>                                    *hmat,
+    typename BlockClusterTree<spacedim1,
+                              typename numbers::NumberTraits<Number1>::
+                                real_type>::node_const_pointer_type bc_node,
     const unsigned int             fixed_rank_k,
     const HMatrixSupport::Property top_hmat_node_property);
 
   template <int spacedim1, typename Number1>
   friend void
   InitAndCreateHMatrixChildren(
-    HMatrix<spacedim1, Number1> *hmat,
-    typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
-                                        bc_node,
+    HMatrix<spacedim1, Number1>                                    *hmat,
+    typename BlockClusterTree<spacedim1,
+                              typename numbers::NumberTraits<Number1>::
+                                real_type>::node_const_pointer_type bc_node,
     const unsigned int                  fixed_rank_k,
     const LAPACKFullMatrixExt<Number1> &M,
     const HMatrixSupport::Property      top_hmat_node_property);
@@ -337,18 +346,20 @@ public:
   template <int spacedim1, typename Number1>
   friend void
   InitAndCreateHMatrixChildren(
-    HMatrix<spacedim1, Number1> *hmat,
-    typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
-                                        bc_node,
-    const LAPACKFullMatrixExt<Number1> &M,
-    const HMatrixSupport::Property      top_hmat_node_property);
+    HMatrix<spacedim1, Number1>                                    *hmat,
+    typename BlockClusterTree<spacedim1,
+                              typename numbers::NumberTraits<Number1>::
+                                real_type>::node_const_pointer_type bc_node,
+    const LAPACKFullMatrixExt<Number1>                             &M,
+    const HMatrixSupport::Property top_hmat_node_property);
 
   template <int spacedim1, typename Number1>
   friend void
   InitAndCreateHMatrixChildren(
-    HMatrix<spacedim1, Number1> *hmat,
-    typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
-                                                  bc_node,
+    HMatrix<spacedim1, Number1>                                    *hmat,
+    typename BlockClusterTree<spacedim1,
+                              typename numbers::NumberTraits<Number1>::
+                                real_type>::node_const_pointer_type bc_node,
     const unsigned int                            fixed_rank_k,
     const LAPACKFullMatrixExt<Number1>           &M,
     const std::array<types::global_dof_index, 2> &M_row_index_range,
@@ -358,10 +369,11 @@ public:
   template <int spacedim1, typename Number1>
   friend void
   InitAndCreateHMatrixChildren(
-    HMatrix<spacedim1, Number1> *hmat,
-    typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
-                                                  bc_node,
-    const LAPACKFullMatrixExt<Number1>           &M,
+    HMatrix<spacedim1, Number1>                                    *hmat,
+    typename BlockClusterTree<spacedim1,
+                              typename numbers::NumberTraits<Number1>::
+                                real_type>::node_const_pointer_type bc_node,
+    const LAPACKFullMatrixExt<Number1>                             &M,
     const std::array<types::global_dof_index, 2> &M_row_index_range,
     const std::array<types::global_dof_index, 2> &M_col_index_range,
     const HMatrixSupport::Property                top_hmat_node_property);
@@ -369,10 +381,11 @@ public:
   template <int spacedim1, typename Number1>
   friend void
   InitAndCreateHMatrixChildren(
-    HMatrix<spacedim1, Number1> *hmat,
-    typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
-                                  bc_node,
-    HMatrix<spacedim1, Number1> &&H);
+    HMatrix<spacedim1, Number1>                                    *hmat,
+    typename BlockClusterTree<spacedim1,
+                              typename numbers::NumberTraits<Number1>::
+                                real_type>::node_const_pointer_type bc_node,
+    HMatrix<spacedim1, Number1>                                   &&H);
 
   template <int spacedim1, typename Number1>
   friend void
@@ -653,14 +666,19 @@ public:
 
   template <int spacedim1, typename Number1>
   friend void
-  h_h_mmult_phase1_recursion(HMatrix<spacedim1, Number1>          *M,
-                             BlockClusterTree<spacedim1, Number1> &Tind);
+  h_h_mmult_phase1_recursion(
+    HMatrix<spacedim1, Number1>                                          *M,
+    BlockClusterTree<spacedim1,
+                     typename numbers::NumberTraits<Number1>::real_type> &Tind);
 
   template <int spacedim1, typename Number1>
   friend void
-  h_h_mmult_phase2(HMatrix<spacedim1, Number1>          &M,
-                   BlockClusterTree<spacedim1, Number1> &target_bc_tree,
-                   const unsigned int                    fixed_rank);
+  h_h_mmult_phase2(
+    HMatrix<spacedim1, Number1> &M,
+    BlockClusterTree<spacedim1,
+                     typename numbers::NumberTraits<Number1>::real_type>
+                      &target_bc_tree,
+    const unsigned int fixed_rank);
 
   template <int spacedim1, typename Number1>
   friend void
@@ -889,13 +907,14 @@ public:
    *
    * \mynote{In case the \bct is only a subtree and the \hmatrix to be built
    * is just a block in the global \hmatrix, the block type is set to
-   * @p HMatrixSupport::undefined_block by default.}
+   * @p HMatrixSupport::BlockType::undefined_block by default.}
    */
-  HMatrix(const BlockClusterTree<spacedim, Number> &bct,
-          const unsigned int                        fixed_rank_k = 1,
-          const HMatrixSupport::Property  property = HMatrixSupport::general,
-          const HMatrixSupport::BlockType block_type =
-            HMatrixSupport::BlockType::undefined_block);
+  HMatrix(
+    const BlockClusterTree<spacedim, real_type> &bct,
+    const unsigned int                           fixed_rank_k = 1,
+    const HMatrixSupport::Property property = HMatrixSupport::Property::general,
+    const HMatrixSupport::BlockType block_type =
+      HMatrixSupport::BlockType::undefined_block);
 
   /**
    * Construct the hierarchical structure without data from a TreeNode in a
@@ -904,14 +923,15 @@ public:
    * \mynote{In case the \bcn is not the root node of the \bct and the
    * \hmatrix to be built is just a block in the global \hmatrix, the block
    * type is set
-   * to @p HMatrixSupport::undefined_block by default.}
+   * to @p HMatrixSupport::BlockType::undefined_block by default.}
    */
-  HMatrix(typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
-                                          bc_node,
-          const unsigned int              fixed_rank_k = 1,
-          const HMatrixSupport::Property  property = HMatrixSupport::general,
-          const HMatrixSupport::BlockType block_type =
-            HMatrixSupport::BlockType::undefined_block);
+  HMatrix(
+    typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
+                                   bc_node,
+    const unsigned int             fixed_rank_k = 1,
+    const HMatrixSupport::Property property = HMatrixSupport::Property::general,
+    const HMatrixSupport::BlockType block_type =
+      HMatrixSupport::BlockType::undefined_block);
 
   /**
    * Construct from the root node of a BlockClusterTree while copying the data
@@ -920,13 +940,13 @@ public:
    *
    * \mynote{Since this \hmatrix is the global matrix, i.e. on the same level
    * as the global full matrix @p M in the \hmatrix hierarchy, its block type
-   * is set to @p HMatrixSupport::diagonal_block by default and its property
+   * is set to @p HMatrixSupport::BlockType::diagonal_block by default and its property
    * is inferred from the full matrix @p M inside this constructor's body.}
    */
-  HMatrix(const BlockClusterTree<spacedim, Number> &bct,
-          const LAPACKFullMatrixExt<Number>        &M,
-          const unsigned int                        fixed_rank_k,
-          const HMatrixSupport::BlockType           block_type =
+  HMatrix(const BlockClusterTree<spacedim, real_type> &bct,
+          const LAPACKFullMatrixExt<Number>           &M,
+          const unsigned int                           fixed_rank_k,
+          const HMatrixSupport::BlockType              block_type =
             HMatrixSupport::BlockType::diagonal_block);
 
   /**
@@ -938,12 +958,12 @@ public:
    *
    * \mynote{Since this \hmatrix is the global matrix, i.e. on the same level
    * as the global full matrix @p M in the \hmatrix hierarchy, its block type
-   * is set to @p HMatrixSupport::diagonal_block by default and its property
+   * is set to @p HMatrixSupport::BlockType::diagonal_block by default and its property
    * is inferred from the full matrix @p M inside this constructor's body.}
    */
-  HMatrix(const BlockClusterTree<spacedim, Number> &bct,
-          const LAPACKFullMatrixExt<Number>        &M,
-          const HMatrixSupport::BlockType           block_type =
+  HMatrix(const BlockClusterTree<spacedim, real_type> &bct,
+          const LAPACKFullMatrixExt<Number>           &M,
+          const HMatrixSupport::BlockType              block_type =
             HMatrixSupport::BlockType::diagonal_block);
 
   /**
@@ -959,13 +979,14 @@ public:
    * @p undefined_block by default and its property cannot be inferred from the
    * global matrix.}
    */
-  HMatrix(typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
-                                             bc_node,
-          const LAPACKFullMatrixExt<Number> &M,
-          const unsigned int                 fixed_rank_k,
-          const HMatrixSupport::Property     property = HMatrixSupport::general,
-          const HMatrixSupport::BlockType    block_type =
-            HMatrixSupport::BlockType::undefined_block);
+  HMatrix(
+    typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
+                                       bc_node,
+    const LAPACKFullMatrixExt<Number> &M,
+    const unsigned int                 fixed_rank_k,
+    const HMatrixSupport::Property property = HMatrixSupport::Property::general,
+    const HMatrixSupport::BlockType block_type =
+      HMatrixSupport::BlockType::undefined_block);
 
   /**
    * Construct from a TreeNode in a BlockClusterTree while copying the data of
@@ -982,12 +1003,13 @@ public:
    * @p undefined_block by default and its property cannot be inferred from the
    * global matrix.}
    */
-  HMatrix(typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
-                                             bc_node,
-          const LAPACKFullMatrixExt<Number> &M,
-          const HMatrixSupport::Property     property = HMatrixSupport::general,
-          const HMatrixSupport::BlockType    block_type =
-            HMatrixSupport::BlockType::undefined_block);
+  HMatrix(
+    typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
+                                       bc_node,
+    const LAPACKFullMatrixExt<Number> &M,
+    const HMatrixSupport::Property property = HMatrixSupport::Property::general,
+    const HMatrixSupport::BlockType block_type =
+      HMatrixSupport::BlockType::undefined_block);
 
   /**
    * Construct from a \p TreeNode in a \p BlockClusterTree while moving the data
@@ -996,12 +1018,13 @@ public:
    * @param bc_node
    * @param H
    */
-  HMatrix(typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
-                                          bc_node,
-          HMatrix<spacedim, Number>     &&H,
-          const HMatrixSupport::Property  property = HMatrixSupport::general,
-          const HMatrixSupport::BlockType block_type =
-            HMatrixSupport::BlockType::undefined_block);
+  HMatrix(
+    typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
+                                   bc_node,
+    HMatrix<spacedim, Number>    &&H,
+    const HMatrixSupport::Property property = HMatrixSupport::Property::general,
+    const HMatrixSupport::BlockType block_type =
+      HMatrixSupport::BlockType::undefined_block);
 
   /**
    * Construct from the root node of a BlockClusterTree while moving the data
@@ -1009,16 +1032,17 @@ public:
    *
    * \mynote{Since this \hmatrix is the global matrix because it is
    * constructed with respect to the root node of the \bct, its block type is
-   * set to @p HMatrixSupport::diagonal_block.}
+   * set to @p HMatrixSupport::BlockType::diagonal_block.}
    *
    * @param bct
    * @param H
    */
-  HMatrix(const BlockClusterTree<spacedim, Number> &bct,
-          HMatrix<spacedim, Number>               &&H,
-          const HMatrixSupport::Property  property = HMatrixSupport::general,
-          const HMatrixSupport::BlockType block_type =
-            HMatrixSupport::BlockType::diagonal_block);
+  HMatrix(
+    const BlockClusterTree<spacedim, real_type> &bct,
+    HMatrix<spacedim, Number>                  &&H,
+    const HMatrixSupport::Property property = HMatrixSupport::Property::general,
+    const HMatrixSupport::BlockType block_type =
+      HMatrixSupport::BlockType::diagonal_block);
 
   /**
    * Deep copy constructor.
@@ -1045,11 +1069,12 @@ public:
    * @param fixed_rank_k
    */
   void
-  reinit(const BlockClusterTree<spacedim, Number> &bct,
-         const unsigned int                        fixed_rank_k = 1,
-         const HMatrixSupport::Property  property = HMatrixSupport::general,
-         const HMatrixSupport::BlockType block_type =
-           HMatrixSupport::BlockType::diagonal_block);
+  reinit(
+    const BlockClusterTree<spacedim, real_type> &bct,
+    const unsigned int                           fixed_rank_k = 1,
+    const HMatrixSupport::Property property = HMatrixSupport::Property::general,
+    const HMatrixSupport::BlockType block_type =
+      HMatrixSupport::BlockType::diagonal_block);
 
   /**
    * Reinitialize the hierarchical structure without data from a TreeNode in a
@@ -1058,12 +1083,13 @@ public:
    * @param fixed_rank_k
    */
   void
-  reinit(typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
-                                         bc_node,
-         const unsigned int              fixed_rank_k = 1,
-         const HMatrixSupport::Property  property     = HMatrixSupport::general,
-         const HMatrixSupport::BlockType block_type =
-           HMatrixSupport::undefined_block);
+  reinit(
+    typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
+                                   bc_node,
+    const unsigned int             fixed_rank_k = 1,
+    const HMatrixSupport::Property property = HMatrixSupport::Property::general,
+    const HMatrixSupport::BlockType block_type =
+      HMatrixSupport::BlockType::undefined_block);
 
   /**
    * Assignment via shallow copy.
@@ -1439,8 +1465,9 @@ public:
    * @param singular_value_threshold
    */
   void
-  write_fullmatrix_leaf_node(std::ostream &out,
-                             const Number  singular_value_threshold = 0.) const;
+  write_fullmatrix_leaf_node(
+    std::ostream   &out,
+    const real_type singular_value_threshold = 0.) const;
 
   /**
    * Write formatted rank-k matrix leaf node to the output stream.
@@ -1475,8 +1502,8 @@ public:
    * @param singular_value_threshold
    */
   void
-  write_leaf_set(std::ostream &out,
-                 const Number  singular_value_threshold = 0.) const;
+  write_leaf_set(std::ostream   &out,
+                 const real_type singular_value_threshold = 0.) const;
 
   /**
    * Write formatted leaf set to the output stream as well as the rank of each
@@ -1494,8 +1521,9 @@ public:
    * @param singular_value_threshold
    */
   void
-  write_leaf_set_by_iteration(std::ostream &out,
-                              const Number singular_value_threshold = 0.) const;
+  write_leaf_set_by_iteration(
+    std::ostream   &out,
+    const real_type singular_value_threshold = 0.) const;
 
   /**
    * Find the diagonal block corresponding to the row block cluster of the
@@ -1619,7 +1647,7 @@ public:
    * @param x Input vector
    * @param top_hmat_property The \hmatrix property (of type
    * @p HMatrixSupport::Property) of the top level \hmatrix, which can be
-   * @p general, @p symmetric and @p lower_triangular.
+   * @p general, @p symmetric, @p hermite_symmetric and @p lower_triangular .
    */
   void
   vmult(Vector<Number>                &y,
@@ -1666,11 +1694,12 @@ public:
    * @param x Input vector
    * @param top_hmat_property The \hmatrix property (of type
    * @p HMatrixSupport::Property) of the top level \hmatrix node, which can be
-   * @p general, @p symmetric or @p lower_triangular.
+   * @p general, @p symmetric, @p hermite_symmetric and @p lower_triangular .
    */
+  template <typename Number2>
   void
   vmult(Vector<Number>                &y,
-        const Number                   alpha,
+        const Number2                  alpha,
         const Vector<Number>          &x,
         const HMatrixSupport::Property top_hmat_property) const;
 
@@ -1689,10 +1718,11 @@ public:
    * @param alpha Scalar factor before \f$x\f$
    * @param x Input vector
    */
+  template <typename Number2, typename Number3>
   void
-  vmult_task_parallel(const Number          beta,
+  vmult_task_parallel(const Number2         beta,
                       Vector<Number>       &y,
-                      const Number          alpha,
+                      const Number3         alpha,
                       const Vector<Number> &x);
 
   /**
@@ -1704,10 +1734,11 @@ public:
    * @param alpha Scalar factor before \f$x\f$
    * @param x Input vector
    */
+  template <typename Number2, typename Number3>
   void
-  vmult_serial_iterative(const Number          beta,
+  vmult_serial_iterative(const Number2         beta,
                          Vector<Number>       &y,
-                         const Number          alpha,
+                         const Number3         alpha,
                          const Vector<Number> &x);
 
   /**
@@ -1720,7 +1751,7 @@ public:
    * @param starting_hmat Top level \hmatrix
    * @param top_hmat_property The \hmatrix property (of type
    * @p HMatrixSupport::Property) of the top level \hmatrix node, which can be
-   * @p general, @p symmetric or @p lower_triangular.
+   * @p general, @p symmetric, @p hermite_symmetric and @p lower_triangular .
    */
   void
   vmult(Vector<Number>                  &y,
@@ -1739,11 +1770,12 @@ public:
    * @param starting_hmat Top level \hmatrix
    * @param top_hmat_property The \hmatrix property (of type
    * @p HMatrixSupport::Property) of the top level \hmatrix node, which can be
-   * @p general, @p symmetric or @p lower_triangular.
+   * @p general, @p symmetric, @p hermite_symmetric and @p lower_triangular .
    */
+  template <typename Number2>
   void
   vmult(Vector<Number>                  &y,
-        const Number                     alpha,
+        const Number2                    alpha,
         const Vector<Number>            &x,
         const HMatrix<spacedim, Number> &starting_hmat,
         const HMatrixSupport::Property   top_hmat_property) const;
@@ -1758,8 +1790,9 @@ public:
    * Calculate the top level \hmat/vector multiplication \f$y= \alpha \cdot M
    * \cdot x\f$.
    */
+  template <typename Number2>
   void
-  vmult(Vector<Number> &y, const Number alpha, const Vector<Number> &x) const;
+  vmult(Vector<Number> &y, const Number2 alpha, const Vector<Number> &x) const;
 
   /**
    * Calculate the top level \hmat/vector multiplication \f$y= y + M \cdot x\f$.
@@ -1771,9 +1804,10 @@ public:
    * Calculate the top level \hmat/vector multiplication \f$y= y + \alpha \cdot
    * M \cdot x\f$.
    */
+  template <typename Number2>
   void
   vmult_add(Vector<Number>       &y,
-            const Number          alpha,
+            const Number2         alpha,
             const Vector<Number> &x) const;
 
   /**
@@ -1791,7 +1825,7 @@ public:
    * @param x Input vector
    * @param top_hmat_property The \hmatrix property (of type
    * @p HMatrixSupport::Property) of the top level \hmatrix, which can be
-   * @p general, @p symmetric or @p lower_triangular.
+   * @p general, @p symmetric, @p hermite_symmetric and @p lower_triangular .
    */
   void
   Tvmult(Vector<Number>                &y,
@@ -1815,7 +1849,7 @@ public:
    * @param x Input vector
    * @param top_hmat_property The \hmatrix property (of type
    * @p HMatrixSupport::Property) of the top level \hmatrix, which can be
-   * @p general, @p symmetric or @p lower_triangular.
+   * @p general, @p symmetric, @p hermite_symmetric and @p lower_triangular .
    */
   void
   Tvmult_task_parallel(Vector<Number> &y, const Vector<Number> &x);
@@ -1836,11 +1870,12 @@ public:
    * @param x Input vector
    * @param top_hmat_property The \hmatrix property (of type
    * @p HMatrixSupport::Property) of the top level \hmatrix, which can be
-   * @p general, @p symmetric or @p lower_triangular.
+   * @p general, @p symmetric, @p hermite_symmetric and @p lower_triangular .
    */
+  template <typename Number2>
   void
   Tvmult(Vector<Number>                &y,
-         const Number                   alpha,
+         const Number2                  alpha,
          const Vector<Number>          &x,
          const HMatrixSupport::Property top_hmat_property) const;
 
@@ -1862,10 +1897,11 @@ public:
    * @param alpha Scalar factor before \f$x\f$
    * @param x Input vector
    */
+  template <typename Number2, typename Number3>
   void
-  Tvmult_task_parallel(const Number          beta,
+  Tvmult_task_parallel(const Number2         beta,
                        Vector<Number>       &y,
-                       const Number          alpha,
+                       const Number3         alpha,
                        const Vector<Number> &x);
 
   /**
@@ -1877,10 +1913,11 @@ public:
    * @param alpha Scalar factor before \f$x\f$
    * @param x Input vector
    */
+  template <typename Number2, typename Number3>
   void
-  Tvmult_serial_iterative(const Number          beta,
+  Tvmult_serial_iterative(const Number2         beta,
                           Vector<Number>       &y,
-                          const Number          alpha,
+                          const Number3         alpha,
                           const Vector<Number> &x);
 
   /**
@@ -1893,7 +1930,7 @@ public:
    * @param starting_hmat Top level \hmatrix
    * @param top_hmat_property The \hmatrix property (of type
    * @p HMatrixSupport::Property) of the top level \hmatrix node, which can be
-   * @p general, @p symmetric or @p lower_triangular.
+   * @p general, @p symmetric, @p hermite_symmetric and @p lower_triangular .
    */
   void
   Tvmult(Vector<Number>                  &y,
@@ -1912,11 +1949,12 @@ public:
    * @param starting_hmat Top level \hmatrix
    * @param top_hmat_property The \hmatrix property (of type
    * @p HMatrixSupport::Property) of the top level \hmatrix node, which can be
-   * @p general, @p symmetric or @p lower_triangular.
+   * @p general, @p symmetric, @p hermite_symmetric and @p lower_triangular .
    */
+  template <typename Number2>
   void
   Tvmult(Vector<Number>                  &y,
-         const Number                     alpha,
+         const Number2                    alpha,
          const Vector<Number>            &x,
          const HMatrix<spacedim, Number> &starting_hmat,
          const HMatrixSupport::Property   top_hmat_property) const;
@@ -1932,8 +1970,9 @@ public:
    * Calculate the top level \hmat/vector multiplication \f$y= \alpha \cdot
    * M^{\mathrm{T}} \cdot x\f$.
    */
+  template <typename Number2>
   void
-  Tvmult(Vector<Number> &y, const Number alpha, const Vector<Number> &x) const;
+  Tvmult(Vector<Number> &y, const Number2 alpha, const Vector<Number> &x) const;
 
   /**
    * Calculate the top level \hmat/vector multiplication \f$y= y +
@@ -1946,10 +1985,70 @@ public:
    * Calculate the top level \hmat/vector multiplication \f$y= y + \alpha \cdot
    * M^{\mathrm{T}} \cdot x\f$.
    */
+  template <typename Number2>
   void
   Tvmult_add(Vector<Number>       &y,
-             const Number          alpha,
+             const Number2         alpha,
              const Vector<Number> &x) const;
+
+  void
+  Hvmult(Vector<Number>                &y,
+         const Vector<Number>          &x,
+         const HMatrixSupport::Property top_hmat_property) const;
+
+  template <typename Number2>
+  void
+  Hvmult(Vector<Number>                &y,
+         const Number2                  alpha,
+         const Vector<Number>          &x,
+         const HMatrixSupport::Property top_hmat_property) const;
+
+  void
+  Hvmult(Vector<Number>                  &y,
+         const Vector<Number>            &x,
+         const HMatrix<spacedim, Number> &starting_hmat,
+         const HMatrixSupport::Property   top_hmat_property) const;
+
+  template <typename Number2>
+  void
+  Hvmult(Vector<Number>                  &y,
+         const Number2                    alpha,
+         const Vector<Number>            &x,
+         const HMatrix<spacedim, Number> &starting_hmat,
+         const HMatrixSupport::Property   top_hmat_property) const;
+
+  void
+  Hvmult(Vector<Number> &y, const Vector<Number> &x) const;
+
+  template <typename Number2>
+  void
+  Hvmult(Vector<Number> &y, const Number2 alpha, const Vector<Number> &x) const;
+
+  void
+  Hvmult_add(Vector<Number> &y, const Vector<Number> &x) const;
+
+  template <typename Number2>
+  void
+  Hvmult_add(Vector<Number>       &y,
+             const Number2         alpha,
+             const Vector<Number> &x) const;
+
+  void
+  Hvmult_task_parallel(Vector<Number> &y, const Vector<Number> &x);
+
+  template <typename Number2, typename Number3>
+  void
+  Hvmult_task_parallel(const Number2         beta,
+                       Vector<Number>       &y,
+                       const Number3         alpha,
+                       const Vector<Number> &x);
+
+  template <typename Number2, typename Number3>
+  void
+  Hvmult_serial_iterative(const Number2         beta,
+                          Vector<Number>       &y,
+                          const Number3         alpha,
+                          const Vector<Number> &x);
 
   /**
    * Perform \hmatrix MM multiplication reduction. This is
@@ -1963,21 +2062,21 @@ public:
    * book.
    */
   void
-  h_h_mmult_horizontal_split(BlockClusterTree<spacedim, Number> &bc_tree);
+  h_h_mmult_horizontal_split(BlockClusterTree<spacedim, real_type> &bc_tree);
 
   /**
    * This function implements \p MM_V in Hackbusch's \hmatrix
    * book.
    */
   void
-  h_h_mmult_vertical_split(BlockClusterTree<spacedim, Number> &bc_tree);
+  h_h_mmult_vertical_split(BlockClusterTree<spacedim, real_type> &bc_tree);
 
   /**
    * This function implements \p MM_C in Hackbusch's \hmatrix
    * book.
    */
   void
-  h_h_mmult_cross_split(BlockClusterTree<spacedim, Number> &bc_tree);
+  h_h_mmult_cross_split(BlockClusterTree<spacedim, real_type> &bc_tree);
 
   /**
    * Multiplication of two \f$\mathcal{H}\f$-matrices \f$C = A \cdot B\f$.
@@ -1989,12 +2088,12 @@ public:
    * @param fixed_rank
    */
   void
-  mmult(HMatrix<spacedim, Number>                &C,
-        HMatrix<spacedim, Number>                &B,
-        const BlockClusterTree<spacedim, Number> &bct_a,
-        const BlockClusterTree<spacedim, Number> &bct_b,
-        BlockClusterTree<spacedim, Number>       &bct_c,
-        const unsigned int                        fixed_rank = 1);
+  mmult(HMatrix<spacedim, Number>                   &C,
+        HMatrix<spacedim, Number>                   &B,
+        const BlockClusterTree<spacedim, real_type> &bct_a,
+        const BlockClusterTree<spacedim, real_type> &bct_b,
+        BlockClusterTree<spacedim, real_type>       &bct_c,
+        const unsigned int                           fixed_rank = 1);
 
   /**
    * Multiplication of two \f$\mathcal{H}\f$-matrices, the result of which
@@ -2009,13 +2108,13 @@ public:
    * @param adding
    */
   void
-  mmult(HMatrix<spacedim, Number>                &C,
-        HMatrix<spacedim, Number>                &B,
-        const BlockClusterTree<spacedim, Number> &bct_a,
-        const BlockClusterTree<spacedim, Number> &bct_b,
-        BlockClusterTree<spacedim, Number>       &bct_c,
-        const unsigned int                        fixed_rank,
-        const bool                                adding);
+  mmult(HMatrix<spacedim, Number>                   &C,
+        HMatrix<spacedim, Number>                   &B,
+        const BlockClusterTree<spacedim, real_type> &bct_a,
+        const BlockClusterTree<spacedim, real_type> &bct_b,
+        BlockClusterTree<spacedim, real_type>       &bct_c,
+        const unsigned int                           fixed_rank,
+        const bool                                   adding);
 
   /**
    * Level conserving \hmatrix multiplication, the result of which will be
@@ -3229,8 +3328,8 @@ public:
    * @param fixed_rank_k
    */
   void
-  coarsen_to_subtree(const BlockClusterTree<spacedim, Number> &subtree,
-                     const unsigned int                        fixed_rank_k);
+  coarsen_to_subtree(const BlockClusterTree<spacedim, real_type> &subtree,
+                     const unsigned int                           fixed_rank_k);
 
   /**
    * Coarsen the current \hmatrix via recursive call so that its leaf set
@@ -3252,7 +3351,7 @@ public:
   void
   coarsen_to_partition(
     const std::vector<
-      typename BlockClusterTree<spacedim, Number>::node_pointer_type>
+      typename BlockClusterTree<spacedim, real_type>::node_pointer_type>
                       &partition,
     const unsigned int fixed_rank_k);
 
@@ -3359,7 +3458,7 @@ public:
    */
   typename std::vector<HMatrix<spacedim, Number> *>::iterator
   find_block_cluster_in_leaf_set(
-    const BlockCluster<spacedim, Number> &block_cluster);
+    const BlockCluster<spacedim, real_type> &block_cluster);
 
   /**
    * Find a block cluster in the leaf set of the current
@@ -3371,7 +3470,7 @@ public:
    */
   typename std::vector<HMatrix<spacedim, Number> *>::const_iterator
   find_block_cluster_in_leaf_set(
-    const BlockCluster<spacedim, Number> &block_cluster) const;
+    const BlockCluster<spacedim, real_type> &block_cluster) const;
 
   /**
    * Refine the current \hmatrix, whose associated block cluster
@@ -3425,9 +3524,9 @@ public:
    */
   void
   convert_between_different_block_cluster_trees(
-    BlockClusterTree<spacedim, Number> &bct1,
-    BlockClusterTree<spacedim, Number> &bct2,
-    const unsigned int                  fixed_rank_k2 = 1);
+    BlockClusterTree<spacedim, real_type> &bct1,
+    BlockClusterTree<spacedim, real_type> &bct2,
+    const unsigned int                     fixed_rank_k2 = 1);
 
   /**
    * Remove a pair of \hmatnodes from the list of
@@ -3600,7 +3699,7 @@ private:
   void
   _convertToFullMatrix(MatrixType                    &M,
                        const HMatrixSupport::Property top_hmat_property =
-                         HMatrixSupport::general) const;
+                         HMatrixSupport::Property::general) const;
 
   /**
    * Check if the current \hmatrix node is non-emtpy.
@@ -3620,7 +3719,7 @@ private:
   bool
   is_current_hmat_node_nonemtpy(
     const HMatrixSupport::Property top_hmat_property =
-      HMatrixSupport::general) const;
+      HMatrixSupport::Property::general) const;
 
   /**
    * Collect \hmatnodes in the leaf set into a vector using Z-curve traversal.
@@ -4108,7 +4207,7 @@ private:
   /**
    * Pointer to the corresponding block cluster node in a BlockClusterTree.
    */
-  typename BlockClusterTree<spacedim, Number>::node_pointer_type bc_node;
+  typename BlockClusterTree<spacedim, real_type>::node_pointer_type bc_node;
 
   /**
    * Pointer to the range of row indices (in internal DoF numbering), which
@@ -4136,7 +4235,7 @@ private:
    * Block cluster tree when this matrix is the product of two
    * \f$\mathcal{H}\f$-matrices.
    */
-  BlockClusterTree<spacedim, Number> Tind;
+  BlockClusterTree<spacedim, real_type> Tind;
 
   /**
    * List of pairs of pointers to \hmatnodes for
@@ -4204,15 +4303,18 @@ typename HMatrix<spacedim, Number>::SpaceFillingCurveType
 template <int spacedim, typename Number = double>
 void
 InitHMatrixWrtBlockClusterNode(
-  HMatrix<spacedim, Number>                                           &hmat,
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node)
+  HMatrix<spacedim, Number> &hmat,
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_const_pointer_type bc_node)
 {
   /**
    * Link \p hmat with \p bc_node.
    */
-  hmat.bc_node =
-    const_cast<typename BlockClusterTree<spacedim, Number>::node_pointer_type>(
-      bc_node);
+  hmat.bc_node = const_cast<typename BlockClusterTree<
+    spacedim,
+    typename numbers::NumberTraits<Number>::real_type>::node_pointer_type>(
+    bc_node);
 
   /**
    * Link row and column indices stored in the clusters \f$\tau\f$ and
@@ -4253,17 +4355,20 @@ InitHMatrixWrtBlockClusterNode(
 template <int spacedim, typename Number = double>
 void
 InitHMatrixWrtBlockClusterNode(
-  HMatrix<spacedim, Number>                                           &hmat,
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
+  HMatrix<spacedim, Number> &hmat,
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_const_pointer_type                                  bc_node,
   const std::vector<std::pair<HMatrix<spacedim, Number> *,
-                              HMatrix<spacedim, Number> *>>           &Sigma_P)
+                              HMatrix<spacedim, Number> *>> &Sigma_P)
 {
   /**
    * Link \p hmat with \p bc_node.
    */
-  hmat.bc_node =
-    const_cast<typename BlockClusterTree<spacedim, Number>::node_pointer_type>(
-      bc_node);
+  hmat.bc_node = const_cast<typename BlockClusterTree<
+    spacedim,
+    typename numbers::NumberTraits<Number>::real_type>::node_pointer_type>(
+    bc_node);
 
   /**
    * Link row and column indices stored in the clusters \f$\tau\f$ and
@@ -4309,17 +4414,20 @@ InitHMatrixWrtBlockClusterNode(
 template <int spacedim, typename Number = double>
 void
 InitHMatrixWrtBlockClusterNode(
-  HMatrix<spacedim, Number>                                           &hmat,
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
+  HMatrix<spacedim, Number> &hmat,
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_const_pointer_type bc_node,
   const std::pair<HMatrix<spacedim, Number> *, HMatrix<spacedim, Number> *>
     &hmat_pair)
 {
   /**
    * Link \p hmat with \p bc_node.
    */
-  hmat.bc_node =
-    const_cast<typename BlockClusterTree<spacedim, Number>::node_pointer_type>(
-      bc_node);
+  hmat.bc_node = const_cast<typename BlockClusterTree<
+    spacedim,
+    typename numbers::NumberTraits<Number>::real_type>::node_pointer_type>(
+    bc_node);
 
   /**
    * Link row and column indices stored in the clusters \f$\tau\f$ and
@@ -4361,15 +4469,18 @@ InitHMatrixWrtBlockClusterNode(
 template <int spacedim, typename Number = double>
 void
 InitAndCreateHMatrixChildrenWithoutAlloc(
-  HMatrix<spacedim, Number>                                           *hmat,
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node)
+  HMatrix<spacedim, Number> *hmat,
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_const_pointer_type bc_node)
 {
   /**
    * Link \p hmat with \p bc_node.
    */
-  hmat->bc_node =
-    const_cast<typename BlockClusterTree<spacedim, Number>::node_pointer_type>(
-      bc_node);
+  hmat->bc_node = const_cast<typename BlockClusterTree<
+    spacedim,
+    typename numbers::NumberTraits<Number>::real_type>::node_pointer_type>(
+    bc_node);
 
   /**
    * Link row and column indices stored in the clusters \f$\tau\f$ and
@@ -4424,7 +4535,7 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
            */
           switch (hmat->block_type)
             {
-                case HMatrixSupport::undefined_block: {
+                case HMatrixSupport::BlockType::undefined_block: {
                   /**
                    * When the current \hmatrix block is @p undefined_block, all
                    * child \hmatrices are @p undefined_block.
@@ -4433,7 +4544,7 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
 
                   break;
                 }
-                case HMatrixSupport::diagonal_block: {
+                case HMatrixSupport::BlockType::diagonal_block: {
                   /**
                    * When the current \hmatrix is @p diagonal_block, the first and
                    * fourth child \hmatrices are @p diagonal_block, while the second
@@ -4444,25 +4555,25 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
                     {
                         case 0: {
                           child_hmat->block_type =
-                            HMatrixSupport::diagonal_block;
+                            HMatrixSupport::BlockType::diagonal_block;
 
                           break;
                         }
                         case 1: {
                           child_hmat->block_type =
-                            HMatrixSupport::upper_triangular_block;
+                            HMatrixSupport::BlockType::upper_triangular_block;
 
                           break;
                         }
                         case 2: {
                           child_hmat->block_type =
-                            HMatrixSupport::lower_triangular_block;
+                            HMatrixSupport::BlockType::lower_triangular_block;
 
                           break;
                         }
                         case 3: {
                           child_hmat->block_type =
-                            HMatrixSupport::diagonal_block;
+                            HMatrixSupport::BlockType::diagonal_block;
 
                           break;
                         }
@@ -4474,7 +4585,7 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
 
                   break;
                 }
-                case HMatrixSupport::upper_triangular_block: {
+                case HMatrixSupport::BlockType::upper_triangular_block: {
                   /**
                    * When the current \hmatrix is @p upper_triangular_block,
                    * all child \hmatrices are @p upper_triangular_block.
@@ -4483,7 +4594,7 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
 
                   break;
                 }
-                case HMatrixSupport::lower_triangular_block: {
+                case HMatrixSupport::BlockType::lower_triangular_block: {
                   /**
                    * When the current \hmatrix is @p lower_triangular_block,
                    * all child \hmatrices are @p lower_triangular_block.
@@ -4507,64 +4618,89 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
            */
           switch (hmat->property)
             {
-                case HMatrixSupport::general: {
+                case HMatrixSupport::Property::general: {
                   /**
                    * When the property of the current \hmatrix is @p general,
                    * all of its children have the same property @p general.
                    */
-                  child_hmat->property = HMatrixSupport::general;
+                  child_hmat->property = HMatrixSupport::Property::general;
 
                   break;
                 }
-                case HMatrixSupport::symmetric: {
+                case HMatrixSupport::Property::symmetric: {
                   /**
                    * When the property of the current \hmatrix is @p symmetric,
                    * only those diagonal submatrices are @p symmetric, while
                    * the other submatrices are @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::symmetric;
+                      child_hmat->property =
+                        HMatrixSupport::Property::symmetric;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
                 }
-                case HMatrixSupport::upper_triangular: {
+                case HMatrixSupport::Property::hermite_symmetric: {
+                  /**
+                   * When the property of the current \hmatrix is @p hermite_symmetric,
+                   * only those diagonal submatrices are @p hermite_symmetric, while
+                   * the other submatrices are @p general.
+                   */
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
+                    {
+                      child_hmat->property =
+                        HMatrixSupport::Property::hermite_symmetric;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::Property::general;
+                    }
+
+                  break;
+                }
+                case HMatrixSupport::Property::upper_triangular: {
                   /**
                    * When the property of the current \hmatrix is
                    * @p upper_triangular, only those diagonal submatrices are
                    * @p upper_triangular, while the other submatrices are
                    * @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::upper_triangular;
+                      child_hmat->property =
+                        HMatrixSupport::Property::upper_triangular;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
                 }
-                case HMatrixSupport::lower_triangular: {
+                case HMatrixSupport::Property::lower_triangular: {
                   /**
                    * When the property of the current \hmatrix is
                    * @p lower_triangular, only those diagonal submatrices are
                    * @p lower_triangular, while the other submatrices are
                    * @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::lower_triangular;
+                      child_hmat->property =
+                        HMatrixSupport::Property::lower_triangular;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
@@ -4618,29 +4754,37 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
            * itself, i.e. its state will change accordingly when some specific
            * operation is applied to it.}
            */
-          if (hmat->block_type == HMatrixSupport::diagonal_block)
+          if (hmat->block_type == HMatrixSupport::BlockType::diagonal_block)
             {
               switch (hmat->property)
                 {
-                    case HMatrixSupport::general: {
-                      hmat->fullmatrix->set_property(LAPACKSupport::general);
-
-                      break;
-                    }
-                    case HMatrixSupport::symmetric: {
-                      hmat->fullmatrix->set_property(LAPACKSupport::symmetric);
-
-                      break;
-                    }
-                    case HMatrixSupport::upper_triangular: {
+                    case HMatrixSupport::Property::general: {
                       hmat->fullmatrix->set_property(
-                        LAPACKSupport::upper_triangular);
+                        LAPACKSupport::Property::general);
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular: {
+                    case HMatrixSupport::Property::symmetric: {
                       hmat->fullmatrix->set_property(
-                        LAPACKSupport::lower_triangular);
+                        LAPACKSupport::Property::symmetric);
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::hermite_symmetric: {
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::Property::hermite_symmetric);
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::upper_triangular: {
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::Property::upper_triangular);
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::lower_triangular: {
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::Property::lower_triangular);
 
                       break;
                     }
@@ -4680,18 +4824,21 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
 template <int spacedim, typename Number = double>
 void
 InitAndCreateHMatrixChildren(
-  HMatrix<spacedim, Number>                                           *hmat,
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
+  HMatrix<spacedim, Number> *hmat,
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_const_pointer_type      bc_node,
   const unsigned int             fixed_rank_k,
   const HMatrixSupport::Property top_hmat_node_property =
-    HMatrixSupport::general)
+    HMatrixSupport::Property::general)
 {
   /**
    * Link \p hmat with \p bc_node.
    */
-  hmat->bc_node =
-    const_cast<typename BlockClusterTree<spacedim, Number>::node_pointer_type>(
-      bc_node);
+  hmat->bc_node = const_cast<typename BlockClusterTree<
+    spacedim,
+    typename numbers::NumberTraits<Number>::real_type>::node_pointer_type>(
+    bc_node);
 
   /**
    * Link row and column indices stored in the clusters \f$\tau\f$ and
@@ -4746,7 +4893,7 @@ InitAndCreateHMatrixChildren(
            */
           switch (hmat->block_type)
             {
-                case HMatrixSupport::undefined_block: {
+                case HMatrixSupport::BlockType::undefined_block: {
                   /**
                    * When the current \hmatrix block is @p undefined_block, all
                    * child \hmatrices are @p undefined_block.
@@ -4755,7 +4902,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::diagonal_block: {
+                case HMatrixSupport::BlockType::diagonal_block: {
                   /**
                    * When the current \hmatrix is @p diagonal_block, the first and
                    * fourth child \hmatrices are @p diagonal_block, while the second
@@ -4766,25 +4913,25 @@ InitAndCreateHMatrixChildren(
                     {
                         case 0: {
                           child_hmat->block_type =
-                            HMatrixSupport::diagonal_block;
+                            HMatrixSupport::BlockType::diagonal_block;
 
                           break;
                         }
                         case 1: {
                           child_hmat->block_type =
-                            HMatrixSupport::upper_triangular_block;
+                            HMatrixSupport::BlockType::upper_triangular_block;
 
                           break;
                         }
                         case 2: {
                           child_hmat->block_type =
-                            HMatrixSupport::lower_triangular_block;
+                            HMatrixSupport::BlockType::lower_triangular_block;
 
                           break;
                         }
                         case 3: {
                           child_hmat->block_type =
-                            HMatrixSupport::diagonal_block;
+                            HMatrixSupport::BlockType::diagonal_block;
 
                           break;
                         }
@@ -4796,7 +4943,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::upper_triangular_block: {
+                case HMatrixSupport::BlockType::upper_triangular_block: {
                   /**
                    * When the current \hmatrix is @p upper_triangular_block,
                    * all child \hmatrices are @p upper_triangular_block.
@@ -4805,7 +4952,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::lower_triangular_block: {
+                case HMatrixSupport::BlockType::lower_triangular_block: {
                   /**
                    * When the current \hmatrix is @p lower_triangular_block,
                    * all child \hmatrices are @p lower_triangular_block.
@@ -4828,64 +4975,89 @@ InitAndCreateHMatrixChildren(
            */
           switch (hmat->property)
             {
-                case HMatrixSupport::general: {
+                case HMatrixSupport::Property::general: {
                   /**
                    * When the property of the current \hmatrix is @p general,
                    * all of its children have the same property @p general.
                    */
-                  child_hmat->property = HMatrixSupport::general;
+                  child_hmat->property = HMatrixSupport::Property::general;
 
                   break;
                 }
-                case HMatrixSupport::symmetric: {
+                case HMatrixSupport::Property::symmetric: {
                   /**
                    * When the property of the current \hmatrix is @p symmetric,
                    * only those diagonal submatrices are @p symmetric, while
                    * the other submatrices are @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::symmetric;
+                      child_hmat->property =
+                        HMatrixSupport::Property::symmetric;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
                 }
-                case HMatrixSupport::upper_triangular: {
+                case HMatrixSupport::Property::hermite_symmetric: {
+                  /**
+                   * When the property of the current \hmatrix is @p hermite_symmetric,
+                   * only those diagonal submatrices are @p hermite_symmetric, while
+                   * the other submatrices are @p general.
+                   */
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
+                    {
+                      child_hmat->property =
+                        HMatrixSupport::Property::hermite_symmetric;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::Property::general;
+                    }
+
+                  break;
+                }
+                case HMatrixSupport::Property::upper_triangular: {
                   /**
                    * When the property of the current \hmatrix is
                    * @p upper_triangular, only those diagonal submatrices are
                    * @p upper_triangular, while the other submatrices are
                    * @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::upper_triangular;
+                      child_hmat->property =
+                        HMatrixSupport::Property::upper_triangular;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
                 }
-                case HMatrixSupport::lower_triangular: {
+                case HMatrixSupport::Property::lower_triangular: {
                   /**
                    * When the property of the current \hmatrix is
                    * @p lower_triangular, only those diagonal submatrices are
                    * @p lower_triangular, while the other submatrices are
                    * @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::lower_triangular;
+                      child_hmat->property =
+                        HMatrixSupport::Property::lower_triangular;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
@@ -4930,7 +5102,7 @@ InitAndCreateHMatrixChildren(
        */
       switch (top_hmat_node_property)
         {
-            case HMatrixSupport::general: {
+            case HMatrixSupport::Property::general: {
               /**
                * When the top level \hmatnode has the @p general property, all
                * \hmatnodes in the leaf set should be created with allocated
@@ -4951,7 +5123,7 @@ InitAndCreateHMatrixChildren(
 
               break;
             }
-            case HMatrixSupport::symmetric: {
+            case HMatrixSupport::Property::symmetric: {
               /**
                * When the top level \hmatnode has the @p symmetric property,
                * only those \hmatnodes in the leaf set that belong to the
@@ -4960,7 +5132,7 @@ InitAndCreateHMatrixChildren(
                */
               switch (hmat->block_type)
                 {
-                    case HMatrixSupport::diagonal_block: {
+                    case HMatrixSupport::BlockType::diagonal_block: {
                       /**
                        * When the current \hmatnode in the leaf set is a
                        * diagonal block in the top level \hmatrix, it can only
@@ -4991,11 +5163,12 @@ InitAndCreateHMatrixChildren(
                       hmat->type = FullMatrixType;
                       hmat->fullmatrix =
                         new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
-                      hmat->fullmatrix->set_property(LAPACKSupport::symmetric);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::Property::symmetric);
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular_block: {
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the lower triangular part in the top level \hmatrix,
@@ -5019,7 +5192,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::upper_triangular_block: {
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the upper triangular part in the top level \hmatrix,
@@ -5053,7 +5226,110 @@ InitAndCreateHMatrixChildren(
 
               break;
             }
-            case HMatrixSupport::lower_triangular: {
+            case HMatrixSupport::Property::hermite_symmetric: {
+              /**
+               * When the top level \hmatnode has the @p hermite_symmetric property,
+               * only those \hmatnodes in the leaf set that belong to the
+               * diagonal or lower triangular part of the original \hmatrix
+               * will be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                    case HMatrixSupport::BlockType::diagonal_block: {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be a Hermite symmetric full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p hermite_symmetric.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::Property::hermite_symmetric);
+
+                      break;
+                    }
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix,
+                       * it can be either a full matrix or a rank-k matrix.
+                       * Its memory will be allocated because it contains
+                       * effective data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                        }
+                      else
+                        {
+                          hmat->type     = RkMatrixType;
+                          hmat->rkmatrix = new RkMatrix<Number>(hmat->m,
+                                                                hmat->n,
+                                                                fixed_rank_k);
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is Hermite symmetric to the corresponding
+                       * block in the lower triangular part.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                    default: {
+                      Assert(false,
+                             ExcMessage(
+                               std::string("Invalid H-matrix block type: ") +
+                               std::string(HMatrixSupport::block_type_name(
+                                 hmat->block_type))));
+                      break;
+                    }
+                }
+
+              break;
+            }
+            case HMatrixSupport::Property::lower_triangular: {
               /**
                * When the top level \hmatnode has the @p lower_triangular
                * property, only those \hmatnodes in the leaf set that belong
@@ -5062,7 +5338,7 @@ InitAndCreateHMatrixChildren(
                */
               switch (hmat->block_type)
                 {
-                    case HMatrixSupport::diagonal_block: {
+                    case HMatrixSupport::BlockType::diagonal_block: {
                       /**
                        * When the current \hmatnode in the leaf set is a
                        * diagonal block in the top level \hmatrix, it can only
@@ -5094,11 +5370,11 @@ InitAndCreateHMatrixChildren(
                       hmat->fullmatrix =
                         new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
                       hmat->fullmatrix->set_property(
-                        LAPACKSupport::lower_triangular);
+                        LAPACKSupport::Property::lower_triangular);
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular_block: {
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the lower triangular part in the top level \hmatrix,
@@ -5122,7 +5398,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::upper_triangular_block: {
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the upper triangular part in the top level \hmatrix,
@@ -5155,7 +5431,7 @@ InitAndCreateHMatrixChildren(
 
               break;
             }
-            case HMatrixSupport::upper_triangular: {
+            case HMatrixSupport::Property::upper_triangular: {
               /**
                * When the top level \hmatnode has the @p upper_triangular
                * property, only those \hmatnodes in the leaf set that belong
@@ -5164,7 +5440,7 @@ InitAndCreateHMatrixChildren(
                */
               switch (hmat->block_type)
                 {
-                    case HMatrixSupport::diagonal_block: {
+                    case HMatrixSupport::BlockType::diagonal_block: {
                       /**
                        * When the current \hmatnode in the leaf set is a
                        * diagonal block in the top level \hmatrix, it can only
@@ -5196,11 +5472,11 @@ InitAndCreateHMatrixChildren(
                       hmat->fullmatrix =
                         new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
                       hmat->fullmatrix->set_property(
-                        LAPACKSupport::upper_triangular);
+                        LAPACKSupport::Property::upper_triangular);
 
                       break;
                     }
-                    case HMatrixSupport::upper_triangular_block: {
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the upper triangular part in the top level \hmatrix,
@@ -5224,7 +5500,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular_block: {
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the lower triangular part in the top level \hmatrix,
@@ -5298,19 +5574,22 @@ InitAndCreateHMatrixChildren(
 template <int spacedim, typename Number = double>
 void
 InitAndCreateHMatrixChildren(
-  HMatrix<spacedim, Number>                                           *hmat,
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
+  HMatrix<spacedim, Number> *hmat,
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_const_pointer_type          bc_node,
   const unsigned int                 fixed_rank_k,
   const LAPACKFullMatrixExt<Number> &M,
   const HMatrixSupport::Property     top_hmat_node_property =
-    HMatrixSupport::general)
+    HMatrixSupport::Property::general)
 {
   /**
    * Link \p hmat with \p bc_node.
    */
-  hmat->bc_node =
-    const_cast<typename BlockClusterTree<spacedim, Number>::node_pointer_type>(
-      bc_node);
+  hmat->bc_node = const_cast<typename BlockClusterTree<
+    spacedim,
+    typename numbers::NumberTraits<Number>::real_type>::node_pointer_type>(
+    bc_node);
 
   /**
    * Link row and column indices.
@@ -5363,7 +5642,7 @@ InitAndCreateHMatrixChildren(
            */
           switch (hmat->block_type)
             {
-                case HMatrixSupport::undefined_block: {
+                case HMatrixSupport::BlockType::undefined_block: {
                   /**
                    * When the current \hmatrix block is @p undefined_block, all
                    * child \hmatrices are @p undefined_block.
@@ -5372,7 +5651,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::diagonal_block: {
+                case HMatrixSupport::BlockType::diagonal_block: {
                   /**
                    * When the current \hmatrix is @p diagonal_block, the first and
                    * fourth child \hmatrices are @p diagonal_block, while the second
@@ -5383,25 +5662,25 @@ InitAndCreateHMatrixChildren(
                     {
                         case 0: {
                           child_hmat->block_type =
-                            HMatrixSupport::diagonal_block;
+                            HMatrixSupport::BlockType::diagonal_block;
 
                           break;
                         }
                         case 1: {
                           child_hmat->block_type =
-                            HMatrixSupport::upper_triangular_block;
+                            HMatrixSupport::BlockType::upper_triangular_block;
 
                           break;
                         }
                         case 2: {
                           child_hmat->block_type =
-                            HMatrixSupport::lower_triangular_block;
+                            HMatrixSupport::BlockType::lower_triangular_block;
 
                           break;
                         }
                         case 3: {
                           child_hmat->block_type =
-                            HMatrixSupport::diagonal_block;
+                            HMatrixSupport::BlockType::diagonal_block;
 
                           break;
                         }
@@ -5413,7 +5692,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::upper_triangular_block: {
+                case HMatrixSupport::BlockType::upper_triangular_block: {
                   /**
                    * When the current \hmatrix is @p upper_triangular_block,
                    * all child \hmatrices are @p upper_triangular_block.
@@ -5422,7 +5701,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::lower_triangular_block: {
+                case HMatrixSupport::BlockType::lower_triangular_block: {
                   /**
                    * When the current \hmatrix is @p lower_triangular_block,
                    * all child \hmatrices are @p lower_triangular_block.
@@ -5443,64 +5722,89 @@ InitAndCreateHMatrixChildren(
            */
           switch (hmat->property)
             {
-                case HMatrixSupport::general: {
+                case HMatrixSupport::Property::general: {
                   /**
                    * When the property of the current \hmatrix is @p general,
                    * all of its children have the same property @p general.
                    */
-                  child_hmat->property = HMatrixSupport::general;
+                  child_hmat->property = HMatrixSupport::Property::general;
 
                   break;
                 }
-                case HMatrixSupport::symmetric: {
+                case HMatrixSupport::Property::symmetric: {
                   /**
                    * When the property of the current \hmatrix is @p symmetric,
                    * only those diagonal submatrices are @p symmetric, while
                    * the other submatrices are @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::symmetric;
+                      child_hmat->property =
+                        HMatrixSupport::Property::symmetric;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
                 }
-                case HMatrixSupport::upper_triangular: {
+                case HMatrixSupport::Property::hermite_symmetric: {
+                  /**
+                   * When the property of the current \hmatrix is @p hermite_symmetric,
+                   * only those diagonal submatrices are @p hermite_symmetric, while
+                   * the other submatrices are @p general.
+                   */
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
+                    {
+                      child_hmat->property =
+                        HMatrixSupport::Property::hermite_symmetric;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::Property::general;
+                    }
+
+                  break;
+                }
+                case HMatrixSupport::Property::upper_triangular: {
                   /**
                    * When the property of the current \hmatrix is
                    * @p upper_triangular, only those diagonal submatrices are
                    * @p upper_triangular, while the other submatrices are
                    * @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::upper_triangular;
+                      child_hmat->property =
+                        HMatrixSupport::Property::upper_triangular;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
                 }
-                case HMatrixSupport::lower_triangular: {
+                case HMatrixSupport::Property::lower_triangular: {
                   /**
                    * When the property of the current \hmatrix is
                    * @p lower_triangular, only those diagonal submatrices are
                    * @p lower_triangular, while the other submatrices are
                    * @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::lower_triangular;
+                      child_hmat->property =
+                        HMatrixSupport::Property::lower_triangular;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
@@ -5544,7 +5848,7 @@ InitAndCreateHMatrixChildren(
        */
       switch (top_hmat_node_property)
         {
-            case HMatrixSupport::general: {
+            case HMatrixSupport::Property::general: {
               /**
                * When the top level \hmatnode has the @p general property, all
                * \hmatnodes in the leaf set should be created with allocated
@@ -5581,7 +5885,7 @@ InitAndCreateHMatrixChildren(
 
               break;
             }
-            case HMatrixSupport::symmetric: {
+            case HMatrixSupport::Property::symmetric: {
               /**
                * When the top level \hmatnode has the @p symmetric property,
                * only those \hmatnodes in the leaf set that belong to the
@@ -5590,7 +5894,7 @@ InitAndCreateHMatrixChildren(
                */
               switch (hmat->block_type)
                 {
-                    case HMatrixSupport::diagonal_block: {
+                    case HMatrixSupport::BlockType::diagonal_block: {
                       /**
                        * When the current \hmatnode in the leaf set is a
                        * diagonal block in the top level \hmatrix, it can only
@@ -5621,7 +5925,8 @@ InitAndCreateHMatrixChildren(
                       hmat->type = FullMatrixType;
                       hmat->fullmatrix =
                         new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
-                      hmat->fullmatrix->set_property(LAPACKSupport::symmetric);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::Property::symmetric);
 
                       /**
                        * Assign matrix values from \p M to the current HMatrix.
@@ -5638,7 +5943,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular_block: {
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the lower triangular part in the top level \hmatrix,
@@ -5677,7 +5982,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::upper_triangular_block: {
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the upper triangular part in the top level \hmatrix,
@@ -5711,22 +6016,22 @@ InitAndCreateHMatrixChildren(
 
               break;
             }
-            case HMatrixSupport::lower_triangular: {
+            case HMatrixSupport::Property::hermite_symmetric: {
               /**
-               * When the top level \hmatnode has the @p lower_triangular
-               * property, only those \hmatnodes in the leaf set that belong
-               * to the diagonal or lower triangular part in the top level
-               * \hmatrix will be created with allocated memory.
+               * When the top level \hmatnode has the @p hermite_symmetric property,
+               * only those \hmatnodes in the leaf set that belong to the
+               * diagonal or lower triangular part of the original \hmatrix
+               * will be created with allocated memory.
                */
               switch (hmat->block_type)
                 {
-                    case HMatrixSupport::diagonal_block: {
+                    case HMatrixSupport::BlockType::diagonal_block: {
                       /**
                        * When the current \hmatnode in the leaf set is a
                        * diagonal block in the top level \hmatrix, it can only
-                       * be a lower triangular full matrix. Its memory will be
+                       * be an Hermite symmetric full matrix. Its memory will be
                        * allocated and its
-                       * @p LAPACKFullMatrix type will be set to @p lower_triangular.
+                       * @p LAPACKFullMatrix type will be set to @p hermite_symmetric.
                        */
 
                       /**
@@ -5752,7 +6057,7 @@ InitAndCreateHMatrixChildren(
                       hmat->fullmatrix =
                         new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
                       hmat->fullmatrix->set_property(
-                        LAPACKSupport::lower_triangular);
+                        LAPACKSupport::Property::hermite_symmetric);
 
                       /**
                        * Assign matrix values from \p M to the current HMatrix.
@@ -5769,7 +6074,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular_block: {
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the lower triangular part in the top level \hmatrix,
@@ -5808,7 +6113,138 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::upper_triangular_block: {
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is Hermite symmetric to the corresponding
+                       * block in the lower triangular part.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                    default: {
+                      Assert(false,
+                             ExcMessage(
+                               std::string("Invalid H-matrix block type: ") +
+                               std::string(HMatrixSupport::block_type_name(
+                                 hmat->block_type))));
+                      break;
+                    }
+                }
+
+              break;
+            }
+            case HMatrixSupport::Property::lower_triangular: {
+              /**
+               * When the top level \hmatnode has the @p lower_triangular
+               * property, only those \hmatnodes in the leaf set that belong
+               * to the diagonal or lower triangular part in the top level
+               * \hmatrix will be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                    case HMatrixSupport::BlockType::diagonal_block: {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be a lower triangular full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p lower_triangular.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::Property::lower_triangular);
+
+                      /**
+                       * Assign matrix values from \p M to the current HMatrix.
+                       */
+                      for (unsigned int i = 0; i < hmat->m; i++)
+                        {
+                          for (unsigned int j = 0; j < hmat->n; j++)
+                            {
+                              (*hmat->fullmatrix)(i, j) =
+                                M((*hmat->row_index_range)[0] + i,
+                                  (*hmat->col_index_range)[0] + j);
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix,
+                       * it can be either a full matrix or a rank-k matrix.
+                       * Its memory will be allocated because it contains
+                       * effective data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                          /**
+                           * Assign matrix values from \p M to the current HMatrix.
+                           */
+                          for (unsigned int i = 0; i < hmat->m; i++)
+                            {
+                              for (unsigned int j = 0; j < hmat->n; j++)
+                                {
+                                  (*hmat->fullmatrix)(i, j) =
+                                    M((*hmat->row_index_range)[0] + i,
+                                      (*hmat->col_index_range)[0] + j);
+                                }
+                            }
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(*(hmat->row_index_range),
+                                                 *(hmat->col_index_range),
+                                                 fixed_rank_k,
+                                                 M);
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the upper triangular part in the top level \hmatrix,
@@ -5841,7 +6277,7 @@ InitAndCreateHMatrixChildren(
 
               break;
             }
-            case HMatrixSupport::upper_triangular: {
+            case HMatrixSupport::Property::upper_triangular: {
               /**
                * When the top level \hmatnode has the @p upper_triangular
                * property, only those \hmatnodes in the leaf set that belong
@@ -5850,7 +6286,7 @@ InitAndCreateHMatrixChildren(
                */
               switch (hmat->block_type)
                 {
-                    case HMatrixSupport::diagonal_block: {
+                    case HMatrixSupport::BlockType::diagonal_block: {
                       /**
                        * When the current \hmatnode in the leaf set is a
                        * diagonal block in the top level \hmatrix, it can only
@@ -5882,7 +6318,7 @@ InitAndCreateHMatrixChildren(
                       hmat->fullmatrix =
                         new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
                       hmat->fullmatrix->set_property(
-                        LAPACKSupport::upper_triangular);
+                        LAPACKSupport::Property::upper_triangular);
 
                       /**
                        * Assign matrix values from \p M to the current HMatrix.
@@ -5899,7 +6335,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::upper_triangular_block: {
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the upper triangular part in the top level \hmatrix,
@@ -5938,7 +6374,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular_block: {
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the lower triangular part in the top level \hmatrix,
@@ -6013,18 +6449,21 @@ InitAndCreateHMatrixChildren(
 template <int spacedim, typename Number = double>
 void
 InitAndCreateHMatrixChildren(
-  HMatrix<spacedim, Number>                                           *hmat,
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
-  const LAPACKFullMatrixExt<Number>                                   &M,
-  const HMatrixSupport::Property top_hmat_node_property =
-    HMatrixSupport::general)
+  HMatrix<spacedim, Number> *hmat,
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_const_pointer_type          bc_node,
+  const LAPACKFullMatrixExt<Number> &M,
+  const HMatrixSupport::Property     top_hmat_node_property =
+    HMatrixSupport::Property::general)
 {
   /**
    * Link \p hmat with \p bc_node.
    */
-  hmat->bc_node =
-    const_cast<typename BlockClusterTree<spacedim, Number>::node_pointer_type>(
-      bc_node);
+  hmat->bc_node = const_cast<typename BlockClusterTree<
+    spacedim,
+    typename numbers::NumberTraits<Number>::real_type>::node_pointer_type>(
+    bc_node);
 
   /**
    * Link row and column indices.
@@ -6077,7 +6516,7 @@ InitAndCreateHMatrixChildren(
            */
           switch (hmat->block_type)
             {
-                case HMatrixSupport::undefined_block: {
+                case HMatrixSupport::BlockType::undefined_block: {
                   /**
                    * When the current \hmatrix block is @p undefined_block, all
                    * child \hmatrices are @p undefined_block.
@@ -6086,7 +6525,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::diagonal_block: {
+                case HMatrixSupport::BlockType::diagonal_block: {
                   /**
                    * When the current \hmatrix is @p diagonal_block, the first and
                    * fourth child \hmatrices are @p diagonal_block, while the second
@@ -6097,25 +6536,25 @@ InitAndCreateHMatrixChildren(
                     {
                         case 0: {
                           child_hmat->block_type =
-                            HMatrixSupport::diagonal_block;
+                            HMatrixSupport::BlockType::diagonal_block;
 
                           break;
                         }
                         case 1: {
                           child_hmat->block_type =
-                            HMatrixSupport::upper_triangular_block;
+                            HMatrixSupport::BlockType::upper_triangular_block;
 
                           break;
                         }
                         case 2: {
                           child_hmat->block_type =
-                            HMatrixSupport::lower_triangular_block;
+                            HMatrixSupport::BlockType::lower_triangular_block;
 
                           break;
                         }
                         case 3: {
                           child_hmat->block_type =
-                            HMatrixSupport::diagonal_block;
+                            HMatrixSupport::BlockType::diagonal_block;
 
                           break;
                         }
@@ -6127,7 +6566,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::upper_triangular_block: {
+                case HMatrixSupport::BlockType::upper_triangular_block: {
                   /**
                    * When the current \hmatrix is @p upper_triangular_block,
                    * all child \hmatrices are @p upper_triangular_block.
@@ -6136,7 +6575,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::lower_triangular_block: {
+                case HMatrixSupport::BlockType::lower_triangular_block: {
                   /**
                    * When the current \hmatrix is @p lower_triangular_block,
                    * all child \hmatrices are @p lower_triangular_block.
@@ -6159,64 +6598,89 @@ InitAndCreateHMatrixChildren(
            */
           switch (hmat->property)
             {
-                case HMatrixSupport::general: {
+                case HMatrixSupport::Property::general: {
                   /**
                    * When the property of the current \hmatrix is @p general,
                    * all of its children have the same property @p general.
                    */
-                  child_hmat->property = HMatrixSupport::general;
+                  child_hmat->property = HMatrixSupport::Property::general;
 
                   break;
                 }
-                case HMatrixSupport::symmetric: {
+                case HMatrixSupport::Property::symmetric: {
                   /**
                    * When the property of the current \hmatrix is @p symmetric,
                    * only those diagonal submatrices are @p symmetric, while
                    * the other submatrices are @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::symmetric;
+                      child_hmat->property =
+                        HMatrixSupport::Property::symmetric;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
                 }
-                case HMatrixSupport::upper_triangular: {
+                case HMatrixSupport::Property::hermite_symmetric: {
+                  /**
+                   * When the property of the current \hmatrix is @p hermite_symmetric,
+                   * only those diagonal submatrices are @p hermite_symmetric, while
+                   * the other submatrices are @p general.
+                   */
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
+                    {
+                      child_hmat->property =
+                        HMatrixSupport::Property::hermite_symmetric;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::Property::general;
+                    }
+
+                  break;
+                }
+                case HMatrixSupport::Property::upper_triangular: {
                   /**
                    * When the property of the current \hmatrix is
                    * @p upper_triangular, only those diagonal submatrices are
                    * @p upper_triangular, while the other submatrices are
                    * @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::upper_triangular;
+                      child_hmat->property =
+                        HMatrixSupport::Property::upper_triangular;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
                 }
-                case HMatrixSupport::lower_triangular: {
+                case HMatrixSupport::Property::lower_triangular: {
                   /**
                    * When the property of the current \hmatrix is
                    * @p lower_triangular, only those diagonal submatrices are
                    * @p lower_triangular, while the other submatrices are
                    * @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::lower_triangular;
+                      child_hmat->property =
+                        HMatrixSupport::Property::lower_triangular;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
@@ -6261,7 +6725,7 @@ InitAndCreateHMatrixChildren(
        */
       switch (top_hmat_node_property)
         {
-            case HMatrixSupport::general: {
+            case HMatrixSupport::Property::general: {
               /**
                * When the top level \hmatnode has the @p general property, all
                * \hmatnodes in the leaf set should be created with allocated
@@ -6297,7 +6761,7 @@ InitAndCreateHMatrixChildren(
 
               break;
             }
-            case HMatrixSupport::symmetric: {
+            case HMatrixSupport::Property::symmetric: {
               /**
                * When the top level \hmatnode has the @p symmetric property,
                * only those \hmatnodes in the leaf set that belong to the
@@ -6306,7 +6770,7 @@ InitAndCreateHMatrixChildren(
                */
               switch (hmat->block_type)
                 {
-                    case HMatrixSupport::diagonal_block: {
+                    case HMatrixSupport::BlockType::diagonal_block: {
                       /**
                        * When the current \hmatnode in the leaf set is a
                        * diagonal block in the top level \hmatrix, it can only
@@ -6337,7 +6801,8 @@ InitAndCreateHMatrixChildren(
                       hmat->type = FullMatrixType;
                       hmat->fullmatrix =
                         new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
-                      hmat->fullmatrix->set_property(LAPACKSupport::symmetric);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::Property::symmetric);
 
                       /**
                        * Assign matrix values from \p M to the current HMatrix.
@@ -6354,7 +6819,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular_block: {
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the lower triangular part in the top level \hmatrix,
@@ -6392,7 +6857,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::upper_triangular_block: {
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the upper triangular part in the top level \hmatrix,
@@ -6423,7 +6888,134 @@ InitAndCreateHMatrixChildren(
 
               break;
             }
-            case HMatrixSupport::lower_triangular: {
+            case HMatrixSupport::Property::hermite_symmetric: {
+              /**
+               * When the top level \hmatnode has the @p hermite_symmetric property,
+               * only those \hmatnodes in the leaf set that belong to the
+               * diagonal or lower triangular part of the original \hmatrix
+               * will be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                    case HMatrixSupport::BlockType::diagonal_block: {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be an Hermite symmetric full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p hermite_symmetric.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::Property::hermite_symmetric);
+
+                      /**
+                       * Assign matrix values from \p M to the current HMatrix.
+                       */
+                      for (unsigned int i = 0; i < hmat->m; i++)
+                        {
+                          for (unsigned int j = 0; j < hmat->n; j++)
+                            {
+                              (*hmat->fullmatrix)(i, j) =
+                                M((*hmat->row_index_range)[0] + i,
+                                  (*hmat->col_index_range)[0] + j);
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix,
+                       * it can be either a full matrix or a rank-k matrix.
+                       * Its memory will be allocated because it contains
+                       * effective data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                          /**
+                           * Assign matrix values from \p M to the current HMatrix.
+                           */
+                          for (unsigned int i = 0; i < hmat->m; i++)
+                            {
+                              for (unsigned int j = 0; j < hmat->n; j++)
+                                {
+                                  (*hmat->fullmatrix)(i, j) =
+                                    M((*hmat->row_index_range)[0] + i,
+                                      (*hmat->col_index_range)[0] + j);
+                                }
+                            }
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(*(hmat->row_index_range),
+                                                 *(hmat->col_index_range),
+                                                 M);
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is symmetric to the corresponding block in
+                       * the lower triangular part.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                    default: {
+                      Assert(false,
+                             ExcInvalidHMatrixBlockType(hmat->block_type));
+                      break;
+                    }
+                }
+
+              break;
+            }
+            case HMatrixSupport::Property::lower_triangular: {
               /**
                * When the top level \hmatnode has the @p lower_triangular
                * property, only those \hmatnodes in the leaf set that belong
@@ -6432,7 +7024,7 @@ InitAndCreateHMatrixChildren(
                */
               switch (hmat->block_type)
                 {
-                    case HMatrixSupport::diagonal_block: {
+                    case HMatrixSupport::BlockType::diagonal_block: {
                       /**
                        * When the current \hmatnode in the leaf set is a
                        * diagonal block in the top level \hmatrix, it can only
@@ -6464,7 +7056,7 @@ InitAndCreateHMatrixChildren(
                       hmat->fullmatrix =
                         new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
                       hmat->fullmatrix->set_property(
-                        LAPACKSupport::lower_triangular);
+                        LAPACKSupport::Property::lower_triangular);
 
                       /**
                        * Assign matrix values from \p M to the current HMatrix.
@@ -6481,7 +7073,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular_block: {
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the lower triangular part in the top level \hmatrix,
@@ -6519,7 +7111,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::upper_triangular_block: {
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the upper triangular part in the top level \hmatrix,
@@ -6549,7 +7141,7 @@ InitAndCreateHMatrixChildren(
 
               break;
             }
-            case HMatrixSupport::upper_triangular: {
+            case HMatrixSupport::Property::upper_triangular: {
               /**
                * When the top level \hmatnode has the @p upper_triangular
                * property, only those \hmatnodes in the leaf set that belong
@@ -6558,7 +7150,7 @@ InitAndCreateHMatrixChildren(
                */
               switch (hmat->block_type)
                 {
-                    case HMatrixSupport::diagonal_block: {
+                    case HMatrixSupport::BlockType::diagonal_block: {
                       /**
                        * When the current \hmatnode in the leaf set is a
                        * diagonal block in the top level \hmatrix, it can only
@@ -6590,7 +7182,7 @@ InitAndCreateHMatrixChildren(
                       hmat->fullmatrix =
                         new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
                       hmat->fullmatrix->set_property(
-                        LAPACKSupport::upper_triangular);
+                        LAPACKSupport::Property::upper_triangular);
 
                       /**
                        * Assign matrix values from \p M to the current HMatrix.
@@ -6607,7 +7199,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::upper_triangular_block: {
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the upper triangular part in the top level \hmatrix,
@@ -6645,7 +7237,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular_block: {
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the lower triangular part in the top level \hmatrix,
@@ -6715,14 +7307,16 @@ InitAndCreateHMatrixChildren(
 template <int spacedim, typename Number = double>
 void
 InitAndCreateHMatrixChildren(
-  HMatrix<spacedim, Number>                                           *hmat,
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
+  HMatrix<spacedim, Number> *hmat,
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_const_pointer_type                     bc_node,
   const unsigned int                            fixed_rank_k,
   const LAPACKFullMatrixExt<Number>            &M,
   const std::array<types::global_dof_index, 2> &M_row_index_range,
   const std::array<types::global_dof_index, 2> &M_col_index_range,
   const HMatrixSupport::Property                top_hmat_node_property =
-    HMatrixSupport::general)
+    HMatrixSupport::Property::general)
 {
   /**
    * Update the matrix dimension of \p hmat.
@@ -6761,7 +7355,7 @@ InitAndCreateHMatrixChildren(
            */
           switch (hmat->block_type)
             {
-                case HMatrixSupport::undefined_block: {
+                case HMatrixSupport::BlockType::undefined_block: {
                   /**
                    * When the current \hmatrix block is @p undefined_block, all
                    * child \hmatrices are @p undefined_block.
@@ -6770,7 +7364,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::diagonal_block: {
+                case HMatrixSupport::BlockType::diagonal_block: {
                   /**
                    * When the current \hmatrix is @p diagonal_block, the first and
                    * fourth child \hmatrices are @p diagonal_block, while the second
@@ -6781,25 +7375,25 @@ InitAndCreateHMatrixChildren(
                     {
                         case 0: {
                           child_hmat->block_type =
-                            HMatrixSupport::diagonal_block;
+                            HMatrixSupport::BlockType::diagonal_block;
 
                           break;
                         }
                         case 1: {
                           child_hmat->block_type =
-                            HMatrixSupport::upper_triangular_block;
+                            HMatrixSupport::BlockType::upper_triangular_block;
 
                           break;
                         }
                         case 2: {
                           child_hmat->block_type =
-                            HMatrixSupport::lower_triangular_block;
+                            HMatrixSupport::BlockType::lower_triangular_block;
 
                           break;
                         }
                         case 3: {
                           child_hmat->block_type =
-                            HMatrixSupport::diagonal_block;
+                            HMatrixSupport::BlockType::diagonal_block;
 
                           break;
                         }
@@ -6811,7 +7405,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::upper_triangular_block: {
+                case HMatrixSupport::BlockType::upper_triangular_block: {
                   /**
                    * When the current \hmatrix is @p upper_triangular_block,
                    * all child \hmatrices are @p upper_triangular_block.
@@ -6820,7 +7414,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::lower_triangular_block: {
+                case HMatrixSupport::BlockType::lower_triangular_block: {
                   /**
                    * When the current \hmatrix is @p lower_triangular_block,
                    * all child \hmatrices are @p lower_triangular_block.
@@ -6841,64 +7435,89 @@ InitAndCreateHMatrixChildren(
            */
           switch (hmat->property)
             {
-                case HMatrixSupport::general: {
+                case HMatrixSupport::Property::general: {
                   /**
                    * When the property of the current \hmatrix is @p general,
                    * all of its children have the same property @p general.
                    */
-                  child_hmat->property = HMatrixSupport::general;
+                  child_hmat->property = HMatrixSupport::Property::general;
 
                   break;
                 }
-                case HMatrixSupport::symmetric: {
+                case HMatrixSupport::Property::symmetric: {
                   /**
                    * When the property of the current \hmatrix is @p symmetric,
                    * only those diagonal submatrices are @p symmetric, while
                    * the other submatrices are @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::symmetric;
+                      child_hmat->property =
+                        HMatrixSupport::Property::symmetric;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
                 }
-                case HMatrixSupport::upper_triangular: {
+                case HMatrixSupport::Property::hermite_symmetric: {
+                  /**
+                   * When the property of the current \hmatrix is @p hermite_symmetric,
+                   * only those diagonal submatrices are @p hermite_symmetric, while
+                   * the other submatrices are @p general.
+                   */
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
+                    {
+                      child_hmat->property =
+                        HMatrixSupport::Property::hermite_symmetric;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::Property::general;
+                    }
+
+                  break;
+                }
+                case HMatrixSupport::Property::upper_triangular: {
                   /**
                    * When the property of the current \hmatrix is
                    * @p upper_triangular, only those diagonal submatrices are
                    * @p upper_triangular, while the other submatrices are
                    * @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::upper_triangular;
+                      child_hmat->property =
+                        HMatrixSupport::Property::upper_triangular;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
                 }
-                case HMatrixSupport::lower_triangular: {
+                case HMatrixSupport::Property::lower_triangular: {
                   /**
                    * When the property of the current \hmatrix is
                    * @p lower_triangular, only those diagonal submatrices are
                    * @p lower_triangular, while the other submatrices are
                    * @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::lower_triangular;
+                      child_hmat->property =
+                        HMatrixSupport::Property::lower_triangular;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
@@ -6944,7 +7563,7 @@ InitAndCreateHMatrixChildren(
        */
       switch (top_hmat_node_property)
         {
-            case HMatrixSupport::general: {
+            case HMatrixSupport::Property::general: {
               /**
                * When the top level \hmatnode has the @p general property, all
                * \hmatnodes in the leaf set should be created with allocated
@@ -6985,7 +7604,7 @@ InitAndCreateHMatrixChildren(
 
               break;
             }
-            case HMatrixSupport::symmetric: {
+            case HMatrixSupport::Property::symmetric: {
               /**
                * When the top level \hmatnode has the @p symmetric property,
                * only those \hmatnodes in the leaf set that belong to the
@@ -6994,7 +7613,7 @@ InitAndCreateHMatrixChildren(
                */
               switch (hmat->block_type)
                 {
-                    case HMatrixSupport::diagonal_block: {
+                    case HMatrixSupport::BlockType::diagonal_block: {
                       /**
                        * When the current \hmatnode in the leaf set is a
                        * diagonal block in the top level \hmatrix, it can only
@@ -7025,7 +7644,8 @@ InitAndCreateHMatrixChildren(
                       hmat->type = FullMatrixType;
                       hmat->fullmatrix =
                         new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
-                      hmat->fullmatrix->set_property(LAPACKSupport::symmetric);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::Property::symmetric);
 
                       /**
                        * Assign matrix values from \p M to the current HMatrix.
@@ -7044,7 +7664,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular_block: {
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the lower triangular part in the top level \hmatrix,
@@ -7087,7 +7707,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::upper_triangular_block: {
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the upper triangular part in the top level \hmatrix,
@@ -7118,7 +7738,141 @@ InitAndCreateHMatrixChildren(
 
               break;
             }
-            case HMatrixSupport::lower_triangular: {
+            case HMatrixSupport::Property::hermite_symmetric: {
+              /**
+               * When the top level \hmatnode has the @p hermite_symmetric property,
+               * only those \hmatnodes in the leaf set that belong to the
+               * diagonal or lower triangular part of the original \hmatrix
+               * will be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                    case HMatrixSupport::BlockType::diagonal_block: {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be an Hermite symmetric full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p hermite_symmetric.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::Property::hermite_symmetric);
+
+                      /**
+                       * Assign matrix values from \p M to the current HMatrix.
+                       */
+                      for (unsigned int i = 0; i < hmat->m; i++)
+                        {
+                          for (unsigned int j = 0; j < hmat->n; j++)
+                            {
+                              (*hmat->fullmatrix)(i, j) =
+                                M((*hmat->row_index_range)[0] -
+                                    M_row_index_range[0] + i,
+                                  (*hmat->col_index_range)[0] -
+                                    M_col_index_range[0] + j);
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix,
+                       * it can be either a full matrix or a rank-k matrix.
+                       * Its memory will be allocated because it contains
+                       * effective data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                          /**
+                           * Assign matrix values from \p M to the current HMatrix.
+                           */
+                          for (unsigned int i = 0; i < hmat->m; i++)
+                            {
+                              for (unsigned int j = 0; j < hmat->n; j++)
+                                {
+                                  (*hmat->fullmatrix)(i, j) =
+                                    M((*hmat->row_index_range)[0] -
+                                        M_row_index_range[0] + i,
+                                      (*hmat->col_index_range)[0] -
+                                        M_col_index_range[0] + j);
+                                }
+                            }
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(*(hmat->row_index_range),
+                                                 *(hmat->col_index_range),
+                                                 fixed_rank_k,
+                                                 M,
+                                                 M_row_index_range,
+                                                 M_col_index_range);
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is symmetric to the corresponding block in
+                       * the lower triangular part.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                    default: {
+                      Assert(false,
+                             ExcInvalidHMatrixBlockType(hmat->block_type));
+                      break;
+                    }
+                }
+
+              break;
+            }
+            case HMatrixSupport::Property::lower_triangular: {
               /**
                * When the top level \hmatnode has the @p lower_triangular
                * property, only those \hmatnodes in the leaf set that belong
@@ -7127,7 +7881,7 @@ InitAndCreateHMatrixChildren(
                */
               switch (hmat->block_type)
                 {
-                    case HMatrixSupport::diagonal_block: {
+                    case HMatrixSupport::BlockType::diagonal_block: {
                       /**
                        * When the current \hmatnode in the leaf set is a
                        * diagonal block in the top level \hmatrix, it can only
@@ -7159,7 +7913,7 @@ InitAndCreateHMatrixChildren(
                       hmat->fullmatrix =
                         new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
                       hmat->fullmatrix->set_property(
-                        LAPACKSupport::lower_triangular);
+                        LAPACKSupport::Property::lower_triangular);
 
                       /**
                        * Assign matrix values from \p M to the current HMatrix.
@@ -7178,7 +7932,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular_block: {
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the lower triangular part in the top level \hmatrix,
@@ -7221,7 +7975,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::upper_triangular_block: {
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the upper triangular part in the top level \hmatrix,
@@ -7251,7 +8005,7 @@ InitAndCreateHMatrixChildren(
 
               break;
             }
-            case HMatrixSupport::upper_triangular: {
+            case HMatrixSupport::Property::upper_triangular: {
               /**
                * When the top level \hmatnode has the @p upper_triangular
                * property, only those \hmatnodes in the leaf set that belong
@@ -7260,7 +8014,7 @@ InitAndCreateHMatrixChildren(
                */
               switch (hmat->block_type)
                 {
-                    case HMatrixSupport::diagonal_block: {
+                    case HMatrixSupport::BlockType::diagonal_block: {
                       /**
                        * When the current \hmatnode in the leaf set is a
                        * diagonal block in the top level \hmatrix, it can only
@@ -7292,7 +8046,7 @@ InitAndCreateHMatrixChildren(
                       hmat->fullmatrix =
                         new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
                       hmat->fullmatrix->set_property(
-                        LAPACKSupport::upper_triangular);
+                        LAPACKSupport::Property::upper_triangular);
 
                       /**
                        * Assign matrix values from \p M to the current HMatrix.
@@ -7311,7 +8065,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::upper_triangular_block: {
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the upper triangular part in the top level \hmatrix,
@@ -7354,7 +8108,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular_block: {
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the lower triangular part in the top level \hmatrix,
@@ -7412,20 +8166,23 @@ InitAndCreateHMatrixChildren(
 template <int spacedim, typename Number = double>
 void
 InitAndCreateHMatrixChildren(
-  HMatrix<spacedim, Number>                                           *hmat,
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
-  const LAPACKFullMatrixExt<Number>                                   &M,
+  HMatrix<spacedim, Number> *hmat,
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_const_pointer_type                     bc_node,
+  const LAPACKFullMatrixExt<Number>            &M,
   const std::array<types::global_dof_index, 2> &M_row_index_range,
   const std::array<types::global_dof_index, 2> &M_col_index_range,
   const HMatrixSupport::Property                top_hmat_node_property =
-    HMatrixSupport::general)
+    HMatrixSupport::Property::general)
 {
   /**
    * Link \p hmat with \p bc_node.
    */
-  hmat->bc_node =
-    const_cast<typename BlockClusterTree<spacedim, Number>::node_pointer_type>(
-      bc_node);
+  hmat->bc_node = const_cast<typename BlockClusterTree<
+    spacedim,
+    typename numbers::NumberTraits<Number>::real_type>::node_pointer_type>(
+    bc_node);
 
   /**
    * Link row and column indices.
@@ -7478,7 +8235,7 @@ InitAndCreateHMatrixChildren(
            */
           switch (hmat->block_type)
             {
-                case HMatrixSupport::undefined_block: {
+                case HMatrixSupport::BlockType::undefined_block: {
                   /**
                    * When the current \hmatrix block is @p undefined_block, all
                    * child \hmatrices are @p undefined_block.
@@ -7487,7 +8244,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::diagonal_block: {
+                case HMatrixSupport::BlockType::diagonal_block: {
                   /**
                    * When the current \hmatrix is @p diagonal_block, the first and
                    * fourth child \hmatrices are @p diagonal_block, while the second
@@ -7498,25 +8255,25 @@ InitAndCreateHMatrixChildren(
                     {
                         case 0: {
                           child_hmat->block_type =
-                            HMatrixSupport::diagonal_block;
+                            HMatrixSupport::BlockType::diagonal_block;
 
                           break;
                         }
                         case 1: {
                           child_hmat->block_type =
-                            HMatrixSupport::upper_triangular_block;
+                            HMatrixSupport::BlockType::upper_triangular_block;
 
                           break;
                         }
                         case 2: {
                           child_hmat->block_type =
-                            HMatrixSupport::lower_triangular_block;
+                            HMatrixSupport::BlockType::lower_triangular_block;
 
                           break;
                         }
                         case 3: {
                           child_hmat->block_type =
-                            HMatrixSupport::diagonal_block;
+                            HMatrixSupport::BlockType::diagonal_block;
 
                           break;
                         }
@@ -7528,7 +8285,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::upper_triangular_block: {
+                case HMatrixSupport::BlockType::upper_triangular_block: {
                   /**
                    * When the current \hmatrix is @p upper_triangular_block,
                    * all child \hmatrices are @p upper_triangular_block.
@@ -7537,7 +8294,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::lower_triangular_block: {
+                case HMatrixSupport::BlockType::lower_triangular_block: {
                   /**
                    * When the current \hmatrix is @p lower_triangular_block,
                    * all child \hmatrices are @p lower_triangular_block.
@@ -7558,64 +8315,89 @@ InitAndCreateHMatrixChildren(
            */
           switch (hmat->property)
             {
-                case HMatrixSupport::general: {
+                case HMatrixSupport::Property::general: {
                   /**
                    * When the property of the current \hmatrix is @p general,
                    * all of its children have the same property @p general.
                    */
-                  child_hmat->property = HMatrixSupport::general;
+                  child_hmat->property = HMatrixSupport::Property::general;
 
                   break;
                 }
-                case HMatrixSupport::symmetric: {
+                case HMatrixSupport::Property::symmetric: {
                   /**
                    * When the property of the current \hmatrix is @p symmetric,
                    * only those diagonal submatrices are @p symmetric, while
                    * the other submatrices are @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::symmetric;
+                      child_hmat->property =
+                        HMatrixSupport::Property::symmetric;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
                 }
-                case HMatrixSupport::upper_triangular: {
+                case HMatrixSupport::Property::hermite_symmetric: {
+                  /**
+                   * When the property of the current \hmatrix is @p hermite_symmetric,
+                   * only those diagonal submatrices are @p hermite_symmetric, while
+                   * the other submatrices are @p general.
+                   */
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
+                    {
+                      child_hmat->property =
+                        HMatrixSupport::Property::hermite_symmetric;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::Property::general;
+                    }
+
+                  break;
+                }
+                case HMatrixSupport::Property::upper_triangular: {
                   /**
                    * When the property of the current \hmatrix is
                    * @p upper_triangular, only those diagonal submatrices are
                    * @p upper_triangular, while the other submatrices are
                    * @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::upper_triangular;
+                      child_hmat->property =
+                        HMatrixSupport::Property::upper_triangular;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
                 }
-                case HMatrixSupport::lower_triangular: {
+                case HMatrixSupport::Property::lower_triangular: {
                   /**
                    * When the property of the current \hmatrix is
                    * @p lower_triangular, only those diagonal submatrices are
                    * @p lower_triangular, while the other submatrices are
                    * @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::lower_triangular;
+                      child_hmat->property =
+                        HMatrixSupport::Property::lower_triangular;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
@@ -7660,7 +8442,7 @@ InitAndCreateHMatrixChildren(
        */
       switch (top_hmat_node_property)
         {
-            case HMatrixSupport::general: {
+            case HMatrixSupport::Property::general: {
               /**
                * When the top level \hmatnode has the @p general property, all
                * \hmatnodes in the leaf set should be created with allocated
@@ -7700,7 +8482,7 @@ InitAndCreateHMatrixChildren(
 
               break;
             }
-            case HMatrixSupport::symmetric: {
+            case HMatrixSupport::Property::symmetric: {
               /**
                * When the top level \hmatnode has the @p symmetric property,
                * only those \hmatnodes in the leaf set that belong to the
@@ -7709,7 +8491,7 @@ InitAndCreateHMatrixChildren(
                */
               switch (hmat->block_type)
                 {
-                    case HMatrixSupport::diagonal_block: {
+                    case HMatrixSupport::BlockType::diagonal_block: {
                       /**
                        * When the current \hmatnode in the leaf set is a
                        * diagonal block in the top level \hmatrix, it can only
@@ -7740,7 +8522,8 @@ InitAndCreateHMatrixChildren(
                       hmat->type = FullMatrixType;
                       hmat->fullmatrix =
                         new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
-                      hmat->fullmatrix->set_property(LAPACKSupport::symmetric);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::Property::symmetric);
 
                       /**
                        * Assign matrix values from \p M to the current HMatrix.
@@ -7759,7 +8542,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular_block: {
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the lower triangular part in the top level \hmatrix,
@@ -7801,7 +8584,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::upper_triangular_block: {
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the upper triangular part in the top level \hmatrix,
@@ -7832,7 +8615,140 @@ InitAndCreateHMatrixChildren(
 
               break;
             }
-            case HMatrixSupport::lower_triangular: {
+            case HMatrixSupport::Property::hermite_symmetric: {
+              /**
+               * When the top level \hmatnode has the @p hermite_symmetric property,
+               * only those \hmatnodes in the leaf set that belong to the
+               * diagonal or lower triangular part of the original \hmatrix
+               * will be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                    case HMatrixSupport::BlockType::diagonal_block: {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be an Hermite symmetric full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p hermite_symmetric.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::Property::hermite_symmetric);
+
+                      /**
+                       * Assign matrix values from \p M to the current HMatrix.
+                       */
+                      for (unsigned int i = 0; i < hmat->m; i++)
+                        {
+                          for (unsigned int j = 0; j < hmat->n; j++)
+                            {
+                              (*hmat->fullmatrix)(i, j) =
+                                M((*hmat->row_index_range)[0] -
+                                    M_row_index_range[0] + i,
+                                  (*hmat->col_index_range)[0] -
+                                    M_col_index_range[0] + j);
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix,
+                       * it can be either a full matrix or a rank-k matrix.
+                       * Its memory will be allocated because it contains
+                       * effective data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                          /**
+                           * Assign matrix values from \p M to the current HMatrix.
+                           */
+                          for (unsigned int i = 0; i < hmat->m; i++)
+                            {
+                              for (unsigned int j = 0; j < hmat->n; j++)
+                                {
+                                  (*hmat->fullmatrix)(i, j) =
+                                    M((*hmat->row_index_range)[0] -
+                                        M_row_index_range[0] + i,
+                                      (*hmat->col_index_range)[0] -
+                                        M_col_index_range[0] + j);
+                                }
+                            }
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(*(hmat->row_index_range),
+                                                 *(hmat->col_index_range),
+                                                 M,
+                                                 M_row_index_range,
+                                                 M_col_index_range);
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is symmetric to the corresponding block in
+                       * the lower triangular part.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                    default: {
+                      Assert(false,
+                             ExcInvalidHMatrixBlockType(hmat->block_type));
+                      break;
+                    }
+                }
+
+              break;
+            }
+            case HMatrixSupport::Property::lower_triangular: {
               /**
                * When the top level \hmatnode has the @p lower_triangular
                * property, only those \hmatnodes in the leaf set that belong
@@ -7841,7 +8757,7 @@ InitAndCreateHMatrixChildren(
                */
               switch (hmat->block_type)
                 {
-                    case HMatrixSupport::diagonal_block: {
+                    case HMatrixSupport::BlockType::diagonal_block: {
                       /**
                        * When the current \hmatnode in the leaf set is a
                        * diagonal block in the top level \hmatrix, it can only
@@ -7873,7 +8789,7 @@ InitAndCreateHMatrixChildren(
                       hmat->fullmatrix =
                         new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
                       hmat->fullmatrix->set_property(
-                        LAPACKSupport::lower_triangular);
+                        LAPACKSupport::Property::lower_triangular);
 
                       /**
                        * Assign matrix values from \p M to the current HMatrix.
@@ -7892,7 +8808,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular_block: {
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the lower triangular part in the top level \hmatrix,
@@ -7934,7 +8850,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::upper_triangular_block: {
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the upper triangular part in the top level \hmatrix,
@@ -7964,7 +8880,7 @@ InitAndCreateHMatrixChildren(
 
               break;
             }
-            case HMatrixSupport::upper_triangular: {
+            case HMatrixSupport::Property::upper_triangular: {
               /**
                * When the top level \hmatnode has the @p upper_triangular
                * property, only those \hmatnodes in the leaf set that belong
@@ -7973,7 +8889,7 @@ InitAndCreateHMatrixChildren(
                */
               switch (hmat->block_type)
                 {
-                    case HMatrixSupport::diagonal_block: {
+                    case HMatrixSupport::BlockType::diagonal_block: {
                       /**
                        * When the current \hmatnode in the leaf set is a
                        * diagonal block in the top level \hmatrix, it can only
@@ -8005,7 +8921,7 @@ InitAndCreateHMatrixChildren(
                       hmat->fullmatrix =
                         new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
                       hmat->fullmatrix->set_property(
-                        LAPACKSupport::upper_triangular);
+                        LAPACKSupport::Property::upper_triangular);
 
                       /**
                        * Assign matrix values from \p M to the current HMatrix.
@@ -8024,7 +8940,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::upper_triangular_block: {
+                    case HMatrixSupport::BlockType::upper_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the upper triangular part in the top level \hmatrix,
@@ -8066,7 +8982,7 @@ InitAndCreateHMatrixChildren(
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular_block: {
+                    case HMatrixSupport::BlockType::lower_triangular_block: {
                       /**
                        * When the current \hmatnode in the leaf set belongs to
                        * the lower triangular part in the top level \hmatrix,
@@ -8121,17 +9037,20 @@ InitAndCreateHMatrixChildren(
 template <int spacedim, typename Number = double>
 void
 InitAndCreateHMatrixChildren(
-  HMatrix<spacedim, Number>                                           *hmat,
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
-  HMatrix<spacedim, Number>                                          &&H)
+  HMatrix<spacedim, Number> *hmat,
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_const_pointer_type   bc_node,
+  HMatrix<spacedim, Number> &&H)
 {
   /**
    * Link \p hmat with \p bc_node and remove the @p const feature @p bc_node by
    * using @p const_cast.
    */
-  hmat->bc_node =
-    const_cast<typename BlockClusterTree<spacedim, Number>::node_pointer_type>(
-      bc_node);
+  hmat->bc_node = const_cast<typename BlockClusterTree<
+    spacedim,
+    typename numbers::NumberTraits<Number>::real_type>::node_pointer_type>(
+    bc_node);
 
   /**
    * Link row and column indices stored in the clusters \f$\tau\f$ and
@@ -8187,7 +9106,7 @@ InitAndCreateHMatrixChildren(
            */
           switch (hmat->block_type)
             {
-                case HMatrixSupport::undefined_block: {
+                case HMatrixSupport::BlockType::undefined_block: {
                   /**
                    * When the current \hmatrix block is @p undefined_block, all
                    * child \hmatrices are @p undefined_block.
@@ -8196,7 +9115,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::diagonal_block: {
+                case HMatrixSupport::BlockType::diagonal_block: {
                   /**
                    * When the current \hmatrix is @p diagonal_block, the first and
                    * fourth child \hmatrices are @p diagonal_block, while the second
@@ -8207,25 +9126,25 @@ InitAndCreateHMatrixChildren(
                     {
                         case 0: {
                           child_hmat->block_type =
-                            HMatrixSupport::diagonal_block;
+                            HMatrixSupport::BlockType::diagonal_block;
 
                           break;
                         }
                         case 1: {
                           child_hmat->block_type =
-                            HMatrixSupport::upper_triangular_block;
+                            HMatrixSupport::BlockType::upper_triangular_block;
 
                           break;
                         }
                         case 2: {
                           child_hmat->block_type =
-                            HMatrixSupport::lower_triangular_block;
+                            HMatrixSupport::BlockType::lower_triangular_block;
 
                           break;
                         }
                         case 3: {
                           child_hmat->block_type =
-                            HMatrixSupport::diagonal_block;
+                            HMatrixSupport::BlockType::diagonal_block;
 
                           break;
                         }
@@ -8237,7 +9156,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::upper_triangular_block: {
+                case HMatrixSupport::BlockType::upper_triangular_block: {
                   /**
                    * When the current \hmatrix is @p upper_triangular_block,
                    * all child \hmatrices are @p upper_triangular_block.
@@ -8246,7 +9165,7 @@ InitAndCreateHMatrixChildren(
 
                   break;
                 }
-                case HMatrixSupport::lower_triangular_block: {
+                case HMatrixSupport::BlockType::lower_triangular_block: {
                   /**
                    * When the current \hmatrix is @p lower_triangular_block,
                    * all child \hmatrices are @p lower_triangular_block.
@@ -8267,64 +9186,89 @@ InitAndCreateHMatrixChildren(
            */
           switch (hmat->property)
             {
-                case HMatrixSupport::general: {
+                case HMatrixSupport::Property::general: {
                   /**
                    * When the property of the current \hmatrix is @p general,
                    * all of its children have the same property @p general.
                    */
-                  child_hmat->property = HMatrixSupport::general;
+                  child_hmat->property = HMatrixSupport::Property::general;
 
                   break;
                 }
-                case HMatrixSupport::symmetric: {
+                case HMatrixSupport::Property::symmetric: {
                   /**
                    * When the property of the current \hmatrix is @p symmetric,
                    * only those diagonal submatrices are @p symmetric, while
                    * the other submatrices are @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::symmetric;
+                      child_hmat->property =
+                        HMatrixSupport::Property::symmetric;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
                 }
-                case HMatrixSupport::upper_triangular: {
+                case HMatrixSupport::Property::hermite_symmetric: {
+                  /**
+                   * When the property of the current \hmatrix is @p hermite_symmetric,
+                   * only those diagonal submatrices are @p hermite_symmetric, while
+                   * the other submatrices are @p general.
+                   */
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
+                    {
+                      child_hmat->property =
+                        HMatrixSupport::Property::hermite_symmetric;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::Property::general;
+                    }
+
+                  break;
+                }
+                case HMatrixSupport::Property::upper_triangular: {
                   /**
                    * When the property of the current \hmatrix is
                    * @p upper_triangular, only those diagonal submatrices are
                    * @p upper_triangular, while the other submatrices are
                    * @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::upper_triangular;
+                      child_hmat->property =
+                        HMatrixSupport::Property::upper_triangular;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
                 }
-                case HMatrixSupport::lower_triangular: {
+                case HMatrixSupport::Property::lower_triangular: {
                   /**
                    * When the property of the current \hmatrix is
                    * @p lower_triangular, only those diagonal submatrices are
                    * @p lower_triangular, while the other submatrices are
                    * @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::lower_triangular;
+                      child_hmat->property =
+                        HMatrixSupport::Property::lower_triangular;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
@@ -8455,7 +9399,7 @@ RefineHMatrixWrtExtendedBlockClusterTree(
            */
           switch (current_hmat->block_type)
             {
-                case HMatrixSupport::undefined_block: {
+                case HMatrixSupport::BlockType::undefined_block: {
                   /**
                    * When the current \hmatrix block is @p undefined_block, all
                    * child \hmatrices are @p undefined_block.
@@ -8464,7 +9408,7 @@ RefineHMatrixWrtExtendedBlockClusterTree(
 
                   break;
                 }
-                case HMatrixSupport::diagonal_block: {
+                case HMatrixSupport::BlockType::diagonal_block: {
                   /**
                    * When the current \hmatrix is @p diagonal_block, the first and
                    * fourth child \hmatrices are @p diagonal_block, while the second
@@ -8475,25 +9419,25 @@ RefineHMatrixWrtExtendedBlockClusterTree(
                     {
                         case 0: {
                           child_hmat->block_type =
-                            HMatrixSupport::diagonal_block;
+                            HMatrixSupport::BlockType::diagonal_block;
 
                           break;
                         }
                         case 1: {
                           child_hmat->block_type =
-                            HMatrixSupport::upper_triangular_block;
+                            HMatrixSupport::BlockType::upper_triangular_block;
 
                           break;
                         }
                         case 2: {
                           child_hmat->block_type =
-                            HMatrixSupport::lower_triangular_block;
+                            HMatrixSupport::BlockType::lower_triangular_block;
 
                           break;
                         }
                         case 3: {
                           child_hmat->block_type =
-                            HMatrixSupport::diagonal_block;
+                            HMatrixSupport::BlockType::diagonal_block;
 
                           break;
                         }
@@ -8505,7 +9449,7 @@ RefineHMatrixWrtExtendedBlockClusterTree(
 
                   break;
                 }
-                case HMatrixSupport::upper_triangular_block: {
+                case HMatrixSupport::BlockType::upper_triangular_block: {
                   /**
                    * When the current \hmatrix is @p upper_triangular_block,
                    * all child \hmatrices are @p upper_triangular_block.
@@ -8514,7 +9458,7 @@ RefineHMatrixWrtExtendedBlockClusterTree(
 
                   break;
                 }
-                case HMatrixSupport::lower_triangular_block: {
+                case HMatrixSupport::BlockType::lower_triangular_block: {
                   /**
                    * When the current \hmatrix is @p lower_triangular_block,
                    * all child \hmatrices are @p lower_triangular_block.
@@ -8537,64 +9481,89 @@ RefineHMatrixWrtExtendedBlockClusterTree(
            */
           switch (current_hmat->property)
             {
-                case HMatrixSupport::general: {
+                case HMatrixSupport::Property::general: {
                   /**
                    * When the property of the current \hmatrix is @p general,
                    * all of its children have the same property @p general.
                    */
-                  child_hmat->property = HMatrixSupport::general;
+                  child_hmat->property = HMatrixSupport::Property::general;
 
                   break;
                 }
-                case HMatrixSupport::symmetric: {
+                case HMatrixSupport::Property::symmetric: {
                   /**
                    * When the property of the current \hmatrix is @p symmetric,
                    * only those diagonal submatrices are @p symmetric, while
                    * the other submatrices are @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::symmetric;
+                      child_hmat->property =
+                        HMatrixSupport::Property::symmetric;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
                 }
-                case HMatrixSupport::upper_triangular: {
+                case HMatrixSupport::Property::hermite_symmetric: {
+                  /**
+                   * When the property of the current \hmatrix is @p hermite_symmetric,
+                   * only those diagonal submatrices are @p hermite_symmetric, while
+                   * the other submatrices are @p general.
+                   */
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
+                    {
+                      child_hmat->property =
+                        HMatrixSupport::Property::hermite_symmetric;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::Property::general;
+                    }
+
+                  break;
+                }
+                case HMatrixSupport::Property::upper_triangular: {
                   /**
                    * When the property of the current \hmatrix is
                    * @p upper_triangular, only those diagonal submatrices are
                    * @p upper_triangular, while the other submatrices are
                    * @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::upper_triangular;
+                      child_hmat->property =
+                        HMatrixSupport::Property::upper_triangular;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
                 }
-                case HMatrixSupport::lower_triangular: {
+                case HMatrixSupport::Property::lower_triangular: {
                   /**
                    * When the property of the current \hmatrix is
                    * @p lower_triangular, only those diagonal submatrices are
                    * @p lower_triangular, while the other submatrices are
                    * @p general.
                    */
-                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                  if (child_hmat->block_type ==
+                      HMatrixSupport::BlockType::diagonal_block)
                     {
-                      child_hmat->property = HMatrixSupport::lower_triangular;
+                      child_hmat->property =
+                        HMatrixSupport::Property::lower_triangular;
                     }
                   else
                     {
-                      child_hmat->property = HMatrixSupport::general;
+                      child_hmat->property = HMatrixSupport::Property::general;
                     }
 
                   break;
@@ -8614,7 +9583,9 @@ RefineHMatrixWrtExtendedBlockClusterTree(
            * block cluster node.
            */
           child_hmat->bc_node = const_cast<
-            typename BlockClusterTree<spacedim, Number>::node_pointer_type>(
+            typename BlockClusterTree<spacedim,
+                                      typename numbers::NumberTraits<
+                                        Number>::real_type>::node_pointer_type>(
             current_hmat->bc_node->get_child_pointer(i));
 
           /**
@@ -8740,31 +9711,38 @@ RefineHMatrixWrtExtendedBlockClusterTree(
                * itself, i.e. its state will change accordingly when some
                * specific operation is applied to it.}
                */
-              if (current_hmat->block_type == HMatrixSupport::diagonal_block)
+              if (current_hmat->block_type ==
+                  HMatrixSupport::BlockType::diagonal_block)
                 {
                   switch (current_hmat->property)
                     {
-                        case HMatrixSupport::general: {
+                        case HMatrixSupport::Property::general: {
                           current_hmat->fullmatrix->set_property(
-                            LAPACKSupport::general);
+                            LAPACKSupport::Property::general);
 
                           break;
                         }
-                        case HMatrixSupport::symmetric: {
+                        case HMatrixSupport::Property::symmetric: {
                           current_hmat->fullmatrix->set_property(
-                            LAPACKSupport::symmetric);
+                            LAPACKSupport::Property::symmetric);
 
                           break;
                         }
-                        case HMatrixSupport::upper_triangular: {
+                        case HMatrixSupport::Property::hermite_symmetric: {
                           current_hmat->fullmatrix->set_property(
-                            LAPACKSupport::upper_triangular);
+                            LAPACKSupport::Property::hermite_symmetric);
 
                           break;
                         }
-                        case HMatrixSupport::lower_triangular: {
+                        case HMatrixSupport::Property::upper_triangular: {
                           current_hmat->fullmatrix->set_property(
-                            LAPACKSupport::lower_triangular);
+                            LAPACKSupport::Property::upper_triangular);
+
+                          break;
+                        }
+                        case HMatrixSupport::Property::lower_triangular: {
+                          current_hmat->fullmatrix->set_property(
+                            LAPACKSupport::Property::lower_triangular);
 
                           break;
                         }
@@ -9343,7 +10321,7 @@ h_rk_mmult(HMatrix<spacedim, Number> &M1,
       for (size_t j = 0; j < M2.formal_rank; j++)
         {
           M2.A.get_column(j, col_vect_in_A);
-          result_vect = 0.;
+          result_vect = Number(0.);
           M1.vmult(result_vect, col_vect_in_A, M1, M1.get_property());
 
           /**
@@ -9422,7 +10400,7 @@ h_rk_mmult(const Number               alpha,
            * \alert{Since the following \p vmult will compute \f$y = y + M x\f$,
            * \p result_vect should be reset to zero beforehand.}
            */
-          result_vect = 0.;
+          result_vect = Number(0.);
           M1.vmult(result_vect, alpha, col_vect_in_A, M1, M1.get_property());
 
           /**
@@ -9500,7 +10478,7 @@ h_rk_mTmult(HMatrix<spacedim, Number> &M1,
       for (size_t j = 0; j < M2.formal_rank; j++)
         {
           M2.B.get_column(j, col_vect_in_B);
-          result_vect = 0.;
+          result_vect = Number(0.);
           M1.vmult(result_vect, col_vect_in_B, M1, M1.get_property());
 
           /**
@@ -9572,7 +10550,7 @@ h_rk_mTmult(const Number               alpha,
       for (size_t j = 0; j < M2.formal_rank; j++)
         {
           M2.B.get_column(j, col_vect_in_B);
-          result_vect = 0.;
+          result_vect = Number(0.);
           M1.vmult(result_vect, alpha, col_vect_in_B, M1, M1.get_property());
 
           /**
@@ -9650,7 +10628,7 @@ h_rk_Tmmult(HMatrix<spacedim, Number> &M1,
       for (size_t j = 0; j < M2.formal_rank; j++)
         {
           M2.A.get_column(j, col_vect_in_A);
-          result_vect = 0.;
+          result_vect = Number(0.);
           M1.Tvmult(result_vect, col_vect_in_A, M1, M1.get_property());
 
           /**
@@ -9732,7 +10710,7 @@ h_rk_Tmmult(const Number               alpha,
       for (size_t j = 0; j < M2.formal_rank; j++)
         {
           M2.A.get_column(j, col_vect_in_A);
-          result_vect = 0.;
+          result_vect = Number(0.);
           M1.Tvmult(result_vect, alpha, col_vect_in_A, M1, M1.get_property());
 
           /**
@@ -9858,7 +10836,7 @@ rk_h_mmult(const RkMatrix<Number>    &M1,
       for (size_t j = 0; j < M.formal_rank; j++)
         {
           M1.B.get_column(j, col_vect_in_B);
-          result_vect = 0.;
+          result_vect = Number(0.);
           M2.Tvmult(result_vect, col_vect_in_B, M2, M2.get_property());
 
           /**
@@ -9942,7 +10920,7 @@ rk_h_mmult(const Number               alpha,
            * \alert{Since the following \p Tvmult will compute \f$y = y + M^T x\f$,
            * \p result_vect should be reset to zero beforehand.}
            */
-          result_vect = 0.;
+          result_vect = Number(0.);
           M2.Tvmult(result_vect, alpha, col_vect_in_B, M2, M2.get_property());
 
           /**
@@ -10018,7 +10996,7 @@ rk_h_mTmult(const RkMatrix<Number>    &M1,
       for (size_t j = 0; j < M.formal_rank; j++)
         {
           M1.B.get_column(j, col_vect_in_B);
-          result_vect = 0.;
+          result_vect = Number(0.);
           M2.vmult(result_vect, col_vect_in_B, M2, M2.get_property());
 
           /**
@@ -10094,7 +11072,7 @@ rk_h_mTmult(const Number               alpha,
       for (size_t j = 0; j < M.formal_rank; j++)
         {
           M1.B.get_column(j, col_vect_in_B);
-          result_vect = 0.;
+          result_vect = Number(0.);
           M2.vmult(result_vect, alpha, col_vect_in_B, M2, M2.get_property());
 
           /**
@@ -10172,7 +11150,7 @@ rk_h_Tmmult(const RkMatrix<Number>    &M1,
       for (size_t j = 0; j < M.formal_rank; j++)
         {
           M1.A.get_column(j, col_vect_in_A);
-          result_vect = 0.;
+          result_vect = Number(0.);
           M2.Tvmult(result_vect, col_vect_in_A, M2, M2.get_property());
 
           /**
@@ -10254,7 +11232,7 @@ rk_h_Tmmult(const Number               alpha,
       for (size_t j = 0; j < M.formal_rank; j++)
         {
           M1.A.get_column(j, col_vect_in_A);
-          result_vect = 0.;
+          result_vect = Number(0.);
           M2.Tvmult(result_vect, alpha, col_vect_in_A, M2, M2.get_property());
 
           /**
@@ -10345,7 +11323,7 @@ h_f_mmult(HMatrix<spacedim, Number>         &M1,
   for (typename LAPACKFullMatrixExt<Number>::size_type j = 0; j < n_cols; j++)
     {
       M2.get_column(j, col_vect_in_M2);
-      result_vect = 0.;
+      result_vect = Number(0.);
       M1.vmult(result_vect, col_vect_in_M2, M1, M1.get_property());
       M.fill_col(j, result_vect);
     }
@@ -10382,7 +11360,7 @@ h_f_mmult(const Number                       alpha,
   for (typename LAPACKFullMatrixExt<Number>::size_type j = 0; j < n_cols; j++)
     {
       M2.get_column(j, col_vect_in_M2);
-      result_vect = 0.;
+      result_vect = Number(0.);
       M1.vmult(result_vect, alpha, col_vect_in_M2, M1, M1.get_property());
       M.fill_col(j, result_vect);
     }
@@ -10417,7 +11395,7 @@ h_f_mTmult(HMatrix<spacedim, Number>         &M1,
   for (typename LAPACKFullMatrixExt<Number>::size_type j = 0; j < n_cols; j++)
     {
       M2.get_row(j, row_vect_in_M2);
-      result_vect = 0.;
+      result_vect = Number(0.);
       M1.vmult(result_vect, row_vect_in_M2, M1, M1.get_property());
       M.fill_col(j, result_vect);
     }
@@ -10453,7 +11431,7 @@ h_f_mTmult(const Number                       alpha,
   for (typename LAPACKFullMatrixExt<Number>::size_type j = 0; j < n_cols; j++)
     {
       M2.get_row(j, row_vect_in_M2);
-      result_vect = 0.;
+      result_vect = Number(0.);
       M1.vmult(result_vect, alpha, row_vect_in_M2, M1, M1.get_property());
       M.fill_col(j, result_vect);
     }
@@ -10488,7 +11466,7 @@ h_f_Tmmult(HMatrix<spacedim, Number>         &M1,
   for (typename LAPACKFullMatrixExt<Number>::size_type j = 0; j < n_cols; j++)
     {
       M2.get_column(j, col_vect_in_M2);
-      result_vect = 0.;
+      result_vect = Number(0.);
       M1.Tvmult(result_vect, col_vect_in_M2, M1, M1.get_property());
       M.fill_col(j, result_vect);
     }
@@ -10514,7 +11492,7 @@ h_f_Tmmult(const Number                       alpha,
   for (typename LAPACKFullMatrixExt<Number>::size_type j = 0; j < n_cols; j++)
     {
       M2.get_column(j, col_vect_in_M2);
-      result_vect = 0.;
+      result_vect = Number(0.);
       M1.Tvmult(result_vect, alpha, col_vect_in_M2, M1, M1.get_property());
       M.fill_col(j, result_vect);
     }
@@ -10849,7 +11827,7 @@ f_h_mmult(const LAPACKFullMatrixExt<Number> &M1,
   for (typename LAPACKFullMatrixExt<Number>::size_type i = 0; i < n_rows; i++)
     {
       M1.get_row(i, row_vect_in_M1);
-      result_vect = 0.;
+      result_vect = Number(0.);
       M2.Tvmult(result_vect, row_vect_in_M1, M2, M2.get_property());
       M.fill_row(i, result_vect);
     }
@@ -10889,7 +11867,7 @@ f_h_mmult(const Number                       alpha,
        * \alert{Since the following \p Tvmult will compute \f$y = y + M^T x\f$,
        * \p result_vect should be reset to zero beforehand.}
        */
-      result_vect = 0.;
+      result_vect = Number(0.);
       M2.Tvmult(result_vect, alpha, row_vect_in_M1, M2, M2.get_property());
       M.fill_row(i, result_vect);
     }
@@ -10923,7 +11901,7 @@ f_h_mTmult(const LAPACKFullMatrixExt<Number> &M1,
   for (typename LAPACKFullMatrixExt<Number>::size_type i = 0; i < n_rows; i++)
     {
       M1.get_row(i, row_vect_in_M1);
-      result_vect = 0.;
+      result_vect = Number(0.);
       M2.vmult(result_vect, row_vect_in_M1, M2, M2.get_property());
       M.fill_row(i, result_vect);
     }
@@ -10959,7 +11937,7 @@ f_h_mTmult(const Number                       alpha,
   for (typename LAPACKFullMatrixExt<Number>::size_type i = 0; i < n_rows; i++)
     {
       M1.get_row(i, row_vect_in_M1);
-      result_vect = 0.;
+      result_vect = Number(0.);
       M2.vmult(result_vect, alpha, row_vect_in_M1, M2, M2.get_property());
       M.fill_row(i, result_vect);
     }
@@ -10992,7 +11970,7 @@ f_h_Tmmult(const LAPACKFullMatrixExt<Number> &M1,
   for (typename LAPACKFullMatrixExt<Number>::size_type i = 0; i < n_rows; i++)
     {
       M1.get_column(i, col_vect_in_M1);
-      result_vect = 0.;
+      result_vect = Number(0.);
       M2.Tvmult(result_vect, col_vect_in_M1, M2, M2.get_property());
       M.fill_row(i, result_vect);
     }
@@ -11027,7 +12005,7 @@ f_h_Tmmult(const Number                       alpha,
   for (typename LAPACKFullMatrixExt<Number>::size_type i = 0; i < n_rows; i++)
     {
       M1.get_column(i, col_vect_in_M1);
-      result_vect = 0.;
+      result_vect = Number(0.);
       M2.Tvmult(result_vect, alpha, col_vect_in_M1, M2, M2.get_property());
       M.fill_row(i, result_vect);
     }
@@ -11272,8 +12250,10 @@ f_h_mmult_for_h_h_mmult(const HMatrix<spacedim, Number> *M1,
 
 template <int spacedim, typename Number = double>
 void
-h_h_mmult_phase1_recursion(HMatrix<spacedim, Number>          *M,
-                           BlockClusterTree<spacedim, Number> &Tind)
+h_h_mmult_phase1_recursion(
+  HMatrix<spacedim, Number> *M,
+  BlockClusterTree<spacedim, typename numbers::NumberTraits<Number>::real_type>
+    &Tind)
 {
   M->h_h_mmult_reduction();
 
@@ -11341,9 +12321,11 @@ h_h_mmult_phase1_recursion(HMatrix<spacedim, Number>          *M,
 
 template <int spacedim, typename Number = double>
 void
-h_h_mmult_phase2(HMatrix<spacedim, Number>          &M,
-                 BlockClusterTree<spacedim, Number> &target_bc_tree,
-                 const unsigned int                  fixed_rank)
+h_h_mmult_phase2(
+  HMatrix<spacedim, Number> &M,
+  BlockClusterTree<spacedim, typename numbers::NumberTraits<Number>::real_type>
+                    &target_bc_tree,
+  const unsigned int fixed_rank)
 {
   /**
    * Collect terms in \p Sigma_R and \p Sigma_F for the leaf nodes.
@@ -11473,23 +12455,31 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
 
   if (is_result_matrix_store_tril_only)
     {
-      Assert(M0.get_property() == HMatrixSupport::symmetric ||
-               M0.get_property() == HMatrixSupport::lower_triangular,
+      Assert(M0.get_property() == HMatrixSupport::Property::symmetric ||
+               M0.get_property() ==
+                 HMatrixSupport::Property::hermite_symmetric ||
+               M0.get_property() == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(M0.get_property()));
-      Assert(M0.get_block_type() == HMatrixSupport::diagonal_block,
+      Assert(M0.get_block_type() == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(M0.get_block_type()));
-      Assert(M.get_property() == HMatrixSupport::symmetric ||
-               M.get_property() == HMatrixSupport::lower_triangular,
+      Assert(M.get_property() == HMatrixSupport::Property::symmetric ||
+               M.get_property() ==
+                 HMatrixSupport::Property::hermite_symmetric ||
+               M.get_property() == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(M.get_property()));
-      Assert(M.get_block_type() == HMatrixSupport::diagonal_block,
+      Assert(M.get_block_type() == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(M.get_block_type()));
     }
 
   // Array of empty child pointers used for initializing a block
   // cluster tree node.
   const std::array<
-    typename BlockClusterTree<spacedim, Number>::node_pointer_type,
-    BlockClusterTree<spacedim, Number>::child_num>
+    typename BlockClusterTree<
+      spacedim,
+      typename numbers::NumberTraits<Number>::real_type>::node_pointer_type,
+    BlockClusterTree<
+      spacedim,
+      typename numbers::NumberTraits<Number>::real_type>::child_num>
     empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
 
   /**
@@ -11497,9 +12487,10 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
    * \p Z. Since this \bcn will not be connected with other \bcns in a \bct,
    * it has neither parent nor children and its level is set to zero.
    */
-  typename BlockClusterTree<spacedim, Number>::node_value_type
-    current_product_bc_node(
-      BlockCluster<spacedim, Number>(
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_value_type current_product_bc_node(
+      BlockCluster<spacedim, typename numbers::NumberTraits<Number>::real_type>(
         M1.bc_node->get_data_reference().get_tau_node(),
         M2.bc_node->get_data_reference().get_sigma_node()),
       0,
@@ -11530,9 +12521,9 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
    * the \hmatrix property of the local product \hmatrix @p Z should be the
    * same as that of @p M by checking if the index ranges of its \f$\tau\f$
    * node and \f$\sigma\f$ are the same, since only when they are the same,
-   * @p Z or @p M's property can be symmetric or lower triangular.
+   * @p Z or @p M's property can be symmetric, Hermite symmetric or lower triangular.
    */
-  HMatrixSupport::Property Z_property = HMatrixSupport::general;
+  HMatrixSupport::Property Z_property = HMatrixSupport::Property::general;
   bool                     is_result_matrix_Z_store_tril_only = false;
 
   if (is_result_matrix_store_tril_only &&
@@ -11540,17 +12531,18 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
     {
       /**
        * The local product \hmatrix @p Z inherits the property of @p M, which
-       * can be either symmetric or lower triangular.
+       * can be either symmetric, Hermite symmetric or lower triangular.
        */
       Z_property                         = M.property;
       is_result_matrix_Z_store_tril_only = true;
 
       /**
-       * If the local \hmatrix @p Z is symmetric or lower triangular, its block
-       * type should be @p diagonal_block and an assertion is made about this
+       * If the local \hmatrix @p Z is symmetric, Hermite symmetric or lower triangular,
+       * its block type should be @p diagonal_block and an assertion is made about this
        * fact.
        */
-      Assert(block_type_for_local_Z == HMatrixSupport::diagonal_block,
+      Assert(block_type_for_local_Z ==
+               HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(block_type_for_local_Z));
     }
 
@@ -11570,7 +12562,7 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
   // involving leaf node.
   LAPACKFullMatrixExt<Number> ZF;
   // The result matrix type for the multiplication involving leaf node.
-  HMatrixType result_matrix_type;
+  HMatrixType result_matrix_type = UndefinedMatrixType;
 
   if (M1.bc_node->is_leaf() || M2.bc_node->is_leaf())
     {
@@ -11639,24 +12631,31 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
             }
 
           /**
-           * If the local product \hmatrix @p Z is expected to be symmetric or
-           * lower triangular, also set the property of the associated full
-           * matrix correspondingly. This operation is mandatory because the
-           * property of the local full matrix @p ZF is @p general, which has
-           * overwritten the property of @p Z.
+           * If the local product \hmatrix @p Z is expected to be symmetric,
+           * Hermite symmetric or lower triangular, also set the property of the
+           * associated full matrix correspondingly. This operation is mandatory
+           * because the property of the local full matrix @p ZF is @p general ,
+           * which has overwritten the property of @p Z.
            */
           if (is_result_matrix_Z_store_tril_only)
             {
               switch (Z.property)
                 {
-                    case HMatrixSupport::symmetric: {
-                      Z.fullmatrix->set_property(LAPACKSupport::symmetric);
+                    case HMatrixSupport::Property::symmetric: {
+                      Z.fullmatrix->set_property(
+                        LAPACKSupport::Property::symmetric);
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular: {
+                    case HMatrixSupport::Property::hermite_symmetric: {
                       Z.fullmatrix->set_property(
-                        LAPACKSupport::lower_triangular);
+                        LAPACKSupport::Property::hermite_symmetric);
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::lower_triangular: {
+                      Z.fullmatrix->set_property(
+                        LAPACKSupport::Property::lower_triangular);
 
                       break;
                     }
@@ -11687,7 +12686,9 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
         std::min(fixed_rank * 2, std::min(Z.m, Z.n));
 
       std::array<HMatrixSupport::BlockType,
-                 BlockClusterTree<spacedim, Number>::child_num>
+                 BlockClusterTree<spacedim,
+                                  typename numbers::NumberTraits<
+                                    Number>::real_type>::child_num>
         block_types_for_submatrices_of_local_Z;
       HMatrixSupport::infer_submatrix_block_types_from_parent_hmat(
         block_type_for_local_Z, block_types_for_submatrices_of_local_Z);
@@ -11709,18 +12710,19 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
 
       if ((!is_result_matrix_Z_store_tril_only) ||
           (is_result_matrix_Z_store_tril_only &&
-           Z.property != HMatrixSupport::symmetric &&
-           Z.property != HMatrixSupport::lower_triangular))
+           Z.property != HMatrixSupport::Property::symmetric &&
+           Z.property != HMatrixSupport::Property::hermite_symmetric &&
+           Z.property != HMatrixSupport::Property::lower_triangular))
         {
           /**
            * The submatrix block @p Z.submatrices[1], which is obtained
            * from the cross type multiplication of @p M1 and @p M2, will be
            * evaluated in two scenarios:
-           * 1. when the \hmatrix @p M is not expected to be symmetric or lower
-           * triangular;
-           * 2. when the \hmatrix @p M is required to be symmetric or lower
-           * triangular a priori, and the product matrix @p Z should not be
-           * symmetric or lower triangular.
+           * 1. when the \hmatrix @p M is not expected to be symmetric,
+           * Hermite symmetric or lower triangular;
+           * 2. when the \hmatrix @p M is required to be symmetric, Hermite
+           * symmetric or lower triangular a priori, and the product matrix
+           * @p Z should not be symmetric, Hermite symmetric or lower triangular.
            */
           h_h_mmult_from_leaf_node(M0,
                                    Z,
@@ -11782,8 +12784,8 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
 
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.block_type != HMatrixSupport::upper_triangular_block &&
-           Z.block_type != HMatrixSupport::upper_triangular_block))
+           M.block_type != HMatrixSupport::BlockType::upper_triangular_block &&
+           Z.block_type != HMatrixSupport::BlockType::upper_triangular_block))
         {
           M.fullmatrix->fill(*(Z.fullmatrix),
                              (*Z.row_index_range)[0] - (*M.row_index_range)[0],
@@ -11807,8 +12809,8 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
 
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.block_type != HMatrixSupport::upper_triangular_block &&
-           Z.block_type != HMatrixSupport::upper_triangular_block))
+           M.block_type != HMatrixSupport::BlockType::upper_triangular_block &&
+           Z.block_type != HMatrixSupport::BlockType::upper_triangular_block))
         {
           M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
                                              *M.col_index_range,
@@ -11872,23 +12874,31 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
 
   if (is_result_matrix_store_tril_only)
     {
-      Assert(M0.get_property() == HMatrixSupport::symmetric ||
-               M0.get_property() == HMatrixSupport::lower_triangular,
+      Assert(M0.get_property() == HMatrixSupport::Property::symmetric ||
+               M0.get_property() ==
+                 HMatrixSupport::Property::hermite_symmetric ||
+               M0.get_property() == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(M0.get_property()));
-      Assert(M0.get_block_type() == HMatrixSupport::diagonal_block,
+      Assert(M0.get_block_type() == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(M0.get_block_type()));
-      Assert(M.get_property() == HMatrixSupport::symmetric ||
-               M.get_property() == HMatrixSupport::lower_triangular,
+      Assert(M.get_property() == HMatrixSupport::Property::symmetric ||
+               M.get_property() ==
+                 HMatrixSupport::Property::hermite_symmetric ||
+               M.get_property() == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(M.get_property()));
-      Assert(M.get_block_type() == HMatrixSupport::diagonal_block,
+      Assert(M.get_block_type() == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(M.get_block_type()));
     }
 
   // Array of empty child pointers used for initializing a block
   // cluster tree node.
   const std::array<
-    typename BlockClusterTree<spacedim, Number>::node_pointer_type,
-    BlockClusterTree<spacedim, Number>::child_num>
+    typename BlockClusterTree<
+      spacedim,
+      typename numbers::NumberTraits<Number>::real_type>::node_pointer_type,
+    BlockClusterTree<
+      spacedim,
+      typename numbers::NumberTraits<Number>::real_type>::child_num>
     empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
 
   /**
@@ -11896,9 +12906,10 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
    * \p Z. Since this \bcn will not be connected with other \bcns in a \bct,
    * it has neither parent nor children and its level is set to zero.
    */
-  typename BlockClusterTree<spacedim, Number>::node_value_type
-    current_product_bc_node(
-      BlockCluster<spacedim, Number>(
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_value_type current_product_bc_node(
+      BlockCluster<spacedim, typename numbers::NumberTraits<Number>::real_type>(
         M1.bc_node->get_data_reference().get_tau_node(),
         M2.bc_node->get_data_reference().get_sigma_node()),
       0,
@@ -11929,9 +12940,9 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
    * the \hmatrix property of the local product \hmatrix @p Z should be the
    * same as that of @p M by checking if the index ranges of its \f$\tau\f$
    * node and \f$\sigma\f$ are the same, since only when they are the same,
-   * @p Z or @p M's property can be symmetric or lower triangular.
+   * @p Z or @p M's property can be symmetric, Hermite symmetric or lower triangular.
    */
-  HMatrixSupport::Property Z_property = HMatrixSupport::general;
+  HMatrixSupport::Property Z_property = HMatrixSupport::Property::general;
   bool                     is_result_matrix_Z_store_tril_only = false;
 
   if (is_result_matrix_store_tril_only &&
@@ -11939,17 +12950,18 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
     {
       /**
        * The local product \hmatrix @p Z inherits the property of @p M, which
-       * can be either symmetric or lower triangular.
+       * can be either symmetric, Hermite symmetric or lower triangular.
        */
       Z_property                         = M.property;
       is_result_matrix_Z_store_tril_only = true;
 
       /**
-       * If the local \hmatrix @p Z is symmetric or lower triangular, its block
-       * type should be @p diagonal_block and an assertion is made about this
+       * If the local \hmatrix @p Z is symmetric, Hermite symmetric or lower triangular,
+       * its block type should be @p diagonal_block and an assertion is made about this
        * fact.
        */
-      Assert(block_type_for_local_Z == HMatrixSupport::diagonal_block,
+      Assert(block_type_for_local_Z ==
+               HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(block_type_for_local_Z));
     }
 
@@ -12039,24 +13051,31 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
             }
 
           /**
-           * If the local product \hmatrix @p Z is expected to be symmetric or
-           * lower triangular, also set the property of the associated full
-           * matrix correspondingly. This operation is mandatory because the
-           * property of the local full matrix @p ZF is @p general, which has
-           * overwritten the property of @p Z.
+           * If the local product \hmatrix @p Z is expected to be symmetric,
+           * Hermite symmetric  or lower triangular, also set the property of
+           * the associated full matrix correspondingly. This operation is
+           * mandatory because the property of the local full matrix @p ZF is
+           * @p general, which has overwritten the property of @p Z.
            */
           if (is_result_matrix_Z_store_tril_only)
             {
               switch (Z.property)
                 {
-                    case HMatrixSupport::symmetric: {
-                      Z.fullmatrix->set_property(LAPACKSupport::symmetric);
+                    case HMatrixSupport::Property::symmetric: {
+                      Z.fullmatrix->set_property(
+                        LAPACKSupport::Property::symmetric);
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular: {
+                    case HMatrixSupport::Property::hermite_symmetric: {
                       Z.fullmatrix->set_property(
-                        LAPACKSupport::lower_triangular);
+                        LAPACKSupport::Property::hermite_symmetric);
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::lower_triangular: {
+                      Z.fullmatrix->set_property(
+                        LAPACKSupport::Property::lower_triangular);
 
                       break;
                     }
@@ -12087,7 +13106,9 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
         std::min(fixed_rank * 2, std::min(Z.m, Z.n));
 
       std::array<HMatrixSupport::BlockType,
-                 BlockClusterTree<spacedim, Number>::child_num>
+                 BlockClusterTree<spacedim,
+                                  typename numbers::NumberTraits<
+                                    Number>::real_type>::child_num>
         block_types_for_submatrices_of_local_Z;
       HMatrixSupport::infer_submatrix_block_types_from_parent_hmat(
         block_type_for_local_Z, block_types_for_submatrices_of_local_Z);
@@ -12111,16 +13132,19 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
 
       if ((!is_result_matrix_Z_store_tril_only) ||
           (is_result_matrix_Z_store_tril_only &&
-           Z.property != HMatrixSupport::symmetric &&
-           Z.property != HMatrixSupport::lower_triangular))
+           Z.property != HMatrixSupport::Property::symmetric &&
+           Z.property != HMatrixSupport::Property::hermite_symmetric &&
+           Z.property != HMatrixSupport::Property::lower_triangular))
         {
           /**
            * The virtual submatrix block @p Z.submatrices[1], which is obtained
            * from the cross type multiplication of @p M1 and @p M2, will be
            * evaluated in two scenarios:
-           * 1. when the result matrix is not expected to be symmetric;
-           * 2. when the result matrix is required to be symmetric a priori,
-           * then if the product matrix @p M is not symmetric.
+           * 1. when the result matrix is not expected to be symmetric, Hermite
+           * symmetric or lower triangular;
+           * 2. when the result matrix is required to be symmetric, Hermite
+           * symmetric or lower triangular a priori, then if the product matrix
+           * @p Z is not symmetric, Hermite symmetric or lower triangular.
            *
            * Here the "virtual" above means even though @p Z is actually not
            * further divided and have no submatrices, the cross type
@@ -12192,8 +13216,8 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
 
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.block_type != HMatrixSupport::upper_triangular_block &&
-           Z.block_type != HMatrixSupport::upper_triangular_block))
+           M.block_type != HMatrixSupport::BlockType::upper_triangular_block &&
+           Z.block_type != HMatrixSupport::BlockType::upper_triangular_block))
         {
           M.fullmatrix->fill(*(Z.fullmatrix),
                              (*Z.row_index_range)[0] - (*M.row_index_range)[0],
@@ -12217,8 +13241,8 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
 
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.block_type != HMatrixSupport::upper_triangular_block &&
-           Z.block_type != HMatrixSupport::upper_triangular_block))
+           M.block_type != HMatrixSupport::BlockType::upper_triangular_block &&
+           Z.block_type != HMatrixSupport::BlockType::upper_triangular_block))
         {
           M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
                                              *M.col_index_range,
@@ -12251,23 +13275,31 @@ h_h_mmult_from_leaf_node_for_parallel_lu(
 
   if (is_result_matrix_store_tril_only)
     {
-      Assert(M0.get_property() == HMatrixSupport::symmetric ||
-               M0.get_property() == HMatrixSupport::lower_triangular,
+      Assert(M0.get_property() == HMatrixSupport::Property::symmetric ||
+               M0.get_property() ==
+                 HMatrixSupport::Property::hermite_symmetric ||
+               M0.get_property() == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(M0.get_property()));
-      Assert(M0.get_block_type() == HMatrixSupport::diagonal_block,
+      Assert(M0.get_block_type() == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(M0.get_block_type()));
-      Assert(M.get_property() == HMatrixSupport::symmetric ||
-               M.get_property() == HMatrixSupport::lower_triangular,
+      Assert(M.get_property() == HMatrixSupport::Property::symmetric ||
+               M.get_property() ==
+                 HMatrixSupport::Property::hermite_symmetric ||
+               M.get_property() == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(M.get_property()));
-      Assert(M.get_block_type() == HMatrixSupport::diagonal_block,
+      Assert(M.get_block_type() == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(M.get_block_type()));
     }
 
   // Array of empty child pointers used for initializing a block
   // cluster tree node.
   const std::array<
-    typename BlockClusterTree<spacedim, Number>::node_pointer_type,
-    BlockClusterTree<spacedim, Number>::child_num>
+    typename BlockClusterTree<
+      spacedim,
+      typename numbers::NumberTraits<Number>::real_type>::node_pointer_type,
+    BlockClusterTree<
+      spacedim,
+      typename numbers::NumberTraits<Number>::real_type>::child_num>
     empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
 
   /**
@@ -12275,9 +13307,10 @@ h_h_mmult_from_leaf_node_for_parallel_lu(
    * \p Z. Since this \bcn will not be connected with other \bcns in a \bct,
    * it has neither parent nor children and its level is set to zero.
    */
-  typename BlockClusterTree<spacedim, Number>::node_value_type
-    current_product_bc_node(
-      BlockCluster<spacedim, Number>(
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_value_type current_product_bc_node(
+      BlockCluster<spacedim, typename numbers::NumberTraits<Number>::real_type>(
         M1.bc_node->get_data_reference().get_tau_node(),
         M2.bc_node->get_data_reference().get_sigma_node()),
       0,
@@ -12310,7 +13343,7 @@ h_h_mmult_from_leaf_node_for_parallel_lu(
    * node and \f$\sigma\f$ are the same, since only when they are the same,
    * @p Z or @p M's property can be symmetric or lower triangular.
    */
-  HMatrixSupport::Property Z_property = HMatrixSupport::general;
+  HMatrixSupport::Property Z_property = HMatrixSupport::Property::general;
   bool                     is_result_matrix_Z_store_tril_only = false;
 
   if (is_result_matrix_store_tril_only &&
@@ -12328,7 +13361,8 @@ h_h_mmult_from_leaf_node_for_parallel_lu(
        * type should be @p diagonal_block and an assertion is made about this
        * fact.
        */
-      Assert(block_type_for_local_Z == HMatrixSupport::diagonal_block,
+      Assert(block_type_for_local_Z ==
+               HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(block_type_for_local_Z));
     }
 
@@ -12428,14 +13462,21 @@ h_h_mmult_from_leaf_node_for_parallel_lu(
             {
               switch (Z.property)
                 {
-                    case HMatrixSupport::symmetric: {
-                      Z.fullmatrix->set_property(LAPACKSupport::symmetric);
+                    case HMatrixSupport::Property::symmetric: {
+                      Z.fullmatrix->set_property(
+                        LAPACKSupport::Property::symmetric);
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular: {
+                    case HMatrixSupport::Property::hermite_symmetric: {
                       Z.fullmatrix->set_property(
-                        LAPACKSupport::lower_triangular);
+                        LAPACKSupport::Property::hermite_symmetric);
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::lower_triangular: {
+                      Z.fullmatrix->set_property(
+                        LAPACKSupport::Property::lower_triangular);
 
                       break;
                     }
@@ -12466,7 +13507,9 @@ h_h_mmult_from_leaf_node_for_parallel_lu(
         std::min(fixed_rank * 2, std::min(Z.m, Z.n));
 
       std::array<HMatrixSupport::BlockType,
-                 BlockClusterTree<spacedim, Number>::child_num>
+                 BlockClusterTree<spacedim,
+                                  typename numbers::NumberTraits<
+                                    Number>::real_type>::child_num>
         block_types_for_submatrices_of_local_Z;
       HMatrixSupport::infer_submatrix_block_types_from_parent_hmat(
         block_type_for_local_Z, block_types_for_submatrices_of_local_Z);
@@ -12492,16 +13535,19 @@ h_h_mmult_from_leaf_node_for_parallel_lu(
 
       if ((!is_result_matrix_Z_store_tril_only) ||
           (is_result_matrix_Z_store_tril_only &&
-           Z.property != HMatrixSupport::symmetric &&
-           Z.property != HMatrixSupport::lower_triangular))
+           Z.property != HMatrixSupport::Property::symmetric &&
+           Z.property != HMatrixSupport::Property::hermite_symmetric &&
+           Z.property != HMatrixSupport::Property::lower_triangular))
         {
           /**
            * The virtual submatrix block @p Z.submatrices[1], which is obtained
            * from the cross type multiplication of @p M1 and @p M2, will be
            * evaluated in two scenarios:
-           * 1. when the result matrix is not expected to be symmetric;
-           * 2. when the result matrix is required to be symmetric a priori,
-           * then if the product matrix @p M is not symmetric.
+           * 1. when the result matrix is not expected to be symmetric, Hermite
+           * symmetric or lower triangular;
+           * 2. when the result matrix is required to be symmetric, Hermite
+           * symmetric or lower triangular a priori, then if the product matrix @p Z
+           * is not symmetric, Hermite symmetric or lower triangular.
            *
            * Here the "virtual" above means even though @p Z is actually not
            * further divided and have no submatrices, the cross type
@@ -12579,8 +13625,8 @@ h_h_mmult_from_leaf_node_for_parallel_lu(
 
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.block_type != HMatrixSupport::upper_triangular_block &&
-           Z.block_type != HMatrixSupport::upper_triangular_block))
+           M.block_type != HMatrixSupport::BlockType::upper_triangular_block &&
+           Z.block_type != HMatrixSupport::BlockType::upper_triangular_block))
         {
           /**
            * Only when the result matrix @p M is the top level result matrix
@@ -12615,8 +13661,8 @@ h_h_mmult_from_leaf_node_for_parallel_lu(
 
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.block_type != HMatrixSupport::upper_triangular_block &&
-           Z.block_type != HMatrixSupport::upper_triangular_block))
+           M.block_type != HMatrixSupport::BlockType::upper_triangular_block &&
+           Z.block_type != HMatrixSupport::BlockType::upper_triangular_block))
         {
           /**
            * Only when the result matrix @p M is the top level result matrix
@@ -12728,23 +13774,31 @@ h_h_mTmult_from_leaf_node(
 
   if (is_result_matrix_store_tril_only)
     {
-      Assert(M0.get_property() == HMatrixSupport::symmetric ||
-               M0.get_property() == HMatrixSupport::lower_triangular,
+      Assert(M0.get_property() == HMatrixSupport::Property::symmetric ||
+               M0.get_property() ==
+                 HMatrixSupport::Property::hermite_symmetric ||
+               M0.get_property() == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(M0.get_property()));
-      Assert(M0.get_block_type() == HMatrixSupport::diagonal_block,
+      Assert(M0.get_block_type() == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(M0.get_block_type()));
-      Assert(M.get_property() == HMatrixSupport::symmetric ||
-               M.get_property() == HMatrixSupport::lower_triangular,
+      Assert(M.get_property() == HMatrixSupport::Property::symmetric ||
+               M.get_property() ==
+                 HMatrixSupport::Property::hermite_symmetric ||
+               M.get_property() == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(M.get_property()));
-      Assert(M.get_block_type() == HMatrixSupport::diagonal_block,
+      Assert(M.get_block_type() == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(M.get_block_type()));
     }
 
   // Array of empty child pointers used for initializing a block
   // cluster tree node.
   const std::array<
-    typename BlockClusterTree<spacedim, Number>::node_pointer_type,
-    BlockClusterTree<spacedim, Number>::child_num>
+    typename BlockClusterTree<
+      spacedim,
+      typename numbers::NumberTraits<Number>::real_type>::node_pointer_type,
+    BlockClusterTree<
+      spacedim,
+      typename numbers::NumberTraits<Number>::real_type>::child_num>
     empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
 
   /**
@@ -12756,14 +13810,16 @@ h_h_mTmult_from_leaf_node(
    * product \bctnode is built from \f$\tau\f$ of \f$M_1\f$ and \f$\tau\f$ of
    * \f$M_2\f$.}
    */
-  typename BlockClusterTree<spacedim, Number>::node_value_type
-    current_product_bc_node(BlockCluster<spacedim, Number>(
-                              M1.bc_node->get_data_reference().get_tau_node(),
-                              M2.bc_node->get_data_reference().get_tau_node()),
-                            0,
-                            empty_child_pointers,
-                            nullptr,
-                            UnsplitMode);
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_value_type current_product_bc_node(
+      BlockCluster<spacedim, typename numbers::NumberTraits<Number>::real_type>(
+        M1.bc_node->get_data_reference().get_tau_node(),
+        M2.bc_node->get_data_reference().get_tau_node()),
+      0,
+      empty_child_pointers,
+      nullptr,
+      UnsplitMode);
 
   /**
    * Set the \p is_near_field flag of the \bcn for the current local product
@@ -12788,9 +13844,10 @@ h_h_mTmult_from_leaf_node(
    * the \hmatrix property of the local product \hmatrix @p Z should be the
    * same as that of @p M by checking if the index ranges of its \f$\tau\f$
    * node and \f$\sigma\f$ are the same, since only when they are the same,
-   * @p Z or @p M's property can be symmetric or lower triangular.
+   * @p Z or @p M's property can be symmetric, Hermite symmetric or lower
+   * triangular.
    */
-  HMatrixSupport::Property Z_property = HMatrixSupport::general;
+  HMatrixSupport::Property Z_property = HMatrixSupport::Property::general;
   bool                     is_result_matrix_Z_store_tril_only = false;
 
   if (is_result_matrix_store_tril_only &&
@@ -12808,7 +13865,8 @@ h_h_mTmult_from_leaf_node(
        * type should be @p diagonal_block and an assertion is made about this
        * fact.
        */
-      Assert(block_type_for_local_Z == HMatrixSupport::diagonal_block,
+      Assert(block_type_for_local_Z ==
+               HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(block_type_for_local_Z));
     }
 
@@ -12907,14 +13965,21 @@ h_h_mTmult_from_leaf_node(
             {
               switch (Z.property)
                 {
-                    case HMatrixSupport::symmetric: {
-                      Z.fullmatrix->set_property(LAPACKSupport::symmetric);
+                    case HMatrixSupport::Property::symmetric: {
+                      Z.fullmatrix->set_property(
+                        LAPACKSupport::Property::symmetric);
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular: {
+                    case HMatrixSupport::Property::hermite_symmetric: {
                       Z.fullmatrix->set_property(
-                        LAPACKSupport::lower_triangular);
+                        LAPACKSupport::Property::hermite_symmetric);
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::lower_triangular: {
+                      Z.fullmatrix->set_property(
+                        LAPACKSupport::Property::lower_triangular);
 
                       break;
                     }
@@ -12945,7 +14010,9 @@ h_h_mTmult_from_leaf_node(
         std::min(fixed_rank * 2, std::min(Z.m, Z.n));
 
       std::array<HMatrixSupport::BlockType,
-                 BlockClusterTree<spacedim, Number>::child_num>
+                 BlockClusterTree<spacedim,
+                                  typename numbers::NumberTraits<
+                                    Number>::real_type>::child_num>
         block_types_for_submatrices_of_local_Z;
       HMatrixSupport::infer_submatrix_block_types_from_parent_hmat(
         block_type_for_local_Z, block_types_for_submatrices_of_local_Z);
@@ -12967,18 +14034,19 @@ h_h_mTmult_from_leaf_node(
 
       if ((!is_result_matrix_Z_store_tril_only) ||
           (is_result_matrix_Z_store_tril_only &&
-           Z.property != HMatrixSupport::symmetric &&
-           Z.property != HMatrixSupport::lower_triangular))
+           Z.property != HMatrixSupport::Property::symmetric &&
+           Z.property != HMatrixSupport::Property::hermite_symmetric &&
+           Z.property != HMatrixSupport::Property::lower_triangular))
         {
           /**
            * The submatrix block @p Z.submatrices[1], which is obtained
            * from the cross type multiplication of @p M1 and @p M2, will be
            * evaluated in two scenarios:
-           * 1. when the \hmatrix @p M is not expected to be symmetric or lower
-           * triangular;
-           * 2. when the \hmatrix @p M is required to be symmetric or lower
-           * triangular a priori, and the product matrix @p Z should not be
-           * symmetric or lower triangular.
+           * 1. when the \hmatrix @p M is not expected to be symmetric, Hermite
+           * symmetric or lower triangular;
+           * 2. when the \hmatrix @p M is required to be symmetric, Hermite
+           * symmetric or lower triangular a priori, and the product matrix @p Z
+           * should not be symmetric, Hermite symmetric or lower triangular.
            */
           h_h_mTmult_from_leaf_node(M0,
                                     Z,
@@ -13040,8 +14108,8 @@ h_h_mTmult_from_leaf_node(
 
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.block_type != HMatrixSupport::upper_triangular_block &&
-           Z.block_type != HMatrixSupport::upper_triangular_block))
+           M.block_type != HMatrixSupport::BlockType::upper_triangular_block &&
+           Z.block_type != HMatrixSupport::BlockType::upper_triangular_block))
         {
           M.fullmatrix->fill(*(Z.fullmatrix),
                              (*Z.row_index_range)[0] - (*M.row_index_range)[0],
@@ -13065,8 +14133,8 @@ h_h_mTmult_from_leaf_node(
 
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.block_type != HMatrixSupport::upper_triangular_block &&
-           Z.block_type != HMatrixSupport::upper_triangular_block))
+           M.block_type != HMatrixSupport::BlockType::upper_triangular_block &&
+           Z.block_type != HMatrixSupport::BlockType::upper_triangular_block))
         {
           M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
                                              *M.col_index_range,
@@ -13131,23 +14199,31 @@ h_h_mTmult_from_leaf_node(
 
   if (is_result_matrix_store_tril_only)
     {
-      Assert(M0.get_property() == HMatrixSupport::symmetric ||
-               M0.get_property() == HMatrixSupport::lower_triangular,
+      Assert(M0.get_property() == HMatrixSupport::Property::symmetric ||
+               M0.get_property() ==
+                 HMatrixSupport::Property::hermite_symmetric ||
+               M0.get_property() == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(M0.get_property()));
-      Assert(M0.get_block_type() == HMatrixSupport::diagonal_block,
+      Assert(M0.get_block_type() == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(M0.get_block_type()));
-      Assert(M.get_property() == HMatrixSupport::symmetric ||
-               M.get_property() == HMatrixSupport::lower_triangular,
+      Assert(M.get_property() == HMatrixSupport::Property::symmetric ||
+               M.get_property() ==
+                 HMatrixSupport::Property::hermite_symmetric ||
+               M.get_property() == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(M.get_property()));
-      Assert(M.get_block_type() == HMatrixSupport::diagonal_block,
+      Assert(M.get_block_type() == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(M.get_block_type()));
     }
 
   // Array of empty child pointers used for initializing a block
   // cluster tree node.
   const std::array<
-    typename BlockClusterTree<spacedim, Number>::node_pointer_type,
-    BlockClusterTree<spacedim, Number>::child_num>
+    typename BlockClusterTree<
+      spacedim,
+      typename numbers::NumberTraits<Number>::real_type>::node_pointer_type,
+    BlockClusterTree<
+      spacedim,
+      typename numbers::NumberTraits<Number>::real_type>::child_num>
     empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
 
   /**
@@ -13159,14 +14235,16 @@ h_h_mTmult_from_leaf_node(
    * product \bctnode is built from \f$\tau\f$ of \f$M_1\f$ and \f$\tau\f$ of
    * \f$M_2\f$.}
    */
-  typename BlockClusterTree<spacedim, Number>::node_value_type
-    current_product_bc_node(BlockCluster<spacedim, Number>(
-                              M1.bc_node->get_data_reference().get_tau_node(),
-                              M2.bc_node->get_data_reference().get_tau_node()),
-                            0,
-                            empty_child_pointers,
-                            nullptr,
-                            UnsplitMode);
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_value_type current_product_bc_node(
+      BlockCluster<spacedim, typename numbers::NumberTraits<Number>::real_type>(
+        M1.bc_node->get_data_reference().get_tau_node(),
+        M2.bc_node->get_data_reference().get_tau_node()),
+      0,
+      empty_child_pointers,
+      nullptr,
+      UnsplitMode);
 
   /**
    * Set the \p is_near_field flag of the \bcn for the current local product
@@ -13193,7 +14271,7 @@ h_h_mTmult_from_leaf_node(
    * node and \f$\sigma\f$ are the same, since only when they are the same,
    * @p Z or @p M's property can be symmetric or lower triangular.
    */
-  HMatrixSupport::Property Z_property = HMatrixSupport::general;
+  HMatrixSupport::Property Z_property = HMatrixSupport::Property::general;
   bool                     is_result_matrix_Z_store_tril_only = false;
 
   if (is_result_matrix_store_tril_only &&
@@ -13211,7 +14289,8 @@ h_h_mTmult_from_leaf_node(
        * type should be @p diagonal_block and an assertion is made about this
        * fact.
        */
-      Assert(block_type_for_local_Z == HMatrixSupport::diagonal_block,
+      Assert(block_type_for_local_Z ==
+               HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(block_type_for_local_Z));
     }
 
@@ -13311,14 +14390,21 @@ h_h_mTmult_from_leaf_node(
             {
               switch (Z.property)
                 {
-                    case HMatrixSupport::symmetric: {
-                      Z.fullmatrix->set_property(LAPACKSupport::symmetric);
+                    case HMatrixSupport::Property::symmetric: {
+                      Z.fullmatrix->set_property(
+                        LAPACKSupport::Property::symmetric);
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular: {
+                    case HMatrixSupport::Property::hermite_symmetric: {
                       Z.fullmatrix->set_property(
-                        LAPACKSupport::lower_triangular);
+                        LAPACKSupport::Property::hermite_symmetric);
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::lower_triangular: {
+                      Z.fullmatrix->set_property(
+                        LAPACKSupport::Property::lower_triangular);
 
                       break;
                     }
@@ -13349,7 +14435,9 @@ h_h_mTmult_from_leaf_node(
         std::min(fixed_rank * 2, std::min(Z.m, Z.n));
 
       std::array<HMatrixSupport::BlockType,
-                 BlockClusterTree<spacedim, Number>::child_num>
+                 BlockClusterTree<spacedim,
+                                  typename numbers::NumberTraits<
+                                    Number>::real_type>::child_num>
         block_types_for_submatrices_of_local_Z;
       HMatrixSupport::infer_submatrix_block_types_from_parent_hmat(
         block_type_for_local_Z, block_types_for_submatrices_of_local_Z);
@@ -13373,18 +14461,19 @@ h_h_mTmult_from_leaf_node(
 
       if ((!is_result_matrix_Z_store_tril_only) ||
           (is_result_matrix_Z_store_tril_only &&
-           Z.property != HMatrixSupport::symmetric &&
-           Z.property != HMatrixSupport::lower_triangular))
+           Z.property != HMatrixSupport::Property::symmetric &&
+           Z.property != HMatrixSupport::Property::hermite_symmetric &&
+           Z.property != HMatrixSupport::Property::lower_triangular))
         {
           /**
            * The submatrix block @p Z.submatrices[1], which is obtained
            * from the cross type multiplication of @p M1 and @p M2, will be
            * evaluated in two scenarios:
-           * 1. when the \hmatrix @p M is not expected to be symmetric or lower
-           * triangular;
-           * 2. when the \hmatrix @p M is required to be symmetric or lower
-           * triangular a priori, and the product matrix @p Z should not be
-           * symmetric or lower triangular.
+           * 1. when the \hmatrix @p M is not expected to be symmetric, Hermite
+           * symmetric or lower triangular;
+           * 2. when the \hmatrix @p M is required to be symmetric, Hermite
+           * symmetric or lower triangular a priori, and the product matrix @p Z
+           * should not be symmetric, Hermite symmetric or lower triangular.
            */
           h_h_mTmult_from_leaf_node(M0,
                                     Z,
@@ -13452,8 +14541,8 @@ h_h_mTmult_from_leaf_node(
 
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.block_type != HMatrixSupport::upper_triangular_block &&
-           Z.block_type != HMatrixSupport::upper_triangular_block))
+           M.block_type != HMatrixSupport::BlockType::upper_triangular_block &&
+           Z.block_type != HMatrixSupport::BlockType::upper_triangular_block))
         {
           M.fullmatrix->fill(*(Z.fullmatrix),
                              (*Z.row_index_range)[0] - (*M.row_index_range)[0],
@@ -13477,8 +14566,8 @@ h_h_mTmult_from_leaf_node(
 
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.block_type != HMatrixSupport::upper_triangular_block &&
-           Z.block_type != HMatrixSupport::upper_triangular_block))
+           M.block_type != HMatrixSupport::BlockType::upper_triangular_block &&
+           Z.block_type != HMatrixSupport::BlockType::upper_triangular_block))
         {
           M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
                                              *M.col_index_range,
@@ -13511,23 +14600,31 @@ h_h_mTmult_from_leaf_node_for_parallel_cholesky(
 
   if (is_result_matrix_store_tril_only)
     {
-      Assert(M0.get_property() == HMatrixSupport::symmetric ||
-               M0.get_property() == HMatrixSupport::lower_triangular,
+      Assert(M0.get_property() == HMatrixSupport::Property::symmetric ||
+               M0.get_property() ==
+                 HMatrixSupport::Property::hermite_symmetric ||
+               M0.get_property() == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(M0.get_property()));
-      Assert(M0.get_block_type() == HMatrixSupport::diagonal_block,
+      Assert(M0.get_block_type() == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(M0.get_block_type()));
-      Assert(M.get_property() == HMatrixSupport::symmetric ||
-               M.get_property() == HMatrixSupport::lower_triangular,
+      Assert(M.get_property() == HMatrixSupport::Property::symmetric ||
+               M.get_property() ==
+                 HMatrixSupport::Property::hermite_symmetric ||
+               M.get_property() == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(M.get_property()));
-      Assert(M.get_block_type() == HMatrixSupport::diagonal_block,
+      Assert(M.get_block_type() == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(M.get_block_type()));
     }
 
   // Array of empty child pointers used for initializing a block
   // cluster tree node.
   const std::array<
-    typename BlockClusterTree<spacedim, Number>::node_pointer_type,
-    BlockClusterTree<spacedim, Number>::child_num>
+    typename BlockClusterTree<
+      spacedim,
+      typename numbers::NumberTraits<Number>::real_type>::node_pointer_type,
+    BlockClusterTree<
+      spacedim,
+      typename numbers::NumberTraits<Number>::real_type>::child_num>
     empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
 
   /**
@@ -13539,14 +14636,16 @@ h_h_mTmult_from_leaf_node_for_parallel_cholesky(
    * product \bctnode is built from \f$\tau\f$ of \f$M_1\f$ and \f$\tau\f$ of
    * \f$M_2\f$.}
    */
-  typename BlockClusterTree<spacedim, Number>::node_value_type
-    current_product_bc_node(BlockCluster<spacedim, Number>(
-                              M1.bc_node->get_data_reference().get_tau_node(),
-                              M2.bc_node->get_data_reference().get_tau_node()),
-                            0,
-                            empty_child_pointers,
-                            nullptr,
-                            UnsplitMode);
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_value_type current_product_bc_node(
+      BlockCluster<spacedim, typename numbers::NumberTraits<Number>::real_type>(
+        M1.bc_node->get_data_reference().get_tau_node(),
+        M2.bc_node->get_data_reference().get_tau_node()),
+      0,
+      empty_child_pointers,
+      nullptr,
+      UnsplitMode);
 
   /**
    * Set the \p is_near_field flag of the \bcn for the current local product
@@ -13573,7 +14672,7 @@ h_h_mTmult_from_leaf_node_for_parallel_cholesky(
    * node and \f$\sigma\f$ are the same, since only when they are the same,
    * @p Z or @p M's property can be symmetric or lower triangular.
    */
-  HMatrixSupport::Property Z_property = HMatrixSupport::general;
+  HMatrixSupport::Property Z_property = HMatrixSupport::Property::general;
   bool                     is_result_matrix_Z_store_tril_only = false;
 
   if (is_result_matrix_store_tril_only &&
@@ -13591,7 +14690,8 @@ h_h_mTmult_from_leaf_node_for_parallel_cholesky(
        * type should be @p diagonal_block and an assertion is made about this
        * fact.
        */
-      Assert(block_type_for_local_Z == HMatrixSupport::diagonal_block,
+      Assert(block_type_for_local_Z ==
+               HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(block_type_for_local_Z));
     }
 
@@ -13691,14 +14791,21 @@ h_h_mTmult_from_leaf_node_for_parallel_cholesky(
             {
               switch (Z.property)
                 {
-                    case HMatrixSupport::symmetric: {
-                      Z.fullmatrix->set_property(LAPACKSupport::symmetric);
+                    case HMatrixSupport::Property::symmetric: {
+                      Z.fullmatrix->set_property(
+                        LAPACKSupport::Property::symmetric);
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular: {
+                    case HMatrixSupport::Property::hermite_symmetric: {
                       Z.fullmatrix->set_property(
-                        LAPACKSupport::lower_triangular);
+                        LAPACKSupport::Property::hermite_symmetric);
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::lower_triangular: {
+                      Z.fullmatrix->set_property(
+                        LAPACKSupport::Property::lower_triangular);
 
                       break;
                     }
@@ -13729,7 +14836,9 @@ h_h_mTmult_from_leaf_node_for_parallel_cholesky(
         std::min(fixed_rank * 2, std::min(Z.m, Z.n));
 
       std::array<HMatrixSupport::BlockType,
-                 BlockClusterTree<spacedim, Number>::child_num>
+                 BlockClusterTree<spacedim,
+                                  typename numbers::NumberTraits<
+                                    Number>::real_type>::child_num>
         block_types_for_submatrices_of_local_Z;
       HMatrixSupport::infer_submatrix_block_types_from_parent_hmat(
         block_type_for_local_Z, block_types_for_submatrices_of_local_Z);
@@ -13755,18 +14864,19 @@ h_h_mTmult_from_leaf_node_for_parallel_cholesky(
 
       if ((!is_result_matrix_Z_store_tril_only) ||
           (is_result_matrix_Z_store_tril_only &&
-           Z.property != HMatrixSupport::symmetric &&
-           Z.property != HMatrixSupport::lower_triangular))
+           Z.property != HMatrixSupport::Property::symmetric &&
+           Z.property != HMatrixSupport::Property::hermite_symmetric &&
+           Z.property != HMatrixSupport::Property::lower_triangular))
         {
           /**
            * The submatrix block @p Z.submatrices[1], which is obtained
            * from the cross type multiplication of @p M1 and @p M2, will be
            * evaluated in two scenarios:
-           * 1. when the \hmatrix @p M is not expected to be symmetric or lower
-           * triangular;
-           * 2. when the \hmatrix @p M is required to be symmetric or lower
-           * triangular a priori, and the product matrix @p Z should not be
-           * symmetric or lower triangular.
+           * 1. when the \hmatrix @p M is not expected to be symmetric, Hermite
+           * symmetric, or lower triangular;
+           * 2. when the \hmatrix @p M is required to be symmetric, Hermite
+           * symmetric or lower triangular a priori, and the product matrix @p Z
+           * should not be symmetric, Hermite symmetric or lower triangular.
            */
           h_h_mTmult_from_leaf_node_for_parallel_cholesky(
             M0,
@@ -13840,8 +14950,8 @@ h_h_mTmult_from_leaf_node_for_parallel_cholesky(
 
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.block_type != HMatrixSupport::upper_triangular_block &&
-           Z.block_type != HMatrixSupport::upper_triangular_block))
+           M.block_type != HMatrixSupport::BlockType::upper_triangular_block &&
+           Z.block_type != HMatrixSupport::BlockType::upper_triangular_block))
         {
           /**
            * Only when the result matrix @p M is the top level result matrix
@@ -13876,8 +14986,8 @@ h_h_mTmult_from_leaf_node_for_parallel_cholesky(
 
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.block_type != HMatrixSupport::upper_triangular_block &&
-           Z.block_type != HMatrixSupport::upper_triangular_block))
+           M.block_type != HMatrixSupport::BlockType::upper_triangular_block &&
+           Z.block_type != HMatrixSupport::BlockType::upper_triangular_block))
         {
           /**
            * Only when the result matrix @p M is the top level result matrix
@@ -13973,23 +15083,31 @@ h_h_Tmmult_from_leaf_node(
 
   if (is_result_matrix_store_tril_only)
     {
-      Assert(M0.get_property() == HMatrixSupport::symmetric ||
-               M0.get_property() == HMatrixSupport::lower_triangular,
+      Assert(M0.get_property() == HMatrixSupport::Property::symmetric ||
+               M0.get_property() ==
+                 HMatrixSupport::Property::hermite_symmetric ||
+               M0.get_property() == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(M0.get_property()));
-      Assert(M0.get_block_type() == HMatrixSupport::diagonal_block,
+      Assert(M0.get_block_type() == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(M0.get_block_type()));
-      Assert(M.get_property() == HMatrixSupport::symmetric ||
-               M.get_property() == HMatrixSupport::lower_triangular,
+      Assert(M.get_property() == HMatrixSupport::Property::symmetric ||
+               M.get_property() ==
+                 HMatrixSupport::Property::hermite_symmetric ||
+               M.get_property() == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(M.get_property()));
-      Assert(M.get_block_type() == HMatrixSupport::diagonal_block,
+      Assert(M.get_block_type() == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(M.get_block_type()));
     }
 
   // Array of empty child pointers used for initializing a block
   // cluster tree node.
   const std::array<
-    typename BlockClusterTree<spacedim, Number>::node_pointer_type,
-    BlockClusterTree<spacedim, Number>::child_num>
+    typename BlockClusterTree<
+      spacedim,
+      typename numbers::NumberTraits<Number>::real_type>::node_pointer_type,
+    BlockClusterTree<
+      spacedim,
+      typename numbers::NumberTraits<Number>::real_type>::child_num>
     empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
 
   /**
@@ -14001,9 +15119,10 @@ h_h_Tmmult_from_leaf_node(
    * product \bctnode is built from \f$\sigma\f$ of \f$M_1\f$ and \f$\sigma\f$
    * of \f$M_2\f$.}
    */
-  typename BlockClusterTree<spacedim, Number>::node_value_type
-    current_product_bc_node(
-      BlockCluster<spacedim, Number>(
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_value_type current_product_bc_node(
+      BlockCluster<spacedim, typename numbers::NumberTraits<Number>::real_type>(
         M1.bc_node->get_data_reference().get_sigma_node(),
         M2.bc_node->get_data_reference().get_sigma_node()),
       0,
@@ -14036,7 +15155,7 @@ h_h_Tmmult_from_leaf_node(
    * node and \f$\sigma\f$ are the same, since only when they are the same,
    * @p Z or @p M's property can be symmetric or lower triangular.
    */
-  HMatrixSupport::Property Z_property = HMatrixSupport::general;
+  HMatrixSupport::Property Z_property = HMatrixSupport::Property::general;
   bool                     is_result_matrix_Z_store_tril_only = false;
 
   if (is_result_matrix_store_tril_only &&
@@ -14054,7 +15173,8 @@ h_h_Tmmult_from_leaf_node(
        * type should be @p diagonal_block and an assertion is made about this
        * fact.
        */
-      Assert(block_type_for_local_Z == HMatrixSupport::diagonal_block,
+      Assert(block_type_for_local_Z ==
+               HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(block_type_for_local_Z));
     }
 
@@ -14153,14 +15273,21 @@ h_h_Tmmult_from_leaf_node(
             {
               switch (Z.property)
                 {
-                    case HMatrixSupport::symmetric: {
-                      Z.fullmatrix->set_property(LAPACKSupport::symmetric);
+                    case HMatrixSupport::Property::symmetric: {
+                      Z.fullmatrix->set_property(
+                        LAPACKSupport::Property::symmetric);
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular: {
+                    case HMatrixSupport::Property::hermite_symmetric: {
                       Z.fullmatrix->set_property(
-                        LAPACKSupport::lower_triangular);
+                        LAPACKSupport::Property::hermite_symmetric);
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::lower_triangular: {
+                      Z.fullmatrix->set_property(
+                        LAPACKSupport::Property::lower_triangular);
 
                       break;
                     }
@@ -14191,7 +15318,9 @@ h_h_Tmmult_from_leaf_node(
         std::min(fixed_rank * 2, std::min(Z.m, Z.n));
 
       std::array<HMatrixSupport::BlockType,
-                 BlockClusterTree<spacedim, Number>::child_num>
+                 BlockClusterTree<spacedim,
+                                  typename numbers::NumberTraits<
+                                    Number>::real_type>::child_num>
         block_types_for_submatrices_of_local_Z;
       HMatrixSupport::infer_submatrix_block_types_from_parent_hmat(
         block_type_for_local_Z, block_types_for_submatrices_of_local_Z);
@@ -14213,18 +15342,19 @@ h_h_Tmmult_from_leaf_node(
 
       if ((!is_result_matrix_Z_store_tril_only) ||
           (is_result_matrix_Z_store_tril_only &&
-           Z.property != HMatrixSupport::symmetric &&
-           Z.property != HMatrixSupport::lower_triangular))
+           Z.property != HMatrixSupport::Property::symmetric &&
+           Z.property != HMatrixSupport::Property::hermite_symmetric &&
+           Z.property != HMatrixSupport::Property::lower_triangular))
         {
           /**
            * The submatrix block @p Z.submatrices[1], which is obtained
            * from the cross type multiplication of @p M1 and @p M2, will be
            * evaluated in two scenarios:
-           * 1. when the \hmatrix @p M is not expected to be symmetric or lower
-           * triangular;
-           * 2. when the \hmatrix @p M is required to be symmetric or lower
-           * triangular a priori, and the product matrix @p Z should not be
-           * symmetric or lower triangular.
+           * 1. when the \hmatrix @p M is not expected to be symmetric, Hermite
+           * symmetric or lower triangular;
+           * 2. when the \hmatrix @p M is required to be symmetric, Hermite
+           * symmetric or lower triangular a priori, and the product matrix @p Z
+           * should not be symmetric, Hermite symmetric or lower triangular.
            */
           h_h_Tmmult_from_leaf_node(M0,
                                     Z,
@@ -14286,8 +15416,8 @@ h_h_Tmmult_from_leaf_node(
 
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.block_type != HMatrixSupport::upper_triangular_block &&
-           Z.block_type != HMatrixSupport::upper_triangular_block))
+           M.block_type != HMatrixSupport::BlockType::upper_triangular_block &&
+           Z.block_type != HMatrixSupport::BlockType::upper_triangular_block))
         {
           M.fullmatrix->fill(*(Z.fullmatrix),
                              (*Z.row_index_range)[0] - (*M.row_index_range)[0],
@@ -14311,8 +15441,8 @@ h_h_Tmmult_from_leaf_node(
 
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.block_type != HMatrixSupport::upper_triangular_block &&
-           Z.block_type != HMatrixSupport::upper_triangular_block))
+           M.block_type != HMatrixSupport::BlockType::upper_triangular_block &&
+           Z.block_type != HMatrixSupport::BlockType::upper_triangular_block))
         {
           M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
                                              *M.col_index_range,
@@ -14361,23 +15491,31 @@ h_h_Tmmult_from_leaf_node(
 
   if (is_result_matrix_store_tril_only)
     {
-      Assert(M0.get_property() == HMatrixSupport::symmetric ||
-               M0.get_property() == HMatrixSupport::lower_triangular,
+      Assert(M0.get_property() == HMatrixSupport::Property::symmetric ||
+               M0.get_property() ==
+                 HMatrixSupport::Property::hermite_symmetric ||
+               M0.get_property() == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(M0.get_property()));
-      Assert(M0.get_block_type() == HMatrixSupport::diagonal_block,
+      Assert(M0.get_block_type() == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(M0.get_block_type()));
-      Assert(M.get_property() == HMatrixSupport::symmetric ||
-               M.get_property() == HMatrixSupport::lower_triangular,
+      Assert(M.get_property() == HMatrixSupport::Property::symmetric ||
+               M.get_property() ==
+                 HMatrixSupport::Property::hermite_symmetric ||
+               M.get_property() == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(M.get_property()));
-      Assert(M.get_block_type() == HMatrixSupport::diagonal_block,
+      Assert(M.get_block_type() == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(M.get_block_type()));
     }
 
   // Array of empty child pointers used for initializing a block
   // cluster tree node.
   const std::array<
-    typename BlockClusterTree<spacedim, Number>::node_pointer_type,
-    BlockClusterTree<spacedim, Number>::child_num>
+    typename BlockClusterTree<
+      spacedim,
+      typename numbers::NumberTraits<Number>::real_type>::node_pointer_type,
+    BlockClusterTree<
+      spacedim,
+      typename numbers::NumberTraits<Number>::real_type>::child_num>
     empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
 
   /**
@@ -14389,9 +15527,10 @@ h_h_Tmmult_from_leaf_node(
    * product \bctnode is built from \f$\sigma\f$ of \f$M_1\f$ and \f$\sigma\f$
    * of \f$M_2\f$.}
    */
-  typename BlockClusterTree<spacedim, Number>::node_value_type
-    current_product_bc_node(
-      BlockCluster<spacedim, Number>(
+  typename BlockClusterTree<spacedim,
+                            typename numbers::NumberTraits<Number>::real_type>::
+    node_value_type current_product_bc_node(
+      BlockCluster<spacedim, typename numbers::NumberTraits<Number>::real_type>(
         M1.bc_node->get_data_reference().get_sigma_node(),
         M2.bc_node->get_data_reference().get_sigma_node()),
       0,
@@ -14424,7 +15563,7 @@ h_h_Tmmult_from_leaf_node(
    * node and \f$\sigma\f$ are the same, since only when they are the same,
    * @p Z or @p M's property can be symmetric or lower triangular.
    */
-  HMatrixSupport::Property Z_property = HMatrixSupport::general;
+  HMatrixSupport::Property Z_property = HMatrixSupport::Property::general;
   bool                     is_result_matrix_Z_store_tril_only = false;
 
   if (is_result_matrix_store_tril_only &&
@@ -14442,7 +15581,8 @@ h_h_Tmmult_from_leaf_node(
        * type should be @p diagonal_block and an assertion is made about this
        * fact.
        */
-      Assert(block_type_for_local_Z == HMatrixSupport::diagonal_block,
+      Assert(block_type_for_local_Z ==
+               HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(block_type_for_local_Z));
     }
 
@@ -14541,14 +15681,21 @@ h_h_Tmmult_from_leaf_node(
             {
               switch (Z.property)
                 {
-                    case HMatrixSupport::symmetric: {
-                      Z.fullmatrix->set_property(LAPACKSupport::symmetric);
+                    case HMatrixSupport::Property::symmetric: {
+                      Z.fullmatrix->set_property(
+                        LAPACKSupport::Property::symmetric);
 
                       break;
                     }
-                    case HMatrixSupport::lower_triangular: {
+                    case HMatrixSupport::Property::hermite_symmetric: {
                       Z.fullmatrix->set_property(
-                        LAPACKSupport::lower_triangular);
+                        LAPACKSupport::Property::hermite_symmetric);
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::lower_triangular: {
+                      Z.fullmatrix->set_property(
+                        LAPACKSupport::Property::lower_triangular);
 
                       break;
                     }
@@ -14579,7 +15726,9 @@ h_h_Tmmult_from_leaf_node(
         std::min(fixed_rank * 2, std::min(Z.m, Z.n));
 
       std::array<HMatrixSupport::BlockType,
-                 BlockClusterTree<spacedim, Number>::child_num>
+                 BlockClusterTree<spacedim,
+                                  typename numbers::NumberTraits<
+                                    Number>::real_type>::child_num>
         block_types_for_submatrices_of_local_Z;
       HMatrixSupport::infer_submatrix_block_types_from_parent_hmat(
         block_type_for_local_Z, block_types_for_submatrices_of_local_Z);
@@ -14603,18 +15752,19 @@ h_h_Tmmult_from_leaf_node(
 
       if ((!is_result_matrix_Z_store_tril_only) ||
           (is_result_matrix_Z_store_tril_only &&
-           Z.property != HMatrixSupport::symmetric &&
-           Z.property != HMatrixSupport::lower_triangular))
+           Z.property != HMatrixSupport::Property::symmetric &&
+           Z.property != HMatrixSupport::Property::hermite_symmetric &&
+           Z.property != HMatrixSupport::Property::lower_triangular))
         {
           /**
            * The submatrix block @p Z.submatrices[1], which is obtained
            * from the cross type multiplication of @p M1 and @p M2, will be
            * evaluated in two scenarios:
-           * 1. when the \hmatrix @p M is not expected to be symmetric or lower
-           * triangular;
-           * 2. when the \hmatrix @p M is required to be symmetric or lower
-           * triangular a priori, and the product matrix @p Z should not be
-           * symmetric or lower triangular.
+           * 1. when the \hmatrix @p M is not expected to be symmetric, Hermite
+           * symmetric or lower triangular;
+           * 2. when the \hmatrix @p M is required to be symmetric, Hermite
+           * symmetric or lower triangular a priori, and the product matrix @p Z
+           * should not be symmetric, Hermite symmetric or lower triangular.
            */
           h_h_Tmmult_from_leaf_node(M0,
                                     Z,
@@ -14682,8 +15832,8 @@ h_h_Tmmult_from_leaf_node(
 
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.block_type != HMatrixSupport::upper_triangular_block &&
-           Z.block_type != HMatrixSupport::upper_triangular_block))
+           M.block_type != HMatrixSupport::BlockType::upper_triangular_block &&
+           Z.block_type != HMatrixSupport::BlockType::upper_triangular_block))
         {
           M.fullmatrix->fill(*(Z.fullmatrix),
                              (*Z.row_index_range)[0] - (*M.row_index_range)[0],
@@ -14707,8 +15857,8 @@ h_h_Tmmult_from_leaf_node(
 
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.block_type != HMatrixSupport::upper_triangular_block &&
-           Z.block_type != HMatrixSupport::upper_triangular_block))
+           M.block_type != HMatrixSupport::BlockType::upper_triangular_block &&
+           Z.block_type != HMatrixSupport::BlockType::upper_triangular_block))
         {
           M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
                                              *M.col_index_range,
@@ -14761,20 +15911,24 @@ h_h_mmult_level_conserving(HMatrix<spacedim, Number> &M,
                                  is_result_matrix_store_tril_only);
 
       /**
-       * N.B. When the \hmatrix is symmetric or lower triangular, it stores
-       * the lower triangular data only (including diagonal elements).
+       * N.B. When the \hmatrix is symmetric, Hermite symmetric or lower
+       * triangular, it stores the lower triangular data only (including
+       * diagonal elements).
        */
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.property != HMatrixSupport::symmetric &&
-           M.property != HMatrixSupport::lower_triangular))
+           M.property != HMatrixSupport::Property::symmetric &&
+           M.property != HMatrixSupport::Property::hermite_symmetric &&
+           M.property != HMatrixSupport::Property::lower_triangular))
         {
           /**
            * The submatrix block @p M.submatrices[1] will be evaluated in two
            * scenarios:
-           * 1. when the result matrix is not expected to be symmetric;
-           * 2. when the result matrix is required to be symmetric a priori,
-           * then if the product matrix @p M is not symmetric.
+           * 1. when the result matrix is not expected to be symmetric, Hermite
+           * symmetric or lower triangular;
+           * 2. when the result matrix is required to be symmetric, Hermite
+           * symmetric or lower triangular a priori, then if the product matrix @p M
+           * is not symmetric, Hermite symmetric or lower triangular.
            */
           h_h_mmult_level_conserving(*(M.submatrices[1]),
                                      *(M1.submatrices[0]),
@@ -14936,15 +16090,18 @@ h_h_mmult_level_conserving(HMatrix<spacedim, Number> &M,
        */
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.property != HMatrixSupport::symmetric &&
-           M.property != HMatrixSupport::lower_triangular))
+           M.property != HMatrixSupport::Property::symmetric &&
+           M.property != HMatrixSupport::Property::hermite_symmetric &&
+           M.property != HMatrixSupport::Property::lower_triangular))
         {
           /**
            * The submatrix block @p M.submatrices[1] will be evaluated in two
            * scenarios:
-           * 1. when the result matrix is not expected to be symmetric;
-           * 2. when the result matrix is required to be symmetric a priori,
-           * then if the product matrix @p M is not symmetric.
+           * 1. when the result matrix is not expected to be symmetric, Hermite
+           * symmetric or lower triangular;
+           * 2. when the result matrix is required to be symmetric, Hermite
+           * symmetric or lower triangular a priori, then if the product matrix @p M
+           * is not symmetric, Hermite symmetric or lower triangular.
            */
           h_h_mmult_level_conserving(*(M.submatrices[1]),
                                      alpha,
@@ -15099,15 +16256,18 @@ h_h_mmult_level_conserving_for_parallel_lu(
        */
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.property != HMatrixSupport::symmetric &&
-           M.property != HMatrixSupport::lower_triangular))
+           M.property != HMatrixSupport::Property::symmetric &&
+           M.property != HMatrixSupport::Property::hermite_symmetric &&
+           M.property != HMatrixSupport::Property::lower_triangular))
         {
           /**
            * The submatrix block @p M.submatrices[1] will be evaluated in two
            * scenarios:
-           * 1. when the result matrix is not expected to be symmetric;
-           * 2. when the result matrix is required to be symmetric a priori,
-           * then if the product matrix @p M is not symmetric.
+           * 1. when the result matrix is not expected to be symmetric, Hermite
+           * symmetric or lower triangular;
+           * 2. when the result matrix is required to be symmetric, Hermite
+           * symmetric or lower triangular a priori, then if the product matrix @p M
+           * is not symmetric, Hermite symmetric or lower triangular.
            */
           h_h_mmult_level_conserving_for_parallel_lu(*(M.submatrices[1]),
                                                      alpha,
@@ -15275,15 +16435,18 @@ h_h_mTmult_level_conserving(HMatrix<spacedim, Number> &M,
        */
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.property != HMatrixSupport::symmetric &&
-           M.property != HMatrixSupport::lower_triangular))
+           M.property != HMatrixSupport::Property::symmetric &&
+           M.property != HMatrixSupport::Property::hermite_symmetric &&
+           M.property != HMatrixSupport::Property::lower_triangular))
         {
           /**
            * The submatrix block @p M.submatrices[1] will be evaluated in two
            * scenarios:
-           * 1. when the result matrix is not expected to be symmetric;
-           * 2. when the result matrix is required to be symmetric a priori,
-           * then if the product matrix @p M is not symmetric.
+           * 1. when the result matrix is not expected to be symmetric, Hermite
+           * symmetric or lower triangular;
+           * 2. when the result matrix is required to be symmetric, Hermite
+           * symmetric or lower triangular a priori, then if the product matrix @p M
+           * is not symmetric, Hermite symmetric or lower triangular.
            */
           h_h_mTmult_level_conserving(*(M.submatrices[1]),
                                       *(M1.submatrices[0]),
@@ -15442,15 +16605,18 @@ h_h_mTmult_level_conserving(HMatrix<spacedim, Number> &M,
        */
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.property != HMatrixSupport::symmetric &&
-           M.property != HMatrixSupport::lower_triangular))
+           M.property != HMatrixSupport::Property::symmetric &&
+           M.property != HMatrixSupport::Property::hermite_symmetric &&
+           M.property != HMatrixSupport::Property::lower_triangular))
         {
           /**
            * The submatrix block @p M.submatrices[1] will be evaluated in two
            * scenarios:
-           * 1. when the result matrix is not expected to be symmetric;
-           * 2. when the result matrix is required to be symmetric a priori,
-           * then if the product matrix @p M is not symmetric.
+           * 1. when the result matrix is not expected to be symmetric, Hermite
+           * symmetric or lower triangular;
+           * 2. when the result matrix is required to be symmetric, Hermite
+           * symmetric or lower triangular a priori, then if the product matrix @p M
+           * is not symmetric, Hermite symmetric or lower triangular.
            */
           h_h_mTmult_level_conserving(*(M.submatrices[1]),
                                       alpha,
@@ -15604,15 +16770,18 @@ h_h_mTmult_level_conserving_for_parallel_cholesky(
        */
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.property != HMatrixSupport::symmetric &&
-           M.property != HMatrixSupport::lower_triangular))
+           M.property != HMatrixSupport::Property::symmetric &&
+           M.property != HMatrixSupport::Property::hermite_symmetric &&
+           M.property != HMatrixSupport::Property::lower_triangular))
         {
           /**
            * The submatrix block @p M.submatrices[1] will be evaluated in two
            * scenarios:
-           * 1. when the result matrix is not expected to be symmetric;
-           * 2. when the result matrix is required to be symmetric a priori,
-           * then if the product matrix @p M is not symmetric.
+           * 1. when the result matrix is not expected to be symmetric, Hermite
+           * symmetric or lower triangular;
+           * 2. when the result matrix is required to be symmetric, Hermite
+           * symmetric or lower triangular a priori, then if the product matrix @p M
+           * is not symmetric, Hermite symmetric or lower triangular.
            */
           h_h_mTmult_level_conserving_for_parallel_cholesky(
             *(M.submatrices[1]),
@@ -15781,15 +16950,18 @@ h_h_Tmmult_level_conserving(HMatrix<spacedim, Number> &M,
        */
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.property != HMatrixSupport::symmetric &&
-           M.property != HMatrixSupport::lower_triangular))
+           M.property != HMatrixSupport::Property::symmetric &&
+           M.property != HMatrixSupport::Property::hermite_symmetric &&
+           M.property != HMatrixSupport::Property::lower_triangular))
         {
           /**
            * The submatrix block @p M.submatrices[1] will be evaluated in two
            * scenarios:
-           * 1. when the result matrix is not expected to be symmetric;
-           * 2. when the result matrix is required to be symmetric a priori,
-           * then if the product matrix @p M is not symmetric.
+           * 1. when the result matrix is not expected to be symmetric, Hermite
+           * symmetric or lower triangular;
+           * 2. when the result matrix is required to be symmetric, Hermite
+           * symmetric or lower triangular a priori, then if the product matrix @p M
+           * is not symmetric, Hermite symmetric or lower triangular.
            */
           h_h_Tmmult_level_conserving(*(M.submatrices[1]),
                                       *(M1.submatrices[0]),
@@ -15949,15 +17121,18 @@ h_h_Tmmult_level_conserving(HMatrix<spacedim, Number> &M,
        */
       if ((!is_result_matrix_store_tril_only) ||
           (is_result_matrix_store_tril_only &&
-           M.property != HMatrixSupport::symmetric &&
-           M.property != HMatrixSupport::lower_triangular))
+           M.property != HMatrixSupport::Property::symmetric &&
+           M.property != HMatrixSupport::Property::hermite_symmetric &&
+           M.property != HMatrixSupport::Property::lower_triangular))
         {
           /**
            * The submatrix block @p M.submatrices[1] will be evaluated in two
            * scenarios:
-           * 1. when the result matrix is not expected to be symmetric;
-           * 2. when the result matrix is required to be symmetric a priori,
-           * then if the product matrix @p M is not symmetric.
+           * 1. when the result matrix is not expected to be symmetric, Hermite
+           * symmetric or lower triangular;
+           * 2. when the result matrix is required to be symmetric, Hermite
+           * symmetric or lower triangular a priori, then if the product matrix @p M
+           * is not symmetric, Hermite symmetric or lower triangular.
            */
           h_h_Tmmult_level_conserving(*(M.submatrices[1]),
                                       alpha,
@@ -16274,9 +17449,9 @@ hmatrix_solve_cholesky(const HMatrix<spacedim, Number> &L,
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix()
   : type(UndefinedMatrixType)
-  , state(HMatrixSupport::matrix)
-  , property(HMatrixSupport::general)
-  , block_type(HMatrixSupport::undefined_block)
+  , state(HMatrixSupport::State::matrix)
+  , property(HMatrixSupport::Property::general)
+  , block_type(HMatrixSupport::BlockType::undefined_block)
   , dot_node_id(0)
   , submatrices(0)
   , parent(nullptr)
@@ -16305,12 +17480,12 @@ HMatrix<spacedim, Number>::HMatrix()
 
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
-  const BlockClusterTree<spacedim, Number> &bct,
-  const unsigned int                        fixed_rank_k,
-  const HMatrixSupport::Property            property,
-  const HMatrixSupport::BlockType           block_type)
+  const BlockClusterTree<spacedim, real_type> &bct,
+  const unsigned int                           fixed_rank_k,
+  const HMatrixSupport::Property               property,
+  const HMatrixSupport::BlockType              block_type)
   : type(UndefinedMatrixType)
-  , state(HMatrixSupport::matrix)
+  , state(HMatrixSupport::State::matrix)
   , property(property)
   , block_type(block_type)
   , dot_node_id(0)
@@ -16345,12 +17520,13 @@ HMatrix<spacedim, Number>::HMatrix(
 
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
+  typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
+                                  bc_node,
   const unsigned int              fixed_rank_k,
   const HMatrixSupport::Property  property,
   const HMatrixSupport::BlockType block_type)
   : type(UndefinedMatrixType)
-  , state(HMatrixSupport::matrix)
+  , state(HMatrixSupport::State::matrix)
   , property(property)
   , block_type(block_type)
   , dot_node_id(0)
@@ -16385,13 +17561,13 @@ HMatrix<spacedim, Number>::HMatrix(
 
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
-  const BlockClusterTree<spacedim, Number> &bct,
-  const LAPACKFullMatrixExt<Number>        &M,
-  const unsigned int                        fixed_rank_k,
-  const HMatrixSupport::BlockType           block_type)
+  const BlockClusterTree<spacedim, real_type> &bct,
+  const LAPACKFullMatrixExt<Number>           &M,
+  const unsigned int                           fixed_rank_k,
+  const HMatrixSupport::BlockType              block_type)
   : type(UndefinedMatrixType)
-  , state(HMatrixSupport::matrix)
-  , property(HMatrixSupport::general)
+  , state(HMatrixSupport::State::matrix)
+  , property(HMatrixSupport::Property::general)
   , block_type(block_type)
   , dot_node_id(0)
   , submatrices(0)
@@ -16430,12 +17606,12 @@ HMatrix<spacedim, Number>::HMatrix(
 
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
-  const BlockClusterTree<spacedim, Number> &bct,
-  const LAPACKFullMatrixExt<Number>        &M,
-  const HMatrixSupport::BlockType           block_type)
+  const BlockClusterTree<spacedim, real_type> &bct,
+  const LAPACKFullMatrixExt<Number>           &M,
+  const HMatrixSupport::BlockType              block_type)
   : type(UndefinedMatrixType)
-  , state(HMatrixSupport::matrix)
-  , property(HMatrixSupport::general)
+  , state(HMatrixSupport::State::matrix)
+  , property(HMatrixSupport::Property::general)
   , block_type(block_type)
   , dot_node_id(0)
   , submatrices(0)
@@ -16474,13 +17650,14 @@ HMatrix<spacedim, Number>::HMatrix(
 
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
-  const LAPACKFullMatrixExt<Number>                                   &M,
-  const unsigned int              fixed_rank_k,
-  const HMatrixSupport::Property  property,
-  const HMatrixSupport::BlockType block_type)
+  typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
+                                     bc_node,
+  const LAPACKFullMatrixExt<Number> &M,
+  const unsigned int                 fixed_rank_k,
+  const HMatrixSupport::Property     property,
+  const HMatrixSupport::BlockType    block_type)
   : type(UndefinedMatrixType)
-  , state(HMatrixSupport::matrix)
+  , state(HMatrixSupport::State::matrix)
   , property(property)
   , block_type(block_type)
   , dot_node_id(0)
@@ -16515,12 +17692,13 @@ HMatrix<spacedim, Number>::HMatrix(
 
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
-  const LAPACKFullMatrixExt<Number>                                   &M,
-  const HMatrixSupport::Property                                       property,
-  const HMatrixSupport::BlockType block_type)
+  typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
+                                     bc_node,
+  const LAPACKFullMatrixExt<Number> &M,
+  const HMatrixSupport::Property     property,
+  const HMatrixSupport::BlockType    block_type)
   : type(UndefinedMatrixType)
-  , state(HMatrixSupport::matrix)
+  , state(HMatrixSupport::State::matrix)
   , property(property)
   , block_type(block_type)
   , dot_node_id(0)
@@ -16555,12 +17733,13 @@ HMatrix<spacedim, Number>::HMatrix(
 
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
-  HMatrix<spacedim, Number>                                          &&H,
-  const HMatrixSupport::Property                                       property,
+  typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
+                                  bc_node,
+  HMatrix<spacedim, Number>     &&H,
+  const HMatrixSupport::Property  property,
   const HMatrixSupport::BlockType block_type)
   : type(UndefinedMatrixType)
-  , state(HMatrixSupport::matrix)
+  , state(HMatrixSupport::State::matrix)
   , property(property)
   , block_type(block_type)
   , dot_node_id(0)
@@ -16595,12 +17774,12 @@ HMatrix<spacedim, Number>::HMatrix(
 
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
-  const BlockClusterTree<spacedim, Number> &bct,
-  HMatrix<spacedim, Number>               &&H,
-  const HMatrixSupport::Property            property,
-  const HMatrixSupport::BlockType           block_type)
+  const BlockClusterTree<spacedim, real_type> &bct,
+  HMatrix<spacedim, Number>                  &&H,
+  const HMatrixSupport::Property               property,
+  const HMatrixSupport::BlockType              block_type)
   : type(UndefinedMatrixType)
-  , state(HMatrixSupport::matrix)
+  , state(HMatrixSupport::State::matrix)
   , property(property)
   , block_type(block_type)
   , dot_node_id(0)
@@ -16636,9 +17815,9 @@ HMatrix<spacedim, Number>::HMatrix(
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(const HMatrix<spacedim, Number> &H)
   : type(UndefinedMatrixType)
-  , state(HMatrixSupport::matrix)
-  , property(HMatrixSupport::general)
-  , block_type(HMatrixSupport::undefined_block)
+  , state(HMatrixSupport::State::matrix)
+  , property(HMatrixSupport::Property::general)
+  , block_type(HMatrixSupport::BlockType::undefined_block)
   , dot_node_id(0)
   , submatrices(0)
   , parent(nullptr)
@@ -16708,10 +17887,13 @@ HMatrix<spacedim, Number>::HMatrix(HMatrix<spacedim, Number> &&H) noexcept
 
 template <int spacedim, typename Number>
 void
-HMatrix<spacedim, Number>::reinit(const BlockClusterTree<spacedim, Number> &bct,
-                                  const unsigned int              fixed_rank_k,
-                                  const HMatrixSupport::Property  property,
-                                  const HMatrixSupport::BlockType block_type)
+HMatrix<spacedim, Number>::reinit(
+  const BlockClusterTree<spacedim,
+                         typename numbers::NumberTraits<Number>::real_type>
+                                 &bct,
+  const unsigned int              fixed_rank_k,
+  const HMatrixSupport::Property  property,
+  const HMatrixSupport::BlockType block_type)
 {
   release();
 
@@ -16730,7 +17912,8 @@ HMatrix<spacedim, Number>::reinit(const BlockClusterTree<spacedim, Number> &bct,
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::reinit(
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
+  typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
+                                  bc_node,
   const unsigned int              fixed_rank_k,
   const HMatrixSupport::Property  property,
   const HMatrixSupport::BlockType block_type)
@@ -16833,7 +18016,7 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
 
         switch (top_hmat_property)
           {
-              case HMatrixSupport::general: {
+              case HMatrixSupport::Property::general: {
                 for (size_type i = 0; i < m; i++)
                   {
                     for (size_type j = 0; j < n; j++)
@@ -16845,8 +18028,9 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
 
                 break;
               }
-            case HMatrixSupport::symmetric:
-              case HMatrixSupport::lower_triangular: {
+            case HMatrixSupport::Property::symmetric:
+            case HMatrixSupport::Property::hermite_symmetric:
+              case HMatrixSupport::Property::lower_triangular: {
                 /**
                  * In principle, we should make assertion here that the block
                  * type of the top level \hmatrix should be diagonal. However,
@@ -16855,7 +18039,8 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
                  * this function, we do not make the assertion.
                  */
 
-                if (this->block_type == HMatrixSupport::diagonal_block)
+                if (this->block_type ==
+                    HMatrixSupport::BlockType::diagonal_block)
                   {
                     for (size_type i = 0; i < m; i++)
                       {
@@ -16867,7 +18052,7 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
                       }
                   }
                 else if (this->block_type ==
-                         HMatrixSupport::lower_triangular_block)
+                         HMatrixSupport::BlockType::lower_triangular_block)
                   {
                     for (size_type i = 0; i < m; i++)
                       {
@@ -16881,7 +18066,7 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
 
                 break;
               }
-              case HMatrixSupport::upper_triangular: {
+              case HMatrixSupport::Property::upper_triangular: {
                 /**
                  * In principle, we should make assertion here that the block
                  * type of the top level \hmatrix should be diagonal. However,
@@ -16890,7 +18075,8 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
                  * this function, we do not make the assertion.
                  */
 
-                if (this->block_type == HMatrixSupport::diagonal_block)
+                if (this->block_type ==
+                    HMatrixSupport::BlockType::diagonal_block)
                   {
                     for (size_type i = 0; i < m; i++)
                       {
@@ -16902,7 +18088,7 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
                       }
                   }
                 else if (this->block_type ==
-                         HMatrixSupport::upper_triangular_block)
+                         HMatrixSupport::BlockType::upper_triangular_block)
                   {
                     for (size_type i = 0; i < m; i++)
                       {
@@ -16929,7 +18115,7 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
 
         switch (top_hmat_property)
           {
-              case HMatrixSupport::general: {
+              case HMatrixSupport::Property::general: {
                 if (rkmatrix->convertToFullMatrix(matrix_block))
                   {
                     /**
@@ -16948,8 +18134,9 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
 
                 break;
               }
-            case HMatrixSupport::symmetric:
-              case HMatrixSupport::lower_triangular: {
+            case HMatrixSupport::Property::symmetric:
+            case HMatrixSupport::Property::hermite_symmetric:
+              case HMatrixSupport::Property::lower_triangular: {
                 /**
                  * In principle, we should make assertion here that the block
                  * type of the top level \hmatrix should be diagonal. However,
@@ -16958,7 +18145,8 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
                  * this function, we do not make the assertion.
                  */
 
-                if (this->block_type == HMatrixSupport::diagonal_block)
+                if (this->block_type ==
+                    HMatrixSupport::BlockType::diagonal_block)
                   {
                     Assert(
                       false,
@@ -16966,7 +18154,7 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
                         "Rank-k matrix cannot belong to the diagonal part!"));
                   }
                 else if (this->block_type ==
-                         HMatrixSupport::lower_triangular_block)
+                         HMatrixSupport::BlockType::lower_triangular_block)
                   {
                     if (rkmatrix->convertToFullMatrix(matrix_block))
                       {
@@ -16989,7 +18177,7 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
 
                 break;
               }
-              case HMatrixSupport::upper_triangular: {
+              case HMatrixSupport::Property::upper_triangular: {
                 /**
                  * In principle, we should make assertion here that the block
                  * type of the top level \hmatrix should be diagonal. However,
@@ -16998,7 +18186,8 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
                  * this function, we do not make the assertion.
                  */
 
-                if (this->block_type == HMatrixSupport::diagonal_block)
+                if (this->block_type ==
+                    HMatrixSupport::BlockType::diagonal_block)
                   {
                     Assert(
                       false,
@@ -17006,7 +18195,7 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
                         "Rank-k matrix cannot belong to the diagonal part!"));
                   }
                 else if (this->block_type ==
-                         HMatrixSupport::upper_triangular_block)
+                         HMatrixSupport::BlockType::upper_triangular_block)
                   {
                     if (rkmatrix->convertToFullMatrix(matrix_block))
                       {
@@ -17062,6 +18251,17 @@ HMatrix<spacedim, Number>::is_current_hmat_node_nonemtpy(
         return true;
 
       case HMatrixSupport::Property::symmetric:
+        if (block_type == HMatrixSupport::BlockType::diagonal_block ||
+            block_type == HMatrixSupport::BlockType::lower_triangular_block)
+          {
+            return true;
+          }
+        else
+          {
+            return false;
+          }
+
+      case HMatrixSupport::Property::hermite_symmetric:
         if (block_type == HMatrixSupport::BlockType::diagonal_block ||
             block_type == HMatrixSupport::BlockType::lower_triangular_block)
           {
@@ -17551,14 +18751,14 @@ HMatrix<spacedim, Number>::release()
   near_field_leaf_set.clear();
   far_field_leaf_set.clear();
 
-  type                                      = UndefinedMatrixType;
-  state                                     = HMatrixSupport::matrix;
-  property                                  = HMatrixSupport::general,
-  block_type                                = HMatrixSupport::undefined_block;
-  dot_node_id                               = 0;
-  bc_node                                   = nullptr;
-  parent                                    = nullptr;
-  next_same_level_hmat_node                 = nullptr;
+  type                      = UndefinedMatrixType;
+  state                     = HMatrixSupport::State::matrix;
+  property                  = HMatrixSupport::Property::general,
+  block_type                = HMatrixSupport::BlockType::undefined_block;
+  dot_node_id               = 0;
+  bc_node                   = nullptr;
+  parent                    = nullptr;
+  next_same_level_hmat_node = nullptr;
   next_same_level_same_row_hmat_node        = nullptr;
   next_same_level_same_column_hmat_node     = nullptr;
   previous_same_level_same_row_hmat_node    = nullptr;
@@ -17624,9 +18824,9 @@ void
 HMatrix<spacedim, Number>::clear_hmat_node()
 {
   type        = UndefinedMatrixType;
-  state       = HMatrixSupport::matrix;
-  property    = HMatrixSupport::general;
-  block_type  = HMatrixSupport::undefined_block;
+  state       = HMatrixSupport::State::matrix;
+  property    = HMatrixSupport::Property::general;
+  block_type  = HMatrixSupport::BlockType::undefined_block;
   dot_node_id = 0;
   submatrices.clear();
   parent                                    = nullptr;
@@ -17768,23 +18968,28 @@ HMatrix<spacedim, Number>::set_current_matrix_property(
 {
   switch (M.get_property())
     {
-        case LAPACKSupport::general: {
-          property = HMatrixSupport::general;
+        case LAPACKSupport::Property::general: {
+          property = HMatrixSupport::Property::general;
 
           break;
         }
-        case LAPACKSupport::symmetric: {
-          property = HMatrixSupport::symmetric;
+        case LAPACKSupport::Property::symmetric: {
+          property = HMatrixSupport::Property::symmetric;
 
           break;
         }
-        case LAPACKSupport::upper_triangular: {
-          property = HMatrixSupport::upper_triangular;
+        case LAPACKSupport::Property::hermite_symmetric: {
+          property = HMatrixSupport::Property::hermite_symmetric;
 
           break;
         }
-        case LAPACKSupport::lower_triangular: {
-          property = HMatrixSupport::lower_triangular;
+        case LAPACKSupport::Property::upper_triangular: {
+          property = HMatrixSupport::Property::upper_triangular;
+
+          break;
+        }
+        case LAPACKSupport::Property::lower_triangular: {
+          property = HMatrixSupport::Property::lower_triangular;
 
           break;
         }
@@ -17802,7 +19007,7 @@ HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
 {
   switch (property)
     {
-        case HMatrixSupport::general: {
+        case HMatrixSupport::Property::general: {
           /**
            * When a \hmatnode's property is @p general, all of its descendants
            * have this same property.
@@ -17823,13 +19028,13 @@ HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
 
           break;
         }
-        case HMatrixSupport::symmetric: {
+        case HMatrixSupport::Property::symmetric: {
           /**
            * If the current \hmatnode is symmetric, it should belong to the
            * diagonal part. Hence we make an assertion.
            */
           Assert(
-            block_type == HMatrixSupport::diagonal_block,
+            block_type == HMatrixSupport::BlockType::diagonal_block,
             ExcMessage(
               "A symmetric H-matrix node should belong to the diagonal part!"));
 
@@ -17843,14 +19048,14 @@ HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
                * matrices.
                *
                * \mynote{Because @p AssertDimension is a macro, the second
-               * argument @p BlockClusterTree<spacedim, Number>::child_num
+               * argument @p BlockClusterTree<spacedim, real_type>::child_num
                * should be protected by a pair of brackets.}
                */
               Assert(submatrices.size() ==
-                       (BlockClusterTree<spacedim, Number>::child_num),
+                       (BlockClusterTree<spacedim, real_type>::child_num),
                      ExcDimensionMismatch(
                        submatrices.size(),
-                       (BlockClusterTree<spacedim, Number>::child_num)));
+                       (BlockClusterTree<spacedim, real_type>::child_num)));
 
               /**
                * In my implementation of \bct and \hmatrix construction, the
@@ -17868,21 +19073,23 @@ HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
                * </code>
                */
               Assert(
-                submatrices[0]->block_type == HMatrixSupport::diagonal_block,
+                submatrices[0]->block_type ==
+                  HMatrixSupport::BlockType::diagonal_block,
                 ExcMessage(
                   "The first child matrix should belong to the diagonal part!"));
               Assert(
                 submatrices[1]->block_type ==
-                  HMatrixSupport::upper_triangular_block,
+                  HMatrixSupport::BlockType::upper_triangular_block,
                 ExcMessage(
                   "The second child matrix should belong to the upper triangular part!"));
               Assert(
                 submatrices[2]->block_type ==
-                  HMatrixSupport::lower_triangular_block,
+                  HMatrixSupport::BlockType::lower_triangular_block,
                 ExcMessage(
                   "The third child matrix should belong to the lower triangular part!"));
               Assert(
-                submatrices[3]->block_type == HMatrixSupport::diagonal_block,
+                submatrices[3]->block_type ==
+                  HMatrixSupport::BlockType::diagonal_block,
                 ExcMessage(
                   "The fourth child matrix should belong to the diagonal part!"));
 
@@ -17891,8 +19098,8 @@ HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
                * property of each submatrix recursively.
                */
               submatrices[0]->set_property(this->property);
-              submatrices[1]->set_property(HMatrixSupport::general);
-              submatrices[2]->set_property(HMatrixSupport::general);
+              submatrices[1]->set_property(HMatrixSupport::Property::general);
+              submatrices[2]->set_property(HMatrixSupport::Property::general);
               submatrices[3]->set_property(this->property);
             }
           else
@@ -17903,18 +19110,107 @@ HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
                */
               Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
 
-              this->fullmatrix->set_property(LAPACKSupport::symmetric);
+              this->fullmatrix->set_property(
+                LAPACKSupport::Property::symmetric);
             }
 
           break;
         }
-        case HMatrixSupport::upper_triangular: {
+        case HMatrixSupport::Property::hermite_symmetric: {
+          /**
+           * If the current \hmatnode is Hermite symmetric, it should belong to
+           * the diagonal part. Hence we make an assertion.
+           */
+          Assert(
+            block_type == HMatrixSupport::BlockType::diagonal_block,
+            ExcMessage(
+              "An Hermite symmetric H-matrix node should belong to the diagonal part!"));
+
+          this->set_current_matrix_property(property);
+
+          if (submatrices.size() > 0)
+            {
+              /**
+               * When the current \hmatnode is not a leaf node, we currently
+               * only handle the situation where there are four child
+               * matrices.
+               *
+               * \mynote{Because @p AssertDimension is a macro, the second
+               * argument @p BlockClusterTree<spacedim, real_type>::child_num
+               * should be protected by a pair of brackets.}
+               */
+              Assert(submatrices.size() ==
+                       (BlockClusterTree<spacedim, real_type>::child_num),
+                     ExcDimensionMismatch(
+                       submatrices.size(),
+                       (BlockClusterTree<spacedim, real_type>::child_num)));
+
+              /**
+               * In my implementation of \bct and \hmatrix construction, the
+               * first and the fourth child matrices belong to the diagonal
+               * part, the second child matrix belongs to the upper triangular
+               * part and the third child matrix belongs to the lower
+               * triangular part.
+               *
+               * <code>
+               *  -----
+               * |0 | 1|
+               *  -----
+               * |2 | 3|
+               *  -----
+               * </code>
+               */
+              Assert(
+                submatrices[0]->block_type ==
+                  HMatrixSupport::BlockType::diagonal_block,
+                ExcMessage(
+                  "The first child matrix should belong to the diagonal part!"));
+              Assert(
+                submatrices[1]->block_type ==
+                  HMatrixSupport::BlockType::upper_triangular_block,
+                ExcMessage(
+                  "The second child matrix should belong to the upper triangular part!"));
+              Assert(
+                submatrices[2]->block_type ==
+                  HMatrixSupport::BlockType::lower_triangular_block,
+                ExcMessage(
+                  "The third child matrix should belong to the lower triangular part!"));
+              Assert(
+                submatrices[3]->block_type ==
+                  HMatrixSupport::BlockType::diagonal_block,
+                ExcMessage(
+                  "The fourth child matrix should belong to the diagonal part!"));
+
+              /**
+               * After the assertion about block type has been made, set the
+               * property of each submatrix recursively.
+               */
+              submatrices[0]->set_property(this->property);
+              submatrices[1]->set_property(HMatrixSupport::Property::general);
+              submatrices[2]->set_property(HMatrixSupport::Property::general);
+              submatrices[3]->set_property(this->property);
+            }
+          else
+            {
+              /**
+               * When the current \hmatnode is a leaf node, because it must be
+               * a diagonal block, it should be a full matrix.
+               */
+              Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+
+              this->fullmatrix->set_property(
+                LAPACKSupport::Property::hermite_symmetric);
+            }
+
+          break;
+        }
+        case HMatrixSupport::Property::upper_triangular: {
           /**
            * If the current \hmatnode is upper triangular, it should belong to
            * the diagonal part. Hence we make an assertion.
            */
           Assert(
-            block_type == HMatrixSupport::diagonal_block,
+            block_type == HMatrixSupport::BlockType::diagonal_block,
             ExcMessage(
               "An upper triangular H-matrix node should belong to the diagonal part!"));
 
@@ -17928,14 +19224,14 @@ HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
                * matrices.
                *
                * \mynote{Because @p AssertDimension is a macro, the second
-               * argument @p BlockClusterTree<spacedim, Number>::child_num
+               * argument @p BlockClusterTree<spacedim, real_type>::child_num
                * should be protected by a pair of brackets.}
                */
               Assert(submatrices.size() ==
-                       (BlockClusterTree<spacedim, Number>::child_num),
+                       (BlockClusterTree<spacedim, real_type>::child_num),
                      ExcDimensionMismatch(
                        submatrices.size(),
-                       (BlockClusterTree<spacedim, Number>::child_num)));
+                       (BlockClusterTree<spacedim, real_type>::child_num)));
 
               /**
                * In my implementation of \bct and \hmatrix construction, the
@@ -17945,21 +19241,23 @@ HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
                * triangular part.
                */
               Assert(
-                submatrices[0]->block_type == HMatrixSupport::diagonal_block,
+                submatrices[0]->block_type ==
+                  HMatrixSupport::BlockType::diagonal_block,
                 ExcMessage(
                   "The first child matrix should belong to the diagonal part!"));
               Assert(
                 submatrices[1]->block_type ==
-                  HMatrixSupport::upper_triangular_block,
+                  HMatrixSupport::BlockType::upper_triangular_block,
                 ExcMessage(
                   "The second child matrix should belong to the upper triangular part!"));
               Assert(
                 submatrices[2]->block_type ==
-                  HMatrixSupport::lower_triangular_block,
+                  HMatrixSupport::BlockType::lower_triangular_block,
                 ExcMessage(
                   "The third child matrix should belong to the lower triangular part!"));
               Assert(
-                submatrices[3]->block_type == HMatrixSupport::diagonal_block,
+                submatrices[3]->block_type ==
+                  HMatrixSupport::BlockType::diagonal_block,
                 ExcMessage(
                   "The fourth child matrix should belong to the diagonal part!"));
 
@@ -17968,8 +19266,8 @@ HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
                * property of each submatrix recursively.
                */
               submatrices[0]->set_property(this->property);
-              submatrices[1]->set_property(HMatrixSupport::general);
-              submatrices[2]->set_property(HMatrixSupport::general);
+              submatrices[1]->set_property(HMatrixSupport::Property::general);
+              submatrices[2]->set_property(HMatrixSupport::Property::general);
               submatrices[3]->set_property(this->property);
             }
           else
@@ -17980,18 +19278,19 @@ HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
                */
               Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
 
-              this->fullmatrix->set_property(LAPACKSupport::upper_triangular);
+              this->fullmatrix->set_property(
+                LAPACKSupport::Property::upper_triangular);
             }
 
           break;
         }
-        case HMatrixSupport::lower_triangular: {
+        case HMatrixSupport::Property::lower_triangular: {
           /**
            * If the current \hmatnode is lower triangular, it should belong to
            * the diagonal part. Hence we make an assertion.
            */
           Assert(
-            block_type == HMatrixSupport::diagonal_block,
+            block_type == HMatrixSupport::BlockType::diagonal_block,
             ExcMessage(
               "A lower triangular H-matrix node should belong to the diagonal part!"));
 
@@ -18005,14 +19304,14 @@ HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
                * matrices.
                *
                * \mynote{Because @p AssertDimension is a macro, the second
-               * argument @p BlockClusterTree<spacedim, Number>::child_num
+               * argument @p BlockClusterTree<spacedim, real_type>::child_num
                * should be protected by a pair of brackets.}
                */
               Assert(submatrices.size() ==
-                       (BlockClusterTree<spacedim, Number>::child_num),
+                       (BlockClusterTree<spacedim, real_type>::child_num),
                      ExcDimensionMismatch(
                        submatrices.size(),
-                       (BlockClusterTree<spacedim, Number>::child_num)));
+                       (BlockClusterTree<spacedim, real_type>::child_num)));
 
               /**
                * In my implementation of \bct and \hmatrix construction, the
@@ -18022,21 +19321,23 @@ HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
                * triangular part.
                */
               Assert(
-                submatrices[0]->block_type == HMatrixSupport::diagonal_block,
+                submatrices[0]->block_type ==
+                  HMatrixSupport::BlockType::diagonal_block,
                 ExcMessage(
                   "The first child matrix should belong to the diagonal part!"));
               Assert(
                 submatrices[1]->block_type ==
-                  HMatrixSupport::upper_triangular_block,
+                  HMatrixSupport::BlockType::upper_triangular_block,
                 ExcMessage(
                   "The second child matrix should belong to the upper triangular part!"));
               Assert(
                 submatrices[2]->block_type ==
-                  HMatrixSupport::lower_triangular_block,
+                  HMatrixSupport::BlockType::lower_triangular_block,
                 ExcMessage(
                   "The third child matrix should belong to the lower triangular part!"));
               Assert(
-                submatrices[3]->block_type == HMatrixSupport::diagonal_block,
+                submatrices[3]->block_type ==
+                  HMatrixSupport::BlockType::diagonal_block,
                 ExcMessage(
                   "The fourth child matrix should belong to the diagonal part!"));
 
@@ -18045,8 +19346,8 @@ HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
                * property of each submatrix recursively.
                */
               submatrices[0]->set_property(this->property);
-              submatrices[1]->set_property(HMatrixSupport::general);
-              submatrices[2]->set_property(HMatrixSupport::general);
+              submatrices[1]->set_property(HMatrixSupport::Property::general);
+              submatrices[2]->set_property(HMatrixSupport::Property::general);
               submatrices[3]->set_property(this->property);
             }
           else
@@ -18057,7 +19358,8 @@ HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
                */
               Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
 
-              this->fullmatrix->set_property(LAPACKSupport::lower_triangular);
+              this->fullmatrix->set_property(
+                LAPACKSupport::Property::lower_triangular);
             }
 
           break;
@@ -18100,7 +19402,7 @@ HMatrix<spacedim, Number>::set_current_matrix_state(
        */
       switch (this->state)
         {
-            case HMatrixSupport::matrix: {
+            case HMatrixSupport::State::matrix: {
               fullmatrix->set_state(LAPACKSupport::matrix);
 
               break;
@@ -18205,7 +19507,7 @@ HMatrix<spacedim, Number>::set_block_type(
     {
       switch (block_type)
         {
-            case HMatrixSupport::undefined_block: {
+            case HMatrixSupport::BlockType::undefined_block: {
               /**
                * When the current \hmatrix block is @p undefined_block, all
                * child \hmatrices are @p undefined_block.
@@ -18214,7 +19516,7 @@ HMatrix<spacedim, Number>::set_block_type(
 
               break;
             }
-            case HMatrixSupport::diagonal_block: {
+            case HMatrixSupport::BlockType::diagonal_block: {
               /**
                * When the current \hmatrix is @p diagonal_block, the first and
                * fourth child \hmatrices are @p diagonal_block, while the second
@@ -18225,25 +19527,25 @@ HMatrix<spacedim, Number>::set_block_type(
                 {
                     case 0: {
                       submatrices[i]->set_block_type(
-                        HMatrixSupport::diagonal_block);
+                        HMatrixSupport::BlockType::diagonal_block);
 
                       break;
                     }
                     case 1: {
                       submatrices[i]->set_block_type(
-                        HMatrixSupport::upper_triangular_block);
+                        HMatrixSupport::BlockType::upper_triangular_block);
 
                       break;
                     }
                     case 2: {
                       submatrices[i]->set_block_type(
-                        HMatrixSupport::lower_triangular_block);
+                        HMatrixSupport::BlockType::lower_triangular_block);
 
                       break;
                     }
                     case 3: {
                       submatrices[i]->set_block_type(
-                        HMatrixSupport::diagonal_block);
+                        HMatrixSupport::BlockType::diagonal_block);
 
                       break;
                     }
@@ -18255,7 +19557,7 @@ HMatrix<spacedim, Number>::set_block_type(
 
               break;
             }
-            case HMatrixSupport::upper_triangular_block: {
+            case HMatrixSupport::BlockType::upper_triangular_block: {
               /**
                * When the current \hmatrix is @p upper_triangular_block,
                * all child \hmatrices are @p upper_triangular_block.
@@ -18264,7 +19566,7 @@ HMatrix<spacedim, Number>::set_block_type(
 
               break;
             }
-            case HMatrixSupport::lower_triangular_block: {
+            case HMatrixSupport::BlockType::lower_triangular_block: {
               /**
                * When the current \hmatrix is @p lower_triangular_block,
                * all child \hmatrices are @p lower_triangular_block.
@@ -18738,23 +20040,28 @@ HMatrix<spacedim, Number>::set_property_for_converted_fullmatrix(
 {
   switch (property)
     {
-        case HMatrixSupport::general: {
-          M.set_property(LAPACKSupport::general);
+        case HMatrixSupport::Property::general: {
+          M.set_property(LAPACKSupport::Property::general);
 
           break;
         }
-        case HMatrixSupport::symmetric: {
-          M.set_property(LAPACKSupport::symmetric);
+        case HMatrixSupport::Property::symmetric: {
+          M.set_property(LAPACKSupport::Property::symmetric);
 
           break;
         }
-        case HMatrixSupport::upper_triangular: {
-          M.set_property(LAPACKSupport::upper_triangular);
+        case HMatrixSupport::Property::hermite_symmetric: {
+          M.set_property(LAPACKSupport::Property::hermite_symmetric);
 
           break;
         }
-        case HMatrixSupport::lower_triangular: {
-          M.set_property(LAPACKSupport::lower_triangular);
+        case HMatrixSupport::Property::upper_triangular: {
+          M.set_property(LAPACKSupport::Property::upper_triangular);
+
+          break;
+        }
+        case HMatrixSupport::Property::lower_triangular: {
+          M.set_property(LAPACKSupport::Property::lower_triangular);
 
           break;
         }
@@ -18769,8 +20076,8 @@ HMatrix<spacedim, Number>::set_property_for_converted_fullmatrix(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::write_fullmatrix_leaf_node(
-  std::ostream &out,
-  const Number  singular_value_threshold) const
+  std::ostream   &out,
+  const real_type singular_value_threshold) const
 {
   Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
 
@@ -18872,8 +20179,8 @@ HMatrix<spacedim, Number>::write_rkmatrix_leaf_node(std::ostream &out) const
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::write_leaf_set(
-  std::ostream &out,
-  const Number  singular_value_threshold) const
+  std::ostream   &out,
+  const real_type singular_value_threshold) const
 {
   switch (type)
     {
@@ -18907,8 +20214,8 @@ HMatrix<spacedim, Number>::write_leaf_set(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::write_leaf_set_by_iteration(
-  std::ostream &out,
-  const Number  singular_value_threshold) const
+  std::ostream   &out,
+  const real_type singular_value_threshold) const
 {
   for (HMatrix *leaf_node : leaf_set)
     {
@@ -19555,6 +20862,28 @@ HMatrix<spacedim, Number>::vmult(
   const Vector<Number>          &x,
   const HMatrixSupport::Property top_hmat_property) const
 {
+  vmult(y, 1.0, x, top_hmat_property);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::vmult_task_parallel(Vector<Number>       &y,
+                                               const Vector<Number> &x)
+{
+  vmult_task_parallel(1., y, 1.0, x);
+}
+
+
+template <int spacedim, typename Number>
+template <typename Number2>
+void
+HMatrix<spacedim, Number>::vmult(
+  Vector<Number>                &y,
+  const Number2                  alpha,
+  const Vector<Number>          &x,
+  const HMatrixSupport::Property top_hmat_property) const
+{
   switch (type)
     {
         case HierarchicalMatrixType: {
@@ -19564,7 +20893,7 @@ HMatrix<spacedim, Number>::vmult(
            */
           for (HMatrix *submatrix : submatrices)
             {
-              submatrix->vmult(y, x, top_hmat_property);
+              submatrix->vmult(y, alpha, x, top_hmat_property);
             }
 
           break;
@@ -19581,6 +20910,13 @@ HMatrix<spacedim, Number>::vmult(
                    * When the top level \hmatnode is general, perform the
                    * matrix-vector multiplication as usual.
                    */
+                  Assert(property == HMatrixSupport::Property::general,
+                         ExcInvalidHMatrixProperty(property));
+                  Assert(fullmatrix->get_property() ==
+                           LAPACKSupport::Property::general,
+                         ExcInvalidLAPACKFullMatrixProperty(
+                           fullmatrix->get_property()));
+
                   Vector<Number> local_y(m);
                   Vector<Number> local_x(n);
 
@@ -19599,7 +20935,7 @@ HMatrix<spacedim, Number>::vmult(
                    */
                   for (size_type i = 0; i < m; i++)
                     {
-                      y((*row_index_range)[0] + i) += local_y(i);
+                      y((*row_index_range)[0] + i) += alpha * local_y(i);
                     }
 
                   break;
@@ -19617,23 +20953,24 @@ HMatrix<spacedim, Number>::vmult(
                            * should also be symmetric, when the top level
                            * \hmatnode is symmetric.
                            */
-                          Assert(property == HMatrixSupport::symmetric,
+                          Assert(property ==
+                                   HMatrixSupport::Property::symmetric,
                                  ExcInvalidHMatrixProperty(property));
                           /**
                            * The full matrix associated with the current
                            * \hmatnode should also be symmetric.
                            */
                           Assert(fullmatrix->get_property() ==
-                                   LAPACKSupport::symmetric,
+                                   LAPACKSupport::Property::symmetric,
                                  ExcInvalidLAPACKFullMatrixProperty(
                                    fullmatrix->get_property()));
 
                           /**
-                           * Perform the matrix-vector multiplication using
-                           * the
-                           * LAPACK function @p symv internally. In my implementation, only
-                           * those lower triangular elements in a symmetric
-                           * full matrix are used by the function.
+                           * Perform the matrix-vector multiplication using the
+                           * LAPACK function @p symv internally. In my
+                           * implementation, only those lower triangular
+                           * elements in a symmetric full matrix are used by the
+                           * function.
                            */
                           Vector<Number> local_y(m);
                           Vector<Number> local_x(n);
@@ -19653,7 +20990,8 @@ HMatrix<spacedim, Number>::vmult(
                            */
                           for (size_type i = 0; i < m; i++)
                             {
-                              y((*row_index_range)[0] + i) += local_y(i);
+                              y((*row_index_range)[0] + i) +=
+                                alpha * local_y(i);
                             }
 
                           break;
@@ -19671,8 +21009,15 @@ HMatrix<spacedim, Number>::vmult(
                            *
                            * \alert{Not only should the full matrix itself be
                            * transposed, the roles of row indices and column
-                           * indices should also be swapped.}
+                           * indices should also be swapped when handling
+                           * \f$M^Tx\f$.}
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::general,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
 
                           Vector<Number> local_y(m);
                           Vector<Number> local_x(n);
@@ -19692,7 +21037,8 @@ HMatrix<spacedim, Number>::vmult(
                            */
                           for (size_type i = 0; i < m; i++)
                             {
-                              y((*row_index_range)[0] + i) += local_y(i);
+                              y((*row_index_range)[0] + i) +=
+                                alpha * local_y(i);
                             }
 
                           Vector<Number> local_y_for_Tvmult(n);
@@ -19718,7 +21064,153 @@ HMatrix<spacedim, Number>::vmult(
                           for (size_type j = 0; j < n; j++)
                             {
                               y((*col_index_range)[0] + j) +=
-                                local_y_for_Tvmult(j);
+                                alpha * local_y_for_Tvmult(j);
+                            }
+
+                          break;
+                        }
+                        case HMatrixSupport::BlockType::
+                          upper_triangular_block: {
+                          /**
+                           * When the current \hmatnode belongs to the upper
+                           * triangular part, do nothing.
+                           */
+                          break;
+                        }
+                        default: {
+                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                    }
+
+                  break;
+                }
+                case HMatrixSupport::Property::hermite_symmetric: {
+                  /**
+                   * When the top level \hmatnode is Hermite symmetric, the
+                   * operation depends on the block type of the current leaf
+                   * \hmatnode.
+                   */
+                  switch (block_type)
+                    {
+                        case HMatrixSupport::BlockType::diagonal_block: {
+                          /**
+                           * A leaf \hmatnode belonging to the diagonal block
+                           * should also be Hermite symmetric, when the top
+                           * level \hmatnode is Hermite symmetric.
+                           */
+                          Assert(property ==
+                                   HMatrixSupport::Property::hermite_symmetric,
+                                 ExcInvalidHMatrixProperty(property));
+                          /**
+                           * The full matrix associated with the current
+                           * \hmatnode should also be Hermite symmetric.
+                           */
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::hermite_symmetric,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
+                          /**
+                           * Perform the matrix-vector multiplication using the
+                           * LAPACK function @p hemv internally. In my
+                           * implementation, only those lower triangular
+                           * elements in a Hermite symmetric full matrix are
+                           * used by the function.
+                           */
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) = x((*col_index_range)[0] + j);
+                            }
+
+                          fullmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_index_range)[0] + i) +=
+                                alpha * local_y(i);
+                            }
+
+                          break;
+                        }
+                        case HMatrixSupport::BlockType::
+                          lower_triangular_block: {
+                          /**
+                           * When the current \hmatnode belongs to the lower
+                           * triangular part, we first perform the
+                           * multiplication \f$Mx\f$ and then perform the
+                           * multiplication \f$M^Hx\f$. This treatment
+                           * considers both the contribution of the current
+                           * matrix block as well as its Hermite symmetric
+                           * counterpart.
+                           *
+                           * \alert{Not only should the full matrix itself be
+                           * Hermite transposed, the roles of row indices and
+                           * column indices should also be swapped.}
+                           */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::general,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) = x((*col_index_range)[0] + j);
+                            }
+
+                          fullmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_index_range)[0] + i) +=
+                                alpha * local_y(i);
+                            }
+
+                          Vector<Number> local_y_for_Hvmult(n);
+                          Vector<Number> local_x_for_Hvmult(m);
+
+                          /**
+                           * Restrict vector x to the current transposed
+                           * matrix block.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              local_x_for_Hvmult(i) =
+                                x((*row_index_range)[0] + i);
+                            }
+
+                          fullmatrix->Hvmult(local_y_for_Hvmult,
+                                             local_x_for_Hvmult);
+
+                          /**
+                           * Merge back the result vector \p local_y_for_Hvmult
+                           * to \p y.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              y((*col_index_range)[0] + j) +=
+                                alpha * local_y_for_Hvmult(j);
                             }
 
                           break;
@@ -19792,703 +21284,6 @@ HMatrix<spacedim, Number>::vmult(
                            */
                           for (size_type i = 0; i < m; i++)
                             {
-                              y((*row_index_range)[0] + i) += local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we simply perform the
-                           * multiplication \f$Mx\f$ by treating the current
-                           * matrix as general.
-                           */
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) = x((*col_index_range)[0] + j);
-                            }
-
-                          fullmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] + i) += local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, we do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::upper_triangular: {
-                  /**
-                   * When the top level \hmatnode is upper triangular, the
-                   * operation depends on the block type of the current leaf
-                   * \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * A leaf \hmatnode belonging to the diagonal block
-                           * should also be upper triangular, when the top
-                           * level \hmatnode is upper triangular.
-                           */
-                          Assert(property ==
-                                   HMatrixSupport::Property::upper_triangular,
-                                 ExcInvalidHMatrixProperty(property));
-                          /**
-                           * The full matrix associated with the current
-                           * \hmatnode should also be upper triangular.
-                           */
-                          Assert(fullmatrix->get_property() ==
-                                   LAPACKSupport::Property::upper_triangular,
-                                 ExcInvalidLAPACKFullMatrixProperty(
-                                   fullmatrix->get_property()));
-
-                          /**
-                           * Perform the matrix-vector multiplication using
-                           * the LAPACK function @p trmv internally.
-                           */
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) = x((*col_index_range)[0] + j);
-                            }
-
-                          fullmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] + i) += local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we do nothing.
-                           */
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, we simply perform the
-                           * multiplication \f$Mx\f$ by treating the current
-                           * matrix as general.
-                           */
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) = x((*col_index_range)[0] + j);
-                            }
-
-                          fullmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] + i) += local_y(i);
-                            }
-
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                default: {
-                  throw(ExcInvalidHMatrixProperty(top_hmat_property));
-
-                  break;
-                }
-            }
-
-          break;
-        }
-        case RkMatrixType: {
-          /**
-           * Here we comes to the matrix-vector multiplication with respect to
-           * a far field leaf \hmatnode.
-           */
-          switch (top_hmat_property)
-            {
-                case HMatrixSupport::Property::general: {
-                  /**
-                   * When the top level \hmatnode is general, perform the
-                   * matrix-vector multiplication as usual.
-                   */
-                  Vector<Number> local_y(m);
-                  Vector<Number> local_x(n);
-
-                  /**
-                   * Restrict vector x to the current matrix block.
-                   */
-                  for (size_type j = 0; j < n; j++)
-                    {
-                      local_x(j) = x((*col_index_range)[0] + j);
-                    }
-
-                  rkmatrix->vmult(local_y, local_x);
-
-                  /**
-                   * Merge back the result vector \p local_y to \p y.
-                   */
-                  for (size_type i = 0; i < m; i++)
-                    {
-                      y((*row_index_range)[0] + i) += local_y(i);
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::symmetric: {
-                  /**
-                   * When the top level \hmatnode is symmetric, the operation
-                   * depends on the block type of the current leaf \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * When the current \hmatnode is rank-k matrix, it
-                           * can never belong to the diagonal part.
-                           */
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we first perform the
-                           * multiplication \f$Mx\f$ and then perform the
-                           * multiplication \f$M^Tx\f$. This treatment
-                           * considers both the contribution of the current
-                           * matrix block as well as its symmetric
-                           * counterpart.
-                           *
-                           * \alert{Not only should the full matrix itself be
-                           * transposed, the roles of row indices and column
-                           * indices should also be swapped.}
-                           */
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) = x((*col_index_range)[0] + j);
-                            }
-
-                          rkmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] + i) += local_y(i);
-                            }
-
-                          Vector<Number> local_y_for_Tvmult(n);
-                          Vector<Number> local_x_for_Tvmult(m);
-
-                          /**
-                           * Restrict vector x to the current transposed
-                           * matrix block.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              local_x_for_Tvmult(i) =
-                                x((*row_index_range)[0] + i);
-                            }
-
-                          rkmatrix->Tvmult(local_y_for_Tvmult,
-                                           local_x_for_Tvmult);
-
-                          /**
-                           * Merge back the result vector \p local_y_for_Tvmult
-                           * to \p y.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              y((*col_index_range)[0] + j) +=
-                                local_y_for_Tvmult(j);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::lower_triangular: {
-                  /**
-                   * When the top level \hmatnode is lower triangular, the
-                   * operation depends on the block type of the current leaf
-                   * \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * A rank-k matrix node can never belong to the
-                           * diagonal part.
-                           */
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we simply perform the
-                           * multiplication \f$Mx\f$ as that for a general
-                           * matrix.
-                           */
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) = x((*col_index_range)[0] + j);
-                            }
-
-                          rkmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] + i) += local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::upper_triangular: {
-                  /**
-                   * When the top level \hmatnode is upper triangular, the
-                   * operation depends on the block type of the current leaf
-                   * \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * A rank-k matrix node can never belong to the
-                           * diagonal part.
-                           */
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, do nothing.
-                           */
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, we simply perform the
-                           * multiplication \f$Mx\f$ as that for a general
-                           * matrix.
-                           */
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) = x((*col_index_range)[0] + j);
-                            }
-
-                          rkmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] + i) += local_y(i);
-                            }
-
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                default: {
-                  throw(ExcInvalidHMatrixProperty(top_hmat_property));
-
-                  break;
-                }
-            }
-
-          break;
-        }
-      case UndefinedMatrixType:
-        default: {
-          Assert(false, ExcInvalidHMatrixType(type));
-          break;
-        }
-    }
-}
-
-
-template <int spacedim, typename Number>
-void
-HMatrix<spacedim, Number>::vmult_task_parallel(Vector<Number>       &y,
-                                               const Vector<Number> &x)
-{
-  vmult_task_parallel(1., y, 1.0, x);
-}
-
-
-template <int spacedim, typename Number>
-void
-HMatrix<spacedim, Number>::vmult(
-  Vector<Number>                &y,
-  const Number                   alpha,
-  const Vector<Number>          &x,
-  const HMatrixSupport::Property top_hmat_property) const
-{
-  switch (type)
-    {
-        case HierarchicalMatrixType: {
-          /**
-           * When the current \hmatnode is hierarchical, recursively call
-           * @p vmult of its children.
-           */
-          for (HMatrix *submatrix : submatrices)
-            {
-              submatrix->vmult(y, alpha, x, top_hmat_property);
-            }
-
-          break;
-        }
-        case FullMatrixType: {
-          /**
-           * Here we comes to the matrix-vector multiplication with respect to
-           * a near field leaf \hmatnode.
-           */
-          switch (top_hmat_property)
-            {
-                case HMatrixSupport::Property::general: {
-                  /**
-                   * When the top level \hmatnode is general, perform the
-                   * matrix-vector multiplication as usual.
-                   */
-                  Vector<Number> local_y(m);
-                  Vector<Number> local_x(n);
-
-                  /**
-                   * Restrict vector x to the current matrix block.
-                   */
-                  for (size_type j = 0; j < n; j++)
-                    {
-                      local_x(j) = x((*col_index_range)[0] + j);
-                    }
-
-                  fullmatrix->vmult(local_y, local_x);
-
-                  /**
-                   * Merge back the result vector \p local_y to \p y.
-                   */
-                  for (size_type i = 0; i < m; i++)
-                    {
-                      y((*row_index_range)[0] + i) += alpha * local_y(i);
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::symmetric: {
-                  /**
-                   * When the top level \hmatnode is symmetric, the operation
-                   * depends on the block type of the current leaf \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * A leaf \hmatnode belonging to the diagonal block
-                           * should also be symmetric, when the top level
-                           * \hmatnode is symmetric.
-                           */
-                          Assert(property == HMatrixSupport::symmetric,
-                                 ExcInvalidHMatrixProperty(property));
-                          /**
-                           * The full matrix associated with the current
-                           * \hmatnode should also be symmetric.
-                           */
-                          Assert(fullmatrix->get_property() ==
-                                   LAPACKSupport::symmetric,
-                                 ExcInvalidLAPACKFullMatrixProperty(
-                                   fullmatrix->get_property()));
-
-                          /**
-                           * Perform the matrix-vector multiplication using
-                           * the
-                           * LAPACK function @p symv. In my implementation, only
-                           * those lower triangular elements in a symmetric
-                           * full matrix are used by the function.
-                           */
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) = x((*col_index_range)[0] + j);
-                            }
-
-                          fullmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] + i) +=
-                                alpha * local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we first perform the
-                           * multiplication \f$Mx\f$ and then perform the
-                           * multiplication \f$M^Tx\f$. This treatment
-                           * considers both the contribution of the current
-                           * matrix block as well as its symmetric
-                           * counterpart.
-                           *
-                           * \alert{Not only should the full matrix itself be
-                           * transposed, the roles of row indices and column
-                           * indices should also be swapped when handling
-                           * \f$M^Tx\f$.}
-                           */
-
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) = x((*col_index_range)[0] + j);
-                            }
-
-                          fullmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] + i) +=
-                                alpha * local_y(i);
-                            }
-
-                          Vector<Number> local_y_for_Tvmult(n);
-                          Vector<Number> local_x_for_Tvmult(m);
-
-                          /**
-                           * Restrict vector x to the current transposed
-                           * matrix block.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              local_x_for_Tvmult(i) =
-                                x((*row_index_range)[0] + i);
-                            }
-
-                          fullmatrix->Tvmult(local_y_for_Tvmult,
-                                             local_x_for_Tvmult);
-
-                          /**
-                           * Merge back the result vector \p local_y_for_Tvmult
-                           * to \p y.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              y((*col_index_range)[0] + j) +=
-                                alpha * local_y_for_Tvmult(j);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::lower_triangular: {
-                  /**
-                   * When the top level \hmatnode is lower triangular, the
-                   * operation depends on the block type of the current leaf
-                   * \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * A leaf \hmatnode belonging to the diagonal block
-                           * should also be lower triangular, when the top
-                           * level \hmatnode is lower triangular.
-                           */
-                          Assert(property ==
-                                   HMatrixSupport::Property::lower_triangular,
-                                 ExcInvalidHMatrixProperty(property));
-                          /**
-                           * The full matrix associated with the current
-                           * \hmatnode should also be lower triangular.
-                           */
-                          Assert(fullmatrix->get_property() ==
-                                   LAPACKSupport::Property::lower_triangular,
-                                 ExcInvalidLAPACKFullMatrixProperty(
-                                   fullmatrix->get_property()));
-
-                          /**
-                           * Perform the matrix-vector multiplication using
-                           * the
-                           * LAPACK function @p trmv internally.
-                           */
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) = x((*col_index_range)[0] + j);
-                            }
-
-                          fullmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
                               y((*row_index_range)[0] + i) +=
                                 alpha * local_y(i);
                             }
@@ -20503,6 +21298,13 @@ HMatrix<spacedim, Number>::vmult(
                            * multiplication \f$Mx\f$ by treating the current
                            * matrix as general.
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::general,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
                           Vector<Number> local_y(m);
                           Vector<Number> local_x(n);
 
@@ -20615,6 +21417,13 @@ HMatrix<spacedim, Number>::vmult(
                            * multiplication \f$Mx\f$ by treating the current
                            * matrix as general.
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::general,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
                           Vector<Number> local_y(m);
                           Vector<Number> local_x(n);
 
@@ -20669,6 +21478,9 @@ HMatrix<spacedim, Number>::vmult(
                    * When the top level \hmatnode is general, perform the
                    * matrix-vector multiplication as usual.
                    */
+                  Assert(property == HMatrixSupport::Property::general,
+                         ExcInvalidHMatrixProperty(property));
+
                   Vector<Number> local_y(m);
                   Vector<Number> local_x(n);
 
@@ -20724,6 +21536,9 @@ HMatrix<spacedim, Number>::vmult(
                            * indices should also be swapped when handling
                            * \f$M^Tx\f$.}
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+
                           Vector<Number> local_y(m);
                           Vector<Number> local_x(n);
 
@@ -20791,6 +21606,108 @@ HMatrix<spacedim, Number>::vmult(
 
                   break;
                 }
+                case HMatrixSupport::Property::hermite_symmetric: {
+                  /**
+                   * When the top level \hmatnode is Hermite symmetric, the
+                   * operation depends on the block type of the current leaf
+                   * \hmatnode.
+                   */
+                  switch (block_type)
+                    {
+                        case HMatrixSupport::BlockType::diagonal_block: {
+                          /**
+                           * When the current \hmatnode is rank-k matrix, it
+                           * can never belong to the diagonal part.
+                           */
+                          throw(ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                        case HMatrixSupport::BlockType::
+                          lower_triangular_block: {
+                          /**
+                           * When the current \hmatnode belongs to the lower
+                           * triangular part, we first perform the
+                           * multiplication \f$Mx\f$ and then perform the
+                           * multiplication \f$M^Hx\f$. This treatment
+                           * considers both the contribution of the current
+                           * matrix block as well as its Hermite symmetric
+                           * counterpart.
+                           *
+                           * \alert{Not only should the full matrix itself be
+                           * Hermite transposed, the roles of row indices and
+                           * column indices should also be swapped.}
+                           */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) = x((*col_index_range)[0] + j);
+                            }
+
+                          rkmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_index_range)[0] + i) +=
+                                alpha * local_y(i);
+                            }
+
+                          Vector<Number> local_y_for_Hvmult(n);
+                          Vector<Number> local_x_for_Hvmult(m);
+
+                          /**
+                           * Restrict vector x to the current Hermite transposed
+                           * matrix block.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              local_x_for_Hvmult(i) =
+                                x((*row_index_range)[0] + i);
+                            }
+
+                          rkmatrix->Hvmult(local_y_for_Hvmult,
+                                           local_x_for_Hvmult);
+
+                          /**
+                           * Merge back the result vector \p local_y_for_Hvmult
+                           * to \p y.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              y((*col_index_range)[0] + j) +=
+                                alpha * local_y_for_Hvmult(j);
+                            }
+
+                          break;
+                        }
+                        case HMatrixSupport::BlockType::
+                          upper_triangular_block: {
+                          /**
+                           * When the current \hmatnode belongs to the upper
+                           * triangular part, do nothing.
+                           */
+                          break;
+                        }
+                        default: {
+                          throw(ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                    }
+
+                  break;
+                }
                 case HMatrixSupport::Property::lower_triangular: {
                   /**
                    * When the top level \hmatnode is lower triangular, the
@@ -20816,6 +21733,9 @@ HMatrix<spacedim, Number>::vmult(
                            * multiplication \f$Mx\f$ as that for a general
                            * matrix.
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+
                           Vector<Number> local_y(m);
                           Vector<Number> local_x(n);
 
@@ -20890,6 +21810,9 @@ HMatrix<spacedim, Number>::vmult(
                            * multiplication \f$Mx\f$ as that for a general
                            * matrix.
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+
                           Vector<Number> local_y(m);
                           Vector<Number> local_x(n);
 
@@ -20942,10 +21865,11 @@ HMatrix<spacedim, Number>::vmult(
 
 
 template <int spacedim, typename Number>
+template <typename Number2, typename Number3>
 void
-HMatrix<spacedim, Number>::vmult_task_parallel(const Number          beta,
+HMatrix<spacedim, Number>::vmult_task_parallel(const Number2         beta,
                                                Vector<Number>       &y,
-                                               const Number          alpha,
+                                               const Number3         alpha,
                                                const Vector<Number> &x)
 {
   /**
@@ -20984,10 +21908,11 @@ HMatrix<spacedim, Number>::vmult_task_parallel(const Number          beta,
          * Clear the local result vector before the multiplication begins.
          */
         this->data_for_vmult_or_tvmult_threads[thread_no].local_vmult_result =
-          0.;
-        if (this->property == HMatrixSupport::Property::symmetric)
+          Number(0.);
+        if (this->property == HMatrixSupport::Property::symmetric ||
+            this->property == HMatrixSupport::Property::hermite_symmetric)
           this->data_for_vmult_or_tvmult_threads[thread_no]
-            .local_tvmult_result = 0.;
+            .local_tvmult_result = Number(0.);
 
         /**
          * Iterate over each \hmatrix node in the interval of the leaf set for
@@ -21111,6 +22036,66 @@ HMatrix<spacedim, Number>::vmult_task_parallel(const Number          beta,
                         j) += alpha * local_y_for_Tvmult(j);
                   }
               }
+            else if (this->property ==
+                       HMatrixSupport::Property::hermite_symmetric &&
+                     this->leaf_set[l]->block_type ==
+                       HMatrixSupport::BlockType::lower_triangular_block)
+              {
+                /**
+                 * When the top level \hmatrix is Hermite symmetric and the
+                 * current leaf
+                 * \hmatrix block type is @p lower_triangular_block, @p Hvmult
+                 * should also be performed.
+                 */
+                Vector<Number> local_y_for_Hvmult(n);
+                Vector<Number> local_x_for_Hvmult(m);
+
+                /**
+                 * Restrict the global vector @p x to the local vector.
+                 */
+                for (size_type i = 0; i < m; i++)
+                  {
+                    local_x_for_Hvmult(i) =
+                      x((*this->leaf_set[l]->row_index_range)[0] + i);
+                  }
+
+                switch (this->leaf_set[l]->type)
+                  {
+                      case HMatrixType::FullMatrixType: {
+                        this->leaf_set[l]->fullmatrix->Hvmult(
+                          local_y_for_Hvmult, local_x_for_Hvmult);
+
+                        break;
+                      }
+                      case HMatrixType::RkMatrixType: {
+                        this->leaf_set[l]->rkmatrix->Hvmult(local_y_for_Hvmult,
+                                                            local_x_for_Hvmult);
+
+                        break;
+                      }
+                      default: {
+                        Assert(false,
+                               ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+                        break;
+                      }
+                  }
+
+                /**
+                 * Merge back the result vector @p local_y_for_Hvmult obtained
+                 * from the current leaf set matrix node to the thread local
+                 * result vector.
+                 */
+                for (size_type j = 0; j < n; j++)
+                  {
+                    this->data_for_vmult_or_tvmult_threads[thread_no]
+                      .local_tvmult_result(
+                        (*this->leaf_set[l]->col_index_range)[0] -
+                        this->data_for_vmult_or_tvmult_threads[thread_no]
+                          .local_tvmult_result_index_range[0] +
+                        j) += alpha * local_y_for_Hvmult(j);
+                  }
+              }
           }
       };
 
@@ -21144,11 +22129,13 @@ HMatrix<spacedim, Number>::vmult_task_parallel(const Number          beta,
             other_thread_no++;
           }
 
-        if (this->property == HMatrixSupport::Property::symmetric)
+        if (this->property == HMatrixSupport::Property::symmetric ||
+            this->property == HMatrixSupport::Property::hermite_symmetric)
           {
             /**
-             * When the top level \hmatrix is symmetric, also merge the @p Tvmult
-             * results from other threads.
+             * When the top level \hmatrix is symmetric or Hermite, also merge
+             * the
+             * @p Tvmult or @p Hvmult results from other threads.
              */
             unsigned int other_thread_no = 0;
             for (const auto &range_intersection :
@@ -21190,10 +22177,11 @@ HMatrix<spacedim, Number>::vmult_task_parallel(const Number          beta,
 
 
 template <int spacedim, typename Number>
+template <typename Number2, typename Number3>
 void
-HMatrix<spacedim, Number>::vmult_serial_iterative(const Number          beta,
+HMatrix<spacedim, Number>::vmult_serial_iterative(const Number2         beta,
                                                   Vector<Number>       &y,
-                                                  const Number          alpha,
+                                                  const Number3         alpha,
                                                   const Vector<Number> &x)
 {
   /**
@@ -21310,6 +22298,60 @@ HMatrix<spacedim, Number>::vmult_serial_iterative(const Number          beta,
                 alpha * local_y_for_Tvmult(j);
             }
         }
+      else if (this->property == HMatrixSupport::Property::hermite_symmetric &&
+               this->leaf_set[l]->block_type ==
+                 HMatrixSupport::BlockType::lower_triangular_block)
+        {
+          /**
+           * When the top level \hmatrix is Hermite symmetric and the current
+           * leaf
+           * \hmatrix block type is @p lower_triangular_block, @p Hvmult
+           * should also be performed.
+           */
+          Vector<Number> local_y_for_Hvmult(n);
+          Vector<Number> local_x_for_Hvmult(m);
+
+          /**
+           * Restrict the global vector @p x to the local vector with respect
+           * to the transposed matrix block.
+           */
+          for (size_type i = 0; i < m; i++)
+            {
+              local_x_for_Hvmult(i) =
+                x((*this->leaf_set[l]->row_index_range)[0] + i);
+            }
+
+          switch (this->leaf_set[l]->type)
+            {
+                case HMatrixType::FullMatrixType: {
+                  this->leaf_set[l]->fullmatrix->Hvmult(local_y_for_Hvmult,
+                                                        local_x_for_Hvmult);
+
+                  break;
+                }
+                case HMatrixType::RkMatrixType: {
+                  this->leaf_set[l]->rkmatrix->Hvmult(local_y_for_Hvmult,
+                                                      local_x_for_Hvmult);
+
+                  break;
+                }
+                default: {
+                  Assert(false, ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+                  break;
+                }
+            }
+
+          /**
+           * Merge back the result vector @p local_y_for_Hvmult to the global
+           * vector @p y.
+           */
+          for (size_type j = 0; j < n; j++)
+            {
+              y((*this->leaf_set[l]->col_index_range)[0] + j) +=
+                alpha * local_y_for_Hvmult(j);
+            }
+        }
     }
 }
 
@@ -21322,733 +22364,16 @@ HMatrix<spacedim, Number>::vmult(
   const HMatrix<spacedim, Number> &starting_hmat,
   const HMatrixSupport::Property   top_hmat_property) const
 {
-  switch (type)
-    {
-        case HierarchicalMatrixType: {
-          /**
-           * When the current \hmatnode is hierarchical, recursively call
-           * @p vmult of its children.
-           */
-          for (HMatrix *submatrix : submatrices)
-            {
-              submatrix->vmult(y, x, starting_hmat, top_hmat_property);
-            }
-
-          break;
-        }
-        case FullMatrixType: {
-          /**
-           * Here we comes to the matrix-vector multiplication with respect to
-           * a near field leaf \hmatnode.
-           */
-          switch (top_hmat_property)
-            {
-                case HMatrixSupport::Property::general: {
-                  /**
-                   * When the top level \hmatnode is general, perform the
-                   * matrix-vector multiplication as usual.
-                   */
-                  Vector<Number> local_y(m);
-                  Vector<Number> local_x(n);
-
-                  /**
-                   * Restrict vector x to the current matrix block.
-                   */
-                  for (size_type j = 0; j < n; j++)
-                    {
-                      local_x(j) = x((*col_index_range)[0] -
-                                     (*starting_hmat.col_index_range)[0] + j);
-                    }
-
-                  fullmatrix->vmult(local_y, local_x);
-
-                  /**
-                   * Merge back the result vector \p local_y to \p y.
-                   */
-                  for (size_type i = 0; i < m; i++)
-                    {
-                      y((*row_index_range)[0] -
-                        (*starting_hmat.row_index_range)[0] + i) += local_y(i);
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::symmetric: {
-                  /**
-                   * When the top level \hmatnode is symmetric, the operation
-                   * depends on the block type of the current leaf \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * A leaf \hmatnode belonging to the diagonal block
-                           * should also be symmetric, when the top level
-                           * \hmatnode is symmetric.
-                           */
-                          Assert(property == HMatrixSupport::symmetric,
-                                 ExcInvalidHMatrixProperty(property));
-                          /**
-                           * The full matrix associated with the current
-                           * \hmatnode should also be symmetric.
-                           */
-                          Assert(fullmatrix->get_property() ==
-                                   LAPACKSupport::symmetric,
-                                 ExcInvalidLAPACKFullMatrixProperty(
-                                   fullmatrix->get_property()));
-
-                          /**
-                           * Perform the matrix-vector multiplication using
-                           * the
-                           * LAPACK function @p symv. In my implementation, only
-                           * those lower triangular elements in a symmetric
-                           * full matrix are used by the function.
-                           */
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) =
-                                x((*col_index_range)[0] -
-                                  (*starting_hmat.col_index_range)[0] + j);
-                            }
-
-                          fullmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] -
-                                (*starting_hmat.row_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we first perform the
-                           * multiplication \f$Mx\f$ and then perform the
-                           * multiplication \f$M^Tx\f$. This treatment
-                           * considers both the contribution of the current
-                           * matrix block as well as its symmetric
-                           * counterpart.
-                           *
-                           * \alert{Not only should the full matrix itself be
-                           * transposed, the roles of row indices and column
-                           * indices should also be swapped.}
-                           */
-
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) =
-                                x((*col_index_range)[0] -
-                                  (*starting_hmat.col_index_range)[0] + j);
-                            }
-
-                          fullmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] -
-                                (*starting_hmat.row_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          Vector<Number> local_y_for_Tvmult(n);
-                          Vector<Number> local_x_for_Tvmult(m);
-
-                          /**
-                           * Restrict vector x to the current transposed
-                           * matrix block.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              local_x_for_Tvmult(i) =
-                                x((*row_index_range)[0] -
-                                  (*starting_hmat.row_index_range)[0] + i);
-                            }
-
-                          fullmatrix->Tvmult(local_y_for_Tvmult,
-                                             local_x_for_Tvmult);
-
-                          /**
-                           * Merge back the result vector \p local_y_for_Tvmult
-                           * to \p y.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              y((*col_index_range)[0] -
-                                (*starting_hmat.col_index_range)[0] + j) +=
-                                local_y_for_Tvmult(j);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::lower_triangular: {
-                  /**
-                   * When the top level \hmatnode is lower triangular, the
-                   * operation depends on the block type of the current leaf
-                   * \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * A leaf \hmatnode belonging to the diagonal block
-                           * should also be lower triangular, when the top
-                           * level \hmatnode is lower triangular.
-                           */
-                          Assert(property ==
-                                   HMatrixSupport::Property::lower_triangular,
-                                 ExcInvalidHMatrixProperty(property));
-                          /**
-                           * The full matrix associated with the current
-                           * \hmatnode should also be lower triangular.
-                           */
-                          Assert(fullmatrix->get_property() ==
-                                   LAPACKSupport::Property::lower_triangular,
-                                 ExcInvalidLAPACKFullMatrixProperty(
-                                   fullmatrix->get_property()));
-
-                          /**
-                           * Perform the matrix-vector multiplication using
-                           * the
-                           * LAPACK function @p trmv internally.
-                           */
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) =
-                                x((*col_index_range)[0] -
-                                  (*starting_hmat.col_index_range)[0] + j);
-                            }
-
-                          fullmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] -
-                                (*starting_hmat.row_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we simply perform the
-                           * multiplication \f$Mx\f$ by treating the current
-                           * matrix as general.
-                           */
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) =
-                                x((*col_index_range)[0] -
-                                  (*starting_hmat.col_index_range)[0] + j);
-                            }
-
-                          fullmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] -
-                                (*starting_hmat.row_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, we do nothing.
-                           */
-
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::upper_triangular: {
-                  /**
-                   * When the top level \hmatnode is upper triangular, the
-                   * operation depends on the block type of the current leaf
-                   * \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * A leaf \hmatnode belonging to the diagonal block
-                           * should also be upper triangular, when the top
-                           * level \hmatnode is upper triangular.
-                           */
-                          Assert(property ==
-                                   HMatrixSupport::Property::upper_triangular,
-                                 ExcInvalidHMatrixProperty(property));
-                          /**
-                           * The full matrix associated with the current
-                           * \hmatnode should also be upper triangular.
-                           */
-                          Assert(fullmatrix->get_property() ==
-                                   LAPACKSupport::Property::upper_triangular,
-                                 ExcInvalidLAPACKFullMatrixProperty(
-                                   fullmatrix->get_property()));
-
-                          /**
-                           * Perform the matrix-vector multiplication using
-                           * the LAPACK function @p trmv internally.
-                           */
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) =
-                                x((*col_index_range)[0] -
-                                  (*starting_hmat.col_index_range)[0] + j);
-                            }
-
-                          fullmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] -
-                                (*starting_hmat.row_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we do nothing.
-                           */
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, we simply perform the
-                           * multiplication \f$Mx\f$ by treating the current
-                           * matrix as general.
-                           */
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) =
-                                x((*col_index_range)[0] -
-                                  (*starting_hmat.col_index_range)[0] + j);
-                            }
-
-                          fullmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] -
-                                (*starting_hmat.row_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                default: {
-                  throw(ExcInvalidHMatrixProperty(top_hmat_property));
-
-                  break;
-                }
-            }
-
-          break;
-        }
-        case RkMatrixType: {
-          /**
-           * Here we comes to the matrix-vector multiplication with respect to
-           * a far field leaf \hmatnode.
-           */
-          switch (top_hmat_property)
-            {
-                case HMatrixSupport::Property::general: {
-                  /**
-                   * When the top level \hmatnode is general, perform the
-                   * matrix-vector multiplication as usual.
-                   */
-                  Vector<Number> local_y(m);
-                  Vector<Number> local_x(n);
-
-                  /**
-                   * Restrict vector x to the current matrix block.
-                   */
-                  for (size_type j = 0; j < n; j++)
-                    {
-                      local_x(j) = x((*col_index_range)[0] -
-                                     (*starting_hmat.col_index_range)[0] + j);
-                    }
-
-                  rkmatrix->vmult(local_y, local_x);
-
-                  /**
-                   * Merge back the result vector \p local_y to \p y.
-                   */
-                  for (size_type i = 0; i < m; i++)
-                    {
-                      y((*row_index_range)[0] -
-                        (*starting_hmat.row_index_range)[0] + i) += local_y(i);
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::symmetric: {
-                  /**
-                   * When the top level \hmatnode is symmetric, the operation
-                   * depends on the block type of the current leaf \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * When the current \hmatnode is rank-k matrix, it
-                           * can never belong to the diagonal part.
-                           */
-                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we first perform the
-                           * multiplication \f$Mx\f$ and then perform the
-                           * multiplication \f$M^Tx\f$. This treatment
-                           * considers both the contribution of the current
-                           * matrix block as well as its symmetric
-                           * counterpart.
-                           *
-                           * \alert{Not only should the full matrix itself be
-                           * transposed, the roles of row indices and column
-                           * indices should also be swapped.}
-                           */
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) =
-                                x((*col_index_range)[0] -
-                                  (*starting_hmat.col_index_range)[0] + j);
-                            }
-
-                          rkmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] -
-                                (*starting_hmat.row_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          Vector<Number> local_y_for_Tvmult(n);
-                          Vector<Number> local_x_for_Tvmult(m);
-
-                          /**
-                           * Restrict vector x to the current transposed
-                           * matrix block.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              local_x_for_Tvmult(i) =
-                                x((*row_index_range)[0] -
-                                  (*starting_hmat.row_index_range)[0] + i);
-                            }
-
-                          rkmatrix->Tvmult(local_y_for_Tvmult,
-                                           local_x_for_Tvmult);
-
-                          /**
-                           * Merge back the result vector \p local_y_for_Tvmult
-                           * to \p y.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              y((*col_index_range)[0] -
-                                (*starting_hmat.col_index_range)[0] + j) +=
-                                local_y_for_Tvmult(j);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::lower_triangular: {
-                  /**
-                   * When the top level \hmatnode is lower triangular, the
-                   * operation depends on the block type of the current leaf
-                   * \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * A rank-k matrix node can never belong to the
-                           * diagonal part.
-                           */
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we simply perform the
-                           * multiplication \f$Mx\f$ as that for a general
-                           * matrix.
-                           */
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) =
-                                x((*col_index_range)[0] -
-                                  (*starting_hmat.col_index_range)[0] + j);
-                            }
-
-                          rkmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] -
-                                (*starting_hmat.row_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::upper_triangular: {
-                  /**
-                   * When the top level \hmatnode is upper triangular, the
-                   * operation depends on the block type of the current leaf
-                   * \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * A rank-k matrix node can never belong to the
-                           * diagonal part.
-                           */
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, do nothing.
-                           */
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, we simply perform the
-                           * multiplication \f$Mx\f$ as that for a general
-                           * matrix.
-                           */
-                          Vector<Number> local_y(m);
-                          Vector<Number> local_x(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x(j) =
-                                x((*col_index_range)[0] -
-                                  (*starting_hmat.col_index_range)[0] + j);
-                            }
-
-                          rkmatrix->vmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] -
-                                (*starting_hmat.row_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                default: {
-                  throw(ExcInvalidHMatrixProperty(top_hmat_property));
-
-                  break;
-                }
-            }
-
-          break;
-        }
-      case UndefinedMatrixType:
-        default: {
-          Assert(false, ExcInvalidHMatrixType(type));
-          break;
-        }
-    }
+  vmult(y, 1.0, x, starting_hmat, top_hmat_property);
 }
 
 
 template <int spacedim, typename Number>
+template <typename Number2>
 void
 HMatrix<spacedim, Number>::vmult(
   Vector<Number>                  &y,
-  const Number                     alpha,
+  const Number2                    alpha,
   const Vector<Number>            &x,
   const HMatrix<spacedim, Number> &starting_hmat,
   const HMatrixSupport::Property   top_hmat_property) const
@@ -22079,6 +22404,13 @@ HMatrix<spacedim, Number>::vmult(
                    * When the top level \hmatnode is general, perform the
                    * matrix-vector multiplication as usual.
                    */
+                  Assert(property == HMatrixSupport::Property::general,
+                         ExcInvalidHMatrixProperty(property));
+                  Assert(fullmatrix->get_property() ==
+                           LAPACKSupport::Property::general,
+                         ExcInvalidLAPACKFullMatrixProperty(
+                           fullmatrix->get_property()));
+
                   Vector<Number> local_y(m);
                   Vector<Number> local_x(n);
 
@@ -22118,14 +22450,15 @@ HMatrix<spacedim, Number>::vmult(
                            * should also be symmetric, when the top level
                            * \hmatnode is symmetric.
                            */
-                          Assert(property == HMatrixSupport::symmetric,
+                          Assert(property ==
+                                   HMatrixSupport::Property::symmetric,
                                  ExcInvalidHMatrixProperty(property));
                           /**
                            * The full matrix associated with the current
                            * \hmatnode should also be symmetric.
                            */
                           Assert(fullmatrix->get_property() ==
-                                   LAPACKSupport::symmetric,
+                                   LAPACKSupport::Property::symmetric,
                                  ExcInvalidLAPACKFullMatrixProperty(
                                    fullmatrix->get_property()));
 
@@ -22179,6 +22512,12 @@ HMatrix<spacedim, Number>::vmult(
                            * indices should also be swapped when handling
                            * \f$M^Tx\f$.}
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::general,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
 
                           Vector<Number> local_y(m);
                           Vector<Number> local_x(n);
@@ -22244,7 +22583,161 @@ HMatrix<spacedim, Number>::vmult(
                           break;
                         }
                         default: {
-                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+                          throw(ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                    }
+
+                  break;
+                }
+                case HMatrixSupport::Property::hermite_symmetric: {
+                  /**
+                   * When the top level \hmatnode is Hermite symmetric, the
+                   * operation depends on the block type of the current leaf
+                   * \hmatnode.
+                   */
+                  switch (block_type)
+                    {
+                        case HMatrixSupport::BlockType::diagonal_block: {
+                          /**
+                           * A leaf \hmatnode belonging to the diagonal block
+                           * should also be Hermite symmetric, when the top
+                           * level \hmatnode is Hermite symmetric.
+                           */
+                          Assert(property ==
+                                   HMatrixSupport::Property::hermite_symmetric,
+                                 ExcInvalidHMatrixProperty(property));
+                          /**
+                           * The full matrix associated with the current
+                           * \hmatnode should also be Hermite symmetric.
+                           */
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::hermite_symmetric,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
+                          /**
+                           * Perform the matrix-vector multiplication using
+                           * the LAPACK function @p hemv internally. In my
+                           * implementation, only those lower triangular
+                           * elements in a Hermite symmetric full matrix are
+                           * used by the function.
+                           */
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) =
+                                x((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + j);
+                            }
+
+                          fullmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_index_range)[0] -
+                                (*starting_hmat.row_index_range)[0] + i) +=
+                                alpha * local_y(i);
+                            }
+
+                          break;
+                        }
+                        case HMatrixSupport::BlockType::
+                          lower_triangular_block: {
+                          /**
+                           * When the current \hmatnode belongs to the lower
+                           * triangular part, we first perform the
+                           * multiplication \f$Mx\f$ and then perform the
+                           * multiplication \f$M^Tx\f$. This treatment
+                           * considers both the contribution of the current
+                           * matrix block as well as its symmetric
+                           * counterpart.
+                           *
+                           * \alert{Not only should the full matrix itself be
+                           * transposed, the roles of row indices and column
+                           * indices should also be swapped.}
+                           */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::general,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) =
+                                x((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + j);
+                            }
+
+                          fullmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_index_range)[0] -
+                                (*starting_hmat.row_index_range)[0] + i) +=
+                                alpha * local_y(i);
+                            }
+
+                          Vector<Number> local_y_for_Hvmult(n);
+                          Vector<Number> local_x_for_Hvmult(m);
+
+                          /**
+                           * Restrict vector x to the current transposed
+                           * matrix block.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              local_x_for_Hvmult(i) =
+                                x((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i);
+                            }
+
+                          fullmatrix->Hvmult(local_y_for_Hvmult,
+                                             local_x_for_Hvmult);
+
+                          /**
+                           * Merge back the result vector \p local_y_for_Hvmult
+                           * to \p y.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              y((*col_index_range)[0] -
+                                (*starting_hmat.col_index_range)[0] + j) +=
+                                alpha * local_y_for_Hvmult(j);
+                            }
+
+                          break;
+                        }
+                        case HMatrixSupport::BlockType::
+                          upper_triangular_block: {
+                          /**
+                           * When the current \hmatnode belongs to the upper
+                           * triangular part, do nothing.
+                           */
+                          break;
+                        }
+                        default: {
+                          throw(ExcInvalidHMatrixBlockType(block_type));
 
                           break;
                         }
@@ -22318,6 +22811,13 @@ HMatrix<spacedim, Number>::vmult(
                            * multiplication \f$Mx\f$ by treating the current
                            * matrix as general.
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::general,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
                           Vector<Number> local_y(m);
                           Vector<Number> local_x(n);
 
@@ -22436,6 +22936,13 @@ HMatrix<spacedim, Number>::vmult(
                            * multiplication \f$Mx\f$ by treating the current
                            * matrix as general.
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::general,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
                           Vector<Number> local_y(m);
                           Vector<Number> local_x(n);
 
@@ -22493,6 +23000,9 @@ HMatrix<spacedim, Number>::vmult(
                    * When the top level \hmatnode is general, perform the
                    * matrix-vector multiplication as usual.
                    */
+                  Assert(property == HMatrixSupport::Property::general,
+                         ExcInvalidHMatrixProperty(property));
+
                   Vector<Number> local_y(m);
                   Vector<Number> local_x(n);
 
@@ -22551,6 +23061,9 @@ HMatrix<spacedim, Number>::vmult(
                            * indices should also be swapped when handling
                            * \f$M^Tx\f$.}
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+
                           Vector<Number> local_y(m);
                           Vector<Number> local_x(n);
 
@@ -22615,7 +23128,114 @@ HMatrix<spacedim, Number>::vmult(
                           break;
                         }
                         default: {
+                          throw(ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                    }
+
+                  break;
+                }
+                case HMatrixSupport::Property::hermite_symmetric: {
+                  /**
+                   * When the top level \hmatnode is Hermite symmetric, the
+                   * operation depends on the block type of the current leaf
+                   * \hmatnode.
+                   */
+                  switch (block_type)
+                    {
+                        case HMatrixSupport::BlockType::diagonal_block: {
+                          /**
+                           * When the current \hmatnode is rank-k matrix, it
+                           * can never belong to the diagonal part.
+                           */
                           Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                        case HMatrixSupport::BlockType::
+                          lower_triangular_block: {
+                          /**
+                           * When the current \hmatnode belongs to the lower
+                           * triangular part, we first perform the
+                           * multiplication \f$Mx\f$ and then perform the
+                           * multiplication \f$M^Hx\f$. This treatment
+                           * considers both the contribution of the current
+                           * matrix block as well as its Hermite symmetric
+                           * counterpart.
+                           *
+                           * \alert{Not only should the full matrix itself be
+                           * Hermite transposed, the roles of row indices and
+                           * column indices should also be swapped.}
+                           */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) =
+                                x((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + j);
+                            }
+
+                          rkmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_index_range)[0] -
+                                (*starting_hmat.row_index_range)[0] + i) +=
+                                alpha * local_y(i);
+                            }
+
+                          Vector<Number> local_y_for_Hvmult(n);
+                          Vector<Number> local_x_for_Hvmult(m);
+
+                          /**
+                           * Restrict vector x to the current Hermite transposed
+                           * matrix block.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              local_x_for_Hvmult(i) =
+                                x((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i);
+                            }
+
+                          rkmatrix->Hvmult(local_y_for_Hvmult,
+                                           local_x_for_Hvmult);
+
+                          /**
+                           * Merge back the result vector \p local_y_for_Hvmult
+                           * to \p y.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              y((*col_index_range)[0] -
+                                (*starting_hmat.col_index_range)[0] + j) +=
+                                alpha * local_y_for_Hvmult(j);
+                            }
+
+                          break;
+                        }
+                        case HMatrixSupport::BlockType::
+                          upper_triangular_block: {
+                          /**
+                           * When the current \hmatnode belongs to the upper
+                           * triangular part, do nothing.
+                           */
+                          break;
+                        }
+                        default: {
+                          throw(ExcInvalidHMatrixBlockType(block_type));
 
                           break;
                         }
@@ -22648,6 +23268,9 @@ HMatrix<spacedim, Number>::vmult(
                            * multiplication \f$Mx\f$ as that for a general
                            * matrix.
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+
                           Vector<Number> local_y(m);
                           Vector<Number> local_x(n);
 
@@ -22725,6 +23348,9 @@ HMatrix<spacedim, Number>::vmult(
                            * multiplication \f$Mx\f$ as that for a general
                            * matrix.
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+
                           Vector<Number> local_y(m);
                           Vector<Number> local_x(n);
 
@@ -22784,7 +23410,7 @@ void
 HMatrix<spacedim, Number>::vmult(Vector<Number>       &y,
                                  const Vector<Number> &x) const
 {
-  y = 0.;
+  y = Number(0.);
   this->vmult(y, x, this->property);
 }
 
@@ -22799,20 +23425,22 @@ HMatrix<spacedim, Number>::vmult_add(Vector<Number>       &y,
 
 
 template <int spacedim, typename Number>
+template <typename Number2>
 void
 HMatrix<spacedim, Number>::vmult(Vector<Number>       &y,
-                                 const Number          alpha,
+                                 const Number2         alpha,
                                  const Vector<Number> &x) const
 {
-  y = 0.;
+  y = Number(0.);
   this->vmult(y, alpha, x, this->property);
 }
 
 
 template <int spacedim, typename Number>
+template <typename Number2>
 void
 HMatrix<spacedim, Number>::vmult_add(Vector<Number>       &y,
-                                     const Number          alpha,
+                                     const Number2         alpha,
                                      const Vector<Number> &x) const
 {
   this->vmult(y, alpha, x, this->property);
@@ -22826,671 +23454,7 @@ HMatrix<spacedim, Number>::Tvmult(
   const Vector<Number>          &x,
   const HMatrixSupport::Property top_hmat_property) const
 {
-  switch (type)
-    {
-        case HierarchicalMatrixType: {
-          /**
-           * When the current \hmatnode is hierarchical, recursively call
-           * @p Tvmult of its children.
-           */
-          for (HMatrix *submatrix : submatrices)
-            {
-              submatrix->Tvmult(y, x, top_hmat_property);
-            }
-
-          break;
-        }
-        case FullMatrixType: {
-          /**
-           * Here we comes to the transposed-matrix-vector multiplication with
-           * respect to a near field leaf \hmatnode.
-           */
-          switch (top_hmat_property)
-            {
-                case HMatrixSupport::Property::general: {
-                  /**
-                   * When the top level \hmatnode is general, perform the
-                   * transposed-matrix-vector multiplication as usual.
-                   */
-                  Vector<Number> local_y(n);
-                  Vector<Number> local_x(m);
-
-                  /**
-                   * Restrict vector x to the transposed matrix block.
-                   */
-                  for (size_type j = 0; j < m; j++)
-                    {
-                      local_x(j) = x((*row_index_range)[0] + j);
-                    }
-
-                  fullmatrix->Tvmult(local_y, local_x);
-
-                  /**
-                   * Merge back the result vector \p local_y to \p y.
-                   */
-                  for (size_type i = 0; i < n; i++)
-                    {
-                      y((*col_index_range)[0] + i) += local_y(i);
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::symmetric: {
-                  /**
-                   * When the top level \hmatnode is symmetric, the operation
-                   * depends on the block type of the current leaf \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * A leaf \hmatnode belonging to the diagonal block
-                           * should also be symmetric, when the top level
-                           * \hmatnode is symmetric.
-                           */
-                          Assert(property == HMatrixSupport::symmetric,
-                                 ExcInvalidHMatrixProperty(property));
-                          /**
-                           * The full matrix associated with the current
-                           * \hmatnode should also be symmetric.
-                           */
-                          Assert(fullmatrix->get_property() ==
-                                   LAPACKSupport::symmetric,
-                                 ExcInvalidLAPACKFullMatrixProperty(
-                                   fullmatrix->get_property()));
-
-                          /**
-                           * Perform the transposed-matrix-vector
-                           * multiplication. In my implementation, only those
-                           * lower triangular elements in a symmetric full
-                           * matrix are used by the function.
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the transposed matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) = x((*row_index_range)[0] + j);
-                            }
-
-                          fullmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] + i) += local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we first perform the
-                           * multiplication \f$M^Tx\f$ and then perform the
-                           * multiplication \f$Mx\f$. This treatment considers
-                           * both the contribution of the current matrix block
-                           * as well as its symmetric counterpart.
-                           *
-                           * \alert{Not only should the full matrix itself be
-                           * transposed, the roles of row indices and column
-                           * indices should also be swapped.}
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the transposed matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) = x((*row_index_range)[0] + j);
-                            }
-
-                          fullmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] + i) += local_y(i);
-                            }
-
-                          Vector<Number> local_y_for_vmult(m);
-                          Vector<Number> local_x_for_vmult(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x_for_vmult(j) =
-                                x((*col_index_range)[0] + j);
-                            }
-
-                          fullmatrix->vmult(local_y_for_vmult,
-                                            local_x_for_vmult);
-
-                          /**
-                           * Merge back the result vector \p local_y_for_vmult to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] + i) +=
-                                local_y_for_vmult(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, since the upper part is not
-                           * saved and its contribution has already been
-                           * considered when we handle the lower triangular
-                           * block, we do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::lower_triangular: {
-                  /**
-                   * When the top level \hmatnode is lower triangular, the
-                   * operation depends on the block type of the current leaf
-                   * \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * A leaf \hmatnode belonging to the diagonal block
-                           * should also be lower triangular, when the top
-                           * level \hmatnode is lower triangular.
-                           */
-                          Assert(property ==
-                                   HMatrixSupport::Property::lower_triangular,
-                                 ExcInvalidHMatrixProperty(property));
-                          /**
-                           * The full matrix associated with the current
-                           * \hmatnode should also be lower triangular.
-                           */
-                          Assert(fullmatrix->get_property() ==
-                                   LAPACKSupport::Property::lower_triangular,
-                                 ExcInvalidLAPACKFullMatrixProperty(
-                                   fullmatrix->get_property()));
-
-                          /**
-                           * Perform the transposed-matrix-vector
-                           * multiplication.
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the transposed matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) = x((*row_index_range)[0] + j);
-                            }
-
-                          fullmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] + i) += local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we perform the multiplication
-                           * \f$M^Tx\f$ as that for a general matrix.
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the transposed matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) = x((*row_index_range)[0] + j);
-                            }
-
-                          fullmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] + i) += local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, since the upper part is not
-                           * saved and has no contribution to the result, we
-                           * do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::upper_triangular: {
-                  /**
-                   * When the top level \hmatnode is upper triangular, the
-                   * operation depends on the block type of the current leaf
-                   * \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * A leaf \hmatnode belonging to the diagonal block
-                           * should also be upper triangular, when the top
-                           * level \hmatnode is upper triangular.
-                           */
-                          Assert(property ==
-                                   HMatrixSupport::Property::upper_triangular,
-                                 ExcInvalidHMatrixProperty(property));
-                          /**
-                           * The full matrix associated with the current
-                           * \hmatnode should also be upper triangular.
-                           */
-                          Assert(fullmatrix->get_property() ==
-                                   LAPACKSupport::Property::upper_triangular,
-                                 ExcInvalidLAPACKFullMatrixProperty(
-                                   fullmatrix->get_property()));
-
-                          /**
-                           * Perform the transposed-matrix-vector
-                           * multiplication.
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the transposed matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) = x((*row_index_range)[0] + j);
-                            }
-
-                          fullmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] + i) += local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, we perform the multiplication
-                           * \f$M^Tx\f$ as that for a general matrix.
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the transposed matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) = x((*row_index_range)[0] + j);
-                            }
-
-                          fullmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] + i) += local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                default: {
-                  throw(ExcInvalidHMatrixProperty(top_hmat_property));
-
-                  break;
-                }
-            }
-
-          break;
-        }
-        case RkMatrixType: {
-          /**
-           * Here we comes to the transposed matrix-vector multiplication with
-           * respect to a far field leaf \hmatnode.
-           */
-          switch (top_hmat_property)
-            {
-                case HMatrixSupport::Property::general: {
-                  /**
-                   * When the top level \hmatnode is general, perform the
-                   * transposed matrix-vector multiplication as usual.
-                   */
-                  Vector<Number> local_y(n);
-                  Vector<Number> local_x(m);
-
-                  /**
-                   * Restrict vector x to the current matrix block.
-                   */
-                  for (size_type j = 0; j < m; j++)
-                    {
-                      local_x(j) = x((*row_index_range)[0] + j);
-                    }
-
-                  rkmatrix->Tvmult(local_y, local_x);
-
-                  /**
-                   * Merge back the result vector \p local_y to \p y.
-                   */
-                  for (size_type i = 0; i < n; i++)
-                    {
-                      y((*col_index_range)[0] + i) += local_y(i);
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::symmetric: {
-                  /**
-                   * When the top level \hmatnode is symmetric, the operation
-                   * depends on the block type of the current leaf \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * When the current \hmatnode is rank-k matrix, it
-                           * can never belong to the diagonal part.
-                           */
-                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we first perform the
-                           * multiplication \f$M^Tx\f$ and then perform the
-                           * multiplication \f$Mx\f$. This treatment considers
-                           * both the contribution of the current matrix block
-                           * as well as its symmetric counterpart.
-                           *
-                           * \alert{Not only should the full matrix itself be
-                           * transposed, the roles of row indices and column
-                           * indices should also be swapped.}
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) = x((*row_index_range)[0] + j);
-                            }
-
-                          rkmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] + i) += local_y(i);
-                            }
-
-                          Vector<Number> local_y_for_vmult(m);
-                          Vector<Number> local_x_for_vmult(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x_for_vmult(j) =
-                                x((*col_index_range)[0] + j);
-                            }
-
-                          rkmatrix->vmult(local_y_for_vmult, local_x_for_vmult);
-
-                          /**
-                           * Merge back the result vector \p local_y_for_vmult to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] + i) +=
-                                local_y_for_vmult(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::lower_triangular: {
-                  /**
-                   * When the top level \hmatnode is lower triangular, the
-                   * operation depends on the block type of the current leaf
-                   * \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * When the current \hmatnode is rank-k matrix, it
-                           * can never belong to the diagonal part.
-                           */
-                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we perform the multiplication
-                           * \f$M^Tx\f$.
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) = x((*row_index_range)[0] + j);
-                            }
-
-                          rkmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] + i) += local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::upper_triangular: {
-                  /**
-                   * When the top level \hmatnode is upper triangular, the
-                   * operation depends on the block type of the current leaf
-                   * \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * When the current \hmatnode is rank-k matrix, it
-                           * can never belong to the diagonal part.
-                           */
-                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, we perform the multiplication
-                           * \f$M^Tx\f$.
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) = x((*row_index_range)[0] + j);
-                            }
-
-                          rkmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] + i) += local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                default: {
-                  throw(ExcInvalidHMatrixProperty(top_hmat_property));
-
-                  break;
-                }
-            }
-
-          break;
-        }
-      case UndefinedMatrixType:
-        default: {
-          Assert(false, ExcInvalidHMatrixType(type));
-          break;
-        }
-    }
+  Tvmult(y, 1.0, x, top_hmat_property);
 }
 
 
@@ -23504,10 +23468,11 @@ HMatrix<spacedim, Number>::Tvmult_task_parallel(Vector<Number>       &y,
 
 
 template <int spacedim, typename Number>
+template <typename Number2>
 void
 HMatrix<spacedim, Number>::Tvmult(
   Vector<Number>                &y,
-  const Number                   alpha,
+  const Number2                  alpha,
   const Vector<Number>          &x,
   const HMatrixSupport::Property top_hmat_property) const
 {
@@ -23537,6 +23502,13 @@ HMatrix<spacedim, Number>::Tvmult(
                    * When the top level \hmatnode is general, perform the
                    * transposed-matrix-vector multiplication as usual.
                    */
+                  Assert(property == HMatrixSupport::Property::general,
+                         ExcInvalidHMatrixProperty(property));
+                  Assert(fullmatrix->get_property() ==
+                           LAPACKSupport::Property::general,
+                         ExcInvalidLAPACKFullMatrixProperty(
+                           fullmatrix->get_property()));
+
                   Vector<Number> local_y(n);
                   Vector<Number> local_x(m);
 
@@ -23573,22 +23545,24 @@ HMatrix<spacedim, Number>::Tvmult(
                            * should also be symmetric, when the top level
                            * \hmatnode is symmetric.
                            */
-                          Assert(property == HMatrixSupport::symmetric,
+                          Assert(property ==
+                                   HMatrixSupport::Property::symmetric,
                                  ExcInvalidHMatrixProperty(property));
                           /**
                            * The full matrix associated with the current
                            * \hmatnode should also be symmetric.
                            */
                           Assert(fullmatrix->get_property() ==
-                                   LAPACKSupport::symmetric,
+                                   LAPACKSupport::Property::symmetric,
                                  ExcInvalidLAPACKFullMatrixProperty(
                                    fullmatrix->get_property()));
 
                           /**
-                           * Perform the transposed-matrix-vector
-                           * multiplication. In my implementation, only those
-                           * lower triangular elements in a symmetric full
-                           * matrix are used by the function.
+                           * Perform the transposed-matrix-vector multiplication
+                           * using the LAPACK function @p symv internally. In my
+                           * implementation, only those lower triangular
+                           * elements in a symmetric full matrix are used by the
+                           * function.
                            */
                           Vector<Number> local_y(n);
                           Vector<Number> local_x(m);
@@ -23628,6 +23602,13 @@ HMatrix<spacedim, Number>::Tvmult(
                            * transposed, the roles of row indices and column
                            * indices should also be swapped.}
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::general,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
                           Vector<Number> local_y(n);
                           Vector<Number> local_x(m);
 
@@ -23664,6 +23645,153 @@ HMatrix<spacedim, Number>::Tvmult(
 
                           fullmatrix->vmult(local_y_for_vmult,
                                             local_x_for_vmult);
+
+                          /**
+                           * Merge back the result vector \p local_y_for_vmult to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_index_range)[0] + i) +=
+                                alpha * local_y_for_vmult(i);
+                            }
+
+                          break;
+                        }
+                        case HMatrixSupport::BlockType::
+                          upper_triangular_block: {
+                          /**
+                           * When the current \hmatnode belongs to the upper
+                           * triangular part, since the upper part is not
+                           * saved and its contribution has already been
+                           * considered when we handle the lower triangular
+                           * block, we do nothing.
+                           */
+                          break;
+                        }
+                        default: {
+                          throw(ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                    }
+
+                  break;
+                }
+                case HMatrixSupport::Property::hermite_symmetric: {
+                  /**
+                   * When the top level \hmatnode is Hermite symmetric, the
+                   * operation depends on the block type of the current leaf
+                   * \hmatnode.
+                   */
+                  switch (block_type)
+                    {
+                        case HMatrixSupport::BlockType::diagonal_block: {
+                          /**
+                           * A leaf \hmatnode belonging to the diagonal block
+                           * should also be Hermite symmetric, when the top
+                           * level \hmatnode is Hermite symmetric.
+                           */
+                          Assert(property ==
+                                   HMatrixSupport::Property::hermite_symmetric,
+                                 ExcInvalidHMatrixProperty(property));
+                          /**
+                           * The full matrix associated with the current
+                           * \hmatnode should also be Hermite symmetric.
+                           */
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::hermite_symmetric,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
+                          /**
+                           * Perform the transposed-matrix-vector multiplication
+                           * using the LAPACK function @p hemv internally. In my
+                           * implementation, only those lower triangular
+                           * elements in a Hermite symmetric full matrix are
+                           * used by the function.
+                           */
+                          Vector<Number> local_y(n);
+                          Vector<Number> local_x(m);
+
+                          /**
+                           * Restrict vector x to the transposed matrix block.
+                           */
+                          for (size_type j = 0; j < m; j++)
+                            {
+                              local_x(j) = x((*row_index_range)[0] + j);
+                            }
+
+                          fullmatrix->Tvmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < n; i++)
+                            {
+                              y((*col_index_range)[0] + i) +=
+                                alpha * local_y(i);
+                            }
+
+                          break;
+                        }
+                        case HMatrixSupport::BlockType::
+                          lower_triangular_block: {
+                          /**
+                           * When the current \hmatnode belongs to the lower
+                           * triangular part, we first perform the
+                           * multiplication \f$M^Tx\f$ and then perform the
+                           * multiplication \f$\overline{M}x\f$. This treatment
+                           * considers both the contribution of the current
+                           * matrix block as well as its Hermite symmetric
+                           * counterpart.
+                           *
+                           * \alert{Not only should the full matrix itself be
+                           * transposed, the roles of row indices and column
+                           * indices should also be swapped.}
+                           */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::general,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
+                          Vector<Number> local_y(n);
+                          Vector<Number> local_x(m);
+
+                          /**
+                           * Restrict vector x to the transposed matrix block.
+                           */
+                          for (size_type j = 0; j < m; j++)
+                            {
+                              local_x(j) = x((*row_index_range)[0] + j);
+                            }
+
+                          fullmatrix->Tvmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < n; i++)
+                            {
+                              y((*col_index_range)[0] + i) +=
+                                alpha * local_y(i);
+                            }
+
+                          Vector<Number> local_y_for_vmult(m);
+                          Vector<Number> local_x_for_vmult(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x_for_vmult(j) =
+                                x((*col_index_range)[0] + j);
+                            }
+
+                          fullmatrix->Cvmult(local_y_for_vmult,
+                                             local_x_for_vmult);
 
                           /**
                            * Merge back the result vector \p local_y_for_vmult to \p y.
@@ -23757,6 +23885,13 @@ HMatrix<spacedim, Number>::Tvmult(
                            * triangular part, we perform the multiplication
                            * \f$M^Tx\f$ as that for a general matrix.
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::general,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
                           Vector<Number> local_y(n);
                           Vector<Number> local_x(m);
 
@@ -23861,6 +23996,13 @@ HMatrix<spacedim, Number>::Tvmult(
                            * triangular part, we perform the multiplication
                            * \f$M^Tx\f$ as that for a general matrix.
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::general,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
                           Vector<Number> local_y(n);
                           Vector<Number> local_x(m);
 
@@ -23923,11 +24065,14 @@ HMatrix<spacedim, Number>::Tvmult(
                    * When the top level \hmatnode is general, perform the
                    * transposed matrix-vector multiplication as usual.
                    */
+                  Assert(property == HMatrixSupport::Property::general,
+                         ExcInvalidHMatrixProperty(property));
+
                   Vector<Number> local_y(n);
                   Vector<Number> local_x(m);
 
                   /**
-                   * Restrict vector x to the current matrix block.
+                   * Restrict vector x to the transposed matrix block.
                    */
                   for (size_type j = 0; j < m; j++)
                     {
@@ -23958,7 +24103,7 @@ HMatrix<spacedim, Number>::Tvmult(
                            * When the current \hmatnode is rank-k matrix, it
                            * can never belong to the diagonal part.
                            */
-                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+                          throw(ExcInvalidHMatrixBlockType(block_type));
 
                           break;
                         }
@@ -23976,11 +24121,14 @@ HMatrix<spacedim, Number>::Tvmult(
                            * transposed, the roles of row indices and column
                            * indices should also be swapped.}
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+
                           Vector<Number> local_y(n);
                           Vector<Number> local_x(m);
 
                           /**
-                           * Restrict vector x to the current matrix block.
+                           * Restrict vector x to the transposed matrix block.
                            */
                           for (size_type j = 0; j < m; j++)
                             {
@@ -24040,6 +24188,105 @@ HMatrix<spacedim, Number>::Tvmult(
 
                   break;
                 }
+                case HMatrixSupport::Property::hermite_symmetric: {
+                  /**
+                   * When the top level \hmatnode is Hermite symmetric, the
+                   * operation depends on the block type of the current leaf
+                   * \hmatnode.
+                   */
+                  switch (block_type)
+                    {
+                        case HMatrixSupport::BlockType::diagonal_block: {
+                          /**
+                           * When the current \hmatnode is rank-k matrix, it
+                           * can never belong to the diagonal part.
+                           */
+                          throw(ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                        case HMatrixSupport::BlockType::
+                          lower_triangular_block: {
+                          /**
+                           * When the current \hmatnode belongs to the lower
+                           * triangular part, we first perform the
+                           * multiplication \f$M^Tx\f$ and then perform the
+                           * multiplication \f$Mx\f$. This treatment considers
+                           * both the contribution of the current matrix block
+                           * as well as its symmetric counterpart.
+                           *
+                           * \alert{Not only should the full matrix itself be
+                           * transposed, the roles of row indices and column
+                           * indices should also be swapped.}
+                           */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+
+                          Vector<Number> local_y(n);
+                          Vector<Number> local_x(m);
+
+                          /**
+                           * Restrict vector x to the transposed matrix block.
+                           */
+                          for (size_type j = 0; j < m; j++)
+                            {
+                              local_x(j) = x((*row_index_range)[0] + j);
+                            }
+
+                          rkmatrix->Tvmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < n; i++)
+                            {
+                              y((*col_index_range)[0] + i) +=
+                                alpha * local_y(i);
+                            }
+
+                          Vector<Number> local_y_for_vmult(m);
+                          Vector<Number> local_x_for_vmult(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x_for_vmult(j) =
+                                x((*col_index_range)[0] + j);
+                            }
+
+                          rkmatrix->Cvmult(local_y_for_vmult,
+                                           local_x_for_vmult);
+
+                          /**
+                           * Merge back the result vector \p local_y_for_vmult to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_index_range)[0] + i) +=
+                                alpha * local_y_for_vmult(i);
+                            }
+
+                          break;
+                        }
+                        case HMatrixSupport::BlockType::
+                          upper_triangular_block: {
+                          /**
+                           * When the current \hmatnode belongs to the upper
+                           * triangular part, do nothing.
+                           */
+                          break;
+                        }
+                        default: {
+                          throw(ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                    }
+
+                  break;
+                }
                 case HMatrixSupport::Property::lower_triangular: {
                   /**
                    * When the top level \hmatnode is lower triangular, the
@@ -24053,7 +24300,7 @@ HMatrix<spacedim, Number>::Tvmult(
                            * When the current \hmatnode is rank-k matrix, it
                            * can never belong to the diagonal part.
                            */
-                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+                          throw(ExcInvalidHMatrixBlockType(block_type));
 
                           break;
                         }
@@ -24064,6 +24311,9 @@ HMatrix<spacedim, Number>::Tvmult(
                            * triangular part, we perform the multiplication
                            * \f$M^Tx\f$.
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+
                           Vector<Number> local_y(n);
                           Vector<Number> local_x(m);
 
@@ -24118,7 +24368,7 @@ HMatrix<spacedim, Number>::Tvmult(
                            * When the current \hmatnode is rank-k matrix, it
                            * can never belong to the diagonal part.
                            */
-                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+                          throw(ExcInvalidHMatrixBlockType(block_type));
 
                           break;
                         }
@@ -24129,6 +24379,9 @@ HMatrix<spacedim, Number>::Tvmult(
                            * triangular part, we perform the multiplication
                            * \f$M^Tx\f$.
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+
                           Vector<Number> local_y(n);
                           Vector<Number> local_x(m);
 
@@ -24171,7 +24424,7 @@ HMatrix<spacedim, Number>::Tvmult(
                   break;
                 }
                 default: {
-                  Assert(false, ExcNotImplemented());
+                  throw(ExcInvalidHMatrixProperty(top_hmat_property));
 
                   break;
                 }
@@ -24189,10 +24442,11 @@ HMatrix<spacedim, Number>::Tvmult(
 
 
 template <int spacedim, typename Number>
+template <typename Number2, typename Number3>
 void
-HMatrix<spacedim, Number>::Tvmult_task_parallel(const Number          beta,
+HMatrix<spacedim, Number>::Tvmult_task_parallel(const Number2         beta,
                                                 Vector<Number>       &y,
-                                                const Number          alpha,
+                                                const Number3         alpha,
                                                 const Vector<Number> &x)
 {
   /**
@@ -24237,7 +24491,10 @@ HMatrix<spacedim, Number>::Tvmult_task_parallel(const Number          beta,
              * Clear the local result vector before the multiplication begins.
              */
             this->data_for_vmult_or_tvmult_threads[thread_no]
-              .local_tvmult_result = 0.;
+              .local_tvmult_result = Number(0.);
+            if (this->property == HMatrixSupport::Property::hermite_symmetric)
+              this->data_for_vmult_or_tvmult_threads[thread_no]
+                .local_vmult_result = Number(0.);
 
             /**
              * Iterate over each \hmatrix node in the interval of the leaf
@@ -24301,6 +24558,66 @@ HMatrix<spacedim, Number>::Tvmult_task_parallel(const Number          beta,
                           .local_tvmult_result_index_range[0] +
                         j) += alpha * local_y_for_Tvmult(j);
                   }
+
+                if (this->property ==
+                      HMatrixSupport::Property::hermite_symmetric &&
+                    this->leaf_set[l]->block_type ==
+                      HMatrixSupport::BlockType::lower_triangular_block)
+                  {
+                    /**
+                     * Result vector and input vector with respect to the
+                     * current matrix node.
+                     */
+                    Vector<Number> local_y(m);
+                    Vector<Number> local_x(n);
+
+                    /**
+                     * Restrict the global vector @p x to the local vector.
+                     */
+                    for (size_type j = 0; j < n; j++)
+                      {
+                        local_x(j) =
+                          x((*this->leaf_set[l]->col_index_range)[0] + j);
+                      }
+
+                    switch (this->leaf_set[l]->type)
+                      {
+                          case HMatrixType::FullMatrixType: {
+                            this->leaf_set[l]->fullmatrix->Cvmult(local_y,
+                                                                  local_x);
+
+                            break;
+                          }
+                          case HMatrixType::RkMatrixType: {
+                            this->leaf_set[l]->rkmatrix->Cvmult(local_y,
+                                                                local_x);
+
+                            break;
+                          }
+                          default: {
+                            Assert(false,
+                                   ExcInvalidHMatrixType(
+                                     this->leaf_set[l]->type));
+
+                            break;
+                          }
+                      }
+
+                    /**
+                     * Merge back the result vector @p local_y obtained from the
+                     * current leaf set matrix node to the thread local result
+                     * vector.
+                     */
+                    for (size_type i = 0; i < m; i++)
+                      {
+                        this->data_for_vmult_or_tvmult_threads[thread_no]
+                          .local_vmult_result(
+                            (*this->leaf_set[l]->row_index_range)[0] -
+                            this->data_for_vmult_or_tvmult_threads[thread_no]
+                              .local_vmult_result_index_range[0] +
+                            i) += alpha * local_y(i);
+                      }
+                  }
               }
           };
 
@@ -24335,6 +24652,32 @@ HMatrix<spacedim, Number>::Tvmult_task_parallel(const Number          beta,
 
                 other_thread_no++;
               }
+
+            if (this->property == HMatrixSupport::Property::hermite_symmetric)
+              {
+                unsigned int other_thread_no = 0;
+                for (
+                  const auto &range_intersection :
+                  this->data_for_vmult_or_tvmult_threads[thread_no]
+                    .vmult_result_index_ranges_contributed_from_other_threads)
+                  {
+                    for (size_type i = range_intersection[0];
+                         i < range_intersection[1];
+                         i++)
+                      {
+                        y(i) +=
+                          this
+                            ->data_for_vmult_or_tvmult_threads[other_thread_no]
+                            .local_vmult_result(
+                              i - this
+                                    ->data_for_vmult_or_tvmult_threads
+                                      [other_thread_no]
+                                    .local_vmult_result_index_range[0]);
+                      }
+
+                    other_thread_no++;
+                  }
+              }
           };
 
           Threads::TaskGroup<void> assembly_tasks;
@@ -24355,10 +24698,11 @@ HMatrix<spacedim, Number>::Tvmult_task_parallel(const Number          beta,
 
 
 template <int spacedim, typename Number>
+template <typename Number2, typename Number3>
 void
-HMatrix<spacedim, Number>::Tvmult_serial_iterative(const Number          beta,
+HMatrix<spacedim, Number>::Tvmult_serial_iterative(const Number2         beta,
                                                    Vector<Number>       &y,
-                                                   const Number          alpha,
+                                                   const Number3         alpha,
                                                    const Vector<Number> &x)
 {
   /**
@@ -24428,6 +24772,55 @@ HMatrix<spacedim, Number>::Tvmult_serial_iterative(const Number          beta,
               y((*this->leaf_set[l]->col_index_range)[0] + j) +=
                 alpha * local_y_for_Tvmult(j);
             }
+
+          if (this->property == HMatrixSupport::Property::hermite_symmetric &&
+              this->leaf_set[l]->block_type ==
+                HMatrixSupport::BlockType::lower_triangular_block)
+            {
+              /**
+               * Result vector and input vector with respect to the current
+               * matrix node.
+               */
+              Vector<Number> local_y(m);
+              Vector<Number> local_x(n);
+
+              /**
+               * Restrict the global vector @p x to the current matrix block.
+               */
+              for (size_type j = 0; j < n; j++)
+                {
+                  local_x(j) = x((*this->leaf_set[l]->col_index_range)[0] + j);
+                }
+
+              switch (this->leaf_set[l]->type)
+                {
+                    case HMatrixType::FullMatrixType: {
+                      this->leaf_set[l]->fullmatrix->Cvmult(local_y, local_x);
+
+                      break;
+                    }
+                    case HMatrixType::RkMatrixType: {
+                      this->leaf_set[l]->rkmatrix->Cvmult(local_y, local_x);
+
+                      break;
+                    }
+                    default: {
+                      Assert(false,
+                             ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+                      break;
+                    }
+                }
+
+              /**
+               * Merge back the result vector @p local_y to the global vector @p y.
+               */
+              for (size_type i = 0; i < m; i++)
+                {
+                  y((*this->leaf_set[l]->row_index_range)[0] + i) +=
+                    alpha * local_y(i);
+                }
+            }
         }
     }
 }
@@ -24441,723 +24834,16 @@ HMatrix<spacedim, Number>::Tvmult(
   const HMatrix<spacedim, Number> &starting_hmat,
   const HMatrixSupport::Property   top_hmat_property) const
 {
-  switch (type)
-    {
-        case HierarchicalMatrixType: {
-          /**
-           * When the current \hmatnode is hierarchical, recursively call
-           * @p Tvmult of its children.
-           */
-          for (HMatrix *submatrix : submatrices)
-            {
-              submatrix->Tvmult(y, x, starting_hmat, top_hmat_property);
-            }
-
-          break;
-        }
-        case FullMatrixType: {
-          /**
-           * Here we comes to the transposed-matrix-vector multiplication with
-           * respect to a near field leaf \hmatnode.
-           */
-          switch (top_hmat_property)
-            {
-                case HMatrixSupport::Property::general: {
-                  /**
-                   * When the top level \hmatnode is general, perform the
-                   * transposed-matrix-vector multiplication as usual.
-                   */
-                  Vector<Number> local_y(n);
-                  Vector<Number> local_x(m);
-
-                  /**
-                   * Restrict vector x to the transposed matrix block.
-                   */
-                  for (size_type j = 0; j < m; j++)
-                    {
-                      local_x(j) = x((*row_index_range)[0] -
-                                     (*starting_hmat.row_index_range)[0] + j);
-                    }
-
-                  fullmatrix->Tvmult(local_y, local_x);
-
-                  /**
-                   * Merge back the result vector \p local_y to \p y.
-                   */
-                  for (size_type i = 0; i < n; i++)
-                    {
-                      y((*col_index_range)[0] -
-                        (*starting_hmat.col_index_range)[0] + i) += local_y(i);
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::symmetric: {
-                  /**
-                   * When the top level \hmatnode is symmetric, the operation
-                   * depends on the block type of the current leaf \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * A leaf \hmatnode belonging to the diagonal block
-                           * should also be symmetric, when the top level
-                           * \hmatnode is symmetric.
-                           */
-                          Assert(property == HMatrixSupport::symmetric,
-                                 ExcInvalidHMatrixProperty(property));
-                          /**
-                           * The full matrix associated with the current
-                           * \hmatnode should also be symmetric.
-                           */
-                          Assert(fullmatrix->get_property() ==
-                                   LAPACKSupport::symmetric,
-                                 ExcInvalidLAPACKFullMatrixProperty(
-                                   fullmatrix->get_property()));
-
-                          /**
-                           * Perform the transposed-matrix-vector
-                           * multiplication. In my implementation, only those
-                           * lower triangular elements in a symmetric full
-                           * matrix are used by the function.
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the transposed matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) =
-                                x((*row_index_range)[0] -
-                                  (*starting_hmat.row_index_range)[0] + j);
-                            }
-
-                          fullmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] -
-                                (*starting_hmat.col_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we first perform the
-                           * multiplication \f$M^Tx\f$ and then perform the
-                           * multiplication \f$Mx\f$. This treatment considers
-                           * both the contribution of the current matrix block
-                           * as well as its symmetric counterpart.
-                           *
-                           * \alert{Not only should the full matrix itself be
-                           * transposed, the roles of row indices and column
-                           * indices should also be swapped.}
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the transposed matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) =
-                                x((*row_index_range)[0] -
-                                  (*starting_hmat.row_index_range)[0] + j);
-                            }
-
-                          fullmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] -
-                                (*starting_hmat.col_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          Vector<Number> local_y_for_vmult(m);
-                          Vector<Number> local_x_for_vmult(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x_for_vmult(j) =
-                                x((*col_index_range)[0] -
-                                  (*starting_hmat.col_index_range)[0] + j);
-                            }
-
-                          fullmatrix->vmult(local_y_for_vmult,
-                                            local_x_for_vmult);
-
-                          /**
-                           * Merge back the result vector \p local_y_for_vmult to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] -
-                                (*starting_hmat.row_index_range)[0] + i) +=
-                                local_y_for_vmult(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, since the upper part is not
-                           * saved and its contribution has already been
-                           * considered when we handle the lower triangular
-                           * block, we do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::lower_triangular: {
-                  /**
-                   * When the top level \hmatnode is lower triangular, the
-                   * operation depends on the block type of the current leaf
-                   * \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * A leaf \hmatnode belonging to the diagonal block
-                           * should also be lower triangular, when the top
-                           * level \hmatnode is lower triangular.
-                           */
-                          Assert(property ==
-                                   HMatrixSupport::Property::lower_triangular,
-                                 ExcInvalidHMatrixProperty(property));
-                          /**
-                           * The full matrix associated with the current
-                           * \hmatnode should also be lower triangular.
-                           */
-                          Assert(fullmatrix->get_property() ==
-                                   LAPACKSupport::Property::lower_triangular,
-                                 ExcInvalidLAPACKFullMatrixProperty(
-                                   fullmatrix->get_property()));
-
-                          /**
-                           * Perform the transposed-matrix-vector
-                           * multiplication.
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the transposed matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) =
-                                x((*row_index_range)[0] -
-                                  (*starting_hmat.row_index_range)[0] + j);
-                            }
-
-                          fullmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] -
-                                (*starting_hmat.col_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we perform the multiplication
-                           * \f$M^Tx\f$ as that for a general matrix.
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the transposed matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) =
-                                x((*row_index_range)[0] -
-                                  (*starting_hmat.row_index_range)[0] + j);
-                            }
-
-                          fullmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] -
-                                (*starting_hmat.col_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, since the upper part is not
-                           * saved and has no contribution to the result, we
-                           * do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::upper_triangular: {
-                  /**
-                   * When the top level \hmatnode is upper triangular, the
-                   * operation depends on the block type of the current leaf
-                   * \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * A leaf \hmatnode belonging to the diagonal block
-                           * should also be upper triangular, when the top
-                           * level \hmatnode is upper triangular.
-                           */
-                          Assert(property ==
-                                   HMatrixSupport::Property::upper_triangular,
-                                 ExcInvalidHMatrixProperty(property));
-                          /**
-                           * The full matrix associated with the current
-                           * \hmatnode should also be upper triangular.
-                           */
-                          Assert(fullmatrix->get_property() ==
-                                   LAPACKSupport::Property::upper_triangular,
-                                 ExcInvalidLAPACKFullMatrixProperty(
-                                   fullmatrix->get_property()));
-
-                          /**
-                           * Perform the transposed-matrix-vector
-                           * multiplication.
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the transposed matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) =
-                                x((*row_index_range)[0] -
-                                  (*starting_hmat.row_index_range)[0] + j);
-                            }
-
-                          fullmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] -
-                                (*starting_hmat.col_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, we perform the multiplication
-                           * \f$M^Tx\f$ as that for a general matrix.
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the transposed matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) =
-                                x((*row_index_range)[0] -
-                                  (*starting_hmat.row_index_range)[0] + j);
-                            }
-
-                          fullmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] -
-                                (*starting_hmat.col_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                default: {
-                  throw(ExcInvalidHMatrixProperty(top_hmat_property));
-
-                  break;
-                }
-            }
-
-          break;
-        }
-        case RkMatrixType: {
-          /**
-           * Here we comes to the transposed matrix-vector multiplication with
-           * respect to a far field leaf \hmatnode.
-           */
-          switch (top_hmat_property)
-            {
-                case HMatrixSupport::Property::general: {
-                  /**
-                   * When the top level \hmatnode is general, perform the
-                   * transposed matrix-vector multiplication as usual.
-                   */
-                  Vector<Number> local_y(n);
-                  Vector<Number> local_x(m);
-
-                  /**
-                   * Restrict vector x to the current matrix block.
-                   */
-                  for (size_type j = 0; j < m; j++)
-                    {
-                      local_x(j) = x((*row_index_range)[0] -
-                                     (*starting_hmat.row_index_range)[0] + j);
-                    }
-
-                  rkmatrix->Tvmult(local_y, local_x);
-
-                  /**
-                   * Merge back the result vector \p local_y to \p y.
-                   */
-                  for (size_type i = 0; i < n; i++)
-                    {
-                      y((*col_index_range)[0] -
-                        (*starting_hmat.col_index_range)[0] + i) += local_y(i);
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::symmetric: {
-                  /**
-                   * When the top level \hmatnode is symmetric, the operation
-                   * depends on the block type of the current leaf \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * When the current \hmatnode is rank-k matrix, it
-                           * can never belong to the diagonal part.
-                           */
-                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we first perform the
-                           * multiplication \f$M^Tx\f$ and then perform the
-                           * multiplication \f$Mx\f$. This treatment considers
-                           * both the contribution of the current matrix block
-                           * as well as its symmetric counterpart.
-                           *
-                           * \alert{Not only should the full matrix itself be
-                           * transposed, the roles of row indices and column
-                           * indices should also be swapped.}
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) =
-                                x((*row_index_range)[0] -
-                                  (*starting_hmat.row_index_range)[0] + j);
-                            }
-
-                          rkmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] -
-                                (*starting_hmat.col_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          Vector<Number> local_y_for_vmult(m);
-                          Vector<Number> local_x_for_vmult(n);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < n; j++)
-                            {
-                              local_x_for_vmult(j) =
-                                x((*col_index_range)[0] -
-                                  (*starting_hmat.col_index_range)[0] + j);
-                            }
-
-                          rkmatrix->vmult(local_y_for_vmult, local_x_for_vmult);
-
-                          /**
-                           * Merge back the result vector \p local_y_for_vmult to \p y.
-                           */
-                          for (size_type i = 0; i < m; i++)
-                            {
-                              y((*row_index_range)[0] -
-                                (*starting_hmat.row_index_range)[0] + i) +=
-                                local_y_for_vmult(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::lower_triangular: {
-                  /**
-                   * When the top level \hmatnode is lower triangular, the
-                   * operation depends on the block type of the current leaf
-                   * \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * When the current \hmatnode is rank-k matrix, it
-                           * can never belong to the diagonal part.
-                           */
-                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, we perform the multiplication
-                           * \f$M^Tx\f$.
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) =
-                                x((*row_index_range)[0] -
-                                  (*starting_hmat.row_index_range)[0] + j);
-                            }
-
-                          rkmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] -
-                                (*starting_hmat.col_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                case HMatrixSupport::Property::upper_triangular: {
-                  /**
-                   * When the top level \hmatnode is upper triangular, the
-                   * operation depends on the block type of the current leaf
-                   * \hmatnode.
-                   */
-                  switch (block_type)
-                    {
-                        case HMatrixSupport::BlockType::diagonal_block: {
-                          /**
-                           * When the current \hmatnode is rank-k matrix, it
-                           * can never belong to the diagonal part.
-                           */
-                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          upper_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the upper
-                           * triangular part, we perform the multiplication
-                           * \f$M^Tx\f$.
-                           */
-                          Vector<Number> local_y(n);
-                          Vector<Number> local_x(m);
-
-                          /**
-                           * Restrict vector x to the current matrix block.
-                           */
-                          for (size_type j = 0; j < m; j++)
-                            {
-                              local_x(j) =
-                                x((*row_index_range)[0] -
-                                  (*starting_hmat.row_index_range)[0] + j);
-                            }
-
-                          rkmatrix->Tvmult(local_y, local_x);
-
-                          /**
-                           * Merge back the result vector \p local_y to \p y.
-                           */
-                          for (size_type i = 0; i < n; i++)
-                            {
-                              y((*col_index_range)[0] -
-                                (*starting_hmat.col_index_range)[0] + i) +=
-                                local_y(i);
-                            }
-
-                          break;
-                        }
-                        case HMatrixSupport::BlockType::
-                          lower_triangular_block: {
-                          /**
-                           * When the current \hmatnode belongs to the lower
-                           * triangular part, do nothing.
-                           */
-                          break;
-                        }
-                        default: {
-                          throw(ExcInvalidHMatrixBlockType(block_type));
-
-                          break;
-                        }
-                    }
-
-                  break;
-                }
-                default: {
-                  throw(ExcInvalidHMatrixProperty(top_hmat_property));
-
-                  break;
-                }
-            }
-
-          break;
-        }
-      case UndefinedMatrixType:
-        default: {
-          Assert(false, ExcInvalidHMatrixType(type));
-          break;
-        }
-    }
+  Tvmult(y, 1.0, x, starting_hmat, top_hmat_property);
 }
 
 
 template <int spacedim, typename Number>
+template <typename Number2>
 void
 HMatrix<spacedim, Number>::Tvmult(
   Vector<Number>                  &y,
-  const Number                     alpha,
+  const Number2                    alpha,
   const Vector<Number>            &x,
   const HMatrix<spacedim, Number> &starting_hmat,
   const HMatrixSupport::Property   top_hmat_property) const
@@ -25188,6 +24874,13 @@ HMatrix<spacedim, Number>::Tvmult(
                    * When the top level \hmatnode is general, perform the
                    * transposed-matrix-vector multiplication as usual.
                    */
+                  Assert(property == HMatrixSupport::Property::general,
+                         ExcInvalidHMatrixProperty(property));
+                  Assert(fullmatrix->get_property() ==
+                           LAPACKSupport::Property::general,
+                         ExcInvalidLAPACKFullMatrixProperty(
+                           fullmatrix->get_property()));
+
                   Vector<Number> local_y(n);
                   Vector<Number> local_x(m);
 
@@ -25227,22 +24920,24 @@ HMatrix<spacedim, Number>::Tvmult(
                            * should also be symmetric, when the top level
                            * \hmatnode is symmetric.
                            */
-                          Assert(property == HMatrixSupport::symmetric,
+                          Assert(property ==
+                                   HMatrixSupport::Property::symmetric,
                                  ExcInvalidHMatrixProperty(property));
                           /**
                            * The full matrix associated with the current
                            * \hmatnode should also be symmetric.
                            */
                           Assert(fullmatrix->get_property() ==
-                                   LAPACKSupport::symmetric,
+                                   LAPACKSupport::Property::symmetric,
                                  ExcInvalidLAPACKFullMatrixProperty(
                                    fullmatrix->get_property()));
 
                           /**
-                           * Perform the transposed-matrix-vector
-                           * multiplication. In my implementation, only those
-                           * lower triangular elements in a symmetric full
-                           * matrix are used by the function.
+                           * Perform the transposed-matrix-vector multiplication
+                           * using the LAPACK function @p symv internally. In my
+                           * implementation, only those lower triangular
+                           * elements in a symmetric full matrix are used by the
+                           * function.
                            */
                           Vector<Number> local_y(n);
                           Vector<Number> local_x(m);
@@ -25285,6 +24980,13 @@ HMatrix<spacedim, Number>::Tvmult(
                            * transposed, the roles of row indices and column
                            * indices should also be swapped.}
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::general,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
                           Vector<Number> local_y(n);
                           Vector<Number> local_x(m);
 
@@ -25325,6 +25027,160 @@ HMatrix<spacedim, Number>::Tvmult(
 
                           fullmatrix->vmult(local_y_for_vmult,
                                             local_x_for_vmult);
+
+                          /**
+                           * Merge back the result vector \p local_y_for_vmult to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_index_range)[0] -
+                                (*starting_hmat.row_index_range)[0] + i) +=
+                                alpha * local_y_for_vmult(i);
+                            }
+
+                          break;
+                        }
+                        case HMatrixSupport::BlockType::
+                          upper_triangular_block: {
+                          /**
+                           * When the current \hmatnode belongs to the upper
+                           * triangular part, since the upper part is not
+                           * saved and its contribution has already been
+                           * considered when we handle the lower triangular
+                           * block, we do nothing.
+                           */
+                          break;
+                        }
+                        default: {
+                          throw(ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                    }
+
+                  break;
+                }
+                case HMatrixSupport::Property::hermite_symmetric: {
+                  /**
+                   * When the top level \hmatnode is Hermite symmetric, the
+                   * operation depends on the block type of the current leaf
+                   * \hmatnode.
+                   */
+                  switch (block_type)
+                    {
+                        case HMatrixSupport::BlockType::diagonal_block: {
+                          /**
+                           * A leaf \hmatnode belonging to the diagonal block
+                           * should also be Hermite symmetric, when the top
+                           * level \hmatnode is Hermite symmetric.
+                           */
+                          Assert(property ==
+                                   HMatrixSupport::Property::hermite_symmetric,
+                                 ExcInvalidHMatrixProperty(property));
+                          /**
+                           * The full matrix associated with the current
+                           * \hmatnode should also be Hermite symmetric.
+                           */
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::hermite_symmetric,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
+                          /**
+                           * Perform the transposed-matrix-vector multiplication
+                           * using the LAPACK function @p symv internally. In my
+                           * implementation, only those lower triangular
+                           * elements in a symmetric full matrix are used by the
+                           * function.
+                           */
+                          Vector<Number> local_y(n);
+                          Vector<Number> local_x(m);
+
+                          /**
+                           * Restrict vector x to the transposed matrix block.
+                           */
+                          for (size_type j = 0; j < m; j++)
+                            {
+                              local_x(j) =
+                                x((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + j);
+                            }
+
+                          fullmatrix->Tvmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < n; i++)
+                            {
+                              y((*col_index_range)[0] -
+                                (*starting_hmat.col_index_range)[0] + i) +=
+                                alpha * local_y(i);
+                            }
+
+                          break;
+                        }
+                        case HMatrixSupport::BlockType::
+                          lower_triangular_block: {
+                          /**
+                           * When the current \hmatnode belongs to the lower
+                           * triangular part, we first perform the
+                           * multiplication \f$M^Tx\f$ and then perform the
+                           * multiplication \f$Mx\f$. This treatment considers
+                           * both the contribution of the current matrix block
+                           * as well as its Hermite symmetric counterpart.
+                           *
+                           * \alert{Not only should the full matrix itself be
+                           * transposed, the roles of row indices and column
+                           * indices should also be swapped.}
+                           */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::general,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
+                          Vector<Number> local_y(n);
+                          Vector<Number> local_x(m);
+
+                          /**
+                           * Restrict vector x to the transposed matrix block.
+                           */
+                          for (size_type j = 0; j < m; j++)
+                            {
+                              local_x(j) =
+                                x((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + j);
+                            }
+
+                          fullmatrix->Tvmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < n; i++)
+                            {
+                              y((*col_index_range)[0] -
+                                (*starting_hmat.col_index_range)[0] + i) +=
+                                alpha * local_y(i);
+                            }
+
+                          Vector<Number> local_y_for_vmult(m);
+                          Vector<Number> local_x_for_vmult(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x_for_vmult(j) =
+                                x((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + j);
+                            }
+
+                          fullmatrix->Cvmult(local_y_for_vmult,
+                                             local_x_for_vmult);
 
                           /**
                            * Merge back the result vector \p local_y_for_vmult to \p y.
@@ -25422,6 +25278,13 @@ HMatrix<spacedim, Number>::Tvmult(
                            * triangular part, we perform the multiplication
                            * \f$M^Tx\f$ as that for a general matrix.
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::general,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
                           Vector<Number> local_y(n);
                           Vector<Number> local_x(m);
 
@@ -25532,6 +25395,13 @@ HMatrix<spacedim, Number>::Tvmult(
                            * triangular part, we perform the multiplication
                            * \f$M^Tx\f$ as that for a general matrix.
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::Property::general,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
                           Vector<Number> local_y(n);
                           Vector<Number> local_x(m);
 
@@ -25597,6 +25467,9 @@ HMatrix<spacedim, Number>::Tvmult(
                    * When the top level \hmatnode is general, perform the
                    * transposed matrix-vector multiplication as usual.
                    */
+                  Assert(property == HMatrixSupport::Property::general,
+                         ExcInvalidHMatrixProperty(property));
+
                   Vector<Number> local_y(n);
                   Vector<Number> local_x(m);
 
@@ -25635,11 +25508,12 @@ HMatrix<spacedim, Number>::Tvmult(
                            * When the current \hmatnode is rank-k matrix, it
                            * can never belong to the diagonal part.
                            */
-                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+                          throw(ExcInvalidHMatrixBlockType(block_type));
 
                           break;
                         }
-                        case HMatrixSupport::lower_triangular_block: {
+                        case HMatrixSupport::BlockType::
+                          lower_triangular_block: {
                           /**
                            * When the current \hmatnode belongs to the lower
                            * triangular part, we first perform the
@@ -25652,6 +25526,9 @@ HMatrix<spacedim, Number>::Tvmult(
                            * transposed, the roles of row indices and column
                            * indices should also be swapped.}
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+
                           Vector<Number> local_y(n);
                           Vector<Number> local_x(m);
 
@@ -25721,6 +25598,110 @@ HMatrix<spacedim, Number>::Tvmult(
 
                   break;
                 }
+                case HMatrixSupport::Property::hermite_symmetric: {
+                  /**
+                   * When the top level \hmatnode is Hermite symmetric, the
+                   * operation depends on the block type of the current leaf
+                   * \hmatnode.
+                   */
+                  switch (block_type)
+                    {
+                        case HMatrixSupport::BlockType::diagonal_block: {
+                          /**
+                           * When the current \hmatnode is rank-k matrix, it
+                           * can never belong to the diagonal part.
+                           */
+                          throw(ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                        case HMatrixSupport::BlockType::
+                          lower_triangular_block: {
+                          /**
+                           * When the current \hmatnode belongs to the lower
+                           * triangular part, we first perform the
+                           * multiplication \f$M^Tx\f$ and then perform the
+                           * multiplication \f$Mx\f$. This treatment considers
+                           * both the contribution of the current matrix block
+                           * as well as its symmetric counterpart.
+                           *
+                           * \alert{Not only should the full matrix itself be
+                           * transposed, the roles of row indices and column
+                           * indices should also be swapped.}
+                           */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+
+                          Vector<Number> local_y(n);
+                          Vector<Number> local_x(m);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < m; j++)
+                            {
+                              local_x(j) =
+                                x((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + j);
+                            }
+
+                          rkmatrix->Tvmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < n; i++)
+                            {
+                              y((*col_index_range)[0] -
+                                (*starting_hmat.col_index_range)[0] + i) +=
+                                alpha * local_y(i);
+                            }
+
+                          Vector<Number> local_y_for_vmult(m);
+                          Vector<Number> local_x_for_vmult(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x_for_vmult(j) =
+                                x((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + j);
+                            }
+
+                          rkmatrix->Cvmult(local_y_for_vmult,
+                                           local_x_for_vmult);
+
+                          /**
+                           * Merge back the result vector \p local_y_for_vmult to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_index_range)[0] -
+                                (*starting_hmat.row_index_range)[0] + i) +=
+                                alpha * local_y_for_vmult(i);
+                            }
+
+                          break;
+                        }
+                        case HMatrixSupport::BlockType::
+                          upper_triangular_block: {
+                          /**
+                           * When the current \hmatnode belongs to the upper
+                           * triangular part, do nothing.
+                           */
+                          break;
+                        }
+                        default: {
+                          throw(ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                    }
+
+                  break;
+                }
                 case HMatrixSupport::Property::lower_triangular: {
                   /**
                    * When the top level \hmatnode is lower triangular, the
@@ -25734,7 +25715,7 @@ HMatrix<spacedim, Number>::Tvmult(
                            * When the current \hmatnode is rank-k matrix, it
                            * can never belong to the diagonal part.
                            */
-                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+                          throw(ExcInvalidHMatrixBlockType(block_type));
 
                           break;
                         }
@@ -25745,6 +25726,9 @@ HMatrix<spacedim, Number>::Tvmult(
                            * triangular part, we perform the multiplication
                            * \f$M^Tx\f$.
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+
                           Vector<Number> local_y(n);
                           Vector<Number> local_x(m);
 
@@ -25802,7 +25786,7 @@ HMatrix<spacedim, Number>::Tvmult(
                            * When the current \hmatnode is rank-k matrix, it
                            * can never belong to the diagonal part.
                            */
-                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+                          throw(ExcInvalidHMatrixBlockType(block_type));
 
                           break;
                         }
@@ -25813,6 +25797,9 @@ HMatrix<spacedim, Number>::Tvmult(
                            * triangular part, we perform the multiplication
                            * \f$M^Tx\f$.
                            */
+                          Assert(property == HMatrixSupport::Property::general,
+                                 ExcInvalidHMatrixProperty(property));
+
                           Vector<Number> local_y(n);
                           Vector<Number> local_x(m);
 
@@ -25880,7 +25867,7 @@ void
 HMatrix<spacedim, Number>::Tvmult(Vector<Number>       &y,
                                   const Vector<Number> &x) const
 {
-  y = 0.;
+  y = Number(0.);
   this->Tvmult(y, x, this->property);
 }
 
@@ -25895,23 +25882,2588 @@ HMatrix<spacedim, Number>::Tvmult_add(Vector<Number>       &y,
 
 
 template <int spacedim, typename Number>
+template <typename Number2>
 void
 HMatrix<spacedim, Number>::Tvmult(Vector<Number>       &y,
-                                  const Number          alpha,
+                                  const Number2         alpha,
                                   const Vector<Number> &x) const
 {
-  y = 0.;
+  y = Number(0.);
+  this->Tvmult(y, alpha, x, this->property);
+}
+
+
+template <int spacedim, typename Number>
+template <typename Number2>
+void
+HMatrix<spacedim, Number>::Tvmult_add(Vector<Number>       &y,
+                                      const Number2         alpha,
+                                      const Vector<Number> &x) const
+{
   this->Tvmult(y, alpha, x, this->property);
 }
 
 
 template <int spacedim, typename Number>
 void
-HMatrix<spacedim, Number>::Tvmult_add(Vector<Number>       &y,
-                                      const Number          alpha,
+HMatrix<spacedim, Number>::Hvmult(
+  Vector<Number>                &y,
+  const Vector<Number>          &x,
+  const HMatrixSupport::Property top_hmat_property) const
+{
+  Hvmult(y, 1.0, x, top_hmat_property);
+}
+
+
+template <int spacedim, typename Number>
+template <typename Number2>
+void
+HMatrix<spacedim, Number>::Hvmult(
+  Vector<Number>                &y,
+  const Number2                  alpha,
+  const Vector<Number>          &x,
+  const HMatrixSupport::Property top_hmat_property) const
+{
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
+    {
+      switch (type)
+        {
+            case HierarchicalMatrixType: {
+              /**
+               * When the current \hmatnode is hierarchical, recursively call
+               * @p Hvmult of its children.
+               */
+              for (HMatrix *submatrix : submatrices)
+                {
+                  submatrix->Hvmult(y, alpha, x, top_hmat_property);
+                }
+
+              break;
+            }
+            case FullMatrixType: {
+              /**
+               * Here we comes to the transposed-matrix-vector multiplication
+               * with respect to a near field leaf \hmatnode.
+               */
+              switch (top_hmat_property)
+                {
+                    case HMatrixSupport::Property::general: {
+                      /**
+                       * When the top level \hmatnode is general, perform the
+                       * transposed-matrix-vector multiplication as usual.
+                       */
+                      Assert(property == HMatrixSupport::Property::general,
+                             ExcInvalidHMatrixProperty(property));
+                      Assert(fullmatrix->get_property() ==
+                               LAPACKSupport::Property::general,
+                             ExcInvalidLAPACKFullMatrixProperty(
+                               fullmatrix->get_property()));
+
+                      Vector<Number> local_y(n);
+                      Vector<Number> local_x(m);
+
+                      /**
+                       * Restrict vector x to the transposed matrix block.
+                       */
+                      for (size_type j = 0; j < m; j++)
+                        {
+                          local_x(j) = x((*row_index_range)[0] + j);
+                        }
+
+                      fullmatrix->Hvmult(local_y, local_x);
+
+                      /**
+                       * Merge back the result vector \p local_y to \p y.
+                       */
+                      for (size_type i = 0; i < n; i++)
+                        {
+                          y((*col_index_range)[0] + i) += alpha * local_y(i);
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::symmetric: {
+                      /**
+                       * When the top level \hmatnode is symmetric, the
+                       * operation depends on the block type of the current leaf
+                       * \hmatnode.
+                       */
+                      switch (block_type)
+                        {
+                            case HMatrixSupport::BlockType::diagonal_block: {
+                              /**
+                               * A leaf \hmatnode belonging to the diagonal
+                               * block should also be symmetric, when the top
+                               * level \hmatnode is symmetric.
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::symmetric,
+                                     ExcInvalidHMatrixProperty(property));
+                              /**
+                               * The full matrix associated with the current
+                               * \hmatnode should also be symmetric.
+                               */
+                              Assert(fullmatrix->get_property() ==
+                                       LAPACKSupport::Property::symmetric,
+                                     ExcInvalidLAPACKFullMatrixProperty(
+                                       fullmatrix->get_property()));
+
+                              /**
+                               * Perform the transposed-matrix-vector
+                               * multiplication
+                               * using the LAPACK function @p symv internally. In my
+                               * implementation, only those lower triangular
+                               * elements in a symmetric full matrix are used by
+                               * the function.
+                               */
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) = x((*row_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              lower_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the lower
+                               * triangular part, we first perform the
+                               * multiplication \f$M^Tx\f$ and then perform the
+                               * multiplication \f$Mx\f$. This treatment
+                               * considers both the contribution of the current
+                               * matrix block as well as its symmetric
+                               * counterpart.
+                               *
+                               * \alert{Not only should the full matrix itself
+                               * be transposed, the roles of row indices and
+                               * column indices should also be swapped.}
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::general,
+                                     ExcInvalidHMatrixProperty(property));
+                              Assert(fullmatrix->get_property() ==
+                                       LAPACKSupport::Property::general,
+                                     ExcInvalidLAPACKFullMatrixProperty(
+                                       fullmatrix->get_property()));
+
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) = x((*row_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              Vector<Number> local_y_for_vmult(m);
+                              Vector<Number> local_x_for_vmult(n);
+
+                              /**
+                               * Restrict vector x to the current matrix block.
+                               */
+                              for (size_type j = 0; j < n; j++)
+                                {
+                                  local_x_for_vmult(j) =
+                                    x((*col_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Cvmult(local_y_for_vmult,
+                                                 local_x_for_vmult);
+
+                              /**
+                               * Merge back the result vector \p local_y_for_vmult to \p y.
+                               */
+                              for (size_type i = 0; i < m; i++)
+                                {
+                                  y((*row_index_range)[0] + i) +=
+                                    alpha * local_y_for_vmult(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              upper_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the upper
+                               * triangular part, since the upper part is not
+                               * saved and its contribution has already been
+                               * considered when we handle the lower triangular
+                               * block, we do nothing.
+                               */
+                              break;
+                            }
+                            default: {
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::hermite_symmetric: {
+                      /**
+                       * When the top level \hmatnode is Hermite symmetric, the
+                       * operation depends on the block type of the current leaf
+                       * \hmatnode.
+                       */
+                      switch (block_type)
+                        {
+                            case HMatrixSupport::BlockType::diagonal_block: {
+                              /**
+                               * A leaf \hmatnode belonging to the diagonal
+                               * block should also be Hermite symmetric, when
+                               * the top level \hmatnode is Hermite symmetric.
+                               */
+                              Assert(
+                                property ==
+                                  HMatrixSupport::Property::hermite_symmetric,
+                                ExcInvalidHMatrixProperty(property));
+                              /**
+                               * The full matrix associated with the current
+                               * \hmatnode should also be Hermite symmetric.
+                               */
+                              Assert(
+                                fullmatrix->get_property() ==
+                                  LAPACKSupport::Property::hermite_symmetric,
+                                ExcInvalidLAPACKFullMatrixProperty(
+                                  fullmatrix->get_property()));
+
+                              /**
+                               * Perform the transposed-matrix-vector
+                               * multiplication
+                               * using the LAPACK function @p hemv internally. In my
+                               * implementation, only those lower triangular
+                               * elements in a Hermite symmetric full matrix are
+                               * used by the function.
+                               */
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) = x((*row_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              lower_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the lower
+                               * triangular part, we first perform the
+                               * multiplication \f$M^Tx\f$ and then perform the
+                               * multiplication \f$\overline{M}x\f$. This
+                               * treatment considers both the contribution of
+                               * the current matrix block as well as its Hermite
+                               * symmetric counterpart.
+                               *
+                               * \alert{Not only should the full matrix itself
+                               * be transposed, the roles of row indices and
+                               * column indices should also be swapped.}
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::general,
+                                     ExcInvalidHMatrixProperty(property));
+                              Assert(fullmatrix->get_property() ==
+                                       LAPACKSupport::Property::general,
+                                     ExcInvalidLAPACKFullMatrixProperty(
+                                       fullmatrix->get_property()));
+
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) = x((*row_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              Vector<Number> local_y_for_vmult(m);
+                              Vector<Number> local_x_for_vmult(n);
+
+                              /**
+                               * Restrict vector x to the current matrix block.
+                               */
+                              for (size_type j = 0; j < n; j++)
+                                {
+                                  local_x_for_vmult(j) =
+                                    x((*col_index_range)[0] + j);
+                                }
+
+                              fullmatrix->vmult(local_y_for_vmult,
+                                                local_x_for_vmult);
+
+                              /**
+                               * Merge back the result vector \p local_y_for_vmult to \p y.
+                               */
+                              for (size_type i = 0; i < m; i++)
+                                {
+                                  y((*row_index_range)[0] + i) +=
+                                    alpha * local_y_for_vmult(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              upper_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the upper
+                               * triangular part, since the upper part is not
+                               * saved and its contribution has already been
+                               * considered when we handle the lower triangular
+                               * block, we do nothing.
+                               */
+                              break;
+                            }
+                            default: {
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::lower_triangular: {
+                      /**
+                       * When the top level \hmatnode is lower triangular, the
+                       * operation depends on the block type of the current leaf
+                       * \hmatnode.
+                       */
+                      switch (block_type)
+                        {
+                            case HMatrixSupport::BlockType::diagonal_block: {
+                              /**
+                               * A leaf \hmatnode belonging to the diagonal
+                               * block should also be lower triangular, when the
+                               * top level \hmatnode is lower triangular.
+                               */
+                              Assert(
+                                property ==
+                                  HMatrixSupport::Property::lower_triangular,
+                                ExcInvalidHMatrixProperty(property));
+                              /**
+                               * The full matrix associated with the current
+                               * \hmatnode should also be lower triangular.
+                               */
+                              Assert(
+                                fullmatrix->get_property() ==
+                                  LAPACKSupport::Property::lower_triangular,
+                                ExcInvalidLAPACKFullMatrixProperty(
+                                  fullmatrix->get_property()));
+
+                              /**
+                               * Perform the transposed-matrix-vector
+                               * multiplication.
+                               */
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) = x((*row_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              lower_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the lower
+                               * triangular part, we perform the multiplication
+                               * \f$M^Tx\f$ as that for a general matrix.
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::general,
+                                     ExcInvalidHMatrixProperty(property));
+                              Assert(fullmatrix->get_property() ==
+                                       LAPACKSupport::Property::general,
+                                     ExcInvalidLAPACKFullMatrixProperty(
+                                       fullmatrix->get_property()));
+
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) = x((*row_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              upper_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the upper
+                               * triangular part, since the upper part is not
+                               * saved and has no contribution to the result, we
+                               * do nothing.
+                               */
+                              break;
+                            }
+                            default: {
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::upper_triangular: {
+                      /**
+                       * When the top level \hmatnode is upper triangular, the
+                       * operation depends on the block type of the current leaf
+                       * \hmatnode.
+                       */
+                      switch (block_type)
+                        {
+                            case HMatrixSupport::BlockType::diagonal_block: {
+                              /**
+                               * A leaf \hmatnode belonging to the diagonal
+                               * block should also be upper triangular, when the
+                               * top level \hmatnode is upper triangular.
+                               */
+                              Assert(
+                                property ==
+                                  HMatrixSupport::Property::upper_triangular,
+                                ExcInvalidHMatrixProperty(property));
+                              /**
+                               * The full matrix associated with the current
+                               * \hmatnode should also be upper triangular.
+                               */
+                              Assert(
+                                fullmatrix->get_property() ==
+                                  LAPACKSupport::Property::upper_triangular,
+                                ExcInvalidLAPACKFullMatrixProperty(
+                                  fullmatrix->get_property()));
+
+                              /**
+                               * Perform the transposed-matrix-vector
+                               * multiplication.
+                               */
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) = x((*row_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              upper_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the upper
+                               * triangular part, we perform the multiplication
+                               * \f$M^Tx\f$ as that for a general matrix.
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::general,
+                                     ExcInvalidHMatrixProperty(property));
+                              Assert(fullmatrix->get_property() ==
+                                       LAPACKSupport::Property::general,
+                                     ExcInvalidLAPACKFullMatrixProperty(
+                                       fullmatrix->get_property()));
+
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) = x((*row_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              lower_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the lower
+                               * triangular part, we do nothing.
+                               */
+                              break;
+                            }
+                            default: {
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                        }
+
+                      break;
+                    }
+                    default: {
+                      throw(ExcInvalidHMatrixProperty(top_hmat_property));
+
+                      break;
+                    }
+                }
+
+              break;
+            }
+            case RkMatrixType: {
+              /**
+               * Here we comes to the transposed matrix-vector multiplication
+               * with respect to a far field leaf \hmatnode.
+               */
+              switch (top_hmat_property)
+                {
+                    case HMatrixSupport::Property::general: {
+                      /**
+                       * When the top level \hmatnode is general, perform the
+                       * transposed matrix-vector multiplication as usual.
+                       */
+                      Assert(property == HMatrixSupport::Property::general,
+                             ExcInvalidHMatrixProperty(property));
+
+                      Vector<Number> local_y(n);
+                      Vector<Number> local_x(m);
+
+                      /**
+                       * Restrict vector x to the transposed matrix block.
+                       */
+                      for (size_type j = 0; j < m; j++)
+                        {
+                          local_x(j) = x((*row_index_range)[0] + j);
+                        }
+
+                      rkmatrix->Hvmult(local_y, local_x);
+
+                      /**
+                       * Merge back the result vector \p local_y to \p y.
+                       */
+                      for (size_type i = 0; i < n; i++)
+                        {
+                          y((*col_index_range)[0] + i) += alpha * local_y(i);
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::symmetric: {
+                      /**
+                       * When the top level \hmatnode is symmetric, the
+                       * operation depends on the block type of the current leaf
+                       * \hmatnode.
+                       */
+                      switch (block_type)
+                        {
+                            case HMatrixSupport::BlockType::diagonal_block: {
+                              /**
+                               * When the current \hmatnode is rank-k matrix, it
+                               * can never belong to the diagonal part.
+                               */
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              lower_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the lower
+                               * triangular part, we first perform the
+                               * multiplication \f$M^Tx\f$ and then perform the
+                               * multiplication \f$Mx\f$. This treatment
+                               * considers both the contribution of the current
+                               * matrix block as well as its symmetric
+                               * counterpart.
+                               *
+                               * \alert{Not only should the full matrix itself
+                               * be transposed, the roles of row indices and
+                               * column indices should also be swapped.}
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::general,
+                                     ExcInvalidHMatrixProperty(property));
+
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) = x((*row_index_range)[0] + j);
+                                }
+
+                              rkmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              Vector<Number> local_y_for_vmult(m);
+                              Vector<Number> local_x_for_vmult(n);
+
+                              /**
+                               * Restrict vector x to the current matrix block.
+                               */
+                              for (size_type j = 0; j < n; j++)
+                                {
+                                  local_x_for_vmult(j) =
+                                    x((*col_index_range)[0] + j);
+                                }
+
+                              rkmatrix->Cvmult(local_y_for_vmult,
+                                               local_x_for_vmult);
+
+                              /**
+                               * Merge back the result vector \p local_y_for_vmult to \p y.
+                               */
+                              for (size_type i = 0; i < m; i++)
+                                {
+                                  y((*row_index_range)[0] + i) +=
+                                    alpha * local_y_for_vmult(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              upper_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the upper
+                               * triangular part, do nothing.
+                               */
+                              break;
+                            }
+                            default: {
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::hermite_symmetric: {
+                      /**
+                       * When the top level \hmatnode is Hermite symmetric, the
+                       * operation depends on the block type of the current leaf
+                       * \hmatnode.
+                       */
+                      switch (block_type)
+                        {
+                            case HMatrixSupport::BlockType::diagonal_block: {
+                              /**
+                               * When the current \hmatnode is rank-k matrix, it
+                               * can never belong to the diagonal part.
+                               */
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              lower_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the lower
+                               * triangular part, we first perform the
+                               * multiplication \f$M^Tx\f$ and then perform the
+                               * multiplication \f$Mx\f$. This treatment
+                               * considers both the contribution of the current
+                               * matrix block as well as its symmetric
+                               * counterpart.
+                               *
+                               * \alert{Not only should the full matrix itself
+                               * be transposed, the roles of row indices and
+                               * column indices should also be swapped.}
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::general,
+                                     ExcInvalidHMatrixProperty(property));
+
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) = x((*row_index_range)[0] + j);
+                                }
+
+                              rkmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              Vector<Number> local_y_for_vmult(m);
+                              Vector<Number> local_x_for_vmult(n);
+
+                              /**
+                               * Restrict vector x to the current matrix block.
+                               */
+                              for (size_type j = 0; j < n; j++)
+                                {
+                                  local_x_for_vmult(j) =
+                                    x((*col_index_range)[0] + j);
+                                }
+
+                              rkmatrix->vmult(local_y_for_vmult,
+                                              local_x_for_vmult);
+
+                              /**
+                               * Merge back the result vector \p local_y_for_vmult to \p y.
+                               */
+                              for (size_type i = 0; i < m; i++)
+                                {
+                                  y((*row_index_range)[0] + i) +=
+                                    alpha * local_y_for_vmult(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              upper_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the upper
+                               * triangular part, do nothing.
+                               */
+                              break;
+                            }
+                            default: {
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::lower_triangular: {
+                      /**
+                       * When the top level \hmatnode is lower triangular, the
+                       * operation depends on the block type of the current leaf
+                       * \hmatnode.
+                       */
+                      switch (block_type)
+                        {
+                            case HMatrixSupport::BlockType::diagonal_block: {
+                              /**
+                               * When the current \hmatnode is rank-k matrix, it
+                               * can never belong to the diagonal part.
+                               */
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              lower_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the lower
+                               * triangular part, we perform the multiplication
+                               * \f$M^Tx\f$.
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::general,
+                                     ExcInvalidHMatrixProperty(property));
+
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the current matrix block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) = x((*row_index_range)[0] + j);
+                                }
+
+                              rkmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              upper_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the upper
+                               * triangular part, do nothing.
+                               */
+                              break;
+                            }
+                            default: {
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::upper_triangular: {
+                      /**
+                       * When the top level \hmatnode is upper triangular, the
+                       * operation depends on the block type of the current leaf
+                       * \hmatnode.
+                       */
+                      switch (block_type)
+                        {
+                            case HMatrixSupport::BlockType::diagonal_block: {
+                              /**
+                               * When the current \hmatnode is rank-k matrix, it
+                               * can never belong to the diagonal part.
+                               */
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              upper_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the upper
+                               * triangular part, we perform the multiplication
+                               * \f$M^Tx\f$.
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::general,
+                                     ExcInvalidHMatrixProperty(property));
+
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the current matrix block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) = x((*row_index_range)[0] + j);
+                                }
+
+                              rkmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              lower_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the lower
+                               * triangular part, do nothing.
+                               */
+                              break;
+                            }
+                            default: {
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                        }
+
+                      break;
+                    }
+                    default: {
+                      throw(ExcInvalidHMatrixProperty(top_hmat_property));
+
+                      break;
+                    }
+                }
+
+              break;
+            }
+          case UndefinedMatrixType:
+            default: {
+              Assert(false, ExcInvalidHMatrixType(type));
+              break;
+            }
+        }
+    }
+  else
+    {
+      this->Tvmult(y, alpha, x, top_hmat_property);
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::Hvmult(
+  Vector<Number>                  &y,
+  const Vector<Number>            &x,
+  const HMatrix<spacedim, Number> &starting_hmat,
+  const HMatrixSupport::Property   top_hmat_property) const
+{
+  Hvmult(y, 1.0, x, starting_hmat, top_hmat_property);
+}
+
+
+template <int spacedim, typename Number>
+template <typename Number2>
+void
+HMatrix<spacedim, Number>::Hvmult(
+  Vector<Number>                  &y,
+  const Number2                    alpha,
+  const Vector<Number>            &x,
+  const HMatrix<spacedim, Number> &starting_hmat,
+  const HMatrixSupport::Property   top_hmat_property) const
+{
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
+    {
+      switch (type)
+        {
+            case HierarchicalMatrixType: {
+              /**
+               * When the current \hmatnode is hierarchical, recursively call
+               * @p Hvmult of its children.
+               */
+              for (HMatrix *submatrix : submatrices)
+                {
+                  submatrix->Hvmult(
+                    y, alpha, x, starting_hmat, top_hmat_property);
+                }
+
+              break;
+            }
+            case FullMatrixType: {
+              /**
+               * Here we comes to the transposed-matrix-vector multiplication
+               * with respect to a near field leaf \hmatnode.
+               */
+              switch (top_hmat_property)
+                {
+                    case HMatrixSupport::Property::general: {
+                      /**
+                       * When the top level \hmatnode is general, perform the
+                       * transposed-matrix-vector multiplication as usual.
+                       */
+                      Assert(property == HMatrixSupport::Property::general,
+                             ExcInvalidHMatrixProperty(property));
+                      Assert(fullmatrix->get_property() ==
+                               LAPACKSupport::Property::general,
+                             ExcInvalidLAPACKFullMatrixProperty(
+                               fullmatrix->get_property()));
+
+                      Vector<Number> local_y(n);
+                      Vector<Number> local_x(m);
+
+                      /**
+                       * Restrict vector x to the transposed matrix block.
+                       */
+                      for (size_type j = 0; j < m; j++)
+                        {
+                          local_x(j) =
+                            x((*row_index_range)[0] -
+                              (*starting_hmat.row_index_range)[0] + j);
+                        }
+
+                      fullmatrix->Hvmult(local_y, local_x);
+
+                      /**
+                       * Merge back the result vector \p local_y to \p y.
+                       */
+                      for (size_type i = 0; i < n; i++)
+                        {
+                          y((*col_index_range)[0] -
+                            (*starting_hmat.col_index_range)[0] + i) +=
+                            alpha * local_y(i);
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::symmetric: {
+                      /**
+                       * When the top level \hmatnode is symmetric, the
+                       * operation depends on the block type of the current leaf
+                       * \hmatnode.
+                       */
+                      switch (block_type)
+                        {
+                            case HMatrixSupport::BlockType::diagonal_block: {
+                              /**
+                               * A leaf \hmatnode belonging to the diagonal
+                               * block should also be symmetric, when the top
+                               * level \hmatnode is symmetric.
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::symmetric,
+                                     ExcInvalidHMatrixProperty(property));
+                              /**
+                               * The full matrix associated with the current
+                               * \hmatnode should also be symmetric.
+                               */
+                              Assert(fullmatrix->get_property() ==
+                                       LAPACKSupport::Property::symmetric,
+                                     ExcInvalidLAPACKFullMatrixProperty(
+                                       fullmatrix->get_property()));
+
+                              /**
+                               * Perform the transposed-matrix-vector
+                               * multiplication
+                               * using the LAPACK function @p symv internally. In my
+                               * implementation, only those lower triangular
+                               * elements in a symmetric full matrix are used by
+                               * the function.
+                               */
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) =
+                                    x((*row_index_range)[0] -
+                                      (*starting_hmat.row_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              lower_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the lower
+                               * triangular part, we first perform the
+                               * multiplication \f$M^Tx\f$ and then perform the
+                               * multiplication \f$Mx\f$. This treatment
+                               * considers both the contribution of the current
+                               * matrix block as well as its symmetric
+                               * counterpart.
+                               *
+                               * \alert{Not only should the full matrix itself
+                               * be transposed, the roles of row indices and
+                               * column indices should also be swapped.}
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::general,
+                                     ExcInvalidHMatrixProperty(property));
+                              Assert(fullmatrix->get_property() ==
+                                       LAPACKSupport::Property::general,
+                                     ExcInvalidLAPACKFullMatrixProperty(
+                                       fullmatrix->get_property()));
+
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) =
+                                    x((*row_index_range)[0] -
+                                      (*starting_hmat.row_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              Vector<Number> local_y_for_vmult(m);
+                              Vector<Number> local_x_for_vmult(n);
+
+                              /**
+                               * Restrict vector x to the current matrix block.
+                               */
+                              for (size_type j = 0; j < n; j++)
+                                {
+                                  local_x_for_vmult(j) =
+                                    x((*col_index_range)[0] -
+                                      (*starting_hmat.col_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Cvmult(local_y_for_vmult,
+                                                 local_x_for_vmult);
+
+                              /**
+                               * Merge back the result vector \p local_y_for_vmult to \p y.
+                               */
+                              for (size_type i = 0; i < m; i++)
+                                {
+                                  y((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + i) +=
+                                    alpha * local_y_for_vmult(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              upper_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the upper
+                               * triangular part, since the upper part is not
+                               * saved and its contribution has already been
+                               * considered when we handle the lower triangular
+                               * block, we do nothing.
+                               */
+                              break;
+                            }
+                            default: {
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::hermite_symmetric: {
+                      /**
+                       * When the top level \hmatnode is Hermite symmetric, the
+                       * operation depends on the block type of the current leaf
+                       * \hmatnode.
+                       */
+                      switch (block_type)
+                        {
+                            case HMatrixSupport::BlockType::diagonal_block: {
+                              /**
+                               * A leaf \hmatnode belonging to the diagonal
+                               * block should also be Hermite symmetric, when
+                               * the top level \hmatnode is Hermite symmetric.
+                               */
+                              Assert(
+                                property ==
+                                  HMatrixSupport::Property::hermite_symmetric,
+                                ExcInvalidHMatrixProperty(property));
+                              /**
+                               * The full matrix associated with the current
+                               * \hmatnode should also be Hermite symmetric.
+                               */
+                              Assert(
+                                fullmatrix->get_property() ==
+                                  LAPACKSupport::Property::hermite_symmetric,
+                                ExcInvalidLAPACKFullMatrixProperty(
+                                  fullmatrix->get_property()));
+
+                              /**
+                               * Perform the transposed-matrix-vector
+                               * multiplication
+                               * using the LAPACK function @p symv internally. In my
+                               * implementation, only those lower triangular
+                               * elements in a symmetric full matrix are used by
+                               * the function.
+                               */
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) =
+                                    x((*row_index_range)[0] -
+                                      (*starting_hmat.row_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              lower_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the lower
+                               * triangular part, we first perform the
+                               * multiplication \f$M^Tx\f$ and then perform the
+                               * multiplication \f$Mx\f$. This treatment
+                               * considers both the contribution of the current
+                               * matrix block as well as its Hermite symmetric
+                               * counterpart.
+                               *
+                               * \alert{Not only should the full matrix itself
+                               * be transposed, the roles of row indices and
+                               * column indices should also be swapped.}
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::general,
+                                     ExcInvalidHMatrixProperty(property));
+                              Assert(fullmatrix->get_property() ==
+                                       LAPACKSupport::Property::general,
+                                     ExcInvalidLAPACKFullMatrixProperty(
+                                       fullmatrix->get_property()));
+
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) =
+                                    x((*row_index_range)[0] -
+                                      (*starting_hmat.row_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              Vector<Number> local_y_for_vmult(m);
+                              Vector<Number> local_x_for_vmult(n);
+
+                              /**
+                               * Restrict vector x to the current matrix block.
+                               */
+                              for (size_type j = 0; j < n; j++)
+                                {
+                                  local_x_for_vmult(j) =
+                                    x((*col_index_range)[0] -
+                                      (*starting_hmat.col_index_range)[0] + j);
+                                }
+
+                              fullmatrix->vmult(local_y_for_vmult,
+                                                local_x_for_vmult);
+
+                              /**
+                               * Merge back the result vector \p local_y_for_vmult to \p y.
+                               */
+                              for (size_type i = 0; i < m; i++)
+                                {
+                                  y((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + i) +=
+                                    alpha * local_y_for_vmult(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              upper_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the upper
+                               * triangular part, since the upper part is not
+                               * saved and its contribution has already been
+                               * considered when we handle the lower triangular
+                               * block, we do nothing.
+                               */
+                              break;
+                            }
+                            default: {
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::lower_triangular: {
+                      /**
+                       * When the top level \hmatnode is lower triangular, the
+                       * operation depends on the block type of the current leaf
+                       * \hmatnode.
+                       */
+                      switch (block_type)
+                        {
+                            case HMatrixSupport::BlockType::diagonal_block: {
+                              /**
+                               * A leaf \hmatnode belonging to the diagonal
+                               * block should also be lower triangular, when the
+                               * top level \hmatnode is lower triangular.
+                               */
+                              Assert(
+                                property ==
+                                  HMatrixSupport::Property::lower_triangular,
+                                ExcInvalidHMatrixProperty(property));
+                              /**
+                               * The full matrix associated with the current
+                               * \hmatnode should also be lower triangular.
+                               */
+                              Assert(
+                                fullmatrix->get_property() ==
+                                  LAPACKSupport::Property::lower_triangular,
+                                ExcInvalidLAPACKFullMatrixProperty(
+                                  fullmatrix->get_property()));
+
+                              /**
+                               * Perform the transposed-matrix-vector
+                               * multiplication.
+                               */
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) =
+                                    x((*row_index_range)[0] -
+                                      (*starting_hmat.row_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              lower_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the lower
+                               * triangular part, we perform the multiplication
+                               * \f$M^Tx\f$ as that for a general matrix.
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::general,
+                                     ExcInvalidHMatrixProperty(property));
+                              Assert(fullmatrix->get_property() ==
+                                       LAPACKSupport::Property::general,
+                                     ExcInvalidLAPACKFullMatrixProperty(
+                                       fullmatrix->get_property()));
+
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) =
+                                    x((*row_index_range)[0] -
+                                      (*starting_hmat.row_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              upper_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the upper
+                               * triangular part, since the upper part is not
+                               * saved and has no contribution to the result, we
+                               * do nothing.
+                               */
+                              break;
+                            }
+                            default: {
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::upper_triangular: {
+                      /**
+                       * When the top level \hmatnode is upper triangular, the
+                       * operation depends on the block type of the current leaf
+                       * \hmatnode.
+                       */
+                      switch (block_type)
+                        {
+                            case HMatrixSupport::BlockType::diagonal_block: {
+                              /**
+                               * A leaf \hmatnode belonging to the diagonal
+                               * block should also be upper triangular, when the
+                               * top level \hmatnode is upper triangular.
+                               */
+                              Assert(
+                                property ==
+                                  HMatrixSupport::Property::upper_triangular,
+                                ExcInvalidHMatrixProperty(property));
+                              /**
+                               * The full matrix associated with the current
+                               * \hmatnode should also be upper triangular.
+                               */
+                              Assert(
+                                fullmatrix->get_property() ==
+                                  LAPACKSupport::Property::upper_triangular,
+                                ExcInvalidLAPACKFullMatrixProperty(
+                                  fullmatrix->get_property()));
+
+                              /**
+                               * Perform the transposed-matrix-vector
+                               * multiplication.
+                               */
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) =
+                                    x((*row_index_range)[0] -
+                                      (*starting_hmat.row_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              upper_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the upper
+                               * triangular part, we perform the multiplication
+                               * \f$M^Tx\f$ as that for a general matrix.
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::general,
+                                     ExcInvalidHMatrixProperty(property));
+                              Assert(fullmatrix->get_property() ==
+                                       LAPACKSupport::Property::general,
+                                     ExcInvalidLAPACKFullMatrixProperty(
+                                       fullmatrix->get_property()));
+
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the transposed matrix
+                               * block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) =
+                                    x((*row_index_range)[0] -
+                                      (*starting_hmat.row_index_range)[0] + j);
+                                }
+
+                              fullmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              lower_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the lower
+                               * triangular part, we do nothing.
+                               */
+                              break;
+                            }
+                            default: {
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                        }
+
+                      break;
+                    }
+                    default: {
+                      throw(ExcInvalidHMatrixProperty(top_hmat_property));
+
+                      break;
+                    }
+                }
+
+              break;
+            }
+            case RkMatrixType: {
+              /**
+               * Here we comes to the transposed matrix-vector multiplication
+               * with respect to a far field leaf \hmatnode.
+               */
+              switch (top_hmat_property)
+                {
+                    case HMatrixSupport::Property::general: {
+                      /**
+                       * When the top level \hmatnode is general, perform the
+                       * transposed matrix-vector multiplication as usual.
+                       */
+                      Assert(property == HMatrixSupport::Property::general,
+                             ExcInvalidHMatrixProperty(property));
+
+                      Vector<Number> local_y(n);
+                      Vector<Number> local_x(m);
+
+                      /**
+                       * Restrict vector x to the current matrix block.
+                       */
+                      for (size_type j = 0; j < m; j++)
+                        {
+                          local_x(j) =
+                            x((*row_index_range)[0] -
+                              (*starting_hmat.row_index_range)[0] + j);
+                        }
+
+                      rkmatrix->Hvmult(local_y, local_x);
+
+                      /**
+                       * Merge back the result vector \p local_y to \p y.
+                       */
+                      for (size_type i = 0; i < n; i++)
+                        {
+                          y((*col_index_range)[0] -
+                            (*starting_hmat.col_index_range)[0] + i) +=
+                            alpha * local_y(i);
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::symmetric: {
+                      /**
+                       * When the top level \hmatnode is symmetric, the
+                       * operation depends on the block type of the current leaf
+                       * \hmatnode.
+                       */
+                      switch (block_type)
+                        {
+                            case HMatrixSupport::BlockType::diagonal_block: {
+                              /**
+                               * When the current \hmatnode is rank-k matrix, it
+                               * can never belong to the diagonal part.
+                               */
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              lower_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the lower
+                               * triangular part, we first perform the
+                               * multiplication \f$M^Tx\f$ and then perform the
+                               * multiplication \f$Mx\f$. This treatment
+                               * considers both the contribution of the current
+                               * matrix block as well as its symmetric
+                               * counterpart.
+                               *
+                               * \alert{Not only should the full matrix itself
+                               * be transposed, the roles of row indices and
+                               * column indices should also be swapped.}
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::general,
+                                     ExcInvalidHMatrixProperty(property));
+
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the current matrix block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) =
+                                    x((*row_index_range)[0] -
+                                      (*starting_hmat.row_index_range)[0] + j);
+                                }
+
+                              rkmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              Vector<Number> local_y_for_vmult(m);
+                              Vector<Number> local_x_for_vmult(n);
+
+                              /**
+                               * Restrict vector x to the current matrix block.
+                               */
+                              for (size_type j = 0; j < n; j++)
+                                {
+                                  local_x_for_vmult(j) =
+                                    x((*col_index_range)[0] -
+                                      (*starting_hmat.col_index_range)[0] + j);
+                                }
+
+                              rkmatrix->Cvmult(local_y_for_vmult,
+                                               local_x_for_vmult);
+
+                              /**
+                               * Merge back the result vector \p local_y_for_vmult to \p y.
+                               */
+                              for (size_type i = 0; i < m; i++)
+                                {
+                                  y((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + i) +=
+                                    alpha * local_y_for_vmult(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              upper_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the upper
+                               * triangular part, do nothing.
+                               */
+                              break;
+                            }
+                            default: {
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::hermite_symmetric: {
+                      /**
+                       * When the top level \hmatnode is Hermite symmetric, the
+                       * operation depends on the block type of the current leaf
+                       * \hmatnode.
+                       */
+                      switch (block_type)
+                        {
+                            case HMatrixSupport::BlockType::diagonal_block: {
+                              /**
+                               * When the current \hmatnode is rank-k matrix, it
+                               * can never belong to the diagonal part.
+                               */
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              lower_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the lower
+                               * triangular part, we first perform the
+                               * multiplication \f$M^Tx\f$ and then perform the
+                               * multiplication \f$Mx\f$. This treatment
+                               * considers both the contribution of the current
+                               * matrix block as well as its symmetric
+                               * counterpart.
+                               *
+                               * \alert{Not only should the full matrix itself
+                               * be transposed, the roles of row indices and
+                               * column indices should also be swapped.}
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::general,
+                                     ExcInvalidHMatrixProperty(property));
+
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the current matrix block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) =
+                                    x((*row_index_range)[0] -
+                                      (*starting_hmat.row_index_range)[0] + j);
+                                }
+
+                              rkmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              Vector<Number> local_y_for_vmult(m);
+                              Vector<Number> local_x_for_vmult(n);
+
+                              /**
+                               * Restrict vector x to the current matrix block.
+                               */
+                              for (size_type j = 0; j < n; j++)
+                                {
+                                  local_x_for_vmult(j) =
+                                    x((*col_index_range)[0] -
+                                      (*starting_hmat.col_index_range)[0] + j);
+                                }
+
+                              rkmatrix->vmult(local_y_for_vmult,
+                                              local_x_for_vmult);
+
+                              /**
+                               * Merge back the result vector \p local_y_for_vmult to \p y.
+                               */
+                              for (size_type i = 0; i < m; i++)
+                                {
+                                  y((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + i) +=
+                                    alpha * local_y_for_vmult(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              upper_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the upper
+                               * triangular part, do nothing.
+                               */
+                              break;
+                            }
+                            default: {
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::lower_triangular: {
+                      /**
+                       * When the top level \hmatnode is lower triangular, the
+                       * operation depends on the block type of the current leaf
+                       * \hmatnode.
+                       */
+                      switch (block_type)
+                        {
+                            case HMatrixSupport::BlockType::diagonal_block: {
+                              /**
+                               * When the current \hmatnode is rank-k matrix, it
+                               * can never belong to the diagonal part.
+                               */
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              lower_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the lower
+                               * triangular part, we perform the multiplication
+                               * \f$M^Tx\f$.
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::general,
+                                     ExcInvalidHMatrixProperty(property));
+
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the current matrix block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) =
+                                    x((*row_index_range)[0] -
+                                      (*starting_hmat.row_index_range)[0] + j);
+                                }
+
+                              rkmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              upper_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the upper
+                               * triangular part, do nothing.
+                               */
+                              break;
+                            }
+                            default: {
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::Property::upper_triangular: {
+                      /**
+                       * When the top level \hmatnode is upper triangular, the
+                       * operation depends on the block type of the current leaf
+                       * \hmatnode.
+                       */
+                      switch (block_type)
+                        {
+                            case HMatrixSupport::BlockType::diagonal_block: {
+                              /**
+                               * When the current \hmatnode is rank-k matrix, it
+                               * can never belong to the diagonal part.
+                               */
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              upper_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the upper
+                               * triangular part, we perform the multiplication
+                               * \f$M^Tx\f$.
+                               */
+                              Assert(property ==
+                                       HMatrixSupport::Property::general,
+                                     ExcInvalidHMatrixProperty(property));
+
+                              Vector<Number> local_y(n);
+                              Vector<Number> local_x(m);
+
+                              /**
+                               * Restrict vector x to the current matrix block.
+                               */
+                              for (size_type j = 0; j < m; j++)
+                                {
+                                  local_x(j) =
+                                    x((*row_index_range)[0] -
+                                      (*starting_hmat.row_index_range)[0] + j);
+                                }
+
+                              rkmatrix->Hvmult(local_y, local_x);
+
+                              /**
+                               * Merge back the result vector \p local_y to \p y.
+                               */
+                              for (size_type i = 0; i < n; i++)
+                                {
+                                  y((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + i) +=
+                                    alpha * local_y(i);
+                                }
+
+                              break;
+                            }
+                            case HMatrixSupport::BlockType::
+                              lower_triangular_block: {
+                              /**
+                               * When the current \hmatnode belongs to the lower
+                               * triangular part, do nothing.
+                               */
+                              break;
+                            }
+                            default: {
+                              throw(ExcInvalidHMatrixBlockType(block_type));
+
+                              break;
+                            }
+                        }
+
+                      break;
+                    }
+                    default: {
+                      throw(ExcInvalidHMatrixProperty(top_hmat_property));
+
+                      break;
+                    }
+                }
+
+              break;
+            }
+          case UndefinedMatrixType:
+            default: {
+              Assert(false, ExcInvalidHMatrixType(type));
+              break;
+            }
+        }
+    }
+  else
+    {
+      this->Tvmult(y, alpha, x, starting_hmat, top_hmat_property);
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::Hvmult(Vector<Number>       &y,
+                                  const Vector<Number> &x) const
+{
+  y = Number(0.);
+  this->Hvmult(y, x, this->property);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::Hvmult_add(Vector<Number>       &y,
                                       const Vector<Number> &x) const
 {
-  this->Tvmult(y, alpha, x, this->property);
+  this->Hvmult(y, x, this->property);
+}
+
+
+template <int spacedim, typename Number>
+template <typename Number2>
+void
+HMatrix<spacedim, Number>::Hvmult(Vector<Number>       &y,
+                                  const Number2         alpha,
+                                  const Vector<Number> &x) const
+{
+  y = Number(0.);
+  this->Hvmult(y, alpha, x, this->property);
+}
+
+
+template <int spacedim, typename Number>
+template <typename Number2>
+void
+HMatrix<spacedim, Number>::Hvmult_add(Vector<Number>       &y,
+                                      const Number2         alpha,
+                                      const Vector<Number> &x) const
+{
+  this->Hvmult(y, alpha, x, this->property);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::Hvmult_task_parallel(Vector<Number>       &y,
+                                                const Vector<Number> &x)
+{
+  Hvmult_task_parallel(1.0, y, 1.0, x);
+}
+
+
+template <int spacedim, typename Number>
+template <typename Number2, typename Number3>
+void
+HMatrix<spacedim, Number>::Hvmult_task_parallel(const Number2         beta,
+                                                Vector<Number>       &y,
+                                                const Number3         alpha,
+                                                const Vector<Number> &x)
+{
+  /**
+   * The current \hmatrix node should be at the top level.
+   */
+  Assert(parent == nullptr, ExcInternalError());
+
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
+    {
+      if (property == HMatrixSupport::Property::hermite_symmetric)
+        {
+          vmult_task_parallel(beta, y, alpha, x);
+        }
+      else
+        {
+          const unsigned int thread_num =
+            data_for_vmult_or_tvmult_threads.size();
+
+          /**
+           * Only perform parallel multiplication when the thread number is
+           * larger than 1. Otherwise, switch to the iterative serial version.
+           */
+          if (thread_num > 1)
+            {
+              /**
+               * Perform thread local scaling of the result vector and
+               * multiplications. The multiplication results are stored locally
+               * in each thread.
+               */
+              auto local_scale_and_multiplication =
+                [this, beta, alpha, &y, &x](
+                  const unsigned int thread_no) -> void {
+                /**
+                 * Local scaling: \f$y_q = \beta y_q\f$.
+                 */
+                for (size_type i =
+                       this->data_for_vmult_or_tvmult_threads[thread_no]
+                         .tvmult_result_index_range[0];
+                     i < this->data_for_vmult_or_tvmult_threads[thread_no]
+                           .tvmult_result_index_range[1];
+                     i++)
+                  {
+                    y[i] *= beta;
+                  }
+
+                /**
+                 * Clear the local result vector before the multiplication
+                 * begins.
+                 */
+                this->data_for_vmult_or_tvmult_threads[thread_no]
+                  .local_tvmult_result = Number(0.);
+                if (this->property == HMatrixSupport::Property::symmetric)
+                  this->data_for_vmult_or_tvmult_threads[thread_no]
+                    .local_vmult_result = Number(0.);
+
+                /**
+                 * Iterate over each \hmatrix node in the interval of the leaf
+                 * set.
+                 */
+                for (unsigned int l =
+                       this->data_for_vmult_or_tvmult_threads[thread_no]
+                         .leaf_set_interval.first;
+                     l <= this->data_for_vmult_or_tvmult_threads[thread_no]
+                            .leaf_set_interval.second;
+                     l++)
+                  {
+                    const size_type m = this->leaf_set[l]->m;
+                    const size_type n = this->leaf_set[l]->n;
+
+                    Vector<Number> local_y_for_Hvmult(n);
+                    Vector<Number> local_x_for_Hvmult(m);
+
+                    /**
+                     * Restrict the global vector @p x to the local vector.
+                     */
+                    for (size_type i = 0; i < m; i++)
+                      {
+                        local_x_for_Hvmult(i) =
+                          x((*this->leaf_set[l]->row_index_range)[0] + i);
+                      }
+
+                    switch (this->leaf_set[l]->type)
+                      {
+                          case HMatrixType::FullMatrixType: {
+                            this->leaf_set[l]->fullmatrix->Hvmult(
+                              local_y_for_Hvmult, local_x_for_Hvmult);
+
+                            break;
+                          }
+                          case HMatrixType::RkMatrixType: {
+                            this->leaf_set[l]->rkmatrix->Hvmult(
+                              local_y_for_Hvmult, local_x_for_Hvmult);
+
+                            break;
+                          }
+                          default: {
+                            Assert(false,
+                                   ExcInvalidHMatrixType(
+                                     this->leaf_set[l]->type));
+
+                            break;
+                          }
+                      }
+
+                    /**
+                     * Merge back the result vector @p local_y_for_Hvmult obtained
+                     * from the current leaf set matrix block to the thread
+                     * local result vector.
+                     */
+                    for (size_type j = 0; j < n; j++)
+                      {
+                        this->data_for_vmult_or_tvmult_threads[thread_no]
+                          .local_tvmult_result(
+                            (*this->leaf_set[l]->col_index_range)[0] -
+                            this->data_for_vmult_or_tvmult_threads[thread_no]
+                              .local_tvmult_result_index_range[0] +
+                            j) += alpha * local_y_for_Hvmult(j);
+                      }
+
+                    if (this->property == HMatrixSupport::Property::symmetric &&
+                        this->leaf_set[l]->block_type ==
+                          HMatrixSupport::BlockType::lower_triangular_block)
+                      {
+                        /**
+                         * Result vector and input vector with respect to the
+                         * current matrix node.
+                         */
+                        Vector<Number> local_y(m);
+                        Vector<Number> local_x(n);
+
+                        /**
+                         * Restrict the global vector @p x to the local vector.
+                         */
+                        for (size_type j = 0; j < n; j++)
+                          {
+                            local_x(j) =
+                              x((*this->leaf_set[l]->col_index_range)[0] + j);
+                          }
+
+                        switch (this->leaf_set[l]->type)
+                          {
+                              case HMatrixType::FullMatrixType: {
+                                this->leaf_set[l]->fullmatrix->Cvmult(local_y,
+                                                                      local_x);
+
+                                break;
+                              }
+                              case HMatrixType::RkMatrixType: {
+                                this->leaf_set[l]->rkmatrix->Cvmult(local_y,
+                                                                    local_x);
+
+                                break;
+                              }
+                              default: {
+                                Assert(false,
+                                       ExcInvalidHMatrixType(
+                                         this->leaf_set[l]->type));
+
+                                break;
+                              }
+                          }
+
+                        /**
+                         * Merge back the result vector @p local_y obtained from the
+                         * current leaf set matrix node to the thread local
+                         * result vector.
+                         */
+                        for (size_type i = 0; i < m; i++)
+                          {
+                            this->data_for_vmult_or_tvmult_threads[thread_no]
+                              .local_vmult_result(
+                                (*this->leaf_set[l]->row_index_range)[0] -
+                                this
+                                  ->data_for_vmult_or_tvmult_threads[thread_no]
+                                  .local_vmult_result_index_range[0] +
+                                i) += alpha * local_y(i);
+                          }
+                      }
+                  }
+              };
+
+              Threads::TaskGroup<void> local_scaling_and_multiplication_tasks;
+              for (unsigned int i = 0; i < thread_num; i++)
+                {
+                  local_scaling_and_multiplication_tasks += Threads::new_task(
+                    std::bind(local_scale_and_multiplication, i));
+                }
+
+              local_scaling_and_multiplication_tasks.join_all();
+
+              auto assemble_contribution_from_all_threads =
+                [this, &y](const unsigned int thread_no) -> void {
+                unsigned int other_thread_no = 0;
+                for (
+                  const auto &range_intersection :
+                  this->data_for_vmult_or_tvmult_threads[thread_no]
+                    .tvmult_result_index_ranges_contributed_from_other_threads)
+                  {
+                    for (size_type i = range_intersection[0];
+                         i < range_intersection[1];
+                         i++)
+                      {
+                        y(i) +=
+                          this
+                            ->data_for_vmult_or_tvmult_threads[other_thread_no]
+                            .local_tvmult_result(
+                              i - this
+                                    ->data_for_vmult_or_tvmult_threads
+                                      [other_thread_no]
+                                    .local_tvmult_result_index_range[0]);
+                      }
+
+                    other_thread_no++;
+                  }
+
+                if (this->property == HMatrixSupport::Property::symmetric)
+                  {
+                    unsigned int other_thread_no = 0;
+                    for (
+                      const auto &range_intersection :
+                      this->data_for_vmult_or_tvmult_threads[thread_no]
+                        .vmult_result_index_ranges_contributed_from_other_threads)
+                      {
+                        for (size_type i = range_intersection[0];
+                             i < range_intersection[1];
+                             i++)
+                          {
+                            y(i) +=
+                              this
+                                ->data_for_vmult_or_tvmult_threads
+                                  [other_thread_no]
+                                .local_vmult_result(
+                                  i - this
+                                        ->data_for_vmult_or_tvmult_threads
+                                          [other_thread_no]
+                                        .local_vmult_result_index_range[0]);
+                          }
+
+                        other_thread_no++;
+                      }
+                  }
+              };
+
+              Threads::TaskGroup<void> assembly_tasks;
+              for (unsigned int i = 0; i < thread_num; i++)
+                {
+                  assembly_tasks += Threads::new_task(
+                    std::bind(assemble_contribution_from_all_threads, i));
+                }
+
+              assembly_tasks.join_all();
+            }
+          else
+            {
+              Hvmult_serial_iterative(beta, y, alpha, x);
+            }
+        }
+    }
+  else
+    {
+      Tvmult_task_parallel(beta, y, alpha, x);
+    }
+}
+
+
+template <int spacedim, typename Number>
+template <typename Number2, typename Number3>
+void
+HMatrix<spacedim, Number>::Hvmult_serial_iterative(const Number2         beta,
+                                                   Vector<Number>       &y,
+                                                   const Number3         alpha,
+                                                   const Vector<Number> &x)
+{
+  /**
+   * The current \hmatrix node should be at the top level.
+   */
+  Assert(parent == nullptr, ExcInternalError());
+
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
+    {
+      if (property == HMatrixSupport::Property::hermite_symmetric)
+        {
+          vmult_serial_iterative(beta, y, alpha, x);
+        }
+      else
+        {
+          /**
+           * Scale \f$y\f$.
+           */
+          y *= beta;
+
+          /**
+           * Iterate over each \hmatrix node in the leaf set.
+           */
+          for (size_type l = 0; l < leaf_set.size(); l++)
+            {
+              const size_type m = this->leaf_set[l]->m;
+              const size_type n = this->leaf_set[l]->n;
+
+              Vector<Number> local_y_for_Hvmult(n);
+              Vector<Number> local_x_for_Hvmult(m);
+
+              /**
+               * Restrict the global vector @p x to the local vector with respect
+               * to the transposed matrix block..
+               */
+              for (size_type i = 0; i < m; i++)
+                {
+                  local_x_for_Hvmult(i) =
+                    x((*this->leaf_set[l]->row_index_range)[0] + i);
+                }
+
+              switch (this->leaf_set[l]->type)
+                {
+                    case HMatrixType::FullMatrixType: {
+                      this->leaf_set[l]->fullmatrix->Hvmult(local_y_for_Hvmult,
+                                                            local_x_for_Hvmult);
+
+                      break;
+                    }
+                    case HMatrixType::RkMatrixType: {
+                      this->leaf_set[l]->rkmatrix->Hvmult(local_y_for_Hvmult,
+                                                          local_x_for_Hvmult);
+
+                      break;
+                    }
+                    default: {
+                      Assert(false,
+                             ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+                      break;
+                    }
+                }
+
+              /**
+               * Merge back the result vector @p local_y_for_Hvmult to the global
+               * vector @p y.
+               */
+              for (size_type j = 0; j < n; j++)
+                {
+                  y((*this->leaf_set[l]->col_index_range)[0] + j) +=
+                    alpha * local_y_for_Hvmult(j);
+                }
+
+              if (this->property == HMatrixSupport::Property::symmetric &&
+                  this->leaf_set[l]->block_type ==
+                    HMatrixSupport::BlockType::lower_triangular_block)
+                {
+                  /**
+                   * Result vector and input vector with respect to the current
+                   * matrix node.
+                   */
+                  Vector<Number> local_y(m);
+                  Vector<Number> local_x(n);
+
+                  /**
+                   * Restrict the global vector @p x to the current matrix block.
+                   */
+                  for (size_type j = 0; j < n; j++)
+                    {
+                      local_x(j) =
+                        x((*this->leaf_set[l]->col_index_range)[0] + j);
+                    }
+
+                  switch (this->leaf_set[l]->type)
+                    {
+                        case HMatrixType::FullMatrixType: {
+                          this->leaf_set[l]->fullmatrix->Cvmult(local_y,
+                                                                local_x);
+
+                          break;
+                        }
+                        case HMatrixType::RkMatrixType: {
+                          this->leaf_set[l]->rkmatrix->Cvmult(local_y, local_x);
+
+                          break;
+                        }
+                        default: {
+                          Assert(false,
+                                 ExcInvalidHMatrixType(
+                                   this->leaf_set[l]->type));
+
+                          break;
+                        }
+                    }
+
+                  /**
+                   * Merge back the result vector @p local_y to the global vector @p y.
+                   */
+                  for (size_type i = 0; i < m; i++)
+                    {
+                      y((*this->leaf_set[l]->row_index_range)[0] + i) +=
+                        alpha * local_y(i);
+                    }
+                }
+            }
+        }
+    }
+  else
+    {
+      this->Tvmult_serial_iterative(beta, y, alpha, x);
+    }
 }
 
 
@@ -26000,7 +28552,7 @@ HMatrix<spacedim, Number>::h_h_mmult_reduction()
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::h_h_mmult_horizontal_split(
-  BlockClusterTree<spacedim, Number> &bc_tree)
+  BlockClusterTree<spacedim, real_type> &bc_tree)
 {
   /**
    * Split the block cluster \f$b\f$ in \f$T_{\rm ind}\f$.
@@ -26108,7 +28660,7 @@ HMatrix<spacedim, Number>::h_h_mmult_horizontal_split(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::h_h_mmult_vertical_split(
-  BlockClusterTree<spacedim, Number> &bc_tree)
+  BlockClusterTree<spacedim, real_type> &bc_tree)
 {
   /**
    * Split the block cluster \f$b\f$ in \f$T_{\rm ind}\f$.
@@ -26216,7 +28768,7 @@ HMatrix<spacedim, Number>::h_h_mmult_vertical_split(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::h_h_mmult_cross_split(
-  BlockClusterTree<spacedim, Number> &bc_tree)
+  BlockClusterTree<spacedim, real_type> &bc_tree)
 {
   /**
    * Split the block cluster \f$b\f$ in \f$T_{\rm ind}\f$.
@@ -26396,12 +28948,12 @@ HMatrix<spacedim, Number>::h_h_mmult_cross_split(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::mmult(
-  HMatrix<spacedim, Number>                &C,
-  HMatrix<spacedim, Number>                &B,
-  const BlockClusterTree<spacedim, Number> &bct_a,
-  const BlockClusterTree<spacedim, Number> &bct_b,
-  BlockClusterTree<spacedim, Number>       &bct_c,
-  const unsigned int                        fixed_rank)
+  HMatrix<spacedim, Number>                   &C,
+  HMatrix<spacedim, Number>                   &B,
+  const BlockClusterTree<spacedim, real_type> &bct_a,
+  const BlockClusterTree<spacedim, real_type> &bct_b,
+  BlockClusterTree<spacedim, real_type>       &bct_c,
+  const unsigned int                           fixed_rank)
 {
   /**
    * <dl class="section">
@@ -26419,7 +28971,7 @@ HMatrix<spacedim, Number>::mmult(
    * <li>Initialize the induced block cluster tree \f$T_{\rm ind}\f$ for the
    * result matrix with a single root node.
    */
-  C.Tind = BlockClusterTree<spacedim, Number>(
+  C.Tind = BlockClusterTree<spacedim, real_type>(
     bct_a.get_root()->get_data_reference().get_tau_node(),
     bct_b.get_root()->get_data_reference().get_sigma_node(),
     bct_c.get_n_min());
@@ -26487,13 +29039,13 @@ HMatrix<spacedim, Number>::mmult(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::mmult(
-  HMatrix<spacedim, Number>                &C,
-  HMatrix<spacedim, Number>                &B,
-  const BlockClusterTree<spacedim, Number> &bct_a,
-  const BlockClusterTree<spacedim, Number> &bct_b,
-  BlockClusterTree<spacedim, Number>       &bct_c,
-  const unsigned int                        fixed_rank,
-  const bool                                adding)
+  HMatrix<spacedim, Number>                   &C,
+  HMatrix<spacedim, Number>                   &B,
+  const BlockClusterTree<spacedim, real_type> &bct_a,
+  const BlockClusterTree<spacedim, real_type> &bct_b,
+  BlockClusterTree<spacedim, real_type>       &bct_c,
+  const unsigned int                           fixed_rank,
+  const bool                                   adding)
 {
   if (adding)
     {
@@ -26818,13 +29370,15 @@ HMatrix<spacedim, Number>::add(
   if (is_result_matrix_store_tril_only)
     {
       /**
-       * When the result matrix is expected to be symmetric or lower
-       * triangular, we perform assertions about its property and block type.
+       * When the result matrix is expected to be symmetric, Hermite symmetric
+       * or lower triangular, we perform assertions about its property and block
+       * type.
        */
-      Assert(this->property == HMatrixSupport::symmetric ||
-               this->property == HMatrixSupport::lower_triangular,
+      Assert(this->property == HMatrixSupport::Property::symmetric ||
+               this->property == HMatrixSupport::Property::hermite_symmetric ||
+               this->property == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(this->property));
-      Assert(this->block_type == HMatrixSupport::diagonal_block,
+      Assert(this->block_type == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(this->block_type));
     }
 
@@ -26847,16 +29401,19 @@ HMatrix<spacedim, Number>::add(
               for (size_type i = 0; i < submatrices.size(); i++)
                 {
                   if (submatrices[i]->block_type !=
-                      HMatrixSupport::upper_triangular_block)
+                      HMatrixSupport::BlockType::upper_triangular_block)
                     {
-                      submatrices[i]->add(B,
-                                          B_row_index_range,
-                                          B_col_index_range,
-                                          fixed_rank_k,
-                                          submatrices[i]->property ==
-                                              HMatrixSupport::symmetric ||
-                                            submatrices[i]->property ==
-                                              HMatrixSupport::lower_triangular);
+                      submatrices[i]->add(
+                        B,
+                        B_row_index_range,
+                        B_col_index_range,
+                        fixed_rank_k,
+                        submatrices[i]->property ==
+                            HMatrixSupport::Property::symmetric ||
+                          submatrices[i]->property ==
+                            HMatrixSupport::Property::hermite_symmetric ||
+                          submatrices[i]->property ==
+                            HMatrixSupport::Property::lower_triangular);
                     }
                 }
             }
@@ -26954,10 +29511,10 @@ HMatrix<spacedim, Number>::add_for_parallel_lu_or_cholesky(
        * When the result matrix is expected to be symmetric or lower
        * triangular, we perform assertions about its property and block type.
        */
-      Assert(this->property == HMatrixSupport::symmetric ||
-               this->property == HMatrixSupport::lower_triangular,
+      Assert(this->property == HMatrixSupport::Property::symmetric ||
+               this->property == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(this->property));
-      Assert(this->block_type == HMatrixSupport::diagonal_block,
+      Assert(this->block_type == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(this->block_type));
     }
 
@@ -26980,7 +29537,7 @@ HMatrix<spacedim, Number>::add_for_parallel_lu_or_cholesky(
               for (size_type i = 0; i < submatrices.size(); i++)
                 {
                   if (submatrices[i]->block_type !=
-                      HMatrixSupport::upper_triangular_block)
+                      HMatrixSupport::BlockType::upper_triangular_block)
                     {
                       /**
                        * 2024-01-13 N.B. The current submatrix @p submatrices[i]
@@ -26993,9 +29550,10 @@ HMatrix<spacedim, Number>::add_for_parallel_lu_or_cholesky(
                         B_row_index_range,
                         B_col_index_range,
                         fixed_rank_k,
-                        submatrices[i]->property == HMatrixSupport::symmetric ||
+                        submatrices[i]->property ==
+                            HMatrixSupport::Property::symmetric ||
                           submatrices[i]->property ==
-                            HMatrixSupport::lower_triangular);
+                            HMatrixSupport::Property::lower_triangular);
                     }
                 }
             }
@@ -27137,10 +29695,11 @@ HMatrix<spacedim, Number>::add(
        * When the result matrix is expected to be symmetric or lower
        * triangular, we perform assertions about its property and block type.
        */
-      Assert(this->property == HMatrixSupport::symmetric ||
-               this->property == HMatrixSupport::lower_triangular,
+      Assert(this->property == HMatrixSupport::Property::symmetric ||
+               this->property == HMatrixSupport::Property::hermite_symmetric ||
+               this->property == HMatrixSupport::Property::lower_triangular,
              ExcInvalidHMatrixProperty(this->property));
-      Assert(this->block_type == HMatrixSupport::diagonal_block,
+      Assert(this->block_type == HMatrixSupport::BlockType::diagonal_block,
              ExcInvalidHMatrixBlockType(this->block_type));
     }
 
@@ -27158,17 +29717,20 @@ HMatrix<spacedim, Number>::add(
               for (size_type i = 0; i < submatrices.size(); i++)
                 {
                   if (submatrices[i]->block_type !=
-                      HMatrixSupport::upper_triangular_block)
+                      HMatrixSupport::BlockType::upper_triangular_block)
                     {
-                      submatrices[i]->add(b,
-                                          B,
-                                          B_row_index_range,
-                                          B_col_index_range,
-                                          fixed_rank_k,
-                                          submatrices[i]->property ==
-                                              HMatrixSupport::symmetric ||
-                                            submatrices[i]->property ==
-                                              HMatrixSupport::lower_triangular);
+                      submatrices[i]->add(
+                        b,
+                        B,
+                        B_row_index_range,
+                        B_col_index_range,
+                        fixed_rank_k,
+                        submatrices[i]->property ==
+                            HMatrixSupport::Property::symmetric ||
+                          submatrices[i]->property ==
+                            HMatrixSupport::Property::hermite_symmetric ||
+                          submatrices[i]->property ==
+                            HMatrixSupport::Property::lower_triangular);
                     }
                 }
             }
@@ -30792,18 +33354,19 @@ HMatrix<spacedim, Number>::_compute_cholesky_factorization(
   HMatrix<spacedim, Number> &L,
   const unsigned int         fixed_rank) const
 {
-  Assert(this->state == HMatrixSupport::matrix,
+  Assert(this->state == HMatrixSupport::State::matrix,
          ExcInvalidHMatrixState(this->state));
-  Assert(this->property == HMatrixSupport::symmetric,
+  Assert(this->property == HMatrixSupport::Property::symmetric,
          ExcInvalidHMatrixProperty(this->property));
-  Assert(this->block_type == HMatrixSupport::diagonal_block,
+  Assert(this->block_type == HMatrixSupport::BlockType::diagonal_block,
          ExcInvalidHMatrixBlockType(this->block_type));
 
-  Assert(L.state == HMatrixSupport::matrix, ExcInvalidHMatrixState(L.state));
-  Assert(L.property == HMatrixSupport::lower_triangular ||
-           L.property == HMatrixSupport::symmetric,
+  Assert(L.state == HMatrixSupport::State::matrix,
+         ExcInvalidHMatrixState(L.state));
+  Assert(L.property == HMatrixSupport::Property::lower_triangular ||
+           L.property == HMatrixSupport::Property::symmetric,
          ExcInvalidHMatrixProperty(L.property));
-  Assert(L.block_type == HMatrixSupport::diagonal_block,
+  Assert(L.block_type == HMatrixSupport::BlockType::diagonal_block,
          ExcInvalidHMatrixBlockType(L.block_type));
 
   if (type != HierarchicalMatrixType)
@@ -30832,7 +33395,7 @@ HMatrix<spacedim, Number>::_compute_cholesky_factorization(
        */
       *(L.fullmatrix) = *fullmatrix;
 
-      Assert(L.fullmatrix->get_property() == LAPACKSupport::symmetric,
+      Assert(L.fullmatrix->get_property() == LAPACKSupport::Property::symmetric,
              ExcInvalidLAPACKFullMatrixProperty(L.fullmatrix->get_property()));
 
       /**
@@ -30950,11 +33513,11 @@ void
 HMatrix<spacedim, Number>::_compute_cholesky_factorization(
   const unsigned int fixed_rank)
 {
-  Assert(this->state == HMatrixSupport::matrix,
+  Assert(this->state == HMatrixSupport::State::matrix,
          ExcInvalidHMatrixState(this->state));
-  Assert(this->property == HMatrixSupport::symmetric,
+  Assert(this->property == HMatrixSupport::Property::symmetric,
          ExcInvalidHMatrixProperty(this->property));
-  Assert(this->block_type == HMatrixSupport::diagonal_block,
+  Assert(this->block_type == HMatrixSupport::BlockType::diagonal_block,
          ExcInvalidHMatrixBlockType(this->block_type));
 
   if (type != HierarchicalMatrixType)
@@ -31070,7 +33633,7 @@ HMatrix<spacedim, Number>::compute_cholesky_factorization(
    * @p cholesky and set its property as @p lower_triangular.
    */
   this->set_state(HMatrixSupport::cholesky);
-  this->set_property(HMatrixSupport::lower_triangular);
+  this->set_property(HMatrixSupport::Property::lower_triangular);
 }
 
 
@@ -31764,18 +34327,16 @@ HMatrix<spacedim, Number>::compute_near_field_hmat_vmult_or_Tvmult_task_cost(
         case HMatrixSupport::Property::general: {
           return m * n;
         }
-
-        case HMatrixSupport::Property::symmetric: {
+      case HMatrixSupport::Property::symmetric:
+        case HMatrixSupport::Property::hermite_symmetric: {
           switch (block_type)
             {
                 case HMatrixSupport::BlockType::diagonal_block: {
                   return m * n;
                 }
-
                 case HMatrixSupport::BlockType::lower_triangular_block: {
                   return 2 * m * n;
                 }
-
                 default: {
                   Assert(false, ExcInvalidHMatrixBlockType(block_type));
 
@@ -31783,18 +34344,15 @@ HMatrix<spacedim, Number>::compute_near_field_hmat_vmult_or_Tvmult_task_cost(
                 }
             }
         }
-
         case HMatrixSupport::Property::lower_triangular: {
           switch (block_type)
             {
                 case HMatrixSupport::BlockType::diagonal_block: {
                   return m * n / 2.0;
                 }
-
                 case HMatrixSupport::BlockType::lower_triangular_block: {
                   return m * n;
                 }
-
                 default: {
                   Assert(false, ExcInvalidHMatrixBlockType(block_type));
 
@@ -31802,18 +34360,15 @@ HMatrix<spacedim, Number>::compute_near_field_hmat_vmult_or_Tvmult_task_cost(
                 }
             }
         }
-
         case HMatrixSupport::Property::upper_triangular: {
           switch (block_type)
             {
                 case HMatrixSupport::BlockType::diagonal_block: {
                   return m * n / 2.0;
                 }
-
                 case HMatrixSupport::BlockType::upper_triangular_block: {
                   return m * n;
                 }
-
                 default: {
                   Assert(false, ExcInvalidHMatrixBlockType(block_type));
 
@@ -31821,7 +34376,6 @@ HMatrix<spacedim, Number>::compute_near_field_hmat_vmult_or_Tvmult_task_cost(
                 }
             }
         }
-
         default: {
           Assert(false, ExcInvalidHMatrixProperty(top_hmat_property));
 
@@ -31844,8 +34398,8 @@ HMatrix<spacedim, Number>::compute_far_field_hmat_vmult_or_Tvmult_task_cost(
         case HMatrixSupport::Property::general: {
           return rkmatrix->get_formal_rank() * (m + n);
         }
-
-        case HMatrixSupport::Property::symmetric: {
+      case HMatrixSupport::Property::symmetric:
+        case HMatrixSupport::Property::hermite_symmetric: {
           if (block_type == HMatrixSupport::BlockType::lower_triangular_block)
             {
               return 2 * rkmatrix->get_formal_rank() * (m + n);
@@ -31857,7 +34411,6 @@ HMatrix<spacedim, Number>::compute_far_field_hmat_vmult_or_Tvmult_task_cost(
               return 0;
             }
         }
-
         case HMatrixSupport::Property::lower_triangular: {
           if (block_type == HMatrixSupport::BlockType::lower_triangular_block)
             {
@@ -31870,7 +34423,6 @@ HMatrix<spacedim, Number>::compute_far_field_hmat_vmult_or_Tvmult_task_cost(
               return 0;
             }
         }
-
         case HMatrixSupport::Property::upper_triangular: {
           if (block_type == HMatrixSupport::BlockType::upper_triangular_block)
             {
@@ -31883,7 +34435,6 @@ HMatrix<spacedim, Number>::compute_far_field_hmat_vmult_or_Tvmult_task_cost(
               return 0;
             }
         }
-
         default: {
           Assert(false, ExcInvalidHMatrixProperty(top_hmat_property));
 
@@ -31945,37 +34496,17 @@ HMatrix<spacedim, Number>::compute_near_field_hmat_assembly_task_cost(
         case HMatrixSupport::Property::general: {
           return m * n;
         }
-
-        case HMatrixSupport::Property::symmetric: {
-          switch (block_type)
-            {
-                case HMatrixSupport::BlockType::diagonal_block: {
-                  return m * n / 2.0;
-                }
-
-                case HMatrixSupport::BlockType::lower_triangular_block: {
-                  return m * n;
-                }
-
-                default: {
-                  Assert(false, ExcInvalidHMatrixBlockType(block_type));
-
-                  return 0;
-                }
-            }
-        }
-
+      case HMatrixSupport::Property::symmetric:
+      case HMatrixSupport::Property::hermite_symmetric:
         case HMatrixSupport::Property::lower_triangular: {
           switch (block_type)
             {
                 case HMatrixSupport::BlockType::diagonal_block: {
                   return m * n / 2.0;
                 }
-
                 case HMatrixSupport::BlockType::lower_triangular_block: {
                   return m * n;
                 }
-
                 default: {
                   Assert(false, ExcInvalidHMatrixBlockType(block_type));
 
@@ -31983,18 +34514,15 @@ HMatrix<spacedim, Number>::compute_near_field_hmat_assembly_task_cost(
                 }
             }
         }
-
         case HMatrixSupport::Property::upper_triangular: {
           switch (block_type)
             {
                 case HMatrixSupport::BlockType::diagonal_block: {
                   return m * n / 2.0;
                 }
-
                 case HMatrixSupport::BlockType::upper_triangular_block: {
                   return m * n;
                 }
-
                 default: {
                   Assert(false, ExcInvalidHMatrixBlockType(block_type));
 
@@ -32002,7 +34530,6 @@ HMatrix<spacedim, Number>::compute_near_field_hmat_assembly_task_cost(
                 }
             }
         }
-
         default: {
           Assert(false, ExcInvalidHMatrixProperty(top_hmat_property));
 
@@ -32059,20 +34586,8 @@ HMatrix<spacedim, Number>::compute_far_field_hmat_assembly_task_cost(
               return 0;
             }
         }
-
-        case HMatrixSupport::Property::symmetric: {
-          if (block_type == HMatrixSupport::BlockType::lower_triangular_block)
-            {
-              return rkmatrix->get_formal_rank() * (m + n);
-            }
-          else
-            {
-              Assert(false, ExcInvalidHMatrixBlockType(block_type));
-
-              return 0;
-            }
-        }
-
+      case HMatrixSupport::Property::symmetric:
+      case HMatrixSupport::Property::hermite_symmetric:
         case HMatrixSupport::Property::lower_triangular: {
           if (block_type == HMatrixSupport::BlockType::lower_triangular_block)
             {
@@ -32085,7 +34600,6 @@ HMatrix<spacedim, Number>::compute_far_field_hmat_assembly_task_cost(
               return 0;
             }
         }
-
         case HMatrixSupport::Property::upper_triangular: {
           if (block_type == HMatrixSupport::BlockType::upper_triangular_block)
             {
@@ -32098,7 +34612,6 @@ HMatrix<spacedim, Number>::compute_far_field_hmat_assembly_task_cost(
               return 0;
             }
         }
-
         default: {
           Assert(false, ExcInvalidHMatrixProperty(top_hmat_property));
 
@@ -32567,7 +35080,7 @@ HMatrix<spacedim, Number>::compute_cholesky_factorization_task_parallel(
    * @p cholesky and set its property as @p lower_triangular.
    */
   this->set_state(HMatrixSupport::cholesky);
-  this->set_property(HMatrixSupport::lower_triangular);
+  this->set_property(HMatrixSupport::Property::lower_triangular);
 }
 
 
@@ -32792,8 +35305,8 @@ HMatrix<spacedim, Number>::_invert_by_gauss_elim(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::coarsen_to_subtree(
-  const BlockClusterTree<spacedim, Number> &subtree,
-  const unsigned int                        fixed_rank_k)
+  const BlockClusterTree<spacedim, real_type> &subtree,
+  const unsigned int                           fixed_rank_k)
 {
   coarsen_to_partition(subtree.get_leaf_set(), fixed_rank_k);
   build_leaf_set();
@@ -32805,7 +35318,8 @@ template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::coarsen_to_partition(
   const std::vector<
-    typename BlockClusterTree<spacedim, Number>::node_pointer_type> &partition,
+    typename BlockClusterTree<spacedim, real_type>::node_pointer_type>
+                    &partition,
   const unsigned int fixed_rank_k)
 {
   /**
@@ -32891,6 +35405,7 @@ HMatrix<spacedim, Number>::link_hmat_nodes_on_same_levels()
 
                     break;
                   case HMatrixSupport::Property::symmetric:
+                  case HMatrixSupport::Property::hermite_symmetric:
                   case HMatrixSupport::Property::lower_triangular:
                     if (hmat->block_type ==
                           HMatrixSupport::BlockType::diagonal_block ||
@@ -32989,11 +35504,12 @@ HMatrix<spacedim, Number>::link_hmat_nodes_on_cross_from_diagonal_blocks(
 
       /**
        * Link same level \hmatrix blocks on a same column with respect to the
-       * diagonal block, when the top level \hmatrix is a general, symmetric
-       * or lower triangular matrix.
+       * diagonal block, when the top level \hmatrix is a general, symmetric,
+       * Hermite symmetric or lower triangular matrix.
        */
       if (top_hmat_property == HMatrixSupport::Property::general ||
           top_hmat_property == HMatrixSupport::Property::symmetric ||
+          top_hmat_property == HMatrixSupport::Property::hermite_symmetric ||
           top_hmat_property == HMatrixSupport::Property::lower_triangular)
         {
           /**
@@ -33168,7 +35684,7 @@ HMatrix<spacedim, Number>::get_col_index_range() const
 template <int spacedim, typename Number>
 typename std::vector<HMatrix<spacedim, Number> *>::iterator
 HMatrix<spacedim, Number>::find_block_cluster_in_leaf_set(
-  const BlockCluster<spacedim, Number> &block_cluster)
+  const BlockCluster<spacedim, real_type> &block_cluster)
 {
   typename std::vector<HMatrix<spacedim, Number> *>::iterator iter;
   for (iter = leaf_set.begin(); iter != leaf_set.end(); iter++)
@@ -33201,7 +35717,7 @@ HMatrix<spacedim, Number>::find_block_cluster_in_leaf_set(
 template <int spacedim, typename Number>
 typename std::vector<HMatrix<spacedim, Number> *>::const_iterator
 HMatrix<spacedim, Number>::find_block_cluster_in_leaf_set(
-  const BlockCluster<spacedim, Number> &block_cluster) const
+  const BlockCluster<spacedim, real_type> &block_cluster) const
 {
   for (typename std::vector<HMatrix<spacedim, Number> *>::const_iterator iter =
          leaf_set.cbegin();
@@ -33307,15 +35823,15 @@ HMatrix<spacedim, Number>::refine_to_supertree()
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::convert_between_different_block_cluster_trees(
-  BlockClusterTree<spacedim, Number> &bct1,
-  BlockClusterTree<spacedim, Number> &bct2,
-  const unsigned int                  fixed_rank_k2)
+  BlockClusterTree<spacedim, real_type> &bct1,
+  BlockClusterTree<spacedim, real_type> &bct2,
+  const unsigned int                     fixed_rank_k2)
 {
   /**
    * Make a copy of the leaf set of the target block cluster tree @p bct2,
    * which will be used for the final coarsening.
    */
-  std::vector<typename BlockClusterTree<spacedim, Number>::node_pointer_type>
+  std::vector<typename BlockClusterTree<spacedim, real_type>::node_pointer_type>
     target_leaf_set(bct2.get_leaf_set());
 
   /**

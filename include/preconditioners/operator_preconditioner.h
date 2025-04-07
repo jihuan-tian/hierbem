@@ -72,6 +72,8 @@ template <int dim,
 class OperatorPreconditioner
 {
 public:
+  using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+
   /**
    * Constructor.
    */
@@ -724,12 +726,12 @@ protected:
   /**
    * Cluster tree for the preconditioning \hmat.
    */
-  ClusterTree<spacedim> ct;
+  ClusterTree<spacedim, real_type> ct;
 
   /**
    * Block cluster tree for the preconditioning \hmat.
    */
-  BlockClusterTree<spacedim> bct;
+  BlockClusterTree<spacedim, real_type> bct;
 
   /**
    * The internal-to-external DoF numbering for the primal space on the primal
@@ -1028,10 +1030,10 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
   /**
    * Initialize the cluster tree.
    */
-  ct = ClusterTree<spacedim>(dof_indices_in_dual_space,
-                             support_points_in_dual_space,
-                             dof_average_cell_size_list,
-                             hmat_params.n_min_for_ct);
+  ct = ClusterTree<spacedim, real_type>(dof_indices_in_dual_space,
+                                        support_points_in_dual_space,
+                                        dof_average_cell_size_list,
+                                        hmat_params.n_min_for_ct);
 
   /**
    * Partition the cluster tree.
@@ -1047,10 +1049,10 @@ OperatorPreconditioner<dim, spacedim, KernelFunctionType, RangeNumberType>::
   /**
    * Create the block cluster tree.
    */
-  bct = BlockClusterTree<spacedim>(ct,
-                                   ct,
-                                   hmat_params.eta,
-                                   hmat_params.n_min_for_bct);
+  bct = BlockClusterTree<spacedim, real_type>(ct,
+                                              ct,
+                                              hmat_params.eta,
+                                              hmat_params.n_min_for_bct);
 
   /**
    * Partition the block cluster tree.

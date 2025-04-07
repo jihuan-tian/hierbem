@@ -109,6 +109,7 @@ namespace HMatrixSupport
    * with memory.The matrix blocks in the upper triangular part are zero
    * valued. Their basic matrix information, such as dimension, is still
    * stored but the memory for the data is not allocated.
+   * <li>@p hermite_symmetric
    * </ul>
    */
   enum Property
@@ -120,7 +121,9 @@ namespace HMatrixSupport
     /// Matrix is upper triangular
     upper_triangular = 2,
     /// Matrix is lower triangular
-    lower_triangular = 4
+    lower_triangular = 4,
+    /// Matrix is Hermite symmetric
+    hermite_symmetric = 6
   };
 
 
@@ -140,6 +143,8 @@ namespace HMatrixSupport
           return "upper triangular";
         case Property::lower_triangular:
           return "lower triangular";
+        case Property::hermite_symmetric:
+          return "Hermite symmetric";
       }
 
     Assert(false, ExcNotImplemented());

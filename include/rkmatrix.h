@@ -39,7 +39,9 @@ public:
   /**
    * Declare the type for container size.
    */
-  using size_type = std::make_unsigned<types::blas_int>::type;
+  using size_type  = std::make_unsigned<types::blas_int>::type;
+  using value_type = Number;
+  using real_type  = typename numbers::NumberTraits<Number>::real_type;
 
   // Friend functions for \f$\mathcal{H}\f$-matrix arithmetic operations.
   template <int spacedim1, typename Number1>
@@ -842,6 +844,15 @@ public:
   vmult(Vector<Number>       &y,
         const Vector<Number> &x,
         const bool            adding = false) const;
+
+  /**
+   * Calculate matrix-vector multiplication with the matrix applied complex
+   * conjugation.
+   */
+  void
+  Cvmult(Vector<Number>       &y,
+         const Vector<Number> &x,
+         const bool            adding = false) const;
 
   /**
    * Calculate transposed matrix-vector multiplication.
@@ -2886,6 +2897,38 @@ RkMatrix<Number>::vmult(Vector<Number>       &y,
 
 template <typename Number>
 void
+RkMatrix<Number>::Cvmult(Vector<Number>       &y,
+                         const Vector<Number> &x,
+                         const bool            adding) const
+{
+  if (rank > 0)
+    {
+      if constexpr (numbers::NumberTraits<Number>::is_complex)
+        {
+          Vector<Number> z(formal_rank);
+          B.Tvmult(z, x);
+          A.Cvmult(y, z, adding);
+        }
+      else
+        {
+          this->vmult(y, x, adding);
+        }
+    }
+  else
+    {
+      if (!adding)
+        {
+          /**
+           * The result vector \f$y\f$ will be overwritten by zeros.
+           */
+          y.reinit(y.size());
+        }
+    }
+}
+
+
+template <typename Number>
+void
 RkMatrix<Number>::Tvmult(Vector<Number>       &y,
                          const Vector<Number> &x,
                          const bool            adding) const
@@ -2906,10 +2949,7 @@ RkMatrix<Number>::Tvmult(Vector<Number>       &y,
 
       if constexpr (numbers::NumberTraits<Number>::is_complex)
         {
-          // Make a copy of B and apply complex conjugation.
-          LAPACKFullMatrixExt<Number> B_tmp;
-          B.conjugate(B_tmp);
-          B_tmp.vmult(y, z, adding);
+          B.Cvmult(y, z, adding);
         }
       else
         {

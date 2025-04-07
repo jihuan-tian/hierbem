@@ -21,6 +21,8 @@ template <int spacedim, typename Number = double>
 class HMatrixSymmPreconditioner : public HMatrix<spacedim, Number>
 {
 public:
+  using real_type = typename numbers::NumberTraits<Number>::real_type;
+
   /**
    * Default constructor
    */
@@ -30,7 +32,7 @@ public:
    * Construct the hierarchical structure without data from the root node of a
    * BlockClusterTree.
    */
-  HMatrixSymmPreconditioner(const BlockClusterTree<spacedim, Number> &bct,
+  HMatrixSymmPreconditioner(const BlockClusterTree<spacedim, real_type> &bct,
                             const unsigned int fixed_rank_k = 1);
 
   /**
@@ -38,7 +40,7 @@ public:
    * BlockClusterTree.
    */
   HMatrixSymmPreconditioner(
-    typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
+    typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
                        bc_node,
     const unsigned int fixed_rank_k = 1);
 
@@ -51,8 +53,8 @@ public:
    * as the global full matrix @p M in the \hmatrix hierarchy, its block type
    * is set to @p HMatrixSupport::diagonal_block by default.}
    */
-  HMatrixSymmPreconditioner(const BlockClusterTree<spacedim, Number> &bct,
-                            const LAPACKFullMatrixExt<Number>        &M,
+  HMatrixSymmPreconditioner(const BlockClusterTree<spacedim, real_type> &bct,
+                            const LAPACKFullMatrixExt<Number>           &M,
                             const unsigned int fixed_rank_k);
 
   /**
@@ -66,8 +68,8 @@ public:
    * as the global full matrix @p M in the \hmatrix hierarchy, its block type
    * is set to @p HMatrixSupport::diagonal_block by default.}
    */
-  HMatrixSymmPreconditioner(const BlockClusterTree<spacedim, Number> &bct,
-                            const LAPACKFullMatrixExt<Number>        &M);
+  HMatrixSymmPreconditioner(const BlockClusterTree<spacedim, real_type> &bct,
+                            const LAPACKFullMatrixExt<Number>           &M);
 
   /**
    * Construct from a TreeNode in a BlockClusterTree while copying the data of
@@ -82,7 +84,7 @@ public:
    * is still diagonal and its property should be symmetric.}
    */
   HMatrixSymmPreconditioner(
-    typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
+    typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
                                        bc_node,
     const LAPACKFullMatrixExt<Number> &M,
     const unsigned int                 fixed_rank_k);
@@ -102,7 +104,7 @@ public:
    * is still diagonal and its property should be symmetric.}
    */
   HMatrixSymmPreconditioner(
-    typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
+    typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
                                        bc_node,
     const LAPACKFullMatrixExt<Number> &M);
 
@@ -191,8 +193,8 @@ HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner()
 
 template <int spacedim, typename Number>
 HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
-  const BlockClusterTree<spacedim, Number> &bct,
-  const unsigned int                        fixed_rank_k)
+  const BlockClusterTree<spacedim, real_type> &bct,
+  const unsigned int                           fixed_rank_k)
   : HMatrix<spacedim, Number>(bct,
                               fixed_rank_k,
                               HMatrixSupport::Property::symmetric,
@@ -202,7 +204,8 @@ HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
 
 template <int spacedim, typename Number>
 HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
+  typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
+                     bc_node,
   const unsigned int fixed_rank_k)
   : HMatrix<spacedim, Number>(bc_node,
                               fixed_rank_k,
@@ -213,9 +216,9 @@ HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
 
 template <int spacedim, typename Number>
 HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
-  const BlockClusterTree<spacedim, Number> &bct,
-  const LAPACKFullMatrixExt<Number>        &M,
-  const unsigned int                        fixed_rank_k)
+  const BlockClusterTree<spacedim, real_type> &bct,
+  const LAPACKFullMatrixExt<Number>           &M,
+  const unsigned int                           fixed_rank_k)
   : HMatrix<spacedim, Number>(bct,
                               M,
                               fixed_rank_k,
@@ -228,8 +231,8 @@ HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
 
 template <int spacedim, typename Number>
 HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
-  const BlockClusterTree<spacedim, Number> &bct,
-  const LAPACKFullMatrixExt<Number>        &M)
+  const BlockClusterTree<spacedim, real_type> &bct,
+  const LAPACKFullMatrixExt<Number>           &M)
   : HMatrix<spacedim, Number>(bct, M, HMatrixSupport::BlockType::diagonal_block)
 {
   Assert(M.get_property() == LAPACKSupport::Property::symmetric,
@@ -239,9 +242,10 @@ HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
 
 template <int spacedim, typename Number>
 HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
-  const LAPACKFullMatrixExt<Number>                                   &M,
-  const unsigned int fixed_rank_k)
+  typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
+                                     bc_node,
+  const LAPACKFullMatrixExt<Number> &M,
+  const unsigned int                 fixed_rank_k)
   : HMatrix<spacedim, Number>(bc_node,
                               M,
                               fixed_rank_k,
@@ -255,8 +259,9 @@ HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
 
 template <int spacedim, typename Number>
 HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
-  const LAPACKFullMatrixExt<Number>                                   &M)
+  typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
+                                     bc_node,
+  const LAPACKFullMatrixExt<Number> &M)
   : HMatrix<spacedim, Number>(bc_node,
                               M,
                               HMatrixSupport::Property::symmetric,

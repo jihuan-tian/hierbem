@@ -79,10 +79,8 @@ public:
    */
   using size_type = std::make_unsigned<types::blas_int>::type;
 
-  /**
-   * Declare the type for the underlying scalar value.
-   */
-  using real_type = typename numbers::NumberTraits<Number>::real_type;
+  using value_type = Number;
+  using real_type  = typename numbers::NumberTraits<Number>::real_type;
 
   // Friend function declaration.
   /**
@@ -621,7 +619,7 @@ public:
    * @return
    */
   size_type
-  rank(Number threshold = 0.) const;
+  rank(real_type threshold = 0.) const;
 
   /**
    * Perform QR decomposition of the matrix. The current matrix belongs to
@@ -1066,6 +1064,14 @@ public:
   vmult(Vector<Number>       &w,
         const Vector<Number> &v,
         const bool            adding = false) const;
+
+  /**
+   * Matrix-vector multiplication with the matrix applied complex conjugation.
+   */
+  void
+  Cvmult(Vector<Number>       &w,
+         const Vector<Number> &v,
+         const bool            adding = false) const;
 
   /**
    * Transposed matrix-vector multiplication.
@@ -1589,12 +1595,12 @@ LAPACKFullMatrixExt<Number>::Reshape(const size_type              rows,
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
 LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBH(
-  LAPACKFullMatrixExt<Number>                                    &A,
-  LAPACKFullMatrixExt<Number>                                    &B,
-  LAPACKFullMatrixExt<Number>                                    &U,
-  std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-  LAPACKFullMatrixExt<Number>                                    &VT,
-  typename numbers::NumberTraits<Number>::real_type singular_value_threshold)
+  LAPACKFullMatrixExt<Number> &A,
+  LAPACKFullMatrixExt<Number> &B,
+  LAPACKFullMatrixExt<Number> &U,
+  std::vector<real_type>      &Sigma_r,
+  LAPACKFullMatrixExt<Number> &VT,
+  real_type                    singular_value_threshold)
 {
   /**
    * <dl class="section">
@@ -1824,13 +1830,13 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBH(
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
 LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBH(
-  LAPACKFullMatrixExt<Number>                                    &A,
-  LAPACKFullMatrixExt<Number>                                    &B,
-  LAPACKFullMatrixExt<Number>                                    &U,
-  std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-  LAPACKFullMatrixExt<Number>                                    &VT,
-  size_type                                         truncation_rank,
-  typename numbers::NumberTraits<Number>::real_type singular_value_threshold)
+  LAPACKFullMatrixExt<Number> &A,
+  LAPACKFullMatrixExt<Number> &B,
+  LAPACKFullMatrixExt<Number> &U,
+  std::vector<real_type>      &Sigma_r,
+  LAPACKFullMatrixExt<Number> &VT,
+  size_type                    truncation_rank,
+  real_type                    singular_value_threshold)
 {
   /**
    * In a rank-k matrix, the number of columns in the component matrix \p A
@@ -2067,15 +2073,15 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBH(
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
 LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBH(
-  LAPACKFullMatrixExt<Number>                                    &A,
-  LAPACKFullMatrixExt<Number>                                    &B,
-  LAPACKFullMatrixExt<Number>                                    &U,
-  std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-  LAPACKFullMatrixExt<Number>                                    &VT,
-  LAPACKFullMatrixExt<Number>                                    &C,
-  LAPACKFullMatrixExt<Number>                                    &D,
-  size_type                                         truncation_rank,
-  typename numbers::NumberTraits<Number>::real_type singular_value_threshold)
+  LAPACKFullMatrixExt<Number> &A,
+  LAPACKFullMatrixExt<Number> &B,
+  LAPACKFullMatrixExt<Number> &U,
+  std::vector<real_type>      &Sigma_r,
+  LAPACKFullMatrixExt<Number> &VT,
+  LAPACKFullMatrixExt<Number> &C,
+  LAPACKFullMatrixExt<Number> &D,
+  size_type                    truncation_rank,
+  real_type                    singular_value_threshold)
 {
   /**
    * In a rank-k matrix, the number of columns in the component matrix \p A
@@ -3339,12 +3345,11 @@ LAPACKFullMatrixExt<Number>::svd(
 
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
-LAPACKFullMatrixExt<Number>::reduced_svd(
-  LAPACKFullMatrixExt<Number>                                  &U,
-  std::vector<typename LAPACKFullMatrixExt<Number>::real_type> &Sigma_r,
-  LAPACKFullMatrixExt<Number>                                  &VT,
-  size_type                                                     truncation_rank,
-  typename LAPACKFullMatrixExt<Number>::real_type singular_value_threshold)
+LAPACKFullMatrixExt<Number>::reduced_svd(LAPACKFullMatrixExt<Number> &U,
+                                         std::vector<real_type>      &Sigma_r,
+                                         LAPACKFullMatrixExt<Number> &VT,
+                                         size_type truncation_rank,
+                                         real_type singular_value_threshold)
 {
   const size_type mm      = this->m();
   const size_type nn      = this->n();
@@ -3499,14 +3504,13 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
 
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
-LAPACKFullMatrixExt<Number>::reduced_svd(
-  LAPACKFullMatrixExt<Number>                                  &U,
-  std::vector<typename LAPACKFullMatrixExt<Number>::real_type> &Sigma_r,
-  LAPACKFullMatrixExt<Number>                                  &VT,
-  LAPACKFullMatrixExt<Number>                                  &C,
-  LAPACKFullMatrixExt<Number>                                  &D,
-  size_type                                                     truncation_rank,
-  typename LAPACKFullMatrixExt<Number>::real_type singular_value_threshold)
+LAPACKFullMatrixExt<Number>::reduced_svd(LAPACKFullMatrixExt<Number> &U,
+                                         std::vector<real_type>      &Sigma_r,
+                                         LAPACKFullMatrixExt<Number> &VT,
+                                         LAPACKFullMatrixExt<Number> &C,
+                                         LAPACKFullMatrixExt<Number> &D,
+                                         size_type truncation_rank,
+                                         real_type singular_value_threshold)
 {
   const size_type mm      = this->m();
   const size_type nn      = this->n();
@@ -3822,7 +3826,7 @@ LAPACKFullMatrixExt<Number>::get_lu_permutation() const
 
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
-LAPACKFullMatrixExt<Number>::rank(Number threshold) const
+LAPACKFullMatrixExt<Number>::rank(real_type threshold) const
 {
   size_type rank;
 
@@ -3830,7 +3834,7 @@ LAPACKFullMatrixExt<Number>::rank(Number threshold) const
     {
       LAPACKFullMatrixExt<Number> copy(*this);
       LAPACKFullMatrixExt<Number> U, VT;
-      std::vector<typename numbers::NumberTraits<Number>::real_type> Sigma_r;
+      std::vector<real_type>      Sigma_r;
 
       copy.svd(U, Sigma_r, VT);
 
@@ -4258,6 +4262,8 @@ LAPACKFullMatrixExt<Number>::conjugate()
               break;
             }
             case LAPACKSupport::Property::hermite_symmetric: {
+              // The diagonal elements are real valued, which do not need
+              // conjugation.
               for (size_type j = 0; j < n; j++)
                 for (size_type i = (j + 1); i < m; i++)
                   (*this)(i, j) = std::conj((*this)(i, j));
@@ -5095,6 +5101,25 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number>       &w,
 
           break;
         }
+    }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::Cvmult(Vector<Number>       &w,
+                                    const Vector<Number> &v,
+                                    const bool            adding) const
+{
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
+    {
+      LAPACKFullMatrixExt<Number> mat_conjugate;
+      this->conjugate(mat_conjugate);
+      mat_conjugate.vmult(w, v, adding);
+    }
+  else
+    {
+      this->vmult(w, v, adding);
     }
 }
 
@@ -6710,7 +6735,10 @@ LAPACKFullMatrixExt<Number>::print_formatted_to_mat(
   const double       threshold) const
 {
   out << "# name: " << name << "\n";
-  out << "# type: matrix\n";
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
+    out << "# type: complex matrix\n";
+  else
+    out << "# type: matrix\n";
   out << "# rows: " << this->m() << "\n";
   out << "# columns: " << this->n() << "\n";
 
@@ -6741,10 +6769,20 @@ LAPACKFullMatrixExt<Number>::read_from_mat(std::ifstream     &in,
            * data type is \p matrix.
            */
           std::getline(in, line_buf);
-          AssertThrow(
-            line_buf.compare("# type: matrix") == 0,
-            ExcMessage(
-              "Data type for the matrix to be read should be 'matrix'"));
+          if constexpr (numbers::NumberTraits<Number>::is_complex)
+            {
+              AssertThrow(
+                line_buf.compare("# type: complex matrix") == 0,
+                ExcMessage(
+                  "Data type for the complex valued matrix to be read should be 'complex matrix'"));
+            }
+          else
+            {
+              AssertThrow(
+                line_buf.compare("# type: matrix") == 0,
+                ExcMessage(
+                  "Data type for the real valued matrix to be read should be 'matrix'"));
+            }
 
           /**
            * Read a new line to extract the number of rows.

@@ -1,5 +1,6 @@
 #include <catch2/catch_all.hpp>
 
+#include <complex>
 #include <fstream>
 
 #include "hmatrix/hmatrix.h"
@@ -18,35 +19,44 @@ run_hmatrix_vmult_symm_serial_iterative()
    * Load a symmetric matrix, where only diagonal and lower triangular parts are
    * stored.
    */
-  LAPACKFullMatrixExt<double> M;
-  std::ifstream               in("M.dat");
+  LAPACKFullMatrixExt<double>               M;
+  LAPACKFullMatrixExt<std::complex<double>> M_complex;
+
+  std::ifstream in("M.dat");
   M.read_from_mat(in, "M");
+  M_complex.read_from_mat(in, "M_complex");
   in.close();
+
   REQUIRE(M.size()[0] > 0);
   REQUIRE(M.size()[0] == M.size()[1]);
+  REQUIRE(M_complex.size()[0] > 0);
+  REQUIRE(M_complex.size()[0] == M_complex.size()[1]);
 
   /**
    * Set the property of the full matrix as @p symmetric.
    */
-  M.set_property(LAPACKSupport::symmetric);
+  M.set_property(LAPACKSupport::Property::symmetric);
+  M_complex.set_property(LAPACKSupport::Property::symmetric);
 
   /**
-   * Read the vector \f$x\f$.
+   * Read the vector \f$x\f$ and the initial values of the vector \f$y\f$.
    */
-  Vector<double> x;
+  Vector<double>               x;
+  Vector<std::complex<double>> x_complex;
+  Vector<double>               y;
+  Vector<std::complex<double>> y_complex;
+
   in.open("xy.dat");
   read_vector_from_octave(in, "x", x);
-  in.close();
-  REQUIRE(x.size() == M.size()[1]);
-
-  /**
-   * Read the initial values of the vector \f$y\f$.
-   */
-  Vector<double> y;
-  in.open("xy.dat");
+  read_vector_from_octave(in, "x_complex", x_complex);
   read_vector_from_octave(in, "y0", y);
+  read_vector_from_octave(in, "y0_complex", y_complex);
   in.close();
+
+  REQUIRE(x.size() == M.size()[1]);
+  REQUIRE(x_complex.size() == M_complex.size()[1]);
   REQUIRE(y.size() == M.size()[0]);
+  REQUIRE(y_complex.size() == M_complex.size()[0]);
 
   /**
    * Generate index set.
@@ -63,37 +73,54 @@ run_hmatrix_vmult_symm_serial_iterative()
   /**
    * Generate cluster tree.
    */
-  const unsigned int n_min = 2;
-  ClusterTree<3>     cluster_tree(index_set, n_min);
+  const unsigned int            spacedim = 3;
+  const unsigned int            n_min    = 2;
+  ClusterTree<spacedim, double> cluster_tree(index_set, n_min);
   cluster_tree.partition();
 
   /**
    * Generate block cluster tree with the two component cluster trees being the
    * same.
    */
-  BlockClusterTree<3, double> block_cluster_tree(cluster_tree, cluster_tree);
+  BlockClusterTree<spacedim, double> block_cluster_tree(cluster_tree,
+                                                        cluster_tree);
   block_cluster_tree.partition_fine_non_tensor_product();
 
   /**
-   * Generate the \hmatrix from the symmetric full matrix.
+   * Generate the \hmatrix from the symmetric full matrix. Its property will
+   * automatically be set to @p HMatrixSupport::Property::symmetric.
    */
-  const unsigned int fixed_rank_k = n / 4;
-  HMatrix<3, double>::set_leaf_set_traversal_method(
-    HMatrix<3, double>::SpaceFillingCurveType::Hilbert);
-  HMatrix<3, double> H(block_cluster_tree, M, fixed_rank_k);
+  const unsigned int        fixed_rank_k = n / 4;
+  HMatrix<spacedim, double> H(block_cluster_tree, M, fixed_rank_k);
+  HMatrix<spacedim, std::complex<double>> H_complex(block_cluster_tree,
+                                                    M_complex,
+                                                    fixed_rank_k);
+
+  REQUIRE(H.get_property() == HMatrixSupport::Property::symmetric);
+  REQUIRE(H_complex.get_property() == HMatrixSupport::Property::symmetric);
   REQUIRE(H.get_m() == M.size()[0]);
   REQUIRE(H.get_n() == M.size()[1]);
+  REQUIRE(H_complex.get_m() == M_complex.size()[0]);
+  REQUIRE(H_complex.get_n() == M_complex.size()[1]);
 
   /**
    * Convert the \hmatrix back to full matrix for comparison with the original
    * full matrix.
    */
-  LAPACKFullMatrixExt<double> H_full;
+  LAPACKFullMatrixExt<double>               H_full;
+  LAPACKFullMatrixExt<std::complex<double>> H_full_complex;
+
   H.convertToFullMatrix(H_full);
+  H_complex.convertToFullMatrix(H_full_complex);
+
   REQUIRE(H_full.size()[0] == M.size()[0]);
   REQUIRE(H_full.size()[1] == M.size()[1]);
+  REQUIRE(H_full_complex.size()[0] == M_complex.size()[0]);
+  REQUIRE(H_full_complex.size()[1] == M_complex.size()[1]);
 
   H_full.print_formatted_to_mat(ofs, "H_full", 15, false, 25, "0");
+  H_full_complex.print_formatted_to_mat(
+    ofs, "H_full_complex", 15, false, 45, "0");
 
   /**
    * Perform \hmatrix/vector multiplication.
@@ -101,8 +128,23 @@ run_hmatrix_vmult_symm_serial_iterative()
   H.vmult_serial_iterative(0.3, y, 1.5, x);
   print_vector_to_mat(ofs, "y1_cpp", y);
 
-  H.vmult_serial_iterative(3.7, y, 8.2, x);
-  print_vector_to_mat(ofs, "y2_cpp", y);
+  H_complex.vmult_serial_iterative(0.3, y_complex, 1.5, x_complex);
+  print_vector_to_mat(ofs, "y1_cpp_complex", y_complex);
+  H_complex.vmult_serial_iterative(std::complex<double>(0.3, 0.2),
+                                   y_complex,
+                                   std::complex<double>(1.5, 2.1),
+                                   x_complex);
+  print_vector_to_mat(ofs, "y2_cpp_complex", y_complex);
+  H_complex.vmult_serial_iterative(std::complex<double>(0.3, 0.2),
+                                   y_complex,
+                                   1.5,
+                                   x_complex);
+  print_vector_to_mat(ofs, "y3_cpp_complex", y_complex);
+  H_complex.vmult_serial_iterative(0.3,
+                                   y_complex,
+                                   std::complex<double>(1.5, 2.1),
+                                   x_complex);
+  print_vector_to_mat(ofs, "y4_cpp_complex", y_complex);
 
   ofs.close();
 }

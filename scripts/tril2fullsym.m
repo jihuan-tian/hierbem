@@ -6,6 +6,6 @@ function M_sym = tril2fullsym(L)
   if (m != n)
     error("Matrix row and column dimensions should be the same!");
   else
-    M_sym = L + (L - (eye(n) .* diag(L)))';
+    M_sym = L + transpose(L - (eye(n) .* diag(L)));
   endif
 endfunction

@@ -28,6 +28,8 @@ template <int spacedim, typename Number = double>
 class SubdomainSteklovPoincareHMatrix
 {
 public:
+  using real_type = typename numbers::NumberTraits<Number>::real_type;
+
   template <int dim>
   void
   build_local_to_global_dof_maps_and_inverses(
@@ -68,31 +70,31 @@ public:
   void
   vmult(Vector<Number> &y, const Number alpha, const Vector<Number> &x) const;
 
-  const BlockClusterTree<spacedim, Number> &
+  const BlockClusterTree<spacedim, real_type> &
   get_bct_for_bilinear_form_D() const
   {
     return bct_for_bilinear_form_D;
   }
 
-  const BlockClusterTree<spacedim, Number> &
+  const BlockClusterTree<spacedim, real_type> &
   get_bct_for_bilinear_form_K() const
   {
     return bct_for_bilinear_form_K;
   }
 
-  const BlockClusterTree<spacedim, Number> &
+  const BlockClusterTree<spacedim, real_type> &
   get_bct_for_bilinear_form_V() const
   {
     return bct_for_bilinear_form_V;
   }
 
-  const ClusterTree<spacedim, Number> &
+  const ClusterTree<spacedim, real_type> &
   get_ct_for_subdomain_dirichlet_space() const
   {
     return ct_for_subdomain_dirichlet_space;
   }
 
-  const ClusterTree<spacedim, Number> &
+  const ClusterTree<spacedim, real_type> &
   get_ct_for_subdomain_neumann_space() const
   {
     return ct_for_subdomain_neumann_space;
@@ -134,31 +136,31 @@ public:
     return V_preconditioner;
   }
 
-  BlockClusterTree<spacedim, Number> &
+  BlockClusterTree<spacedim, real_type> &
   get_bct_for_bilinear_form_D()
   {
     return bct_for_bilinear_form_D;
   }
 
-  BlockClusterTree<spacedim, Number> &
+  BlockClusterTree<spacedim, real_type> &
   get_bct_for_bilinear_form_K()
   {
     return bct_for_bilinear_form_K;
   }
 
-  BlockClusterTree<spacedim, Number> &
+  BlockClusterTree<spacedim, real_type> &
   get_bct_for_bilinear_form_V()
   {
     return bct_for_bilinear_form_V;
   }
 
-  ClusterTree<spacedim, Number> &
+  ClusterTree<spacedim, real_type> &
   get_ct_for_subdomain_dirichlet_space()
   {
     return ct_for_subdomain_dirichlet_space;
   }
 
-  ClusterTree<spacedim, Number> &
+  ClusterTree<spacedim, real_type> &
   get_ct_for_subdomain_neumann_space()
   {
     return ct_for_subdomain_neumann_space;
@@ -297,8 +299,8 @@ private:
   std::vector<int> skeleton_to_subdomain_dirichlet_dof_index_map;
   std::vector<int> skeleton_to_subdomain_neumann_dof_index_map;
 
-  ClusterTree<spacedim, Number> ct_for_subdomain_dirichlet_space;
-  ClusterTree<spacedim, Number> ct_for_subdomain_neumann_space;
+  ClusterTree<spacedim, real_type> ct_for_subdomain_dirichlet_space;
+  ClusterTree<spacedim, real_type> ct_for_subdomain_neumann_space;
   const std::vector<types::global_dof_index>
     *dof_e2i_numbering_for_subdomain_dirichlet_space;
   const std::vector<types::global_dof_index>
@@ -307,9 +309,9 @@ private:
     *dof_e2i_numbering_for_subdomain_neumann_space;
   const std::vector<types::global_dof_index>
     *dof_i2e_numbering_for_subdomain_neumann_space;
-  BlockClusterTree<spacedim, Number> bct_for_bilinear_form_D;
-  BlockClusterTree<spacedim, Number> bct_for_bilinear_form_K;
-  BlockClusterTree<spacedim, Number> bct_for_bilinear_form_V;
+  BlockClusterTree<spacedim, real_type> bct_for_bilinear_form_D;
+  BlockClusterTree<spacedim, real_type> bct_for_bilinear_form_K;
+  BlockClusterTree<spacedim, real_type> bct_for_bilinear_form_V;
 };
 
 

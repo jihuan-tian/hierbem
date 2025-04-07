@@ -79,9 +79,21 @@ TEST_CASE("Symmetric H-matrix/vector multiplication", "[hmatrix]")
     REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-14));
 
     out = inst.eval_string("y1_rel_err");
-    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-12));
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-14));
 
     out = inst.eval_string("y2_rel_err");
-    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-12));
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-14));
+
+    out = inst.eval_string("hmat_complex_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-14));
+
+    out = inst.eval_string("y1_complex_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-14));
+
+    out = inst.eval_string("y2_complex_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-14));
+
+    out = inst.eval_string("y3_complex_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-14));
   }
 }

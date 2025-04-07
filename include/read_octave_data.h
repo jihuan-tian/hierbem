@@ -7,6 +7,7 @@
 #ifndef HIERBEM_INCLUDE_READ_OCTAVE_DATA_H_
 #define HIERBEM_INCLUDE_READ_OCTAVE_DATA_H_
 
+#include <deal.II/base/numbers.h>
 
 #include <deal.II/lac/vector.h>
 
@@ -25,6 +26,8 @@ read_matrix_from_octave(std::ifstream     &in,
                         const std::string &name,
                         MatrixType        &matrix)
 {
+  in.seekg(0);
+
   std::string line_buf;
 
   /**
@@ -40,9 +43,21 @@ read_matrix_from_octave(std::ifstream     &in,
            * data type is \p matrix.
            */
           std::getline(in, line_buf);
-          Assert(line_buf.compare("# type: matrix") == 0,
-                 ExcMessage(
-                   "Data type for the matrix to be read should be 'matrix'"));
+          if constexpr (numbers::NumberTraits<
+                          typename MatrixType::value_type>::is_complex)
+            {
+              Assert(
+                line_buf.compare("# type: complex matrix") == 0,
+                ExcMessage(
+                  "Data type for the complex valued matrix to be read should be 'complex matrix'"));
+            }
+          else
+            {
+              Assert(
+                line_buf.compare("# type: matrix") == 0,
+                ExcMessage(
+                  "Data type for the real valued matrix to be read should be 'matrix'"));
+            }
 
           /**
            * Read a new line to extract the number of rows.
@@ -100,6 +115,8 @@ read_vector_from_octave(std::ifstream          &in,
                         const std::string      &name,
                         dealii::Vector<Number> &vec)
 {
+  in.seekg(0);
+
   std::string line_buf;
 
   /**
@@ -115,9 +132,20 @@ read_vector_from_octave(std::ifstream          &in,
            * data type is \p matrix.
            */
           std::getline(in, line_buf);
-          Assert(line_buf.compare("# type: matrix") == 0,
-                 ExcMessage(
-                   "Data type for the matrix to be read should be 'matrix'"));
+          if constexpr (numbers::NumberTraits<Number>::is_complex)
+            {
+              Assert(
+                line_buf.compare("# type: complex matrix") == 0,
+                ExcMessage(
+                  "Data type for the complex valued vector to be read should be 'complex matrix'"));
+            }
+          else
+            {
+              Assert(
+                line_buf.compare("# type: matrix") == 0,
+                ExcMessage(
+                  "Data type for the real valued vector to be read should be 'matrix'"));
+            }
 
           /**
            * Read a new line to extract the number of rows.

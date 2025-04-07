@@ -243,7 +243,13 @@ print_vector_to_mat(std::ostream      &out,
                     const unsigned int width         = 25)
 {
   out << "# name: " << name << "\n";
-  out << "# type: matrix\n";
+
+  if constexpr (numbers::NumberTraits<
+                  typename VectorType::value_type>::is_complex)
+    out << "# type: complex matrix\n";
+  else
+    out << "# type: matrix\n";
+
   if (is_row_vector)
     {
       out << "# rows: 1\n";
@@ -291,7 +297,13 @@ print_matrix_to_mat(std::ostream      &out,
                     const double       threshold   = 0.)
 {
   out << "# name: " << name << "\n";
-  out << "# type: matrix\n";
+
+  if constexpr (numbers::NumberTraits<
+                  typename MatrixType::value_type>::is_complex)
+    out << "# type: complex matrix\n";
+  else
+    out << "# type: matrix\n";
+
   out << "# rows: " << values.m() << "\n";
   out << "# columns: " << values.n() << "\n";
 
@@ -313,7 +325,13 @@ print_sparse_matrix_to_mat(std::ostream      &out,
                            const double       denominator = 1.)
 {
   out << "# name: " << name << "\n";
-  out << "# type: matrix\n";
+
+  if constexpr (numbers::NumberTraits<
+                  typename MatrixType::value_type>::is_complex)
+    out << "# type: complex matrix\n";
+  else
+    out << "# type: matrix\n";
+
   out << "# rows: " << values.m() << "\n";
   out << "# columns: " << values.n() << "\n";
 
@@ -336,7 +354,12 @@ print_2d_table_to_mat(std::ostream      &out,
   const typename TableBase<2, T>::size_type n = values.size(1);
 
   out << "# name: " << name << "\n";
-  out << "# type: matrix\n";
+
+  if constexpr (numbers::NumberTraits<T>::is_complex)
+    out << "# type: complex matrix\n";
+  else
+    out << "# type: matrix\n";
+
   out << "# rows: " << m << "\n";
   out << "# columns: " << n << "\n";
 
@@ -692,17 +715,21 @@ print_qgauss(std::ostream                    &out,
  * @param precision
  * @param width
  */
-template <int dim, typename RangeNumberType = double>
+template <int dim, typename Number = double>
 void
-print_point_vector_to_mat(
-  std::ostream                                   &out,
-  const std::string                              &name,
-  const std::vector<Point<dim, RangeNumberType>> &values,
-  const unsigned int                              precision = 6,
-  const unsigned int                              width     = 10)
+print_point_vector_to_mat(std::ostream                          &out,
+                          const std::string                     &name,
+                          const std::vector<Point<dim, Number>> &values,
+                          const unsigned int                     precision = 6,
+                          const unsigned int                     width     = 10)
 {
   out << "# name: " << name << "\n";
-  out << "# type: matrix\n";
+
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
+    out << "# type: complex matrix\n";
+  else
+    out << "# type: matrix\n";
+
   out << "# rows: " << values.size() << "\n";
   out << "# columns: " << dim << "\n";
 
