@@ -3643,22 +3643,28 @@ public:
                                      const bool is_tvmult) const;
 
   /**
-   * Prepare thread data for (transposed) \hmatrix/vector multiplication.
+   * Prepare thread data for taskparallel \hmatrix/vector multiplication,
+   * including @p vmult , @p Tvmult and @p Hvmult .
    *
-   * This function is called once before multiple calls of @p vmult or
-   * @p Tvmult by an iterative solver.
+   * This function is called once before multiple calls of task parallel
+   * versions of @p vmult , @p Tvmult or @p Hvmult by an iterative solver.
    *
    * The \hmatrix calling this function should be at the top level. When this
-   * \hmatrix is symmetric, both @p is_vmult and @p is_tvmult should be set to
-   * @p true, since each lower triangular matrix block as well as its counterpart
-   * upper triangular matrix block should be multiplied with the vector.
+   * \hmatrix is symmetric or Hermite symmetric, both @p is_vmult and @p is_tvmult
+   * should be set to @p true, since each lower triangular matrix block as well as
+   * its counterpart upper triangular matrix block should be multiplied with the
+   * vector.
    *
-   * When the \hmatrix is not symmetric, @p vmult and @p Tvmult may be
-   * performed consecutively. This scenario appears in the problem with mixed
-   * boundary condition. Then, the two flags should also be set to @p true.
+   * Even though the \hmatrix is not symmetric or Hermite symmetric, @p vmult ,
+   * @p Tvmult or @p Hvmult may be called consecutively by an iterative solver.
+   * This scenario appears in the problem with mixed boundary condition. Then,
+   * the two flags should also be set to @p true .
+   *
+   * For a general \hmatrix, if @p vmult is called, @p is_vmult should be set to @p true .
+   * If @p Tvmult or @p Hvmult is called, @p is_tvmult should be set to @p true .
    *
    * @param is_vmult Flag for enabling @p vmult.
-   * @param is_tvmult Flag for enabling @p Tvmult.
+   * @param is_tvmult Flag for enabling @p Tvmult or @p Hvmult .
    */
   void
   prepare_for_vmult_or_tvmult(const bool is_vmult, const bool is_tvmult);
