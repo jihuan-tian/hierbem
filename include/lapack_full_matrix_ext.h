@@ -29,6 +29,7 @@
 #include "general_exceptions.h"
 #include "generic_functors.h"
 #include "lapack_helpers.h"
+#include "number_traits.h"
 
 HBEM_NS_OPEN
 
@@ -2659,6 +2660,7 @@ LAPACKFullMatrixExt<Number> &
 LAPACKFullMatrixExt<Number>::operator*=(const Number2 factor)
 {
   AssertIsFinite(factor);
+  static_assert(is_number_larger_or_equal<Number, Number2>());
 
   if constexpr (numbers::NumberTraits<Number2>::is_complex)
     {
@@ -2735,6 +2737,7 @@ LAPACKFullMatrixExt<Number> &
 LAPACKFullMatrixExt<Number>::operator/=(const Number2 factor)
 {
   AssertIsFinite(factor);
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   Assert(factor != Number2(0.), ExcZero());
 
   if constexpr (numbers::NumberTraits<Number2>::is_complex)
@@ -4102,6 +4105,7 @@ template <typename Number2>
 void
 LAPACKFullMatrixExt<Number>::scale_rows(const std::vector<Number2> &V)
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   Assert(state == LAPACKSupport::matrix ||
            state == LAPACKSupport::inverse_matrix,
          ExcState(state));
@@ -4126,6 +4130,7 @@ void
 LAPACKFullMatrixExt<Number>::scale_rows(LAPACKFullMatrixExt<Number> &A,
                                         const std::vector<Number2>  &V) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   AssertDimension(this->m(), V.size());
 
   size_type nrows = this->m();
@@ -4148,6 +4153,7 @@ template <typename Number2>
 void
 LAPACKFullMatrixExt<Number>::scale_rows(const Vector<Number2> &V)
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   Assert(state == LAPACKSupport::matrix ||
            state == LAPACKSupport::inverse_matrix,
          ExcState(state));
@@ -4171,6 +4177,7 @@ template <typename Number2>
 void
 LAPACKFullMatrixExt<Number>::scale_columns(const std::vector<Number2> &V)
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   Assert(state == LAPACKSupport::matrix ||
            state == LAPACKSupport::inverse_matrix,
          ExcState(state));
@@ -4195,6 +4202,7 @@ void
 LAPACKFullMatrixExt<Number>::scale_columns(LAPACKFullMatrixExt<Number> &A,
                                            const std::vector<Number2>  &V) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   AssertDimension(this->n(), V.size());
 
   size_type nrows = this->m();
@@ -4217,6 +4225,7 @@ template <typename Number2>
 void
 LAPACKFullMatrixExt<Number>::scale_columns(const Vector<Number2> &V)
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   Assert(state == LAPACKSupport::matrix ||
            state == LAPACKSupport::inverse_matrix,
          ExcState(state));
@@ -4418,6 +4427,7 @@ LAPACKFullMatrixExt<Number>::fill(const MatrixType &src,
                                   const bool        transpose,
                                   const bool        is_adding)
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   AssertIndexRange(src_offset_i, src.m());
   AssertIndexRange(src_offset_j, src.n());
   AssertIndexRange(dst_offset_i, this->m());
@@ -4820,6 +4830,7 @@ LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number>       &C,
                                  const LAPACKFullMatrixExt<Number> &B,
                                  const bool is_result_matrix_symm_apriori) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   AssertDimension(this->m(), B.m());
   AssertDimension(this->n(), B.n());
 
@@ -4910,6 +4921,7 @@ LAPACKFullMatrixExt<Number>::add(const Number2                      b,
                                  const LAPACKFullMatrixExt<Number> &B,
                                  const bool is_result_matrix_store_tril_only)
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   AssertDimension(this->m(), B.m());
   AssertDimension(this->n(), B.n());
 
@@ -4955,6 +4967,7 @@ LAPACKFullMatrixExt<Number>::add(const size_type i,
                                  const size_type j,
                                  const Number2   value)
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   (*this)(i, j) += value;
 }
 
@@ -5380,6 +5393,7 @@ LAPACKFullMatrixExt<Number>::mmult(LAPACKFullMatrixExt<Number>       &C,
                                    const LAPACKFullMatrixExt<Number> &B,
                                    const bool adding) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   AssertDimension(this->n(), B.m());
 
   const size_type nrows = this->m();
@@ -5517,6 +5531,7 @@ LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number>       &C,
                                     const LAPACKFullMatrixExt<Number> &B,
                                     bool adding) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   const types::blas_int mm = this->m();
   const types::blas_int nn = B.m();
   const types::blas_int kk = B.n();
@@ -5729,6 +5744,7 @@ LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number>       &C,
                                     const LAPACKFullMatrixExt<Number> &B,
                                     bool adding) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   const types::blas_int mm = this->n();
   const types::blas_int nn = B.n();
   const types::blas_int kk = B.m();
@@ -5964,6 +5980,7 @@ LAPACKFullMatrixExt<Number>::mHmult(LAPACKFullMatrixExt<Number>       &C,
                                     const LAPACKFullMatrixExt<Number> &B,
                                     bool adding) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   if constexpr (numbers::NumberTraits<Number>::is_complex)
     {
       const types::blas_int mm = this->m();
@@ -6225,6 +6242,7 @@ LAPACKFullMatrixExt<Number>::Hmmult(LAPACKFullMatrixExt<Number>       &C,
                                     const LAPACKFullMatrixExt<Number> &B,
                                     bool adding) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   if constexpr (numbers::NumberTraits<Number>::is_complex)
     {
       const types::blas_int mm = this->n();

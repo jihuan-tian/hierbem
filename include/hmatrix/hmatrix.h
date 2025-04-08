@@ -33,6 +33,7 @@
 #include "generic_functors.h"
 #include "hmatrix/hmatrix_support.h"
 #include "lapack_full_matrix_ext.h"
+#include "number_traits.h"
 #include "rkmatrix.h"
 #include "sequence_partition/sequence_partition.h"
 
@@ -20890,6 +20891,7 @@ HMatrix<spacedim, Number>::vmult(
   const Vector<Number>          &x,
   const HMatrixSupport::Property top_hmat_property) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   switch (type)
     {
         case HierarchicalMatrixType: {
@@ -21878,6 +21880,8 @@ HMatrix<spacedim, Number>::vmult_task_parallel(const Number2         beta,
                                                const Number3         alpha,
                                                const Vector<Number> &x)
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
+  static_assert(is_number_larger_or_equal<Number, Number3>());
   /**
    * The current \hmatrix node should be at the top level.
    */
@@ -22190,6 +22194,8 @@ HMatrix<spacedim, Number>::vmult_serial_iterative(const Number2         beta,
                                                   const Number3         alpha,
                                                   const Vector<Number> &x)
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
+  static_assert(is_number_larger_or_equal<Number, Number3>());
   /**
    * The current \hmatrix node should be at the top level.
    */
@@ -22384,6 +22390,7 @@ HMatrix<spacedim, Number>::vmult(
   const HMatrix<spacedim, Number> &starting_hmat,
   const HMatrixSupport::Property   top_hmat_property) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   switch (type)
     {
         case HierarchicalMatrixType: {
@@ -23437,6 +23444,7 @@ HMatrix<spacedim, Number>::vmult(Vector<Number>       &y,
                                  const Number2         alpha,
                                  const Vector<Number> &x) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   y = Number(0.);
   this->vmult(y, alpha, x, this->property);
 }
@@ -23449,6 +23457,7 @@ HMatrix<spacedim, Number>::vmult_add(Vector<Number>       &y,
                                      const Number2         alpha,
                                      const Vector<Number> &x) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   this->vmult(y, alpha, x, this->property);
 }
 
@@ -23482,6 +23491,7 @@ HMatrix<spacedim, Number>::Tvmult(
   const Vector<Number>          &x,
   const HMatrixSupport::Property top_hmat_property) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   switch (type)
     {
         case HierarchicalMatrixType: {
@@ -24455,6 +24465,8 @@ HMatrix<spacedim, Number>::Tvmult_task_parallel(const Number2         beta,
                                                 const Number3         alpha,
                                                 const Vector<Number> &x)
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
+  static_assert(is_number_larger_or_equal<Number, Number3>());
   /**
    * The current \hmatrix node should be at the top level.
    */
@@ -24711,6 +24723,8 @@ HMatrix<spacedim, Number>::Tvmult_serial_iterative(const Number2         beta,
                                                    const Number3         alpha,
                                                    const Vector<Number> &x)
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
+  static_assert(is_number_larger_or_equal<Number, Number3>());
   /**
    * The current \hmatrix node should be at the top level.
    */
@@ -24854,6 +24868,7 @@ HMatrix<spacedim, Number>::Tvmult(
   const HMatrix<spacedim, Number> &starting_hmat,
   const HMatrixSupport::Property   top_hmat_property) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   switch (type)
     {
         case HierarchicalMatrixType: {
@@ -25894,6 +25909,7 @@ HMatrix<spacedim, Number>::Tvmult(Vector<Number>       &y,
                                   const Number2         alpha,
                                   const Vector<Number> &x) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   y = Number(0.);
   this->Tvmult(y, alpha, x, this->property);
 }
@@ -25906,6 +25922,7 @@ HMatrix<spacedim, Number>::Tvmult_add(Vector<Number>       &y,
                                       const Number2         alpha,
                                       const Vector<Number> &x) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   this->Tvmult(y, alpha, x, this->property);
 }
 
@@ -25930,6 +25947,7 @@ HMatrix<spacedim, Number>::Hvmult(
   const Vector<Number>          &x,
   const HMatrixSupport::Property top_hmat_property) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   if constexpr (numbers::NumberTraits<Number>::is_complex)
     {
       switch (type)
@@ -26956,6 +26974,7 @@ HMatrix<spacedim, Number>::Hvmult(
   const HMatrix<spacedim, Number> &starting_hmat,
   const HMatrixSupport::Property   top_hmat_property) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   if constexpr (numbers::NumberTraits<Number>::is_complex)
     {
       switch (type)
@@ -28037,6 +28056,7 @@ HMatrix<spacedim, Number>::Hvmult(Vector<Number>       &y,
                                   const Number2         alpha,
                                   const Vector<Number> &x) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   y = Number(0.);
   this->Hvmult(y, alpha, x, this->property);
 }
@@ -28049,6 +28069,7 @@ HMatrix<spacedim, Number>::Hvmult_add(Vector<Number>       &y,
                                       const Number2         alpha,
                                       const Vector<Number> &x) const
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   this->Hvmult(y, alpha, x, this->property);
 }
 
@@ -28070,6 +28091,8 @@ HMatrix<spacedim, Number>::Hvmult_task_parallel(const Number2         beta,
                                                 const Number3         alpha,
                                                 const Vector<Number> &x)
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
+  static_assert(is_number_larger_or_equal<Number, Number3>());
   /**
    * The current \hmatrix node should be at the top level.
    */
@@ -28341,6 +28364,8 @@ HMatrix<spacedim, Number>::Hvmult_serial_iterative(const Number2         beta,
                                                    const Number3         alpha,
                                                    const Vector<Number> &x)
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
+  static_assert(is_number_larger_or_equal<Number, Number3>());
   /**
    * The current \hmatrix node should be at the top level.
    */
