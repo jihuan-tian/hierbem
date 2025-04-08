@@ -1,0 +1,64 @@
+=== float, float ===
+>: false
+>=: true
+<: false
+<=: true
+=== double, double ===
+>: false
+>=: true
+<: false
+<=: true
+=== std::complex<float>, std::complex<float> ===
+>: false
+>=: true
+<: false
+<=: true
+=== std::complex<double>, std::complex<double> ===
+>: false
+>=: true
+<: false
+<=: true
+=== float, double ===
+>: false
+>=: false
+<: true
+<=: true
+=== double, float ===
+>: true
+>=: true
+<: false
+<=: false
+=== float, std::complex<float> ===
+>: false
+>=: false
+<: true
+<=: true
+=== std::complex<float>, float ===
+>: true
+>=: true
+<: false
+<=: false
+=== float, std::complex<double> ===
+>: false
+>=: false
+<: true
+<=: true
+=== std::complex<double>, float ===
+>: true
+>=: true
+<: false
+<=: false
+=== double, std::complex<float> ===
+not comparable
+=== std::complex<float>, double ===
+not comparable
+=== double, std::complex<double> ===
+>: false
+>=: false
+<: true
+<=: true
+=== std::complex<double>, double ===
+>: true
+>=: true
+<: false
+<=: false
