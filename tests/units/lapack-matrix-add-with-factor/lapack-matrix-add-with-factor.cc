@@ -8,11 +8,12 @@
  */
 
 #include <catch2/catch_all.hpp>
-#include <julia.h>
 
 #include <cmath>
 #include <complex>
 
+#include "hbem_julia_cpp_compare.h"
+#include "hbem_julia_wrapper.h"
 #include "lapack_full_matrix_ext.h"
 
 using namespace Catch::Matchers;
@@ -36,18 +37,8 @@ matrix_double_add()
   A.add(C, b, B);
   A.add(b, B);
 
-  // Get the result from Julia.
-  jl_array_t *C_jl      = (jl_array_t *)jl_eval_string("C");
-  double     *C_jl_data = (double *)jl_array_data(C_jl);
-  REQUIRE(jl_array_dim(C_jl, 0) == m);
-  REQUIRE(jl_array_dim(C_jl, 1) == n);
-
-  for (size_t j = 0; j < n; j++)
-    for (size_t i = 0; i < m; i++)
-      {
-        REQUIRE(C_jl_data[i + j * m] == Catch::Approx(C(i, j)).epsilon(1e-15));
-        REQUIRE(C_jl_data[i + j * m] == Catch::Approx(A(i, j)).epsilon(1e-15));
-      }
+  compare_with_jl_matrix(C, "C", 1e-15, 1e-15);
+  compare_with_jl_matrix(A, "C", 1e-15, 1e-15);
 }
 
 void
@@ -85,35 +76,18 @@ matrix_complex_add()
   A.add(C, b, B);
   A.add(b, B);
 
-  // Get the result from Julia.
-  jl_array_t           *C_jl      = (jl_array_t *)jl_eval_string("C_complex");
-  std::complex<double> *C_jl_data = (std::complex<double> *)jl_array_data(C_jl);
-  REQUIRE(jl_array_dim(C_jl, 0) == m);
-  REQUIRE(jl_array_dim(C_jl, 1) == n);
-
-  for (size_t j = 0; j < n; j++)
-    for (size_t i = 0; i < m; i++)
-      {
-        REQUIRE(C_jl_data[i + j * m].real() ==
-                Catch::Approx(C(i, j).real()).epsilon(1e-15));
-        REQUIRE(C_jl_data[i + j * m].imag() ==
-                Catch::Approx(C(i, j).imag()).epsilon(1e-15));
-        REQUIRE(C_jl_data[i + j * m].real() ==
-                Catch::Approx(A(i, j).real()).epsilon(1e-15));
-        REQUIRE(C_jl_data[i + j * m].imag() ==
-                Catch::Approx(A(i, j).imag()).epsilon(1e-15));
-      }
+  compare_with_jl_matrix(C, "C_complex", 1e-15, 1e-15);
+  compare_with_jl_matrix(A, "C_complex", 1e-15, 1e-15);
 }
 
 TEST_CASE("Verify matrix addition for LAPACKFullMatrixExt", "[linalg]")
 {
   INFO("*** test start");
-  jl_init();
-  (void)jl_eval_string("include(\"process.jl\")");
+  HBEMJuliaWrapper &inst = HBEMJuliaWrapper::get_instance();
+  inst.source_file("process.jl");
 
   matrix_double_add();
   matrix_complex_add();
 
-  jl_atexit_hook(0);
   INFO("*** test end");
 }

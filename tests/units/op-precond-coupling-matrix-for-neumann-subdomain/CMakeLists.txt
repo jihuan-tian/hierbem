@@ -3,6 +3,8 @@
 set(_target test-op-precond-coupling-matrix-for-neumann-subdomain)
 
 add_executable(${_target} op-precond-coupling-matrix-for-neumann-subdomain.cu)
+target_include_directories(${_target} PUBLIC ${JULIA_DIR}/include/julia)
+target_link_directories(${_target} PUBLIC ${JULIA_DIR}/lib)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})

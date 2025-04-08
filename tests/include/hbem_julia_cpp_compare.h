@@ -27,6 +27,10 @@ HBEM_NS_OPEN
 using namespace Catch::Matchers;
 using namespace dealii;
 
+/**
+ * Compare with a scalar value. N.B. When a complex value is to be compared
+ * with, we should compare with its real and imaginary parts separately.
+ */
 template <typename Number>
 void
 compare_with_jl_scalar(
@@ -42,25 +46,25 @@ compare_with_jl_scalar(
   HBEMJuliaWrapper &inst     = HBEMJuliaWrapper::get_instance();
   HBEMJuliaValue    jl_value = inst.eval_string(jl_value_name);
 
-  if (std::is_same<Number, int>::value)
+  if constexpr (std::is_same<Number, int>::value)
     {
       REQUIRE_THAT(func(value),
                    WithinAbs(func(jl_value.int_value()), abs_error) ||
                      WithinRel(func(jl_value.int_value()), rel_error));
     }
-  else if (std::is_same<Number, unsigned int>::value)
+  else if constexpr (std::is_same<Number, unsigned int>::value)
     {
       REQUIRE_THAT(func(value),
                    WithinAbs(func(jl_value.uint_value()), abs_error) ||
                      WithinRel(func(jl_value.uint_value()), rel_error));
     }
-  else if (std::is_same<Number, float>::value)
+  else if constexpr (std::is_same<Number, float>::value)
     {
       REQUIRE_THAT(func(value),
                    WithinAbs(func(jl_value.float_value()), abs_error) ||
                      WithinRel(func(jl_value.float_value()), rel_error));
     }
-  else if (std::is_same<Number, double>::value)
+  else if constexpr (std::is_same<Number, double>::value)
     {
       REQUIRE_THAT(func(value),
                    WithinAbs(func(jl_value.double_value()), abs_error) ||

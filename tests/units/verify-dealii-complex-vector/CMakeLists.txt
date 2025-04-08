@@ -10,6 +10,7 @@ deal_ii_setup_target(${_target})
 target_link_libraries(
   ${_target}
   generic_tools
+  hbem_julia_wrapper
   boost_program_options
   dl # Lazy way: always link with libdl no matter if CUDA is used or not
   julia
