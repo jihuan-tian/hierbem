@@ -98,35 +98,6 @@ namespace BEMTools
 
 
   /**
-   * Permute a vector by using the given permutation indices to access its
-   * elements.
-   *
-   * The returned vector has the same size as the input vector.
-   *
-   * @param input_vector
-   * @param permutation_indices
-   * @return Permuted vector
-   */
-  template <typename T>
-  std::vector<T>
-  permute_vector(const std::vector<T>            &input_vector,
-                 const std::vector<unsigned int> &permutation_indices)
-  {
-    const unsigned int N = input_vector.size();
-    AssertDimension(N, permutation_indices.size());
-
-    std::vector<T> permuted_vector(N);
-
-    for (unsigned int i = 0; i < N; i++)
-      {
-        permuted_vector[i] = input_vector[permutation_indices[i]];
-      }
-
-    return permuted_vector;
-  }
-
-
-  /**
    * @brief Permute a vector by using the given permutation indices to access
    * its elements.
    *
@@ -378,26 +349,28 @@ namespace BEMTools
    * @return The matrix storing the gradient of each shape function. Its
    * dimension is @p dofs_per_cell*dim.
    */
-  template <int dim, int spacedim>
-  LAPACKFullMatrixExt<double>
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  LAPACKFullMatrixExt<RangeNumberType>
   shape_grad_matrix(const FiniteElement<dim, spacedim> &fe,
                     const std::vector<unsigned int>    &dof_permutation,
                     const Point<dim>                   &p)
   {
-    LAPACKFullMatrixExt<double> shape_grad_matrix(fe.dofs_per_cell, dim);
+    LAPACKFullMatrixExt<RangeNumberType> grad_matrix(fe.dofs_per_cell, dim);
 
     for (unsigned int i = 0; i < fe.dofs_per_cell; i++)
       {
         // The gradient of a shape function as a tensor.
         Tensor<1, dim> shape_grad_tensor = fe.shape_grad(dof_permutation[i], p);
-        // Assign the gradient of the shape function to the matrix.
+        // Assign the gradient of the shape function to the matrix. The value
+        // returned from @p fe.shape_grad has double type, which will be cast
+        // to the result type @p RangeNumberType . It is possible that
+        // @p RangeNumberType is float, when we need a low precision simulation.
         for (unsigned int j = 0; j < dim; j++)
-          {
-            shape_grad_matrix(i, j) = shape_grad_tensor[j];
-          }
+          grad_matrix(i, j) =
+            static_cast<RangeNumberType>(shape_grad_tensor[j]);
       }
 
-    return shape_grad_matrix;
+    return grad_matrix;
   }
 
 
@@ -418,12 +391,13 @@ namespace BEMTools
    * @return The matrix storing the gradient of each shape function. Its
    * dimension is @p dofs_per_cell*dim.
    */
-  template <int dim, int spacedim>
-  LAPACKFullMatrixExt<double>
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  LAPACKFullMatrixExt<RangeNumberType>
   shape_grad_matrix_in_default_dof_order(const FiniteElement<dim, spacedim> &fe,
                                          const Point<dim>                   &p)
   {
-    LAPACKFullMatrixExt<double> shape_grad_matrix(fe.dofs_per_cell, dim);
+    LAPACKFullMatrixExt<RangeNumberType> shape_grad_matrix(fe.dofs_per_cell,
+                                                           dim);
 
     for (unsigned int i = 0; i < fe.dofs_per_cell; i++)
       {
@@ -431,9 +405,8 @@ namespace BEMTools
         Tensor<1, dim> shape_grad_tensor = fe.shape_grad(i, p);
         // Assign the gradient of the shape function to the matrix.
         for (unsigned int j = 0; j < dim; j++)
-          {
-            shape_grad_matrix(i, j) = shape_grad_tensor[j];
-          }
+          shape_grad_matrix(i, j) =
+            static_cast<RangeNumberType>(shape_grad_tensor[j]);
       }
 
     return shape_grad_matrix;
@@ -455,10 +428,10 @@ namespace BEMTools
    * @param p The area coordinates at which the shape function's gradient is
    * to be evaluated.
    * @return The matrix storing the gradient of each shape function. Its
-   * dimension is @p dofs_per_cell*dim.
+   * dimension is @p dofs_per_cell*dim .
    */
-  template <int dim, int spacedim>
-  LAPACKFullMatrixExt<double>
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  LAPACKFullMatrixExt<RangeNumberType>
   shape_grad_matrix_in_lexicographic_order(
     const FiniteElement<dim, spacedim> &fe,
     const Point<dim>                   &p)
@@ -466,7 +439,8 @@ namespace BEMTools
     using FE_Poly_short          = FE_Poly<dim, spacedim>;
     const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
 
-    return shape_grad_matrix(fe, fe_poly.get_poly_space_numbering_inverse(), p);
+    return shape_grad_matrix<dim, spacedim, RangeNumberType>(
+      fe, fe_poly.get_poly_space_numbering_inverse(), p);
   }
 
 
@@ -481,18 +455,17 @@ namespace BEMTools
    * evaluated.
    * @return A list of shape function values.
    */
-  template <int dim, int spacedim>
-  Vector<double>
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  Vector<RangeNumberType>
   shape_values(const FiniteElement<dim, spacedim> &fe,
                const std::vector<unsigned int>    &dof_permutation,
                const Point<dim>                   &p)
   {
-    Vector<double> shape_values_vector(fe.dofs_per_cell);
+    Vector<RangeNumberType> shape_values_vector(fe.dofs_per_cell);
 
     for (unsigned int i = 0; i < fe.dofs_per_cell; i++)
-      {
-        shape_values_vector(i) = fe.shape_value(dof_permutation[i], p);
-      }
+      shape_values_vector(i) =
+        static_cast<RangeNumberType>(fe.shape_value(dof_permutation[i], p));
 
     return shape_values_vector;
   }
@@ -512,17 +485,16 @@ namespace BEMTools
    * evaluated.
    * @return A list of shape function values.
    */
-  template <int dim, int spacedim>
-  Vector<double>
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  Vector<RangeNumberType>
   shape_values_in_default_dof_order(const FiniteElement<dim, spacedim> &fe,
                                     const Point<dim>                   &p)
   {
-    Vector<double> shape_values_vector(fe.dofs_per_cell);
+    Vector<RangeNumberType> shape_values_vector(fe.dofs_per_cell);
 
     for (unsigned int i = 0; i < fe.dofs_per_cell; i++)
-      {
-        shape_values_vector(i) = fe.shape_value(i, p);
-      }
+      shape_values_vector(i) =
+        static_cast<RangeNumberType>(fe.shape_value(i, p));
 
     return shape_values_vector;
   }
@@ -542,8 +514,8 @@ namespace BEMTools
    * evaluated.
    * @return A list of shape function values.
    */
-  template <int dim, int spacedim>
-  Vector<double>
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  Vector<RangeNumberType>
   shape_values_in_lexicographic_order(const FiniteElement<dim, spacedim> &fe,
                                       const Point<dim>                   &p)
   {
@@ -552,7 +524,8 @@ namespace BEMTools
 
     // Use the inverse numbering of polynomial space to restore the tensor
     // product ordering of shape functions.
-    return shape_values(fe, fe_poly.get_poly_space_numbering_inverse(), p);
+    return shape_values<dim, spacedim, RangeNumberType>(
+      fe, fe_poly.get_poly_space_numbering_inverse(), p);
   }
 
 
@@ -570,16 +543,17 @@ namespace BEMTools
    * @return A matrix storing the two coordinate components for all points. It
    * has a dimension @p 2*points.size().
    */
-  template <int spacedim>
-  LAPACKFullMatrixExt<double>
-  collect_two_components_from_point3(const std::vector<Point<spacedim>> &points,
-                                     const unsigned int first_component,
-                                     const unsigned int second_component)
+  template <int spacedim, typename RangeNumberType = double>
+  LAPACKFullMatrixExt<RangeNumberType>
+  collect_two_components_from_point3(
+    const std::vector<Point<spacedim, RangeNumberType>> &points,
+    const unsigned int                                   first_component,
+    const unsigned int                                   second_component)
   {
     Assert(first_component < spacedim, ExcInternalError());
     Assert(second_component < spacedim, ExcInternalError());
 
-    LAPACKFullMatrixExt<double> two_component_coords(2, points.size());
+    LAPACKFullMatrixExt<RangeNumberType> two_component_coords(2, points.size());
 
     for (unsigned int i = 0; i < points.size(); i++)
       {
@@ -607,18 +581,20 @@ namespace BEMTools
    * @return A matrix storing the two coordinate components for all points. It
    * has a dimension @p 2*points.size().
    */
-  template <int spacedim>
-  LAPACKFullMatrixExt<double>
-  collect_two_components_from_point3(const std::vector<Point<spacedim>> &points,
-                                     const unsigned int effective_point_num,
-                                     const unsigned int first_component,
-                                     const unsigned int second_component)
+  template <int spacedim, typename RangeNumberType = double>
+  LAPACKFullMatrixExt<RangeNumberType>
+  collect_two_components_from_point3(
+    const std::vector<Point<spacedim, RangeNumberType>> &points,
+    const unsigned int                                   effective_point_num,
+    const unsigned int                                   first_component,
+    const unsigned int                                   second_component)
   {
     Assert(first_component < spacedim, ExcInternalError());
     Assert(second_component < spacedim, ExcInternalError());
     Assert(effective_point_num <= points.size(), ExcInternalError());
 
-    LAPACKFullMatrixExt<double> two_component_coords(2, effective_point_num);
+    LAPACKFullMatrixExt<RangeNumberType> two_component_coords(
+      2, effective_point_num);
 
     for (unsigned int i = 0; i < effective_point_num; i++)
       {
@@ -653,11 +629,12 @@ namespace BEMTools
    * @param points
    * @return
    */
-  template <int spacedim>
-  LAPACKFullMatrixExt<double>
-  collect_components_from_points(const std::vector<Point<spacedim>> &points)
+  template <int spacedim, typename RangeNumberType = double>
+  LAPACKFullMatrixExt<RangeNumberType>
+  collect_components_from_points(
+    const std::vector<Point<spacedim, RangeNumberType>> &points)
   {
-    LAPACKFullMatrixExt<double> point_coords(spacedim, points.size());
+    LAPACKFullMatrixExt<RangeNumberType> point_coords(spacedim, points.size());
 
     for (unsigned int i = 0; i < points.size(); i++)
       {
@@ -681,12 +658,13 @@ namespace BEMTools
    * @param point_num
    * @return
    */
-  template <int spacedim>
-  LAPACKFullMatrixExt<double>
-  collect_components_from_points(const std::vector<Point<spacedim>> &points,
-                                 const unsigned int                  point_num)
+  template <int spacedim, typename RangeNumberType = double>
+  LAPACKFullMatrixExt<RangeNumberType>
+  collect_components_from_points(
+    const std::vector<Point<spacedim, RangeNumberType>> &points,
+    const unsigned int                                   point_num)
   {
-    LAPACKFullMatrixExt<double> point_coords(spacedim, point_num);
+    LAPACKFullMatrixExt<RangeNumberType> point_coords(spacedim, point_num);
 
     for (unsigned int i = 0; i < point_num; i++)
       {
@@ -3015,18 +2993,19 @@ namespace BEMTools
    * normal vector should be negated.
    * @return Surface Jacobian determinant or surface metric tensor
    */
-  template <int spacedim>
-  double
+  template <int spacedim, typename RangeNumberType = double>
+  RangeNumberType
   surface_jacobian_det_and_normal_vector(
     const unsigned int k3_index,
     const unsigned int quad_no,
-    const Table<3, LAPACKFullMatrixExt<double>>
-                                       &mapping_shape_grad_matrix_table,
-    const unsigned int                  mapping_index,
-    const unsigned int                  mapping_n_shape_functions,
-    const std::vector<Point<spacedim>> &support_points_in_real_cell,
-    Tensor<1, spacedim>                &normal_vector,
-    const bool                          is_normal_vector_negated = false)
+    const Table<3, LAPACKFullMatrixExt<RangeNumberType>>
+                      &mapping_shape_grad_matrix_table,
+    const unsigned int mapping_index,
+    const unsigned int mapping_n_shape_functions,
+    const std::vector<Point<spacedim, RangeNumberType>>
+                                         &support_points_in_real_cell,
+    Tensor<1, spacedim, RangeNumberType> &normal_vector,
+    const bool                            is_normal_vector_negated = false)
   {
     // Currently, only @p spacedim=3 is supported.
     Assert(spacedim == 3, ExcInternalError());
@@ -3037,15 +3016,16 @@ namespace BEMTools
      * dimension of the gradient matrix is the shape function index and the
      * second dimension is coordinate component index in the unit cell.
      */
-    const LAPACKFullMatrixExt<double> &mapping_shape_grad_matrix_at_quad_point =
-      mapping_shape_grad_matrix_table(mapping_index, k3_index, quad_no);
+    const LAPACKFullMatrixExt<RangeNumberType>
+      &mapping_shape_grad_matrix_at_quad_point =
+        mapping_shape_grad_matrix_table(mapping_index, k3_index, quad_no);
 
-    double                      surface_jacobian_det = 0.0;
-    LAPACKFullMatrixExt<double> jacobian_matrix_2x2(2, 2);
-    double                      surface_jacobian_det_components[spacedim];
+    RangeNumberType surface_jacobian_det = RangeNumberType(0.);
+    LAPACKFullMatrixExt<RangeNumberType> jacobian_matrix_2x2(2, 2);
+    RangeNumberType surface_jacobian_det_components[spacedim];
     for (unsigned int i = 0; i < spacedim; i++)
       {
-        LAPACKFullMatrixExt<double> support_point_components =
+        LAPACKFullMatrixExt<RangeNumberType> support_point_components =
           collect_two_components_from_point3(support_points_in_real_cell,
                                              mapping_n_shape_functions,
                                              i,
@@ -3104,16 +3084,17 @@ namespace BEMTools
    * @param support_points_in_real_cell
    * @return
    */
-  template <int spacedim, typename Number>
-  LAPACKFullMatrixExt<Number>
+  template <int spacedim, typename RangeNumberType = double>
+  LAPACKFullMatrixExt<RangeNumberType>
   surface_covariant_transformation(
     const unsigned int k3_index,
     const unsigned int quad_no,
-    const Table<3, LAPACKFullMatrixExt<Number>>
-                                               &mapping_shape_grad_matrix_table,
-    const unsigned int                          mapping_index,
-    const unsigned int                          mapping_n_shape_functions,
-    const std::vector<Point<spacedim, Number>> &support_points_in_real_cell)
+    const Table<3, LAPACKFullMatrixExt<RangeNumberType>>
+                      &mapping_shape_grad_matrix_table,
+    const unsigned int mapping_index,
+    const unsigned int mapping_n_shape_functions,
+    const std::vector<Point<spacedim, RangeNumberType>>
+      &support_points_in_real_cell)
   {
     // Currently, only @p spacedim=3 is supported.
     Assert(spacedim == 3, ExcInternalError());
@@ -3123,35 +3104,36 @@ namespace BEMTools
      * \f$k_3\f$ index and quadrature point, which will then be used for
      * calculating the Jacobian matrix.
      */
-    const LAPACKFullMatrixExt<Number> &mapping_shape_grad_matrix_at_quad_point =
-      mapping_shape_grad_matrix_table(mapping_index, k3_index, quad_no);
+    const LAPACKFullMatrixExt<RangeNumberType>
+      &mapping_shape_grad_matrix_at_quad_point =
+        mapping_shape_grad_matrix_table(mapping_index, k3_index, quad_no);
 
-    LAPACKFullMatrixExt<Number> support_point_components =
+    LAPACKFullMatrixExt<RangeNumberType> support_point_components =
       collect_components_from_points(support_points_in_real_cell,
                                      mapping_n_shape_functions);
 
     const unsigned int dim = mapping_shape_grad_matrix_at_quad_point.n();
     AssertDimension(dim, 2);
 
-    LAPACKFullMatrixExt<Number> jacobian_matrix(spacedim, dim);
+    LAPACKFullMatrixExt<RangeNumberType> jacobian_matrix(spacedim, dim);
     support_point_components.mmult(jacobian_matrix,
                                    mapping_shape_grad_matrix_at_quad_point);
 
     /**
      * Metric tensor
      */
-    LAPACKFullMatrixExt<Number> G(dim, dim);
+    LAPACKFullMatrixExt<RangeNumberType> G(dim, dim);
     /**
      * Inverse of the metric tensor
      */
-    LAPACKFullMatrixExt<Number> G_inv(dim, dim);
+    LAPACKFullMatrixExt<RangeNumberType> G_inv(dim, dim);
     /**
      * \f$G=J^T J\f$
      */
     jacobian_matrix.Tmmult(G, jacobian_matrix);
     G_inv.invert(G);
 
-    LAPACKFullMatrixExt<Number> covariant(spacedim, dim);
+    LAPACKFullMatrixExt<RangeNumberType> covariant(spacedim, dim);
     jacobian_matrix.mmult(covariant, G_inv);
 
     return covariant;
@@ -3172,14 +3154,15 @@ namespace BEMTools
    * dimension @p spacedim.
    */
   template <int spacedim, typename RangeNumberType = double>
-  Point<spacedim>
+  Point<spacedim, RangeNumberType>
   transform_quad_point_from_unit_to_permuted_real_cell(
-    const unsigned int                  k3_index,
-    const unsigned int                  quad_no,
-    const Table<4, RangeNumberType>    &mapping_shape_value_table,
-    const unsigned int                  mapping_index,
-    const unsigned int                  mapping_n_shape_functions,
-    const std::vector<Point<spacedim>> &mapping_support_points_in_real_cell)
+    const unsigned int               k3_index,
+    const unsigned int               quad_no,
+    const Table<4, RangeNumberType> &mapping_shape_value_table,
+    const unsigned int               mapping_index,
+    const unsigned int               mapping_n_shape_functions,
+    const std::vector<Point<spacedim, RangeNumberType>>
+      &mapping_support_points_in_real_cell)
   {
     // @p mapping_n_shape_functions is the number of shape functions in the
     // actual mapping object, while the vector @p mapping_support_points_in_real_cell
@@ -3189,7 +3172,7 @@ namespace BEMTools
              mapping_support_points_in_real_cell.size(),
            ExcInternalError());
 
-    Point<spacedim> real_coords;
+    Point<spacedim, RangeNumberType> real_coords;
 
     /**
      * Linear combination of support point coordinates and evaluation of

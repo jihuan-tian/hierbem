@@ -156,7 +156,7 @@ main(int argc, char *argv[])
   FE_DGQ<dim, spacedim>     fe(0);
   DoFHandler<dim, spacedim> dof_handler(tria);
 
-  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim>
+  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim, double>
     single_layer_kernel;
 
   TableHandler table;
@@ -226,10 +226,10 @@ main(int argc, char *argv[])
       table.add_value("Memory", bct.memory_consumption());
 
       // Create a symmetric H-matrix with respect to the block cluster tree.
-      HMatrix<spacedim> V(bct,
-                          opts.max_rank,
-                          HMatrixSupport::Property::symmetric,
-                          HMatrixSupport::BlockType::diagonal_block);
+      HMatrix<spacedim, double> V(bct,
+                                  opts.max_rank,
+                                  HMatrixSupport::Property::symmetric,
+                                  HMatrixSupport::BlockType::diagonal_block);
 
       // Assemble the H-matrix using ACA.
       fill_hmatrix_with_aca_plus_smp(
@@ -237,7 +237,7 @@ main(int argc, char *argv[])
         V,
         ACAConfig(opts.max_rank, opts.epsilon, opts.eta),
         single_layer_kernel,
-        1.0,
+        static_cast<double>(1.0),
         dof_to_cell_topo,
         dof_to_cell_topo,
         SauterQuadratureRule<dim>(5, 4, 4, 3),

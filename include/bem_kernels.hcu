@@ -8,6 +8,7 @@
 #ifndef HIERBEM_INCLUDE_BEM_KERNELS_H_
 #define HIERBEM_INCLUDE_BEM_KERNELS_H_
 
+#include <deal.II/base/numbers.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/subscriptor.h>
 #include <deal.II/base/table.h>
@@ -27,6 +28,7 @@
 #include <deal.II/grid/tria.h>
 
 #include <assert.h>
+#include <number_traits.h>
 
 #include <algorithm>
 #include <array>
@@ -64,12 +66,13 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType = double>
   class KernelPulledbackToUnitCell
   {
   public:
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
     const unsigned int n_components;
 
     /**
@@ -134,9 +137,9 @@ namespace CUDAWrappers
      * @return
      */
     HBEM_ATTR_HOST RangeNumberType
-    value(const unsigned int                               k3_index,
-          const unsigned int                               quad_no,
-          const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    value(const unsigned int                         k3_index,
+          const unsigned int                         quad_no,
+          const BEMValues<dim, spacedim, real_type> &bem_values,
           const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
                             &scratch_data,
           const unsigned int component = 0) const;
@@ -150,9 +153,9 @@ namespace CUDAWrappers
      * @return
      */
     HBEM_ATTR_DEV RangeNumberType
-    value(const unsigned int                                   k3_index,
-          const unsigned int                                   quad_no,
-          const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    value(const unsigned int                             k3_index,
+          const unsigned int                             quad_no,
+          const CUDABEMValues<dim, spacedim, real_type> &bem_values,
           const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                             &scratch_data,
           const unsigned int component = 0) const;
@@ -177,8 +180,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV
   KernelPulledbackToUnitCell<dim,
@@ -200,8 +202,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV
     KernelPulledbackToUnitCell<dim,
@@ -213,8 +214,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV KernelPulledbackToUnitCell<dim,
                                                           spacedim,
@@ -239,8 +239,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV void
   KernelPulledbackToUnitCell<
@@ -255,8 +254,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV void
   KernelPulledbackToUnitCell<
@@ -271,17 +269,16 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType>
   HBEM_ATTR_HOST RangeNumberType
   KernelPulledbackToUnitCell<dim,
                              spacedim,
                              KernelFunctionType,
                              RangeNumberType>::
-    value(const unsigned int                               k3_index,
-          const unsigned int                               quad_no,
-          const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    value(const unsigned int                         k3_index,
+          const unsigned int                         quad_no,
+          const BEMValues<dim, spacedim, real_type> &bem_values,
           const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
                             &scratch_data,
           const unsigned int component) const
@@ -296,12 +293,12 @@ namespace CUDAWrappers
      * be updated,
      * hence they are members of @p BEMValues instead of @p ScratchData.
      */
-    const Table<3, RangeNumberType> *kx_shape_value_table = nullptr;
-    const Table<3, RangeNumberType> *ky_shape_value_table = nullptr;
-    const Table<2, LAPACKFullMatrixExt<RangeNumberType>>
-      *kx_shape_grad_matrix_table = nullptr;
-    const Table<2, LAPACKFullMatrixExt<RangeNumberType>>
-      *ky_shape_grad_matrix_table = nullptr;
+    const Table<3, real_type> *kx_shape_value_table = nullptr;
+    const Table<3, real_type> *ky_shape_value_table = nullptr;
+    const Table<2, LAPACKFullMatrixExt<real_type>> *kx_shape_grad_matrix_table =
+      nullptr;
+    const Table<2, LAPACKFullMatrixExt<real_type>> *ky_shape_grad_matrix_table =
+      nullptr;
 
     /**
      * N.B. The covariant transformation matrix data tables are related to the
@@ -313,15 +310,15 @@ namespace CUDAWrappers
      * updated when coming to a new cell. Hence, they are members of
      * @p ScratchData instead of @p BEMValues.
      */
-    const Table<2, LAPACKFullMatrixExt<RangeNumberType>> *kx_covariants_table =
+    const Table<2, LAPACKFullMatrixExt<real_type>> *kx_covariants_table =
       nullptr;
-    const Table<2, LAPACKFullMatrixExt<RangeNumberType>> *ky_covariants_table =
+    const Table<2, LAPACKFullMatrixExt<real_type>> *ky_covariants_table =
       nullptr;
 
-    Point<spacedim>                      x, y;
-    RangeNumberType                      Jx = 0;
-    RangeNumberType                      Jy = 0;
-    Tensor<1, spacedim, RangeNumberType> nx, ny;
+    Point<spacedim, real_type>     x, y;
+    real_type                      Jx = 0;
+    real_type                      Jy = 0;
+    Tensor<1, spacedim, real_type> nx, ny;
 
     /**
      * Select data tables according to the cell neighboring type.
@@ -474,8 +471,8 @@ namespace CUDAWrappers
          * current quadrature point in the unit cell for \f$K_x\f$ as well as
          * \f$K_y\f$.
          */
-        Vector<RangeNumberType> kx_shape_grad_in_unit_cell(dim);
-        Vector<RangeNumberType> ky_shape_grad_in_unit_cell(dim);
+        Vector<real_type> kx_shape_grad_in_unit_cell(dim);
+        Vector<real_type> ky_shape_grad_in_unit_cell(dim);
 
         for (unsigned int i = 0; i < dim; i++)
           {
@@ -489,8 +486,8 @@ namespace CUDAWrappers
          * Apply covariant transformation to the gradient tensors in the unit
          * cell.
          */
-        Vector<RangeNumberType> kx_shape_grad_in_real_cell(spacedim);
-        Vector<RangeNumberType> ky_shape_grad_in_real_cell(spacedim);
+        Vector<real_type> kx_shape_grad_in_real_cell(spacedim);
+        Vector<real_type> ky_shape_grad_in_real_cell(spacedim);
         (*kx_covariants_table)(k3_index, quad_no)
           .vmult(kx_shape_grad_in_real_cell, kx_shape_grad_in_unit_cell);
         (*ky_covariants_table)(k3_index, quad_no)
@@ -504,15 +501,15 @@ namespace CUDAWrappers
          * \mynote{The cross product operation requires the input vectors be
          * transformed to tensors.}
          */
-        Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+        Tensor<1, spacedim, real_type> kx_shape_surface_curl =
           dealii::cross_product_3d(
             nx,
-            VectorToTensor<spacedim, RangeNumberType, Vector<RangeNumberType>>(
+            VectorToTensor<spacedim, real_type, Vector<real_type>>(
               kx_shape_grad_in_real_cell));
-        Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+        Tensor<1, spacedim, real_type> ky_shape_surface_curl =
           dealii::cross_product_3d(
             ny,
-            VectorToTensor<spacedim, RangeNumberType, Vector<RangeNumberType>>(
+            VectorToTensor<spacedim, real_type, Vector<real_type>>(
               ky_shape_grad_in_real_cell));
 
         return kernel_function.value(x, y, nx, ny, component) * Jx * Jy *
@@ -535,17 +532,16 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType>
   HBEM_ATTR_DEV RangeNumberType
   KernelPulledbackToUnitCell<dim,
                              spacedim,
                              KernelFunctionType,
                              RangeNumberType>::
-    value(const unsigned int                                   k3_index,
-          const unsigned int                                   quad_no,
-          const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    value(const unsigned int                             k3_index,
+          const unsigned int                             quad_no,
+          const CUDABEMValues<dim, spacedim, real_type> &bem_values,
           const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                             &scratch_data,
           const unsigned int component) const
@@ -558,10 +554,10 @@ namespace CUDAWrappers
      * be updated,
      * hence they are members of @p BEMValues instead of @p ScratchData.
      */
-    const CUDATable<3, RangeNumberType> *kx_shape_value_table       = nullptr;
-    const CUDATable<3, RangeNumberType> *ky_shape_value_table       = nullptr;
-    const CUDATable<4, RangeNumberType> *kx_shape_grad_matrix_table = nullptr;
-    const CUDATable<4, RangeNumberType> *ky_shape_grad_matrix_table = nullptr;
+    const CUDATable<3, real_type> *kx_shape_value_table       = nullptr;
+    const CUDATable<3, real_type> *ky_shape_value_table       = nullptr;
+    const CUDATable<4, real_type> *kx_shape_grad_matrix_table = nullptr;
+    const CUDATable<4, real_type> *ky_shape_grad_matrix_table = nullptr;
 
     /**
      * N.B. The covariant transformation matrix data tables are related to the
@@ -573,13 +569,13 @@ namespace CUDAWrappers
      * updated when coming to a new cell. Hence, they are members of
      * @p ScratchData instead of @p BEMValues.
      */
-    const CUDATable<4, RangeNumberType> *kx_covariants_table = nullptr;
-    const CUDATable<4, RangeNumberType> *ky_covariants_table = nullptr;
+    const CUDATable<4, real_type> *kx_covariants_table = nullptr;
+    const CUDATable<4, real_type> *ky_covariants_table = nullptr;
 
-    Point<spacedim>                      x, y;
-    RangeNumberType                      Jx = 0;
-    RangeNumberType                      Jy = 0;
-    Tensor<1, spacedim, RangeNumberType> nx, ny;
+    Point<spacedim, real_type>     x, y;
+    real_type                      Jx = 0;
+    real_type                      Jy = 0;
+    Tensor<1, spacedim, real_type> nx, ny;
 
     /**
      * Select data tables according to the cell neighboring type.
@@ -730,11 +726,11 @@ namespace CUDAWrappers
          * current quadrature point in the unit cell for \f$K_x\f$ as well as
          * \f$K_y\f$.
          */
-        RangeNumberType             kx_shape_grad_in_unit_cell[dim];
-        RangeNumberType             ky_shape_grad_in_unit_cell[dim];
-        CUDAVector<RangeNumberType> kx_shape_grad_in_unit_cell_vector(
+        real_type             kx_shape_grad_in_unit_cell[dim];
+        real_type             ky_shape_grad_in_unit_cell[dim];
+        CUDAVector<real_type> kx_shape_grad_in_unit_cell_vector(
           kx_shape_grad_in_unit_cell, dim);
-        CUDAVector<RangeNumberType> ky_shape_grad_in_unit_cell_vector(
+        CUDAVector<real_type> ky_shape_grad_in_unit_cell_vector(
           ky_shape_grad_in_unit_cell, dim);
 
 #pragma unroll
@@ -750,20 +746,20 @@ namespace CUDAWrappers
          * Apply covariant transformation to the gradient tensors in the unit
          * cell.
          */
-        RangeNumberType             kx_shape_grad_in_real_cell[spacedim];
-        RangeNumberType             ky_shape_grad_in_real_cell[spacedim];
-        CUDAVector<RangeNumberType> kx_shape_grad_in_real_cell_vector(
+        real_type             kx_shape_grad_in_real_cell[spacedim];
+        real_type             ky_shape_grad_in_real_cell[spacedim];
+        CUDAVector<real_type> kx_shape_grad_in_real_cell_vector(
           kx_shape_grad_in_real_cell, spacedim);
-        CUDAVector<RangeNumberType> ky_shape_grad_in_real_cell_vector(
+        CUDAVector<real_type> ky_shape_grad_in_real_cell_vector(
           ky_shape_grad_in_real_cell, spacedim);
 
-        CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
-          const_cast<RangeNumberType *>(
+        CUDAFullMatrix<real_type> kx_covariant_matrix(
+          const_cast<real_type *>(
             &((*kx_covariants_table)(k3_index, quad_no, 0, 0))),
           spacedim,
           dim);
-        CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
-          const_cast<RangeNumberType *>(
+        CUDAFullMatrix<real_type> ky_covariant_matrix(
+          const_cast<real_type *>(
             &((*ky_covariants_table)(k3_index, quad_no, 0, 0))),
           spacedim,
           dim);
@@ -781,9 +777,9 @@ namespace CUDAWrappers
          * \mynote{The cross product operation requires the input vectors be
          * transformed to tensors.}
          */
-        Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+        Tensor<1, spacedim, real_type> kx_shape_surface_curl =
           cross_product_3d(nx, kx_shape_grad_in_real_cell_vector);
-        Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+        Tensor<1, spacedim, real_type> ky_shape_surface_curl =
           cross_product_3d(ny, ky_shape_grad_in_real_cell_vector);
 
         return kernel_function.value(x, y, nx, ny, component) * Jx * Jy *
@@ -810,12 +806,13 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType = double>
   class KernelPulledbackToSauterSpace
   {
   public:
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
     const unsigned int n_components;
 
     /**
@@ -863,8 +860,8 @@ namespace CUDAWrappers
      * @return
      */
     HBEM_ATTR_HOST RangeNumberType
-    value(const unsigned int                               quad_no,
-          const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    value(const unsigned int                         quad_no,
+          const BEMValues<dim, spacedim, real_type> &bem_values,
           const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
                             &scratch_data,
           const unsigned int component = 0) const;
@@ -879,8 +876,8 @@ namespace CUDAWrappers
      * @return
      */
     HBEM_ATTR_DEV RangeNumberType
-    value(const unsigned int                                   quad_no,
-          const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    value(const unsigned int                             quad_no,
+          const CUDABEMValues<dim, spacedim, real_type> &bem_values,
           const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                             &scratch_data,
           const unsigned int component = 0) const;
@@ -896,8 +893,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV
   KernelPulledbackToSauterSpace<dim,
@@ -918,8 +914,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV KernelPulledbackToSauterSpace<
     dim,
@@ -930,8 +925,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV KernelPulledbackToSauterSpace<dim,
                                                              spacedim,
@@ -954,30 +948,29 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType>
   HBEM_ATTR_HOST RangeNumberType
   KernelPulledbackToSauterSpace<dim,
                                 spacedim,
                                 KernelFunctionType,
                                 RangeNumberType>::
-    value(const unsigned int                               quad_no,
-          const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    value(const unsigned int                         quad_no,
+          const BEMValues<dim, spacedim, real_type> &bem_values,
           const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
                             &scratch_data,
           const unsigned int component) const
   {
-    RangeNumberType kernel_value = 0.;
+    RangeNumberType kernel_value = RangeNumberType(0.);
 
     switch (cell_neighboring_type)
       {
           case SamePanel: {
             // Current point in the Sauter's parametric space, at which the
             // pulled back kernel function is to be evaluated.
-            const Point<dim * 2> &p =
+            const Point<dim * 2, real_type> &p =
               bem_values.quad_rule_for_same_panel.point(quad_no);
-            double jacobian_det = p(0) * (1 - p(0)) * (1 - p(0) * p(1));
+            real_type jacobian_det = p(0) * (1 - p(0)) * (1 - p(0) * p(1));
 
             for (unsigned int k3_index = 0; k3_index < 8; k3_index++)
               {
@@ -992,10 +985,10 @@ namespace CUDAWrappers
           case CommonEdge: {
             // Current point in the Sauter's parametric space, at which the
             // pulled back kernel function is to be evaluated.
-            const Point<dim * 2> &p =
+            const Point<dim * 2, real_type> &p =
               bem_values.quad_rule_for_common_edge.point(quad_no);
-            double jacobian_det1 = p(0) * p(0) * (1 - p(0));
-            double jacobian_det2 = p(0) * p(0) * (1 - p(0) * p(1));
+            real_type jacobian_det1 = p(0) * p(0) * (1 - p(0));
+            real_type jacobian_det2 = p(0) * p(0) * (1 - p(0) * p(1));
 
             kernel_value =
               jacobian_det1 *
@@ -1018,9 +1011,9 @@ namespace CUDAWrappers
           case CommonVertex: {
             // Current point in the Sauter's parametric space, at which the
             // pulled back kernel function is to be evaluated.
-            const Point<dim * 2> &p =
+            const Point<dim * 2, real_type> &p =
               bem_values.quad_rule_for_common_vertex.point(quad_no);
-            double jacobian_det = dealii::Utilities::fixed_power<3>(p(0));
+            real_type jacobian_det = dealii::Utilities::fixed_power<3>(p(0));
 
             for (unsigned int k3_index = 0; k3_index < 4; k3_index++)
               {
@@ -1051,21 +1044,20 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType>
   HBEM_ATTR_DEV RangeNumberType
   KernelPulledbackToSauterSpace<dim,
                                 spacedim,
                                 KernelFunctionType,
                                 RangeNumberType>::
-    value(const unsigned int                                   quad_no,
-          const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    value(const unsigned int                             quad_no,
+          const CUDABEMValues<dim, spacedim, real_type> &bem_values,
           const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                             &scratch_data,
           const unsigned int component) const
   {
-    RangeNumberType kernel_value = 0.;
+    RangeNumberType kernel_value = RangeNumberType(0.);
 
     switch (cell_neighboring_type)
       {
@@ -1076,9 +1068,9 @@ namespace CUDAWrappers
              * Sauter's parametric space, at which the pulled back kernel
              * function is to be evaluated.
              */
-            const CUDATable<2, double> &quad_points =
+            const CUDATable<2, real_type> &quad_points =
               bem_values.quad_rule_for_same_panel.get_points();
-            double jacobian_det =
+            real_type jacobian_det =
               quad_points(quad_no, 0) * (1 - quad_points(quad_no, 0)) *
               (1 - quad_points(quad_no, 0) * quad_points(quad_no, 1));
 
@@ -1100,12 +1092,12 @@ namespace CUDAWrappers
              * Sauter's parametric space, at which the pulled back kernel
              * function is to be evaluated.
              */
-            const CUDATable<2, double> &quad_points =
+            const CUDATable<2, real_type> &quad_points =
               bem_values.quad_rule_for_common_edge.get_points();
-            double jacobian_det1 = quad_points(quad_no, 0) *
-                                   quad_points(quad_no, 0) *
-                                   (1 - quad_points(quad_no, 0));
-            double jacobian_det2 =
+            real_type jacobian_det1 = quad_points(quad_no, 0) *
+                                      quad_points(quad_no, 0) *
+                                      (1 - quad_points(quad_no, 0));
+            real_type jacobian_det2 =
               quad_points(quad_no, 0) * quad_points(quad_no, 0) *
               (1 - quad_points(quad_no, 0) * quad_points(quad_no, 1));
 
@@ -1134,9 +1126,9 @@ namespace CUDAWrappers
              * Sauter's parametric space, at which the pulled back kernel
              * function is to be evaluated.
              */
-            const CUDATable<2, double> &quad_points =
+            const CUDATable<2, real_type> &quad_points =
               bem_values.quad_rule_for_common_vertex.get_points();
-            double jacobian_det =
+            real_type jacobian_det =
               HierBEM::PlatformShared::Utilities::fixed_power<3>(
                 quad_points(quad_no, 0));
 

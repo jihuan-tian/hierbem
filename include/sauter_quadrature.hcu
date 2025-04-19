@@ -9,6 +9,7 @@
 #define HIERBEM_INCLUDE_SAUTER_QUADRATURE_H_
 
 #include <deal.II/base/logstream.h>
+#include <deal.II/base/numbers.h>
 #include <deal.II/base/utilities.h>
 
 #include <deal.II/dofs/dof_accessor.h>
@@ -16,6 +17,7 @@
 
 #include <deal.II/fe/fe.h>
 #include <deal.II/fe/fe_data.h>
+#include <deal.II/fe/fe_update_flags.h>
 
 #include <deal.II/grid/tria_accessor.h>
 
@@ -31,9 +33,11 @@
 #include <iostream>
 #include <iterator>
 #include <mutex>
+#include <type_traits>
 #include <vector>
 
 #include "bem_kernels.hcu"
+#include "bem_tools.h"
 #include "bem_values.hcu"
 #include "config.h"
 #include "cu_bem_values.hcu"
@@ -43,6 +47,7 @@
 #include "dof_to_cell_topology.h"
 #include "hmatrix/hmatrix.h"
 #include "mapping/mapping_q_generic_ext.h"
+#include "number_traits.h"
 #include "sauter_quadrature_tools.h"
 
 HBEM_NS_OPEN
@@ -281,11 +286,11 @@ get_start_vertex_local_index_in_cell_from_vertex_numbers(
  * @param kx_mapping_info
  * @param ky_mapping_info
  */
-template <int dim, int spacedim, typename RangeNumberType = double>
+template <int dim, int spacedim, typename KernelNumberType>
 void
 permute_dofs_and_mapping_support_points_for_sauter_quad(
-  PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
-  PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
+  PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch,
+  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &data,
   const CellNeighboringType cell_neighboring_type,
   const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter,
   const typename DoFHandler<dim, spacedim>::cell_iterator &ky_cell_iter,
@@ -300,7 +305,7 @@ permute_dofs_and_mapping_support_points_for_sauter_quad(
 
   switch (cell_neighboring_type)
     {
-        case SamePanel: {
+        case CellNeighboringType::SamePanel: {
           Assert(scratch.common_vertex_pair_local_indices.size() ==
                    vertices_per_cell,
                  ExcInternalError());
@@ -357,7 +362,7 @@ permute_dofs_and_mapping_support_points_for_sauter_quad(
 
           break;
         }
-        case CommonEdge: {
+        case CellNeighboringType::CommonEdge: {
           /**
            * This part handles the common edge case of Sauter's quadrature
            * rule.
@@ -456,7 +461,7 @@ permute_dofs_and_mapping_support_points_for_sauter_quad(
 
           break;
         }
-        case CommonVertex: {
+        case CellNeighboringType::CommonVertex: {
           Assert(scratch.common_vertex_pair_local_indices.size() == 1,
                  ExcInternalError());
 
@@ -535,7 +540,7 @@ permute_dofs_and_mapping_support_points_for_sauter_quad(
 
           break;
         }
-        case Regular: {
+        case CellNeighboringType::Regular: {
           Assert(scratch.common_vertex_pair_local_indices.size() == 0,
                  ExcInternalError());
 
@@ -647,9 +652,9 @@ namespace CUDAWrappers
    * N.B. The allocation of thread blocks are enough to cover all quadrature
    * points. Therefore, there is no for-loop inside related kernel functions.
    *
-   * @tparam RangeNumberType
    * @tparam dim
    * @tparam spacedim
+   * @tparam RangeNumberType
    * @param cell_neighboring_type
    * @param bem_values
    * @param blocks_rect
@@ -665,7 +670,7 @@ namespace CUDAWrappers
   {
     switch (cell_neighboring_type)
       {
-          case SamePanel: {
+          case CellNeighboringType::SamePanel: {
             threads_rect.x = 32;
             threads_rect.y = 8;
 
@@ -676,7 +681,7 @@ namespace CUDAWrappers
 
             break;
           }
-          case CommonEdge: {
+          case CellNeighboringType::CommonEdge: {
             threads_rect.x = 32;
             threads_rect.y = 6;
 
@@ -687,7 +692,7 @@ namespace CUDAWrappers
 
             break;
           }
-          case CommonVertex: {
+          case CellNeighboringType::CommonVertex: {
             threads_rect.x = 32;
             threads_rect.y = 4;
 
@@ -698,7 +703,7 @@ namespace CUDAWrappers
 
             break;
           }
-          case Regular: {
+          case CellNeighboringType::Regular: {
             threads_rect.x = 32;
             threads_rect.y = 1;
 
@@ -754,9 +759,12 @@ namespace CUDAWrappers
   template <int dim, int spacedim, typename RangeNumberType = double>
   __global__ void
   calc_jacobian_normals_for_sauter_quad_same_panel(
-    const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
-    const unsigned int                                  kx_mapping_index,
-    const unsigned int                                  ky_mapping_index,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<RangeNumberType>::real_type> bem_values,
+    const unsigned int kx_mapping_index,
+    const unsigned int ky_mapping_index,
     const unsigned int kx_mapping_n_shape_functions,
     const unsigned int ky_mapping_n_shape_functions,
     const bool         is_kx_normal_inward,
@@ -858,9 +866,12 @@ namespace CUDAWrappers
   template <int dim, int spacedim, typename RangeNumberType = double>
   __global__ void
   calc_jacobian_normals_for_sauter_quad_common_edge(
-    const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
-    const unsigned int                                  kx_mapping_index,
-    const unsigned int                                  ky_mapping_index,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<RangeNumberType>::real_type> bem_values,
+    const unsigned int kx_mapping_index,
+    const unsigned int ky_mapping_index,
     const unsigned int kx_mapping_n_shape_functions,
     const unsigned int ky_mapping_n_shape_functions,
     const bool         is_kx_normal_inward,
@@ -964,9 +975,12 @@ namespace CUDAWrappers
   template <int dim, int spacedim, typename RangeNumberType = double>
   __global__ void
   calc_jacobian_normals_for_sauter_quad_common_vertex(
-    const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
-    const unsigned int                                  kx_mapping_index,
-    const unsigned int                                  ky_mapping_index,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<RangeNumberType>::real_type> bem_values,
+    const unsigned int kx_mapping_index,
+    const unsigned int ky_mapping_index,
     const unsigned int kx_mapping_n_shape_functions,
     const unsigned int ky_mapping_n_shape_functions,
     const bool         is_kx_normal_inward,
@@ -1069,9 +1083,12 @@ namespace CUDAWrappers
   template <int dim, int spacedim, typename RangeNumberType = double>
   __global__ void
   calc_jacobian_normals_for_sauter_quad_regular(
-    const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
-    const unsigned int                                  kx_mapping_index,
-    const unsigned int                                  ky_mapping_index,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<RangeNumberType>::real_type> bem_values,
+    const unsigned int kx_mapping_index,
+    const unsigned int ky_mapping_index,
     const unsigned int kx_mapping_n_shape_functions,
     const unsigned int ky_mapping_n_shape_functions,
     const bool         is_kx_normal_inward,
@@ -1137,13 +1154,19 @@ namespace CUDAWrappers
   template <int dim, int spacedim, typename RangeNumberType = double>
   __global__ void
   calc_covariant_transformations_same_panel(
-    const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
-    const unsigned int                                  kx_mapping_index,
-    const unsigned int                                  ky_mapping_index,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<RangeNumberType>::real_type> bem_values,
+    const unsigned int kx_mapping_index,
+    const unsigned int ky_mapping_index,
     const unsigned int kx_mapping_n_shape_functions,
     const unsigned int ky_mapping_n_shape_functions,
     CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data)
   {
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
+
     // Thread index in the X direction, which is mapped to the quadrature
     // point index.
     const unsigned int current_quad_point_index =
@@ -1152,7 +1175,7 @@ namespace CUDAWrappers
 
     if (current_quad_point_index < bem_values.quad_rule_for_same_panel.size())
       {
-        CUDAFullMatrix<RangeNumberType> kx_covariant(
+        CUDAFullMatrix<real_type> kx_covariant(
           &(scratch_data.kx_covariants_same_panel(
             threadIdx.y, current_quad_point_index, 0, 0)),
           spacedim,
@@ -1166,7 +1189,7 @@ namespace CUDAWrappers
           scratch_data.kx_mapping_support_points_permuted,
           kx_covariant);
 
-        CUDAFullMatrix<RangeNumberType> ky_covariant(
+        CUDAFullMatrix<real_type> ky_covariant(
           &(scratch_data.ky_covariants_same_panel(
             threadIdx.y, current_quad_point_index, 0, 0)),
           spacedim,
@@ -1186,13 +1209,19 @@ namespace CUDAWrappers
   template <int dim, int spacedim, typename RangeNumberType = double>
   __global__ void
   calc_covariant_transformations_common_edge(
-    const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
-    const unsigned int                                  kx_mapping_index,
-    const unsigned int                                  ky_mapping_index,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<RangeNumberType>::real_type> bem_values,
+    const unsigned int kx_mapping_index,
+    const unsigned int ky_mapping_index,
     const unsigned int kx_mapping_n_shape_functions,
     const unsigned int ky_mapping_n_shape_functions,
     CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data)
   {
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
+
     // Thread index in the X direction, which is mapped to the quadrature
     // point index.
     const unsigned int current_quad_point_index =
@@ -1201,7 +1230,7 @@ namespace CUDAWrappers
 
     if (current_quad_point_index < bem_values.quad_rule_for_common_edge.size())
       {
-        CUDAFullMatrix<RangeNumberType> kx_covariant(
+        CUDAFullMatrix<real_type> kx_covariant(
           &(scratch_data.kx_covariants_common_edge(
             threadIdx.y, current_quad_point_index, 0, 0)),
           spacedim,
@@ -1215,7 +1244,7 @@ namespace CUDAWrappers
           scratch_data.kx_mapping_support_points_permuted,
           kx_covariant);
 
-        CUDAFullMatrix<RangeNumberType> ky_covariant(
+        CUDAFullMatrix<real_type> ky_covariant(
           &(scratch_data.ky_covariants_common_edge(
             threadIdx.y, current_quad_point_index, 0, 0)),
           spacedim,
@@ -1235,13 +1264,19 @@ namespace CUDAWrappers
   template <int dim, int spacedim, typename RangeNumberType = double>
   __global__ void
   calc_covariant_transformations_common_vertex(
-    const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
-    const unsigned int                                  kx_mapping_index,
-    const unsigned int                                  ky_mapping_index,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<RangeNumberType>::real_type> bem_values,
+    const unsigned int kx_mapping_index,
+    const unsigned int ky_mapping_index,
     const unsigned int kx_mapping_n_shape_functions,
     const unsigned int ky_mapping_n_shape_functions,
     CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data)
   {
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
+
     // Thread index in the X direction, which is mapped to the quadrature
     // point index.
     const unsigned int current_quad_point_index =
@@ -1251,7 +1286,7 @@ namespace CUDAWrappers
     if (current_quad_point_index <
         bem_values.quad_rule_for_common_vertex.size())
       {
-        CUDAFullMatrix<RangeNumberType> kx_covariant(
+        CUDAFullMatrix<real_type> kx_covariant(
           &(scratch_data.kx_covariants_common_vertex(
             threadIdx.y, current_quad_point_index, 0, 0)),
           spacedim,
@@ -1265,7 +1300,7 @@ namespace CUDAWrappers
           scratch_data.kx_mapping_support_points_permuted,
           kx_covariant);
 
-        CUDAFullMatrix<RangeNumberType> ky_covariant(
+        CUDAFullMatrix<real_type> ky_covariant(
           &(scratch_data.ky_covariants_common_vertex(
             threadIdx.y, current_quad_point_index, 0, 0)),
           spacedim,
@@ -1285,13 +1320,19 @@ namespace CUDAWrappers
   template <int dim, int spacedim, typename RangeNumberType = double>
   __global__ void
   calc_covariant_transformations_regular(
-    const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
-    const unsigned int                                  kx_mapping_index,
-    const unsigned int                                  ky_mapping_index,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<RangeNumberType>::real_type> bem_values,
+    const unsigned int kx_mapping_index,
+    const unsigned int ky_mapping_index,
     const unsigned int kx_mapping_n_shape_functions,
     const unsigned int ky_mapping_n_shape_functions,
     CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data)
   {
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
+
     // Thread index in the X direction, which is mapped to the quadrature
     // point index.
     const unsigned int current_quad_point_index =
@@ -1299,7 +1340,7 @@ namespace CUDAWrappers
 
     if (current_quad_point_index < bem_values.quad_rule_for_regular.size())
       {
-        CUDAFullMatrix<RangeNumberType> kx_covariant(
+        CUDAFullMatrix<real_type> kx_covariant(
           &(scratch_data.kx_covariants_regular(
             0, current_quad_point_index, 0, 0)),
           spacedim,
@@ -1313,7 +1354,7 @@ namespace CUDAWrappers
           scratch_data.kx_mapping_support_points_permuted,
           kx_covariant);
 
-        CUDAFullMatrix<RangeNumberType> ky_covariant(
+        CUDAFullMatrix<real_type> ky_covariant(
           &(scratch_data.ky_covariants_regular(
             0, current_quad_point_index, 0, 0)),
           spacedim,
@@ -1373,24 +1414,30 @@ namespace CUDAWrappers
   template <int dim,
             int spacedim,
             template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename KernelNumberType = double>
   __global__ void
   ApplyQuadratureUsingBEMValuesSamePanel(
-    const KernelFunctionType<spacedim, RangeNumberType> kernel_function,
-    const RangeNumberType                               factor,
-    const unsigned int                                  kx_dof_index,
-    const unsigned int                                  ky_dof_index,
-    const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
-    const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+    const KernelFunctionType<spacedim, KernelNumberType> kernel_function,
+    const KernelNumberType                               factor,
+    const unsigned int                                   kx_dof_index,
+    const unsigned int                                   ky_dof_index,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<KernelNumberType>::real_type> bem_values,
+    const CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
                  scratch_data,
     unsigned int component = 0)
   {
+    using real_type =
+      typename numbers::NumberTraits<KernelNumberType>::real_type;
+
     /**
      * @internal Result array in the shared memory which stores the quadrature
      * results for each thread in a same thread block. Its dimension should be
      * @p blockDim.x.
      */
-    extern __shared__ RangeNumberType quad_values_in_thread_block[];
+    extern __shared__ KernelNumberType quad_values_in_thread_block[];
 
     const unsigned int tid     = threadIdx.x;
     const unsigned int quad_no = blockIdx.x * blockDim.x + threadIdx.x;
@@ -1404,7 +1451,7 @@ namespace CUDAWrappers
          * @internal Evaluate the kernel function at the current quadrature
          * point, which is an accumulation of all @p k3 terms.
          */
-        RangeNumberType kernel_value = 0.;
+        KernelNumberType kernel_value = KernelNumberType(0.);
 
 #pragma unroll
         for (unsigned int k3_index = 0; k3_index < 8; k3_index++)
@@ -1416,11 +1463,11 @@ namespace CUDAWrappers
                  * function at the current quadrature point in the unit cell
                  * for \f$K_x\f$ as well as \f$K_y\f$.
                  */
-                RangeNumberType             kx_shape_grad_in_unit_cell[dim];
-                RangeNumberType             ky_shape_grad_in_unit_cell[dim];
-                CUDAVector<RangeNumberType> kx_shape_grad_in_unit_cell_vector(
+                real_type             kx_shape_grad_in_unit_cell[dim];
+                real_type             ky_shape_grad_in_unit_cell[dim];
+                CUDAVector<real_type> kx_shape_grad_in_unit_cell_vector(
                   kx_shape_grad_in_unit_cell, dim);
-                CUDAVector<RangeNumberType> ky_shape_grad_in_unit_cell_vector(
+                CUDAVector<real_type> ky_shape_grad_in_unit_cell_vector(
                   ky_shape_grad_in_unit_cell, dim);
 
 #pragma unroll
@@ -1438,21 +1485,21 @@ namespace CUDAWrappers
                  * Apply covariant transformation to the gradient tensors in
                  * the unit cell.
                  */
-                RangeNumberType kx_shape_grad_in_real_cell[spacedim];
-                RangeNumberType ky_shape_grad_in_real_cell[spacedim];
-                CUDAVector<RangeNumberType> kx_shape_grad_in_real_cell_vector(
+                real_type             kx_shape_grad_in_real_cell[spacedim];
+                real_type             ky_shape_grad_in_real_cell[spacedim];
+                CUDAVector<real_type> kx_shape_grad_in_real_cell_vector(
                   kx_shape_grad_in_real_cell, spacedim);
-                CUDAVector<RangeNumberType> ky_shape_grad_in_real_cell_vector(
+                CUDAVector<real_type> ky_shape_grad_in_real_cell_vector(
                   ky_shape_grad_in_real_cell, spacedim);
 
-                CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
-                  const_cast<RangeNumberType *>(
+                CUDAFullMatrix<real_type> kx_covariant_matrix(
+                  const_cast<real_type *>(
                     &(scratch_data.kx_covariants_same_panel(
                       k3_index, quad_no, 0, 0))),
                   spacedim,
                   dim);
-                CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
-                  const_cast<RangeNumberType *>(
+                CUDAFullMatrix<real_type> ky_covariant_matrix(
+                  const_cast<real_type *>(
                     &(scratch_data.ky_covariants_same_panel(
                       k3_index, quad_no, 0, 0))),
                   spacedim,
@@ -1471,11 +1518,11 @@ namespace CUDAWrappers
                  * \mynote{The cross product operation requires the input
                  * vectors be transformed to tensors.}
                  */
-                Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+                Tensor<1, spacedim, real_type> kx_shape_surface_curl =
                   cross_product_3d(scratch_data.kx_normals_same_panel(k3_index,
                                                                       quad_no),
                                    kx_shape_grad_in_real_cell_vector);
-                Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+                Tensor<1, spacedim, real_type> ky_shape_surface_curl =
                   cross_product_3d(scratch_data.ky_normals_same_panel(k3_index,
                                                                       quad_no),
                                    ky_shape_grad_in_real_cell_vector);
@@ -1531,7 +1578,7 @@ namespace CUDAWrappers
       }
     else
       {
-        quad_values_in_thread_block[tid] = 0.;
+        quad_values_in_thread_block[tid] = KernelNumberType(0.);
       }
 
     /**
@@ -1584,24 +1631,30 @@ namespace CUDAWrappers
   template <int dim,
             int spacedim,
             template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename KernelNumberType = double>
   __global__ void
   ApplyQuadratureUsingBEMValuesCommonEdge(
-    const KernelFunctionType<spacedim, RangeNumberType> kernel_function,
-    const RangeNumberType                               factor,
-    const unsigned int                                  kx_dof_index,
-    const unsigned int                                  ky_dof_index,
-    const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
-    const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+    const KernelFunctionType<spacedim, KernelNumberType> kernel_function,
+    const KernelNumberType                               factor,
+    const unsigned int                                   kx_dof_index,
+    const unsigned int                                   ky_dof_index,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<KernelNumberType>::real_type> bem_values,
+    const CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
                  scratch_data,
     unsigned int component = 0)
   {
+    using real_type =
+      typename numbers::NumberTraits<KernelNumberType>::real_type;
+
     /**
      * @internal Result array in the shared memory which stores the quadrature
      * results for each thread in a same thread block. Its dimension should be
      * @p blockDim.x.
      */
-    extern __shared__ RangeNumberType quad_values_in_thread_block[];
+    extern __shared__ KernelNumberType quad_values_in_thread_block[];
 
     const unsigned int tid     = threadIdx.x;
     const unsigned int quad_no = blockIdx.x * blockDim.x + threadIdx.x;
@@ -1610,10 +1663,10 @@ namespace CUDAWrappers
       {
         const CUDATable<2, double> &quad_points =
           bem_values.quad_rule_for_common_edge.get_points();
-        RangeNumberType jacobian_det1 = quad_points(quad_no, 0) *
-                                        quad_points(quad_no, 0) *
-                                        (1 - quad_points(quad_no, 0));
-        RangeNumberType jacobian_det2 =
+        real_type jacobian_det1 = quad_points(quad_no, 0) *
+                                  quad_points(quad_no, 0) *
+                                  (1 - quad_points(quad_no, 0));
+        real_type jacobian_det2 =
           quad_points(quad_no, 0) * quad_points(quad_no, 0) *
           (1 - quad_points(quad_no, 0) * quad_points(quad_no, 1));
 
@@ -1621,7 +1674,7 @@ namespace CUDAWrappers
          * @internal Evaluate the kernel function at the current quadrature
          * point, which is an accumulation of all @p k3 terms.
          */
-        RangeNumberType kernel_value = 0.;
+        KernelNumberType kernel_value = KernelNumberType(0.);
 
 #pragma unroll
         for (unsigned int k3_index = 0; k3_index < 6; k3_index++)
@@ -1633,11 +1686,11 @@ namespace CUDAWrappers
                  * function at the current quadrature point in the unit cell
                  * for \f$K_x\f$ as well as \f$K_y\f$.
                  */
-                RangeNumberType             kx_shape_grad_in_unit_cell[dim];
-                RangeNumberType             ky_shape_grad_in_unit_cell[dim];
-                CUDAVector<RangeNumberType> kx_shape_grad_in_unit_cell_vector(
+                real_type             kx_shape_grad_in_unit_cell[dim];
+                real_type             ky_shape_grad_in_unit_cell[dim];
+                CUDAVector<real_type> kx_shape_grad_in_unit_cell_vector(
                   kx_shape_grad_in_unit_cell, dim);
-                CUDAVector<RangeNumberType> ky_shape_grad_in_unit_cell_vector(
+                CUDAVector<real_type> ky_shape_grad_in_unit_cell_vector(
                   ky_shape_grad_in_unit_cell, dim);
 
 #pragma unroll
@@ -1655,21 +1708,21 @@ namespace CUDAWrappers
                  * Apply covariant transformation to the gradient tensors in
                  * the unit cell.
                  */
-                RangeNumberType kx_shape_grad_in_real_cell[spacedim];
-                RangeNumberType ky_shape_grad_in_real_cell[spacedim];
-                CUDAVector<RangeNumberType> kx_shape_grad_in_real_cell_vector(
+                real_type             kx_shape_grad_in_real_cell[spacedim];
+                real_type             ky_shape_grad_in_real_cell[spacedim];
+                CUDAVector<real_type> kx_shape_grad_in_real_cell_vector(
                   kx_shape_grad_in_real_cell, spacedim);
-                CUDAVector<RangeNumberType> ky_shape_grad_in_real_cell_vector(
+                CUDAVector<real_type> ky_shape_grad_in_real_cell_vector(
                   ky_shape_grad_in_real_cell, spacedim);
 
-                CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
-                  const_cast<RangeNumberType *>(
+                CUDAFullMatrix<real_type> kx_covariant_matrix(
+                  const_cast<real_type *>(
                     &(scratch_data.kx_covariants_common_edge(
                       k3_index, quad_no, 0, 0))),
                   spacedim,
                   dim);
-                CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
-                  const_cast<RangeNumberType *>(
+                CUDAFullMatrix<real_type> ky_covariant_matrix(
+                  const_cast<real_type *>(
                     &(scratch_data.ky_covariants_common_edge(
                       k3_index, quad_no, 0, 0))),
                   spacedim,
@@ -1688,11 +1741,11 @@ namespace CUDAWrappers
                  * \mynote{The cross product operation requires the input
                  * vectors to be transformed to tensors.}
                  */
-                Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+                Tensor<1, spacedim, real_type> kx_shape_surface_curl =
                   cross_product_3d(scratch_data.kx_normals_common_edge(k3_index,
                                                                        quad_no),
                                    kx_shape_grad_in_real_cell_vector);
-                Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+                Tensor<1, spacedim, real_type> ky_shape_surface_curl =
                   cross_product_3d(scratch_data.ky_normals_common_edge(k3_index,
                                                                        quad_no),
                                    ky_shape_grad_in_real_cell_vector);
@@ -1748,7 +1801,7 @@ namespace CUDAWrappers
       }
     else
       {
-        quad_values_in_thread_block[tid] = 0.;
+        quad_values_in_thread_block[tid] = KernelNumberType(0.);
       }
 
     /**
@@ -1797,24 +1850,30 @@ namespace CUDAWrappers
   template <int dim,
             int spacedim,
             template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename KernelNumberType = double>
   __global__ void
   ApplyQuadratureUsingBEMValuesCommonVertex(
-    const KernelFunctionType<spacedim, RangeNumberType> kernel_function,
-    const RangeNumberType                               factor,
-    const unsigned int                                  kx_dof_index,
-    const unsigned int                                  ky_dof_index,
-    const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
-    const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+    const KernelFunctionType<spacedim, KernelNumberType> kernel_function,
+    const KernelNumberType                               factor,
+    const unsigned int                                   kx_dof_index,
+    const unsigned int                                   ky_dof_index,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<KernelNumberType>::real_type> bem_values,
+    const CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
                  scratch_data,
     unsigned int component = 0)
   {
+    using real_type =
+      typename numbers::NumberTraits<KernelNumberType>::real_type;
+
     /**
      * @internal Result array in the shared memory which stores the quadrature
      * results for each thread in a same thread block. Its dimension should be
      * @p blockDim.x.
      */
-    extern __shared__ RangeNumberType quad_values_in_thread_block[];
+    extern __shared__ KernelNumberType quad_values_in_thread_block[];
 
     const unsigned int tid     = threadIdx.x;
     const unsigned int quad_no = blockIdx.x * blockDim.x + threadIdx.x;
@@ -1828,7 +1887,7 @@ namespace CUDAWrappers
          * @internal Evaluate the kernel function at the current quadrature
          * point, which is an accumulation of all @p k3 terms.
          */
-        RangeNumberType kernel_value = 0.;
+        KernelNumberType kernel_value = KernelNumberType(0.);
 
 #pragma unroll
         for (unsigned int k3_index = 0; k3_index < 4; k3_index++)
@@ -1840,11 +1899,11 @@ namespace CUDAWrappers
                  * function at the current quadrature point in the unit cell
                  * for \f$K_x\f$ as well as \f$K_y\f$.
                  */
-                RangeNumberType             kx_shape_grad_in_unit_cell[dim];
-                RangeNumberType             ky_shape_grad_in_unit_cell[dim];
-                CUDAVector<RangeNumberType> kx_shape_grad_in_unit_cell_vector(
+                real_type             kx_shape_grad_in_unit_cell[dim];
+                real_type             ky_shape_grad_in_unit_cell[dim];
+                CUDAVector<real_type> kx_shape_grad_in_unit_cell_vector(
                   kx_shape_grad_in_unit_cell, dim);
-                CUDAVector<RangeNumberType> ky_shape_grad_in_unit_cell_vector(
+                CUDAVector<real_type> ky_shape_grad_in_unit_cell_vector(
                   ky_shape_grad_in_unit_cell, dim);
 
 #pragma unroll
@@ -1862,21 +1921,21 @@ namespace CUDAWrappers
                  * Apply covariant transformation to the gradient tensors in
                  * the unit cell.
                  */
-                RangeNumberType kx_shape_grad_in_real_cell[spacedim];
-                RangeNumberType ky_shape_grad_in_real_cell[spacedim];
-                CUDAVector<RangeNumberType> kx_shape_grad_in_real_cell_vector(
+                real_type             kx_shape_grad_in_real_cell[spacedim];
+                real_type             ky_shape_grad_in_real_cell[spacedim];
+                CUDAVector<real_type> kx_shape_grad_in_real_cell_vector(
                   kx_shape_grad_in_real_cell, spacedim);
-                CUDAVector<RangeNumberType> ky_shape_grad_in_real_cell_vector(
+                CUDAVector<real_type> ky_shape_grad_in_real_cell_vector(
                   ky_shape_grad_in_real_cell, spacedim);
 
-                CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
-                  const_cast<RangeNumberType *>(
+                CUDAFullMatrix<real_type> kx_covariant_matrix(
+                  const_cast<real_type *>(
                     &(scratch_data.kx_covariants_common_vertex(
                       k3_index, quad_no, 0, 0))),
                   spacedim,
                   dim);
-                CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
-                  const_cast<RangeNumberType *>(
+                CUDAFullMatrix<real_type> ky_covariant_matrix(
+                  const_cast<real_type *>(
                     &(scratch_data.ky_covariants_common_vertex(
                       k3_index, quad_no, 0, 0))),
                   spacedim,
@@ -1895,11 +1954,11 @@ namespace CUDAWrappers
                  * \mynote{The cross product operation requires the input
                  * vectors to be transformed to tensors.}
                  */
-                Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+                Tensor<1, spacedim, real_type> kx_shape_surface_curl =
                   cross_product_3d(
                     scratch_data.kx_normals_common_vertex(k3_index, quad_no),
                     kx_shape_grad_in_real_cell_vector);
-                Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+                Tensor<1, spacedim, real_type> ky_shape_surface_curl =
                   cross_product_3d(
                     scratch_data.ky_normals_common_vertex(k3_index, quad_no),
                     ky_shape_grad_in_real_cell_vector);
@@ -1957,7 +2016,7 @@ namespace CUDAWrappers
       }
     else
       {
-        quad_values_in_thread_block[tid] = 0.;
+        quad_values_in_thread_block[tid] = KernelNumberType(0.);
       }
 
     /**
@@ -2006,24 +2065,30 @@ namespace CUDAWrappers
   template <int dim,
             int spacedim,
             template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename KernelNumberType = double>
   __global__ void
   ApplyQuadratureUsingBEMValuesRegular(
-    const KernelFunctionType<spacedim, RangeNumberType> kernel_function,
-    const RangeNumberType                               factor,
-    const unsigned int                                  kx_dof_index,
-    const unsigned int                                  ky_dof_index,
-    const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
-    const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+    const KernelFunctionType<spacedim, KernelNumberType> kernel_function,
+    const KernelNumberType                               factor,
+    const unsigned int                                   kx_dof_index,
+    const unsigned int                                   ky_dof_index,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<KernelNumberType>::real_type> bem_values,
+    const CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
                  scratch_data,
     unsigned int component = 0)
   {
+    using real_type =
+      typename numbers::NumberTraits<KernelNumberType>::real_type;
+
     /**
      * @internal Result array in the shared memory which stores the quadrature
      * results for each thread in a same thread block. Its dimension should be
      * @p blockDim.x.
      */
-    extern __shared__ RangeNumberType quad_values_in_thread_block[];
+    extern __shared__ KernelNumberType quad_values_in_thread_block[];
 
     const unsigned int tid     = threadIdx.x;
     const unsigned int quad_no = blockIdx.x * blockDim.x + threadIdx.x;
@@ -2037,11 +2102,11 @@ namespace CUDAWrappers
              * function at the current quadrature point in the unit cell
              * for \f$K_x\f$ as well as \f$K_y\f$.
              */
-            RangeNumberType             kx_shape_grad_in_unit_cell[dim];
-            RangeNumberType             ky_shape_grad_in_unit_cell[dim];
-            CUDAVector<RangeNumberType> kx_shape_grad_in_unit_cell_vector(
+            real_type             kx_shape_grad_in_unit_cell[dim];
+            real_type             ky_shape_grad_in_unit_cell[dim];
+            CUDAVector<real_type> kx_shape_grad_in_unit_cell_vector(
               kx_shape_grad_in_unit_cell, dim);
-            CUDAVector<RangeNumberType> ky_shape_grad_in_unit_cell_vector(
+            CUDAVector<real_type> ky_shape_grad_in_unit_cell_vector(
               ky_shape_grad_in_unit_cell, dim);
 
 #pragma unroll
@@ -2059,20 +2124,20 @@ namespace CUDAWrappers
              * Apply covariant transformation to the gradient tensors in
              * the unit cell.
              */
-            RangeNumberType             kx_shape_grad_in_real_cell[spacedim];
-            RangeNumberType             ky_shape_grad_in_real_cell[spacedim];
-            CUDAVector<RangeNumberType> kx_shape_grad_in_real_cell_vector(
+            real_type             kx_shape_grad_in_real_cell[spacedim];
+            real_type             ky_shape_grad_in_real_cell[spacedim];
+            CUDAVector<real_type> kx_shape_grad_in_real_cell_vector(
               kx_shape_grad_in_real_cell, spacedim);
-            CUDAVector<RangeNumberType> ky_shape_grad_in_real_cell_vector(
+            CUDAVector<real_type> ky_shape_grad_in_real_cell_vector(
               ky_shape_grad_in_real_cell, spacedim);
 
-            CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
-              const_cast<RangeNumberType *>(
+            CUDAFullMatrix<real_type> kx_covariant_matrix(
+              const_cast<real_type *>(
                 &(scratch_data.kx_covariants_regular(0, quad_no, 0, 0))),
               spacedim,
               dim);
-            CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
-              const_cast<RangeNumberType *>(
+            CUDAFullMatrix<real_type> ky_covariant_matrix(
+              const_cast<real_type *>(
                 &(scratch_data.ky_covariants_regular(0, quad_no, 0, 0))),
               spacedim,
               dim);
@@ -2090,10 +2155,10 @@ namespace CUDAWrappers
              * \mynote{The cross product operation requires the input
              * vectors be transformed to tensors.}
              */
-            Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+            Tensor<1, spacedim, real_type> kx_shape_surface_curl =
               cross_product_3d(scratch_data.kx_normals_regular(0, quad_no),
                                kx_shape_grad_in_real_cell_vector);
-            Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+            Tensor<1, spacedim, real_type> ky_shape_surface_curl =
               cross_product_3d(scratch_data.ky_normals_regular(0, quad_no),
                                ky_shape_grad_in_real_cell_vector);
 
@@ -2139,7 +2204,7 @@ namespace CUDAWrappers
       }
     else
       {
-        quad_values_in_thread_block[tid] = 0.;
+        quad_values_in_thread_block[tid] = KernelNumberType(0.);
       }
 
     /**
@@ -2263,14 +2328,19 @@ namespace CUDAWrappers
    * @tparam dim
    * @tparam spacedim
    * @tparam RangeNumberType
+   * @tparam KernelNumberType
    */
   template <int capacity,
             int dim,
             int spacedim,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename KernelNumberType>
   class SauterQuadratureTaskRingBuffer
   {
   public:
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
+
     /**
      * Allocate memory for the ring buffer on the host and device.
      *
@@ -2283,9 +2353,9 @@ namespace CUDAWrappers
      * mapping objects, the number of quadrature points, etc.
      */
     HBEM_ATTR_HOST void
-    allocate(const CellNeighboringType       neighboring_type,
-             const unsigned int              num_to_fetch,
-             const BEMValues<dim, spacedim> &bem_values);
+    allocate(const CellNeighboringType                  neighboring_type,
+             const unsigned int                         num_to_fetch,
+             const BEMValues<dim, spacedim, real_type> &bem_values);
 
     /**
      * Release the memory on the host and device.
@@ -2347,8 +2417,8 @@ namespace CUDAWrappers
              const unsigned int                    fullmat_row_index,
              const unsigned int                    fullmat_col_index,
              const SauterQuadratureTaskScalarData &scalar_data,
-             const RangeNumberType                 mass_matrix_entry,
-             const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
+             const real_type                       mass_matrix_entry,
+             const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
                &scratch_data);
 
     /**
@@ -2362,12 +2432,12 @@ namespace CUDAWrappers
     template <template <int, typename> typename KernelFunctionType>
     HBEM_ATTR_HOST bool
     fetch_and_process_task_batch(
-      const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-      const RangeNumberType                                kernel_factor,
-      const unsigned int                                   block_size,
-      const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
-      std::mutex                                          &result_lock,
-      const cudaStream_t                                   cuda_stream_handle);
+      const KernelFunctionType<spacedim, KernelNumberType> &kernel,
+      const KernelNumberType                                kernel_factor,
+      const unsigned int                                    block_size,
+      const CUDABEMValues<dim, spacedim, real_type>        &bem_values,
+      std::mutex                                           &result_lock,
+      const cudaStream_t                                    cuda_stream_handle);
 
     /**
      * Print the current values of all ring buffer pointers. For debugging
@@ -2422,7 +2492,7 @@ namespace CUDAWrappers
      * 2. Second dimension: point index in the permuted mapping support points
      * in \f$K_x\f$.
      */
-    Table<2, Point<spacedim, RangeNumberType>>
+    Table<2, Point<spacedim, real_type>>
       kx_mapping_support_points_permuted_ring_buffer_cpu;
 
     /**
@@ -2433,7 +2503,7 @@ namespace CUDAWrappers
      * 2. Second dimension: point index in the permuted mapping support points
      * in \f$K_y\f$.
      */
-    Table<2, Point<spacedim, RangeNumberType>>
+    Table<2, Point<spacedim, real_type>>
       ky_mapping_support_points_permuted_ring_buffer_cpu;
 
     /**
@@ -2444,7 +2514,7 @@ namespace CUDAWrappers
      * 2. Second dimension: point index in the permuted mapping support points
      * in \f$K_x\f$.
      */
-    CUDATable<2, Point<spacedim, RangeNumberType>>
+    CUDATable<2, Point<spacedim, real_type>>
       kx_mapping_support_points_permuted_ring_buffer_gpu;
 
     /**
@@ -2455,7 +2525,7 @@ namespace CUDAWrappers
      * 2. Second dimension: point index in the permuted mapping support points
      * in \f$K_y\f$.
      */
-    CUDATable<2, Point<spacedim, RangeNumberType>>
+    CUDATable<2, Point<spacedim, real_type>>
       ky_mapping_support_points_permuted_ring_buffer_gpu;
 
     /**
@@ -2497,17 +2567,17 @@ namespace CUDAWrappers
     /**
      * Mass matrix entries
      */
-    RangeNumberType mass_matrix_entries_ring_buffer_cpu[capacity];
+    real_type mass_matrix_entries_ring_buffer_cpu[capacity];
 
     /**
      * Array of quadrature values on the host.
      */
-    RangeNumberType *quadrature_value_ring_buffer_cpu;
+    KernelNumberType *quadrature_value_ring_buffer_cpu;
 
     /**
      * Array of quadrature values on the device.
      */
-    RangeNumberType *quadrature_value_ring_buffer_gpu;
+    KernelNumberType *quadrature_value_ring_buffer_gpu;
 
     /**
      * Flag indicating if all matrix entries in all near filed \hmatrices have
@@ -2561,11 +2631,18 @@ namespace CUDAWrappers
    * @tparam dim
    * @tparam spacedim
    * @tparam RangeNumberType
+   * @tparam KernelNumberType
    */
-  template <int dim, int spacedim, typename RangeNumberType = double>
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
   class SauterQuadratureTaskBufferForVector
   {
   public:
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
+
     /**
      * Constructor
      *
@@ -2580,11 +2657,11 @@ namespace CUDAWrappers
      * @param stream
      */
     SauterQuadratureTaskBufferForVector(
-      const unsigned int              v_vector_size,
-      const unsigned int              max_cells_per_dof_in_test_space,
-      const unsigned int              max_cells_per_dof_in_ansatz_space,
-      const BEMValues<dim, spacedim> &bem_values,
-      const cudaStream_t              stream);
+      const unsigned int v_vector_size,
+      const unsigned int max_cells_per_dof_in_test_space,
+      const unsigned int max_cells_per_dof_in_ansatz_space,
+      const BEMValues<dim, spacedim, real_type> &bem_values,
+      const cudaStream_t                         stream);
 
     /**
      * Reinitialize the buffer to be used for another vector having the same
@@ -2607,7 +2684,7 @@ namespace CUDAWrappers
      */
     void
     add_task(const SauterQuadratureTaskScalarData &scalar_data,
-             const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
+             const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
                &scratch_data);
 
     /**
@@ -2617,14 +2694,13 @@ namespace CUDAWrappers
      */
     template <template <int, typename> typename KernelFunctionType>
     void
-    process_tasks(
-      Vector<RangeNumberType>                             &hmat_vector,
-      const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-      const RangeNumberType                                kernel_factor,
-      const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
-      const unsigned int                                   task_num_per_block,
-      const unsigned int block_size_for_quad_result_accumulation,
-      const cudaStream_t cuda_stream_handle);
+    process_tasks(Vector<RangeNumberType> &hmat_vector,
+                  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
+                  const KernelNumberType                         kernel_factor,
+                  const CUDABEMValues<dim, spacedim, real_type> &bem_values,
+                  const unsigned int task_num_per_block,
+                  const unsigned int block_size_for_quad_result_accumulation,
+                  const cudaStream_t cuda_stream_handle);
 
 
     /**
@@ -2694,7 +2770,7 @@ namespace CUDAWrappers
      * 2. Second dimension: point index in the permuted mapping support points
      * in \f$K_x\f$.
      */
-    Table<2, Point<spacedim, RangeNumberType>>
+    Table<2, Point<spacedim, real_type>>
       kx_mapping_support_points_permuted_buffer_cpu;
 
     /**
@@ -2705,7 +2781,7 @@ namespace CUDAWrappers
      * 2. Second dimension: point index in the permuted mapping support points
      * in \f$K_y\f$.
      */
-    Table<2, Point<spacedim, RangeNumberType>>
+    Table<2, Point<spacedim, real_type>>
       ky_mapping_support_points_permuted_buffer_cpu;
 
     /**
@@ -2724,7 +2800,7 @@ namespace CUDAWrappers
      * TODO When different mapping objects are adopted for different
      * subdomains, this should be modified accordingly.}
      */
-    CUDATable<2, Point<spacedim, RangeNumberType>>
+    CUDATable<2, Point<spacedim, real_type>>
       kx_mapping_support_points_permuted_buffer_gpu;
 
     /**
@@ -2743,7 +2819,7 @@ namespace CUDAWrappers
      * TODO When different mapping objects are adopted for different
      * subdomains, this should be modified accordingly.}
      */
-    CUDATable<2, Point<spacedim, RangeNumberType>>
+    CUDATable<2, Point<spacedim, real_type>>
       ky_mapping_support_points_permuted_buffer_gpu;
 
     /**
@@ -2763,7 +2839,7 @@ namespace CUDAWrappers
      *
      * The number of elements in this array is @p capacity*quad_point_num.
      */
-    RangeNumberType *values_at_all_quad_points_gpu;
+    KernelNumberType *values_at_all_quad_points_gpu;
 
     /**
      * Vector element values on the device. The number of elements in this
@@ -2791,35 +2867,47 @@ namespace CUDAWrappers
     const KernelFunctionType<spacedim, RangeNumberType> kernel,
     const RangeNumberType                               kernel_factor,
     const unsigned int                                  capacity,
-    CUDATable<2, Point<spacedim, RangeNumberType>>
+    CUDATable<2,
+              Point<spacedim,
+                    typename numbers::NumberTraits<RangeNumberType>::real_type>>
       kx_mapping_support_points_permuted_ring_buffer,
-    CUDATable<2, Point<spacedim, RangeNumberType>>
+    CUDATable<2,
+              Point<spacedim,
+                    typename numbers::NumberTraits<RangeNumberType>::real_type>>
       ky_mapping_support_points_permuted_ring_buffer,
     SauterQuadratureTaskScalarData *scalar_data_ring_buffer_gpu,
     RangeNumberType                *quadrature_value_ring_buffer_gpu,
     const unsigned int              start_task_index,
     const unsigned int              fetched_task_num,
-    const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values)
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<RangeNumberType>::real_type> bem_values)
   {
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
+
     /**
      * @internal For simplicity, we use 1D linear thread grid.
      */
     const unsigned int thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-    RangeNumberType                      kx_jacobian, ky_jacobian;
-    Tensor<1, spacedim, RangeNumberType> kx_normal, ky_normal;
-    Point<spacedim, RangeNumberType>     kx_quad_point, ky_quad_point;
+    real_type                      kx_jacobian, ky_jacobian;
+    Tensor<1, spacedim, real_type> kx_normal, ky_normal;
+    Point<spacedim, real_type>     kx_quad_point, ky_quad_point;
     /**
      * @internal Create a wrapper matrix for the covariant matrix
      * on \f$K_x\f$. N.B. Only when the kernel function is
      * @p HyperSingularRegular, this matrix will be evaluated.
      */
-    RangeNumberType                 kx_covariant_matrix_data[spacedim * dim];
-    RangeNumberType                 ky_covariant_matrix_data[spacedim * dim];
-    CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
-      kx_covariant_matrix_data, spacedim, dim);
-    CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
-      ky_covariant_matrix_data, spacedim, dim);
+    real_type                 kx_covariant_matrix_data[spacedim * dim];
+    real_type                 ky_covariant_matrix_data[spacedim * dim];
+    CUDAFullMatrix<real_type> kx_covariant_matrix(kx_covariant_matrix_data,
+                                                  spacedim,
+                                                  dim);
+    CUDAFullMatrix<real_type> ky_covariant_matrix(ky_covariant_matrix_data,
+                                                  spacedim,
+                                                  dim);
 
     /**
      * @internal Get the list of quadrature points in the Sauter
@@ -2849,7 +2937,7 @@ namespace CUDAWrappers
          * which is efficient for accumulating values contributed from all
          * \f$k_3\f$ terms and quadrature points.
          */
-        RangeNumberType quad_value = 0.;
+        RangeNumberType quad_value = RangeNumberType(0.);
 
         /**
          * @internal Iterate over each quadrature point.
@@ -2869,7 +2957,7 @@ namespace CUDAWrappers
              * will be multiplied to @p kernel_value instead of the shape
              * function values.}
              */
-            RangeNumberType kernel_value = 0.;
+            RangeNumberType kernel_value = RangeNumberType(0.);
             /**
              * @internal Iterate over each k3 term.
              */
@@ -2949,14 +3037,12 @@ namespace CUDAWrappers
                      * shape function at the current quadrature point in the
                      * unit cells for \f$K_x\f$ and \f$K_y\f$.
                      */
-                    RangeNumberType kx_shape_grad_in_unit_cell[dim];
-                    RangeNumberType ky_shape_grad_in_unit_cell[dim];
-                    CUDAVector<RangeNumberType>
-                      kx_shape_grad_in_unit_cell_vector(
-                        kx_shape_grad_in_unit_cell, dim);
-                    CUDAVector<RangeNumberType>
-                      ky_shape_grad_in_unit_cell_vector(
-                        ky_shape_grad_in_unit_cell, dim);
+                    real_type             kx_shape_grad_in_unit_cell[dim];
+                    real_type             ky_shape_grad_in_unit_cell[dim];
+                    CUDAVector<real_type> kx_shape_grad_in_unit_cell_vector(
+                      kx_shape_grad_in_unit_cell, dim);
+                    CUDAVector<real_type> ky_shape_grad_in_unit_cell_vector(
+                      ky_shape_grad_in_unit_cell, dim);
 
 #pragma unroll
                     for (unsigned int d = 0; d < dim; d++)
@@ -2982,14 +3068,12 @@ namespace CUDAWrappers
                      * gradient tensors in the unit cells, then we get the
                      * gradient tensors in the real cells.
                      */
-                    RangeNumberType kx_shape_grad_in_real_cell[spacedim];
-                    RangeNumberType ky_shape_grad_in_real_cell[spacedim];
-                    CUDAVector<RangeNumberType>
-                      kx_shape_grad_in_real_cell_vector(
-                        kx_shape_grad_in_real_cell, spacedim);
-                    CUDAVector<RangeNumberType>
-                      ky_shape_grad_in_real_cell_vector(
-                        ky_shape_grad_in_real_cell, spacedim);
+                    real_type             kx_shape_grad_in_real_cell[spacedim];
+                    real_type             ky_shape_grad_in_real_cell[spacedim];
+                    CUDAVector<real_type> kx_shape_grad_in_real_cell_vector(
+                      kx_shape_grad_in_real_cell, spacedim);
+                    CUDAVector<real_type> ky_shape_grad_in_real_cell_vector(
+                      ky_shape_grad_in_real_cell, spacedim);
 
                     kx_covariant_matrix.vmult(
                       kx_shape_grad_in_real_cell_vector,
@@ -3006,10 +3090,10 @@ namespace CUDAWrappers
                      * \mynote{The cross product operation requires the input
                      * vectors to be transformed to tensors.}
                      */
-                    Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+                    Tensor<1, spacedim, real_type> kx_shape_surface_curl =
                       cross_product_3d(kx_normal,
                                        kx_shape_grad_in_real_cell_vector);
-                    Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+                    Tensor<1, spacedim, real_type> ky_shape_surface_curl =
                       cross_product_3d(ky_normal,
                                        ky_shape_grad_in_real_cell_vector);
 
@@ -3066,35 +3150,47 @@ namespace CUDAWrappers
     const KernelFunctionType<spacedim, RangeNumberType> kernel,
     const RangeNumberType                               kernel_factor,
     const unsigned int                                  capacity,
-    CUDATable<2, Point<spacedim, RangeNumberType>>
+    CUDATable<2,
+              Point<spacedim,
+                    typename numbers::NumberTraits<RangeNumberType>::real_type>>
       kx_mapping_support_points_permuted_ring_buffer,
-    CUDATable<2, Point<spacedim, RangeNumberType>>
+    CUDATable<2,
+              Point<spacedim,
+                    typename numbers::NumberTraits<RangeNumberType>::real_type>>
       ky_mapping_support_points_permuted_ring_buffer,
     SauterQuadratureTaskScalarData *scalar_data_ring_buffer_gpu,
     RangeNumberType                *quadrature_value_ring_buffer_gpu,
     const unsigned int              start_task_index,
     const unsigned int              fetched_task_num,
-    const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values)
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<RangeNumberType>::real_type> bem_values)
   {
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
+
     /**
      * @internal For simplicity, we use 1D linear thread grid.
      */
     const unsigned int thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-    RangeNumberType                      kx_jacobian, ky_jacobian;
-    Tensor<1, spacedim, RangeNumberType> kx_normal, ky_normal;
-    Point<spacedim, RangeNumberType>     kx_quad_point, ky_quad_point;
+    real_type                      kx_jacobian, ky_jacobian;
+    Tensor<1, spacedim, real_type> kx_normal, ky_normal;
+    Point<spacedim, real_type>     kx_quad_point, ky_quad_point;
     /**
      * @internal Create a wrapper matrix for the covariant matrix
      * on \f$K_x\f$. N.B. Only when the kernel function is
      * @p HyperSingularRegular, this matrix will be evaluated.
      */
-    RangeNumberType                 kx_covariant_matrix_data[spacedim * dim];
-    RangeNumberType                 ky_covariant_matrix_data[spacedim * dim];
-    CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
-      kx_covariant_matrix_data, spacedim, dim);
-    CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
-      ky_covariant_matrix_data, spacedim, dim);
+    real_type                 kx_covariant_matrix_data[spacedim * dim];
+    real_type                 ky_covariant_matrix_data[spacedim * dim];
+    CUDAFullMatrix<real_type> kx_covariant_matrix(kx_covariant_matrix_data,
+                                                  spacedim,
+                                                  dim);
+    CUDAFullMatrix<real_type> ky_covariant_matrix(ky_covariant_matrix_data,
+                                                  spacedim,
+                                                  dim);
 
     /**
      * @internal Get the list of quadrature points in the Sauter
@@ -3124,7 +3220,7 @@ namespace CUDAWrappers
          * which is efficient for accumulating values contributed from all
          * \f$k_3\f$ terms and quadrature points.
          */
-        RangeNumberType quad_value = 0.;
+        RangeNumberType quad_value = RangeNumberType(0.);
 
         /**
          * @internal Iterate over each quadrature point.
@@ -3133,10 +3229,10 @@ namespace CUDAWrappers
              quad_no < bem_values.quad_rule_for_common_edge.size();
              quad_no++)
           {
-            RangeNumberType jacobian_det1 = quad_points(quad_no, 0) *
-                                            quad_points(quad_no, 0) *
-                                            (1 - quad_points(quad_no, 0));
-            RangeNumberType jacobian_det2 =
+            real_type jacobian_det1 = quad_points(quad_no, 0) *
+                                      quad_points(quad_no, 0) *
+                                      (1 - quad_points(quad_no, 0));
+            real_type jacobian_det2 =
               quad_points(quad_no, 0) * quad_points(quad_no, 0) *
               (1 - quad_points(quad_no, 0) * quad_points(quad_no, 1));
 
@@ -3151,7 +3247,7 @@ namespace CUDAWrappers
              * will be multiplied to @p kernel_value instead of the shape
              * function values.}
              */
-            RangeNumberType kernel_value = 0.;
+            RangeNumberType kernel_value = RangeNumberType(0.);
             /**
              * @internal Iterate over each k3 term.
              */
@@ -3234,14 +3330,12 @@ namespace CUDAWrappers
                      * shape function at the current quadrature point in the
                      * unit cells for \f$K_x\f$ and \f$K_y\f$.
                      */
-                    RangeNumberType kx_shape_grad_in_unit_cell[dim];
-                    RangeNumberType ky_shape_grad_in_unit_cell[dim];
-                    CUDAVector<RangeNumberType>
-                      kx_shape_grad_in_unit_cell_vector(
-                        kx_shape_grad_in_unit_cell, dim);
-                    CUDAVector<RangeNumberType>
-                      ky_shape_grad_in_unit_cell_vector(
-                        ky_shape_grad_in_unit_cell, dim);
+                    real_type             kx_shape_grad_in_unit_cell[dim];
+                    real_type             ky_shape_grad_in_unit_cell[dim];
+                    CUDAVector<real_type> kx_shape_grad_in_unit_cell_vector(
+                      kx_shape_grad_in_unit_cell, dim);
+                    CUDAVector<real_type> ky_shape_grad_in_unit_cell_vector(
+                      ky_shape_grad_in_unit_cell, dim);
 
 #pragma unroll
                     for (unsigned int d = 0; d < dim; d++)
@@ -3267,14 +3361,12 @@ namespace CUDAWrappers
                      * gradient tensors in the unit cells, then we get the
                      * gradient tensors in the real cells.
                      */
-                    RangeNumberType kx_shape_grad_in_real_cell[spacedim];
-                    RangeNumberType ky_shape_grad_in_real_cell[spacedim];
-                    CUDAVector<RangeNumberType>
-                      kx_shape_grad_in_real_cell_vector(
-                        kx_shape_grad_in_real_cell, spacedim);
-                    CUDAVector<RangeNumberType>
-                      ky_shape_grad_in_real_cell_vector(
-                        ky_shape_grad_in_real_cell, spacedim);
+                    real_type             kx_shape_grad_in_real_cell[spacedim];
+                    real_type             ky_shape_grad_in_real_cell[spacedim];
+                    CUDAVector<real_type> kx_shape_grad_in_real_cell_vector(
+                      kx_shape_grad_in_real_cell, spacedim);
+                    CUDAVector<real_type> ky_shape_grad_in_real_cell_vector(
+                      ky_shape_grad_in_real_cell, spacedim);
 
                     kx_covariant_matrix.vmult(
                       kx_shape_grad_in_real_cell_vector,
@@ -3291,10 +3383,10 @@ namespace CUDAWrappers
                      * \mynote{The cross product operation requires the input
                      * vectors to be transformed to tensors.}
                      */
-                    Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+                    Tensor<1, spacedim, real_type> kx_shape_surface_curl =
                       cross_product_3d(kx_normal,
                                        kx_shape_grad_in_real_cell_vector);
-                    Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+                    Tensor<1, spacedim, real_type> ky_shape_surface_curl =
                       cross_product_3d(ky_normal,
                                        ky_shape_grad_in_real_cell_vector);
 
@@ -3351,35 +3443,47 @@ namespace CUDAWrappers
     const KernelFunctionType<spacedim, RangeNumberType> kernel,
     const RangeNumberType                               kernel_factor,
     const unsigned int                                  capacity,
-    CUDATable<2, Point<spacedim, RangeNumberType>>
+    CUDATable<2,
+              Point<spacedim,
+                    typename numbers::NumberTraits<RangeNumberType>::real_type>>
       kx_mapping_support_points_permuted_ring_buffer,
-    CUDATable<2, Point<spacedim, RangeNumberType>>
+    CUDATable<2,
+              Point<spacedim,
+                    typename numbers::NumberTraits<RangeNumberType>::real_type>>
       ky_mapping_support_points_permuted_ring_buffer,
     SauterQuadratureTaskScalarData *scalar_data_ring_buffer_gpu,
     RangeNumberType                *quadrature_value_ring_buffer_gpu,
     const unsigned int              start_task_index,
     const unsigned int              fetched_task_num,
-    const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values)
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<RangeNumberType>::real_type> bem_values)
   {
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
+
     /**
      * @internal For simplicity, we use 1D linear thread grid.
      */
     const unsigned int thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-    RangeNumberType                      kx_jacobian, ky_jacobian;
-    Tensor<1, spacedim, RangeNumberType> kx_normal, ky_normal;
-    Point<spacedim, RangeNumberType>     kx_quad_point, ky_quad_point;
+    real_type                      kx_jacobian, ky_jacobian;
+    Tensor<1, spacedim, real_type> kx_normal, ky_normal;
+    Point<spacedim, real_type>     kx_quad_point, ky_quad_point;
     /**
      * @internal Create a wrapper matrix for the covariant matrix
      * on \f$K_x\f$. N.B. Only when the kernel function is
      * @p HyperSingularRegular, this matrix will be evaluated.
      */
-    RangeNumberType                 kx_covariant_matrix_data[spacedim * dim];
-    RangeNumberType                 ky_covariant_matrix_data[spacedim * dim];
-    CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
-      kx_covariant_matrix_data, spacedim, dim);
-    CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
-      ky_covariant_matrix_data, spacedim, dim);
+    real_type                 kx_covariant_matrix_data[spacedim * dim];
+    real_type                 ky_covariant_matrix_data[spacedim * dim];
+    CUDAFullMatrix<real_type> kx_covariant_matrix(kx_covariant_matrix_data,
+                                                  spacedim,
+                                                  dim);
+    CUDAFullMatrix<real_type> ky_covariant_matrix(ky_covariant_matrix_data,
+                                                  spacedim,
+                                                  dim);
 
     /**
      * @internal Get the list of quadrature points in the Sauter
@@ -3409,7 +3513,7 @@ namespace CUDAWrappers
          * which is efficient for accumulating values contributed from all
          * \f$k_3\f$ terms and quadrature points.
          */
-        RangeNumberType quad_value = 0.;
+        RangeNumberType quad_value = RangeNumberType(0.);
 
         /**
          * @internal Iterate over each quadrature point.
@@ -3429,7 +3533,7 @@ namespace CUDAWrappers
              * will be multiplied to @p kernel_value instead of the shape
              * function values.}
              */
-            RangeNumberType kernel_value = 0.;
+            RangeNumberType kernel_value = RangeNumberType(0.);
             /**
              * @internal Iterate over each k3 term.
              */
@@ -3509,14 +3613,12 @@ namespace CUDAWrappers
                      * shape function at the current quadrature point in the
                      * unit cells for \f$K_x\f$ and \f$K_y\f$.
                      */
-                    RangeNumberType kx_shape_grad_in_unit_cell[dim];
-                    RangeNumberType ky_shape_grad_in_unit_cell[dim];
-                    CUDAVector<RangeNumberType>
-                      kx_shape_grad_in_unit_cell_vector(
-                        kx_shape_grad_in_unit_cell, dim);
-                    CUDAVector<RangeNumberType>
-                      ky_shape_grad_in_unit_cell_vector(
-                        ky_shape_grad_in_unit_cell, dim);
+                    real_type             kx_shape_grad_in_unit_cell[dim];
+                    real_type             ky_shape_grad_in_unit_cell[dim];
+                    CUDAVector<real_type> kx_shape_grad_in_unit_cell_vector(
+                      kx_shape_grad_in_unit_cell, dim);
+                    CUDAVector<real_type> ky_shape_grad_in_unit_cell_vector(
+                      ky_shape_grad_in_unit_cell, dim);
 
 #pragma unroll
                     for (unsigned int d = 0; d < dim; d++)
@@ -3544,14 +3646,12 @@ namespace CUDAWrappers
                      * gradient tensors in the unit cells, then we get the
                      * gradient tensors in the real cells.
                      */
-                    RangeNumberType kx_shape_grad_in_real_cell[spacedim];
-                    RangeNumberType ky_shape_grad_in_real_cell[spacedim];
-                    CUDAVector<RangeNumberType>
-                      kx_shape_grad_in_real_cell_vector(
-                        kx_shape_grad_in_real_cell, spacedim);
-                    CUDAVector<RangeNumberType>
-                      ky_shape_grad_in_real_cell_vector(
-                        ky_shape_grad_in_real_cell, spacedim);
+                    real_type             kx_shape_grad_in_real_cell[spacedim];
+                    real_type             ky_shape_grad_in_real_cell[spacedim];
+                    CUDAVector<real_type> kx_shape_grad_in_real_cell_vector(
+                      kx_shape_grad_in_real_cell, spacedim);
+                    CUDAVector<real_type> ky_shape_grad_in_real_cell_vector(
+                      ky_shape_grad_in_real_cell, spacedim);
 
                     kx_covariant_matrix.vmult(
                       kx_shape_grad_in_real_cell_vector,
@@ -3568,10 +3668,10 @@ namespace CUDAWrappers
                      * \mynote{The cross product operation requires the input
                      * vectors to be transformed to tensors.}
                      */
-                    Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+                    Tensor<1, spacedim, real_type> kx_shape_surface_curl =
                       cross_product_3d(kx_normal,
                                        kx_shape_grad_in_real_cell_vector);
-                    Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+                    Tensor<1, spacedim, real_type> ky_shape_surface_curl =
                       cross_product_3d(ky_normal,
                                        ky_shape_grad_in_real_cell_vector);
 
@@ -3628,35 +3728,47 @@ namespace CUDAWrappers
     const KernelFunctionType<spacedim, RangeNumberType> kernel,
     const RangeNumberType                               kernel_factor,
     const unsigned int                                  capacity,
-    CUDATable<2, Point<spacedim, RangeNumberType>>
+    CUDATable<2,
+              Point<spacedim,
+                    typename numbers::NumberTraits<RangeNumberType>::real_type>>
       kx_mapping_support_points_permuted_ring_buffer,
-    CUDATable<2, Point<spacedim, RangeNumberType>>
+    CUDATable<2,
+              Point<spacedim,
+                    typename numbers::NumberTraits<RangeNumberType>::real_type>>
       ky_mapping_support_points_permuted_ring_buffer,
     SauterQuadratureTaskScalarData *scalar_data_ring_buffer_gpu,
     RangeNumberType                *quadrature_value_ring_buffer_gpu,
     const unsigned int              start_task_index,
     const unsigned int              fetched_task_num,
-    const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values)
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<RangeNumberType>::real_type> bem_values)
   {
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
+
     /**
      * @internal For simplicity, we use 1D linear thread grid.
      */
     const unsigned int thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-    RangeNumberType                      kx_jacobian, ky_jacobian;
-    Tensor<1, spacedim, RangeNumberType> kx_normal, ky_normal;
-    Point<spacedim, RangeNumberType>     kx_quad_point, ky_quad_point;
+    real_type                      kx_jacobian, ky_jacobian;
+    Tensor<1, spacedim, real_type> kx_normal, ky_normal;
+    Point<spacedim, real_type>     kx_quad_point, ky_quad_point;
     /**
      * @internal Create a wrapper matrix for the covariant matrix
      * on \f$K_x\f$. N.B. Only when the kernel function is
      * @p HyperSingularRegular, this matrix will be evaluated.
      */
-    RangeNumberType                 kx_covariant_matrix_data[spacedim * dim];
-    RangeNumberType                 ky_covariant_matrix_data[spacedim * dim];
-    CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
-      kx_covariant_matrix_data, spacedim, dim);
-    CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
-      ky_covariant_matrix_data, spacedim, dim);
+    real_type                 kx_covariant_matrix_data[spacedim * dim];
+    real_type                 ky_covariant_matrix_data[spacedim * dim];
+    CUDAFullMatrix<real_type> kx_covariant_matrix(kx_covariant_matrix_data,
+                                                  spacedim,
+                                                  dim);
+    CUDAFullMatrix<real_type> ky_covariant_matrix(ky_covariant_matrix_data,
+                                                  spacedim,
+                                                  dim);
 
     /**
      * @internal The number of allocated CUDA threads for executing this
@@ -3679,7 +3791,7 @@ namespace CUDAWrappers
          * which is efficient for accumulating values contributed from all
          * \f$k_3\f$ terms and quadrature points.
          */
-        RangeNumberType quad_value = 0.;
+        RangeNumberType quad_value = RangeNumberType(0.);
 
         /**
          * @internal Iterate over each quadrature point.
@@ -3755,11 +3867,11 @@ namespace CUDAWrappers
                  * shape function at the current quadrature point in the
                  * unit cells for \f$K_x\f$ and \f$K_y\f$.
                  */
-                RangeNumberType             kx_shape_grad_in_unit_cell[dim];
-                RangeNumberType             ky_shape_grad_in_unit_cell[dim];
-                CUDAVector<RangeNumberType> kx_shape_grad_in_unit_cell_vector(
+                real_type             kx_shape_grad_in_unit_cell[dim];
+                real_type             ky_shape_grad_in_unit_cell[dim];
+                CUDAVector<real_type> kx_shape_grad_in_unit_cell_vector(
                   kx_shape_grad_in_unit_cell, dim);
-                CUDAVector<RangeNumberType> ky_shape_grad_in_unit_cell_vector(
+                CUDAVector<real_type> ky_shape_grad_in_unit_cell_vector(
                   ky_shape_grad_in_unit_cell, dim);
 
 #pragma unroll
@@ -3784,11 +3896,11 @@ namespace CUDAWrappers
                  * gradient tensors in the unit cells, then we get the
                  * gradient tensors in the real cells.
                  */
-                RangeNumberType kx_shape_grad_in_real_cell[spacedim];
-                RangeNumberType ky_shape_grad_in_real_cell[spacedim];
-                CUDAVector<RangeNumberType> kx_shape_grad_in_real_cell_vector(
+                real_type             kx_shape_grad_in_real_cell[spacedim];
+                real_type             ky_shape_grad_in_real_cell[spacedim];
+                CUDAVector<real_type> kx_shape_grad_in_real_cell_vector(
                   kx_shape_grad_in_real_cell, spacedim);
-                CUDAVector<RangeNumberType> ky_shape_grad_in_real_cell_vector(
+                CUDAVector<real_type> ky_shape_grad_in_real_cell_vector(
                   ky_shape_grad_in_real_cell, spacedim);
 
                 kx_covariant_matrix.vmult(kx_shape_grad_in_real_cell_vector,
@@ -3804,10 +3916,10 @@ namespace CUDAWrappers
                  * \mynote{The cross product operation requires the input
                  * vectors to be transformed to tensors.}
                  */
-                Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+                Tensor<1, spacedim, real_type> kx_shape_surface_curl =
                   cross_product_3d(kx_normal,
                                    kx_shape_grad_in_real_cell_vector);
-                Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+                Tensor<1, spacedim, real_type> ky_shape_surface_curl =
                   cross_product_3d(ky_normal,
                                    ky_shape_grad_in_real_cell_vector);
 
@@ -3862,16 +3974,26 @@ namespace CUDAWrappers
   process_sauter_tasks_in_buffer_for_far_field_hmat_vector(
     const KernelFunctionType<spacedim, RangeNumberType> kernel,
     const RangeNumberType                               kernel_factor,
-    CUDATable<2, Point<spacedim, RangeNumberType>>
+    CUDATable<2,
+              Point<spacedim,
+                    typename numbers::NumberTraits<RangeNumberType>::real_type>>
       kx_mapping_support_points_permuted_buffer,
-    CUDATable<2, Point<spacedim, RangeNumberType>>
+    CUDATable<2,
+              Point<spacedim,
+                    typename numbers::NumberTraits<RangeNumberType>::real_type>>
                                     ky_mapping_support_points_permuted_buffer,
     SauterQuadratureTaskScalarData *scalar_data_buffer_gpu,
     RangeNumberType                *values_at_all_quad_points_gpu,
     const unsigned int              task_num,
     const unsigned int              quad_point_num,
-    const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values)
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<RangeNumberType>::real_type> bem_values)
   {
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
+
     /**
      * @internal We use a 2D thread block, the first dimension represents task
      * index, while the second dimension represents quadrature point index.
@@ -3879,20 +4001,22 @@ namespace CUDAWrappers
     const unsigned int task_index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int quad_no    = blockIdx.y * blockDim.y + threadIdx.y;
 
-    RangeNumberType                      kx_jacobian, ky_jacobian;
-    Tensor<1, spacedim, RangeNumberType> kx_normal, ky_normal;
-    Point<spacedim, RangeNumberType>     kx_quad_point, ky_quad_point;
+    real_type                      kx_jacobian, ky_jacobian;
+    Tensor<1, spacedim, real_type> kx_normal, ky_normal;
+    Point<spacedim, real_type>     kx_quad_point, ky_quad_point;
     /**
      * @internal Create a wrapper matrix for the covariant matrix
      * on \f$K_x\f$. N.B. Only when the kernel function is
      * @p HyperSingularRegular, this matrix will be evaluated.
      */
-    RangeNumberType                 kx_covariant_matrix_data[spacedim * dim];
-    RangeNumberType                 ky_covariant_matrix_data[spacedim * dim];
-    CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
-      kx_covariant_matrix_data, spacedim, dim);
-    CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
-      ky_covariant_matrix_data, spacedim, dim);
+    real_type                 kx_covariant_matrix_data[spacedim * dim];
+    real_type                 ky_covariant_matrix_data[spacedim * dim];
+    CUDAFullMatrix<real_type> kx_covariant_matrix(kx_covariant_matrix_data,
+                                                  spacedim,
+                                                  dim);
+    CUDAFullMatrix<real_type> ky_covariant_matrix(ky_covariant_matrix_data,
+                                                  spacedim,
+                                                  dim);
 
     if (task_index < task_num && quad_no < quad_point_num)
       {
@@ -3966,11 +4090,11 @@ namespace CUDAWrappers
              * shape function at the current quadrature point in the
              * unit cells for \f$K_x\f$ and \f$K_y\f$.
              */
-            RangeNumberType             kx_shape_grad_in_unit_cell[dim];
-            RangeNumberType             ky_shape_grad_in_unit_cell[dim];
-            CUDAVector<RangeNumberType> kx_shape_grad_in_unit_cell_vector(
+            real_type             kx_shape_grad_in_unit_cell[dim];
+            real_type             ky_shape_grad_in_unit_cell[dim];
+            CUDAVector<real_type> kx_shape_grad_in_unit_cell_vector(
               kx_shape_grad_in_unit_cell, dim);
-            CUDAVector<RangeNumberType> ky_shape_grad_in_unit_cell_vector(
+            CUDAVector<real_type> ky_shape_grad_in_unit_cell_vector(
               ky_shape_grad_in_unit_cell, dim);
 
 #pragma unroll
@@ -3995,11 +4119,11 @@ namespace CUDAWrappers
              * gradient tensors in the unit cells, then we get the
              * gradient tensors in the real cells.
              */
-            RangeNumberType             kx_shape_grad_in_real_cell[spacedim];
-            RangeNumberType             ky_shape_grad_in_real_cell[spacedim];
-            CUDAVector<RangeNumberType> kx_shape_grad_in_real_cell_vector(
+            real_type             kx_shape_grad_in_real_cell[spacedim];
+            real_type             ky_shape_grad_in_real_cell[spacedim];
+            CUDAVector<real_type> kx_shape_grad_in_real_cell_vector(
               kx_shape_grad_in_real_cell, spacedim);
-            CUDAVector<RangeNumberType> ky_shape_grad_in_real_cell_vector(
+            CUDAVector<real_type> ky_shape_grad_in_real_cell_vector(
               ky_shape_grad_in_real_cell, spacedim);
 
             kx_covariant_matrix.vmult(kx_shape_grad_in_real_cell_vector,
@@ -4015,9 +4139,9 @@ namespace CUDAWrappers
              * \mynote{The cross product operation requires the input
              * vectors to be transformed to tensors.}
              */
-            Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+            Tensor<1, spacedim, real_type> kx_shape_surface_curl =
               cross_product_3d(kx_normal, kx_shape_grad_in_real_cell_vector);
-            Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+            Tensor<1, spacedim, real_type> ky_shape_surface_curl =
               cross_product_3d(ky_normal, ky_shape_grad_in_real_cell_vector);
 
             quad_value =
@@ -4053,20 +4177,21 @@ namespace CUDAWrappers
    * associated with each vector element.
    *
    * @tparam RangeNumberType
+   * @tparam KernelNumberType
    * @param vector_size
    * @param quad_point_num
    * @param starting_task_indices_for_dof_pairs_gpu
    * @param values_at_all_quad_points_gpu
    * @param vector_element_values_gpu
    */
-  template <typename RangeNumberType = double>
+  template <typename RangeNumberType, typename KernelNumberType>
   __global__ void
   accumulate_quadrature_values_into_vector(
-    const unsigned int     vector_size,
-    const unsigned int     quad_point_num,
-    unsigned int          *starting_task_indices_for_dof_pairs_gpu,
-    const RangeNumberType *values_at_all_quad_points_gpu,
-    RangeNumberType       *vector_element_values_gpu)
+    const unsigned int      vector_size,
+    const unsigned int      quad_point_num,
+    unsigned int           *starting_task_indices_for_dof_pairs_gpu,
+    const KernelNumberType *values_at_all_quad_points_gpu,
+    RangeNumberType        *vector_element_values_gpu)
   {
     /**
      * @internal Here we use 1D thread block and the thread index @p idx is
@@ -4079,7 +4204,7 @@ namespace CUDAWrappers
         /**
          * @internal Accumulation of results into register variable.
          */
-        RangeNumberType vector_element = 0.;
+        RangeNumberType vector_element = RangeNumberType(0.);
 
         for (unsigned int task_index =
                starting_task_indices_for_dof_pairs_gpu[idx];
@@ -4108,13 +4233,28 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity, int dim, int spacedim, typename RangeNumberType>
+  template <int capacity,
+            int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
   HBEM_ATTR_HOST void
-  SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
-    allocate(const CellNeighboringType       neighboring_type,
-             const unsigned int              num_to_fetch,
-             const BEMValues<dim, spacedim> &bem_values)
+  SauterQuadratureTaskRingBuffer<capacity,
+                                 dim,
+                                 spacedim,
+                                 RangeNumberType,
+                                 KernelNumberType>::
+    allocate(const CellNeighboringType                  neighboring_type,
+             const unsigned int                         num_to_fetch,
+             const BEMValues<dim, spacedim, real_type> &bem_values)
   {
+    static_assert(
+      is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
+    static_assert(
+      std::is_same<
+        real_type,
+        typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
     cell_neighboring_type                = neighboring_type;
     if_all_near_field_hmat_entries_added = false;
     head_pending                         = 0;
@@ -4136,7 +4276,7 @@ namespace CUDAWrappers
     AssertCuda(cudaHostRegister(
       (void *)&(kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
       kx_mapping_support_points_permuted_ring_buffer_cpu.n_elements() *
-        sizeof(Point<spacedim, RangeNumberType>),
+        sizeof(Point<spacedim, real_type>),
       0));
 
     ky_mapping_support_points_permuted_ring_buffer_cpu.reinit(
@@ -4144,7 +4284,7 @@ namespace CUDAWrappers
     AssertCuda(cudaHostRegister(
       (void *)&(ky_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
       ky_mapping_support_points_permuted_ring_buffer_cpu.n_elements() *
-        sizeof(Point<spacedim, RangeNumberType>),
+        sizeof(Point<spacedim, real_type>),
       0));
 
     kx_mapping_support_points_permuted_ring_buffer_gpu.allocate(
@@ -4163,11 +4303,11 @@ namespace CUDAWrappers
      * @internal Allocate pinned memory on the host for the quadrature values.
      */
     AssertCuda(cudaMallocHost((void **)&quadrature_value_ring_buffer_cpu,
-                              capacity * sizeof(RangeNumberType)));
+                              capacity * sizeof(KernelNumberType)));
 
 
     AssertCuda(cudaMalloc((void **)&quadrature_value_ring_buffer_gpu,
-                          capacity * sizeof(RangeNumberType)));
+                          capacity * sizeof(KernelNumberType)));
 
     /**
      * @internal Initialize task status array.
@@ -4180,10 +4320,17 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity, int dim, int spacedim, typename RangeNumberType>
+  template <int capacity,
+            int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
   HBEM_ATTR_HOST void
-  SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
-    release()
+  SauterQuadratureTaskRingBuffer<capacity,
+                                 dim,
+                                 spacedim,
+                                 RangeNumberType,
+                                 KernelNumberType>::release()
   {
     AssertCuda(cudaHostUnregister(
       (void *)&(kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0))));
@@ -4216,10 +4363,18 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity, int dim, int spacedim, typename RangeNumberType>
+  template <int capacity,
+            int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
   HBEM_ATTR_HOST inline unsigned int
-  SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
-    task_num_during_creation() const
+  SauterQuadratureTaskRingBuffer<capacity,
+                                 dim,
+                                 spacedim,
+                                 RangeNumberType,
+                                 KernelNumberType>::task_num_during_creation()
+    const
   {
     /**
      * @internal Circular index should be used for computing.
@@ -4230,10 +4385,18 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity, int dim, int spacedim, typename RangeNumberType>
+  template <int capacity,
+            int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
   HBEM_ATTR_HOST inline unsigned int
-  SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
-    task_num_ready_for_processing() const
+  SauterQuadratureTaskRingBuffer<
+    capacity,
+    dim,
+    spacedim,
+    RangeNumberType,
+    KernelNumberType>::task_num_ready_for_processing() const
   {
     return (tail_committed < head_pending ? tail_committed + capacity :
                                             tail_committed) -
@@ -4241,10 +4404,18 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity, int dim, int spacedim, typename RangeNumberType>
+  template <int capacity,
+            int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
   HBEM_ATTR_HOST inline unsigned int
-  SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
-    task_num_during_processing() const
+  SauterQuadratureTaskRingBuffer<capacity,
+                                 dim,
+                                 spacedim,
+                                 RangeNumberType,
+                                 KernelNumberType>::task_num_during_processing()
+    const
   {
     return (head_pending < head_committed ? head_pending + capacity :
                                             head_pending) -
@@ -4252,10 +4423,17 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity, int dim, int spacedim, typename RangeNumberType>
+  template <int capacity,
+            int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
   HBEM_ATTR_HOST inline unsigned int
-  SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
-    task_num_total() const
+  SauterQuadratureTaskRingBuffer<capacity,
+                                 dim,
+                                 spacedim,
+                                 RangeNumberType,
+                                 KernelNumberType>::task_num_total() const
   {
     return (tail_pending < head_committed ? tail_pending + capacity :
                                             tail_pending) -
@@ -4263,10 +4441,17 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity, int dim, int spacedim, typename RangeNumberType>
+  template <int capacity,
+            int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
   HBEM_ATTR_HOST inline bool
-  SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
-    is_full() const
+  SauterQuadratureTaskRingBuffer<capacity,
+                                 dim,
+                                 spacedim,
+                                 RangeNumberType,
+                                 KernelNumberType>::is_full() const
   {
     return ((tail_pending + 1) >= capacity ?
               (tail_pending + 1 - capacity) :
@@ -4274,10 +4459,17 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity, int dim, int spacedim, typename RangeNumberType>
+  template <int capacity,
+            int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
   HBEM_ATTR_HOST inline bool
-  SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
-    is_not_full() const
+  SauterQuadratureTaskRingBuffer<capacity,
+                                 dim,
+                                 spacedim,
+                                 RangeNumberType,
+                                 KernelNumberType>::is_not_full() const
   {
     return ((tail_pending + 1) >= capacity ?
               (tail_pending + 1 - capacity) :
@@ -4285,24 +4477,39 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity, int dim, int spacedim, typename RangeNumberType>
+  template <int capacity,
+            int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
   HBEM_ATTR_HOST inline bool
-  SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
-    is_empty() const
+  SauterQuadratureTaskRingBuffer<capacity,
+                                 dim,
+                                 spacedim,
+                                 RangeNumberType,
+                                 KernelNumberType>::is_empty() const
   {
     return tail_pending == head_committed;
   }
 
 
-  template <int capacity, int dim, int spacedim, typename RangeNumberType>
+  template <int capacity,
+            int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
   HBEM_ATTR_HOST void
-  SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
+  SauterQuadratureTaskRingBuffer<capacity,
+                                 dim,
+                                 spacedim,
+                                 RangeNumberType,
+                                 KernelNumberType>::
     add_task(LAPACKFullMatrixExt<RangeNumberType> *fullmat,
              const unsigned int                    fullmat_row_index,
              const unsigned int                    fullmat_col_index,
              const SauterQuadratureTaskScalarData &scalar_data,
-             const RangeNumberType                 mass_matrix_entry,
-             const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
+             const real_type                       mass_matrix_entry,
+             const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
                &scratch_data)
   {
 #if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
@@ -4465,17 +4672,25 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity, int dim, int spacedim, typename RangeNumberType>
+  template <int capacity,
+            int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
   template <template <int, typename> typename KernelFunctionType>
   HBEM_ATTR_HOST bool
-  SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
+  SauterQuadratureTaskRingBuffer<capacity,
+                                 dim,
+                                 spacedim,
+                                 RangeNumberType,
+                                 KernelNumberType>::
     fetch_and_process_task_batch(
-      const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-      const RangeNumberType                                kernel_factor,
-      const unsigned int                                   block_size,
-      const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
-      std::mutex                                          &result_lock,
-      const cudaStream_t                                   cuda_stream_handle)
+      const KernelFunctionType<spacedim, KernelNumberType> &kernel,
+      const KernelNumberType                                kernel_factor,
+      const unsigned int                                    block_size,
+      const CUDABEMValues<dim, spacedim, real_type>        &bem_values,
+      std::mutex                                           &result_lock,
+      const cudaStream_t                                    cuda_stream_handle)
   {
 #if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
     LogStream::Prefix prefix_string(
@@ -4842,7 +5057,7 @@ namespace CUDAWrappers
                                        task_start_index_to_fetch),
                               (void *)(quadrature_value_ring_buffer_gpu +
                                        task_start_index_to_fetch),
-                              task_num_to_fetch * sizeof(RangeNumberType),
+                              task_num_to_fetch * sizeof(KernelNumberType),
                               cudaMemcpyDeviceToHost,
                               cuda_stream_handle));
 
@@ -4891,7 +5106,7 @@ namespace CUDAWrappers
                               (void *)(quadrature_value_ring_buffer_gpu +
                                        task_start_index_to_fetch),
                               number_of_data_until_buffer_end *
-                                sizeof(RangeNumberType),
+                                sizeof(KernelNumberType),
                               cudaMemcpyDeviceToHost,
                               cuda_stream_handle));
 
@@ -4900,7 +5115,7 @@ namespace CUDAWrappers
               cudaMemcpyAsync((void *)(quadrature_value_ring_buffer_cpu),
                               (void *)(quadrature_value_ring_buffer_gpu),
                               number_of_data_from_buffer_start *
-                                sizeof(RangeNumberType),
+                                sizeof(KernelNumberType),
                               cudaMemcpyDeviceToHost,
                               cuda_stream_handle));
 
@@ -5001,10 +5216,18 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity, int dim, int spacedim, typename RangeNumberType>
+  template <int capacity,
+            int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
   void
-  SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
-    print_pointers(LogStream &log_stream) const
+  SauterQuadratureTaskRingBuffer<
+    capacity,
+    dim,
+    spacedim,
+    RangeNumberType,
+    KernelNumberType>::print_pointers(LogStream &log_stream) const
   {
     log_stream << "head_committed=" << head_committed
                << ", head_pending=" << head_pending
@@ -5013,14 +5236,20 @@ namespace CUDAWrappers
   }
 
 
-  template <int dim, int spacedim, typename RangeNumberType>
-  SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>::
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
+  SauterQuadratureTaskBufferForVector<dim,
+                                      spacedim,
+                                      RangeNumberType,
+                                      KernelNumberType>::
     SauterQuadratureTaskBufferForVector(
-      const unsigned int              v_vector_size,
-      const unsigned int              max_cells_per_dof_in_test_space,
-      const unsigned int              max_cells_per_dof_in_ansatz_space,
-      const BEMValues<dim, spacedim> &bem_values,
-      const cudaStream_t              stream)
+      const unsigned int v_vector_size,
+      const unsigned int max_cells_per_dof_in_test_space,
+      const unsigned int max_cells_per_dof_in_ansatz_space,
+      const BEMValues<dim, spacedim, real_type> &bem_values,
+      const cudaStream_t                         stream)
     : cuda_stream_handle(stream)
     , vector_size(v_vector_size)
     , capacity(vector_size * max_cells_per_dof_in_test_space *
@@ -5034,6 +5263,13 @@ namespace CUDAWrappers
     , values_at_all_quad_points_gpu(nullptr)
     , vector_element_values_gpu(nullptr)
   {
+    static_assert(
+      is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
+    static_assert(
+      std::is_same<
+        real_type,
+        typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
     /**
      * @internal Allocate memory asynchronously on the device.
      */
@@ -5061,7 +5297,7 @@ namespace CUDAWrappers
 
     AssertCuda(
       cudaMallocAsync((void **)&values_at_all_quad_points_gpu,
-                      capacity * quad_point_num * sizeof(RangeNumberType),
+                      capacity * quad_point_num * sizeof(KernelNumberType),
                       cuda_stream_handle));
 
 
@@ -5081,7 +5317,7 @@ namespace CUDAWrappers
     AssertCuda(cudaHostRegister(
       (void *)&(kx_mapping_support_points_permuted_buffer_cpu(0, 0)),
       kx_mapping_support_points_permuted_buffer_cpu.n_elements() *
-        sizeof(Point<spacedim, RangeNumberType>),
+        sizeof(Point<spacedim, real_type>),
       0));
 
 
@@ -5090,7 +5326,7 @@ namespace CUDAWrappers
     AssertCuda(cudaHostRegister(
       (void *)&(ky_mapping_support_points_permuted_buffer_cpu(0, 0)),
       ky_mapping_support_points_permuted_buffer_cpu.n_elements() *
-        sizeof(Point<spacedim, RangeNumberType>),
+        sizeof(Point<spacedim, real_type>),
       0));
 
 
@@ -5100,9 +5336,15 @@ namespace CUDAWrappers
   }
 
 
-  template <int dim, int spacedim, typename RangeNumberType>
-  SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>::
-    ~SauterQuadratureTaskBufferForVector()
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
+  SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    RangeNumberType,
+    KernelNumberType>::~SauterQuadratureTaskBufferForVector()
   {
     if (starting_task_indices_for_dof_pairs_cpu != nullptr)
       {
@@ -5154,9 +5396,15 @@ namespace CUDAWrappers
   }
 
 
-  template <int dim, int spacedim, typename RangeNumberType>
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
   void
-  SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>::reinit()
+  SauterQuadratureTaskBufferForVector<dim,
+                                      spacedim,
+                                      RangeNumberType,
+                                      KernelNumberType>::reinit()
   {
     /**
      * @internal Reset the number of quadrature tasks to zero.
@@ -5165,11 +5413,18 @@ namespace CUDAWrappers
   }
 
 
-  template <int dim, int spacedim, typename RangeNumberType>
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
   void
-  SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>::add_task(
-    const SauterQuadratureTaskScalarData                          &scalar_data,
-    const PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data)
+  SauterQuadratureTaskBufferForVector<dim,
+                                      spacedim,
+                                      RangeNumberType,
+                                      KernelNumberType>::
+    add_task(const SauterQuadratureTaskScalarData &scalar_data,
+             const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
+               &scratch_data)
   {
     AssertIndexRange(task_num, capacity);
 
@@ -5198,18 +5453,23 @@ namespace CUDAWrappers
   }
 
 
-  template <int dim, int spacedim, typename RangeNumberType>
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
   template <template <int, typename> typename KernelFunctionType>
   void
-  SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>::
-    process_tasks(
-      Vector<RangeNumberType>                             &hmat_vector,
-      const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-      const RangeNumberType                                kernel_factor,
-      const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
-      const unsigned int                                   task_num_per_block,
-      const unsigned int block_size_for_quad_result_accumulation,
-      const cudaStream_t cuda_stream_handle)
+  SauterQuadratureTaskBufferForVector<dim,
+                                      spacedim,
+                                      RangeNumberType,
+                                      KernelNumberType>::
+    process_tasks(Vector<RangeNumberType> &hmat_vector,
+                  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
+                  const KernelNumberType                         kernel_factor,
+                  const CUDABEMValues<dim, spacedim, real_type> &bem_values,
+                  const unsigned int task_num_per_block,
+                  const unsigned int block_size_for_quad_result_accumulation,
+                  const cudaStream_t cuda_stream_handle)
   {
     /**
      * @internal Copy task data from host to device.
@@ -5304,11 +5564,12 @@ namespace CUDAWrappers
    *
    * This is the work function associated with a producer thread.
    *
-   * @tparam RangeNumberType
-   * @tparam SurfaceNormalDetector
    * @tparam capacity
    * @tparam dim
    * @tparam spacedim
+   * @tparam RangeNumberType
+   * @tparam KernelNumberType
+   * @tparam SurfaceNormalDetector
    * @param near_field_leaf_set
    * @param start_leaf_set_index
    * @param end_leaf_set_index This is the pass-the-end index.
@@ -5335,6 +5596,7 @@ namespace CUDAWrappers
             int dim,
             int spacedim,
             typename RangeNumberType,
+            typename KernelNumberType,
             typename SurfaceNormalDetector>
   void
   sauter_quadrature_for_near_field_matrix_entries_producer(
@@ -5342,23 +5604,41 @@ namespace CUDAWrappers
                       &near_field_leaf_set,
     const unsigned int start_leaf_set_index,
     const unsigned int end_leaf_set_index,
-    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
+    SauterQuadratureTaskRingBuffer<capacity,
+                                   dim,
+                                   spacedim,
+                                   RangeNumberType,
+                                   KernelNumberType>
       &ring_buffer_for_same_panel,
-    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
+    SauterQuadratureTaskRingBuffer<capacity,
+                                   dim,
+                                   spacedim,
+                                   RangeNumberType,
+                                   KernelNumberType>
       &ring_buffer_for_common_edge,
-    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
+    SauterQuadratureTaskRingBuffer<capacity,
+                                   dim,
+                                   spacedim,
+                                   RangeNumberType,
+                                   KernelNumberType>
       &ring_buffer_for_common_vertex,
-    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
-      &ring_buffer_for_regular,
+    SauterQuadratureTaskRingBuffer<capacity,
+                                   dim,
+                                   spacedim,
+                                   RangeNumberType,
+                                   KernelNumberType> &ring_buffer_for_regular,
     const std::vector<
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
       &kx_dof_to_cell_topo,
     const std::vector<
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-                                                    &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim>                 &kx_dof_handler,
-    const DoFHandler<dim, spacedim>                 &ky_dof_handler,
+      &ky_dof_to_cell_topo,
+    const BEMValues<dim,
+                    spacedim,
+                    typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                    &bem_values,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
@@ -5372,6 +5652,15 @@ namespace CUDAWrappers
     const bool                   is_kernel_symmetric,
     const bool                   enable_build_symmetric_hmat = false)
   {
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
+    static_assert(
+      is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
+    static_assert(
+      std::is_same<
+        real_type,
+        typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
     const std::thread::id current_thread_id = std::this_thread::get_id();
     deallog << "Producer thread " << current_thread_id << " starts...\n";
 #if ENABLE_NVTX == 1
@@ -5387,13 +5676,13 @@ namespace CUDAWrappers
      * N.B. A CUDA stream is created during the construction of the scratch
      * data.
      */
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+    PairCellWiseScratchData<dim, spacedim, KernelNumberType> scratch_data(
       current_thread_id,
       kx_dof_handler.get_fe(),
       ky_dof_handler.get_fe(),
       mappings,
       bem_values);
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
+    PairCellWisePerTaskData<dim, spacedim, KernelNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
     /**
@@ -5439,15 +5728,16 @@ namespace CUDAWrappers
              */
             switch (leaf_mat->get_block_type())
               {
-                  case HMatrixSupport::diagonal_block: {
+                  case HMatrixSupport::BlockType::diagonal_block: {
                     /**
                      * A diagonal \hmatrix block as well as its associated
                      * full matrix should be symmetric.
                      */
                     Assert(leaf_mat->get_property() ==
-                             HMatrixSupport::symmetric,
+                             HMatrixSupport::Property::symmetric,
                            ExcInvalidHMatrixProperty(leaf_mat->get_property()));
-                    Assert(fullmat->get_property() == LAPACKSupport::symmetric,
+                    Assert(fullmat->get_property() ==
+                             LAPACKSupport::Property::symmetric,
                            ExcInvalidLAPACKFullMatrixProperty(
                              fullmat->get_property()));
 
@@ -5502,7 +5792,7 @@ namespace CUDAWrappers
 
                     break;
                   }
-                  case HMatrixSupport::upper_triangular_block: {
+                  case HMatrixSupport::BlockType::upper_triangular_block: {
                     /**
                      * Do not build \hmatrix block belonging to the upper
                      * triangular part.
@@ -5510,7 +5800,7 @@ namespace CUDAWrappers
 
                     break;
                   }
-                  case HMatrixSupport::lower_triangular_block: {
+                  case HMatrixSupport::BlockType::lower_triangular_block: {
                     /**
                      * When the current \hmatrix block belongs to the lower
                      * triangular part, evaluate all of its elements as
@@ -5563,7 +5853,7 @@ namespace CUDAWrappers
 
                     break;
                   }
-                  case HMatrixSupport::undefined_block: {
+                  case HMatrixSupport::BlockType::undefined_block: {
                     Assert(false,
                            ExcInvalidHMatrixBlockType(
                              leaf_mat->get_block_type()));
@@ -5641,11 +5931,12 @@ namespace CUDAWrappers
    * This is the work function associated with a producer thread. This
    * overloaded version add a mass matrix to the \hmat.
    *
-   * @tparam RangeNumberType
-   * @tparam SurfaceNormalDetector
    * @tparam capacity
    * @tparam dim
    * @tparam spacedim
+   * @tparam RangeNumberType
+   * @tparam KernelNumberType
+   * @tparam SurfaceNormalDetector
    * @param near_field_leaf_set
    * @param start_leaf_set_index
    * @param end_leaf_set_index This is the pass-the-end index.
@@ -5674,6 +5965,7 @@ namespace CUDAWrappers
             int dim,
             int spacedim,
             typename RangeNumberType,
+            typename KernelNumberType,
             typename SurfaceNormalDetector>
   void
   sauter_quadrature_for_near_field_matrix_entries_producer(
@@ -5681,22 +5973,41 @@ namespace CUDAWrappers
                       &near_field_leaf_set,
     const unsigned int start_leaf_set_index,
     const unsigned int end_leaf_set_index,
-    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
+    SauterQuadratureTaskRingBuffer<capacity,
+                                   dim,
+                                   spacedim,
+                                   RangeNumberType,
+                                   KernelNumberType>
       &ring_buffer_for_same_panel,
-    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
+    SauterQuadratureTaskRingBuffer<capacity,
+                                   dim,
+                                   spacedim,
+                                   RangeNumberType,
+                                   KernelNumberType>
       &ring_buffer_for_common_edge,
-    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
+    SauterQuadratureTaskRingBuffer<capacity,
+                                   dim,
+                                   spacedim,
+                                   RangeNumberType,
+                                   KernelNumberType>
       &ring_buffer_for_common_vertex,
-    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
-                         &ring_buffer_for_regular,
-    const RangeNumberType mass_matrix_factor,
+    SauterQuadratureTaskRingBuffer<capacity,
+                                   dim,
+                                   spacedim,
+                                   RangeNumberType,
+                                   KernelNumberType> &ring_buffer_for_regular,
+    const typename numbers::NumberTraits<RangeNumberType>::real_type
+      mass_matrix_factor,
     const std::vector<
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
       &kx_dof_to_cell_topo,
     const std::vector<
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-                                                    &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+      &ky_dof_to_cell_topo,
+    const BEMValues<dim,
+                    spacedim,
+                    typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                    &bem_values,
     const QGauss<dim>               &mass_matrix_quadrature_formula,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -5713,6 +6024,15 @@ namespace CUDAWrappers
     const bool                   is_kernel_symmetric,
     const bool                   enable_build_symmetric_hmat = false)
   {
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
+    static_assert(
+      is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
+    static_assert(
+      std::is_same<
+        real_type,
+        typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
     const std::thread::id current_thread_id = std::this_thread::get_id();
     deallog << "Producer thread " << current_thread_id << " starts...\n";
 #if ENABLE_NVTX == 1
@@ -5737,13 +6057,13 @@ namespace CUDAWrappers
      * N.B. A CUDA stream is created during the construction of the scratch
      * data.
      */
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+    PairCellWiseScratchData<dim, spacedim, KernelNumberType> scratch_data(
       current_thread_id,
       kx_dof_handler.get_fe(),
       ky_dof_handler.get_fe(),
       mappings,
       bem_values);
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
+    PairCellWisePerTaskData<dim, spacedim, KernelNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
     /**
@@ -5789,15 +6109,16 @@ namespace CUDAWrappers
              */
             switch (leaf_mat->get_block_type())
               {
-                  case HMatrixSupport::diagonal_block: {
+                  case HMatrixSupport::BlockType::diagonal_block: {
                     /**
                      * A diagonal \hmatrix block as well as its associated
                      * full matrix should be symmetric.
                      */
                     Assert(leaf_mat->get_property() ==
-                             HMatrixSupport::symmetric,
+                             HMatrixSupport::Property::symmetric,
                            ExcInvalidHMatrixProperty(leaf_mat->get_property()));
-                    Assert(fullmat->get_property() == LAPACKSupport::symmetric,
+                    Assert(fullmat->get_property() ==
+                             LAPACKSupport::Property::symmetric,
                            ExcInvalidLAPACKFullMatrixProperty(
                              fullmat->get_property()));
 
@@ -5854,7 +6175,7 @@ namespace CUDAWrappers
 
                     break;
                   }
-                  case HMatrixSupport::upper_triangular_block: {
+                  case HMatrixSupport::BlockType::upper_triangular_block: {
                     /**
                      * Do not build \hmatrix block belonging to the upper
                      * triangular part.
@@ -5862,7 +6183,7 @@ namespace CUDAWrappers
 
                     break;
                   }
-                  case HMatrixSupport::lower_triangular_block: {
+                  case HMatrixSupport::BlockType::lower_triangular_block: {
                     /**
                      * When the current \hmatrix block belongs to the lower
                      * triangular part, evaluate all of its elements as
@@ -5917,7 +6238,7 @@ namespace CUDAWrappers
 
                     break;
                   }
-                  case HMatrixSupport::undefined_block: {
+                  case HMatrixSupport::BlockType::undefined_block: {
                     Assert(false,
                            ExcInvalidHMatrixBlockType(
                              leaf_mat->get_block_type()));
@@ -5993,17 +6314,34 @@ namespace CUDAWrappers
             int dim,
             int spacedim,
             template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename KernelNumberType>
   void
   sauter_quadrature_for_near_field_matrix_entries_consumer(
-    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-    const RangeNumberType                                kernel_factor,
-    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
-                                                        &ring_buffer,
-    const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values_gpu,
-    std::mutex                                          &result_lock,
-    const unsigned int                                   block_size)
+    const KernelFunctionType<spacedim, KernelNumberType> &kernel,
+    const KernelNumberType                                kernel_factor,
+    SauterQuadratureTaskRingBuffer<capacity,
+                                   dim,
+                                   spacedim,
+                                   RangeNumberType,
+                                   KernelNumberType>     &ring_buffer,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<RangeNumberType>::real_type>
+                      &bem_values_gpu,
+    std::mutex        &result_lock,
+    const unsigned int block_size)
   {
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
+    static_assert(
+      is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
+    static_assert(
+      std::is_same<
+        real_type,
+        typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
     const std::thread::id current_thread_id = std::this_thread::get_id();
     deallog << "Consumer thread " << current_thread_id << " for "
             << cell_neighboring_type_name(ring_buffer.cell_neighboring_type)
@@ -6053,11 +6391,12 @@ namespace CUDAWrappers
    * The created tasks are added to the ring buffer with the corresponding
    * cell neighboring type.
    *
-   * @tparam RangeNumberType
-   * @tparam SurfaceNormalDetector
    * @tparam capacity
    * @tparam dim
    * @tparam spacedim
+   * @tparam RangeNumberType
+   * @tparam KernelNumberType
+   * @tparam SurfaceNormalDetector
    * @param ring_buffer_for_same_panel
    * @param ring_buffer_for_common_edge
    * @param ring_buffer_for_common_vertex
@@ -6085,22 +6424,38 @@ namespace CUDAWrappers
             int dim,
             int spacedim,
             typename RangeNumberType,
+            typename KernelNumberType,
             typename SurfaceNormalDetector>
   void
   create_sauter_quadrature_tasks_on_one_pair_of_dofs(
-    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
+    SauterQuadratureTaskRingBuffer<capacity,
+                                   dim,
+                                   spacedim,
+                                   RangeNumberType,
+                                   KernelNumberType>
       &ring_buffer_for_same_panel,
-    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
+    SauterQuadratureTaskRingBuffer<capacity,
+                                   dim,
+                                   spacedim,
+                                   RangeNumberType,
+                                   KernelNumberType>
       &ring_buffer_for_common_edge,
-    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
+    SauterQuadratureTaskRingBuffer<capacity,
+                                   dim,
+                                   spacedim,
+                                   RangeNumberType,
+                                   KernelNumberType>
       &ring_buffer_for_common_vertex,
-    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
-                                         &ring_buffer_for_regular,
-    LAPACKFullMatrixExt<RangeNumberType> *fullmat,
-    const unsigned int                    fullmat_row_index,
-    const unsigned int                    fullmat_col_index,
-    const types::global_dof_index         i_global_dof_index,
-    const types::global_dof_index         j_global_dof_index,
+    SauterQuadratureTaskRingBuffer<capacity,
+                                   dim,
+                                   spacedim,
+                                   RangeNumberType,
+                                   KernelNumberType> &ring_buffer_for_regular,
+    LAPACKFullMatrixExt<RangeNumberType>             *fullmat,
+    const unsigned int                                fullmat_row_index,
+    const unsigned int                                fullmat_col_index,
+    const types::global_dof_index                     i_global_dof_index,
+    const types::global_dof_index                     j_global_dof_index,
     const std::vector<
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
       &kx_dof_to_cell_topo,
@@ -6111,9 +6466,18 @@ namespace CUDAWrappers
     const std::map<types::material_id, unsigned int>
                                 &material_id_to_mapping_index,
     const SurfaceNormalDetector &normal_detector,
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
   {
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
+    static_assert(
+      is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
+    static_assert(
+      std::is_same<
+        real_type,
+        typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
 #if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
     LogStream::Prefix prefix_string("create_sauter_task");
 #endif
@@ -6378,11 +6742,12 @@ namespace CUDAWrappers
    * mass matrix entry if needed. The final result will be the addition of
    * this value and the Sauter quadrature result.}
    *
-   * @tparam RangeNumberType
-   * @tparam SurfaceNormalDetector
    * @tparam capacity
    * @tparam dim
    * @tparam spacedim
+   * @tparam RangeNumberType
+   * @tparam KernelNumberType
+   * @tparam SurfaceNormalDetector
    * @param ring_buffer_for_same_panel
    * @param ring_buffer_for_common_edge
    * @param ring_buffer_for_common_vertex
@@ -6412,18 +6777,35 @@ namespace CUDAWrappers
             int dim,
             int spacedim,
             typename RangeNumberType,
+            typename KernelNumberType,
             typename SurfaceNormalDetector>
   void
   create_sauter_quadrature_tasks_on_one_pair_of_dofs(
-    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
+    SauterQuadratureTaskRingBuffer<capacity,
+                                   dim,
+                                   spacedim,
+                                   RangeNumberType,
+                                   KernelNumberType>
       &ring_buffer_for_same_panel,
-    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
+    SauterQuadratureTaskRingBuffer<capacity,
+                                   dim,
+                                   spacedim,
+                                   RangeNumberType,
+                                   KernelNumberType>
       &ring_buffer_for_common_edge,
-    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
+    SauterQuadratureTaskRingBuffer<capacity,
+                                   dim,
+                                   spacedim,
+                                   RangeNumberType,
+                                   KernelNumberType>
       &ring_buffer_for_common_vertex,
-    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
-                                         &ring_buffer_for_regular,
-    const RangeNumberType                 mass_matrix_factor,
+    SauterQuadratureTaskRingBuffer<capacity,
+                                   dim,
+                                   spacedim,
+                                   RangeNumberType,
+                                   KernelNumberType> &ring_buffer_for_regular,
+    const typename numbers::NumberTraits<RangeNumberType>::real_type
+                                          mass_matrix_factor,
     LAPACKFullMatrixExt<RangeNumberType> *fullmat,
     const unsigned int                    fullmat_row_index,
     const unsigned int                    fullmat_col_index,
@@ -6440,9 +6822,18 @@ namespace CUDAWrappers
                                 &material_id_to_mapping_index,
     const SurfaceNormalDetector &normal_detector,
     CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
   {
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
+    static_assert(
+      is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
+    static_assert(
+      std::is_same<
+        real_type,
+        typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
 #if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
     LogStream::Prefix prefix_string("create_sauter_task");
 #endif
@@ -6559,7 +6950,7 @@ namespace CUDAWrappers
              * following comparison <code>kx_cell_index ==
              * ky_cell_index</code> is meaningful.}
              */
-            RangeNumberType mass_matrix_entry = 0.;
+            real_type mass_matrix_entry = 0.;
             if ((kx_cell_index == ky_cell_index) && (mass_matrix_factor != 0))
               {
 #if ENABLE_NVTX == 1
@@ -6838,10 +7229,11 @@ namespace CUDAWrappers
    *
    * \mynote{The cell neighboring type for each pair of cells is @p regular.}
    *
-   * @tparam RangeNumberType
-   * @tparam SurfaceNormalDetector
    * @tparam dim
    * @tparam spacedim
+   * @tparam RangeNumberType
+   * @tparam KernelNumberType
+   * @tparam SurfaceNormalDetector
    * @param task_buffer
    * @param i_global_dof_index
    * @param j_global_dof_index
@@ -6857,13 +7249,16 @@ namespace CUDAWrappers
   template <int dim,
             int spacedim,
             typename RangeNumberType,
+            typename KernelNumberType,
             typename SurfaceNormalDetector>
   unsigned int
   create_sauter_quadrature_tasks_on_one_pair_of_dofs(
-    SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
-                                 &task_buffer,
-    const types::global_dof_index i_global_dof_index,
-    const types::global_dof_index j_global_dof_index,
+    SauterQuadratureTaskBufferForVector<dim,
+                                        spacedim,
+                                        RangeNumberType,
+                                        KernelNumberType> &task_buffer,
+    const types::global_dof_index                          i_global_dof_index,
+    const types::global_dof_index                          j_global_dof_index,
     const std::vector<
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
       &kx_dof_to_cell_topo,
@@ -6874,9 +7269,16 @@ namespace CUDAWrappers
     const std::map<types::material_id, unsigned int>
                                 &material_id_to_mapping_index,
     const SurfaceNormalDetector &normal_detector,
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
   {
+    static_assert(
+      is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
+    static_assert(
+      std::is_same<
+        typename numbers::NumberTraits<RangeNumberType>::real_type,
+        typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
     unsigned int number_of_tasks_for_dof_pair = 0;
 
     /**
@@ -7038,23 +7440,25 @@ namespace CUDAWrappers
  * @param scratch
  * @param active_quad_rule
  */
-template <int dim, int spacedim, typename RangeNumberType = double>
+template <int dim, int spacedim, typename KernelNumberType>
 HBEM_ATTR_HOST void
 calc_jacobian_normals_for_sauter_quad(
-  const CellNeighboringType                        cell_neighboring_type,
-  const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-  const unsigned int                               kx_mapping_index,
-  const unsigned int                               ky_mapping_index,
-  const unsigned int                               kx_mapping_n_shape_functions,
-  const unsigned int                               ky_mapping_n_shape_functions,
-  const bool                                       is_kx_normal_inward,
-  const bool                                       is_ky_normal_inward,
-  PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
-  const QGauss<dim * 2>                                   &active_quad_rule)
+  const CellNeighboringType cell_neighboring_type,
+  const BEMValues<dim,
+                  spacedim,
+                  typename numbers::NumberTraits<KernelNumberType>::real_type>
+                    &bem_values,
+  const unsigned int kx_mapping_index,
+  const unsigned int ky_mapping_index,
+  const unsigned int kx_mapping_n_shape_functions,
+  const unsigned int ky_mapping_n_shape_functions,
+  const bool         is_kx_normal_inward,
+  const bool         is_ky_normal_inward,
+  PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch)
 {
   switch (cell_neighboring_type)
     {
-        case SamePanel: {
+        case CellNeighboringType::SamePanel: {
           Assert(scratch.common_vertex_pair_local_indices.size() ==
                    GeometryInfo<dim>::vertices_per_cell,
                  ExcInternalError());
@@ -7066,7 +7470,9 @@ calc_jacobian_normals_for_sauter_quad(
            */
           for (unsigned int k3_index = 0; k3_index < 8; k3_index++)
             {
-              for (unsigned int q = 0; q < active_quad_rule.size(); q++)
+              for (unsigned int q = 0;
+                   q < scratch.kx_jacobians_same_panel.size(1);
+                   q++)
                 {
                   scratch.kx_jacobians_same_panel(k3_index, q) =
                     surface_jacobian_det_and_normal_vector(
@@ -7114,7 +7520,7 @@ calc_jacobian_normals_for_sauter_quad(
 
           break;
         }
-        case CommonEdge: {
+        case CellNeighboringType::CommonEdge: {
           Assert(scratch.common_vertex_pair_local_indices.size() ==
                    GeometryInfo<2>::vertices_per_face,
                  ExcInternalError());
@@ -7122,7 +7528,9 @@ calc_jacobian_normals_for_sauter_quad(
           // Precalculate surface Jacobians and normal vectors.
           for (unsigned int k3_index = 0; k3_index < 6; k3_index++)
             {
-              for (unsigned int q = 0; q < active_quad_rule.size(); q++)
+              for (unsigned int q = 0;
+                   q < scratch.kx_jacobians_common_edge.size(1);
+                   q++)
                 {
                   scratch.kx_jacobians_common_edge(k3_index, q) =
                     surface_jacobian_det_and_normal_vector(
@@ -7173,14 +7581,16 @@ calc_jacobian_normals_for_sauter_quad(
 
           break;
         }
-        case CommonVertex: {
+        case CellNeighboringType::CommonVertex: {
           Assert(scratch.common_vertex_pair_local_indices.size() == 1,
                  ExcInternalError());
 
           // Precalculate surface Jacobians and normal vectors.
           for (unsigned int k3_index = 0; k3_index < 4; k3_index++)
             {
-              for (unsigned int q = 0; q < active_quad_rule.size(); q++)
+              for (unsigned int q = 0;
+                   q < scratch.kx_jacobians_common_vertex.size(1);
+                   q++)
                 {
                   scratch.kx_jacobians_common_vertex(k3_index, q) =
                     surface_jacobian_det_and_normal_vector(
@@ -7228,12 +7638,13 @@ calc_jacobian_normals_for_sauter_quad(
 
           break;
         }
-        case Regular: {
+        case CellNeighboringType::Regular: {
           Assert(scratch.common_vertex_pair_local_indices.size() == 0,
                  ExcInternalError());
 
           // Precalculate surface Jacobians and normal vectors.
-          for (unsigned int q = 0; q < active_quad_rule.size(); q++)
+          for (unsigned int q = 0; q < scratch.kx_jacobians_regular.size(1);
+               q++)
             {
               scratch.kx_jacobians_regular(0, q) =
                 surface_jacobian_det_and_normal_vector(
@@ -7298,28 +7709,32 @@ calc_jacobian_normals_for_sauter_quad(
  * @param scratch
  * @param active_quad_rule
  */
-template <int dim, int spacedim, typename RangeNumberType = double>
+template <int dim, int spacedim, typename KernelNumberType>
 HBEM_ATTR_HOST void
 calc_covariant_transformations(
-  const CellNeighboringType                        cell_neighboring_type,
-  const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-  const unsigned int                               kx_mapping_index,
-  const unsigned int                               ky_mapping_index,
-  const unsigned int                               kx_mapping_n_shape_functions,
-  const unsigned int                               ky_mapping_n_shape_functions,
-  PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
-  const QGauss<dim * 2>                                   &active_quad_rule)
+  const CellNeighboringType cell_neighboring_type,
+  const BEMValues<dim,
+                  spacedim,
+                  typename numbers::NumberTraits<KernelNumberType>::real_type>
+                    &bem_values,
+  const unsigned int kx_mapping_index,
+  const unsigned int ky_mapping_index,
+  const unsigned int kx_mapping_n_shape_functions,
+  const unsigned int ky_mapping_n_shape_functions,
+  PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch)
 {
   switch (cell_neighboring_type)
     {
-        case SamePanel: {
+        case CellNeighboringType::SamePanel: {
           Assert(scratch.common_vertex_pair_local_indices.size() ==
                    GeometryInfo<dim>::vertices_per_cell,
                  ExcInternalError());
 
           for (unsigned int k3_index = 0; k3_index < 8; k3_index++)
             {
-              for (unsigned int q = 0; q < active_quad_rule.size(); q++)
+              for (unsigned int q = 0;
+                   q < scratch.kx_covariants_same_panel.size(1);
+                   q++)
                 {
                   scratch.kx_covariants_same_panel(k3_index, q) =
                     surface_covariant_transformation(
@@ -7345,14 +7760,16 @@ calc_covariant_transformations(
 
           break;
         }
-        case CommonEdge: {
+        case CellNeighboringType::CommonEdge: {
           Assert(scratch.common_vertex_pair_local_indices.size() ==
                    GeometryInfo<2>::vertices_per_face,
                  ExcInternalError());
 
           for (unsigned int k3_index = 0; k3_index < 6; k3_index++)
             {
-              for (unsigned int q = 0; q < active_quad_rule.size(); q++)
+              for (unsigned int q = 0;
+                   q < scratch.kx_covariants_common_edge.size(1);
+                   q++)
                 {
                   scratch.kx_covariants_common_edge(k3_index, q) =
                     surface_covariant_transformation(
@@ -7378,13 +7795,15 @@ calc_covariant_transformations(
 
           break;
         }
-        case CommonVertex: {
+        case CellNeighboringType::CommonVertex: {
           Assert(scratch.common_vertex_pair_local_indices.size() == 1,
                  ExcInternalError());
 
           for (unsigned int k3_index = 0; k3_index < 4; k3_index++)
             {
-              for (unsigned int q = 0; q < active_quad_rule.size(); q++)
+              for (unsigned int q = 0;
+                   q < scratch.kx_covariants_common_vertex.size(1);
+                   q++)
                 {
                   scratch.kx_covariants_common_vertex(k3_index, q) =
                     surface_covariant_transformation(
@@ -7410,11 +7829,12 @@ calc_covariant_transformations(
 
           break;
         }
-        case Regular: {
+        case CellNeighboringType::Regular: {
           Assert(scratch.common_vertex_pair_local_indices.size() == 0,
                  ExcInternalError());
 
-          for (unsigned int q = 0; q < active_quad_rule.size(); q++)
+          for (unsigned int q = 0; q < scratch.kx_covariants_regular.size(1);
+               q++)
             {
               scratch.kx_covariants_regular(0, q) =
                 surface_covariant_transformation(
@@ -7461,21 +7881,24 @@ calc_covariant_transformations(
 template <int dim,
           int spacedim,
           template <int, typename> typename KernelFunctionType,
-          typename RangeNumberType = double>
-HBEM_ATTR_HOST RangeNumberType
+          typename KernelNumberType>
+HBEM_ATTR_HOST KernelNumberType
 ApplyQuadratureUsingBEMValues(
   const Quadrature<dim * 2> &quad_rule,
   const HierBEM::CUDAWrappers::KernelPulledbackToSauterSpace<dim,
                                                              spacedim,
                                                              KernelFunctionType,
-                                                             RangeNumberType>
-                                                                &f,
-  const RangeNumberType                                          factor,
-  const BEMValues<dim, spacedim, RangeNumberType>               &bem_values,
-  const PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-  unsigned int                                                   component = 0)
+                                                             KernelNumberType>
+                        &f,
+  const KernelNumberType factor,
+  const BEMValues<dim,
+                  spacedim,
+                  typename numbers::NumberTraits<KernelNumberType>::real_type>
+                                                                 &bem_values,
+  const PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
+  unsigned int                                                    component = 0)
 {
-  RangeNumberType result = 0.;
+  KernelNumberType result = KernelNumberType(0.);
 
   const std::vector<double> &quad_weights = quad_rule.get_weights();
 
@@ -7499,16 +7922,16 @@ select_sauter_quad_rule_from_bem_values(
 {
   switch (cell_neighboring_type)
     {
-        case SamePanel: {
+        case CellNeighboringType::SamePanel: {
           return bem_values.quad_rule_for_same_panel;
         }
-        case CommonEdge: {
+        case CellNeighboringType::CommonEdge: {
           return bem_values.quad_rule_for_common_edge;
         }
-        case CommonVertex: {
+        case CellNeighboringType::CommonVertex: {
           return bem_values.quad_rule_for_common_vertex;
         }
-        case Regular: {
+        case CellNeighboringType::Regular: {
           return bem_values.quad_rule_for_regular;
         }
         default: {
@@ -7572,20 +7995,23 @@ select_sauter_quad_rule_from_bem_values(
 template <int dim,
           int spacedim,
           template <int, typename> typename KernelFunctionType,
-          typename RangeNumberType,
+          typename KernelNumberType,
           typename SurfaceNormalDetector>
 void
 sauter_quadrature_on_one_pair_of_cells(
-  const KernelFunctionType<spacedim, RangeNumberType>            &kernel,
-  const RangeNumberType                                           kernel_factor,
+  const KernelFunctionType<spacedim, KernelNumberType>           &kernel,
+  const KernelNumberType                                          kernel_factor,
   const typename DoFHandler<dim, spacedim>::active_cell_iterator &kx_cell_iter,
   const typename DoFHandler<dim, spacedim>::active_cell_iterator &ky_cell_iter,
-  const MappingInfo<dim, spacedim>                        &kx_mapping_info,
-  const MappingInfo<dim, spacedim>                        &ky_mapping_info,
-  const BEMValues<dim, spacedim, RangeNumberType>         &bem_values,
-  const SurfaceNormalDetector                             &normal_detector,
-  PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+  const MappingInfo<dim, spacedim> &kx_mapping_info,
+  const MappingInfo<dim, spacedim> &ky_mapping_info,
+  const BEMValues<dim,
+                  spacedim,
+                  typename numbers::NumberTraits<KernelNumberType>::real_type>
+                                                           &bem_values,
+  const SurfaceNormalDetector                              &normal_detector,
+  PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
   const bool is_kx_mapping_internaldata_computed = true)
 {
   /**
@@ -7675,8 +8101,7 @@ sauter_quadrature_on_one_pair_of_cells(
                                         ky_mapping_n_shape_functions,
                                         is_kx_normal_inward,
                                         is_ky_normal_inward,
-                                        scratch_data,
-                                        active_quad_rule);
+                                        scratch_data);
 
   /**
    * When the bilinear form for the hyper singular operator is evaluated,
@@ -7690,8 +8115,7 @@ sauter_quadrature_on_one_pair_of_cells(
                                      ky_mapping_index,
                                      kx_mapping_n_shape_functions,
                                      ky_mapping_n_shape_functions,
-                                     scratch_data,
-                                     active_quad_rule);
+                                     scratch_data);
     }
 
   /**
@@ -7713,7 +8137,7 @@ sauter_quadrature_on_one_pair_of_cells(
           HierBEM::CUDAWrappers::KernelPulledbackToUnitCell<dim,
                                                             spacedim,
                                                             KernelFunctionType,
-                                                            RangeNumberType>
+                                                            KernelNumberType>
             kernel_pullback_on_unit(kernel, cell_neighboring_type, i, j);
 
           // Pullback the kernel function to Sauter parameter space.
@@ -7721,7 +8145,7 @@ sauter_quadrature_on_one_pair_of_cells(
             dim,
             spacedim,
             KernelFunctionType,
-            RangeNumberType>
+            KernelNumberType>
             kernel_pullback_on_sauter(kernel_pullback_on_unit,
                                       cell_neighboring_type);
 
@@ -7744,22 +8168,25 @@ sauter_quadrature_on_one_pair_of_cells(
 template <int dim,
           int spacedim,
           template <int, typename> typename KernelFunctionType,
-          typename RangeNumberType,
+          typename KernelNumberType,
           typename SurfaceNormalDetector>
 void
 sauter_quadrature_on_one_pair_of_cells_parallel_over_ky(
-  const KernelFunctionType<spacedim, RangeNumberType>            &kernel,
-  const RangeNumberType                                           kernel_factor,
+  const KernelFunctionType<spacedim, KernelNumberType>           &kernel,
+  const KernelNumberType                                          kernel_factor,
   const typename DoFHandler<dim, spacedim>::active_cell_iterator &kx_cell_iter,
   const typename DoFHandler<dim, spacedim>::active_cell_iterator &ky_cell_iter,
   const std::vector<MappingInfo<dim, spacedim> *>                &mappings,
   const std::map<types::material_id, unsigned int>
-                                                  &material_id_to_mapping_index,
-  const MappingInfo<dim, spacedim>                &kx_mapping_info,
-  const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-  const SurfaceNormalDetector                     &normal_detector,
-  PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+                                   &material_id_to_mapping_index,
+  const MappingInfo<dim, spacedim> &kx_mapping_info,
+  const BEMValues<dim,
+                  spacedim,
+                  typename numbers::NumberTraits<KernelNumberType>::real_type>
+                                                           &bem_values,
+  const SurfaceNormalDetector                              &normal_detector,
+  PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
   const bool is_kx_mapping_internaldata_computed = true)
 {
   const unsigned int ky_mapping_index =
@@ -7783,22 +8210,25 @@ sauter_quadrature_on_one_pair_of_cells_parallel_over_ky(
 template <int dim,
           int spacedim,
           template <int, typename> typename KernelFunctionType,
-          typename RangeNumberType,
+          typename KernelNumberType,
           typename SurfaceNormalDetector>
-RangeNumberType
+KernelNumberType
 sauter_quadrature_on_one_pair_of_shape_functions(
-  const KernelFunctionType<spacedim, RangeNumberType>            &kernel,
-  const RangeNumberType                                           kernel_factor,
+  const KernelFunctionType<spacedim, KernelNumberType>           &kernel,
+  const KernelNumberType                                          kernel_factor,
   const unsigned int                                              i,
   const unsigned int                                              j,
   const typename DoFHandler<dim, spacedim>::active_cell_iterator &kx_cell_iter,
   const typename DoFHandler<dim, spacedim>::active_cell_iterator &ky_cell_iter,
-  const MappingInfo<dim, spacedim>                        &kx_mapping_info,
-  const MappingInfo<dim, spacedim>                        &ky_mapping_info,
-  const BEMValues<dim, spacedim, RangeNumberType>         &bem_values,
-  const SurfaceNormalDetector                             &normal_detector,
-  PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+  const MappingInfo<dim, spacedim> &kx_mapping_info,
+  const MappingInfo<dim, spacedim> &ky_mapping_info,
+  const BEMValues<dim,
+                  spacedim,
+                  typename numbers::NumberTraits<KernelNumberType>::real_type>
+                                                           &bem_values,
+  const SurfaceNormalDetector                              &normal_detector,
+  PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
 {
   /**
    * Detect the cell neighboring type based on cell vertex indices.
@@ -7884,8 +8314,7 @@ sauter_quadrature_on_one_pair_of_shape_functions(
                                         ky_mapping_n_shape_functions,
                                         is_kx_normal_inward,
                                         is_ky_normal_inward,
-                                        scratch_data,
-                                        active_quad_rule);
+                                        scratch_data);
 
   /**
    * When the bilinear form for the hyper singular operator is evaluated,
@@ -7899,8 +8328,7 @@ sauter_quadrature_on_one_pair_of_shape_functions(
                                      ky_mapping_index,
                                      kx_mapping_n_shape_functions,
                                      ky_mapping_n_shape_functions,
-                                     scratch_data,
-                                     active_quad_rule);
+                                     scratch_data);
     }
 
   AssertIndexRange(i, kx_n_dofs);
@@ -7910,14 +8338,14 @@ sauter_quadrature_on_one_pair_of_shape_functions(
   HierBEM::CUDAWrappers::KernelPulledbackToUnitCell<dim,
                                                     spacedim,
                                                     KernelFunctionType,
-                                                    RangeNumberType>
+                                                    KernelNumberType>
     kernel_pullback_on_unit(kernel, cell_neighboring_type, i, j);
 
   // Pullback the kernel function to Sauter parameter space.
   HierBEM::CUDAWrappers::KernelPulledbackToSauterSpace<dim,
                                                        spacedim,
                                                        KernelFunctionType,
-                                                       RangeNumberType>
+                                                       KernelNumberType>
     kernel_pullback_on_sauter(kernel_pullback_on_unit, cell_neighboring_type);
 
   // Apply Sauter numerical quadrature.
@@ -7947,10 +8375,11 @@ sauter_quadrature_on_one_pair_of_shape_functions(
  * When coming to this function for Sauter quadrature, the global DoF
  * indices should be used.}
  *
- * @tparam RangeNumberType
- * @tparam SurfaceNormalDetector
  * @tparam dim
  * @tparam spacedim
+ * @tparam KernelFunctionType
+ * @tparam KernelNumberType
+ * @tparam SurfaceNormalDetector
  * @param kernel
  * @param kernel_factor
  * @param i Global DoF index in the external numbering. If only a subset of
@@ -7973,32 +8402,37 @@ sauter_quadrature_on_one_pair_of_shape_functions(
 template <int dim,
           int spacedim,
           template <int, typename> typename KernelFunctionType,
-          typename RangeNumberType,
+          typename KernelNumberType,
           typename SurfaceNormalDetector>
-RangeNumberType
+KernelNumberType
 sauter_quadrature_on_one_pair_of_dofs(
-  const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-  const RangeNumberType                                kernel_factor,
-  const types::global_dof_index                        i,
-  const types::global_dof_index                        j,
+  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
+  const KernelNumberType                                kernel_factor,
+  const types::global_dof_index                         i,
+  const types::global_dof_index                         j,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &ky_dof_to_cell_topo,
-  const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+  const HierBEM::CUDAWrappers::CUDABEMValues<
+    dim,
+    spacedim,
+    typename numbers::NumberTraits<KernelNumberType>::real_type>
                                                   &bem_values_gpu,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
                               &material_id_to_mapping_index,
   const SurfaceNormalDetector &normal_detector,
-  PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+  PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
-                                                          &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
+                                                           &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
 {
+  using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
+
 #if ENABLE_NVTX == 1
   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
     "sauter_quadrature_on_one_pair_of_dofs");
@@ -8008,7 +8442,7 @@ sauter_quadrature_on_one_pair_of_dofs(
    * @internal This result variable accumulates all contributions from pairs
    * of cells related to the global DoF indices @p (i,j).
    */
-  RangeNumberType double_integral = 0.0;
+  KernelNumberType double_integral = KernelNumberType(0.);
 
   /**
    * Iterate over each cell in the support of the basis function associated
@@ -8389,7 +8823,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                     ApplyQuadratureUsingBEMValuesSamePanel<<<
                       blocks_rect.x,
                       threads_rect.x,
-                      threads_rect.x * sizeof(RangeNumberType),
+                      threads_rect.x * sizeof(KernelNumberType),
                       scratch_data.cuda_stream_handle>>>(kernel,
                                                          kernel_factor,
                                                          i_index,
@@ -8409,7 +8843,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                     ApplyQuadratureUsingBEMValuesCommonEdge<<<
                       blocks_rect.x,
                       threads_rect.x,
-                      threads_rect.x * sizeof(RangeNumberType),
+                      threads_rect.x * sizeof(KernelNumberType),
                       scratch_data.cuda_stream_handle>>>(kernel,
                                                          kernel_factor,
                                                          i_index,
@@ -8429,7 +8863,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                     ApplyQuadratureUsingBEMValuesCommonVertex<<<
                       blocks_rect.x,
                       threads_rect.x,
-                      threads_rect.x * sizeof(RangeNumberType),
+                      threads_rect.x * sizeof(KernelNumberType),
                       scratch_data.cuda_stream_handle>>>(kernel,
                                                          kernel_factor,
                                                          i_index,
@@ -8448,7 +8882,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                   HierBEM::CUDAWrappers::ApplyQuadratureUsingBEMValuesRegular<<<
                     blocks_rect.x,
                     threads_rect.x,
-                    threads_rect.x * sizeof(RangeNumberType),
+                    threads_rect.x * sizeof(KernelNumberType),
                     scratch_data.cuda_stream_handle>>>(kernel,
                                                        kernel_factor,
                                                        i_index,
@@ -8471,7 +8905,7 @@ sauter_quadrature_on_one_pair_of_dofs(
           AssertCuda(cudaMemcpyAsync(
             (void *)(scratch_data.quad_values_in_thread_blocks),
             (void *)(scratch_data_gpu.quad_values_in_thread_blocks),
-            sizeof(RangeNumberType) * blocks_rect.x,
+            sizeof(KernelNumberType) * blocks_rect.x,
             cudaMemcpyDeviceToHost,
             scratch_data.cuda_stream_handle));
 
@@ -8519,10 +8953,11 @@ sauter_quadrature_on_one_pair_of_dofs(
  * When coming to this function for Sauter quadrature, the global DoF
  * indices should be used.}
  *
- * @tparam RangeNumberType
- * @tparam SurfaceNormalDetector
  * @tparam dim
  * @tparam spacedim
+ * @tparam KernelFunctionType
+ * @tparam KernelNumberType
+ * @tparam SurfaceNormalDetector
  * @param kernel
  * @param kernel_factor
  * @param mass_matrix_factor
@@ -8547,34 +8982,40 @@ sauter_quadrature_on_one_pair_of_dofs(
 template <int dim,
           int spacedim,
           template <int, typename> typename KernelFunctionType,
-          typename RangeNumberType,
+          typename KernelNumberType,
           typename SurfaceNormalDetector>
-RangeNumberType
+KernelNumberType
 sauter_quadrature_on_one_pair_of_dofs(
-  const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-  const RangeNumberType                                kernel_factor,
-  const RangeNumberType                                mass_matrix_factor,
-  const types::global_dof_index                        i,
-  const types::global_dof_index                        j,
+  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
+  const KernelNumberType                                kernel_factor,
+  const typename numbers::NumberTraits<KernelNumberType>::real_type
+                                mass_matrix_factor,
+  const types::global_dof_index i,
+  const types::global_dof_index j,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &ky_dof_to_cell_topo,
-  const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+  const HierBEM::CUDAWrappers::CUDABEMValues<
+    dim,
+    spacedim,
+    typename numbers::NumberTraits<KernelNumberType>::real_type>
                                                   &bem_values_gpu,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
                                                   &material_id_to_mapping_index,
   const SurfaceNormalDetector                     &normal_detector,
   CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
-  PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+  PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
-                                                          &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
+                                                           &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
 {
+  using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
+
 #if ENABLE_NVTX == 1
   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
     "sauter_quadrature_on_one_pair_of_dofs with mass matrix");
@@ -8584,7 +9025,7 @@ sauter_quadrature_on_one_pair_of_dofs(
    * @internal This result variable accumulates all contributions from pairs
    * of cells related to the global DoF indices @p (i,j).
    */
-  RangeNumberType double_integral = 0.0;
+  KernelNumberType double_integral = KernelNumberType(0.);
 
   /**
    * Iterate over each cell in the support of the basis function associated
@@ -8972,7 +9413,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                     ApplyQuadratureUsingBEMValuesSamePanel<<<
                       blocks_rect.x,
                       threads_rect.x,
-                      threads_rect.x * sizeof(RangeNumberType),
+                      threads_rect.x * sizeof(KernelNumberType),
                       scratch_data.cuda_stream_handle>>>(kernel,
                                                          kernel_factor,
                                                          i_index,
@@ -8992,7 +9433,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                     ApplyQuadratureUsingBEMValuesCommonEdge<<<
                       blocks_rect.x,
                       threads_rect.x,
-                      threads_rect.x * sizeof(RangeNumberType),
+                      threads_rect.x * sizeof(KernelNumberType),
                       scratch_data.cuda_stream_handle>>>(kernel,
                                                          kernel_factor,
                                                          i_index,
@@ -9012,7 +9453,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                     ApplyQuadratureUsingBEMValuesCommonVertex<<<
                       blocks_rect.x,
                       threads_rect.x,
-                      threads_rect.x * sizeof(RangeNumberType),
+                      threads_rect.x * sizeof(KernelNumberType),
                       scratch_data.cuda_stream_handle>>>(kernel,
                                                          kernel_factor,
                                                          i_index,
@@ -9031,7 +9472,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                   HierBEM::CUDAWrappers::ApplyQuadratureUsingBEMValuesRegular<<<
                     blocks_rect.x,
                     threads_rect.x,
-                    threads_rect.x * sizeof(RangeNumberType),
+                    threads_rect.x * sizeof(KernelNumberType),
                     scratch_data.cuda_stream_handle>>>(kernel,
                                                        kernel_factor,
                                                        i_index,
@@ -9054,7 +9495,7 @@ sauter_quadrature_on_one_pair_of_dofs(
           AssertCuda(cudaMemcpyAsync(
             (void *)(scratch_data.quad_values_in_thread_blocks),
             (void *)(scratch_data_gpu.quad_values_in_thread_blocks),
-            sizeof(RangeNumberType) * blocks_rect.x,
+            sizeof(KernelNumberType) * blocks_rect.x,
             cudaMemcpyDeviceToHost,
             scratch_data.cuda_stream_handle));
 
@@ -9191,32 +9632,37 @@ sauter_quadrature_on_one_pair_of_dofs(
 template <int dim,
           int spacedim,
           template <int, typename> typename KernelFunctionType,
-          typename RangeNumberType,
+          typename KernelNumberType,
           typename SurfaceNormalDetector>
-RangeNumberType
+KernelNumberType
 sauter_quadrature_on_one_pair_of_far_field_dofs(
-  const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-  const RangeNumberType                                kernel_factor,
-  const types::global_dof_index                        i,
-  const types::global_dof_index                        j,
+  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
+  const KernelNumberType                                kernel_factor,
+  const types::global_dof_index                         i,
+  const types::global_dof_index                         j,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &ky_dof_to_cell_topo,
-  const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+  const HierBEM::CUDAWrappers::CUDABEMValues<
+    dim,
+    spacedim,
+    typename numbers::NumberTraits<KernelNumberType>::real_type>
                                                   &bem_values_gpu,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
                               &material_id_to_mapping_index,
   const SurfaceNormalDetector &normal_detector,
-  PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+  PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
-                                                          &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
+                                                           &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
 {
+  using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
+
 #if ENABLE_NVTX == 1
   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
     "sauter_quadrature_on_one_pair_of_far_field_dofs");
@@ -9226,7 +9672,7 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
    * @internal This result variable accumulates all contributions from pairs
    * of cells related to the global DoF indices @p (i,j).
    */
-  RangeNumberType double_integral = 0.0;
+  KernelNumberType double_integral = KernelNumberType(0.);
 
   /**
    * Iterate over each cell in the support of the basis function associated
@@ -9443,7 +9889,7 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
             HierBEM::CUDAWrappers::ApplyQuadratureUsingBEMValuesRegular<<<
               blocks_rect.x,
               threads_rect.x,
-              threads_rect.x * sizeof(RangeNumberType),
+              threads_rect.x * sizeof(KernelNumberType),
               scratch_data.cuda_stream_handle>>>(kernel,
                                                  kernel_factor,
                                                  i_index,
@@ -9459,7 +9905,7 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
           AssertCuda(cudaMemcpyAsync(
             (void *)(scratch_data.quad_values_in_thread_blocks),
             (void *)(scratch_data_gpu.quad_values_in_thread_blocks),
-            sizeof(RangeNumberType) * blocks_rect.x,
+            sizeof(KernelNumberType) * blocks_rect.x,
             cudaMemcpyDeviceToHost,
             scratch_data.cuda_stream_handle));
 

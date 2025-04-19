@@ -10,12 +10,17 @@
 
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
+#include <deal.II/base/numbers.h>
+#include <deal.II/base/point.h>
 #include <deal.II/base/quadrature.h>
+#include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/types.h>
 #include <deal.II/base/work_stream.h>
 
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_tools.h>
+
+#include <deal.II/fe/fe_update_flags.h>
 
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/sparse_matrix.h>
@@ -27,6 +32,7 @@
 #include <functional>
 #include <map>
 #include <set>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -36,6 +42,7 @@
 #include "config.h"
 #include "gmsh_manipulation.h"
 #include "mapping/mapping_info.h"
+#include "number_traits.h"
 #include "sauter_quadrature.hcu"
 #include "subdomain_topology.h"
 
@@ -157,7 +164,7 @@ assemble_fem_scaled_mass_matrix_on_one_cell(
 /**
  * Assemble the mass matrix in FEM on one cell.
  *
- * This version used for building a mass matrix on a subdomain.
+ * This version is used for building a mass matrix on a subdomain.
  */
 template <int dim, int spacedim, typename RangeNumberType>
 void
@@ -492,26 +499,15 @@ assemble_fem_scaled_mass_matrix(
   WorkStream::run(
     cell_iterator_pairs_for_mass_matrix.begin(),
     cell_iterator_pairs_for_mass_matrix.end(),
-    std::bind(
-      static_cast<void (*)(
-        const RangeNumberType,
-        const typename std::vector<
-          std::pair<typename DoFHandler<dim, spacedim>::active_cell_iterator,
-                    typename DoFHandler<dim, spacedim>::active_cell_iterator>>::
-          const_iterator &,
-        CellWiseScratchDataForMassMatrix<dim, spacedim> &,
-        CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType> &)>(
-        assemble_fem_scaled_mass_matrix_on_one_cell),
-      factor,
-      std::placeholders::_1,
-      std::placeholders::_2,
-      std::placeholders::_3),
-    std::bind(
-      static_cast<void (*)(
-        const CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType> &,
-        MatrixType &)>(copy_cell_local_to_global_for_fem_matrix),
-      std::placeholders::_1,
-      std::ref(target_matrix)),
+    [factor](const auto &iterator_for_cell_iterator_pairs,
+             auto       &scratch_data,
+             auto       &copy_data) {
+      assemble_fem_scaled_mass_matrix_on_one_cell(
+        factor, iterator_for_cell_iterator_pairs, scratch_data, copy_data);
+    },
+    [&target_matrix](const auto &data) {
+      copy_cell_local_to_global_for_fem_matrix(data, target_matrix);
+    },
     CellWiseScratchDataForMassMatrix<dim, spacedim>(
       dof_handler_for_test_space.get_fe(),
       dof_handler_for_trial_space.get_fe(),
@@ -566,38 +562,28 @@ assemble_fem_scaled_mass_matrix(
   WorkStream::run(
     cell_iterator_pairs_for_mass_matrix.begin(),
     cell_iterator_pairs_for_mass_matrix.end(),
-    std::bind(
-      static_cast<void (*)(
-        const RangeNumberType,
-        const std::vector<bool> &,
-        const std::vector<bool> &,
-        const typename std::vector<
-          std::pair<typename DoFHandler<dim, spacedim>::active_cell_iterator,
-                    typename DoFHandler<dim, spacedim>::active_cell_iterator>>::
-          const_iterator &,
-        CellWiseScratchDataForMassMatrix<dim, spacedim> &,
-        CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType> &)>(
-        assemble_fem_scaled_mass_matrix_on_one_cell),
-      factor,
-      std::cref(dof_selectors_test_space),
-      std::cref(dof_selectors_trial_space),
-      std::placeholders::_1,
-      std::placeholders::_2,
-      std::placeholders::_3),
-    std::bind(
-      static_cast<void (*)(
-        const CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType> &,
-        const std::vector<bool> &,
-        const std::vector<types::global_dof_index> &,
-        const std::vector<bool> &,
-        const std::vector<types::global_dof_index> &,
-        MatrixType &)>(copy_cell_local_to_global_for_fem_matrix),
-      std::placeholders::_1,
-      std::cref(dof_selectors_test_space),
-      std::cref(full_to_local_dof_id_map_test_space),
-      std::cref(dof_selectors_trial_space),
-      std::cref(full_to_local_dof_id_map_trial_space),
-      std::ref(target_matrix)),
+    [factor,
+     &dof_selectors_test_space,
+     &dof_selectors_trial_space](const auto &iterator_for_cell_iterator_pairs,
+                                 auto       &scratch_data,
+                                 auto       &copy_data) {
+      assemble_fem_scaled_mass_matrix_on_one_cell(
+        factor,
+        dof_selectors_test_space,
+        dof_selectors_trial_space,
+        iterator_for_cell_iterator_pairs,
+        scratch_data,
+        copy_data);
+    },
+    [&](const auto &data) {
+      copy_cell_local_to_global_for_fem_matrix(
+        data,
+        dof_selectors_test_space,
+        full_to_local_dof_id_map_test_space,
+        dof_selectors_trial_space,
+        full_to_local_dof_id_map_trial_space,
+        target_matrix);
+    },
     CellWiseScratchDataForMassMatrix<dim, spacedim>(
       dof_handler_for_test_space.get_fe(),
       dof_handler_for_trial_space.get_fe(),
@@ -654,38 +640,28 @@ assemble_fem_scaled_mass_matrix(
   WorkStream::run(
     cell_iterator_pairs_for_mass_matrix.begin(),
     cell_iterator_pairs_for_mass_matrix.end(),
-    std::bind(
-      static_cast<void (*)(
-        const RangeNumberType,
-        const std::vector<bool> &,
-        const std::vector<bool> &,
-        const typename std::vector<
-          std::pair<typename DoFHandler<dim, spacedim>::active_cell_iterator,
-                    typename DoFHandler<dim, spacedim>::active_cell_iterator>>::
-          const_iterator &,
-        CellWiseScratchDataForMassMatrix<dim, spacedim> &,
-        CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType> &)>(
-        assemble_fem_scaled_mass_matrix_on_one_cell),
-      factor,
-      std::cref(dof_selectors_test_space),
-      std::cref(dof_selectors_trial_space),
-      std::placeholders::_1,
-      std::placeholders::_2,
-      std::placeholders::_3),
-    std::bind(
-      static_cast<void (*)(
-        const CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType> &,
-        const std::vector<bool> &,
-        const std::vector<types::global_dof_index> &,
-        const std::vector<bool> &,
-        const std::vector<types::global_dof_index> &,
-        MatrixType &)>(copy_cell_local_to_global_for_fem_matrix),
-      std::placeholders::_1,
-      std::cref(dof_selectors_test_space),
-      std::cref(full_to_local_dof_id_map_test_space),
-      std::cref(dof_selectors_trial_space),
-      std::cref(full_to_local_dof_id_map_trial_space),
-      std::ref(target_matrix)),
+    [factor,
+     &dof_selectors_test_space,
+     &dof_selectors_trial_space](const auto &iterator_for_cell_iterator_pairs,
+                                 auto       &scratch_data,
+                                 auto       &copy_data) {
+      assemble_fem_scaled_mass_matrix_on_one_cell(
+        factor,
+        dof_selectors_test_space,
+        dof_selectors_trial_space,
+        iterator_for_cell_iterator_pairs,
+        scratch_data,
+        copy_data);
+    },
+    [&](const auto &data) {
+      copy_cell_local_to_global_for_fem_matrix(
+        data,
+        dof_selectors_test_space,
+        full_to_local_dof_id_map_test_space,
+        dof_selectors_trial_space,
+        full_to_local_dof_id_map_trial_space,
+        target_matrix);
+    },
     CellWiseScratchDataForMassMatrix<dim, spacedim>(
       dof_handler_for_test_space.get_fe(),
       dof_handler_for_trial_space.get_fe(),
@@ -783,7 +759,6 @@ copy_pair_of_cells_local_to_global_for_bem_full_matrix(
 }
 
 
-
 /**
  * Assemble a full matrix for a bilinear form in BEM.
  *
@@ -800,15 +775,14 @@ copy_pair_of_cells_local_to_global_for_bem_full_matrix(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
-          typename RangeNumberType,
+          template <int, typename> typename KernelFunctionType,
+          typename KernelNumberType,
           typename SurfaceNormalDetector,
           typename MatrixType>
 void
 assemble_bem_full_matrix(
-  const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-  const RangeNumberType                                factor,
+  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
+  const KernelNumberType                                factor,
   const DoFHandler<dim, spacedim>                 &dof_handler_for_test_space,
   const DoFHandler<dim, spacedim>                 &dof_handler_for_trial_space,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
@@ -818,6 +792,8 @@ assemble_bem_full_matrix(
   const SauterQuadratureRule<dim> &sauter_quad_rule,
   MatrixType                      &target_full_matrix)
 {
+  using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
+
   /**
    * Precalculate data tables for shape values at quadrature points.
    *
@@ -842,7 +818,7 @@ assemble_bem_full_matrix(
    * For DLP BEM matrix and the mass matrix, the test function space
    * is @p FE_DGQ and the trial function space is @p FE_Q.}
    */
-  BEMValues<dim, spacedim, RangeNumberType> bem_values(
+  BEMValues<dim, spacedim, real_type> bem_values(
     dof_handler_for_test_space.get_fe(),
     dof_handler_for_trial_space.get_fe(),
     mappings,
@@ -860,12 +836,12 @@ assemble_bem_full_matrix(
    * each thread and will further be modified in the working
    * function @p assemble_on_one_pair_of_cells, they should be passed by value.}
    */
-  PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+  PairCellWiseScratchData<dim, spacedim, KernelNumberType> scratch_data(
     dof_handler_for_test_space.get_fe(),
     dof_handler_for_trial_space.get_fe(),
     mappings,
     bem_values);
-  PairCellWisePerTaskData<dim, spacedim, RangeNumberType> per_task_data(
+  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> per_task_data(
     dof_handler_for_test_space.get_fe(), dof_handler_for_trial_space.get_fe());
 
   for (const auto &e : dof_handler_for_test_space.active_cell_iterators())
@@ -894,40 +870,25 @@ assemble_bem_full_matrix(
       WorkStream::run(
         dof_handler_for_trial_space.begin_active(),
         dof_handler_for_trial_space.end(),
-        std::bind(
-          static_cast<void (*)(
-            const KernelFunctionType<spacedim, RangeNumberType> &,
-            const RangeNumberType,
-            const typename DoFHandler<dim, spacedim>::active_cell_iterator &,
-            const typename DoFHandler<dim, spacedim>::active_cell_iterator &,
-            const std::vector<MappingInfo<dim, spacedim> *> &,
-            const std::map<types::material_id, unsigned int> &,
-            const MappingInfo<dim, spacedim> &,
-            const BEMValues<dim, spacedim, RangeNumberType> &,
-            const SurfaceNormalDetector &,
-            PairCellWiseScratchData<dim, spacedim, RangeNumberType> &,
-            PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &,
-            const bool)>(
-            sauter_quadrature_on_one_pair_of_cells_parallel_over_ky),
-          std::cref(kernel),
-          factor,
-          std::cref(e),
-          std::placeholders::_1,
-          std::cref(mappings),
-          std::cref(material_id_to_mapping_index),
-          std::cref(kx_mapping_info),
-          std::cref(bem_values),
-          std::cref(normal_detector),
-          std::placeholders::_2,
-          std::placeholders::_3,
-          true),
-        std::bind(&copy_pair_of_cells_local_to_global_for_bem_full_matrix<
-                    dim,
-                    spacedim,
-                    RangeNumberType,
-                    MatrixType>,
-                  std::placeholders::_1,
-                  std::ref(target_full_matrix)),
+        [&](const auto &ky_cell_iter, auto &scratch_data, auto &copy_data) {
+          sauter_quadrature_on_one_pair_of_cells_parallel_over_ky(
+            kernel,
+            factor,
+            e,
+            ky_cell_iter,
+            mappings,
+            material_id_to_mapping_index,
+            kx_mapping_info,
+            bem_values,
+            normal_detector,
+            scratch_data,
+            copy_data,
+            true);
+        },
+        [&target_full_matrix](const auto &data) {
+          copy_pair_of_cells_local_to_global_for_bem_full_matrix(
+            data, target_full_matrix);
+        },
         scratch_data,
         per_task_data);
     }
@@ -945,7 +906,8 @@ assemble_bem_full_matrix(
  * @tparam dim
  * @tparam spacedim
  * @tparam KernelFunctionType
- * @tparam RangeNumberType
+ * @tparam KernelNumberType
+ * @tparam SurfaceNormalDetector
  * @tparam MatrixType
  * @param kernel
  * @param factor
@@ -957,15 +919,14 @@ assemble_bem_full_matrix(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
-          typename RangeNumberType,
+          template <int, typename> typename KernelFunctionType,
+          typename KernelNumberType,
           typename SurfaceNormalDetector,
           typename MatrixType>
 void
 assemble_bem_full_matrix_serial(
-  const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-  const RangeNumberType                                factor,
+  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
+  const KernelNumberType                                factor,
   const DoFHandler<dim, spacedim>                 &dof_handler_for_test_space,
   const DoFHandler<dim, spacedim>                 &dof_handler_for_trial_space,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
@@ -975,6 +936,8 @@ assemble_bem_full_matrix_serial(
   const SauterQuadratureRule<dim> &sauter_quad_rule,
   MatrixType                      &target_full_matrix)
 {
+  using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
+
   /**
    * Precalculate data tables for shape values at quadrature points.
    *
@@ -999,7 +962,7 @@ assemble_bem_full_matrix_serial(
    * For DLP BEM matrix and the mass matrix, the test function space
    * is @p FE_DGQ and the trial function space is @p FE_Q.}
    */
-  BEMValues<dim, spacedim, RangeNumberType> bem_values(
+  BEMValues<dim, spacedim, real_type> bem_values(
     dof_handler_for_test_space.get_fe(),
     dof_handler_for_trial_space.get_fe(),
     mappings,
@@ -1017,12 +980,12 @@ assemble_bem_full_matrix_serial(
    * each thread and will further be modified in the working
    * function @p assemble_on_one_pair_of_cells, they should be passed by value.}
    */
-  PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+  PairCellWiseScratchData<dim, spacedim, KernelNumberType> scratch_data(
     dof_handler_for_test_space.get_fe(),
     dof_handler_for_trial_space.get_fe(),
     mappings,
     bem_values);
-  PairCellWisePerTaskData<dim, spacedim, RangeNumberType> per_task_data(
+  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> per_task_data(
     dof_handler_for_test_space.get_fe(), dof_handler_for_trial_space.get_fe());
 
   for (const auto &e : dof_handler_for_test_space.active_cell_iterators())
@@ -1168,14 +1131,24 @@ struct CellWiseCopyDataForRHSLinearForm
  * @param scratch_data
  * @param copy_data
  */
-template <int dim, int spacedim = dim, typename RangeNumberType = double>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename FunctionNumberType>
 void
 local_assemble_rhs_linear_form_vector(
-  const Function<spacedim, RangeNumberType>                      &f,
+  const Function<spacedim, FunctionNumberType>                   &f,
   const typename DoFHandler<dim, spacedim>::active_cell_iterator &cell_iter,
   CellWiseScratchDataForRHSLinearForm<dim, spacedim>             &scratch_data,
   CellWiseCopyDataForRHSLinearForm<dim, spacedim, RangeNumberType> &copy_data)
 {
+  static_assert(
+    is_number_larger_or_equal<RangeNumberType, FunctionNumberType>());
+  static_assert(
+    std::is_same<
+      typename numbers::NumberTraits<RangeNumberType>::real_type,
+      typename numbers::NumberTraits<FunctionNumberType>::real_type>::value);
+
   scratch_data.fe_values_for_test_space.reinit(cell_iter);
 
   const unsigned int n_q_points =
@@ -1212,14 +1185,24 @@ local_assemble_rhs_linear_form_vector(
  * @param scratch_data
  * @param copy_data
  */
-template <int dim, int spacedim = dim, typename RangeNumberType = double>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename FunctionNumberType>
 void
 local_assemble_const_rhs_linear_form_vector(
-  const RangeNumberType                                           f,
+  const FunctionNumberType                                        f,
   const typename DoFHandler<dim, spacedim>::active_cell_iterator &cell_iter,
   CellWiseScratchDataForRHSLinearForm<dim, spacedim>             &scratch_data,
   CellWiseCopyDataForRHSLinearForm<dim, spacedim, RangeNumberType> &copy_data)
 {
+  static_assert(
+    is_number_larger_or_equal<RangeNumberType, FunctionNumberType>());
+  static_assert(
+    std::is_same<
+      typename numbers::NumberTraits<RangeNumberType>::real_type,
+      typename numbers::NumberTraits<FunctionNumberType>::real_type>::value);
+
   scratch_data.fe_values_for_test_space.reinit(cell_iter);
 
   const unsigned int n_q_points =
@@ -1275,26 +1258,37 @@ copy_cell_local_to_global_rhs_linear_form_vector(
  * @param quad_rule
  * @param rhs_vector
  */
-template <int dim, int spacedim, typename RangeNumberType, typename VectorType>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename FunctionNumberType,
+          typename VectorType>
 void
 assemble_rhs_linear_form_vector(
-  const Function<spacedim, RangeNumberType> &f,
-  const DoFHandler<dim, spacedim>           &dof_handler_for_test_space,
-  const Quadrature<dim>                     &quad_rule,
-  VectorType                                &rhs_vector)
+  const Function<spacedim, FunctionNumberType> &f,
+  const DoFHandler<dim, spacedim>              &dof_handler_for_test_space,
+  const Quadrature<dim>                        &quad_rule,
+  VectorType                                   &rhs_vector)
 {
+  static_assert(
+    is_number_larger_or_equal<RangeNumberType, FunctionNumberType>());
+  static_assert(
+    std::is_same<
+      typename numbers::NumberTraits<RangeNumberType>::real_type,
+      typename numbers::NumberTraits<FunctionNumberType>::real_type>::value);
+
   WorkStream::run(
     dof_handler_for_test_space.begin_active(),
     dof_handler_for_test_space.end(),
-    std::bind(
-      &local_assemble_rhs_linear_form_vector<dim, spacedim, RangeNumberType>,
-      f,
-      std::placeholders::_1,
-      std::placeholders::_2,
-      std::placeholders::_3),
-    std::bind(&copy_cell_local_to_global_rhs_linear_form_vector,
-              std::placeholders::_1,
-              std::ref(rhs_vector)),
+    [&f](const auto &cell_iter, auto &scratch_data, auto &copy_data) {
+      local_assemble_rhs_linear_form_vector(f,
+                                            cell_iter,
+                                            scratch_data,
+                                            copy_data);
+    },
+    [&rhs_vector](const auto &copy_data) {
+      copy_cell_local_to_global_rhs_linear_form_vector(copy_data, rhs_vector);
+    },
     CellWiseScratchDataForRHSLinearForm<dim, spacedim>(
       dof_handler_for_test_space.get_fe(),
       quad_rule,
@@ -1315,31 +1309,37 @@ assemble_rhs_linear_form_vector(
  * @param quad_rule
  * @param rhs_vector
  */
-template <int dim, int spacedim, typename RangeNumberType, typename VectorType>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename FunctionNumberType,
+          typename VectorType>
 void
 assemble_rhs_linear_form_vector(
-  const RangeNumberType            f,
+  const FunctionNumberType         f,
   const DoFHandler<dim, spacedim> &dof_handler_for_test_space,
   const Quadrature<dim>           &quad_rule,
   VectorType                      &rhs_vector)
 {
+  static_assert(
+    is_number_larger_or_equal<RangeNumberType, FunctionNumberType>());
+  static_assert(
+    std::is_same<
+      typename numbers::NumberTraits<RangeNumberType>::real_type,
+      typename numbers::NumberTraits<FunctionNumberType>::real_type>::value);
+
   WorkStream::run(
     dof_handler_for_test_space.begin_active(),
     dof_handler_for_test_space.end(),
-    std::bind(&local_assemble_const_rhs_linear_form_vector<dim,
-                                                           spacedim,
-                                                           RangeNumberType>,
-              f,
-              std::placeholders::_1,
-              std::placeholders::_2,
-              std::placeholders::_3),
-    std::bind(&copy_cell_local_to_global_rhs_linear_form_vector<
-                dim,
-                spacedim,
-                RangeNumberType,
-                Vector<RangeNumberType>>,
-              std::placeholders::_1,
-              std::ref(rhs_vector)),
+    [&f](const auto &cell_iter, auto &scratch_data, auto &copy_data) {
+      local_assemble_const_rhs_linear_form_vector(f,
+                                                  cell_iter,
+                                                  scratch_data,
+                                                  copy_data);
+    },
+    [&rhs_vector](const auto &copy_data) {
+      copy_cell_local_to_global_rhs_linear_form_vector(copy_data, rhs_vector);
+    },
     CellWiseScratchDataForRHSLinearForm<dim, spacedim>(
       dof_handler_for_test_space.get_fe(),
       quad_rule,
@@ -1524,19 +1524,22 @@ compute_stabilization_vectors_for_hyper_singular_bilinear_form(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
-          typename RangeNumberType>
+          template <int, typename> typename KernelFunctionType,
+          typename KernelNumberType>
 void
 evaluate_potential_on_one_cell(
-  const KernelFunctionType<spacedim, RangeNumberType>            &kernel,
-  const Point<spacedim, RangeNumberType>                         &target_point,
-  const RangeNumberType                                           factor,
+  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
+  const Point<spacedim,
+              typename numbers::NumberTraits<KernelNumberType>::real_type>
+                                                                 &target_point,
+  const KernelNumberType                                          factor,
   const typename DoFHandler<dim, spacedim>::active_cell_iterator &cell_iter,
-  const bool is_normal_vector_negated,
-  CellWiseScratchDataForPotentialEval<dim, spacedim, RangeNumberType> &scratch,
-  CellWisePerTaskDataForPotentialEval<dim, spacedim, RangeNumberType> &data)
+  const bool                                          is_normal_vector_negated,
+  CellWiseScratchDataForPotentialEval<dim, spacedim> &scratch,
+  CellWisePerTaskDataForPotentialEval<dim, spacedim, KernelNumberType> &data)
 {
+  using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
+
   /**
    * Clear the local result vector.
    */
@@ -1568,12 +1571,14 @@ evaluate_potential_on_one_cell(
        * normal vector on \f$K_y\f$ is needed. Therefore, the normal vector
        * on \f$K_x\f$ passed to the kernel function can be arbitrary.}
        */
-      RangeNumberType scaled_kernel_value =
+      KernelNumberType scaled_kernel_value =
         kernel.value(target_point,
-                     scratch.fe_values_for_trial_space.quadrature_point(q),
-                     Tensor<1, spacedim>(),
+                     static_cast<Point<spacedim, real_type>>(
+                       scratch.fe_values_for_trial_space.quadrature_point(q)),
+                     Tensor<1, spacedim, real_type>(),
                      (is_normal_vector_negated ? -1.0 : 1.0) *
-                       scratch.fe_values_for_trial_space.normal_vector(q)) *
+                       static_cast<Tensor<1, spacedim, real_type>>(
+                         scratch.fe_values_for_trial_space.normal_vector(q))) *
         factor;
 
       /**
@@ -1635,19 +1640,21 @@ copy_cell_local_to_global_for_potential_eval(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
-          typename RangeNumberType,
+          template <int, typename> typename KernelFunctionType,
+          typename KernelNumberType,
           typename VectorType>
 void
 evaluate_potential_at_points(
-  const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-  const RangeNumberType                                factor,
+  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
+  const KernelNumberType                                factor,
   const DoFHandler<dim, spacedim> &dof_handler_for_trial_space,
   const VectorType                &dof_values_in_trial_space,
   const bool                       is_normal_vector_negated,
-  const std::vector<Point<spacedim, RangeNumberType>> &target_point_list,
-  VectorType                                          &potential_values)
+  const std::vector<
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+             &target_point_list,
+  VectorType &potential_values)
 {
   AssertDimension(target_point_list.size(), potential_values.size());
 
@@ -1670,29 +1677,26 @@ evaluate_potential_at_points(
       WorkStream::run(
         dof_handler_for_trial_space.begin_active(),
         dof_handler_for_trial_space.end(),
-        std::bind(&evaluate_potential_on_one_cell<dim,
-                                                  spacedim,
-                                                  KernelFunctionType,
-                                                  RangeNumberType>,
-                  std::cref(kernel),
-                  std::cref(target_point_list[i]),
-                  factor,
-                  std::placeholders::_1,
-                  is_normal_vector_negated,
-                  std::placeholders::_2,
-                  std::placeholders::_3),
-        std::bind(&copy_cell_local_to_global_for_potential_eval<dim,
-                                                                spacedim,
-                                                                RangeNumberType,
-                                                                VectorType>,
-                  std::placeholders::_1,
-                  std::ref(kernel_evaluation_discretized_to_dofs)),
-        CellWiseScratchDataForPotentialEval<dim, spacedim, RangeNumberType>(
+        [&kernel, &target_point_list, i, factor, is_normal_vector_negated](
+          const auto &cell_iter, auto &scratch, auto &data) {
+          evaluate_potential_on_one_cell(kernel,
+                                         target_point_list[i],
+                                         factor,
+                                         cell_iter,
+                                         is_normal_vector_negated,
+                                         scratch,
+                                         data);
+        },
+        [&kernel_evaluation_discretized_to_dofs](const auto &copy_data) {
+          copy_cell_local_to_global_for_potential_eval(
+            copy_data, kernel_evaluation_discretized_to_dofs);
+        },
+        CellWiseScratchDataForPotentialEval<dim, spacedim>(
           fe,
           quad_rule,
           update_quadrature_points | update_values | update_JxW_values |
             update_normal_vectors),
-        CellWisePerTaskDataForPotentialEval<dim, spacedim, RangeNumberType>(
+        CellWisePerTaskDataForPotentialEval<dim, spacedim, KernelNumberType>(
           fe));
 
       /**

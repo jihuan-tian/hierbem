@@ -4733,17 +4733,17 @@ Generally, assume there are two sets of numbering \(A\) and \(B\) assigned to a 
 \end{figure}
 
 \section{Reason for making local copies of mapping objects in
-  \texttt{sauter\_assemble\_on\_one\_pair\_of\_dofs} and
-  \texttt{sauter\_assemble\_on\_one\_pair\_of\_cells}}
+  \texttt{sauter\_quadrature\_on\_one\_pair\_of\_dofs} and
+  \texttt{sauter\_quadrature\_on\_one\_pair\_of\_cells}}
 
 At the moment, in the \texttt{LaplaceBEM} class, there are only two mapping objects \texttt{kx\_mapping} and \texttt{ky\_mapping} of the type \texttt{MappingQGenericExt} defined. When calling the member function \texttt{MappingQGenericExt::compute\_mapping\_support\_points}, the member variable \texttt{support\_points} in \texttt{MappingQGenericExt} will be overwritten.
 
 \begin{enumerate}
-\item \texttt{sauter\_assemble\_on\_one\_pair\_of\_cells} is called by \texttt{assemble\_bem\_full\_matrix}. In this function, the outer loop iterates over each cell in the test space, while the TBB parallelized inner loop iterates over each cell in the trial space. In the outer loop, the mapping support points and DoF indices are computed for \(K_x\) in the main thread without parallelism. In the inner loop, several working threads need to calculate the mapping support points and DoF indices for their own \(K_y\) in parallel. Hence, if these threads operates directly on only one instance of \texttt{ky\_mapping}, there will be resource competition and memory inconsistency.
+\item \texttt{sauter\_quadrature\_on\_one\_pair\_of\_cells} is called by \texttt{assemble\_bem\_full\_matrix}. In this function, the outer loop iterates over each cell in the test space, while the TBB parallelized inner loop iterates over each cell in the trial space. In the outer loop, the mapping support points and DoF indices are computed for \(K_x\) in the main thread without parallelism. In the inner loop, several working threads need to calculate the mapping support points and DoF indices for their own \(K_y\) in parallel. Hence, if these threads operates directly on only one instance of \texttt{ky\_mapping}, there will be resource competition and memory inconsistency.
 
-Therefore, the current solution is to pass \texttt{kx\_mapping} and \texttt{ky\_mapping} into \texttt{sauter\_assemble\_on\_one\_pair\_of\_cells} via \texttt{const} references. Inside this function, a local copy associated with the thread is made for \texttt{ky\_mapping} for calculating the mapping support points and DoF indices. Since \texttt{kx\_mapping} related data have already been computed in the outer loop in \texttt{assemble\_bem\_full\_matrix}, there is no need to recalculate it in \texttt{sauter\_assemble\_on\_one\_pair\_of\_cells}.
+Therefore, the current solution is to pass \texttt{kx\_mapping} and \texttt{ky\_mapping} into \texttt{sauter\_quadrature\_on\_one\_pair\_of\_cells} via \texttt{const} references. Inside this function, a local copy associated with the thread is made for \texttt{ky\_mapping} for calculating the mapping support points and DoF indices. Since \texttt{kx\_mapping} related data have already been computed in the outer loop in \texttt{assemble\_bem\_full\_matrix}, there is no need to recalculate it in \texttt{sauter\_quadrature\_on\_one\_pair\_of\_cells}.
 
-\item \texttt{sauter\_assemble\_on\_one\_pair\_of\_dofs} is called by \texttt{fill\_hmatrix\_leaf\_node\_with\_aca\_plus}, which itself contains double loops, with the outer loop iterating over the cells in the support of the \(i\)-th DoF and the inner loop iterating over the cells in the support of the \(j\)-th DoF. Because \texttt{fill\_hmatrix\_leaf\_node\_with\_aca\_plus} will be executed in several TBB threads at the same time, computation of the mapping support points should be performed in thread dependent local copies of \texttt{kx\_mapping} and \texttt{ky\_mapping}. Similar to the treatment in \texttt{sauter\_assemble\_on\_one\_pair\_of\_cells}, \texttt{kx\_mapping} and \texttt{ky\_mapping} are passed as const references into \texttt{sauter\_assemble\_on\_one\_pair\_of\_dofs}. Inside this function, a local copy of \texttt{kx\_mapping} is made in the outer loop and another copy of \texttt{ky\_mapping} is made in the inner loop.
+\item \texttt{sauter\_quadrature\_on\_one\_pair\_of\_dofs} is called by \texttt{fill\_hmatrix\_leaf\_node\_with\_aca\_plus}, which itself contains double loops, with the outer loop iterating over the cells in the support of the \(i\)-th DoF and the inner loop iterating over the cells in the support of the \(j\)-th DoF. Because \texttt{fill\_hmatrix\_leaf\_node\_with\_aca\_plus} will be executed in several TBB threads at the same time, computation of the mapping support points should be performed in thread dependent local copies of \texttt{kx\_mapping} and \texttt{ky\_mapping}. Similar to the treatment in \texttt{sauter\_quadrature\_on\_one\_pair\_of\_cells}, \texttt{kx\_mapping} and \texttt{ky\_mapping} are passed as const references into \texttt{sauter\_quadrature\_on\_one\_pair\_of\_dofs}. Inside this function, a local copy of \texttt{kx\_mapping} is made in the outer loop and another copy of \texttt{ky\_mapping} is made in the inner loop.
 \end{enumerate}
 
 \section{Identical panels}
@@ -4978,7 +4978,7 @@ The integral variables $(\hat{x}, \hat{y})$ will further be pulled back to the p
 \item In the constructed DoF index-to-cell topology, \textbf{global} DoF indices in the
   \textbf{external numbering} with respect to the \textbf{complete} DoF set in the
   \texttt{DoFHandler} are adopted. \emph{That's why such global DoF indices are passed
-    into the function \texttt{sauter\_assemble\_on\_one\_pair\_of\_dofs}.}
+    into the function \texttt{sauter\_quadrature\_on\_one\_pair\_of\_dofs}.}
   \begin{lstlisting}[language=C++]
     std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo;
     std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo;
@@ -4996,7 +4996,7 @@ The integral variables $(\hat{x}, \hat{y})$ will further be pulled back to the p
   we can get the list of \textbf{global} DoF indices in the \textbf{external numbering}
   with respect to the complete DoF set in the \texttt{DoFHandler}.
 \item \texttt{i\_index} and \texttt{j\_index} calculated inside the function
-  \texttt{sauter\_assemble\_on\_one\_pair\_of\_dofs} are the array indices for accessing
+  \texttt{sauter\_quadrature\_on\_one\_pair\_of\_dofs} are the array indices for accessing
   the vectors of permuted indices, i.e.
   \texttt{copy\_data.kx\_local\_dof\_indices\_permuted} and
   \texttt{copy\_data.ky\_local\_dof\_indices\_permuted}, to obtain the \texttt{i} and
@@ -7107,7 +7107,7 @@ The function call hierarchy is below.
   \item \texttt{fill\_hmatrix\_leaf\_node\_with\_aca\_plus} (3 versions) \hfill
     \texttt{aca\_plus.hcu}
     \begin{codeitemize}
-    \item \texttt{sauter\_assemble\_on\_one\_pair\_of\_dofs} (2 versions) \hfill
+    \item \texttt{sauter\_quadrature\_on\_one\_pair\_of\_dofs} (2 versions) \hfill
       \texttt{sauter\_quadrature.hcu}
       \begin{codeitemize}
       \item \texttt{permute\_dofs\_and\_mapping\_support\_points\_for\_sauter\_quad}
@@ -7146,7 +7146,7 @@ The function call hierarchy is below.
             \texttt{sauter\_quadrature.hcu}
             
             \emph{The following functions calls are the same to those under
-            \texttt{sauter\_assemble\_on\_one\_pair\_of\_dofs} which is called by
+            \texttt{sauter\_quadrature\_on\_one\_pair\_of\_dofs} which is called by
             \texttt{fill\_hmatrix\_with\_aca\_plus\_serial}.}
             \begin{codeitemize}
             \item \texttt{permute\_dofs\_and\_mapping\_support\_points\_for\_sauter\_quad}

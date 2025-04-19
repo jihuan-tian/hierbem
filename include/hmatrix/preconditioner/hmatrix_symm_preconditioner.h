@@ -12,6 +12,8 @@
 #ifndef HIERBEM_INCLUDE_HMATRIX_PRECONDITIONER_HMATRIX_SYMM_PRECONDITIONER_H_
 #define HIERBEM_INCLUDE_HMATRIX_PRECONDITIONER_HMATRIX_SYMM_PRECONDITIONER_H_
 
+#include <deal.II/base/numbers.h>
+
 #include "config.h"
 #include "hmatrix/hmatrix.h"
 

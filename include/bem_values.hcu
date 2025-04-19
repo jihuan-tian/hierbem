@@ -8,6 +8,7 @@
 #ifndef HIERBEM_INCLUDE_BEM_VALUES_H_
 #define HIERBEM_INCLUDE_BEM_VALUES_H_
 
+#include <deal.II/base/numbers.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/table.h>
 #include <deal.II/base/table_indices.h>
@@ -898,8 +899,9 @@ BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_same_panel()
           for (unsigned int s = 0; s < kx_dofs_per_cell; s++)
             {
               kx_shape_value_table_for_same_panel(TableIndices<3>(s, k, q)) =
-                kx_fe.shape_value(kx_poly_space_inverse_numbering[s],
-                                  kx_unit_quad_points[q]);
+                static_cast<RangeNumberType>(
+                  kx_fe.shape_value(kx_poly_space_inverse_numbering[s],
+                                    kx_unit_quad_points[q]));
             }
 
           /**
@@ -910,21 +912,26 @@ BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_same_panel()
           for (unsigned int s = 0; s < ky_dofs_per_cell; s++)
             {
               ky_shape_value_table_for_same_panel(TableIndices<3>(s, k, q)) =
-                ky_fe.shape_value(ky_poly_space_inverse_numbering[s],
-                                  ky_unit_quad_points[q]);
+                static_cast<RangeNumberType>(
+                  ky_fe.shape_value(ky_poly_space_inverse_numbering[s],
+                                    ky_unit_quad_points[q]));
             }
 
           // Calculate the Jacobian matrix evaluated at
           // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
           // to shape functions which are in the lexicographic order.
           kx_shape_grad_matrix_table_for_same_panel(TableIndices<2>(k, q)) =
-            BEMTools::shape_grad_matrix_in_lexicographic_order(
+            BEMTools::shape_grad_matrix_in_lexicographic_order<dim,
+                                                               spacedim,
+                                                               RangeNumberType>(
               kx_fe, kx_unit_quad_points[q]);
           // Calculate the Jacobian matrix evaluated at
           // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
           // to shape functions which are in the lexicographic order.
           ky_shape_grad_matrix_table_for_same_panel(TableIndices<2>(k, q)) =
-            BEMTools::shape_grad_matrix_in_lexicographic_order(
+            BEMTools::shape_grad_matrix_in_lexicographic_order<dim,
+                                                               spacedim,
+                                                               RangeNumberType>(
               ky_fe, ky_unit_quad_points[q]);
         }
 
@@ -960,14 +967,15 @@ BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_same_panel()
                 {
                   kx_mapping_shape_value_table_for_same_panel(
                     TableIndices<4>(m, s, k, q)) =
-                    mapping_data->shape(q, lexicographic_numbering[s]);
+                    static_cast<RangeNumberType>(
+                      mapping_data->shape(q, lexicographic_numbering[s]));
 
                   for (unsigned int d = 0; d < dim; d++)
                     {
                       kx_mapping_shape_grad_matrix_table_for_same_panel(
                         TableIndices<3>(m, k, q))(s, d) =
-                        mapping_data->derivative(q,
-                                                 lexicographic_numbering[s])[d];
+                        static_cast<RangeNumberType>(mapping_data->derivative(
+                          q, lexicographic_numbering[s])[d]);
                     }
                 }
             }
@@ -980,14 +988,15 @@ BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_same_panel()
                 {
                   ky_mapping_shape_value_table_for_same_panel(
                     TableIndices<4>(m, s, k, q)) =
-                    mapping_data->shape(q, lexicographic_numbering[s]);
+                    static_cast<RangeNumberType>(
+                      mapping_data->shape(q, lexicographic_numbering[s]));
 
                   for (unsigned int d = 0; d < dim; d++)
                     {
                       ky_mapping_shape_grad_matrix_table_for_same_panel(
                         TableIndices<3>(m, k, q))(s, d) =
-                        mapping_data->derivative(q,
-                                                 lexicographic_numbering[s])[d];
+                        static_cast<RangeNumberType>(mapping_data->derivative(
+                          q, lexicographic_numbering[s])[d]);
                     }
                 }
             }
@@ -1107,8 +1116,9 @@ BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_common_edge()
           for (unsigned int s = 0; s < kx_dofs_per_cell; s++)
             {
               kx_shape_value_table_for_common_edge(TableIndices<3>(s, k, q)) =
-                kx_fe.shape_value(kx_poly_space_inverse_numbering[s],
-                                  kx_unit_quad_points[q]);
+                static_cast<RangeNumberType>(
+                  kx_fe.shape_value(kx_poly_space_inverse_numbering[s],
+                                    kx_unit_quad_points[q]));
             }
 
           /**
@@ -1119,21 +1129,26 @@ BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_common_edge()
           for (unsigned int s = 0; s < ky_dofs_per_cell; s++)
             {
               ky_shape_value_table_for_common_edge(TableIndices<3>(s, k, q)) =
-                ky_fe.shape_value(ky_poly_space_inverse_numbering[s],
-                                  ky_unit_quad_points[q]);
+                static_cast<RangeNumberType>(
+                  ky_fe.shape_value(ky_poly_space_inverse_numbering[s],
+                                    ky_unit_quad_points[q]));
             }
 
           // Calculate the Jacobian matrix evaluated at
           // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
           // to shape functions which are in the lexicographic order.
           kx_shape_grad_matrix_table_for_common_edge(TableIndices<2>(k, q)) =
-            BEMTools::shape_grad_matrix_in_lexicographic_order(
+            BEMTools::shape_grad_matrix_in_lexicographic_order<dim,
+                                                               spacedim,
+                                                               RangeNumberType>(
               kx_fe, kx_unit_quad_points[q]);
           // Calculate the Jacobian matrix evaluated at
           // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
           // to shape functions which are in the lexicographic order.
           ky_shape_grad_matrix_table_for_common_edge(TableIndices<2>(k, q)) =
-            BEMTools::shape_grad_matrix_in_lexicographic_order(
+            BEMTools::shape_grad_matrix_in_lexicographic_order<dim,
+                                                               spacedim,
+                                                               RangeNumberType>(
               ky_fe, ky_unit_quad_points[q]);
         }
 
@@ -1169,14 +1184,15 @@ BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_common_edge()
                 {
                   kx_mapping_shape_value_table_for_common_edge(
                     TableIndices<4>(m, s, k, q)) =
-                    mapping_data->shape(q, lexicographic_numbering[s]);
+                    static_cast<RangeNumberType>(
+                      mapping_data->shape(q, lexicographic_numbering[s]));
 
                   for (unsigned int d = 0; d < dim; d++)
                     {
                       kx_mapping_shape_grad_matrix_table_for_common_edge(
                         TableIndices<3>(m, k, q))(s, d) =
-                        mapping_data->derivative(q,
-                                                 lexicographic_numbering[s])[d];
+                        static_cast<RangeNumberType>(mapping_data->derivative(
+                          q, lexicographic_numbering[s])[d]);
                     }
                 }
             }
@@ -1189,14 +1205,15 @@ BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_common_edge()
                 {
                   ky_mapping_shape_value_table_for_common_edge(
                     TableIndices<4>(m, s, k, q)) =
-                    mapping_data->shape(q, lexicographic_numbering[s]);
+                    static_cast<RangeNumberType>(
+                      mapping_data->shape(q, lexicographic_numbering[s]));
 
                   for (unsigned int d = 0; d < dim; d++)
                     {
                       ky_mapping_shape_grad_matrix_table_for_common_edge(
                         TableIndices<3>(m, k, q))(s, d) =
-                        mapping_data->derivative(q,
-                                                 lexicographic_numbering[s])[d];
+                        static_cast<RangeNumberType>(mapping_data->derivative(
+                          q, lexicographic_numbering[s])[d]);
                     }
                 }
             }
@@ -1316,8 +1333,9 @@ BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_common_vertex()
           for (unsigned int s = 0; s < kx_dofs_per_cell; s++)
             {
               kx_shape_value_table_for_common_vertex(TableIndices<3>(s, k, q)) =
-                kx_fe.shape_value(kx_poly_space_inverse_numbering[s],
-                                  kx_unit_quad_points[q]);
+                static_cast<RangeNumberType>(
+                  kx_fe.shape_value(kx_poly_space_inverse_numbering[s],
+                                    kx_unit_quad_points[q]));
             }
 
           /**
@@ -1328,21 +1346,26 @@ BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_common_vertex()
           for (unsigned int s = 0; s < ky_dofs_per_cell; s++)
             {
               ky_shape_value_table_for_common_vertex(TableIndices<3>(s, k, q)) =
-                ky_fe.shape_value(ky_poly_space_inverse_numbering[s],
-                                  ky_unit_quad_points[q]);
+                static_cast<RangeNumberType>(
+                  ky_fe.shape_value(ky_poly_space_inverse_numbering[s],
+                                    ky_unit_quad_points[q]));
             }
 
           // Calculate the Jacobian matrix evaluated at
           // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
           // to shape functions which are in the lexicographic order.
           kx_shape_grad_matrix_table_for_common_vertex(TableIndices<2>(k, q)) =
-            BEMTools::shape_grad_matrix_in_lexicographic_order(
+            BEMTools::shape_grad_matrix_in_lexicographic_order<dim,
+                                                               spacedim,
+                                                               RangeNumberType>(
               kx_fe, kx_unit_quad_points[q]);
           // Calculate the Jacobian matrix evaluated at
           // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
           // to shape functions which are in the lexicographic order.
           ky_shape_grad_matrix_table_for_common_vertex(TableIndices<2>(k, q)) =
-            BEMTools::shape_grad_matrix_in_lexicographic_order(
+            BEMTools::shape_grad_matrix_in_lexicographic_order<dim,
+                                                               spacedim,
+                                                               RangeNumberType>(
               ky_fe, ky_unit_quad_points[q]);
         }
 
@@ -1378,14 +1401,15 @@ BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_common_vertex()
                 {
                   kx_mapping_shape_value_table_for_common_vertex(
                     TableIndices<4>(m, s, k, q)) =
-                    mapping_data->shape(q, lexicographic_numbering[s]);
+                    static_cast<RangeNumberType>(
+                      mapping_data->shape(q, lexicographic_numbering[s]));
 
                   for (unsigned int d = 0; d < dim; d++)
                     {
                       kx_mapping_shape_grad_matrix_table_for_common_vertex(
                         TableIndices<3>(m, k, q))(s, d) =
-                        mapping_data->derivative(q,
-                                                 lexicographic_numbering[s])[d];
+                        static_cast<RangeNumberType>(mapping_data->derivative(
+                          q, lexicographic_numbering[s])[d]);
                     }
                 }
             }
@@ -1398,14 +1422,15 @@ BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_common_vertex()
                 {
                   ky_mapping_shape_value_table_for_common_vertex(
                     TableIndices<4>(m, s, k, q)) =
-                    mapping_data->shape(q, lexicographic_numbering[s]);
+                    static_cast<RangeNumberType>(
+                      mapping_data->shape(q, lexicographic_numbering[s]));
 
                   for (unsigned int d = 0; d < dim; d++)
                     {
                       ky_mapping_shape_grad_matrix_table_for_common_vertex(
                         TableIndices<3>(m, k, q))(s, d) =
-                        mapping_data->derivative(q,
-                                                 lexicographic_numbering[s])[d];
+                        static_cast<RangeNumberType>(mapping_data->derivative(
+                          q, lexicographic_numbering[s])[d]);
                     }
                 }
             }
@@ -1514,8 +1539,9 @@ BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_regular()
       for (unsigned int s = 0; s < kx_dofs_per_cell; s++)
         {
           kx_shape_value_table_for_regular(TableIndices<3>(s, 0, q)) =
-            kx_fe.shape_value(kx_poly_space_inverse_numbering[s],
-                              kx_unit_quad_points[q]);
+            static_cast<RangeNumberType>(
+              kx_fe.shape_value(kx_poly_space_inverse_numbering[s],
+                                kx_unit_quad_points[q]));
         }
 
       /**
@@ -1526,21 +1552,26 @@ BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_regular()
       for (unsigned int s = 0; s < ky_dofs_per_cell; s++)
         {
           ky_shape_value_table_for_regular(TableIndices<3>(s, 0, q)) =
-            ky_fe.shape_value(ky_poly_space_inverse_numbering[s],
-                              ky_unit_quad_points[q]);
+            static_cast<RangeNumberType>(
+              ky_fe.shape_value(ky_poly_space_inverse_numbering[s],
+                                ky_unit_quad_points[q]));
         }
 
       // Calculate the Jacobian matrix evaluated at
       // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
       // to shape functions which are in the lexicographic order.
       kx_shape_grad_matrix_table_for_regular(TableIndices<2>(0, q)) =
-        BEMTools::shape_grad_matrix_in_lexicographic_order(
+        BEMTools::shape_grad_matrix_in_lexicographic_order<dim,
+                                                           spacedim,
+                                                           RangeNumberType>(
           kx_fe, kx_unit_quad_points[q]);
       // Calculate the Jacobian matrix evaluated at
       // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
       // to shape functions which are in the lexicographic order.
       ky_shape_grad_matrix_table_for_regular(TableIndices<2>(0, q)) =
-        BEMTools::shape_grad_matrix_in_lexicographic_order(
+        BEMTools::shape_grad_matrix_in_lexicographic_order<dim,
+                                                           spacedim,
+                                                           RangeNumberType>(
           ky_fe, ky_unit_quad_points[q]);
     }
 
@@ -1576,13 +1607,16 @@ BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_regular()
             {
               kx_mapping_shape_value_table_for_regular(
                 TableIndices<4>(m, s, 0, q)) =
-                mapping_data->shape(q, lexicographic_numbering[s]);
+                static_cast<RangeNumberType>(
+                  mapping_data->shape(q, lexicographic_numbering[s]));
 
               for (unsigned int d = 0; d < dim; d++)
                 {
                   kx_mapping_shape_grad_matrix_table_for_regular(
                     TableIndices<3>(m, 0, q))(s, d) =
-                    mapping_data->derivative(q, lexicographic_numbering[s])[d];
+                    static_cast<RangeNumberType>(
+                      mapping_data->derivative(q,
+                                               lexicographic_numbering[s])[d]);
                 }
             }
         }
@@ -1595,13 +1629,16 @@ BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_regular()
             {
               ky_mapping_shape_value_table_for_regular(
                 TableIndices<4>(m, s, 0, q)) =
-                mapping_data->shape(q, lexicographic_numbering[s]);
+                static_cast<RangeNumberType>(
+                  mapping_data->shape(q, lexicographic_numbering[s]));
 
               for (unsigned int d = 0; d < dim; d++)
                 {
                   ky_mapping_shape_grad_matrix_table_for_regular(
                     TableIndices<3>(m, 0, q))(s, d) =
-                    mapping_data->derivative(q, lexicographic_numbering[s])[d];
+                    static_cast<RangeNumberType>(
+                      mapping_data->derivative(q,
+                                               lexicographic_numbering[s])[d]);
                 }
             }
         }
@@ -1751,7 +1788,7 @@ struct CellWiseScratchDataForMassMatrix
 };
 
 
-template <int dim, int spacedim = dim, typename RangeNumberType = double>
+template <int dim, int spacedim = dim>
 struct CellWiseScratchDataForPotentialEval
 {
   FEValues<dim, spacedim> fe_values_for_trial_space;
@@ -1807,6 +1844,7 @@ class PairCellWiseScratchData
 {
 public:
   using FE_Poly_short = FE_Poly<dim, spacedim>;
+  using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
 
   /**
    * ID for the working thread associated with this scratch data.
@@ -1847,7 +1885,7 @@ public:
    * generated within the mapping object. Therefore, its size will
    * automatically adjusted and needs not be preallocated.
    */
-  std::vector<Point<spacedim, RangeNumberType>>
+  std::vector<Point<spacedim, real_type>>
     kx_mapping_support_points_in_default_order;
   /**
    * List of mapping support points in the real cell \f$K_y\f$ in the
@@ -1857,7 +1895,7 @@ public:
    * generated within the mapping object. Therefore, its size will
    * automatically adjusted and needs not be preallocated.
    */
-  std::vector<Point<spacedim, RangeNumberType>>
+  std::vector<Point<spacedim, real_type>>
     ky_mapping_support_points_in_default_order;
 
   /**
@@ -1870,8 +1908,7 @@ public:
    * mapping. The number of its effective values is determined from the size
    * of @p poly_space_numbering_inverse.
    */
-  std::vector<Point<spacedim, RangeNumberType>>
-    kx_mapping_support_points_permuted;
+  std::vector<Point<spacedim, real_type>> kx_mapping_support_points_permuted;
   /**
    * Permuted list of mapping support points in the real cell \f$K_y\f$.
    *
@@ -1882,8 +1919,7 @@ public:
    * mapping. The number of its effective values is determined from the size
    * of @p poly_space_numbering_inverse.
    */
-  std::vector<Point<spacedim, RangeNumberType>>
-    ky_mapping_support_points_permuted;
+  std::vector<Point<spacedim, real_type>> ky_mapping_support_points_permuted;
 
   /**
    * Similar to @p kx_mapping_support_points_permuted and
@@ -1891,18 +1927,18 @@ public:
    * preallocated to the number of support points in the highest order
    * mapping.
    */
-  std::vector<Point<2, RangeNumberType>>
+  std::vector<Point<2, real_type>>
     kx_mapping_support_points_permuted_xy_components;
-  std::vector<Point<2, RangeNumberType>>
+  std::vector<Point<2, real_type>>
     kx_mapping_support_points_permuted_yz_components;
-  std::vector<Point<2, RangeNumberType>>
+  std::vector<Point<2, real_type>>
     kx_mapping_support_points_permuted_zx_components;
 
-  std::vector<Point<2, RangeNumberType>>
+  std::vector<Point<2, real_type>>
     ky_mapping_support_points_permuted_xy_components;
-  std::vector<Point<2, RangeNumberType>>
+  std::vector<Point<2, real_type>>
     ky_mapping_support_points_permuted_yz_components;
-  std::vector<Point<2, RangeNumberType>>
+  std::vector<Point<2, real_type>>
     ky_mapping_support_points_permuted_zx_components;
 
   /**
@@ -1975,170 +2011,170 @@ public:
    * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
    * \f$k_3\f$ term and at each quadrature point for the same panel case.
    */
-  Table<2, RangeNumberType> kx_jacobians_same_panel;
+  Table<2, real_type> kx_jacobians_same_panel;
   /**
    * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
    * \f$k_3\f$ term and at each quadrature point for the common edge case.
    */
-  Table<2, RangeNumberType> kx_jacobians_common_edge;
+  Table<2, real_type> kx_jacobians_common_edge;
   /**
    * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
    * \f$k_3\f$ term and at each quadrature point for the common vertex case.
    */
-  Table<2, RangeNumberType> kx_jacobians_common_vertex;
+  Table<2, real_type> kx_jacobians_common_vertex;
   /**
    * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
    * \f$k_3\f$ term and at each quadrature point for the regular case.
    */
-  Table<2, RangeNumberType> kx_jacobians_regular;
+  Table<2, real_type> kx_jacobians_regular;
 
   /**
    * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
    * the same panel case.
    */
-  Table<2, Tensor<1, spacedim, RangeNumberType>> kx_normals_same_panel;
+  Table<2, Tensor<1, spacedim, real_type>> kx_normals_same_panel;
   /**
    * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
    * the common edge case.
    */
-  Table<2, Tensor<1, spacedim, RangeNumberType>> kx_normals_common_edge;
+  Table<2, Tensor<1, spacedim, real_type>> kx_normals_common_edge;
   /**
    * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
    * the common vertex case.
    */
-  Table<2, Tensor<1, spacedim, RangeNumberType>> kx_normals_common_vertex;
+  Table<2, Tensor<1, spacedim, real_type>> kx_normals_common_vertex;
   /**
    * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
    * the regular case.
    */
-  Table<2, Tensor<1, spacedim, RangeNumberType>> kx_normals_regular;
+  Table<2, Tensor<1, spacedim, real_type>> kx_normals_regular;
 
   /**
    * Covariant transformation matrix for each \f$k_3\f$ term and each
    * quadrature point in the real cell \f$K_x\f$ for the same panel case.
    */
-  Table<2, LAPACKFullMatrixExt<RangeNumberType>> kx_covariants_same_panel;
+  Table<2, LAPACKFullMatrixExt<real_type>> kx_covariants_same_panel;
   /**
    * Covariant transformation matrix for each \f$k_3\f$ term and each
    * quadrature point in the real cell \f$K_x\f$ for the common edge case.
    */
-  Table<2, LAPACKFullMatrixExt<RangeNumberType>> kx_covariants_common_edge;
+  Table<2, LAPACKFullMatrixExt<real_type>> kx_covariants_common_edge;
   /**
    * Covariant transformation matrix for each \f$k_3\f$ term and each
    * quadrature point in the real cell \f$K_x\f$ for the common vertex case.
    */
-  Table<2, LAPACKFullMatrixExt<RangeNumberType>> kx_covariants_common_vertex;
+  Table<2, LAPACKFullMatrixExt<real_type>> kx_covariants_common_vertex;
   /**
    * Covariant transformation matrix for each \f$k_3\f$ term and each
    * quadrature point in the real cell \f$K_x\f$ for the regular case.
    */
-  Table<2, LAPACKFullMatrixExt<RangeNumberType>> kx_covariants_regular;
+  Table<2, LAPACKFullMatrixExt<real_type>> kx_covariants_regular;
 
   /**
    * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
    * quadrature point for the same panel case.
    */
-  Table<2, Point<spacedim, RangeNumberType>> kx_quad_points_same_panel;
+  Table<2, Point<spacedim, real_type>> kx_quad_points_same_panel;
   /**
    * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
    * quadrature point for the common edge case.
    */
-  Table<2, Point<spacedim, RangeNumberType>> kx_quad_points_common_edge;
+  Table<2, Point<spacedim, real_type>> kx_quad_points_common_edge;
   /**
    * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
    * quadrature point for the common vertex case.
    */
-  Table<2, Point<spacedim, RangeNumberType>> kx_quad_points_common_vertex;
+  Table<2, Point<spacedim, real_type>> kx_quad_points_common_vertex;
   /**
    * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
    * quadrature point for the regular case.
    */
-  Table<2, Point<spacedim, RangeNumberType>> kx_quad_points_regular;
+  Table<2, Point<spacedim, real_type>> kx_quad_points_regular;
 
 
   /**
    * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
    * \f$k_3\f$ term and at each quadrature point for the same panel case.
    */
-  Table<2, RangeNumberType> ky_jacobians_same_panel;
+  Table<2, real_type> ky_jacobians_same_panel;
   /**
    * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
    * \f$k_3\f$ term and at each quadrature point for the common edge case.
    */
-  Table<2, RangeNumberType> ky_jacobians_common_edge;
+  Table<2, real_type> ky_jacobians_common_edge;
   /**
    * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
    * \f$k_3\f$ term and at each quadrature point for the common vertex case.
    */
-  Table<2, RangeNumberType> ky_jacobians_common_vertex;
+  Table<2, real_type> ky_jacobians_common_vertex;
   /**
    * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
    * \f$k_3\f$ term and at each quadrature point for the regular case.
    */
-  Table<2, RangeNumberType> ky_jacobians_regular;
+  Table<2, real_type> ky_jacobians_regular;
 
   /**
    * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
    * the same panel case.
    */
-  Table<2, Tensor<1, spacedim, RangeNumberType>> ky_normals_same_panel;
+  Table<2, Tensor<1, spacedim, real_type>> ky_normals_same_panel;
   /**
    * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
    * the common edge case.
    */
-  Table<2, Tensor<1, spacedim, RangeNumberType>> ky_normals_common_edge;
+  Table<2, Tensor<1, spacedim, real_type>> ky_normals_common_edge;
   /**
    * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
    * the common vertex case.
    */
-  Table<2, Tensor<1, spacedim, RangeNumberType>> ky_normals_common_vertex;
+  Table<2, Tensor<1, spacedim, real_type>> ky_normals_common_vertex;
   /**
    * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
    * the regular case.
    */
-  Table<2, Tensor<1, spacedim, RangeNumberType>> ky_normals_regular;
+  Table<2, Tensor<1, spacedim, real_type>> ky_normals_regular;
 
   /**
    * Covariant transformation matrix for each \f$k_3\f$ term and each
    * quadrature point in the real cell \f$K_x\f$ for the same panel case.
    */
-  Table<2, LAPACKFullMatrixExt<RangeNumberType>> ky_covariants_same_panel;
+  Table<2, LAPACKFullMatrixExt<real_type>> ky_covariants_same_panel;
   /**
    * Covariant transformation matrix for each \f$k_3\f$ term and each
    * quadrature point in the real cell \f$K_x\f$ for the common edge case.
    */
-  Table<2, LAPACKFullMatrixExt<RangeNumberType>> ky_covariants_common_edge;
+  Table<2, LAPACKFullMatrixExt<real_type>> ky_covariants_common_edge;
   /**
    * Covariant transformation matrix for each \f$k_3\f$ term and each
    * quadrature point in the real cell \f$K_x\f$ for the common vertex case.
    */
-  Table<2, LAPACKFullMatrixExt<RangeNumberType>> ky_covariants_common_vertex;
+  Table<2, LAPACKFullMatrixExt<real_type>> ky_covariants_common_vertex;
   /**
    * Covariant transformation matrix for each \f$k_3\f$ term and each
    * quadrature point in the real cell \f$K_x\f$ for the regular case.
    */
-  Table<2, LAPACKFullMatrixExt<RangeNumberType>> ky_covariants_regular;
+  Table<2, LAPACKFullMatrixExt<real_type>> ky_covariants_regular;
 
   /**
    * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
    * quadrature point for the same panel case.
    */
-  Table<2, Point<spacedim, RangeNumberType>> ky_quad_points_same_panel;
+  Table<2, Point<spacedim, real_type>> ky_quad_points_same_panel;
   /**
    * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
    * quadrature point for the common edge case.
    */
-  Table<2, Point<spacedim, RangeNumberType>> ky_quad_points_common_edge;
+  Table<2, Point<spacedim, real_type>> ky_quad_points_common_edge;
   /**
    * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
    * quadrature point for the common vertex case.
    */
-  Table<2, Point<spacedim, RangeNumberType>> ky_quad_points_common_vertex;
+  Table<2, Point<spacedim, real_type>> ky_quad_points_common_vertex;
   /**
    * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
    * quadrature point for the regular case.
    */
-  Table<2, Point<spacedim, RangeNumberType>> ky_quad_points_regular;
+  Table<2, Point<spacedim, real_type>> ky_quad_points_regular;
   /**
    * Buffer holding quadrature results accumulated from all thread blocks.
    */
@@ -2157,7 +2193,7 @@ public:
     const FiniteElement<dim, spacedim>              &kx_fe,
     const FiniteElement<dim, spacedim>              &ky_fe,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
-    const BEMValues<dim, spacedim>                  &bem_values)
+    const BEMValues<dim, spacedim, real_type>       &bem_values)
     : cuda_stream_handle(0)
     , common_vertex_pair_local_indices(0)
     , kx_mapping_support_points_permuted(
@@ -2256,89 +2292,89 @@ public:
     AssertCuda(
       cudaHostRegister((void *)kx_mapping_support_points_permuted.data(),
                        kx_mapping_support_points_permuted.size() *
-                         sizeof(Point<spacedim, RangeNumberType>),
+                         sizeof(Point<spacedim, real_type>),
                        0));
 
     AssertCuda(
       cudaHostRegister((void *)ky_mapping_support_points_permuted.data(),
                        ky_mapping_support_points_permuted.size() *
-                         sizeof(Point<spacedim, RangeNumberType>),
+                         sizeof(Point<spacedim, real_type>),
                        0));
 
     AssertCuda(cudaHostRegister(
       (void *)kx_mapping_support_points_permuted_xy_components.data(),
       kx_mapping_support_points_permuted_xy_components.size() *
-        sizeof(Point<2, RangeNumberType>),
+        sizeof(Point<2, real_type>),
       0));
 
     AssertCuda(cudaHostRegister(
       (void *)kx_mapping_support_points_permuted_yz_components.data(),
       kx_mapping_support_points_permuted_yz_components.size() *
-        sizeof(Point<2, RangeNumberType>),
+        sizeof(Point<2, real_type>),
       0));
 
     AssertCuda(cudaHostRegister(
       (void *)kx_mapping_support_points_permuted_zx_components.data(),
       kx_mapping_support_points_permuted_zx_components.size() *
-        sizeof(Point<2, RangeNumberType>),
+        sizeof(Point<2, real_type>),
       0));
 
     AssertCuda(cudaHostRegister(
       (void *)ky_mapping_support_points_permuted_xy_components.data(),
       ky_mapping_support_points_permuted_xy_components.size() *
-        sizeof(Point<2, RangeNumberType>),
+        sizeof(Point<2, real_type>),
       0));
 
     AssertCuda(cudaHostRegister(
       (void *)ky_mapping_support_points_permuted_yz_components.data(),
       ky_mapping_support_points_permuted_yz_components.size() *
-        sizeof(Point<2, RangeNumberType>),
+        sizeof(Point<2, real_type>),
       0));
 
     AssertCuda(cudaHostRegister(
       (void *)ky_mapping_support_points_permuted_zx_components.data(),
       ky_mapping_support_points_permuted_zx_components.size() *
-        sizeof(Point<2, RangeNumberType>),
+        sizeof(Point<2, real_type>),
       0));
 
     AssertCuda(cudaHostRegister((void *)&(kx_quad_points_same_panel(0, 0)),
                                 kx_quad_points_same_panel.n_elements() *
-                                  sizeof(Point<spacedim, RangeNumberType>),
+                                  sizeof(Point<spacedim, real_type>),
                                 0));
 
     AssertCuda(cudaHostRegister((void *)&(kx_quad_points_common_edge(0, 0)),
                                 kx_quad_points_common_edge.n_elements() *
-                                  sizeof(Point<spacedim, RangeNumberType>),
+                                  sizeof(Point<spacedim, real_type>),
                                 0));
 
     AssertCuda(cudaHostRegister((void *)&(kx_quad_points_common_vertex(0, 0)),
                                 kx_quad_points_common_vertex.n_elements() *
-                                  sizeof(Point<spacedim, RangeNumberType>),
+                                  sizeof(Point<spacedim, real_type>),
                                 0));
 
     AssertCuda(cudaHostRegister((void *)&(kx_quad_points_regular(0, 0)),
                                 kx_quad_points_regular.n_elements() *
-                                  sizeof(Point<spacedim, RangeNumberType>),
+                                  sizeof(Point<spacedim, real_type>),
                                 0));
 
     AssertCuda(cudaHostRegister((void *)&(ky_quad_points_same_panel(0, 0)),
                                 ky_quad_points_same_panel.n_elements() *
-                                  sizeof(Point<spacedim, RangeNumberType>),
+                                  sizeof(Point<spacedim, real_type>),
                                 0));
 
     AssertCuda(cudaHostRegister((void *)&(ky_quad_points_common_edge(0, 0)),
                                 ky_quad_points_common_edge.n_elements() *
-                                  sizeof(Point<spacedim, RangeNumberType>),
+                                  sizeof(Point<spacedim, real_type>),
                                 0));
 
     AssertCuda(cudaHostRegister((void *)&(ky_quad_points_common_vertex(0, 0)),
                                 ky_quad_points_common_vertex.n_elements() *
-                                  sizeof(Point<spacedim, RangeNumberType>),
+                                  sizeof(Point<spacedim, real_type>),
                                 0));
 
     AssertCuda(cudaHostRegister((void *)&(ky_quad_points_regular(0, 0)),
                                 ky_quad_points_regular.n_elements() *
-                                  sizeof(Point<spacedim, RangeNumberType>),
+                                  sizeof(Point<spacedim, real_type>),
                                 0));
 
     AssertCuda(cudaMallocHost((void **)&quad_values_in_thread_blocks,
@@ -2360,7 +2396,7 @@ public:
     const FiniteElement<dim, spacedim>              &kx_fe,
     const FiniteElement<dim, spacedim>              &ky_fe,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
-    const BEMValues<dim, spacedim>                  &bem_values)
+    const BEMValues<dim, spacedim, real_type>       &bem_values)
     : thread_id(thread_id)
     , cuda_stream_handle(0)
     , common_vertex_pair_local_indices(0)
@@ -2468,89 +2504,89 @@ public:
     AssertCuda(
       cudaHostRegister((void *)kx_mapping_support_points_permuted.data(),
                        kx_mapping_support_points_permuted.size() *
-                         sizeof(Point<spacedim, RangeNumberType>),
+                         sizeof(Point<spacedim, real_type>),
                        0));
 
     AssertCuda(
       cudaHostRegister((void *)ky_mapping_support_points_permuted.data(),
                        ky_mapping_support_points_permuted.size() *
-                         sizeof(Point<spacedim, RangeNumberType>),
+                         sizeof(Point<spacedim, real_type>),
                        0));
 
     AssertCuda(cudaHostRegister(
       (void *)kx_mapping_support_points_permuted_xy_components.data(),
       kx_mapping_support_points_permuted_xy_components.size() *
-        sizeof(Point<2, RangeNumberType>),
+        sizeof(Point<2, real_type>),
       0));
 
     AssertCuda(cudaHostRegister(
       (void *)kx_mapping_support_points_permuted_yz_components.data(),
       kx_mapping_support_points_permuted_yz_components.size() *
-        sizeof(Point<2, RangeNumberType>),
+        sizeof(Point<2, real_type>),
       0));
 
     AssertCuda(cudaHostRegister(
       (void *)kx_mapping_support_points_permuted_zx_components.data(),
       kx_mapping_support_points_permuted_zx_components.size() *
-        sizeof(Point<2, RangeNumberType>),
+        sizeof(Point<2, real_type>),
       0));
 
     AssertCuda(cudaHostRegister(
       (void *)ky_mapping_support_points_permuted_xy_components.data(),
       ky_mapping_support_points_permuted_xy_components.size() *
-        sizeof(Point<2, RangeNumberType>),
+        sizeof(Point<2, real_type>),
       0));
 
     AssertCuda(cudaHostRegister(
       (void *)ky_mapping_support_points_permuted_yz_components.data(),
       ky_mapping_support_points_permuted_yz_components.size() *
-        sizeof(Point<2, RangeNumberType>),
+        sizeof(Point<2, real_type>),
       0));
 
     AssertCuda(cudaHostRegister(
       (void *)ky_mapping_support_points_permuted_zx_components.data(),
       ky_mapping_support_points_permuted_zx_components.size() *
-        sizeof(Point<2, RangeNumberType>),
+        sizeof(Point<2, real_type>),
       0));
 
     AssertCuda(cudaHostRegister((void *)&(kx_quad_points_same_panel(0, 0)),
                                 kx_quad_points_same_panel.n_elements() *
-                                  sizeof(Point<spacedim, RangeNumberType>),
+                                  sizeof(Point<spacedim, real_type>),
                                 0));
 
     AssertCuda(cudaHostRegister((void *)&(kx_quad_points_common_edge(0, 0)),
                                 kx_quad_points_common_edge.n_elements() *
-                                  sizeof(Point<spacedim, RangeNumberType>),
+                                  sizeof(Point<spacedim, real_type>),
                                 0));
 
     AssertCuda(cudaHostRegister((void *)&(kx_quad_points_common_vertex(0, 0)),
                                 kx_quad_points_common_vertex.n_elements() *
-                                  sizeof(Point<spacedim, RangeNumberType>),
+                                  sizeof(Point<spacedim, real_type>),
                                 0));
 
     AssertCuda(cudaHostRegister((void *)&(kx_quad_points_regular(0, 0)),
                                 kx_quad_points_regular.n_elements() *
-                                  sizeof(Point<spacedim, RangeNumberType>),
+                                  sizeof(Point<spacedim, real_type>),
                                 0));
 
     AssertCuda(cudaHostRegister((void *)&(ky_quad_points_same_panel(0, 0)),
                                 ky_quad_points_same_panel.n_elements() *
-                                  sizeof(Point<spacedim, RangeNumberType>),
+                                  sizeof(Point<spacedim, real_type>),
                                 0));
 
     AssertCuda(cudaHostRegister((void *)&(ky_quad_points_common_edge(0, 0)),
                                 ky_quad_points_common_edge.n_elements() *
-                                  sizeof(Point<spacedim, RangeNumberType>),
+                                  sizeof(Point<spacedim, real_type>),
                                 0));
 
     AssertCuda(cudaHostRegister((void *)&(ky_quad_points_common_vertex(0, 0)),
                                 ky_quad_points_common_vertex.n_elements() *
-                                  sizeof(Point<spacedim, RangeNumberType>),
+                                  sizeof(Point<spacedim, real_type>),
                                 0));
 
     AssertCuda(cudaHostRegister((void *)&(ky_quad_points_regular(0, 0)),
                                 ky_quad_points_regular.n_elements() *
-                                  sizeof(Point<spacedim, RangeNumberType>),
+                                  sizeof(Point<spacedim, real_type>),
                                 0));
 
     AssertCuda(cudaMallocHost((void **)&quad_values_in_thread_blocks,

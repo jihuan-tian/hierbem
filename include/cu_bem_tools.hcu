@@ -4,6 +4,8 @@
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
 
+#include <cmath>
+
 #include "config.h"
 #include "cu_fullmatrix.hcu"
 #include "cu_table.hcu"
@@ -14,7 +16,6 @@ using namespace dealii;
 
 namespace BEMTools
 {
-
   namespace CUDAWrappers
   {
     /**
@@ -167,7 +168,7 @@ namespace BEMTools
       HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
         jacobian_matrix_2x2(jacobian_matrix_2x2_data, 2, 2);
 
-      RangeNumberType surface_jacobian_det = 0.0;
+      RangeNumberType surface_jacobian_det = RangeNumberType(0.);
       RangeNumberType surface_jacobian_det_components[spacedim];
 
       HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
@@ -204,7 +205,7 @@ namespace BEMTools
       surface_jacobian_det +=
         surface_jacobian_det_components[2] * surface_jacobian_det_components[2];
 
-      surface_jacobian_det = sqrt(surface_jacobian_det);
+      surface_jacobian_det = std::sqrt(surface_jacobian_det);
 
       /**
        * This loop transform the vector \f$[J_{01}, J_{12}, J_{20}]/\abs{J}\f$
@@ -473,9 +474,7 @@ namespace BEMTools
 
 #pragma unroll
       for (unsigned int i = 0; i < spacedim; i++)
-        {
-          local_quad_point_in_real_cell(i) = 0.;
-        }
+        local_quad_point_in_real_cell(i) = RangeNumberType(0.);
 
       /**
        * Linear combination of support point coordinates and evaluation of

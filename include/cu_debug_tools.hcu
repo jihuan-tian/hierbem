@@ -1988,54 +1988,6 @@ is_equal(const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
   return check_result;
 }
 
-
-/**
- * Check the equality of @p PairCellWisePerTaskData and @p CUDAPairCellWisePerTaskData.
- *
- * @tparam dim
- * @tparam spacedim
- * @tparam RangeNumberType
- * @param copy_data_cpu
- * @param copy_data_gpu
- * @param stream
- * @return
- */
-template <int dim, int spacedim, typename RangeNumberType = double>
-bool
-is_equal(
-  const PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data_cpu,
-  const HierBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu,
-  const cudaStream_t                                             stream)
-{
-  LogStream::Prefix prefix_string("Check CopyData");
-
-  if (is_equal(copy_data_cpu.kx_local_dof_indices_permuted,
-               copy_data_gpu.kx_local_dof_indices_permuted,
-               stream))
-    {
-      deallog << "kx_local_dof_indices_permuted is equal" << std::endl;
-    }
-  else
-    {
-      deallog << "kx_local_dof_indices_permuted is not equal" << std::endl;
-      return false;
-    }
-
-  if (is_equal(copy_data_cpu.ky_local_dof_indices_permuted,
-               copy_data_gpu.ky_local_dof_indices_permuted,
-               stream))
-    {
-      deallog << "ky_local_dof_indices_permuted is equal" << std::endl;
-    }
-  else
-    {
-      deallog << "ky_local_dof_indices_permuted is not equal" << std::endl;
-      return false;
-    }
-
-  return true;
-}
-
 HBEM_NS_CLOSE
 
 #endif // HIERBEM_INCLUDE_CU_DEBUG_TOOLS_H_

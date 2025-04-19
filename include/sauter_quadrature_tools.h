@@ -262,6 +262,10 @@ sauter_common_edge_parametric_coords_to_unit_cells(
  * common vertex case to unit cell coordinates for \f$K_x\f$ and \f$K_y\f$
  * respectively.
  *
+ * \myalert{This function directly operates on the quadrature points obtained
+ * from a quadrature object, which have double type. Therefore, we do not make
+ * the number type as a template parameter in this function.}
+ *
  * @param parametric_coords Parameter coordinates in \f$\mathbb{R}^{dim*2}\f$
  * @param k3_index
  * @param kx_unit_cell_coords [out]

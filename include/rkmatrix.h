@@ -1090,7 +1090,7 @@ public:
    *
    * @return
    */
-  Number
+  real_type
   frobenius_norm(const size_type number_of_columns) const;
 
   /**
@@ -1099,7 +1099,7 @@ public:
    *
    * @return
    */
-  Number
+  real_type
   frobenius_norm(void) const;
 
   /**
@@ -3329,7 +3329,7 @@ RkMatrix<Number>::assemble_from_rkmatrix(
 
 
 template <typename Number>
-Number
+typename numbers::NumberTraits<Number>::real_type
 RkMatrix<Number>::frobenius_norm(const size_type number_of_columns) const
 {
   Assert(
@@ -3337,7 +3337,7 @@ RkMatrix<Number>::frobenius_norm(const size_type number_of_columns) const
     ExcMessage(
       "The effective number of columns required for calculating the Frobenius norm should be less than or equal to the formal rank!"));
 
-  Number result = 0.0;
+  Number result = Number(0.);
 
   Vector<Number> ui(A.m());
   Vector<Number> uj(A.m());
@@ -3358,12 +3358,15 @@ RkMatrix<Number>::frobenius_norm(const size_type number_of_columns) const
         }
     }
 
-  return std::sqrt(result);
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
+    return std::sqrt(std::real(result));
+  else
+    return std::sqrt(result);
 }
 
 
 template <typename Number>
-Number
+typename numbers::NumberTraits<Number>::real_type
 RkMatrix<Number>::frobenius_norm(void) const
 {
   return frobenius_norm(formal_rank);

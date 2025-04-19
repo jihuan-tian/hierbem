@@ -8,6 +8,7 @@
 #ifndef HIERBEM_INCLUDE_CU_BEM_VALUES_H_
 #define HIERBEM_INCLUDE_CU_BEM_VALUES_H_
 
+#include <deal.II/base/numbers.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/utilities.h>
@@ -937,6 +938,8 @@ namespace CUDAWrappers
   public:
     using value_type = RangeNumberType;
     using size_type  = std::size_t;
+    using real_type =
+      typename numbers::NumberTraits<RangeNumberType>::real_type;
 
     /**
      * Allocate global memory on the device according to the data size of
@@ -968,26 +971,24 @@ namespace CUDAWrappers
     /**
      * Permuted list of mapping support points in the real cell \f$K_x\f$.
      */
-    CUDATable<1, Point<spacedim, RangeNumberType>>
-      kx_mapping_support_points_permuted;
+    CUDATable<1, Point<spacedim, real_type>> kx_mapping_support_points_permuted;
     /**
      * Permuted list of mapping support points in the real cell \f$K_y\f$.
      */
-    CUDATable<1, Point<spacedim, RangeNumberType>>
-      ky_mapping_support_points_permuted;
+    CUDATable<1, Point<spacedim, real_type>> ky_mapping_support_points_permuted;
 
-    CUDATable<1, Point<2, RangeNumberType>>
+    CUDATable<1, Point<2, real_type>>
       kx_mapping_support_points_permuted_xy_components;
-    CUDATable<1, Point<2, RangeNumberType>>
+    CUDATable<1, Point<2, real_type>>
       kx_mapping_support_points_permuted_yz_components;
-    CUDATable<1, Point<2, RangeNumberType>>
+    CUDATable<1, Point<2, real_type>>
       kx_mapping_support_points_permuted_zx_components;
 
-    CUDATable<1, Point<2, RangeNumberType>>
+    CUDATable<1, Point<2, real_type>>
       ky_mapping_support_points_permuted_xy_components;
-    CUDATable<1, Point<2, RangeNumberType>>
+    CUDATable<1, Point<2, real_type>>
       ky_mapping_support_points_permuted_yz_components;
-    CUDATable<1, Point<2, RangeNumberType>>
+    CUDATable<1, Point<2, real_type>>
       ky_mapping_support_points_permuted_zx_components;
 
     /**
@@ -998,7 +999,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, RangeNumberType> kx_jacobians_same_panel;
+    CUDATable<2, real_type> kx_jacobians_same_panel;
     /**
      * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the common edge case.
@@ -1007,7 +1008,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, RangeNumberType> kx_jacobians_common_edge;
+    CUDATable<2, real_type> kx_jacobians_common_edge;
     /**
      * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the common vertex case.
@@ -1016,7 +1017,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, RangeNumberType> kx_jacobians_common_vertex;
+    CUDATable<2, real_type> kx_jacobians_common_vertex;
     /**
      * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the regular case.
@@ -1025,7 +1026,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, RangeNumberType> kx_jacobians_regular;
+    CUDATable<2, real_type> kx_jacobians_regular;
 
     /**
      * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
@@ -1035,7 +1036,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, Tensor<1, spacedim, RangeNumberType>> kx_normals_same_panel;
+    CUDATable<2, Tensor<1, spacedim, real_type>> kx_normals_same_panel;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
      * the common edge case.
@@ -1044,7 +1045,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, Tensor<1, spacedim, RangeNumberType>> kx_normals_common_edge;
+    CUDATable<2, Tensor<1, spacedim, real_type>> kx_normals_common_edge;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
      * the common vertex case.
@@ -1053,7 +1054,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, Tensor<1, spacedim, RangeNumberType>> kx_normals_common_vertex;
+    CUDATable<2, Tensor<1, spacedim, real_type>> kx_normals_common_vertex;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
      * the regular case.
@@ -1062,7 +1063,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, Tensor<1, spacedim, RangeNumberType>> kx_normals_regular;
+    CUDATable<2, Tensor<1, spacedim, real_type>> kx_normals_regular;
 
     /**
      * Covariant transformation matrix (with dimension <tt>spacedim *
@@ -1075,7 +1076,7 @@ namespace CUDAWrappers
      * 3. Unit cell coordinate index
      * 4. Real cell coordinate index
      */
-    CUDATable<4, RangeNumberType> kx_covariants_same_panel;
+    CUDATable<4, real_type> kx_covariants_same_panel;
     /**
      * Covariant transformation matrix (with dimension <tt>spacedim *
      * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
@@ -1087,7 +1088,7 @@ namespace CUDAWrappers
      * 3. Unit cell coordinate index
      * 4. Real cell coordinate index
      */
-    CUDATable<4, RangeNumberType> kx_covariants_common_edge;
+    CUDATable<4, real_type> kx_covariants_common_edge;
     /**
      * Covariant transformation matrix (with dimension <tt>spacedim *
      * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
@@ -1099,7 +1100,7 @@ namespace CUDAWrappers
      * 3. Unit cell coordinate index
      * 4. Real cell coordinate index
      */
-    CUDATable<4, RangeNumberType> kx_covariants_common_vertex;
+    CUDATable<4, real_type> kx_covariants_common_vertex;
     /**
      * Covariant transformation matrix (with dimension <tt>spacedim *
      * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
@@ -1111,7 +1112,7 @@ namespace CUDAWrappers
      * 3. Unit cell coordinate index
      * 4. Real cell coordinate index
      */
-    CUDATable<4, RangeNumberType> kx_covariants_regular;
+    CUDATable<4, real_type> kx_covariants_regular;
 
     /**
      * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
@@ -1121,7 +1122,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, Point<spacedim, RangeNumberType>> kx_quad_points_same_panel;
+    CUDATable<2, Point<spacedim, real_type>> kx_quad_points_same_panel;
     /**
      * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
      * quadrature point for the common edge case.
@@ -1130,7 +1131,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, Point<spacedim, RangeNumberType>> kx_quad_points_common_edge;
+    CUDATable<2, Point<spacedim, real_type>> kx_quad_points_common_edge;
     /**
      * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
      * quadrature point for the common vertex case.
@@ -1139,7 +1140,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, Point<spacedim, RangeNumberType>> kx_quad_points_common_vertex;
+    CUDATable<2, Point<spacedim, real_type>> kx_quad_points_common_vertex;
     /**
      * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
      * quadrature point for the regular case.
@@ -1148,7 +1149,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, Point<spacedim, RangeNumberType>> kx_quad_points_regular;
+    CUDATable<2, Point<spacedim, real_type>> kx_quad_points_regular;
 
     /**
      * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
@@ -1158,7 +1159,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, RangeNumberType> ky_jacobians_same_panel;
+    CUDATable<2, real_type> ky_jacobians_same_panel;
     /**
      * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the common edge case.
@@ -1167,7 +1168,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, RangeNumberType> ky_jacobians_common_edge;
+    CUDATable<2, real_type> ky_jacobians_common_edge;
     /**
      * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the common vertex case.
@@ -1176,7 +1177,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, RangeNumberType> ky_jacobians_common_vertex;
+    CUDATable<2, real_type> ky_jacobians_common_vertex;
     /**
      * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the regular case.
@@ -1185,7 +1186,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, RangeNumberType> ky_jacobians_regular;
+    CUDATable<2, real_type> ky_jacobians_regular;
 
     /**
      * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
@@ -1195,7 +1196,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, Tensor<1, spacedim, RangeNumberType>> ky_normals_same_panel;
+    CUDATable<2, Tensor<1, spacedim, real_type>> ky_normals_same_panel;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
      * the common edge case.
@@ -1204,7 +1205,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, Tensor<1, spacedim, RangeNumberType>> ky_normals_common_edge;
+    CUDATable<2, Tensor<1, spacedim, real_type>> ky_normals_common_edge;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
      * the common vertex case.
@@ -1213,7 +1214,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, Tensor<1, spacedim, RangeNumberType>> ky_normals_common_vertex;
+    CUDATable<2, Tensor<1, spacedim, real_type>> ky_normals_common_vertex;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
      * the regular case.
@@ -1222,7 +1223,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, Tensor<1, spacedim, RangeNumberType>> ky_normals_regular;
+    CUDATable<2, Tensor<1, spacedim, real_type>> ky_normals_regular;
 
     /**
      * Covariant transformation matrix (with dimension <tt>spacedim *
@@ -1235,7 +1236,7 @@ namespace CUDAWrappers
      * 3. Unit cell coordinate index
      * 4. Real cell coordinate index
      */
-    CUDATable<4, RangeNumberType> ky_covariants_same_panel;
+    CUDATable<4, real_type> ky_covariants_same_panel;
     /**
      * Covariant transformation matrix (with dimension <tt>spacedim *
      * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
@@ -1247,7 +1248,7 @@ namespace CUDAWrappers
      * 3. Unit cell coordinate index
      * 4. Real cell coordinate index
      */
-    CUDATable<4, RangeNumberType> ky_covariants_common_edge;
+    CUDATable<4, real_type> ky_covariants_common_edge;
     /**
      * Covariant transformation matrix (with dimension <tt>spacedim *
      * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
@@ -1259,7 +1260,7 @@ namespace CUDAWrappers
      * 3. Unit cell coordinate index
      * 4. Real cell coordinate index
      */
-    CUDATable<4, RangeNumberType> ky_covariants_common_vertex;
+    CUDATable<4, real_type> ky_covariants_common_vertex;
     /**
      * Covariant transformation matrix (with dimension <tt>spacedim *
      * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
@@ -1271,7 +1272,7 @@ namespace CUDAWrappers
      * 3. Unit cell coordinate index
      * 4. Real cell coordinate index
      */
-    CUDATable<4, RangeNumberType> ky_covariants_regular;
+    CUDATable<4, real_type> ky_covariants_regular;
 
     /**
      * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
@@ -1281,7 +1282,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, Point<spacedim, RangeNumberType>> ky_quad_points_same_panel;
+    CUDATable<2, Point<spacedim, real_type>> ky_quad_points_same_panel;
     /**
      * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
      * quadrature point for the common edge case.
@@ -1290,7 +1291,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, Point<spacedim, RangeNumberType>> ky_quad_points_common_edge;
+    CUDATable<2, Point<spacedim, real_type>> ky_quad_points_common_edge;
     /**
      * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
      * quadrature point for the common vertex case.
@@ -1299,7 +1300,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, Point<spacedim, RangeNumberType>> ky_quad_points_common_vertex;
+    CUDATable<2, Point<spacedim, real_type>> ky_quad_points_common_vertex;
     /**
      * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
      * quadrature point for the regular case.
@@ -1308,7 +1309,7 @@ namespace CUDAWrappers
      * 1. k3 term index
      * 2. Quadrature point index
      */
-    CUDATable<2, Point<spacedim, RangeNumberType>> ky_quad_points_regular;
+    CUDATable<2, Point<spacedim, real_type>> ky_quad_points_regular;
 
     /**
      * Sauter quadrature values calculated from the accumulation of each
@@ -1587,71 +1588,6 @@ namespace CUDAWrappers
 
     AssertCuda(cudaFreeAsync(quad_values_in_thread_blocks, stream));
   }
-
-
-  /**
-   * PairCellWisePerTaskData on GPU device.
-   */
-  class CUDAPairCellWisePerTaskData
-  {
-  public:
-    /**
-     * Allocate global memory on the device.
-     *
-     * @tparam dim
-     * @tparam spacedim
-     * @tparam RangeNumberType
-     * @param per_task_data
-     */
-    template <int dim, int spacedim, typename RangeNumberType>
-    void
-    allocate(const PairCellWisePerTaskData<dim, spacedim, RangeNumberType>
-                               &per_task_data,
-             const cudaStream_t stream)
-    {
-      kx_local_dof_indices_permuted.allocate(
-        CUDATableIndices<1>(per_task_data.kx_local_dof_indices_permuted.size()),
-        stream);
-      ky_local_dof_indices_permuted.allocate(
-        CUDATableIndices<1>(per_task_data.ky_local_dof_indices_permuted.size()),
-        stream);
-    }
-
-    /**
-     * Assign values from @p PairCellWisePerTaskData on the host to the
-     * device.
-     *
-     * @tparam dim
-     * @tparam spacedim
-     * @tparam RangeNumberType
-     * @param per_task_data
-     */
-    template <int dim, int spacedim, typename RangeNumberType>
-    void
-    assign_from_host(
-      const PairCellWisePerTaskData<dim, spacedim, RangeNumberType>
-                        &per_task_data,
-      const cudaStream_t stream)
-    {
-      kx_local_dof_indices_permuted.assign_from_host(
-        per_task_data.kx_local_dof_indices_permuted, stream);
-      ky_local_dof_indices_permuted.assign_from_host(
-        per_task_data.ky_local_dof_indices_permuted, stream);
-    }
-
-    /**
-     * Release the memory on the device.
-     */
-    void
-    release(const cudaStream_t stream)
-    {
-      kx_local_dof_indices_permuted.release(stream);
-      ky_local_dof_indices_permuted.release(stream);
-    }
-
-    CUDATable<1, types::global_dof_index> kx_local_dof_indices_permuted;
-    CUDATable<1, types::global_dof_index> ky_local_dof_indices_permuted;
-  };
 } // namespace CUDAWrappers
 
 HBEM_NS_CLOSE
