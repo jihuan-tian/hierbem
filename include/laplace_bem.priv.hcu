@@ -4925,13 +4925,14 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 spacedim,
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
                 double,
-                Vector<double>>(double_layer_kernel_,
-                                -1.0,
-                                dof_handler_for_dirichlet_space_,
-                                dirichlet_bc_,
-                                false,
-                                potential_grid_points,
-                                potential_values);
+                double,
+                Vector>(double_layer_kernel_,
+                        -1.0,
+                        dof_handler_for_dirichlet_space_,
+                        dirichlet_bc_,
+                        false,
+                        potential_grid_points,
+                        potential_values);
 
               /**
                * Evaluate the single layer potential, which is the single
@@ -4945,13 +4946,14 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 spacedim,
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
                 double,
-                Vector<double>>(single_layer_kernel_,
-                                1.0,
-                                dof_handler_for_neumann_space_,
-                                neumann_data_,
-                                false,
-                                potential_grid_points,
-                                potential_values);
+                double,
+                Vector>(single_layer_kernel_,
+                        1.0,
+                        dof_handler_for_neumann_space_,
+                        neumann_data_,
+                        false,
+                        potential_grid_points,
+                        potential_values);
             }
           else
             {
@@ -4969,13 +4971,14 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 spacedim,
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
                 double,
-                Vector<double>>(double_layer_kernel_,
-                                1.0,
-                                dof_handler_for_dirichlet_space_,
-                                dirichlet_bc_,
-                                false,
-                                potential_grid_points,
-                                potential_values);
+                double,
+                Vector>(double_layer_kernel_,
+                        1.0,
+                        dof_handler_for_dirichlet_space_,
+                        dirichlet_bc_,
+                        false,
+                        potential_grid_points,
+                        potential_values);
 
               /**
                * Evaluate the single layer potential, which is the single
@@ -4989,13 +4992,14 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 spacedim,
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
                 double,
-                Vector<double>>(single_layer_kernel_,
-                                -1.0,
-                                dof_handler_for_neumann_space_,
-                                neumann_data_,
-                                false,
-                                potential_grid_points,
-                                potential_values);
+                double,
+                Vector>(single_layer_kernel_,
+                        -1.0,
+                        dof_handler_for_neumann_space_,
+                        neumann_data_,
+                        false,
+                        potential_grid_points,
+                        potential_values);
             }
 
           break;
@@ -5017,13 +5021,14 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 spacedim,
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
                 double,
-                Vector<double>>(double_layer_kernel_,
-                                -1.0,
-                                dof_handler_for_dirichlet_space_,
-                                dirichlet_data_,
-                                false,
-                                potential_grid_points,
-                                potential_values);
+                double,
+                Vector>(double_layer_kernel_,
+                        -1.0,
+                        dof_handler_for_dirichlet_space_,
+                        dirichlet_data_,
+                        false,
+                        potential_grid_points,
+                        potential_values);
 
               /**
                * Evaluate the single layer potential, which is the single
@@ -5037,13 +5042,14 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 spacedim,
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
                 double,
-                Vector<double>>(single_layer_kernel_,
-                                1.0,
-                                dof_handler_for_neumann_space_,
-                                neumann_bc_,
-                                false,
-                                potential_grid_points,
-                                potential_values);
+                double,
+                Vector>(single_layer_kernel_,
+                        1.0,
+                        dof_handler_for_neumann_space_,
+                        neumann_bc_,
+                        false,
+                        potential_grid_points,
+                        potential_values);
             }
           else
             {
@@ -5061,13 +5067,14 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 spacedim,
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
                 double,
-                Vector<double>>(double_layer_kernel_,
-                                1.0,
-                                dof_handler_for_dirichlet_space_,
-                                dirichlet_data_,
-                                false,
-                                potential_grid_points,
-                                potential_values);
+                double,
+                Vector>(double_layer_kernel_,
+                        1.0,
+                        dof_handler_for_dirichlet_space_,
+                        dirichlet_data_,
+                        false,
+                        potential_grid_points,
+                        potential_values);
 
               /**
                * Evaluate the single layer potential, which is the single
@@ -5081,13 +5088,14 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 spacedim,
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
                 double,
-                Vector<double>>(single_layer_kernel_,
-                                -1.0,
-                                dof_handler_for_neumann_space_,
-                                neumann_bc_,
-                                false,
-                                potential_grid_points,
-                                potential_values);
+                double,
+                Vector>(single_layer_kernel_,
+                        -1.0,
+                        dof_handler_for_neumann_space_,
+                        neumann_bc_,
+                        false,
+                        potential_grid_points,
+                        potential_values);
             }
 
           break;
@@ -5109,13 +5117,14 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 spacedim,
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
                 double,
-                Vector<double>>(double_layer_kernel_,
-                                -1.0,
-                                dof_handler_for_dirichlet_space_,
-                                dirichlet_data_,
-                                false,
-                                potential_grid_points,
-                                potential_values);
+                double,
+                Vector>(double_layer_kernel_,
+                        -1.0,
+                        dof_handler_for_dirichlet_space_,
+                        dirichlet_data_,
+                        false,
+                        potential_grid_points,
+                        potential_values);
 
               /**
                * Evaluate the single layer potential, which is the single
@@ -5129,13 +5138,14 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 spacedim,
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
                 double,
-                Vector<double>>(single_layer_kernel_,
-                                1.0,
-                                dof_handler_for_neumann_space_,
-                                neumann_data_,
-                                false,
-                                potential_grid_points,
-                                potential_values);
+                double,
+                Vector>(single_layer_kernel_,
+                        1.0,
+                        dof_handler_for_neumann_space_,
+                        neumann_data_,
+                        false,
+                        potential_grid_points,
+                        potential_values);
             }
           else
             {
@@ -5153,13 +5163,14 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 spacedim,
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
                 double,
-                Vector<double>>(double_layer_kernel_,
-                                1.0,
-                                dof_handler_for_dirichlet_space_,
-                                dirichlet_data_,
-                                false,
-                                potential_grid_points,
-                                potential_values);
+                double,
+                Vector>(double_layer_kernel_,
+                        1.0,
+                        dof_handler_for_dirichlet_space_,
+                        dirichlet_data_,
+                        false,
+                        potential_grid_points,
+                        potential_values);
 
               /**
                * Evaluate the single layer potential, which is the single
@@ -5173,13 +5184,14 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 spacedim,
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
                 double,
-                Vector<double>>(single_layer_kernel_,
-                                -1.0,
-                                dof_handler_for_neumann_space_,
-                                neumann_data_,
-                                false,
-                                potential_grid_points,
-                                potential_values);
+                double,
+                Vector>(single_layer_kernel_,
+                        -1.0,
+                        dof_handler_for_neumann_space_,
+                        neumann_data_,
+                        false,
+                        potential_grid_points,
+                        potential_values);
             }
 
           break;

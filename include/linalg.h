@@ -8,19 +8,33 @@
 #ifndef HIERBEM_INCLUDE_LINALG_H_
 #define HIERBEM_INCLUDE_LINALG_H_
 
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/numbers.h>
+#include <deal.II/base/parallel.h>
+#include <deal.II/base/types.h>
+#include <deal.II/base/vectorization.h>
+
 #include <deal.II/lac/full_matrix.h>
+#include <deal.II/lac/lapack_support.h>
 #include <deal.II/lac/vector.h>
+#include <deal.II/lac/vector_operations_internal.h>
+
+#include <tbb/partitioner.h>
 
 #include <limits>
+#include <type_traits>
 
+#include "blas_helpers.h"
 #include "config.h"
 #include "lapack_full_matrix_ext.h"
+#include "number_traits.h"
 
 HBEM_NS_OPEN
 
 namespace LinAlg
 {
   using namespace dealii;
+  using size_type = types::blas_int;
 
   /**
    * Calculate the determinant of a $4 \times 4$ matrix.
@@ -142,6 +156,212 @@ namespace LinAlg
     std::memcpy((void *)(dst_vec.data() + dst_start_index),
                 (void *)(src_vec.data() + src_start_index),
                 number_of_data * sizeof(number));
+  }
+
+
+  /**
+   * Compute the inner product of two vectors. When in the complex valued case,
+   * complex conjugation is applied to the second operand.
+   */
+  template <typename VectorType1, typename VectorType2>
+  typename VectorType1::value_type
+  inner_product(const VectorType1 &vec1, const VectorType2 &vec2)
+  {
+    using Number1 = typename VectorType1::value_type;
+    using Number2 = typename VectorType2::value_type;
+
+    static_assert(is_number_larger_or_equal<Number1, Number2>());
+    const size_type n = vec1.size();
+    AssertDimension(n, vec2.size());
+
+    if constexpr (std::is_same<Number1, Number2>::value)
+      return BLASHelpers::inner_product_helper(n, vec1, vec2);
+    else
+      {
+        Number1 result = Number1(0.);
+        for (size_type i = 0; i < n; i++)
+          result += vec1[i] *
+                    Number1(numbers::NumberTraits<Number2>::conjugate(vec2[i]));
+
+        return result;
+      }
+  }
+
+
+  /**
+   * Compute the linear combination of two vectors, which is different from the
+   * inner product operation in that the second operand is not conjugated when
+   * the number is complex valued.
+   */
+  template <typename VectorType1, typename VectorType2>
+  typename VectorType1::value_type
+  linear_combination(const VectorType1 &vec1, const VectorType2 &vec2)
+  {
+    using Number1 = typename VectorType1::value_type;
+    using Number2 = typename VectorType2::value_type;
+
+    static_assert(is_number_larger_or_equal<Number1, Number2>());
+    const size_type n = vec1.size();
+    AssertDimension(n, vec2.size());
+
+    if constexpr (std::is_same<Number1, Number2>::value)
+      return BLASHelpers::linear_combination_helper(n, vec1, vec2);
+    else
+      {
+        Number1 result = Number1(0.);
+        for (size_type i = 0; i < n; i++)
+          result += vec1[i] * Number1(vec2[i]);
+
+        return result;
+      }
+  }
+
+
+  template <typename Number1, typename Number2>
+  struct InnerProductOperation
+  {
+    static constexpr bool vectorizes = std::is_same<Number1, Number2>::value &&
+                                       (std::is_same<Number1, float>::value ||
+                                        std::is_same<Number1, double>::value) &&
+                                       (VectorizedArray<Number1>::size() > 1);
+
+    InnerProductOperation(const Number1 *const X, const Number2 *const Y)
+      : X(X)
+      , Y(Y)
+    {
+      static_assert(is_number_larger_or_equal<Number1, Number2>());
+    }
+
+    Number1
+    operator()(const size_type i) const
+    {
+      return X[i] * Number1(numbers::NumberTraits<Number2>::conjugate(Y[i]));
+    }
+
+    VectorizedArray<Number1>
+    do_vectorized(const size_type i) const
+    {
+      VectorizedArray<Number1> x, y;
+      x.load(X + i);
+      y.load(Y + i);
+
+      // the following operation in VectorizedArray does an element-wise
+      // scalar product without taking into account complex values and
+      // the need to take the complex-conjugate of one argument. this
+      // may be a bug, but because all VectorizedArray classes only
+      // work on real scalars, it doesn't really matter very much.
+      // in any case, assert that we really don't get here for
+      // complex-valued objects
+      static_assert(numbers::NumberTraits<Number1>::is_complex == false,
+                    "This operation is not correctly implemented for "
+                    "complex-valued objects.");
+      return x * y;
+    }
+
+    const Number1 *const X;
+    const Number2 *const Y;
+  };
+
+
+  template <typename Number1, typename Number2>
+  struct LinearCombinationOperation
+  {
+    static constexpr bool vectorizes = std::is_same<Number1, Number2>::value &&
+                                       (std::is_same<Number1, float>::value ||
+                                        std::is_same<Number1, double>::value) &&
+                                       (VectorizedArray<Number1>::size() > 1);
+
+    LinearCombinationOperation(const Number1 *const X, const Number2 *const Y)
+      : X(X)
+      , Y(Y)
+    {
+      static_assert(is_number_larger_or_equal<Number1, Number2>());
+    }
+
+    Number1
+    operator()(const size_type i) const
+    {
+      return X[i] * Number1(Y[i]);
+    }
+
+    VectorizedArray<Number1>
+    do_vectorized(const size_type i) const
+    {
+      VectorizedArray<Number1> x, y;
+      x.load(X + i);
+      y.load(Y + i);
+
+      // the following operation in VectorizedArray does an element-wise
+      // scalar product without taking into account complex values and
+      // the need to take the complex-conjugate of one argument. this
+      // may be a bug, but because all VectorizedArray classes only
+      // work on real scalars, it doesn't really matter very much.
+      // in any case, assert that we really don't get here for
+      // complex-valued objects
+      static_assert(numbers::NumberTraits<Number1>::is_complex == false,
+                    "This operation is not correctly implemented for "
+                    "complex-valued objects.");
+      return x * y;
+    }
+
+    const Number1 *const X;
+    const Number2 *const Y;
+  };
+
+
+  /**
+   * Compute the inner product of two vectors using TBB @p parallel_reduce . When
+   * in the complex valued case, complex conjugation is applied to the second
+   * operand.
+   */
+  template <typename VectorType1, typename VectorType2>
+  typename VectorType1::value_type
+  inner_product_tbb(const VectorType1 &vec1, const VectorType2 &vec2)
+  {
+    using Number1 = typename VectorType1::value_type;
+    using Number2 = typename VectorType2::value_type;
+
+    static_assert(is_number_larger_or_equal<Number1, Number2>());
+    const size_type n = vec1.size();
+    AssertDimension(n, vec2.size());
+
+    Number1                                 result;
+    InnerProductOperation<Number1, Number2> op(vec1.data(), vec2.data());
+    auto partitioner = std::make_shared<parallel::internal::TBBPartitioner>();
+    auto affinity_partitioner = partitioner->acquire_one_partitioner();
+
+    internal::VectorOperations::parallel_reduce(op, 0, n, result, partitioner);
+    AssertIsFinite(result);
+    partitioner->release_one_partitioner(affinity_partitioner);
+
+    return result;
+  }
+
+
+  /**
+   * Compute the linear combination of two vectors using TBB @p parallel_reduce .
+   */
+  template <typename VectorType1, typename VectorType2>
+  typename VectorType1::value_type
+  linear_combination_tbb(const VectorType1 &vec1, const VectorType2 &vec2)
+  {
+    using Number1 = typename VectorType1::value_type;
+    using Number2 = typename VectorType2::value_type;
+
+    static_assert(is_number_larger_or_equal<Number1, Number2>());
+    const size_type n = vec1.size();
+    AssertDimension(n, vec2.size());
+
+    Number1                                      result;
+    LinearCombinationOperation<Number1, Number2> op(vec1.data(), vec2.data());
+    auto partitioner = std::make_shared<parallel::internal::TBBPartitioner>();
+    auto affinity_partitioner = partitioner->acquire_one_partitioner();
+
+    internal::VectorOperations::parallel_reduce(op, 0, n, result, partitioner);
+    AssertIsFinite(result);
+    partitioner->release_one_partitioner(affinity_partitioner);
+
+    return result;
   }
 } // namespace LinAlg
 

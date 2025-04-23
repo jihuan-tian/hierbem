@@ -29,6 +29,62 @@ using namespace dealii;
 extern "C"
 {
   /**
+   * Compute the dot product of two vectors.
+   */
+  float DEAL_II_FORTRAN_MANGLE(sdot, SDOT)(const dealii::types::blas_int *n,
+                                           const float                   *x,
+                                           const dealii::types::blas_int *incx,
+                                           const float                   *y,
+                                           const dealii::types::blas_int *incy);
+
+  double DEAL_II_FORTRAN_MANGLE(ddot,
+                                DDOT)(const dealii::types::blas_int *n,
+                                      const double                  *x,
+                                      const dealii::types::blas_int *incx,
+                                      const double                  *y,
+                                      const dealii::types::blas_int *incy);
+
+  /**
+   * N.B. Complex conjugation is applied to x.
+   */
+  std::complex<float>
+    DEAL_II_FORTRAN_MANGLE(cdotc, CDOTC)(const dealii::types::blas_int *n,
+                                         const std::complex<float>     *x,
+                                         const dealii::types::blas_int *incx,
+                                         const std::complex<float>     *y,
+                                         const dealii::types::blas_int *incy);
+
+  /**
+   * N.B. No complex conjugation is applied.
+   */
+  std::complex<float>
+    DEAL_II_FORTRAN_MANGLE(cdotu, CDOTU)(const dealii::types::blas_int *n,
+                                         const std::complex<float>     *x,
+                                         const dealii::types::blas_int *incx,
+                                         const std::complex<float>     *y,
+                                         const dealii::types::blas_int *incy);
+
+  /**
+   * N.B. Complex conjugation is applied to x.
+   */
+  std::complex<double>
+    DEAL_II_FORTRAN_MANGLE(zdotc, ZDOTC)(const dealii::types::blas_int *n,
+                                         const std::complex<double>    *x,
+                                         const dealii::types::blas_int *incx,
+                                         const std::complex<double>    *y,
+                                         const dealii::types::blas_int *incy);
+
+  /**
+   * N.B. No complex conjugation is applied.
+   */
+  std::complex<double>
+    DEAL_II_FORTRAN_MANGLE(zdotu, ZDOTU)(const dealii::types::blas_int *n,
+                                         const std::complex<double>    *x,
+                                         const dealii::types::blas_int *incx,
+                                         const std::complex<double>    *y,
+                                         const dealii::types::blas_int *incy);
+
+  /**
    * Scale a vector by a factor.
    */
   void DEAL_II_FORTRAN_MANGLE(sscal,
@@ -57,6 +113,182 @@ extern "C"
 }
 
 HBEM_NS_OPEN
+
+inline float
+inner_product(const dealii::types::blas_int *n,
+              const float                   *x,
+              const dealii::types::blas_int *incx,
+              const float                   *y,
+              const dealii::types::blas_int *incy)
+{
+#ifdef DEAL_II_WITH_LAPACK
+  return DEAL_II_FORTRAN_MANGLE(sdot, SDOT)(n, x, incx, y, incy);
+#else
+  (void)n;
+  (void)x;
+  (void)incx;
+  (void)y;
+  (void)incy;
+
+  Assert(false, LAPACKSupport::ExcMissing("sdot"));
+  return 0.;
+#endif
+}
+
+
+inline double
+inner_product(const dealii::types::blas_int *n,
+              const double                  *x,
+              const dealii::types::blas_int *incx,
+              const double                  *y,
+              const dealii::types::blas_int *incy)
+{
+#ifdef DEAL_II_WITH_LAPACK
+  return DEAL_II_FORTRAN_MANGLE(ddot, DDOT)(n, x, incx, y, incy);
+#else
+  (void)n;
+  (void)x;
+  (void)incx;
+  (void)y;
+  (void)incy;
+
+  Assert(false, LAPACKSupport::ExcMissing("ddot"));
+  return 0.;
+#endif
+}
+
+
+inline std::complex<float>
+inner_product(const dealii::types::blas_int *n,
+              const std::complex<float>     *x,
+              const dealii::types::blas_int *incx,
+              const std::complex<float>     *y,
+              const dealii::types::blas_int *incy)
+{
+#ifdef DEAL_II_WITH_LAPACK
+  return DEAL_II_FORTRAN_MANGLE(cdotc, CDOTC)(n, x, incx, y, incy);
+#else
+  (void)n;
+  (void)x;
+  (void)incx;
+  (void)y;
+  (void)incy;
+
+  Assert(false, LAPACKSupport::ExcMissing("cdotc"));
+  return std::complex<float>(0.);
+#endif
+}
+
+
+inline std::complex<double>
+inner_product(const dealii::types::blas_int *n,
+              const std::complex<double>    *x,
+              const dealii::types::blas_int *incx,
+              const std::complex<double>    *y,
+              const dealii::types::blas_int *incy)
+{
+#ifdef DEAL_II_WITH_LAPACK
+  return DEAL_II_FORTRAN_MANGLE(zdotc, ZDOTC)(n, x, incx, y, incy);
+#else
+  (void)n;
+  (void)x;
+  (void)incx;
+  (void)y;
+  (void)incy;
+
+  Assert(false, LAPACKSupport::ExcMissing("zdotc"));
+  return std::complex<double>(0.);
+#endif
+}
+
+
+inline float
+linear_combination(const dealii::types::blas_int *n,
+                   const float                   *x,
+                   const dealii::types::blas_int *incx,
+                   const float                   *y,
+                   const dealii::types::blas_int *incy)
+{
+#ifdef DEAL_II_WITH_LAPACK
+  return DEAL_II_FORTRAN_MANGLE(sdot, SDOT)(n, x, incx, y, incy);
+#else
+  (void)n;
+  (void)x;
+  (void)incx;
+  (void)y;
+  (void)incy;
+
+  Assert(false, LAPACKSupport::ExcMissing("sdot"));
+  return 0.;
+#endif
+}
+
+
+inline double
+linear_combination(const dealii::types::blas_int *n,
+                   const double                  *x,
+                   const dealii::types::blas_int *incx,
+                   const double                  *y,
+                   const dealii::types::blas_int *incy)
+{
+#ifdef DEAL_II_WITH_LAPACK
+  return DEAL_II_FORTRAN_MANGLE(ddot, DDOT)(n, x, incx, y, incy);
+#else
+  (void)n;
+  (void)x;
+  (void)incx;
+  (void)y;
+  (void)incy;
+
+  Assert(false, LAPACKSupport::ExcMissing("ddot"));
+  return 0.;
+#endif
+}
+
+
+inline std::complex<float>
+linear_combination(const dealii::types::blas_int *n,
+                   const std::complex<float>     *x,
+                   const dealii::types::blas_int *incx,
+                   const std::complex<float>     *y,
+                   const dealii::types::blas_int *incy)
+{
+#ifdef DEAL_II_WITH_LAPACK
+  return DEAL_II_FORTRAN_MANGLE(cdotu, CDOTU)(n, x, incx, y, incy);
+#else
+  (void)n;
+  (void)x;
+  (void)incx;
+  (void)y;
+  (void)incy;
+
+  Assert(false, LAPACKSupport::ExcMissing("cdotu"));
+  return std::complex<float>(0.);
+#endif
+}
+
+
+inline std::complex<double>
+linear_combination(const dealii::types::blas_int *n,
+                   const std::complex<double>    *x,
+                   const dealii::types::blas_int *incx,
+                   const std::complex<double>    *y,
+                   const dealii::types::blas_int *incy)
+{
+#ifdef DEAL_II_WITH_LAPACK
+  return DEAL_II_FORTRAN_MANGLE(zdotu, ZDOTU)(n, x, incx, y, incy);
+#else
+  (void)n;
+  (void)x;
+  (void)incx;
+  (void)y;
+  (void)incy;
+
+  Assert(false, LAPACKSupport::ExcMissing("zdotu"));
+  return std::complex<double>(0.);
+#endif
+}
+
 
 template <typename number1, typename number2>
 inline void

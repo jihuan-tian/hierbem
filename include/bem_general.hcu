@@ -41,6 +41,7 @@
 #include "bem_values.hcu"
 #include "config.h"
 #include "gmsh_manipulation.h"
+#include "linalg.h"
 #include "mapping/mapping_info.h"
 #include "number_traits.h"
 #include "sauter_quadrature.hcu"
@@ -1600,13 +1601,23 @@ evaluate_potential_on_one_cell(
 }
 
 
-template <int dim, int spacedim, typename RangeNumberType, typename VectorType>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType,
+          template <typename> typename VectorType>
 void
 copy_cell_local_to_global_for_potential_eval(
-  const CellWisePerTaskDataForPotentialEval<dim, spacedim, RangeNumberType>
-             &copy_data,
-  VectorType &result_vector)
+  const CellWisePerTaskDataForPotentialEval<dim, spacedim, KernelNumberType>
+                              &copy_data,
+  VectorType<RangeNumberType> &result_vector)
 {
+  static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
+  static_assert(
+    std::is_same<
+      typename numbers::NumberTraits<RangeNumberType>::real_type,
+      typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
   AssertDimension(copy_data.local_dof_indices_for_trial_space.size(),
                   copy_data.local_vector.size());
 
@@ -1625,6 +1636,11 @@ copy_cell_local_to_global_for_potential_eval(
  * s_y
  * \]
  *
+ * @tparam dim
+ * @tparam spacedim
+ * @tparam KernelFunctionType
+ * @tparam KernelNumberType
+ * @tparam VectorType The number type of @p VectorType should be >= @p KernelNumberType
  * @param kernel
  * @param factor
  * @param dof_handler_for_trial_space DoF handler related to either the
@@ -1641,27 +1657,34 @@ copy_cell_local_to_global_for_potential_eval(
 template <int dim,
           int spacedim,
           template <int, typename> typename KernelFunctionType,
+          typename RangeNumberType,
           typename KernelNumberType,
-          typename VectorType>
+          template <typename> typename VectorType>
 void
 evaluate_potential_at_points(
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                factor,
-  const DoFHandler<dim, spacedim> &dof_handler_for_trial_space,
-  const VectorType                &dof_values_in_trial_space,
-  const bool                       is_normal_vector_negated,
+  const DoFHandler<dim, spacedim>   &dof_handler_for_trial_space,
+  const VectorType<RangeNumberType> &dof_values_in_trial_space,
+  const bool                         is_normal_vector_negated,
   const std::vector<
     Point<spacedim,
           typename numbers::NumberTraits<KernelNumberType>::real_type>>
-             &target_point_list,
-  VectorType &potential_values)
+                              &target_point_list,
+  VectorType<RangeNumberType> &potential_values)
 {
+  static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
+  static_assert(
+    std::is_same<
+      typename numbers::NumberTraits<RangeNumberType>::real_type,
+      typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
   AssertDimension(target_point_list.size(), potential_values.size());
 
   const FiniteElement<dim, spacedim> &fe = dof_handler_for_trial_space.get_fe();
 
   const types::global_dof_index n_dofs = dof_handler_for_trial_space.n_dofs();
-  VectorType                    kernel_evaluation_discretized_to_dofs(n_dofs);
+  VectorType<KernelNumberType>  kernel_evaluation_discretized_to_dofs(n_dofs);
 
   QGauss<dim> quad_rule(fe.degree + 1);
 
@@ -1700,13 +1723,18 @@ evaluate_potential_at_points(
           fe));
 
       /**
-       * Calculate the inner product of the kernel evaluation and DoF values.
-       * N.B. The implementation here appends the results to the result
+       * Calculate the linear combination of the kernel evaluation and DoF
+       * values. N.B. The implementation here appends the results to the result
        * vector, so that a single vector can accumulate the contribution from
        * both the single layer and double layer potentials.
+       *
+       * In the linear combination, @p dof_values_in_trial_space is placed before
+       * @p kernel_evaluation_discretized_to_dofs, since it has a larger number
+       * type.
        */
       potential_values(i) +=
-        kernel_evaluation_discretized_to_dofs * dof_values_in_trial_space;
+        LinAlg::linear_combination_tbb(dof_values_in_trial_space,
+                                       kernel_evaluation_discretized_to_dofs);
     }
 }
 

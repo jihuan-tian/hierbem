@@ -15,6 +15,7 @@
 #include <catch2/catch_all.hpp>
 
 #include <algorithm>
+#include <complex>
 #include <functional>
 #include <type_traits>
 
@@ -71,6 +72,81 @@ compare_with_jl_scalar(
                      WithinRel(func(jl_value.double_value()), rel_error));
     }
 }
+
+
+template <typename Number>
+void
+compare_with_jl_complex(
+  const std::complex<Number>                             value,
+  const std::string                                     &jl_value_name,
+  const double                                           abs_error = 1e-15,
+  const double                                           rel_error = 1e-15,
+  const std::function<typename numbers::NumberTraits<Number>::real_type(
+    typename numbers::NumberTraits<Number>::real_type)> &func =
+    [](typename numbers::NumberTraits<Number>::real_type v) ->
+  typename numbers::NumberTraits<Number>::real_type { return v; })
+{
+  HBEMJuliaWrapper &inst = HBEMJuliaWrapper::get_instance();
+
+  // Compare the real part.
+  HBEMJuliaValue jl_value =
+    inst.eval_string(std::string("real(") + jl_value_name + std::string(")"));
+
+  if constexpr (std::is_same<Number, int>::value)
+    {
+      REQUIRE_THAT(func(value.real()),
+                   WithinAbs(func(jl_value.int_value()), abs_error) ||
+                     WithinRel(func(jl_value.int_value()), rel_error));
+    }
+  else if constexpr (std::is_same<Number, unsigned int>::value)
+    {
+      REQUIRE_THAT(func(value.real()),
+                   WithinAbs(func(jl_value.uint_value()), abs_error) ||
+                     WithinRel(func(jl_value.uint_value()), rel_error));
+    }
+  else if constexpr (std::is_same<Number, float>::value)
+    {
+      REQUIRE_THAT(func(value.real()),
+                   WithinAbs(func(jl_value.float_value()), abs_error) ||
+                     WithinRel(func(jl_value.float_value()), rel_error));
+    }
+  else if constexpr (std::is_same<Number, double>::value)
+    {
+      REQUIRE_THAT(func(value.real()),
+                   WithinAbs(func(jl_value.double_value()), abs_error) ||
+                     WithinRel(func(jl_value.double_value()), rel_error));
+    }
+
+  // Compare the imaginary part
+  jl_value =
+    inst.eval_string(std::string("imag(") + jl_value_name + std::string(")"));
+
+  if constexpr (std::is_same<Number, int>::value)
+    {
+      REQUIRE_THAT(func(value.imag()),
+                   WithinAbs(func(jl_value.int_value()), abs_error) ||
+                     WithinRel(func(jl_value.int_value()), rel_error));
+    }
+  else if constexpr (std::is_same<Number, unsigned int>::value)
+    {
+      REQUIRE_THAT(func(value.imag()),
+                   WithinAbs(func(jl_value.uint_value()), abs_error) ||
+                     WithinRel(func(jl_value.uint_value()), rel_error));
+    }
+  else if constexpr (std::is_same<Number, float>::value)
+    {
+      REQUIRE_THAT(func(value.imag()),
+                   WithinAbs(func(jl_value.float_value()), abs_error) ||
+                     WithinRel(func(jl_value.float_value()), rel_error));
+    }
+  else if constexpr (std::is_same<Number, double>::value)
+    {
+      REQUIRE_THAT(func(value.imag()),
+                   WithinAbs(func(jl_value.double_value()), abs_error) ||
+                     WithinRel(func(jl_value.double_value()), rel_error));
+    }
+}
+
 
 template <typename Number, template <typename> typename VectorType>
 void
