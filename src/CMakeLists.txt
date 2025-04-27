@@ -11,7 +11,6 @@ add_library(
   generic_tools SHARED
   debug_tools.cc
   dof_tools_ext.cc
-  hmatrix/aca_plus/aca_config.cc
   hmatrix/aca_plus/aca_plus.cu
   hmatrix/hmatrix_support.cc
   generic_functors.cc

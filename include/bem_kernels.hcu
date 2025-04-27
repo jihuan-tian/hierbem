@@ -961,16 +961,17 @@ namespace CUDAWrappers
                             &scratch_data,
           const unsigned int component) const
   {
-    RangeNumberType kernel_value = RangeNumberType(0.);
+    RangeNumberType kernel_value = RangeNumberType();
 
     switch (cell_neighboring_type)
       {
           case SamePanel: {
             // Current point in the Sauter's parametric space, at which the
             // pulled back kernel function is to be evaluated.
-            const Point<dim * 2, real_type> &p =
+            const Point<dim * 2> &p =
               bem_values.quad_rule_for_same_panel.point(quad_no);
-            real_type jacobian_det = p(0) * (1 - p(0)) * (1 - p(0) * p(1));
+            real_type jacobian_det =
+              static_cast<real_type>(p(0) * (1 - p(0)) * (1 - p(0) * p(1)));
 
             for (unsigned int k3_index = 0; k3_index < 8; k3_index++)
               {
@@ -985,10 +986,12 @@ namespace CUDAWrappers
           case CommonEdge: {
             // Current point in the Sauter's parametric space, at which the
             // pulled back kernel function is to be evaluated.
-            const Point<dim * 2, real_type> &p =
+            const Point<dim * 2> &p =
               bem_values.quad_rule_for_common_edge.point(quad_no);
-            real_type jacobian_det1 = p(0) * p(0) * (1 - p(0));
-            real_type jacobian_det2 = p(0) * p(0) * (1 - p(0) * p(1));
+            real_type jacobian_det1 =
+              static_cast<real_type>(p(0) * p(0) * (1 - p(0)));
+            real_type jacobian_det2 =
+              static_cast<real_type>(p(0) * p(0) * (1 - p(0) * p(1)));
 
             kernel_value =
               jacobian_det1 *
@@ -1011,9 +1014,10 @@ namespace CUDAWrappers
           case CommonVertex: {
             // Current point in the Sauter's parametric space, at which the
             // pulled back kernel function is to be evaluated.
-            const Point<dim * 2, real_type> &p =
+            const Point<dim * 2> &p =
               bem_values.quad_rule_for_common_vertex.point(quad_no);
-            real_type jacobian_det = dealii::Utilities::fixed_power<3>(p(0));
+            real_type jacobian_det =
+              static_cast<real_type>(dealii::Utilities::fixed_power<3>(p(0)));
 
             for (unsigned int k3_index = 0; k3_index < 4; k3_index++)
               {
@@ -1057,7 +1061,7 @@ namespace CUDAWrappers
                             &scratch_data,
           const unsigned int component) const
   {
-    RangeNumberType kernel_value = RangeNumberType(0.);
+    RangeNumberType kernel_value = RangeNumberType();
 
     switch (cell_neighboring_type)
       {
@@ -1068,11 +1072,11 @@ namespace CUDAWrappers
              * Sauter's parametric space, at which the pulled back kernel
              * function is to be evaluated.
              */
-            const CUDATable<2, real_type> &quad_points =
+            const CUDATable<2, double> &quad_points =
               bem_values.quad_rule_for_same_panel.get_points();
-            real_type jacobian_det =
+            real_type jacobian_det = static_cast<real_type>(
               quad_points(quad_no, 0) * (1 - quad_points(quad_no, 0)) *
-              (1 - quad_points(quad_no, 0) * quad_points(quad_no, 1));
+              (1 - quad_points(quad_no, 0) * quad_points(quad_no, 1)));
 
 #pragma unroll
             for (unsigned int k3_index = 0; k3_index < 8; k3_index++)
@@ -1092,14 +1096,14 @@ namespace CUDAWrappers
              * Sauter's parametric space, at which the pulled back kernel
              * function is to be evaluated.
              */
-            const CUDATable<2, real_type> &quad_points =
+            const CUDATable<2, double> &quad_points =
               bem_values.quad_rule_for_common_edge.get_points();
-            real_type jacobian_det1 = quad_points(quad_no, 0) *
-                                      quad_points(quad_no, 0) *
-                                      (1 - quad_points(quad_no, 0));
-            real_type jacobian_det2 =
+            real_type jacobian_det1 = static_cast<real_type>(
               quad_points(quad_no, 0) * quad_points(quad_no, 0) *
-              (1 - quad_points(quad_no, 0) * quad_points(quad_no, 1));
+              (1 - quad_points(quad_no, 0)));
+            real_type jacobian_det2 = static_cast<real_type>(
+              quad_points(quad_no, 0) * quad_points(quad_no, 0) *
+              (1 - quad_points(quad_no, 0) * quad_points(quad_no, 1)));
 
             kernel_value =
               jacobian_det1 *
@@ -1126,11 +1130,11 @@ namespace CUDAWrappers
              * Sauter's parametric space, at which the pulled back kernel
              * function is to be evaluated.
              */
-            const CUDATable<2, real_type> &quad_points =
+            const CUDATable<2, double> &quad_points =
               bem_values.quad_rule_for_common_vertex.get_points();
-            real_type jacobian_det =
+            real_type jacobian_det = static_cast<real_type>(
               HierBEM::PlatformShared::Utilities::fixed_power<3>(
-                quad_points(quad_no, 0));
+                quad_points(quad_no, 0)));
 
 #pragma unroll
             for (unsigned int k3_index = 0; k3_index < 4; k3_index++)

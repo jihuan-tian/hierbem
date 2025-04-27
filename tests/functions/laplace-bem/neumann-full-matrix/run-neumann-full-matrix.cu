@@ -72,11 +72,11 @@ run_neumann_full_matrix()
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  const bool                is_interior_problem = false;
-  LaplaceBEM<dim, spacedim> bem(
+  const bool                                is_interior_problem = false;
+  LaplaceBEM<dim, spacedim, double, double> bem(
     1,
     0,
-    LaplaceBEM<dim, spacedim>::ProblemType::NeumannBCProblem,
+    LaplaceBEM<dim, spacedim, double, double>::ProblemType::NeumannBCProblem,
     is_interior_problem,
     MultithreadInfo::n_threads());
   bem.set_project_name("neumann-full-matrix");

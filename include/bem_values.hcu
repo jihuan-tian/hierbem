@@ -1885,8 +1885,7 @@ public:
    * generated within the mapping object. Therefore, its size will
    * automatically adjusted and needs not be preallocated.
    */
-  std::vector<Point<spacedim, real_type>>
-    kx_mapping_support_points_in_default_order;
+  std::vector<Point<spacedim>> kx_mapping_support_points_in_default_order;
   /**
    * List of mapping support points in the real cell \f$K_y\f$ in the
    * hierarchic order.
@@ -1895,8 +1894,7 @@ public:
    * generated within the mapping object. Therefore, its size will
    * automatically adjusted and needs not be preallocated.
    */
-  std::vector<Point<spacedim, real_type>>
-    ky_mapping_support_points_in_default_order;
+  std::vector<Point<spacedim>> ky_mapping_support_points_in_default_order;
 
   /**
    * Permuted list of mapping support points in the real cell \f$K_x\f$.

@@ -96,10 +96,10 @@ run_mixed_l_shape()
   const unsigned int spacedim            = 3;
   const bool         is_interior_problem = true;
 
-  LaplaceBEM<dim, spacedim> bem(
+  LaplaceBEM<dim, spacedim, double, double> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
-    LaplaceBEM<dim, spacedim>::ProblemType::MixedBCProblem,
+    LaplaceBEM<dim, spacedim, double, double>::ProblemType::MixedBCProblem,
     is_interior_problem,         // is interior problem
     4,                           // n_min for cluster tree
     32,                          // n_min for block cluster tree

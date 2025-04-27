@@ -10,6 +10,7 @@
 #define HIERBEM_INCLUDE_PRECONDITIONERS_PRECONDITIONER_FOR_LAPLACE_DIRICHLET_H_
 
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/numbers.h>
 #include <deal.II/base/types.h>
 
 #include <deal.II/dofs/dof_handler.h>
@@ -31,16 +32,21 @@ HBEM_NS_OPEN
 
 using namespace dealii;
 
-template <int dim, int spacedim, typename RangeNumberType>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 class PreconditionerForLaplaceDirichlet
   : public OperatorPreconditioner<
       dim,
       spacedim,
-      HierBEM::PlatformShared::LaplaceKernel::
-        HyperSingularKernelRegular<spacedim, RangeNumberType>,
-      RangeNumberType>
+      HierBEM::PlatformShared::LaplaceKernel::HyperSingularKernelRegular,
+      RangeNumberType,
+      KernelNumberType>
 {
 public:
+  using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+
   /**
    * Constructor for preconditioner on full domain.
    */
@@ -51,8 +57,8 @@ public:
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
     const unsigned int                          max_iter    = 1000,
-    const double                                tol         = 1e-8,
-    const double                                omega       = 1.0,
+    const real_type                             tol         = 1e-8,
+    const real_type                             omega       = 1.0,
     const bool                                  log_history = true,
     const bool                                  log_result  = true);
 
@@ -67,8 +73,8 @@ public:
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
     const std::set<types::material_id>         &subdomain_material_ids,
     const unsigned int                          max_iter    = 1000,
-    const double                                tol         = 1e-8,
-    const double                                omega       = 1.0,
+    const real_type                             tol         = 1e-8,
+    const real_type                             omega       = 1.0,
     const bool                                  log_history = true,
     const bool                                  log_result  = true);
 
@@ -80,8 +86,14 @@ public:
 };
 
 
-template <int dim, int spacedim, typename RangeNumberType>
-PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+PreconditionerForLaplaceDirichlet<dim,
+                                  spacedim,
+                                  RangeNumberType,
+                                  KernelNumberType>::
   PreconditionerForLaplaceDirichlet(
     FiniteElement<dim, spacedim>               &fe_primal_space,
     FiniteElement<dim, spacedim>               &fe_dual_space,
@@ -89,31 +101,31 @@ PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
     const unsigned int                          max_iter,
-    const double                                tol,
-    const double                                omega,
+    const real_type                             tol,
+    const real_type                             omega,
     const bool                                  log_history,
     const bool                                  log_result)
   : OperatorPreconditioner<
       dim,
       spacedim,
-      HierBEM::PlatformShared::LaplaceKernel::
-        HyperSingularKernelRegular<spacedim, RangeNumberType>,
-      RangeNumberType>("dirichlet",
-                       fe_primal_space,
-                       fe_dual_space,
-                       tria,
-                       primal_space_dof_i2e_numbering,
-                       primal_space_dof_e2i_numbering,
-                       std::set<types::material_id>(),
-                       std::set<types::material_id>(),
-                       true,
-                       false,
-                       false,
-                       max_iter,
-                       tol,
-                       omega,
-                       log_history,
-                       log_result)
+      HierBEM::PlatformShared::LaplaceKernel::HyperSingularKernelRegular,
+      RangeNumberType,
+      KernelNumberType>("dirichlet",
+                        fe_primal_space,
+                        fe_dual_space,
+                        tria,
+                        primal_space_dof_i2e_numbering,
+                        primal_space_dof_e2i_numbering,
+                        std::set<types::material_id>(),
+                        std::set<types::material_id>(),
+                        true,
+                        false,
+                        false,
+                        max_iter,
+                        tol,
+                        omega,
+                        log_history,
+                        log_result)
 {
   // At the moment, in a Dirichlet problem, the primal space can only be
   // @p FE_DGQ(0) and the dual space can only be @p FE_Q(1). Therefore, we make
@@ -128,8 +140,14 @@ PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
 }
 
 
-template <int dim, int spacedim, typename RangeNumberType>
-PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+PreconditionerForLaplaceDirichlet<dim,
+                                  spacedim,
+                                  RangeNumberType,
+                                  KernelNumberType>::
   PreconditionerForLaplaceDirichlet(
     FiniteElement<dim, spacedim>               &fe_primal_space,
     FiniteElement<dim, spacedim>               &fe_dual_space,
@@ -138,31 +156,31 @@ PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
     const std::set<types::material_id>         &subdomain_material_ids,
     const unsigned int                          max_iter,
-    const double                                tol,
-    const double                                omega,
+    const real_type                             tol,
+    const real_type                             omega,
     const bool                                  log_history,
     const bool                                  log_result)
   : OperatorPreconditioner<
       dim,
       spacedim,
-      HierBEM::PlatformShared::LaplaceKernel::
-        HyperSingularKernelRegular<spacedim, RangeNumberType>,
-      RangeNumberType>("dirichlet-subdomain",
-                       fe_primal_space,
-                       fe_dual_space,
-                       tria,
-                       primal_space_dof_i2e_numbering,
-                       primal_space_dof_e2i_numbering,
-                       subdomain_material_ids,
-                       std::set<types::material_id>(),
-                       false,
-                       false,
-                       false,
-                       max_iter,
-                       tol,
-                       omega,
-                       log_history,
-                       log_result)
+      HierBEM::PlatformShared::LaplaceKernel::HyperSingularKernelRegular,
+      RangeNumberType,
+      KernelNumberType>("dirichlet-subdomain",
+                        fe_primal_space,
+                        fe_dual_space,
+                        tria,
+                        primal_space_dof_i2e_numbering,
+                        primal_space_dof_e2i_numbering,
+                        subdomain_material_ids,
+                        std::set<types::material_id>(),
+                        false,
+                        false,
+                        false,
+                        max_iter,
+                        tol,
+                        omega,
+                        log_history,
+                        log_result)
 {
   // At the moment, in a Dirichlet problem, the primal space can only be
   // @p FE_DGQ(0) and the dual space can only be @p FE_Q(1). Therefore, we make
@@ -177,10 +195,15 @@ PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
 }
 
 
-template <int dim, int spacedim, typename RangeNumberType>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
-  build_coupling_matrix()
+PreconditionerForLaplaceDirichlet<dim,
+                                  spacedim,
+                                  RangeNumberType,
+                                  KernelNumberType>::build_coupling_matrix()
 {
   // Generate the dynamic sparsity pattern.
   DynamicSparsityPattern dsp(
@@ -298,10 +321,15 @@ PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
 }
 
 
-template <int dim, int spacedim, typename RangeNumberType>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-PreconditionerForLaplaceDirichlet<dim, spacedim, RangeNumberType>::
-  build_averaging_matrix()
+PreconditionerForLaplaceDirichlet<dim,
+                                  spacedim,
+                                  RangeNumberType,
+                                  KernelNumberType>::build_averaging_matrix()
 {
   // Generate the dynamic sparsity pattern. N.B. The row size of this matrix
   // is the number of DoFs in the dual space on the dual mesh, which is the

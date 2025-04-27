@@ -21,6 +21,7 @@
 
 #include <tbb/partitioner.h>
 
+#include <complex>
 #include <limits>
 #include <type_traits>
 
@@ -328,11 +329,8 @@ namespace LinAlg
     Number1                                 result;
     InnerProductOperation<Number1, Number2> op(vec1.data(), vec2.data());
     auto partitioner = std::make_shared<parallel::internal::TBBPartitioner>();
-    auto affinity_partitioner = partitioner->acquire_one_partitioner();
-
     internal::VectorOperations::parallel_reduce(op, 0, n, result, partitioner);
     AssertIsFinite(result);
-    partitioner->release_one_partitioner(affinity_partitioner);
 
     return result;
   }
@@ -355,13 +353,98 @@ namespace LinAlg
     Number1                                      result;
     LinearCombinationOperation<Number1, Number2> op(vec1.data(), vec2.data());
     auto partitioner = std::make_shared<parallel::internal::TBBPartitioner>();
-    auto affinity_partitioner = partitioner->acquire_one_partitioner();
-
     internal::VectorOperations::parallel_reduce(op, 0, n, result, partitioner);
     AssertIsFinite(result);
-    partitioner->release_one_partitioner(affinity_partitioner);
 
     return result;
+  }
+
+
+  template <typename Number1, typename Number2>
+  struct Vector_real_part
+  {
+    Vector_real_part(const std::complex<Number2> *const src, Number1 *const dst)
+      : src(src)
+      , dst(dst)
+    {
+      static_assert(is_number_larger_or_equal<Number1, Number2>());
+      static_assert(numbers::NumberTraits<Number1>::is_complex == false);
+
+      Assert(src != nullptr, ExcInternalError());
+      Assert(dst != nullptr, ExcInternalError());
+    }
+
+    void
+    operator()(const size_type begin, const size_type end) const
+    {
+      Assert(end >= begin, ExcInternalError());
+
+      DEAL_II_OPENMP_SIMD_PRAGMA
+      for (size_type i = begin; i < end; ++i)
+        dst[i] = std::real(src[i]);
+    }
+
+    const std::complex<Number2> *const src;
+    Number1 *const                     dst;
+  };
+
+
+  template <typename Number1, typename Number2>
+  struct Vector_imag_part
+  {
+    Vector_imag_part(const std::complex<Number2> *const src, Number1 *const dst)
+      : src(src)
+      , dst(dst)
+    {
+      static_assert(is_number_larger_or_equal<Number1, Number2>());
+      static_assert(numbers::NumberTraits<Number1>::is_complex == false);
+
+      Assert(src != nullptr, ExcInternalError());
+      Assert(dst != nullptr, ExcInternalError());
+    }
+
+    void
+    operator()(const size_type begin, const size_type end) const
+    {
+      Assert(end >= begin, ExcInternalError());
+
+      DEAL_II_OPENMP_SIMD_PRAGMA
+      for (size_type i = begin; i < end; ++i)
+        dst[i] = std::imag(src[i]);
+    }
+
+    const std::complex<Number2> *const src;
+    Number1 *const                     dst;
+  };
+
+
+  template <typename VectorType1, typename VectorType2>
+  void
+  get_vector_real_part(VectorType1 &vec1, const VectorType2 &vec2)
+  {
+    AssertDimension(vec1.size(), vec2.size());
+
+    Vector_real_part op(vec2.data(), vec1.data());
+    auto partitioner = std::make_shared<parallel::internal::TBBPartitioner>();
+    dealii::internal::VectorOperations::parallel_for(op,
+                                                     0,
+                                                     vec1.size(),
+                                                     partitioner);
+  }
+
+
+  template <typename VectorType1, typename VectorType2>
+  void
+  get_vector_imag_part(VectorType1 &vec1, const VectorType2 &vec2)
+  {
+    AssertDimension(vec1.size(), vec2.size());
+
+    Vector_imag_part op(vec2.data(), vec1.data());
+    auto partitioner = std::make_shared<parallel::internal::TBBPartitioner>();
+    dealii::internal::VectorOperations::parallel_for(op,
+                                                     0,
+                                                     vec1.size(),
+                                                     partitioner);
   }
 } // namespace LinAlg
 

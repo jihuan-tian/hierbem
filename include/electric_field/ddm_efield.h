@@ -12,6 +12,7 @@
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_parser.h>
 #include <deal.II/base/geometry_info.h>
+#include <deal.II/base/numbers.h>
 #include <deal.II/base/patterns.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/types.h>
@@ -73,33 +74,33 @@ enum SubdomainType
   FloatingConductor
 };
 
-template <int spacedim>
+template <int spacedim, typename RangeNumberType>
 class EfieldSubdomain;
 
-template <int spacedim>
+template <int spacedim, typename RangeNumberType>
 class EfieldSurface
 {
 public:
-  EfieldSurface(const EntityTag             entity_tag,
-                EfieldSurface<spacedim>    *neighbor_surface,
-                EfieldSubdomain<spacedim>  *parent_subdomain,
-                const bool                  is_normal_outward,
-                const bool                  is_dirichlet_boundary,
-                Function<spacedim, double> *dirichlet_voltage);
+  EfieldSurface(const EntityTag                             entity_tag,
+                EfieldSurface                              *neighbor_surface,
+                EfieldSubdomain<spacedim, RangeNumberType> *parent_subdomain,
+                const bool                                  is_normal_outward,
+                const bool                           is_dirichlet_boundary,
+                Function<spacedim, RangeNumberType> *dirichlet_voltage);
 
   EfieldSurface(const EfieldSurface &surface) = default;
 
   EfieldSurface &
   operator=(const EfieldSurface &surface) = default;
 
-  Function<spacedim, double> *
+  Function<spacedim, RangeNumberType> *
   get_dirichlet_voltage()
   {
     return dirichlet_voltage;
   }
 
   void
-  set_dirichlet_voltage(Function<spacedim, double> *dirichletVoltage)
+  set_dirichlet_voltage(Function<spacedim, RangeNumberType> *dirichletVoltage)
   {
     dirichlet_voltage = dirichletVoltage;
   }
@@ -140,48 +141,49 @@ public:
     is_normal_outward = isNormalOutward;
   }
 
-  EfieldSurface<spacedim> *
+  EfieldSurface *
   get_neighbor_surface()
   {
     return neighbor_surface;
   }
 
   void
-  set_neighbor_surface(EfieldSurface<spacedim> *neighborSurface)
+  set_neighbor_surface(EfieldSurface *neighborSurface)
   {
     neighbor_surface = neighborSurface;
   }
 
-  EfieldSubdomain<spacedim> *
+  EfieldSubdomain<spacedim, RangeNumberType> *
   get_parent_subdomain()
   {
     return parent_subdomain;
   }
 
   void
-  set_parent_subdomain(EfieldSubdomain<spacedim> *parentSubdomain)
+  set_parent_subdomain(
+    EfieldSubdomain<spacedim, RangeNumberType> *parentSubdomain)
   {
     parent_subdomain = parentSubdomain;
   }
 
 private:
-  EntityTag                   entity_tag;
-  EfieldSurface<spacedim>    *neighbor_surface;
-  EfieldSubdomain<spacedim>  *parent_subdomain;
-  bool                        is_normal_outward;
-  bool                        is_dirichlet_boundary;
-  Function<spacedim, double> *dirichlet_voltage;
+  EntityTag                                   entity_tag;
+  EfieldSurface                              *neighbor_surface;
+  EfieldSubdomain<spacedim, RangeNumberType> *parent_subdomain;
+  bool                                        is_normal_outward;
+  bool                                        is_dirichlet_boundary;
+  Function<spacedim, RangeNumberType>        *dirichlet_voltage;
 };
 
 
-template <int spacedim>
-EfieldSurface<spacedim>::EfieldSurface(
-  const EntityTag             entity_tag,
-  EfieldSurface<spacedim>    *neighbor_surface,
-  EfieldSubdomain<spacedim>  *parent_subdomain,
-  const bool                  is_normal_outward,
-  const bool                  is_dirichlet_boundary,
-  Function<spacedim, double> *dirichlet_voltage)
+template <int spacedim, typename RangeNumberType>
+EfieldSurface<spacedim, RangeNumberType>::EfieldSurface(
+  const EntityTag                             entity_tag,
+  EfieldSurface                              *neighbor_surface,
+  EfieldSubdomain<spacedim, RangeNumberType> *parent_subdomain,
+  const bool                                  is_normal_outward,
+  const bool                                  is_dirichlet_boundary,
+  Function<spacedim, RangeNumberType>        *dirichlet_voltage)
   : entity_tag(entity_tag)
   , neighbor_surface(neighbor_surface)
   , parent_subdomain(parent_subdomain)
@@ -194,53 +196,53 @@ EfieldSurface<spacedim>::EfieldSurface(
 /**
  * A subdomain in electric field problem
  */
-template <int spacedim>
+template <int spacedim, typename RangeNumberType>
 class EfieldSubdomain
 {
 public:
   EfieldSubdomain() = default;
 
-  EfieldSubdomain(const EntityTag     entity_tag,
-                  const SubdomainType type,
-                  const double        permittivity,
-                  const double        voltage);
+  EfieldSubdomain(const EntityTag       entity_tag,
+                  const SubdomainType   type,
+                  const RangeNumberType permittivity,
+                  const RangeNumberType voltage);
 
   EfieldSubdomain(const EfieldSubdomain &subdomain) = default;
 
   EfieldSubdomain &
   operator=(const EfieldSubdomain &subdomain) = default;
 
-  const std::vector<EfieldSurface<spacedim>> &
+  const std::vector<EfieldSurface<spacedim, RangeNumberType>> &
   get_surfaces_touching_dielectric() const
   {
     return surfaces_touching_dielectric;
   }
 
-  const std::vector<EfieldSurface<spacedim>> &
+  const std::vector<EfieldSurface<spacedim, RangeNumberType>> &
   get_surfaces_touching_floating_conductor() const
   {
     return surfaces_touching_floating_conductor;
   }
 
-  const std::vector<EfieldSurface<spacedim>> &
+  const std::vector<EfieldSurface<spacedim, RangeNumberType>> &
   get_surfaces_touching_voltage_conductor() const
   {
     return surfaces_touching_voltage_conductor;
   }
 
-  std::vector<EfieldSurface<spacedim>> &
+  std::vector<EfieldSurface<spacedim, RangeNumberType>> &
   get_surfaces_touching_dielectric()
   {
     return surfaces_touching_dielectric;
   }
 
-  std::vector<EfieldSurface<spacedim>> &
+  std::vector<EfieldSurface<spacedim, RangeNumberType>> &
   get_surfaces_touching_floating_conductor()
   {
     return surfaces_touching_floating_conductor;
   }
 
-  std::vector<EfieldSurface<spacedim>> &
+  std::vector<EfieldSurface<spacedim, RangeNumberType>> &
   get_surfaces_touching_voltage_conductor()
   {
     return surfaces_touching_voltage_conductor;
@@ -252,7 +254,7 @@ public:
     return entity_tag;
   }
 
-  double
+  RangeNumberType
   get_permittivity() const
   {
     return permittivity;
@@ -264,28 +266,32 @@ public:
     return type;
   }
 
-  double
+  RangeNumberType
   get_voltage() const
   {
     return voltage;
   }
 
 private:
-  EntityTag                            entity_tag;
-  SubdomainType                        type;
-  double                               permittivity;
-  double                               voltage;
-  std::vector<EfieldSurface<spacedim>> surfaces_touching_dielectric;
-  std::vector<EfieldSurface<spacedim>> surfaces_touching_voltage_conductor;
-  std::vector<EfieldSurface<spacedim>> surfaces_touching_floating_conductor;
+  EntityTag       entity_tag;
+  SubdomainType   type;
+  RangeNumberType permittivity;
+  RangeNumberType voltage;
+  std::vector<EfieldSurface<spacedim, RangeNumberType>>
+    surfaces_touching_dielectric;
+  std::vector<EfieldSurface<spacedim, RangeNumberType>>
+    surfaces_touching_voltage_conductor;
+  std::vector<EfieldSurface<spacedim, RangeNumberType>>
+    surfaces_touching_floating_conductor;
 };
 
 
-template <int spacedim>
-EfieldSubdomain<spacedim>::EfieldSubdomain(const EntityTag     entity_tag,
-                                           const SubdomainType type,
-                                           const double        permittivity,
-                                           const double        voltage)
+template <int spacedim, typename RangeNumberType>
+EfieldSubdomain<spacedim, RangeNumberType>::EfieldSubdomain(
+  const EntityTag       entity_tag,
+  const SubdomainType   type,
+  const RangeNumberType permittivity,
+  const RangeNumberType voltage)
   : entity_tag(entity_tag)
   , type(type)
   , permittivity(permittivity)
@@ -293,71 +299,79 @@ EfieldSubdomain<spacedim>::EfieldSubdomain(const EntityTag     entity_tag,
 {}
 
 
-template <int spacedim>
+template <int spacedim, typename RangeNumberType>
 class EfieldSubdomainDescription
 {
 public:
   EfieldSubdomainDescription() = default;
 
-  const std::map<EntityTag, EfieldSubdomain<spacedim>> &
+  const std::map<EntityTag, EfieldSubdomain<spacedim, RangeNumberType>> &
   get_subdomains() const
   {
     return subdomains;
   }
 
-  const std::vector<EfieldSubdomain<spacedim> *> &
+  const std::vector<EfieldSubdomain<spacedim, RangeNumberType> *> &
   get_dielectric_subdomains() const
   {
     return dielectric_subdomains;
   }
 
-  const std::vector<EfieldSubdomain<spacedim> *> &
+  const std::vector<EfieldSubdomain<spacedim, RangeNumberType> *> &
   get_floating_conductor_subdomains() const
   {
     return floating_conductor_subdomains;
   }
 
-  const std::vector<EfieldSubdomain<spacedim> *> &
+  const std::vector<EfieldSubdomain<spacedim, RangeNumberType> *> &
   get_voltage_conductor_subdomains() const
   {
     return voltage_conductor_subdomains;
   }
 
-  std::vector<EfieldSubdomain<spacedim> *> &
+  std::vector<EfieldSubdomain<spacedim, RangeNumberType> *> &
   get_dielectric_subdomains()
   {
     return dielectric_subdomains;
   }
 
-  std::vector<EfieldSubdomain<spacedim> *> &
+  std::vector<EfieldSubdomain<spacedim, RangeNumberType> *> &
   get_floating_conductor_subdomains()
   {
     return floating_conductor_subdomains;
   }
 
-  std::vector<EfieldSubdomain<spacedim> *> &
+  std::vector<EfieldSubdomain<spacedim, RangeNumberType> *> &
   get_voltage_conductor_subdomains()
   {
     return voltage_conductor_subdomains;
   }
 
-  std::map<EntityTag, EfieldSubdomain<spacedim>> &
+  std::map<EntityTag, EfieldSubdomain<spacedim, RangeNumberType>> &
   get_subdomains()
   {
     return subdomains;
   }
 
 private:
-  std::map<EntityTag, EfieldSubdomain<spacedim>> subdomains;
-  std::vector<EfieldSubdomain<spacedim> *>       dielectric_subdomains;
-  std::vector<EfieldSubdomain<spacedim> *>       voltage_conductor_subdomains;
-  std::vector<EfieldSubdomain<spacedim> *>       floating_conductor_subdomains;
+  std::map<EntityTag, EfieldSubdomain<spacedim, RangeNumberType>> subdomains;
+  std::vector<EfieldSubdomain<spacedim, RangeNumberType> *>
+    dielectric_subdomains;
+  std::vector<EfieldSubdomain<spacedim, RangeNumberType> *>
+    voltage_conductor_subdomains;
+  std::vector<EfieldSubdomain<spacedim, RangeNumberType> *>
+    floating_conductor_subdomains;
 };
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 class DDMEfield
 {
 public:
+  using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+
   /**
    * Maximum mapping order.
    */
@@ -369,12 +383,12 @@ public:
             const unsigned int fe_order_for_neumann_space,
             const unsigned int n_min_for_ct,
             const unsigned int n_min_for_bct,
-            const double       eta,
+            const real_type    eta,
             const unsigned int max_hmat_rank,
-            const double       aca_relative_error,
-            const double       eta_for_preconditioner,
+            const real_type    aca_relative_error,
+            const real_type    eta_for_preconditioner,
             const unsigned int max_hmat_rank_for_preconditioner,
-            const double       aca_relative_error_for_preconditioner,
+            const real_type    aca_relative_error_for_preconditioner,
             const unsigned int thread_num);
 
   ~DDMEfield();
@@ -467,9 +481,9 @@ public:
   }
 
 private:
-  SubdomainTopology<dim, spacedim>     subdomain_topology;
-  EfieldSubdomainDescription<spacedim> domain;
-  Triangulation<dim, spacedim>         tria;
+  SubdomainTopology<dim, spacedim>                      subdomain_topology;
+  EfieldSubdomainDescription<spacedim, RangeNumberType> domain;
+  Triangulation<dim, spacedim>                          tria;
   /**
    * A list of mapping objects from 1st to 3rd order.
    */
@@ -478,18 +492,19 @@ private:
   /**
    * Kernel function for the single layer potential.
    */
-  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<3>
+  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<3, KernelNumberType>
     single_layer_kernel;
   /**
    * Kernel function for the double layer potential.
    */
-  HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel<3>
+  HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel<3, KernelNumberType>
     double_layer_kernel;
   /**
    * Kernel function for the hyper-singular potential.
    */
-  HierBEM::PlatformShared::LaplaceKernel::HyperSingularKernelRegular<3>
-    hyper_singular_kernel;
+  HierBEM::PlatformShared::LaplaceKernel::
+    HyperSingularKernelRegular<3, KernelNumberType>
+      hyper_singular_kernel;
 
   /**
    * Dirichlet space on the whole skeleton.
@@ -549,7 +564,7 @@ private:
    * Admissibility constant. At present, assume all \bcts share this same
    * parameter.
    */
-  double eta;
+  real_type eta;
   /**
    * Maximum rank of the \hmatrices to be built. At present, assume all
    * \hmatrices share this same parameter.
@@ -559,11 +574,11 @@ private:
    * Relative approximation error used in ACA+. At present, assume all
    * \hmatrices share this same parameter.
    */
-  double aca_relative_error;
+  real_type aca_relative_error;
   /**
    * Admissibility constant for the preconditioner.
    */
-  double eta_for_preconditioner;
+  real_type eta_for_preconditioner;
   /**
    * Maximum rank of the \hmatrices to be built for the preconditioner.
    */
@@ -571,20 +586,21 @@ private:
   /**
    * Relative approximation error used in ACA+ for the preconditioner.
    */
-  double aca_relative_error_for_preconditioner;
+  real_type aca_relative_error_for_preconditioner;
 
   unsigned int thread_num;
 
-  DDMEfieldMatrix<spacedim, double>               system_matrix;
-  DDMEfieldGlobalPreconditioner<spacedim, double> system_preconditioner;
-  Vector<double>                                  rhs_for_transmission_eqn;
-  Vector<double>                                  rhs_for_charge_neutrality_eqn;
+  DDMEfieldMatrix<spacedim, RangeNumberType> system_matrix;
+  DDMEfieldGlobalPreconditioner<spacedim, RangeNumberType>
+                          system_preconditioner;
+  Vector<RangeNumberType> rhs_for_transmission_eqn;
+  Vector<RangeNumberType> rhs_for_charge_neutrality_eqn;
 
   /**
    * Dirichlet boundary condition data on all DoFs in the associated DoF
    * handler.
    */
-  Vector<double> dirichlet_bc;
+  Vector<RangeNumberType> dirichlet_bc;
 
   /**
    * Map volume entity tag to subdomain type.
@@ -593,15 +609,15 @@ private:
   /**
    * Map volume entity tag to permittivity.
    */
-  std::map<EntityTag, double> permittivities;
+  std::map<EntityTag, RangeNumberType> permittivities;
   /**
    * Map volume entity tag to voltages of conductors.
    */
-  std::map<EntityTag, double> conductor_voltages;
+  std::map<EntityTag, RangeNumberType> conductor_voltages;
   /**
    * Map surface entity tag to Dirichlet boundary condition.
    */
-  std::map<EntityTag, Function<spacedim, double> *>
+  std::map<EntityTag, Function<spacedim, RangeNumberType> *>
     dirichlet_boundary_conditions;
   /**
    * Map surface entity tag to manifold id. At the moment, the material for
@@ -619,8 +635,11 @@ private:
 };
 
 
-template <int dim, int spacedim>
-DDMEfield<dim, spacedim>::DDMEfield()
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::DDMEfield()
   : project_name("default")
   , fe_order_for_dirichlet_space(1)
   , fe_order_for_neumann_space(0)
@@ -638,18 +657,21 @@ DDMEfield<dim, spacedim>::DDMEfield()
 {}
 
 
-template <int dim, int spacedim>
-DDMEfield<dim, spacedim>::DDMEfield(
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::DDMEfield(
   const unsigned int fe_order_for_dirichlet_space,
   const unsigned int fe_order_for_neumann_space,
   const unsigned int n_min_for_ct,
   const unsigned int n_min_for_bct,
-  const double       eta,
+  const real_type    eta,
   const unsigned int max_hmat_rank,
-  const double       aca_relative_error,
-  const double       eta_for_preconditioner,
+  const real_type    aca_relative_error,
+  const real_type    eta_for_preconditioner,
   const unsigned int max_hmat_rank_for_preconditioner,
-  const double       aca_relative_error_for_preconditioner,
+  const real_type    aca_relative_error_for_preconditioner,
   const unsigned int thread_num)
   : project_name("default")
   , fe_order_for_dirichlet_space(fe_order_for_dirichlet_space)
@@ -668,8 +690,11 @@ DDMEfield<dim, spacedim>::DDMEfield(
 {}
 
 
-template <int dim, int spacedim>
-DDMEfield<dim, spacedim>::~DDMEfield()
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::~DDMEfield()
 {
   // Release function objects defining Dirichlet boundary conditions on
   // dielectric surfaces or interfaces.
@@ -692,18 +717,26 @@ DDMEfield<dim, spacedim>::~DDMEfield()
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-DDMEfield<dim, spacedim>::read_subdomain_topology(const std::string &cad_file,
-                                                  const std::string &mesh_file)
+DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::
+  read_subdomain_topology(const std::string &cad_file,
+                          const std::string &mesh_file)
 {
   subdomain_topology.generate_topology(cad_file, mesh_file);
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-DDMEfield<dim, spacedim>::initialize_parameters()
+DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::
+  initialize_parameters()
 {
   subdomain_types[0] = SubdomainType::SurroundingSpace;
   subdomain_types[1] = SubdomainType::VoltageConductor;
@@ -715,10 +748,10 @@ DDMEfield<dim, spacedim>::initialize_parameters()
   permittivities[3] = 4;
 
   // Assign Dirichlet boundary condition on dielectric boundary or interface.
-  conductor_voltages[1] = 10;
+  conductor_voltages[1] = RangeNumberType(10);
 
-  std::string                   symbolic_variables = "x,y,z";
-  std::map<std::string, double> symbolic_constants;
+  std::string                      symbolic_variables = "x,y,z";
+  std::map<std::string, real_type> symbolic_constants;
   symbolic_constants["pi"] = numbers::PI;
   symbolic_constants["e"]  = numbers::E;
 
@@ -749,9 +782,13 @@ DDMEfield<dim, spacedim>::initialize_parameters()
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-DDMEfield<dim, spacedim>::initialize_manifolds_and_mappings()
+DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::
+  initialize_manifolds_and_mappings()
 {
   // Assign manifold ids to all cells in the triangulation. Because there are
   // no physical groups defined, the manifold ids cannot be read from the MSH
@@ -793,9 +830,13 @@ DDMEfield<dim, spacedim>::initialize_manifolds_and_mappings()
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-DDMEfield<dim, spacedim>::interpolate_surface_dirichlet_bc()
+DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::
+  interpolate_surface_dirichlet_bc()
 {
   dirichlet_bc.reinit(dof_handler_for_dirichlet_space.n_dofs());
 
@@ -803,7 +844,7 @@ DDMEfield<dim, spacedim>::interpolate_surface_dirichlet_bc()
   // interpolate the Dirichlet boundary condition vector surface by surface.
   for (const auto &bc : dirichlet_boundary_conditions)
     {
-      std::map<types::material_id, const Function<spacedim, double> *>
+      std::map<types::material_id, const Function<spacedim, RangeNumberType> *>
         single_pair_map;
       single_pair_map[static_cast<types::material_id>(bc.first)] = bc.second;
 
@@ -818,14 +859,18 @@ DDMEfield<dim, spacedim>::interpolate_surface_dirichlet_bc()
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-DDMEfield<dim, spacedim>::create_efield_subdomains_and_surfaces()
+DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::
+  create_efield_subdomains_and_surfaces()
 {
   // Create the default surrounding space subdomain (e.g. air domain) and add
   // it as the first dielectric subdomain in the domain description object.
-  domain.get_subdomains()[0] = EfieldSubdomain<spacedim>(
-    0, SubdomainType::SurroundingSpace, permittivities[0], 0);
+  domain.get_subdomains()[0] = EfieldSubdomain<spacedim, RangeNumberType>(
+    0, SubdomainType::SurroundingSpace, permittivities[0], RangeNumberType());
   domain.get_dielectric_subdomains().push_back(&domain.get_subdomains()[0]);
 
   // Create each subdomain.
@@ -835,12 +880,16 @@ DDMEfield<dim, spacedim>::create_efield_subdomains_and_surfaces()
       const SubdomainType type       = subdomain_types[record.first];
       const double        permittivity =
         (type == SubdomainType::Dielectric) ? permittivities[entity_tag] : 0;
-      const double voltage = (type == SubdomainType::VoltageConductor) ?
-                               conductor_voltages[entity_tag] :
-                               0;
+      const RangeNumberType voltage =
+        (type == SubdomainType::VoltageConductor) ?
+          conductor_voltages[entity_tag] :
+          0;
 
       domain.get_subdomains()[entity_tag] =
-        EfieldSubdomain<spacedim>(entity_tag, type, permittivity, voltage);
+        EfieldSubdomain<spacedim, RangeNumberType>(entity_tag,
+                                                   type,
+                                                   permittivity,
+                                                   voltage);
 
       // Add the subdomain to corresponding list in the domain description
       // object.
@@ -870,10 +919,11 @@ DDMEfield<dim, spacedim>::create_efield_subdomains_and_surfaces()
     {
       // Determine if the current surface is assigned a Dirichlet boundary
       // condition.
-      typename std::map<EntityTag, Function<spacedim, double> *>::iterator pos =
+      typename std::map<EntityTag,
+                        Function<spacedim, RangeNumberType> *>::iterator pos =
         dirichlet_boundary_conditions.find(record.first);
-      bool                        is_dirichlet_surface;
-      Function<spacedim, double> *dirichlet_voltage;
+      bool                                 is_dirichlet_surface;
+      Function<spacedim, RangeNumberType> *dirichlet_voltage;
 
       if (pos != dirichlet_boundary_conditions.end())
         {
@@ -887,13 +937,15 @@ DDMEfield<dim, spacedim>::create_efield_subdomains_and_surfaces()
         }
 
       // Get the two subdomains sharing the current surface.
-      EfieldSubdomain<spacedim> &subdomain_surface_normal_point_from =
-        domain.get_subdomains()[record.second[0]];
-      EfieldSubdomain<spacedim> &subdomain_surface_normal_point_to =
-        domain.get_subdomains()[record.second[1]];
+      EfieldSubdomain<spacedim, RangeNumberType>
+        &subdomain_surface_normal_point_from =
+          domain.get_subdomains()[record.second[0]];
+      EfieldSubdomain<spacedim, RangeNumberType>
+        &subdomain_surface_normal_point_to =
+          domain.get_subdomains()[record.second[1]];
 
-      EfieldSurface<spacedim> *surface_of_from_subdomain;
-      EfieldSurface<spacedim> *surface_of_to_subdomain;
+      EfieldSurface<spacedim, RangeNumberType> *surface_of_from_subdomain;
+      EfieldSurface<spacedim, RangeNumberType> *surface_of_to_subdomain;
 
       // Create a surface object for the "from" subdomain.
       // Here we check its neighboring subdomain type and add the surface to
@@ -1022,9 +1074,13 @@ DDMEfield<dim, spacedim>::create_efield_subdomains_and_surfaces()
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-DDMEfield<dim, spacedim>::initialize_subdomain_hmatrices()
+DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::
+  initialize_subdomain_hmatrices()
 {
   auto &subdomain_hmatrices = system_matrix.get_subdomain_hmatrices();
   // TODO 2024-08-10 At the moment, the memory should be reserved for this
@@ -1173,8 +1229,8 @@ DDMEfield<dim, spacedim>::initialize_subdomain_hmatrices()
         material_ids,
         dof_selectors_for_neumann_space);
 
-      SubdomainSteklovPoincareHMatrix<spacedim, double> &steklov_poincare_hmat =
-        subdomain_hmatrices.back();
+      SubdomainSteklovPoincareHMatrix<spacedim, RangeNumberType>
+        &steklov_poincare_hmat = subdomain_hmatrices.back();
 
       steklov_poincare_hmat.build_local_to_global_dof_maps_and_inverses(
         dof_handler_for_dirichlet_space,
@@ -1209,10 +1265,11 @@ DDMEfield<dim, spacedim>::initialize_subdomain_hmatrices()
       gen_linear_indices<vector_uta, types::global_dof_index>(
         dof_indices_for_local_neumann_space);
 
-      std::vector<Point<spacedim>> support_points_for_local_dirichlet_space(
-        n_dofs_for_local_dirichlet_space);
-      std::vector<Point<spacedim>> support_points_for_local_neumann_space(
-        n_dofs_for_local_neumann_space);
+      std::vector<Point<spacedim, real_type>>
+        support_points_for_local_dirichlet_space(
+          n_dofs_for_local_dirichlet_space);
+      std::vector<Point<spacedim, real_type>>
+        support_points_for_local_neumann_space(n_dofs_for_local_neumann_space);
 
       // N.B. Because the support points are only used for cluster tree
       // partition, there is no need to use the actually mapping object
@@ -1231,9 +1288,9 @@ DDMEfield<dim, spacedim>::initialize_subdomain_hmatrices()
         support_points_for_local_neumann_space);
 
       // Compute average mesh cell size at each support point.
-      std::vector<double> cell_sizes_for_local_dirichlet_space(
+      std::vector<real_type> cell_sizes_for_local_dirichlet_space(
         n_dofs_for_local_dirichlet_space);
-      std::vector<double> cell_sizes_for_local_neumann_space(
+      std::vector<real_type> cell_sizes_for_local_neumann_space(
         n_dofs_for_local_neumann_space);
 
       cell_sizes_for_local_dirichlet_space.assign(
@@ -1254,15 +1311,16 @@ DDMEfield<dim, spacedim>::initialize_subdomain_hmatrices()
 
       // Initialize cluster trees.
       steklov_poincare_hmat.get_ct_for_subdomain_dirichlet_space() =
-        ClusterTree<spacedim>(dof_indices_for_local_dirichlet_space,
-                              support_points_for_local_dirichlet_space,
-                              cell_sizes_for_local_dirichlet_space,
-                              n_min_for_ct);
+        ClusterTree<spacedim, real_type>(
+          dof_indices_for_local_dirichlet_space,
+          support_points_for_local_dirichlet_space,
+          cell_sizes_for_local_dirichlet_space,
+          n_min_for_ct);
       steklov_poincare_hmat.get_ct_for_subdomain_neumann_space() =
-        ClusterTree<spacedim>(dof_indices_for_local_neumann_space,
-                              support_points_for_local_neumann_space,
-                              cell_sizes_for_local_neumann_space,
-                              n_min_for_ct);
+        ClusterTree<spacedim, real_type>(dof_indices_for_local_neumann_space,
+                                         support_points_for_local_neumann_space,
+                                         cell_sizes_for_local_neumann_space,
+                                         n_min_for_ct);
 
       steklov_poincare_hmat.get_ct_for_subdomain_dirichlet_space().partition(
         support_points_for_local_dirichlet_space,
@@ -1286,21 +1344,21 @@ DDMEfield<dim, spacedim>::initialize_subdomain_hmatrices()
 
       // Initialize block cluster trees.
       steklov_poincare_hmat.get_bct_for_bilinear_form_D() =
-        BlockClusterTree<spacedim>(
+        BlockClusterTree<spacedim, real_type>(
           steklov_poincare_hmat.get_ct_for_subdomain_dirichlet_space(),
           steklov_poincare_hmat.get_ct_for_subdomain_dirichlet_space(),
           eta,
           n_min_for_bct);
 
       steklov_poincare_hmat.get_bct_for_bilinear_form_K() =
-        BlockClusterTree<spacedim>(
+        BlockClusterTree<spacedim, real_type>(
           steklov_poincare_hmat.get_ct_for_subdomain_neumann_space(),
           steklov_poincare_hmat.get_ct_for_subdomain_dirichlet_space(),
           eta,
           n_min_for_bct);
 
       steklov_poincare_hmat.get_bct_for_bilinear_form_V() =
-        BlockClusterTree<spacedim>(
+        BlockClusterTree<spacedim, real_type>(
           steklov_poincare_hmat.get_ct_for_subdomain_neumann_space(),
           steklov_poincare_hmat.get_ct_for_subdomain_neumann_space(),
           eta,
@@ -1329,21 +1387,22 @@ DDMEfield<dim, spacedim>::initialize_subdomain_hmatrices()
         cell_sizes_for_local_neumann_space);
 
       // Initialize subdomain local \hmatrices.
-      steklov_poincare_hmat.get_D() =
-        HMatrix<spacedim>(steklov_poincare_hmat.get_bct_for_bilinear_form_D(),
-                          max_hmat_rank,
-                          HMatrixSupport::Property::symmetric,
-                          HMatrixSupport::BlockType::diagonal_block);
+      steklov_poincare_hmat.get_D() = HMatrix<spacedim, RangeNumberType>(
+        steklov_poincare_hmat.get_bct_for_bilinear_form_D(),
+        max_hmat_rank,
+        HMatrixSupport::Property::symmetric,
+        HMatrixSupport::BlockType::diagonal_block);
       steklov_poincare_hmat.get_K_with_mass_matrix() =
-        HMatrix<spacedim>(steklov_poincare_hmat.get_bct_for_bilinear_form_K(),
-                          max_hmat_rank,
-                          HMatrixSupport::Property::general,
-                          HMatrixSupport::BlockType::diagonal_block);
-      steklov_poincare_hmat.get_V() =
-        HMatrix<spacedim>(steklov_poincare_hmat.get_bct_for_bilinear_form_V(),
-                          max_hmat_rank,
-                          HMatrixSupport::Property::symmetric,
-                          HMatrixSupport::BlockType::diagonal_block);
+        HMatrix<spacedim, RangeNumberType>(
+          steklov_poincare_hmat.get_bct_for_bilinear_form_K(),
+          max_hmat_rank,
+          HMatrixSupport::Property::general,
+          HMatrixSupport::BlockType::diagonal_block);
+      steklov_poincare_hmat.get_V() = HMatrix<spacedim, RangeNumberType>(
+        steklov_poincare_hmat.get_bct_for_bilinear_form_V(),
+        max_hmat_rank,
+        HMatrixSupport::Property::symmetric,
+        HMatrixSupport::BlockType::diagonal_block);
 
       // Create the two wrapper classes for transmission equation and charge
       // neutrality equation.
@@ -1363,9 +1422,13 @@ DDMEfield<dim, spacedim>::initialize_subdomain_hmatrices()
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-DDMEfield<dim, spacedim>::collect_cell_iterators()
+DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::
+  collect_cell_iterators()
 {
   cell_iterators_for_dirichlet_space.reserve(
     dof_handler_for_dirichlet_space.get_triangulation().n_active_cells());
@@ -1384,9 +1447,12 @@ DDMEfield<dim, spacedim>::collect_cell_iterators()
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-DDMEfield<dim, spacedim>::setup_system()
+DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::setup_system()
 {
   // Create subdomain and surface objects.
   create_efield_subdomains_and_surfaces();
@@ -1416,9 +1482,12 @@ DDMEfield<dim, spacedim>::setup_system()
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-DDMEfield<dim, spacedim>::assemble_system()
+DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::assemble_system()
 {
   LogStream::Prefix prefix_string("assemble_system");
   Timer             timer;
@@ -1427,27 +1496,31 @@ DDMEfield<dim, spacedim>::assemble_system()
   /**
    * Define the @p ACAConfig object.
    */
-  ACAConfig aca_config(max_hmat_rank, aca_relative_error, eta);
+  ACAConfig<real_type> aca_config(max_hmat_rank, aca_relative_error, eta);
 
   for (auto &steklov_poincare_hmat : system_matrix.get_subdomain_hmatrices())
     {}
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-DDMEfield<dim, spacedim>::output_results()
+DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::output_results()
 {
   std::cout << "=== Output results ===" << std::endl;
 
   // Write the Dirichlet boundary condition.
   std::ofstream          vtk_output(project_name + std::string(".vtk"));
   DataOut<dim, spacedim> data_out;
+
   data_out.add_data_vector(dof_handler_for_dirichlet_space,
                            dirichlet_bc,
                            "dirichlet_bc");
 
-  Vector<double> dofs_on_nondirichlet_boundary;
+  Vector<RangeNumberType> dofs_on_nondirichlet_boundary;
   dofs_on_nondirichlet_boundary.reinit(
     dof_handler_for_dirichlet_space.n_dofs());
   for (auto index :

@@ -10,6 +10,7 @@
 #define HIERBEM_INCLUDE_PRECONDITIONERS_PRECONDITIONER_FOR_LAPLACE_NEUMANN_H_
 
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/numbers.h>
 #include <deal.II/base/types.h>
 
 #include <deal.II/dofs/dof_handler.h>
@@ -33,16 +34,21 @@ HBEM_NS_OPEN
 
 using namespace dealii;
 
-template <int dim, int spacedim, typename RangeNumberType>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 class PreconditionerForLaplaceNeumann
   : public OperatorPreconditioner<
       dim,
       spacedim,
-      HierBEM::PlatformShared::LaplaceKernel::
-        SingleLayerKernel<spacedim, RangeNumberType>,
-      RangeNumberType>
+      HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
+      RangeNumberType,
+      KernelNumberType>
 {
 public:
+  using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+
   /**
    * Constructor for preconditioner on full domain.
    */
@@ -53,8 +59,8 @@ public:
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
     const unsigned int                          max_iter    = 1000,
-    const double                                tol         = 1e-8,
-    const double                                omega       = 1.0,
+    const real_type                             tol         = 1e-8,
+    const real_type                             omega       = 1.0,
     const bool                                  log_history = true,
     const bool                                  log_result  = true);
 
@@ -70,8 +76,8 @@ public:
     const std::set<types::material_id>         &subdomain_material_ids,
     const std::set<types::material_id> &subdomain_complement_material_ids,
     const unsigned int                  max_iter    = 1000,
-    const double                        tol         = 1e-8,
-    const double                        omega       = 1.0,
+    const real_type                     tol         = 1e-8,
+    const real_type                     omega       = 1.0,
     const bool                          log_history = true,
     const bool                          log_result  = true);
 
@@ -98,8 +104,14 @@ private:
 };
 
 
-template <int dim, int spacedim, typename RangeNumberType>
-PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+PreconditionerForLaplaceNeumann<dim,
+                                spacedim,
+                                RangeNumberType,
+                                KernelNumberType>::
   PreconditionerForLaplaceNeumann(
     FiniteElement<dim, spacedim>               &fe_primal_space,
     FiniteElement<dim, spacedim>               &fe_dual_space,
@@ -107,30 +119,31 @@ PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
     const unsigned int                          max_iter,
-    const double                                tol,
-    const double                                omega,
+    const real_type                             tol,
+    const real_type                             omega,
     const bool                                  log_history,
     const bool                                  log_result)
-  : OperatorPreconditioner<dim,
-                           spacedim,
-                           HierBEM::PlatformShared::LaplaceKernel::
-                             SingleLayerKernel<spacedim, RangeNumberType>,
-                           RangeNumberType>("neumann",
-                                            fe_primal_space,
-                                            fe_dual_space,
-                                            tria,
-                                            primal_space_dof_i2e_numbering,
-                                            primal_space_dof_e2i_numbering,
-                                            std::set<types::material_id>(),
-                                            std::set<types::material_id>(),
-                                            true,
-                                            false,
-                                            false,
-                                            max_iter,
-                                            tol,
-                                            omega,
-                                            log_history,
-                                            log_result)
+  : OperatorPreconditioner<
+      dim,
+      spacedim,
+      HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
+      RangeNumberType,
+      KernelNumberType>("neumann",
+                        fe_primal_space,
+                        fe_dual_space,
+                        tria,
+                        primal_space_dof_i2e_numbering,
+                        primal_space_dof_e2i_numbering,
+                        std::set<types::material_id>(),
+                        std::set<types::material_id>(),
+                        true,
+                        false,
+                        false,
+                        max_iter,
+                        tol,
+                        omega,
+                        log_history,
+                        log_result)
 {
   // At the moment, in a Neumann problem, the primal space can only be
   // @p FE_Q(1) and the dual space can only be @p FE_DGQ(0). Therefore, we make
@@ -145,8 +158,14 @@ PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
 }
 
 
-template <int dim, int spacedim, typename RangeNumberType>
-PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+PreconditionerForLaplaceNeumann<dim,
+                                spacedim,
+                                RangeNumberType,
+                                KernelNumberType>::
   PreconditionerForLaplaceNeumann(
     FiniteElement<dim, spacedim>               &fe_primal_space,
     FiniteElement<dim, spacedim>               &fe_dual_space,
@@ -156,30 +175,31 @@ PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
     const std::set<types::material_id>         &subdomain_material_ids,
     const std::set<types::material_id> &subdomain_complement_material_ids,
     const unsigned int                  max_iter,
-    const double                        tol,
-    const double                        omega,
+    const real_type                     tol,
+    const real_type                     omega,
     const bool                          log_history,
     const bool                          log_result)
-  : OperatorPreconditioner<dim,
-                           spacedim,
-                           HierBEM::PlatformShared::LaplaceKernel::
-                             SingleLayerKernel<spacedim, RangeNumberType>,
-                           RangeNumberType>("neumann-subdomain",
-                                            fe_primal_space,
-                                            fe_dual_space,
-                                            tria,
-                                            primal_space_dof_i2e_numbering,
-                                            primal_space_dof_e2i_numbering,
-                                            subdomain_material_ids,
-                                            subdomain_complement_material_ids,
-                                            false,
-                                            true,
-                                            false,
-                                            max_iter,
-                                            tol,
-                                            omega,
-                                            log_history,
-                                            log_result)
+  : OperatorPreconditioner<
+      dim,
+      spacedim,
+      HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
+      RangeNumberType,
+      KernelNumberType>("neumann-subdomain",
+                        fe_primal_space,
+                        fe_dual_space,
+                        tria,
+                        primal_space_dof_i2e_numbering,
+                        primal_space_dof_e2i_numbering,
+                        subdomain_material_ids,
+                        subdomain_complement_material_ids,
+                        false,
+                        true,
+                        false,
+                        max_iter,
+                        tol,
+                        omega,
+                        log_history,
+                        log_result)
 {
   // At the moment, in a Neumann problem, the primal space can only be
   // @p FE_Q(1) and the dual space can only be @p FE_DGQ(0). Therefore, we make
@@ -194,18 +214,24 @@ PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
 }
 
 
-template <int dim, int spacedim, typename RangeNumberType>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
-  build_dof_to_cell_topology()
+PreconditionerForLaplaceNeumann<dim,
+                                spacedim,
+                                RangeNumberType,
+                                KernelNumberType>::build_dof_to_cell_topology()
 {
   // Call the parent class's function to build the DoF-to-cell topology for the
   // dual space on the refined mesh.
-  OperatorPreconditioner<dim,
-                         spacedim,
-                         HierBEM::PlatformShared::LaplaceKernel::
-                           SingleLayerKernel<spacedim, RangeNumberType>,
-                         RangeNumberType>::build_dof_to_cell_topology();
+  OperatorPreconditioner<
+    dim,
+    spacedim,
+    HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
+    RangeNumberType,
+    KernelNumberType>::build_dof_to_cell_topology();
 
   // Build the DoF-to-cell topology for the primal space on the primal mesh.
   cell_iterators_primal_space.reserve(this->tria.n_cells(0));
@@ -251,10 +277,15 @@ PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
 }
 
 
-template <int dim, int spacedim, typename RangeNumberType>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
-  build_coupling_matrix()
+PreconditionerForLaplaceNeumann<dim,
+                                spacedim,
+                                RangeNumberType,
+                                KernelNumberType>::build_coupling_matrix()
 {
   // Generate the dynamic sparsity pattern.
   DynamicSparsityPattern dsp(
@@ -865,10 +896,15 @@ PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
 }
 
 
-template <int dim, int spacedim, typename RangeNumberType>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-PreconditionerForLaplaceNeumann<dim, spacedim, RangeNumberType>::
-  build_averaging_matrix()
+PreconditionerForLaplaceNeumann<dim,
+                                spacedim,
+                                RangeNumberType,
+                                KernelNumberType>::build_averaging_matrix()
 {
   // Generate the dynamic sparsity pattern. N.B. The number of DoFs in the
   // primal space on the primal mesh should be the same as the number of DoFs in

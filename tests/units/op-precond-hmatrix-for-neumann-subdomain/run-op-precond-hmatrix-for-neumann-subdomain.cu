@@ -59,7 +59,8 @@ count_number_of_nodes_in_neumann_boundary(
 }
 
 void
-setup_preconditioner(PreconditionerForLaplaceNeumann<2, 3, double> &precond)
+setup_preconditioner(
+  PreconditionerForLaplaceNeumann<2, 3, double, double> &precond)
 {
   precond.initialize_dof_handlers();
   precond.generate_dof_selectors();
@@ -185,7 +186,7 @@ run_op_precond_hmatrix_for_neumann()
       fe_primal_space, tria, complement_subdomain_material_ids);
   deallog << "Number of selected DoFs: " << n_selected_dofs << std::endl;
   std::vector<types::global_dof_index> dummy_numbering(n_selected_dofs);
-  PreconditionerForLaplaceNeumann<dim, spacedim, double> precond(
+  PreconditionerForLaplaceNeumann<dim, spacedim, double, double> precond(
     fe_primal_space,
     fe_dual_space,
     tria,

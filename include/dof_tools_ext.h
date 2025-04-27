@@ -364,13 +364,14 @@ namespace DoFToolsExt
    * @param selected_dofs
    * @param reset_selectors_to_false
    */
-  template <int dim, int spacedim>
+  template <int dim, int spacedim, typename RangeNumberType>
   void
   extract_boundary_condition_dofs(
-    const DoFHandler<dim, spacedim>                   &dof_handler,
-    std::map<EntityTag, Function<spacedim, double> *> &boundary_bc_definition,
-    std::vector<bool>                                 &selected_dofs,
-    const bool reset_selectors_to_false = true)
+    const DoFHandler<dim, spacedim> &dof_handler,
+    std::map<EntityTag, Function<spacedim, RangeNumberType> *>
+                      &boundary_bc_definition,
+    std::vector<bool> &selected_dofs,
+    const bool         reset_selectors_to_false = true)
   {
     Assert(selected_dofs.size() == dof_handler.n_dofs(),
            ExcDimensionMismatch(selected_dofs.size(), dof_handler.n_dofs()));
@@ -468,6 +469,28 @@ namespace DoFToolsExt
   }
 
 
+  template <int dim, int spacedim, typename Number = double>
+  void
+  map_dofs_to_support_points(
+    const Mapping<dim, spacedim>         &mapping,
+    const DoFHandler<dim, spacedim>      &dof_handler,
+    std::vector<Point<spacedim, Number>> &support_points)
+  {
+    const types::global_dof_index n_dofs = dof_handler.n_dofs();
+    AssertDimension(n_dofs, support_points.size());
+
+    std::vector<Point<spacedim>> support_points_double(n_dofs);
+    DoFTools::map_dofs_to_support_points(mapping,
+                                         dof_handler,
+                                         support_points_double);
+
+    for (types::global_dof_index d = 0; d < n_dofs; d++)
+      {
+        support_points[d] = support_points_double[d];
+      }
+  }
+
+
   /**
    * Return a list of support points for the local DoFs selected from the full
    * list of DoFs handled by the DoF handler.
@@ -493,13 +516,14 @@ namespace DoFToolsExt
    * which is also equal to the size of @p map_from_local_to_full_dof_indices.
    * Previous content of this object is deleted in this function.
    */
-  template <int dim, int spacedim>
+  template <int dim, int spacedim, typename Number = double>
   void
-  map_dofs_to_support_points(const Mapping<dim, spacedim>    &mapping,
-                             const DoFHandler<dim, spacedim> &dof_handler,
-                             const std::vector<types::global_dof_index>
-                               &map_from_local_to_full_dof_indices,
-                             std::vector<Point<spacedim>> &support_points)
+  map_dofs_to_support_points(
+    const Mapping<dim, spacedim>    &mapping,
+    const DoFHandler<dim, spacedim> &dof_handler,
+    const std::vector<types::global_dof_index>
+                                         &map_from_local_to_full_dof_indices,
+    std::vector<Point<spacedim, Number>> &support_points)
   {
     const types::global_dof_index n_dofs =
       map_from_local_to_full_dof_indices.size();
@@ -533,13 +557,13 @@ namespace DoFToolsExt
    * @param level
    * @param support_points
    */
-  template <int dim, int spacedim>
+  template <int dim, int spacedim, typename Number = double>
   void
   map_mg_dofs_to_support_points(
-    const Mapping<dim, spacedim>                       &mapping,
-    const DoFHandler<dim, spacedim>                    &dof_handler,
-    const unsigned int                                  level,
-    std::map<types::global_dof_index, Point<spacedim>> &support_points)
+    const Mapping<dim, spacedim>                               &mapping,
+    const DoFHandler<dim, spacedim>                            &dof_handler,
+    const unsigned int                                          level,
+    std::map<types::global_dof_index, Point<spacedim, Number>> &support_points)
   {
     support_points.clear();
 
@@ -583,12 +607,13 @@ namespace DoFToolsExt
    * @param level
    * @param support_points
    */
-  template <int dim, int spacedim>
+  template <int dim, int spacedim, typename Number = double>
   void
-  map_mg_dofs_to_support_points(const Mapping<dim, spacedim>    &mapping,
-                                const DoFHandler<dim, spacedim> &dof_handler,
-                                const unsigned int               level,
-                                std::vector<Point<spacedim>>    &support_points)
+  map_mg_dofs_to_support_points(
+    const Mapping<dim, spacedim>         &mapping,
+    const DoFHandler<dim, spacedim>      &dof_handler,
+    const unsigned int                    level,
+    std::vector<Point<spacedim, Number>> &support_points)
   {
     AssertDimension(dof_handler.n_dofs(level), support_points.size());
 
@@ -625,7 +650,7 @@ namespace DoFToolsExt
    * passed to DoFTools::write_gnuplot_dof_support_point_info for visualizing
    * the distribution of support points.
    */
-  template <int dim, int spacedim>
+  template <int dim, int spacedim, typename Number = double>
   void
   map_mg_dofs_to_support_points(
     const Mapping<dim, spacedim>               &mapping,
@@ -634,7 +659,7 @@ namespace DoFToolsExt
     const std::set<types::material_id>         &subdomain_material_ids,
     const std::vector<bool>                    &dof_selectors,
     const std::vector<types::global_dof_index> &full_to_local_dof_id_map,
-    std::map<types::global_dof_index, Point<spacedim>> &support_points)
+    std::map<types::global_dof_index, Point<spacedim, Number>> &support_points)
   {
     support_points.clear();
 
@@ -687,7 +712,7 @@ namespace DoFToolsExt
    * @param support_points The memory of the list of support points should be
    * preallocated.
    */
-  template <int dim, int spacedim>
+  template <int dim, int spacedim, typename Number = double>
   void
   map_mg_dofs_to_support_points(
     const Mapping<dim, spacedim>               &mapping,
@@ -696,7 +721,7 @@ namespace DoFToolsExt
     const std::set<types::material_id>         &subdomain_material_ids,
     const std::vector<bool>                    &dof_selectors,
     const std::vector<types::global_dof_index> &full_to_local_dof_id_map,
-    std::vector<Point<spacedim>>               &support_points)
+    std::vector<Point<spacedim, Number>>       &support_points)
   {
     // Get the unit support point coordinates.
     const std::vector<Point<dim>> &unit_supports =
@@ -1253,13 +1278,14 @@ namespace DoFToolsExt
    * @param selected_dofs
    * @param has_label
    */
-  template <int spacedim>
+  template <int spacedim, typename Number = double>
   void
   write_gnuplot_dof_support_point_info(
-    std::ostream                                             &out,
-    const std::map<types::global_dof_index, Point<spacedim>> &support_points,
-    const std::vector<bool>                                  &selected_dofs,
-    const bool                                                has_label = true)
+    std::ostream &out,
+    const std::map<types::global_dof_index, Point<spacedim, Number>>
+                            &support_points,
+    const std::vector<bool> &selected_dofs,
+    const bool               has_label = true)
   {
     AssertDimension(support_points.size(), selected_dofs.size());
 

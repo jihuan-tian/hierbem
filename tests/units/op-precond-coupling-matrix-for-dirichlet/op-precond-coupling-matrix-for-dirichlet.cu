@@ -66,7 +66,7 @@ print_cell_support_point_info(const DoFHandler<2, 3> &dof_handler,
  */
 void
 print_support_points_in_primal_and_refined_meshes(
-  const PreconditionerForLaplaceDirichlet<2, 3, double> &precond)
+  const PreconditionerForLaplaceDirichlet<2, 3, double, double> &precond)
 {
   std::cout << "# DoF index, Support point coordinates x, y, z" << std::endl;
 
@@ -113,8 +113,8 @@ main(int argc, const char *argv[])
   // system matrix in this case, the conversion between internal and external
   // DoF numberings is not needed. Therefore, we pass a dummy numbering to the
   // preconditioner's constructor.
-  std::vector<types::global_dof_index>            dummy_numbering;
-  PreconditionerForLaplaceDirichlet<2, 3, double> precond(
+  std::vector<types::global_dof_index>                    dummy_numbering;
+  PreconditionerForLaplaceDirichlet<2, 3, double, double> precond(
     fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
 
   // Build the coupling matrix.

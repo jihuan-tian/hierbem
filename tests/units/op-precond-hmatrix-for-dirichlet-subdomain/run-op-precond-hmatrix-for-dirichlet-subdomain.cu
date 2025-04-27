@@ -54,7 +54,8 @@ count_number_of_cells_with_material_id(Triangulation<2, 3>     &tria,
 }
 
 void
-setup_preconditioner(PreconditionerForLaplaceDirichlet<2, 3, double> &precond)
+setup_preconditioner(
+  PreconditionerForLaplaceDirichlet<2, 3, double, double> &precond)
 {
   precond.initialize_dof_handlers();
   precond.generate_dof_selectors();
@@ -177,7 +178,7 @@ run_op_precond_hmatrix_for_dirichlet()
   std::vector<types::global_dof_index> dummy_numbering(
     count_number_of_cells_with_material_id(tria, 1));
   std::set<types::material_id> subdomain_material_ids = {1};
-  PreconditionerForLaplaceDirichlet<dim, spacedim, double> precond(
+  PreconditionerForLaplaceDirichlet<dim, spacedim, double, double> precond(
     fe_primal_space,
     fe_dual_space,
     tria,

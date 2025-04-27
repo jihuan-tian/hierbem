@@ -974,28 +974,30 @@ public:
    * Add two matrix into a new matrix \f$C = A + B\f$, where \f$A\f$ is the
    * current matrix.
    */
+  template <typename Number2, typename Number3>
   void
-  add(LAPACKFullMatrixExt<Number>       &C,
-      const LAPACKFullMatrixExt<Number> &B,
+  add(LAPACKFullMatrixExt<Number3>       &C,
+      const LAPACKFullMatrixExt<Number2> &B,
       const bool is_result_matrix_symm_apriori = false) const;
 
   /**
    * Add two matrix into a new matrix \f$C = A + b*B\f$ with a factor \f$b\f$
    * multiplied with \f$B\f$, where \f$A\f$ is the current matrix.
    */
-  template <typename Number2>
+  template <typename Number2, typename Number3, typename Number4>
   void
-  add(LAPACKFullMatrixExt<Number>       &C,
-      const Number2                      b,
-      const LAPACKFullMatrixExt<Number> &B,
+  add(LAPACKFullMatrixExt<Number4>       &C,
+      const Number2                       b,
+      const LAPACKFullMatrixExt<Number3> &B,
       const bool is_result_matrix_symm_apriori = false) const;
 
   /**
    * Add the matrix \p B into the current matrix.
    * @param B
    */
+  template <typename Number2>
   void
-  add(const LAPACKFullMatrixExt<Number> &B,
+  add(const LAPACKFullMatrixExt<Number2> &B,
       const bool is_result_matrix_store_tril_only = false);
 
   /**
@@ -1003,10 +1005,10 @@ public:
    * multiplied with \f$B\f$.
    * @param B
    */
-  template <typename Number2>
+  template <typename Number2, typename Number3>
   void
-  add(const Number2                      b,
-      const LAPACKFullMatrixExt<Number> &B,
+  add(const Number2                       b,
+      const LAPACKFullMatrixExt<Number3> &B,
       const bool is_result_matrix_store_tril_only = false);
 
   /**
@@ -4777,11 +4779,15 @@ LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
 
 
 template <typename Number>
+template <typename Number2, typename Number3>
 void
-LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number>       &C,
-                                 const LAPACKFullMatrixExt<Number> &B,
+LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number3>       &C,
+                                 const LAPACKFullMatrixExt<Number2> &B,
                                  const bool is_result_matrix_symm_apriori) const
 {
+  static_assert(is_number_larger_or_equal<Number3, Number>() &&
+                is_number_larger_or_equal<Number3, Number2>());
+
   AssertDimension(this->m(), B.m());
   AssertDimension(this->n(), B.n());
 
@@ -4816,6 +4822,57 @@ LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number>       &C,
           for (size_type j = 0; j < ncols; j++)
             {
               C(i, j) = (*this)(i, j) + B(i, j);
+            }
+        }
+    }
+}
+
+
+template <typename Number>
+template <typename Number2, typename Number3, typename Number4>
+void
+LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number4>       &C,
+                                 const Number2                       b,
+                                 const LAPACKFullMatrixExt<Number3> &B,
+                                 const bool is_result_matrix_symm_apriori) const
+{
+  static_assert(is_number_larger_or_equal<Number4, Number>() &&
+                is_number_larger_or_equal<Number4, Number2>() &&
+                is_number_larger_or_equal<Number4, Number3>());
+  AssertDimension(this->m(), B.m());
+  AssertDimension(this->n(), B.n());
+
+  const size_type nrows = this->m();
+  const size_type ncols = this->n();
+
+  C.reinit(nrows, ncols);
+
+  if (is_result_matrix_symm_apriori)
+    {
+      /**
+       * Perform addition for matrix elements in the diagonal part and in the
+       * lower triangular part only.
+       */
+      Assert(C.get_property() == LAPACKSupport::Property::symmetric,
+             ExcMessage(std::string("The result matrix should be ") +
+                        std::string(LAPACKSupport::property_name(
+                          LAPACKSupport::Property::symmetric))));
+
+      for (size_type i = 0; i < nrows; i++)
+        {
+          for (size_type j = 0; j <= i; j++)
+            {
+              C(i, j) = (*this)(i, j) + b * B(i, j);
+            }
+        }
+    }
+  else
+    {
+      for (size_type i = 0; i < nrows; i++)
+        {
+          for (size_type j = 0; j < ncols; j++)
+            {
+              C(i, j) = (*this)(i, j) + b * B(i, j);
             }
         }
     }
@@ -4825,57 +4882,10 @@ LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number>       &C,
 template <typename Number>
 template <typename Number2>
 void
-LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number>       &C,
-                                 const Number2                      b,
-                                 const LAPACKFullMatrixExt<Number> &B,
-                                 const bool is_result_matrix_symm_apriori) const
-{
-  static_assert(is_number_larger_or_equal<Number, Number2>());
-  AssertDimension(this->m(), B.m());
-  AssertDimension(this->n(), B.n());
-
-  const size_type nrows = this->m();
-  const size_type ncols = this->n();
-
-  C.reinit(nrows, ncols);
-
-  if (is_result_matrix_symm_apriori)
-    {
-      /**
-       * Perform addition for matrix elements in the diagonal part and in the
-       * lower triangular part only.
-       */
-      Assert(C.get_property() == LAPACKSupport::Property::symmetric,
-             ExcMessage(std::string("The result matrix should be ") +
-                        std::string(LAPACKSupport::property_name(
-                          LAPACKSupport::Property::symmetric))));
-
-      for (size_type i = 0; i < nrows; i++)
-        {
-          for (size_type j = 0; j <= i; j++)
-            {
-              C(i, j) = (*this)(i, j) + b * B(i, j);
-            }
-        }
-    }
-  else
-    {
-      for (size_type i = 0; i < nrows; i++)
-        {
-          for (size_type j = 0; j < ncols; j++)
-            {
-              C(i, j) = (*this)(i, j) + b * B(i, j);
-            }
-        }
-    }
-}
-
-
-template <typename Number>
-void
-LAPACKFullMatrixExt<Number>::add(const LAPACKFullMatrixExt<Number> &B,
+LAPACKFullMatrixExt<Number>::add(const LAPACKFullMatrixExt<Number2> &B,
                                  const bool is_result_matrix_store_tril_only)
 {
+  static_assert(is_number_larger_or_equal<Number, Number2>());
   AssertDimension(this->m(), B.m());
   AssertDimension(this->n(), B.n());
 
@@ -4915,13 +4925,14 @@ LAPACKFullMatrixExt<Number>::add(const LAPACKFullMatrixExt<Number> &B,
 
 
 template <typename Number>
-template <typename Number2>
+template <typename Number2, typename Number3>
 void
-LAPACKFullMatrixExt<Number>::add(const Number2                      b,
-                                 const LAPACKFullMatrixExt<Number> &B,
+LAPACKFullMatrixExt<Number>::add(const Number2                       b,
+                                 const LAPACKFullMatrixExt<Number3> &B,
                                  const bool is_result_matrix_store_tril_only)
 {
-  static_assert(is_number_larger_or_equal<Number, Number2>());
+  static_assert(is_number_larger_or_equal<Number, Number2>() &&
+                is_number_larger_or_equal<Number, Number3>());
   AssertDimension(this->m(), B.m());
   AssertDimension(this->n(), B.n());
 

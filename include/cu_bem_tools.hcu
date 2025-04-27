@@ -168,7 +168,7 @@ namespace BEMTools
       HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
         jacobian_matrix_2x2(jacobian_matrix_2x2_data, 2, 2);
 
-      RangeNumberType surface_jacobian_det = RangeNumberType(0.);
+      RangeNumberType surface_jacobian_det = RangeNumberType();
       RangeNumberType surface_jacobian_det_components[spacedim];
 
       HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
@@ -474,7 +474,7 @@ namespace BEMTools
 
 #pragma unroll
       for (unsigned int i = 0; i < spacedim; i++)
-        local_quad_point_in_real_cell(i) = RangeNumberType(0.);
+        local_quad_point_in_real_cell(i) = RangeNumberType();
 
       /**
        * Linear combination of support point coordinates and evaluation of

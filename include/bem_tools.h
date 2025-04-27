@@ -101,7 +101,8 @@ namespace BEMTools
    * @brief Permute a vector by using the given permutation indices to access
    * its elements.
    *
-   * @tparam VectorType
+   * @tparam VectorType1
+   * @tparam VectorType2
    * @tparam IndexType
    * @param input_vector
    * @param permutation_indices
@@ -109,11 +110,11 @@ namespace BEMTools
    * before calling this function. Its size should be >= the size of the input
    * vector.
    */
-  template <typename VectorType, typename IndexType>
+  template <typename VectorType1, typename VectorType2, typename IndexType>
   void
-  permute_vector(const VectorType             &input_vector,
+  permute_vector(const VectorType1            &input_vector,
                  const std::vector<IndexType> &permutation_indices,
-                 VectorType                   &permuted_vector)
+                 VectorType2                  &permuted_vector)
   {
     const IndexType N = input_vector.size();
     AssertDimension(N, permutation_indices.size());
@@ -3020,7 +3021,7 @@ namespace BEMTools
       &mapping_shape_grad_matrix_at_quad_point =
         mapping_shape_grad_matrix_table(mapping_index, k3_index, quad_no);
 
-    RangeNumberType surface_jacobian_det = RangeNumberType(0.);
+    RangeNumberType surface_jacobian_det = RangeNumberType();
     LAPACKFullMatrixExt<RangeNumberType> jacobian_matrix_2x2(2, 2);
     RangeNumberType surface_jacobian_det_components[spacedim];
     for (unsigned int i = 0; i < spacedim; i++)

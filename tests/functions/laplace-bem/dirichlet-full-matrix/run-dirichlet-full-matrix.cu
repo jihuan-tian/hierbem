@@ -61,11 +61,11 @@ run_dirichlet_full_matrix()
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  const bool                is_interior_problem = true;
-  LaplaceBEM<dim, spacedim> bem(
+  const bool                                is_interior_problem = true;
+  LaplaceBEM<dim, spacedim, double, double> bem(
     1,
     0,
-    LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
+    LaplaceBEM<dim, spacedim, double, double>::ProblemType::DirichletBCProblem,
     is_interior_problem,
     MultithreadInfo::n_threads());
   bem.set_project_name("dirichlet-full-matrix");

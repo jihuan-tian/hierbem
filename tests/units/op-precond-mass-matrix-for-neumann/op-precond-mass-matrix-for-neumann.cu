@@ -32,7 +32,8 @@ using namespace dealii;
 using namespace std;
 
 void
-setup_preconditioner(PreconditionerForLaplaceNeumann<2, 3, double> &precond)
+setup_preconditioner(
+  PreconditionerForLaplaceNeumann<2, 3, double, double> &precond)
 {
   precond.initialize_dof_handlers();
   precond.build_dof_to_cell_topology();
@@ -87,8 +88,8 @@ TEST_CASE("Verify mass matrix for operator preconditioning in Laplace Neumann",
   // system matrix in this case, the conversion between internal and external
   // DoF numberings is not needed. Therefore, we pass a dummy numbering to the
   // preconditioner's constructor.
-  std::vector<types::global_dof_index>          dummy_numbering;
-  PreconditionerForLaplaceNeumann<2, 3, double> precond(
+  std::vector<types::global_dof_index>                  dummy_numbering;
+  PreconditionerForLaplaceNeumann<2, 3, double, double> precond(
     fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
 
   // Setup the preconditioner and build matrices.

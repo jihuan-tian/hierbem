@@ -110,7 +110,7 @@ public:
    * @param n_min
    */
   ClusterTree(const std::vector<types::global_dof_index> &index_set,
-              const std::vector<Point<spacedim>>         &all_support_points,
+              const std::vector<Point<spacedim, Number>> &all_support_points,
               const unsigned int                          n_min);
 
   /**
@@ -128,7 +128,7 @@ public:
    * @param n_min
    */
   ClusterTree(const std::vector<types::global_dof_index> &index_set,
-              const std::vector<Point<spacedim>>         &all_support_points,
+              const std::vector<Point<spacedim, Number>> &all_support_points,
               const std::vector<Number>                  &cell_size_at_dofs,
               const unsigned int                          n_min);
 
@@ -210,7 +210,7 @@ public:
    * </dl>
    */
   void
-  partition(const std::vector<Point<spacedim>> &all_support_points);
+  partition(const std::vector<Point<spacedim, Number>> &all_support_points);
 
   /**
    * Perform a recursive partition dependent on the coordinates of DoF support
@@ -233,8 +233,8 @@ public:
    * </dl>
    */
   void
-  partition(const std::vector<Point<spacedim>> &all_support_points,
-            const std::vector<Number>          &cell_size_at_dofs);
+  partition(const std::vector<Point<spacedim, Number>> &all_support_points,
+            const std::vector<Number>                  &cell_size_at_dofs);
 
   /**
    * Get the pointer to the root node of the cluster tree.
@@ -422,9 +422,9 @@ private:
    */
   void
   partition_from_cluster_node(
-    node_pointer_type                   current_cluster_node,
-    const std::vector<Point<spacedim>> &all_support_points,
-    std::vector<node_pointer_type>     &leaf_set_wrt_current_node);
+    node_pointer_type                           current_cluster_node,
+    const std::vector<Point<spacedim, Number>> &all_support_points,
+    std::vector<node_pointer_type>             &leaf_set_wrt_current_node);
 
   /**
    * Perform a recursive partition dependent on the coordinates of DoF support
@@ -450,10 +450,10 @@ private:
    */
   void
   partition_from_cluster_node(
-    node_pointer_type                   current_cluster_node,
-    const std::vector<Point<spacedim>> &all_support_points,
-    const std::vector<Number>          &cell_size_at_dofs,
-    std::vector<node_pointer_type>     &leaf_set_wrt_current_node);
+    node_pointer_type                           current_cluster_node,
+    const std::vector<Point<spacedim, Number>> &all_support_points,
+    const std::vector<Number>                  &cell_size_at_dofs,
+    std::vector<node_pointer_type>             &leaf_set_wrt_current_node);
 
   /**
    * Build the internal-to-external and external-to-internal DoF numberings by
@@ -614,7 +614,7 @@ ClusterTree<spacedim, Number>::ClusterTree(
 template <int spacedim, typename Number>
 ClusterTree<spacedim, Number>::ClusterTree(
   const std::vector<types::global_dof_index> &index_set,
-  const std::vector<Point<spacedim>>         &all_support_points,
+  const std::vector<Point<spacedim, Number>> &all_support_points,
   const unsigned int                          n_min)
   : root_node(nullptr)
   , leaf_set(0)
@@ -647,7 +647,7 @@ ClusterTree<spacedim, Number>::ClusterTree(
 template <int spacedim, typename Number>
 ClusterTree<spacedim, Number>::ClusterTree(
   const std::vector<types::global_dof_index> &index_set,
-  const std::vector<Point<spacedim>>         &all_support_points,
+  const std::vector<Point<spacedim, Number>> &all_support_points,
   const std::vector<Number>                  &cell_size_at_dofs,
   const unsigned int                          n_min)
   : root_node(nullptr)
@@ -915,9 +915,9 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
 template <int spacedim, typename Number>
 void
 ClusterTree<spacedim, Number>::partition_from_cluster_node(
-  node_pointer_type                   current_cluster_node,
-  const std::vector<Point<spacedim>> &all_support_points,
-  std::vector<node_pointer_type>     &leaf_set_wrt_current_node)
+  node_pointer_type                           current_cluster_node,
+  const std::vector<Point<spacedim, Number>> &all_support_points,
+  std::vector<node_pointer_type>             &leaf_set_wrt_current_node)
 {
   leaf_set_wrt_current_node.clear();
 
@@ -1117,10 +1117,10 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
 template <int spacedim, typename Number>
 void
 ClusterTree<spacedim, Number>::partition_from_cluster_node(
-  node_pointer_type                   current_cluster_node,
-  const std::vector<Point<spacedim>> &all_support_points,
-  const std::vector<Number>          &cell_size_at_dofs,
-  std::vector<node_pointer_type>     &leaf_set_wrt_current_node)
+  node_pointer_type                           current_cluster_node,
+  const std::vector<Point<spacedim, Number>> &all_support_points,
+  const std::vector<Number>                  &cell_size_at_dofs,
+  std::vector<node_pointer_type>             &leaf_set_wrt_current_node)
 {
   leaf_set_wrt_current_node.clear();
 
@@ -1411,7 +1411,7 @@ ClusterTree<spacedim, Number>::partition()
 template <int spacedim, typename Number>
 void
 ClusterTree<spacedim, Number>::partition(
-  const std::vector<Point<spacedim>> &all_support_points)
+  const std::vector<Point<spacedim, Number>> &all_support_points)
 {
   partition_from_cluster_node(root_node, all_support_points, leaf_set);
   build_internal_and_external_dof_numbering_mappings();
@@ -1424,8 +1424,8 @@ ClusterTree<spacedim, Number>::partition(
 template <int spacedim, typename Number>
 void
 ClusterTree<spacedim, Number>::partition(
-  const std::vector<Point<spacedim>> &all_support_points,
-  const std::vector<Number>          &cell_size_at_dofs)
+  const std::vector<Point<spacedim, Number>> &all_support_points,
+  const std::vector<Number>                  &cell_size_at_dofs)
 {
   partition_from_cluster_node(root_node,
                               all_support_points,

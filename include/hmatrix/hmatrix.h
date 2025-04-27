@@ -20869,7 +20869,7 @@ HMatrix<spacedim, Number>::vmult(
   const Vector<Number>          &x,
   const HMatrixSupport::Property top_hmat_property) const
 {
-  vmult(y, 1.0, x, top_hmat_property);
+  vmult(y, real_type(1.0), x, top_hmat_property);
 }
 
 
@@ -20878,7 +20878,7 @@ void
 HMatrix<spacedim, Number>::vmult_task_parallel(Vector<Number>       &y,
                                                const Vector<Number> &x)
 {
-  vmult_task_parallel(1., y, 1.0, x);
+  vmult_task_parallel(real_type(1.), y, real_type(1.0), x);
 }
 
 
@@ -22376,7 +22376,7 @@ HMatrix<spacedim, Number>::vmult(
   const HMatrix<spacedim, Number> &starting_hmat,
   const HMatrixSupport::Property   top_hmat_property) const
 {
-  vmult(y, 1.0, x, starting_hmat, top_hmat_property);
+  vmult(y, real_type(1.0), x, starting_hmat, top_hmat_property);
 }
 
 
@@ -23469,7 +23469,7 @@ HMatrix<spacedim, Number>::Tvmult(
   const Vector<Number>          &x,
   const HMatrixSupport::Property top_hmat_property) const
 {
-  Tvmult(y, 1.0, x, top_hmat_property);
+  Tvmult(y, real_type(1.0), x, top_hmat_property);
 }
 
 
@@ -23478,7 +23478,7 @@ void
 HMatrix<spacedim, Number>::Tvmult_task_parallel(Vector<Number>       &y,
                                                 const Vector<Number> &x)
 {
-  Tvmult_task_parallel(1.0, y, 1.0, x);
+  Tvmult_task_parallel(real_type(1.0), y, real_type(1.0), x);
 }
 
 
@@ -24854,7 +24854,7 @@ HMatrix<spacedim, Number>::Tvmult(
   const HMatrix<spacedim, Number> &starting_hmat,
   const HMatrixSupport::Property   top_hmat_property) const
 {
-  Tvmult(y, 1.0, x, starting_hmat, top_hmat_property);
+  Tvmult(y, real_type(1.0), x, starting_hmat, top_hmat_property);
 }
 
 
@@ -25934,7 +25934,7 @@ HMatrix<spacedim, Number>::Hvmult(
   const Vector<Number>          &x,
   const HMatrixSupport::Property top_hmat_property) const
 {
-  Hvmult(y, 1.0, x, top_hmat_property);
+  Hvmult(y, real_type(1.0), x, top_hmat_property);
 }
 
 
@@ -26960,7 +26960,7 @@ HMatrix<spacedim, Number>::Hvmult(
   const HMatrix<spacedim, Number> &starting_hmat,
   const HMatrixSupport::Property   top_hmat_property) const
 {
-  Hvmult(y, 1.0, x, starting_hmat, top_hmat_property);
+  Hvmult(y, real_type(1.0), x, starting_hmat, top_hmat_property);
 }
 
 
@@ -30084,7 +30084,7 @@ HMatrix<spacedim, Number>::solve_by_forward_substitution(
           for (size_type j = 0; j < i; j++)
             {
               submatrices[i * n_col_blocks + j]->vmult(
-                b, -1.0, b, HMatrixSupport::Property::general);
+                b, real_type(-1.0), b, HMatrixSupport::Property::general);
             }
 
           /**
@@ -30185,7 +30185,11 @@ HMatrix<spacedim, Number>::solve_by_forward_substitution(
           for (size_type j = 0; j < i; j++)
             {
               submatrices[i * n_col_blocks + j]->vmult(
-                b, -1.0, b, starting_hmat, HMatrixSupport::Property::general);
+                b,
+                real_type(-1.0),
+                b,
+                starting_hmat,
+                HMatrixSupport::Property::general);
             }
 
           /**
@@ -30604,7 +30608,7 @@ HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
           for (size_type i = 0; i < j; i++)
             {
               submatrices[i * n_col_blocks + j]->Tvmult(
-                b, -1.0, b, HMatrixSupport::Property::general);
+                b, real_type(-1.0), b, HMatrixSupport::Property::general);
             }
 
           /**
@@ -30695,7 +30699,11 @@ HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
           for (size_type i = 0; i < j; i++)
             {
               submatrices[i * n_col_blocks + j]->Tvmult(
-                b, -1.0, b, starting_hmat, HMatrixSupport::Property::general);
+                b,
+                real_type(-1.0),
+                b,
+                starting_hmat,
+                HMatrixSupport::Property::general);
             }
 
           /**
@@ -31402,7 +31410,7 @@ HMatrix<spacedim, Number>::solve_block_triangular_by_forward_substitution(
           for (size_type j = 0; j < i; j++)
             {
               submatrices[i * n_col_blocks + j]->vmult(
-                b, -1.0, b, HMatrixSupport::Property::general);
+                b, real_type(-1.0), b, HMatrixSupport::Property::general);
             }
 
           /**
@@ -31513,7 +31521,11 @@ HMatrix<spacedim, Number>::solve_block_triangular_by_forward_substitution(
           for (size_type j = 0; j < i; j++)
             {
               submatrices[i * n_col_blocks + j]->vmult(
-                b, -1.0, b, starting_hmat, HMatrixSupport::Property::general);
+                b,
+                real_type(-1.0),
+                b,
+                starting_hmat,
+                HMatrixSupport::Property::general);
             }
 
           /**
@@ -31661,7 +31673,7 @@ HMatrix<spacedim, Number>::solve_by_backward_substitution(
           for (size_type j = i + 1; j < n_col_blocks; j++)
             {
               submatrices[i * n_col_blocks + j]->vmult(
-                b, -1.0, b, HMatrixSupport::Property::general);
+                b, real_type(-1.0), b, HMatrixSupport::Property::general);
             }
 
           /**
@@ -31760,7 +31772,11 @@ HMatrix<spacedim, Number>::solve_by_backward_substitution(
           for (size_type j = i + 1; j < n_col_blocks; j++)
             {
               submatrices[i * n_col_blocks + j]->vmult(
-                b, -1.0, b, starting_hmat, HMatrixSupport::Property::general);
+                b,
+                real_type(-1.0),
+                b,
+                starting_hmat,
+                HMatrixSupport::Property::general);
             }
 
           /**
@@ -31873,7 +31889,7 @@ HMatrix<spacedim, Number>::solve_block_triangular_by_backward_substitution(
           for (size_type j = i + 1; j < n_col_blocks; j++)
             {
               submatrices[i * n_col_blocks + j]->vmult(
-                b, -1.0, b, HMatrixSupport::Property::general);
+                b, real_type(-1.0), b, HMatrixSupport::Property::general);
             }
 
           /**
@@ -31989,7 +32005,11 @@ HMatrix<spacedim, Number>::solve_block_triangular_by_backward_substitution(
           for (size_type j = i + 1; j < n_col_blocks; j++)
             {
               submatrices[i * n_col_blocks + j]->vmult(
-                b, -1.0, b, starting_hmat, HMatrixSupport::Property::general);
+                b,
+                real_type(-1.0),
+                b,
+                starting_hmat,
+                HMatrixSupport::Property::general);
             }
 
           /**
@@ -32093,7 +32113,7 @@ HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
                * solved, \p Tvmult is used here instead of \p vmult.
                */
               submatrices[i * n_col_blocks + j]->Tvmult(
-                b, -1.0, b, HMatrixSupport::Property::general);
+                b, real_type(-1.0), b, HMatrixSupport::Property::general);
             }
 
           /**
@@ -32192,7 +32212,11 @@ HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
                * solved, \p Tvmult is used here instead of \p vmult.
                */
               submatrices[i * n_col_blocks + j]->Tvmult(
-                b, -1.0, b, starting_hmat, HMatrixSupport::Property::general);
+                b,
+                real_type(-1.0),
+                b,
+                starting_hmat,
+                HMatrixSupport::Property::general);
             }
 
           /**

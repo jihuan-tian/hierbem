@@ -131,7 +131,7 @@ run_op_precond_hmatrix_for_dirichlet()
   // preconditioner's constructor. Its size is initialized to the number of
   // cells in the primal mesh.
   std::vector<types::global_dof_index> dummy_numbering(tria.n_cells(0));
-  PreconditionerForLaplaceDirichlet<dim, spacedim, double> precond(
+  PreconditionerForLaplaceDirichlet<dim, spacedim, double, double> precond(
     fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
 
   // Build the mass matrix on the refined mesh first, because it

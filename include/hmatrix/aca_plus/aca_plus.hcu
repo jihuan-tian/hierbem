@@ -224,13 +224,10 @@ assemble_kernel_row(
   Vector<RangeNumberType>                              &row_vector,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
-  const std::vector<
-    Vector<typename numbers::NumberTraits<RangeNumberType>::real_type>>
-    &mass_vmult_weq,
-  const typename numbers::NumberTraits<RangeNumberType>::real_type
-                                              stabilization_factor,
-  const types::global_dof_index               row_dof_index,
-  const std::vector<types::global_dof_index> &column_dof_indices,
+  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
+  const KernelNumberType                                stabilization_factor,
+  const types::global_dof_index                         row_dof_index,
+  const std::vector<types::global_dof_index>           &column_dof_indices,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
@@ -435,13 +432,10 @@ assemble_kernel_row(
   Vector<RangeNumberType>                              &row_vector,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
-  const std::vector<
-    Vector<typename numbers::NumberTraits<RangeNumberType>::real_type>>
-    &mass_vmult_weq,
-  const typename numbers::NumberTraits<RangeNumberType>::real_type
-                                              stabilization_factor,
-  const types::global_dof_index               row_dof_index,
-  const std::vector<types::global_dof_index> &column_dof_indices,
+  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
+  const KernelNumberType                                stabilization_factor,
+  const types::global_dof_index                         row_dof_index,
+  const std::vector<types::global_dof_index>           &column_dof_indices,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
@@ -647,13 +641,10 @@ assemble_kernel_column(
   Vector<RangeNumberType>                              &col_vector,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
-  const std::vector<
-    Vector<typename numbers::NumberTraits<RangeNumberType>::real_type>>
-    &mass_vmult_weq,
-  const typename numbers::NumberTraits<RangeNumberType>::real_type
-                                              stabilization_factor,
-  const std::vector<types::global_dof_index> &row_dof_indices,
-  const types::global_dof_index               col_dof_index,
+  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
+  const KernelNumberType                                stabilization_factor,
+  const std::vector<types::global_dof_index>           &row_dof_indices,
+  const types::global_dof_index                         col_dof_index,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
@@ -851,13 +842,10 @@ assemble_kernel_column(
   Vector<RangeNumberType>                              &col_vector,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
-  const std::vector<
-    Vector<typename numbers::NumberTraits<RangeNumberType>::real_type>>
-    &mass_vmult_weq,
-  const typename numbers::NumberTraits<RangeNumberType>::real_type
-                                              stabilization_factor,
-  const std::vector<types::global_dof_index> &row_dof_indices,
-  const types::global_dof_index               col_dof_index,
+  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
+  const KernelNumberType                                stabilization_factor,
+  const std::vector<types::global_dof_index>           &row_dof_indices,
+  const types::global_dof_index                         col_dof_index,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
@@ -1134,13 +1122,10 @@ random_select_ref_row(
   Vector<RangeNumberType>                              &row_vector,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
-  const std::vector<
-    Vector<typename numbers::NumberTraits<RangeNumberType>::real_type>>
-    &mass_vmult_weq,
-  const typename numbers::NumberTraits<RangeNumberType>::real_type
-                                              stabilization_factor,
-  std::forward_list<size_type>               &remaining_row_indices,
-  const size_type                             current_ref_row_index,
+  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
+  const KernelNumberType                                stabilization_factor,
+  std::forward_list<size_type>                         &remaining_row_indices,
+  const size_type                                       current_ref_row_index,
   const size_type                             pass_the_end_ref_row_index,
   const std::vector<types::global_dof_index> &row_dof_indices,
   const std::vector<types::global_dof_index> &col_dof_indices,
@@ -1434,13 +1419,10 @@ random_select_ref_row(
   Vector<RangeNumberType>                              &row_vector,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
-  const std::vector<
-    Vector<typename numbers::NumberTraits<RangeNumberType>::real_type>>
-    &mass_vmult_weq,
-  const typename numbers::NumberTraits<RangeNumberType>::real_type
-                                              stabilization_factor,
-  std::forward_list<size_type>               &remaining_row_indices,
-  const size_type                             current_ref_row_index,
+  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
+  const KernelNumberType                                stabilization_factor,
+  std::forward_list<size_type>                         &remaining_row_indices,
+  const size_type                                       current_ref_row_index,
   const size_type                             pass_the_end_ref_row_index,
   const std::vector<types::global_dof_index> &row_dof_indices,
   const std::vector<types::global_dof_index> &col_dof_indices,
@@ -1881,13 +1863,10 @@ random_select_ref_column(
   Vector<RangeNumberType>                              &col_vector,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
-  const std::vector<
-    Vector<typename numbers::NumberTraits<RangeNumberType>::real_type>>
-    &mass_vmult_weq,
-  const typename numbers::NumberTraits<RangeNumberType>::real_type
-                                              stabilization_factor,
-  std::forward_list<size_type>               &remaining_col_indices,
-  const size_type                             current_ref_col_index,
+  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
+  const KernelNumberType                                stabilization_factor,
+  std::forward_list<size_type>                         &remaining_col_indices,
+  const size_type                                       current_ref_col_index,
   const size_type                             pass_the_end_ref_col_index,
   const std::vector<types::global_dof_index> &row_dof_indices,
   const std::vector<types::global_dof_index> &col_dof_indices,
@@ -2183,13 +2162,10 @@ random_select_ref_column(
   Vector<RangeNumberType>                              &col_vector,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
-  const std::vector<
-    Vector<typename numbers::NumberTraits<RangeNumberType>::real_type>>
-    &mass_vmult_weq,
-  const typename numbers::NumberTraits<RangeNumberType>::real_type
-                                              stabilization_factor,
-  std::forward_list<size_type>               &remaining_col_indices,
-  const size_type                             current_ref_col_index,
+  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
+  const KernelNumberType                                stabilization_factor,
+  std::forward_list<size_type>                         &remaining_col_indices,
+  const size_type                                       current_ref_col_index,
   const size_type                             pass_the_end_ref_col_index,
   const std::vector<types::global_dof_index> &row_dof_indices,
   const std::vector<types::global_dof_index> &col_dof_indices,
@@ -2446,8 +2422,9 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 aca_plus_parallel_sauter_quad_for_vector_entry(
-  RkMatrix<RangeNumberType>                            &rkmat,
-  const ACAConfig                                      &aca_config,
+  RkMatrix<RangeNumberType> &rkmat,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                                       &aca_config,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
   const std::array<types::global_dof_index, 2>         &row_dof_index_range,
@@ -2518,8 +2495,8 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   AssertDimension(rkmat.get_formal_rank(), aca_config.max_iter);
   LAPACKFullMatrixExt<RangeNumberType> &u_mat = rkmat.get_A();
   LAPACKFullMatrixExt<RangeNumberType> &v_mat = rkmat.get_B();
-  u_mat                                       = RangeNumberType(0.);
-  v_mat                                       = RangeNumberType(0.);
+  u_mat                                       = RangeNumberType();
+  v_mat                                       = RangeNumberType();
 
   /**
    * Generate two lists for storing remaining row indices and column indices
@@ -3142,19 +3119,17 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 aca_plus_parallel_sauter_quad_for_vector_entry(
-  RkMatrix<RangeNumberType>                            &rkmat,
-  const ACAConfig                                      &aca_config,
+  RkMatrix<RangeNumberType> &rkmat,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                                       &aca_config,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
-  const std::vector<
-    Vector<typename numbers::NumberTraits<RangeNumberType>::real_type>>
-    &mass_vmult_weq,
-  const typename numbers::NumberTraits<RangeNumberType>::real_type
-                                                stabilization_factor,
-  const std::array<types::global_dof_index, 2> &row_dof_index_range,
-  const std::array<types::global_dof_index, 2> &col_dof_index_range,
-  const DoFToCellTopology<dim, spacedim>       &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim>       &ky_dof_to_cell_topo,
+  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
+  const KernelNumberType                                stabilization_factor,
+  const std::array<types::global_dof_index, 2>         &row_dof_index_range,
+  const std::array<types::global_dof_index, 2>         &col_dof_index_range,
+  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
   const HierBEM::CUDAWrappers::CUDABEMValues<
     dim,
     spacedim,
@@ -3219,8 +3194,8 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   AssertDimension(rkmat.get_formal_rank(), aca_config.max_iter);
   LAPACKFullMatrixExt<RangeNumberType> &u_mat = rkmat.get_A();
   LAPACKFullMatrixExt<RangeNumberType> &v_mat = rkmat.get_B();
-  u_mat                                       = RangeNumberType(0.);
-  v_mat                                       = RangeNumberType(0.);
+  u_mat                                       = RangeNumberType();
+  v_mat                                       = RangeNumberType();
 
   /**
    * Generate two lists for storing remaining row indices and column indices
@@ -3828,8 +3803,9 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 aca_plus_parallel_sauter_quad_for_whole_vector(
-  RkMatrix<RangeNumberType>                            &rkmat,
-  const ACAConfig                                      &aca_config,
+  RkMatrix<RangeNumberType> &rkmat,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                                       &aca_config,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
   const std::array<types::global_dof_index, 2>         &row_dof_index_range,
@@ -3924,8 +3900,8 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   AssertDimension(rkmat.get_formal_rank(), aca_config.max_iter);
   LAPACKFullMatrixExt<RangeNumberType> &u_mat = rkmat.get_A();
   LAPACKFullMatrixExt<RangeNumberType> &v_mat = rkmat.get_B();
-  u_mat                                       = RangeNumberType(0.);
-  v_mat                                       = RangeNumberType(0.);
+  u_mat                                       = RangeNumberType();
+  v_mat                                       = RangeNumberType();
 
   /**
    * Generate two lists for storing remaining row indices and column indices
@@ -4560,19 +4536,17 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 aca_plus_parallel_sauter_quad_for_whole_vector(
-  RkMatrix<RangeNumberType>                            &rkmat,
-  const ACAConfig                                      &aca_config,
+  RkMatrix<RangeNumberType> &rkmat,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                                       &aca_config,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
-  const std::vector<
-    Vector<typename numbers::NumberTraits<RangeNumberType>::real_type>>
-    &mass_vmult_weq,
-  const typename numbers::NumberTraits<RangeNumberType>::real_type
-                                                stabilization_factor,
-  const std::array<types::global_dof_index, 2> &row_dof_index_range,
-  const std::array<types::global_dof_index, 2> &col_dof_index_range,
-  const DoFToCellTopology<dim, spacedim>       &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim>       &ky_dof_to_cell_topo,
+  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
+  const KernelNumberType                                stabilization_factor,
+  const std::array<types::global_dof_index, 2>         &row_dof_index_range,
+  const std::array<types::global_dof_index, 2>         &col_dof_index_range,
+  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
   const BEMValues<dim,
                   spacedim,
                   typename numbers::NumberTraits<RangeNumberType>::real_type>
@@ -4661,8 +4635,8 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   AssertDimension(rkmat.get_formal_rank(), aca_config.max_iter);
   LAPACKFullMatrixExt<RangeNumberType> &u_mat = rkmat.get_A();
   LAPACKFullMatrixExt<RangeNumberType> &v_mat = rkmat.get_B();
-  u_mat                                       = RangeNumberType(0.);
-  v_mat                                       = RangeNumberType(0.);
+  u_mat                                       = RangeNumberType();
+  v_mat                                       = RangeNumberType();
 
   /**
    * Generate two lists for storing remaining row indices and column indices
@@ -5320,9 +5294,11 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
  */
 template <typename RangeNumberType = double>
 void
-aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
-         const ACAConfig                            &aca_config,
-         const LAPACKFullMatrixExt<RangeNumberType> &A)
+aca_plus(
+  RkMatrix<RangeNumberType> &rkmat,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                             &aca_config,
+  const LAPACKFullMatrixExt<RangeNumberType> &A)
 {
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
 
@@ -5344,8 +5320,8 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
   AssertDimension(rkmat.get_formal_rank(), aca_config.max_iter);
   LAPACKFullMatrixExt<RangeNumberType> &u_mat = rkmat.get_A();
   LAPACKFullMatrixExt<RangeNumberType> &v_mat = rkmat.get_B();
-  u_mat                                       = RangeNumberType(0.);
-  v_mat                                       = RangeNumberType(0.);
+  u_mat                                       = RangeNumberType();
+  v_mat                                       = RangeNumberType();
 
   /**
    * Generate two lists for storing remaining row indices and column indices
@@ -5847,8 +5823,9 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 fill_hmatrix_leaf_node_with_aca_plus(
-  HMatrix<spacedim, RangeNumberType>                   *leaf_mat,
-  const ACAConfig                                      &aca_config,
+  HMatrix<spacedim, RangeNumberType> *leaf_mat,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                                       &aca_config,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
   const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
@@ -6262,17 +6239,15 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 fill_hmatrix_leaf_node_with_aca_plus(
-  HMatrix<spacedim, RangeNumberType>                   *leaf_mat,
-  const ACAConfig                                      &aca_config,
+  HMatrix<spacedim, RangeNumberType> *leaf_mat,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                                       &aca_config,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
-  const std::vector<
-    Vector<typename numbers::NumberTraits<RangeNumberType>::real_type>>
-    &mass_vmult_weq,
-  const typename numbers::NumberTraits<RangeNumberType>::real_type
-                                          stabilization_factor,
-  const DoFToCellTopology<dim, spacedim> &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim> &ky_dof_to_cell_topo,
+  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
+  const KernelNumberType                                stabilization_factor,
+  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
   const HierBEM::CUDAWrappers::CUDABEMValues<
     dim,
     spacedim,
@@ -6678,8 +6653,9 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 fill_hmatrix_leaf_node_with_aca_plus(
-  HMatrix<spacedim, RangeNumberType>                   *leaf_mat,
-  const ACAConfig                                      &aca_config,
+  HMatrix<spacedim, RangeNumberType> *leaf_mat,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                                       &aca_config,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
   const typename numbers::NumberTraits<RangeNumberType>::real_type
@@ -7008,8 +6984,9 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 fill_far_field_hmatrix_leaf_node_with_aca_plus(
-  HMatrix<spacedim, RangeNumberType>                   *leaf_mat,
-  const ACAConfig                                      &aca_config,
+  HMatrix<spacedim, RangeNumberType> *leaf_mat,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                                       &aca_config,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
   const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
@@ -7175,17 +7152,15 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 fill_far_field_hmatrix_leaf_node_with_aca_plus(
-  HMatrix<spacedim, RangeNumberType>                   *leaf_mat,
-  const ACAConfig                                      &aca_config,
+  HMatrix<spacedim, RangeNumberType> *leaf_mat,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                                       &aca_config,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
-  const std::vector<
-    Vector<typename numbers::NumberTraits<RangeNumberType>::real_type>>
-    &mass_vmult_weq,
-  const typename numbers::NumberTraits<RangeNumberType>::real_type
-                                          stabilization_factor,
-  const DoFToCellTopology<dim, spacedim> &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim> &ky_dof_to_cell_topo,
+  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
+  const KernelNumberType                                stabilization_factor,
+  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
   const BEMValues<dim,
                   spacedim,
                   typename numbers::NumberTraits<RangeNumberType>::real_type>
@@ -7363,8 +7338,9 @@ void
 fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
   const tbb::blocked_range<
     typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
-                                                       &range,
-  const ACAConfig                                      &aca_config,
+    &range,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                                       &aca_config,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
   const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
@@ -7485,17 +7461,15 @@ void
 fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
   const tbb::blocked_range<
     typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
-                                                       &range,
-  const ACAConfig                                      &aca_config,
+    &range,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                                       &aca_config,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
-  const std::vector<
-    Vector<typename numbers::NumberTraits<RangeNumberType>::real_type>>
-    &mass_vmult_weq,
-  const typename numbers::NumberTraits<RangeNumberType>::real_type
-                                          stabilization_factor,
-  const DoFToCellTopology<dim, spacedim> &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim> &ky_dof_to_cell_topo,
+  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
+  const KernelNumberType                                stabilization_factor,
+  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
   const BEMValues<dim,
                   spacedim,
                   typename numbers::NumberTraits<RangeNumberType>::real_type>
@@ -7593,17 +7567,14 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
  * @param stabilization_factor
  * @param enable_build_symmetric_hmat
  */
-template <int spacedim, typename RangeNumberType = double>
+template <int spacedim, typename RangeNumberType, typename KernelNumberType>
 void
 stabilize_near_field_hmatrices_for_hypersingular_kernel(
   const tbb::blocked_range<
     typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
-    &range,
-  const std::vector<
-    Vector<typename numbers::NumberTraits<RangeNumberType>::real_type>>
-    &mass_vmult_weq,
-  const typename numbers::NumberTraits<RangeNumberType>::real_type
-             stabilization_factor,
+                                              &range,
+  const std::vector<Vector<KernelNumberType>> &mass_vmult_weq,
+  const KernelNumberType                       stabilization_factor,
   const bool enable_build_symmetric_hmat = true)
 {
   for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
@@ -7764,8 +7735,9 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 fill_hmatrix_with_aca_plus_serial(
-  HMatrix<spacedim, RangeNumberType>                   &hmat,
-  const ACAConfig                                      &aca_config,
+  HMatrix<spacedim, RangeNumberType> &hmat,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                                       &aca_config,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
   const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
@@ -7945,20 +7917,18 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 fill_hmatrix_with_aca_plus_serial(
-  HMatrix<spacedim, RangeNumberType>                   &hmat,
-  const ACAConfig                                      &aca_config,
+  HMatrix<spacedim, RangeNumberType> &hmat,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                                       &aca_config,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
-  const std::vector<
-    Vector<typename numbers::NumberTraits<RangeNumberType>::real_type>>
-    &mass_vmult_weq,
-  const typename numbers::NumberTraits<RangeNumberType>::real_type
-                                          stabilization_factor,
-  const DoFToCellTopology<dim, spacedim> &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim> &ky_dof_to_cell_topo,
-  const SauterQuadratureRule<dim>        &sauter_quad_rule,
-  const DoFHandler<dim, spacedim>        &kx_dof_handler,
-  const DoFHandler<dim, spacedim>        &ky_dof_handler,
+  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
+  const KernelNumberType                                stabilization_factor,
+  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
+  const SauterQuadratureRule<dim>                      &sauter_quad_rule,
+  const DoFHandler<dim, spacedim>                      &kx_dof_handler,
+  const DoFHandler<dim, spacedim>                      &ky_dof_handler,
   const std::vector<types::global_dof_index>
     *kx_map_from_local_to_full_dof_indices,
   const std::vector<types::global_dof_index>
@@ -8120,8 +8090,9 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 fill_hmatrix_with_aca_plus_serial(
-  HMatrix<spacedim, RangeNumberType>                   &hmat,
-  const ACAConfig                                      &aca_config,
+  HMatrix<spacedim, RangeNumberType> &hmat,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                                       &aca_config,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
   const typename numbers::NumberTraits<RangeNumberType>::real_type
@@ -8306,9 +8277,10 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 fill_hmatrix_with_aca_plus_smp(
-  const unsigned int                                    thread_num,
-  HMatrix<spacedim, RangeNumberType>                   &hmat,
-  const ACAConfig                                      &aca_config,
+  const unsigned int                  thread_num,
+  HMatrix<spacedim, RangeNumberType> &hmat,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                                       &aca_config,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
   const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
@@ -8702,21 +8674,19 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 fill_hmatrix_with_aca_plus_smp(
-  const unsigned int                                    thread_num,
-  HMatrix<spacedim, RangeNumberType>                   &hmat,
-  const ACAConfig                                      &aca_config,
+  const unsigned int                  thread_num,
+  HMatrix<spacedim, RangeNumberType> &hmat,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                                       &aca_config,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
-  const std::vector<
-    Vector<typename numbers::NumberTraits<RangeNumberType>::real_type>>
-    &mass_vmult_weq,
-  const typename numbers::NumberTraits<RangeNumberType>::real_type
-                                          stabilization_factor,
-  const DoFToCellTopology<dim, spacedim> &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim> &ky_dof_to_cell_topo,
-  const SauterQuadratureRule<dim>        &sauter_quad_rule,
-  const DoFHandler<dim, spacedim>        &kx_dof_handler,
-  const DoFHandler<dim, spacedim>        &ky_dof_handler,
+  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
+  const KernelNumberType                                stabilization_factor,
+  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
+  const SauterQuadratureRule<dim>                      &sauter_quad_rule,
+  const DoFHandler<dim, spacedim>                      &kx_dof_handler,
+  const DoFHandler<dim, spacedim>                      &ky_dof_handler,
   const std::vector<types::global_dof_index>
     *kx_map_from_local_to_full_dof_indices,
   const std::vector<types::global_dof_index>
@@ -8999,10 +8969,11 @@ fill_hmatrix_with_aca_plus_smp(
             HMatrix<spacedim, RangeNumberType> *>::iterator> &range) {
         stabilize_near_field_hmatrices_for_hypersingular_kernel<
           spacedim,
-          RangeNumberType>(range,
-                           mass_vmult_weq,
-                           stabilization_factor,
-                           enable_build_symmetric_hmat);
+          RangeNumberType,
+          KernelNumberType>(range,
+                            mass_vmult_weq,
+                            stabilization_factor,
+                            enable_build_symmetric_hmat);
       },
       grain_size);
   }
@@ -9132,9 +9103,10 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 fill_hmatrix_with_aca_plus_smp(
-  const unsigned int                                    thread_num,
-  HMatrix<spacedim, RangeNumberType>                   &hmat,
-  const ACAConfig                                      &aca_config,
+  const unsigned int                  thread_num,
+  HMatrix<spacedim, RangeNumberType> &hmat,
+  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                                       &aca_config,
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const KernelNumberType                                kernel_factor,
   const typename numbers::NumberTraits<RangeNumberType>::real_type

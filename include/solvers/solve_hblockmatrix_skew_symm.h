@@ -32,7 +32,8 @@ using namespace dealii;
 template <typename SkewSymmetricBlockMatrixType,
           typename VectorType,
           typename PrecondM11Type,
-          typename PrecondM22Type>
+          typename PrecondM22Type,
+          typename Number>
 void
 solve_hblockmatrix_skew_symm_using_schur_complement(
   const SkewSymmetricBlockMatrixType &block_mat,
@@ -43,7 +44,7 @@ solve_hblockmatrix_skew_symm_using_schur_complement(
   const PrecondM11Type               &precond11,
   const PrecondM22Type               &precond22,
   const unsigned int                  max_iter,
-  const double                        tolerance,
+  const Number                        tolerance,
   const bool                          log_history,
   const bool                          log_result)
 {
@@ -63,7 +64,10 @@ solve_hblockmatrix_skew_symm_using_schur_complement(
   b3 += b2;
 
   // Construct the Schur complement matrix and solve it for @p x2.
-  SchurComplement<SkewSymmetricBlockMatrixType, VectorType, PrecondM11Type>
+  SchurComplement<SkewSymmetricBlockMatrixType,
+                  VectorType,
+                  PrecondM11Type,
+                  Number>
     schur_complement(
       block_mat, precond11, max_iter, tolerance, log_history, log_result);
   SolverControl solver_control2(max_iter, tolerance, log_history, log_result);

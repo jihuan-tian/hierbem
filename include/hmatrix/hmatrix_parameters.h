@@ -8,14 +8,15 @@ HBEM_NS_OPEN
 /**
  * @brief Class holding the set of \hmatrix parameters.
  */
+template <typename Number = double>
 class HMatrixParameters
 {
 public:
   HMatrixParameters(const unsigned int n_min_for_ct,
                     const unsigned int n_min_for_bct,
-                    const double       eta,
+                    const Number       eta,
                     const unsigned int max_hmat_rank,
-                    const double       aca_relative_error)
+                    const Number       aca_relative_error)
     : n_min_for_ct(n_min_for_ct)
     , n_min_for_bct(n_min_for_bct)
     , eta(eta)
@@ -34,7 +35,7 @@ public:
   /**
    * Admissibility constant.
    */
-  double eta;
+  Number eta;
   /**
    * Maximum \hmat rank.
    */
@@ -42,7 +43,7 @@ public:
   /**
    * Relative error for ACA iteration.
    */
-  double aca_relative_error;
+  Number aca_relative_error;
 };
 
 HBEM_NS_CLOSE

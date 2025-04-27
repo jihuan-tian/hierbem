@@ -38,7 +38,7 @@ TEST_CASE("Create subdomain H-hmatrices", "[ddm_efield]")
   AssertCuda(
     cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
 
-  DDMEfield<2, 3> efield(
+  DDMEfield<2, 3, double, double> efield(
     1,                           // fe order for dirichlet space
     0,                           // fe order for neumann space
     32,                          // n_min for cluster tree

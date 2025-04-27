@@ -13,14 +13,15 @@ HBEM_NS_OPEN
  */
 template <typename SkewSymmetricBlockMatrixType,
           typename VectorType,
-          typename PrecondM11Type>
+          typename PrecondM11Type,
+          typename Number>
 class SchurComplement
 {
 public:
   SchurComplement(const SkewSymmetricBlockMatrixType &block_matrix_,
                   const PrecondM11Type               &precond11_,
                   const unsigned int                  max_iter_,
-                  const double                        tolerance_,
+                  const Number                        tolerance_,
                   const bool                          log_history_,
                   const bool                          log_result_)
     : block_matrix(block_matrix_)
@@ -54,7 +55,7 @@ private:
   const SkewSymmetricBlockMatrixType &block_matrix;
   const PrecondM11Type               &precond11;
   unsigned int                        max_iter;
-  double                              tolerance;
+  Number                              tolerance;
   bool                                log_history;
   bool                                log_result;
 
@@ -75,10 +76,13 @@ private:
 
 template <typename SkewSymmetricBlockMatrixType,
           typename VectorType,
-          typename PrecondM11Type>
+          typename PrecondM11Type,
+          typename Number>
 void
-SchurComplement<SkewSymmetricBlockMatrixType, VectorType, PrecondM11Type>::
-  reinit()
+SchurComplement<SkewSymmetricBlockMatrixType,
+                VectorType,
+                PrecondM11Type,
+                Number>::reinit()
 {
   y1->reinit(block_matrix.get_M12().get_m());
   y2->reinit(block_matrix.get_M11().get_n());
@@ -88,10 +92,13 @@ SchurComplement<SkewSymmetricBlockMatrixType, VectorType, PrecondM11Type>::
 
 template <typename SkewSymmetricBlockMatrixType,
           typename VectorType,
-          typename PrecondM11Type>
+          typename PrecondM11Type,
+          typename Number>
 void
-SchurComplement<SkewSymmetricBlockMatrixType, VectorType, PrecondM11Type>::
-  vmult(VectorType &y, const VectorType &x) const
+SchurComplement<SkewSymmetricBlockMatrixType,
+                VectorType,
+                PrecondM11Type,
+                Number>::vmult(VectorType &y, const VectorType &x) const
 {
   // It is possible that M12 is a non-symmetric H-matrix, whose vmult function
   // is accumulative. Therefore, we set the result vector as zero first to clear

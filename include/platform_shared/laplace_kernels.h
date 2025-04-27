@@ -39,13 +39,13 @@ namespace PlatformShared
     /**
      * Laplace single layer kernel function
      */
-    template <int dim, typename RangeNumberType = double>
+    template <int spacedim, typename KernelNumberType = double>
     class SingleLayerKernel
     {
     public:
       using real_type =
-        typename numbers::NumberTraits<RangeNumberType>::real_type;
-      static constexpr unsigned int dimension = dim;
+        typename numbers::NumberTraits<KernelNumberType>::real_type;
+      static constexpr unsigned int dimension = spacedim;
       const KernelType              kernel_type;
       const unsigned int            n_components;
 
@@ -65,12 +65,12 @@ namespace PlatformShared
        * @param component
        * @return
        */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV RangeNumberType
-      value(const Point<dim, real_type>     &x,
-            const Point<dim, real_type>     &y,
-            const Tensor<1, dim, real_type> &nx,
-            const Tensor<1, dim, real_type> &ny,
-            const unsigned int               component = 0) const;
+      HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+      value(const Point<spacedim, real_type>     &x,
+            const Point<spacedim, real_type>     &y,
+            const Tensor<1, spacedim, real_type> &nx,
+            const Tensor<1, spacedim, real_type> &ny,
+            const unsigned int                    component = 0) const;
 
       /**
        * Return whether the kernel function is symmetric.
@@ -82,20 +82,20 @@ namespace PlatformShared
     };
 
 
-    template <int dim, typename RangeNumberType>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV RangeNumberType
-    SingleLayerKernel<dim, RangeNumberType>::value(
-      const Point<dim, real_type>     &x,
-      const Point<dim, real_type>     &y,
-      const Tensor<1, dim, real_type> &nx,
-      const Tensor<1, dim, real_type> &ny,
-      const unsigned int               component) const
+    template <int spacedim, typename KernelNumberType>
+    HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+    SingleLayerKernel<spacedim, KernelNumberType>::value(
+      const Point<spacedim, real_type>     &x,
+      const Point<spacedim, real_type>     &y,
+      const Tensor<1, spacedim, real_type> &nx,
+      const Tensor<1, spacedim, real_type> &ny,
+      const unsigned int                    component) const
     {
       (void)nx;
       (void)ny;
       (void)component;
 
-      switch (dim)
+      switch (spacedim)
         {
           case 2:
 #ifdef __CUDA_ARCH__
@@ -109,14 +109,14 @@ namespace PlatformShared
 
           default:
             assert(false);
-            return 0.;
+            return KernelNumberType();
         }
     }
 
 
-    template <int dim, typename RangeNumberType>
+    template <int spacedim, typename KernelNumberType>
     HBEM_ATTR_HOST HBEM_ATTR_DEV bool
-    SingleLayerKernel<dim, RangeNumberType>::is_symmetric() const
+    SingleLayerKernel<spacedim, KernelNumberType>::is_symmetric() const
     {
       return true;
     }
@@ -125,13 +125,13 @@ namespace PlatformShared
     /**
      * Double layer kernel.
      */
-    template <int dim, typename RangeNumberType = double>
+    template <int spacedim, typename KernelNumberType = double>
     class DoubleLayerKernel
     {
     public:
       using real_type =
-        typename numbers::NumberTraits<RangeNumberType>::real_type;
-      static constexpr unsigned int dimension = dim;
+        typename numbers::NumberTraits<KernelNumberType>::real_type;
+      static constexpr unsigned int dimension = spacedim;
       const KernelType              kernel_type;
       const unsigned int            n_components;
 
@@ -141,12 +141,12 @@ namespace PlatformShared
         , n_components(1)
       {}
 
-      HBEM_ATTR_HOST HBEM_ATTR_DEV RangeNumberType
-      value(const Point<dim, real_type>     &x,
-            const Point<dim, real_type>     &y,
-            const Tensor<1, dim, real_type> &nx,
-            const Tensor<1, dim, real_type> &ny,
-            const unsigned int               component = 0) const;
+      HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+      value(const Point<spacedim, real_type>     &x,
+            const Point<spacedim, real_type>     &y,
+            const Tensor<1, spacedim, real_type> &nx,
+            const Tensor<1, spacedim, real_type> &ny,
+            const unsigned int                    component = 0) const;
 
       /**
        * Return whether the kernel function is symmetric.
@@ -158,19 +158,19 @@ namespace PlatformShared
     };
 
 
-    template <int dim, typename RangeNumberType>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV RangeNumberType
-    DoubleLayerKernel<dim, RangeNumberType>::value(
-      const Point<dim, real_type>     &x,
-      const Point<dim, real_type>     &y,
-      const Tensor<1, dim, real_type> &nx,
-      const Tensor<1, dim, real_type> &ny,
-      const unsigned int               component) const
+    template <int spacedim, typename KernelNumberType>
+    HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+    DoubleLayerKernel<spacedim, KernelNumberType>::value(
+      const Point<spacedim, real_type>     &x,
+      const Point<spacedim, real_type>     &y,
+      const Tensor<1, spacedim, real_type> &nx,
+      const Tensor<1, spacedim, real_type> &ny,
+      const unsigned int                    component) const
     {
       (void)nx;
       (void)component;
 
-      switch (dim)
+      switch (spacedim)
         {
           case 2:
             return scalar_product((y - x), ny) / 2.0 / numbers::PI /
@@ -183,27 +183,27 @@ namespace PlatformShared
 
           default:
             assert(false);
-            return 0.;
+            return KernelNumberType();
         }
     }
 
 
-    template <int dim, typename RangeNumberType>
+    template <int spacedim, typename KernelNumberType>
     HBEM_ATTR_HOST HBEM_ATTR_DEV bool
-    DoubleLayerKernel<dim, RangeNumberType>::is_symmetric() const
+    DoubleLayerKernel<spacedim, KernelNumberType>::is_symmetric() const
     {
       return false;
     }
 
 
     // Class for the adjoint double layer kernel.
-    template <int dim, typename RangeNumberType = double>
+    template <int spacedim, typename KernelNumberType = double>
     class AdjointDoubleLayerKernel
     {
     public:
       using real_type =
-        typename numbers::NumberTraits<RangeNumberType>::real_type;
-      static constexpr unsigned int dimension = dim;
+        typename numbers::NumberTraits<KernelNumberType>::real_type;
+      static constexpr unsigned int dimension = spacedim;
       const KernelType              kernel_type;
       const unsigned int            n_components;
 
@@ -213,12 +213,12 @@ namespace PlatformShared
         , n_components(1)
       {}
 
-      HBEM_ATTR_HOST HBEM_ATTR_DEV RangeNumberType
-      value(const Point<dim, real_type>     &x,
-            const Point<dim, real_type>     &y,
-            const Tensor<1, dim, real_type> &nx,
-            const Tensor<1, dim, real_type> &ny,
-            const unsigned int               component = 0) const;
+      HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+      value(const Point<spacedim, real_type>     &x,
+            const Point<spacedim, real_type>     &y,
+            const Tensor<1, spacedim, real_type> &nx,
+            const Tensor<1, spacedim, real_type> &ny,
+            const unsigned int                    component = 0) const;
 
       /**
        * Return whether the kernel function is symmetric.
@@ -230,19 +230,19 @@ namespace PlatformShared
     };
 
 
-    template <int dim, typename RangeNumberType>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV RangeNumberType
-    AdjointDoubleLayerKernel<dim, RangeNumberType>::value(
-      const Point<dim, real_type>     &x,
-      const Point<dim, real_type>     &y,
-      const Tensor<1, dim, real_type> &nx,
-      const Tensor<1, dim, real_type> &ny,
-      const unsigned int               component) const
+    template <int spacedim, typename KernelNumberType>
+    HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+    AdjointDoubleLayerKernel<spacedim, KernelNumberType>::value(
+      const Point<spacedim, real_type>     &x,
+      const Point<spacedim, real_type>     &y,
+      const Tensor<1, spacedim, real_type> &nx,
+      const Tensor<1, spacedim, real_type> &ny,
+      const unsigned int                    component) const
     {
       (void)ny;
       (void)component;
 
-      switch (dim)
+      switch (spacedim)
         {
           case 2:
             return scalar_product((x - y), nx) / 2.0 / numbers::PI /
@@ -255,14 +255,14 @@ namespace PlatformShared
 
           default:
             assert(false);
-            return 0.;
+            return KernelNumberType();
         }
     }
 
 
-    template <int dim, typename RangeNumberType>
+    template <int spacedim, typename KernelNumberType>
     HBEM_ATTR_HOST HBEM_ATTR_DEV bool
-    AdjointDoubleLayerKernel<dim, RangeNumberType>::is_symmetric() const
+    AdjointDoubleLayerKernel<spacedim, KernelNumberType>::is_symmetric() const
     {
       return false;
     }
@@ -271,13 +271,13 @@ namespace PlatformShared
     /**
      * Kernel function for the hyper singular boundary integral operator.
      */
-    template <int dim, typename RangeNumberType = double>
+    template <int spacedim, typename KernelNumberType = double>
     class HyperSingularKernel
     {
     public:
       using real_type =
-        typename numbers::NumberTraits<RangeNumberType>::real_type;
-      static constexpr unsigned int dimension = dim;
+        typename numbers::NumberTraits<KernelNumberType>::real_type;
+      static constexpr unsigned int dimension = spacedim;
       const KernelType              kernel_type;
       const unsigned int            n_components;
 
@@ -287,12 +287,12 @@ namespace PlatformShared
         , n_components(1)
       {}
 
-      HBEM_ATTR_HOST HBEM_ATTR_DEV RangeNumberType
-      value(const Point<dim, real_type>     &x,
-            const Point<dim, real_type>     &y,
-            const Tensor<1, dim, real_type> &nx,
-            const Tensor<1, dim, real_type> &ny,
-            const unsigned int               component = 0) const;
+      HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+      value(const Point<spacedim, real_type>     &x,
+            const Point<spacedim, real_type>     &y,
+            const Tensor<1, spacedim, real_type> &nx,
+            const Tensor<1, spacedim, real_type> &ny,
+            const unsigned int                    component = 0) const;
 
       /**
        * Return whether the kernel function is symmetric.
@@ -304,20 +304,20 @@ namespace PlatformShared
     };
 
 
-    template <int dim, typename RangeNumberType>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV RangeNumberType
-    HyperSingularKernel<dim, RangeNumberType>::value(
-      const Point<dim, real_type>     &x,
-      const Point<dim, real_type>     &y,
-      const Tensor<1, dim, real_type> &nx,
-      const Tensor<1, dim, real_type> &ny,
-      const unsigned int               component) const
+    template <int spacedim, typename KernelNumberType>
+    HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+    HyperSingularKernel<spacedim, KernelNumberType>::value(
+      const Point<spacedim, real_type>     &x,
+      const Point<spacedim, real_type>     &y,
+      const Tensor<1, spacedim, real_type> &nx,
+      const Tensor<1, spacedim, real_type> &ny,
+      const unsigned int                    component) const
     {
       (void)component;
 
       real_type r2 = (x - y).norm_square();
 
-      switch (dim)
+      switch (spacedim)
         {
             case 2: {
               real_type r4 = r2 * r2;
@@ -340,14 +340,14 @@ namespace PlatformShared
 
             default: {
               assert(false);
-              return 0.;
+              return KernelNumberType();
             }
         }
     }
 
-    template <int dim, typename RangeNumberType>
+    template <int spacedim, typename KernelNumberType>
     HBEM_ATTR_HOST HBEM_ATTR_DEV bool
-    HyperSingularKernel<dim, RangeNumberType>::is_symmetric() const
+    HyperSingularKernel<spacedim, KernelNumberType>::is_symmetric() const
     {
       return true;
     }
@@ -357,13 +357,13 @@ namespace PlatformShared
      * Kernel function for the regularized hyper singular boundary integral
      * operator.
      */
-    template <int dim, typename RangeNumberType = double>
+    template <int spacedim, typename KernelNumberType = double>
     class HyperSingularKernelRegular
     {
     public:
       using real_type =
-        typename numbers::NumberTraits<RangeNumberType>::real_type;
-      static constexpr unsigned int dimension = dim;
+        typename numbers::NumberTraits<KernelNumberType>::real_type;
+      static constexpr unsigned int dimension = spacedim;
       const KernelType              kernel_type;
       const unsigned int            n_components;
 
@@ -392,12 +392,12 @@ namespace PlatformShared
        * @param component
        * @return
        */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV RangeNumberType
-      value(const Point<dim, real_type>     &x,
-            const Point<dim, real_type>     &y,
-            const Tensor<1, dim, real_type> &nx,
-            const Tensor<1, dim, real_type> &ny,
-            const unsigned int               component = 0) const;
+      HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+      value(const Point<spacedim, real_type>     &x,
+            const Point<spacedim, real_type>     &y,
+            const Tensor<1, spacedim, real_type> &nx,
+            const Tensor<1, spacedim, real_type> &ny,
+            const unsigned int                    component = 0) const;
 
       /**
        * Return whether the kernel function is symmetric.
@@ -409,20 +409,20 @@ namespace PlatformShared
     };
 
 
-    template <int dim, typename RangeNumberType>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV RangeNumberType
-    HyperSingularKernelRegular<dim, RangeNumberType>::value(
-      const Point<dim, real_type>     &x,
-      const Point<dim, real_type>     &y,
-      const Tensor<1, dim, real_type> &nx,
-      const Tensor<1, dim, real_type> &ny,
-      const unsigned int               component) const
+    template <int spacedim, typename KernelNumberType>
+    HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+    HyperSingularKernelRegular<spacedim, KernelNumberType>::value(
+      const Point<spacedim, real_type>     &x,
+      const Point<spacedim, real_type>     &y,
+      const Tensor<1, spacedim, real_type> &nx,
+      const Tensor<1, spacedim, real_type> &ny,
+      const unsigned int                    component) const
     {
       (void)nx;
       (void)ny;
       (void)component;
 
-      switch (dim)
+      switch (spacedim)
         {
             case 2: {
 #ifdef __CUDA_ARCH__
@@ -438,15 +438,15 @@ namespace PlatformShared
 
             default: {
               assert(false);
-              return 0.;
+              return KernelNumberType();
             }
         }
     }
 
 
-    template <int dim, typename RangeNumberType>
+    template <int spacedim, typename KernelNumberType>
     HBEM_ATTR_HOST HBEM_ATTR_DEV bool
-    HyperSingularKernelRegular<dim, RangeNumberType>::is_symmetric() const
+    HyperSingularKernelRegular<spacedim, KernelNumberType>::is_symmetric() const
     {
       return true;
     }

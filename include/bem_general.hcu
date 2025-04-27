@@ -1374,7 +1374,9 @@ assemble_indicator_vectors_for_subdomains(
   AssertDimension(subdomain_topology.get_subdomain_to_surface().size(),
                   indicator_vectors.size());
 
-  Functions::ConstantFunction<spacedim> indicator(1.0);
+  using value_type = typename VectorType::value_type;
+
+  Functions::ConstantFunction<spacedim, value_type> indicator(value_type(1.0));
 
   unsigned int subdomain_counter = 0;
   // Iterate over each subdomain.
@@ -1384,7 +1386,7 @@ assemble_indicator_vectors_for_subdomains(
       // Iterate over each surface belonging to the subdomain.
       for (auto surface_tag : subdomain_to_surface.second)
         {
-          std::map<types::material_id, const Function<spacedim, double> *>
+          std::map<types::material_id, const Function<spacedim, value_type> *>
             indicator_function_map;
           indicator_function_map[static_cast<types::material_id>(surface_tag)] =
             &indicator;
@@ -1414,7 +1416,7 @@ assemble_indicator_vectors_for_subdomains(
  * The memory of the stabilization vectors should be allocated before calling
  * this function.
  */
-template <int dim, int spacedim, typename RangeNumberType, typename VectorType>
+template <int dim, int spacedim, typename VectorType>
 void
 compute_stabilization_vectors_for_hyper_singular_bilinear_form(
   const DoFHandler<dim, spacedim> &dof_handler_for_dirichlet_space,
@@ -1423,10 +1425,12 @@ compute_stabilization_vectors_for_hyper_singular_bilinear_form(
   const std::vector<VectorType>   &natural_density_vectors,
   std::vector<VectorType>         &stabilization_vectors)
 {
+  using real_type =
+    typename numbers::NumberTraits<typename VectorType::value_type>::real_type;
   AssertDimension(natural_density_vectors.size(), stabilization_vectors.size());
 
-  SparseMatrix<RangeNumberType> mass_matrix;
-  SparsityPattern               mass_matrix_sp;
+  SparseMatrix<real_type> mass_matrix;
+  SparsityPattern         mass_matrix_sp;
 
   // Generate the sparsity pattern for the mass matrix.
   DynamicSparsityPattern dsp(dof_handler_for_dirichlet_space.n_dofs(),
@@ -1462,7 +1466,7 @@ compute_stabilization_vectors_for_hyper_singular_bilinear_form(
  * The memory of the stabilization vectors should be allocated before calling
  * this function.
  */
-template <int dim, int spacedim, typename RangeNumberType, typename VectorType>
+template <int dim, int spacedim, typename VectorType>
 void
 compute_stabilization_vectors_for_hyper_singular_bilinear_form(
   const DoFHandler<dim, spacedim> &dof_handler_for_dirichlet_space,
@@ -1473,10 +1477,12 @@ compute_stabilization_vectors_for_hyper_singular_bilinear_form(
   const std::vector<VectorType> &natural_density_vectors,
   std::vector<VectorType>       &stabilization_vectors)
 {
+  using real_type =
+    typename numbers::NumberTraits<typename VectorType::value_type>::real_type;
   AssertDimension(natural_density_vectors.size(), stabilization_vectors.size());
 
-  SparseMatrix<RangeNumberType> mass_matrix;
-  SparsityPattern               mass_matrix_sp;
+  SparseMatrix<real_type> mass_matrix;
+  SparsityPattern         mass_matrix_sp;
 
   // Generate the sparsity pattern for the mass matrix.
   DynamicSparsityPattern dsp(dof_handler_for_dirichlet_space.n_dofs(),

@@ -50,7 +50,8 @@ assign_material_ids(Triangulation<2, 3> &tria, const double width)
 }
 
 void
-setup_preconditioner(PreconditionerForLaplaceDirichlet<2, 3, double> &precond)
+setup_preconditioner(
+  PreconditionerForLaplaceDirichlet<2, 3, double, double> &precond)
 {
   precond.initialize_dof_handlers();
   precond.generate_dof_selectors();
@@ -118,7 +119,7 @@ TEST_CASE(
   // preconditioner's constructor.
   std::vector<types::global_dof_index> dummy_numbering(tria.n_cells(0) / 2);
   std::set<types::material_id>         subdomain_material_ids = {1};
-  PreconditionerForLaplaceDirichlet<2, 3, double> precond(
+  PreconditionerForLaplaceDirichlet<2, 3, double, double> precond(
     fe_primal_space,
     fe_dual_space,
     tria,

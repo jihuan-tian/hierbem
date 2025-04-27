@@ -11,6 +11,7 @@
 #define HIERBEM_INCLUDE_LAPLACE_BEM_H_
 
 #include <deal.II/base/function.h>
+#include <deal.II/base/numbers.h>
 
 #include <deal.II/dofs/dof_handler.h>
 
@@ -32,7 +33,10 @@ HBEM_NS_OPEN
 
 using namespace dealii;
 
-template <int dim, int spacedim = dim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType  = double,
+          typename KernelNumberType = RangeNumberType>
 class LaplaceBEM
 {
 public:
@@ -59,10 +63,12 @@ public:
     Jacobi
   };
 
+  using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+
 #pragma endregion
 #pragma region == == Constants == ==
   /**
-   * Maximum mapping order.
+   * Maximum mapping order used for representing curved manifolds.
    */
   inline static const unsigned int max_mapping_order = 3;
 
@@ -118,12 +124,12 @@ public:
              bool         is_interior_problem,
              unsigned int n_min_for_ct,
              unsigned int n_min_for_bct,
-             double       eta,
+             real_type    eta,
              unsigned int max_hmat_rank,
-             double       aca_relative_error,
-             double       eta_for_preconditioner,
+             real_type    aca_relative_error,
+             real_type    eta_for_preconditioner,
              unsigned int max_hmat_rank_for_preconditioner,
-             double       aca_relative_error_for_preconditioner,
+             real_type    aca_relative_error_for_preconditioner,
              unsigned int thread_num);
 
   /**
@@ -163,8 +169,8 @@ public:
    * function to all surfaces in the model.
    */
   void
-  assign_dirichlet_bc(Function<spacedim, double> &f,
-                      const EntityTag             surface_tag = -1);
+  assign_dirichlet_bc(Function<spacedim, RangeNumberType> &f,
+                      const EntityTag                      surface_tag = -1);
 
   /**
    * Assign Dirichlet boundary condition function object to a set of surfaces.
@@ -175,8 +181,8 @@ public:
    * @param surface_tags
    */
   void
-  assign_dirichlet_bc(Function<spacedim, double>   &f,
-                      const std::vector<EntityTag> &surface_tags);
+  assign_dirichlet_bc(Function<spacedim, RangeNumberType> &f,
+                      const std::vector<EntityTag>        &surface_tags);
 
   /**
    * Assign Neumann boundary condition function object to all or a specific
@@ -187,8 +193,8 @@ public:
    * function to all surfaces in the model.
    */
   void
-  assign_neumann_bc(Function<spacedim, double> &f,
-                    const EntityTag             surface_tag = -1);
+  assign_neumann_bc(Function<spacedim, RangeNumberType> &f,
+                    const EntityTag                      surface_tag = -1);
 
   /**
    * Assign Neumann boundary condition function object to a set of surfaces.
@@ -197,8 +203,8 @@ public:
    * @param surface_tags
    */
   void
-  assign_neumann_bc(Function<spacedim, double>   &f,
-                    const std::vector<EntityTag> &surface_tags);
+  assign_neumann_bc(Function<spacedim, RangeNumberType> &f,
+                    const std::vector<EntityTag>        &surface_tags);
 
   /**
    * Validate the subdomain topology.
@@ -265,11 +271,11 @@ public:
 #pragma endregion
 #pragma region == == Accessors == == =
 
-  double
+  KernelNumberType
   get_alpha_for_neumann() const;
 
   void
-  set_alpha_for_neumann(double alphaForNeumann);
+  set_alpha_for_neumann(KernelNumberType alphaForNeumann);
 
   bool
   is_cpu_serial() const;
@@ -340,16 +346,16 @@ public:
   DoFHandler<dim, spacedim> &
   get_dof_handler_neumann();
 
-  const Vector<double> &
+  const Vector<RangeNumberType> &
   get_dirichlet_data() const;
 
-  Vector<double> &
+  Vector<RangeNumberType> &
   get_dirichlet_data();
 
-  const Vector<double> &
+  const Vector<RangeNumberType> &
   get_neumann_data() const;
 
-  Vector<double> &
+  Vector<RangeNumberType> &
   get_neumann_data();
 #pragma endregion
 

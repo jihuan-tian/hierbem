@@ -31,7 +31,7 @@ using namespace std;
 
 void
 print_weights_at_support_points_in_refined_mesh(
-  const PreconditionerForLaplaceDirichlet<2, 3, double> &precond)
+  const PreconditionerForLaplaceDirichlet<2, 3, double, double> &precond)
 {
   std::cout
     << "# DoF index in dual mesh, DoF index in refined mesh, Support point coordinates x, y, z, Weight for dual basis"
@@ -113,7 +113,7 @@ main(int argc, const char *argv[])
   // preconditioner's constructor. Its size is initialized to the number of
   // cells in the primal mesh.
   std::vector<types::global_dof_index> dummy_numbering(tria.n_cells(0));
-  PreconditionerForLaplaceDirichlet<2, 3, double> precond(
+  PreconditionerForLaplaceDirichlet<2, 3, double, double> precond(
     fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
 
   // Build the averaging matrix.

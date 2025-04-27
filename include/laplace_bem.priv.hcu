@@ -40,6 +40,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <iostream>
 #include <iterator>
 #include <set>
 #include <vector>
@@ -61,6 +62,7 @@
 #include "hmatrix/preconditioner/hblockmatrix_skew_symm_preconditioner.h"
 #include "hmatrix/preconditioner/hmatrix_symm_preconditioner.h"
 #include "laplace_bem.h"
+#include "linalg.h"
 #include "mapping/mapping_info.h"
 #include "platform_shared/laplace_kernels.h"
 #include "preconditioners/preconditioner_for_laplace_dirichlet.h"
@@ -76,10 +78,15 @@ HBEM_NS_OPEN
 
 using namespace dealii;
 
-template <int dim, int spacedim>
-class LaplaceBEM<dim, spacedim>::Priv
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+class LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv
 {
 public:
+  using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+
 #pragma region == == Internal class ctor and dtor decls == ==
   Priv();
   Priv(unsigned int fe_order_for_dirichlet_space,
@@ -93,12 +100,12 @@ public:
        bool         is_interior_problem,
        unsigned int n_min_for_ct,
        unsigned int n_min_for_bct,
-       double       eta,
+       real_type    eta,
        unsigned int max_hmat_rank,
-       double       aca_relative_error,
-       double       eta_for_preconditioner,
+       real_type    aca_relative_error,
+       real_type    eta_for_preconditioner,
        unsigned int max_hmat_rank_for_preconditioner,
-       double       aca_relative_error_for_preconditioner,
+       real_type    aca_relative_error_for_preconditioner,
        unsigned int thread_num);
   ~Priv();
 
@@ -124,20 +131,20 @@ public:
   setup_system();
 
   void
-  assign_dirichlet_bc(Function<spacedim, double> &f,
-                      const EntityTag             surface_tag = -1);
+  assign_dirichlet_bc(Function<spacedim, RangeNumberType> &f,
+                      const EntityTag                      surface_tag = -1);
 
   void
-  assign_dirichlet_bc(Function<spacedim, double>   &f,
-                      const std::vector<EntityTag> &surface_tags);
+  assign_dirichlet_bc(Function<spacedim, RangeNumberType> &f,
+                      const std::vector<EntityTag>        &surface_tags);
 
   void
-  assign_neumann_bc(Function<spacedim, double> &f,
-                    const EntityTag             surface_tag = -1);
+  assign_neumann_bc(Function<spacedim, RangeNumberType> &f,
+                    const EntityTag                      surface_tag = -1);
 
   void
-  assign_neumann_bc(Function<spacedim, double>   &f,
-                    const std::vector<EntityTag> &surface_tags);
+  assign_neumann_bc(Function<spacedim, RangeNumberType> &f,
+                    const std::vector<EntityTag>        &surface_tags);
 
   bool
   validate_subdomain_topology() const;
@@ -215,7 +222,7 @@ private:
 #pragma endregion
 
 #pragma region == == Internal class private member variable decls == ==
-  friend class LaplaceBEM<dim, spacedim>;
+  friend class LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>;
 
   std::string project_name_;
 
@@ -375,35 +382,38 @@ private:
   /**
    * Kernel function for the single layer potential.
    */
-  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<3>
+  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<3, KernelNumberType>
     single_layer_kernel_;
   /**
    * Kernel function for the double layer potential.
    */
-  HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel<3>
+  HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel<3, KernelNumberType>
     double_layer_kernel_;
   /**
    * Kernel function for the adjoint double layer potential.
    */
-  HierBEM::PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel<3>
-    adjoint_double_layer_kernel_;
+  HierBEM::PlatformShared::LaplaceKernel::
+    AdjointDoubleLayerKernel<3, KernelNumberType>
+      adjoint_double_layer_kernel_;
   /**
    * Kernel function for the hyper-singular potential.
    */
-  HierBEM::PlatformShared::LaplaceKernel::HyperSingularKernelRegular<3>
-    hyper_singular_kernel_;
+  HierBEM::PlatformShared::LaplaceKernel::
+    HyperSingularKernelRegular<3, KernelNumberType>
+      hyper_singular_kernel_;
 
   /**
    * Full matrices for verification purpose.
    */
-  LAPACKFullMatrixExt<double> V1_matrix_;
-  LAPACKFullMatrixExt<double> K1_matrix_;
-  LAPACKFullMatrixExt<double> K_prime1_matrix_;
-  LAPACKFullMatrixExt<double> D1_matrix_;
-  LAPACKFullMatrixExt<double> K2_matrix_with_mass_matrix_;
-  LAPACKFullMatrixExt<double> V2_matrix_;
-  LAPACKFullMatrixExt<double> D2_matrix_;
-  LAPACKFullMatrixExt<double> K_prime2_matrix_with_mass_matrix_;
+  LAPACKFullMatrixExt<RangeNumberType>  V1_matrix_;
+  LAPACKFullMatrixExt<KernelNumberType> V_matrix_weq_;
+  LAPACKFullMatrixExt<RangeNumberType>  K1_matrix_;
+  LAPACKFullMatrixExt<RangeNumberType>  K_prime1_matrix_;
+  LAPACKFullMatrixExt<RangeNumberType>  D1_matrix_;
+  LAPACKFullMatrixExt<RangeNumberType>  K2_matrix_with_mass_matrix_;
+  LAPACKFullMatrixExt<RangeNumberType>  V2_matrix_;
+  LAPACKFullMatrixExt<RangeNumberType>  D2_matrix_;
+  LAPACKFullMatrixExt<RangeNumberType>  K_prime2_matrix_with_mass_matrix_;
 
   /**
    * Whether \hmatrix is used.
@@ -418,10 +428,10 @@ private:
   /**
    * Cluster trees
    */
-  ClusterTree<spacedim> ct_for_dirichlet_space_on_dirichlet_domain_;
-  ClusterTree<spacedim> ct_for_neumann_space_on_dirichlet_domain_;
-  ClusterTree<spacedim> ct_for_dirichlet_space_on_neumann_domain_;
-  ClusterTree<spacedim> ct_for_neumann_space_on_neumann_domain_;
+  ClusterTree<spacedim, real_type> ct_for_dirichlet_space_on_dirichlet_domain_;
+  ClusterTree<spacedim, real_type> ct_for_neumann_space_on_dirichlet_domain_;
+  ClusterTree<spacedim, real_type> ct_for_dirichlet_space_on_neumann_domain_;
+  ClusterTree<spacedim, real_type> ct_for_neumann_space_on_neumann_domain_;
 
   /**
    * Block cluster trees corresponding to discretized bilinear forms in
@@ -440,38 +450,42 @@ private:
    * left. @p K2, @p V2, @p D2 and @p K_prime2 correspond to matrix blocks
    * on the right.
    */
-  BlockClusterTree<spacedim> bct_for_bilinear_form_V1_;
-  BlockClusterTree<spacedim> bct_for_bilinear_form_K1_;
-  BlockClusterTree<spacedim> bct_for_bilinear_form_K_prime1_;
-  BlockClusterTree<spacedim> bct_for_bilinear_form_D1_;
-  BlockClusterTree<spacedim> bct_for_bilinear_form_V2_;
-  BlockClusterTree<spacedim> bct_for_bilinear_form_K2_;
-  BlockClusterTree<spacedim> bct_for_bilinear_form_K_prime2_;
-  BlockClusterTree<spacedim> bct_for_bilinear_form_D2_;
+  BlockClusterTree<spacedim, real_type> bct_for_bilinear_form_V1_;
+  BlockClusterTree<spacedim, real_type> bct_for_bilinear_form_K1_;
+  BlockClusterTree<spacedim, real_type> bct_for_bilinear_form_K_prime1_;
+  BlockClusterTree<spacedim, real_type> bct_for_bilinear_form_D1_;
+  BlockClusterTree<spacedim, real_type> bct_for_bilinear_form_V2_;
+  BlockClusterTree<spacedim, real_type> bct_for_bilinear_form_K2_;
+  BlockClusterTree<spacedim, real_type> bct_for_bilinear_form_K_prime2_;
+  BlockClusterTree<spacedim, real_type> bct_for_bilinear_form_D2_;
 
   /**
    * \hmatrices corresponding to discretized bilinear forms in the
    * mixed boundary value problem, which contain all possible cases.
    */
-  HMatrix<spacedim>              V1_hmat_;
-  HMatrix<spacedim>              K1_hmat_;
-  HMatrix<spacedim>              K_prime1_hmat_;
-  HMatrix<spacedim>              D1_hmat_;
-  HMatrix<spacedim>              V2_hmat_;
-  HMatrix<spacedim>              K2_hmat_with_mass_matrix_;
-  HMatrix<spacedim>              K_prime2_hmat_with_mass_matrix_;
-  HMatrix<spacedim>              D2_hmat_;
-  HBlockMatrixSkewSymm<spacedim> M_hmat_;
+  HMatrix<spacedim, RangeNumberType>  V1_hmat_;
+  HMatrix<spacedim, KernelNumberType> V_hmat_weq_;
+  HMatrix<spacedim, RangeNumberType>  K1_hmat_;
+  HMatrix<spacedim, RangeNumberType>  K_prime1_hmat_;
+  HMatrix<spacedim, RangeNumberType>  D1_hmat_;
+  HMatrix<spacedim, RangeNumberType>  V2_hmat_;
+  HMatrix<spacedim, RangeNumberType>  K2_hmat_with_mass_matrix_;
+  HMatrix<spacedim, RangeNumberType>  K_prime2_hmat_with_mass_matrix_;
+  HMatrix<spacedim, RangeNumberType>  D2_hmat_;
+  HBlockMatrixSkewSymm<spacedim, RangeNumberType> M_hmat_;
 
   /**
    * Preconditioners
    */
-  HMatrixSymmPreconditioner<spacedim>          V1_hmat_preconditioner_;
-  HMatrixSymmPreconditioner<spacedim>          D1_hmat_preconditioner_;
-  HMatrix<spacedim>                            M11_in_preconditioner_;
-  HMatrix<spacedim>                            M12_in_preconditioner_;
-  HMatrix<spacedim>                            M22_in_preconditioner_;
-  HBlockMatrixSkewSymmPreconditioner<spacedim> M_hmat_preconditioner_;
+  HMatrixSymmPreconditioner<spacedim, RangeNumberType> V1_hmat_preconditioner_;
+  HMatrixSymmPreconditioner<spacedim, KernelNumberType>
+    V_hmat_preconditioner_weq_;
+  HMatrixSymmPreconditioner<spacedim, RangeNumberType> D1_hmat_preconditioner_;
+  HMatrix<spacedim, RangeNumberType>                   M11_in_preconditioner_;
+  HMatrix<spacedim, RangeNumberType>                   M12_in_preconditioner_;
+  HMatrix<spacedim, RangeNumberType>                   M22_in_preconditioner_;
+  HBlockMatrixSkewSymmPreconditioner<spacedim, RangeNumberType>
+    M_hmat_preconditioner_;
 
   /**
    * The sequence of all DoF indices with the values \f$0, 1, \cdots\f$ for
@@ -490,26 +504,26 @@ private:
    * The list of all support points associated with @p dof_indices held
    * within different DoF handlers.
    */
-  std::vector<Point<spacedim>>
+  std::vector<Point<spacedim, real_type>>
     support_points_for_dirichlet_space_on_dirichlet_domain_;
-  std::vector<Point<spacedim>>
+  std::vector<Point<spacedim, real_type>>
     support_points_for_dirichlet_space_on_neumann_domain_;
-  std::vector<Point<spacedim>>
+  std::vector<Point<spacedim, real_type>>
     support_points_for_neumann_space_on_dirichlet_domain_;
-  std::vector<Point<spacedim>>
+  std::vector<Point<spacedim, real_type>>
     support_points_for_neumann_space_on_neumann_domain_;
 
   /**
    * Estimated average cell size values associated with @p dof_indices held
    * within different DoF handlers.
    */
-  std::vector<double>
+  std::vector<real_type>
     dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain_;
-  std::vector<double>
+  std::vector<real_type>
     dof_average_cell_size_for_neumann_space_on_dirichlet_domain_;
-  std::vector<double>
+  std::vector<real_type>
     dof_average_cell_size_for_dirichlet_space_on_neumann_domain_;
-  std::vector<double>
+  std::vector<real_type>
     dof_average_cell_size_for_neumann_space_on_neumann_domain_;
 
   /**
@@ -526,7 +540,7 @@ private:
    * Admissibility constant. At present, assume all \bcts share this same
    * parameter.
    */
-  double eta_;
+  real_type eta_;
   /**
    * Maximum rank of the \hmatrices to be built. At present, assume all
    * \hmatrices share this same parameter.
@@ -536,11 +550,11 @@ private:
    * Relative approximation error used in ACA+. At present, assume all
    * \hmatrices share this same parameter.
    */
-  double aca_relative_error_;
+  real_type aca_relative_error_;
   /**
    * Admissibility constant for the preconditioner.
    */
-  double eta_for_preconditioner_;
+  real_type eta_for_preconditioner_;
   /**
    * Maximum rank of the \hmatrices to be built for the preconditioner.
    */
@@ -548,70 +562,72 @@ private:
   /**
    * Relative approximation error used in ACA+ for the preconditioner.
    */
-  double aca_relative_error_for_preconditioner_;
+  real_type aca_relative_error_for_preconditioner_;
 
   /**
    * Map surface entity tag to Neumann boundary condition.
    */
-  std::map<EntityTag, Function<spacedim, double> *> neumann_bc_definition_;
+  std::map<EntityTag, Function<spacedim, RangeNumberType> *>
+    neumann_bc_definition_;
 
   /**
    * Neumann boundary condition data on all DoFs in the associated DoF
    * handler. When in the \hmat version, they are in the external DoF
    * numbering.
    */
-  Vector<double> neumann_bc_;
-  Vector<double> neumann_bc_on_selected_dofs_;
+  Vector<RangeNumberType> neumann_bc_;
+  Vector<RangeNumberType> neumann_bc_on_selected_dofs_;
   /**
    * Neumann boundary condition data on all DoFs in the associated DoF handler
    * in the internal DoF numbering. Only used in the \hmat version.
    */
-  Vector<double> neumann_bc_internal_dof_numbering_;
+  Vector<RangeNumberType> neumann_bc_internal_dof_numbering_;
 
   /**
    * The free parameter \f$\alpha\f$ in the variational formulation of the
    * Laplace problem with Neumann boundary condition.
    */
-  double alpha_for_neumann_;
+  KernelNumberType alpha_for_neumann_;
 
   /**
    * Map surface entity tag to Dirichlet boundary condition.
    */
-  std::map<EntityTag, Function<spacedim, double> *> dirichlet_bc_definition_;
+  std::map<EntityTag, Function<spacedim, RangeNumberType> *>
+    dirichlet_bc_definition_;
 
   /**
    * Dirichlet boundary condition data on all DoFs in the associated DoF
    * handler.
    */
-  Vector<double> dirichlet_bc_;
+  Vector<RangeNumberType> dirichlet_bc_;
   /**
    * Dirichlet boundary condition data on those selected DoFs in the
    * associated DoF handler. When in the \hmat version, they are in the
    * external DoF numbering.
    */
-  Vector<double> dirichlet_bc_on_selected_dofs_;
+  Vector<RangeNumberType> dirichlet_bc_on_selected_dofs_;
   /**
    * Dirichlet boundary condition data on those selected DoFs in the
    * associated DoF handler in the internal DoF numbering. Only used in the
    * \hmat version.
    */
-  Vector<double> dirichlet_bc_internal_dof_numbering_;
+  Vector<RangeNumberType> dirichlet_bc_internal_dof_numbering_;
 
   /**
    * Right hand side vector on the Dirichlet domain. When in the \hmat
    * version, it is in the internal DoF numbering.
    */
-  Vector<double> system_rhs_on_dirichlet_domain_;
+  Vector<RangeNumberType> system_rhs_on_dirichlet_domain_;
   /**
    * Right hand side vector on the Neumann domain. When in the \hmat version,
    * it is in the internal DoF numbering.
    */
-  Vector<double> system_rhs_on_neumann_domain_;
+  Vector<RangeNumberType> system_rhs_on_neumann_domain_;
   /**
    * Right hand side vector on both the Dirichlet domain and Neumann domain.
    * Only used in the mixed boundary value problem.
    */
-  Vector<double> system_rhs_on_combined_domain_;
+  Vector<RangeNumberType> system_rhs_on_combined_domain_;
 
   /**
    * A list of natural density \f$w_{\mathrm{eq}}\f$ vectors used in the Neumann
@@ -628,7 +644,7 @@ private:
    * \alert{It adopts the external DoF numbering, since it will be multiplied by
    * the mass matrix, which is also built with this numbering.}
    */
-  std::vector<Vector<double>> natural_densities_;
+  std::vector<Vector<KernelNumberType>> natural_densities_;
 
   /**
    * A list of result vectors for the multiplication of the mass matrix and the
@@ -640,7 +656,7 @@ private:
    * to the hyper singular matrix \f$\mathcal{D}\f$, when \f$\mathcal{D}\f$ is
    * an \hmat, it adopts the internal DoF numbering.}
    */
-  std::vector<Vector<double>> mass_vmult_weq_;
+  std::vector<Vector<KernelNumberType>> mass_vmult_weq_;
 
   /**
    * Right hand side vector, which is used in the equation \f$\mathscr{V}
@@ -650,50 +666,52 @@ private:
    *
    * \alert{This vector adopts the internal DoF numbering.}
    */
-  Vector<double> system_rhs_for_natural_density_;
+  Vector<KernelNumberType> system_rhs_for_natural_density_;
 
   /**
    * Numerical solution on the Dirichlet domain for full matrix version or in
    * the external DoF numbering for the \hmat version.
    */
-  Vector<double> neumann_data_;
+  Vector<RangeNumberType> neumann_data_;
   /**
    * Numerical solution on the Dirichlet domain in the internal DoF numbering.
    * Only used in the \hmat version.
    */
-  Vector<double> neumann_data_on_dirichlet_domain_internal_dof_numbering_;
+  Vector<RangeNumberType>
+    neumann_data_on_dirichlet_domain_internal_dof_numbering_;
   /**
    * Numerical solution on the Neumann domain on all DoFs in the associated
    * DoF handler.
    */
-  Vector<double> dirichlet_data_;
+  Vector<RangeNumberType> dirichlet_data_;
   /**
    * Numerical solution on the Neumann domain only on those selected DoFs in
    * the associated DoF handler. When in the \hmat version, they are in the
    * external DoF numbering.
    */
-  Vector<double> dirichlet_data_on_neumann_domain_;
-  Vector<double> neumann_data_on_dirichlet_domain_;
+  Vector<RangeNumberType> dirichlet_data_on_neumann_domain_;
+  Vector<RangeNumberType> neumann_data_on_dirichlet_domain_;
   /**
    * Numerical solution on the Neumann domain only on those selected DoFs in
    * the associated DoF handler in the internal DoF numbering. Only used in
    * the \hmat version.
    */
-  Vector<double> dirichlet_data_on_neumann_domain_internal_dof_numbering_;
+  Vector<RangeNumberType>
+    dirichlet_data_on_neumann_domain_internal_dof_numbering_;
   /**
    * Solution vector on both the Dirichlet domain and Neumann domain. Only
    * used in the mixed boundary value problem and in the \hmat version.
    */
-  Vector<double> solution_on_combined_domain_internal_dof_numbering_;
+  Vector<RangeNumberType> solution_on_combined_domain_internal_dof_numbering_;
 
   /**
    * Analytical solution on the Dirichlet domain.
    */
-  Vector<double> analytical_solution_on_dirichlet_domain_;
+  Vector<RangeNumberType> analytical_solution_on_dirichlet_domain_;
   /**
    * Analytical solution on the Neumann domain.
    */
-  Vector<double> analytical_solution_on_neumann_domain_;
+  Vector<RangeNumberType> analytical_solution_on_neumann_domain_;
 
   /**
    * Type of the preconditioner.
@@ -704,14 +722,20 @@ private:
    * Operator preconditioner for Dirichlet problem, either on the whole domain
    * or a subdomain.
    */
-  PreconditionerForLaplaceDirichlet<dim, spacedim, double>
+  PreconditionerForLaplaceDirichlet<dim,
+                                    spacedim,
+                                    RangeNumberType,
+                                    KernelNumberType>
     *operator_preconditioner_dirichlet_;
 
   /**
    * Operator preconditioner for Neumann problem, either on the whole domain or
    * a subdomain.
    */
-  PreconditionerForLaplaceNeumann<dim, spacedim, double>
+  PreconditionerForLaplaceNeumann<dim,
+                                  spacedim,
+                                  RangeNumberType,
+                                  KernelNumberType>
     *operator_preconditioner_neumann_;
 
   /**
@@ -723,38 +747,38 @@ private:
 #pragma region == == Internal class friend function decls == ==
   template <int dim1,
             int spacedim1,
-            typename RangeNumberType,
+            typename RangeNumberType1,
             typename MatrixType>
   friend void
   assemble_fem_scaled_mass_matrix(
     const DoFHandler<dim1, spacedim1> &dof_handler_for_test_space,
     const DoFHandler<dim1, spacedim1> &dof_handler_for_trial_space,
-    const RangeNumberType              factor,
+    const RangeNumberType1             factor,
     const Quadrature<dim1>            &quad_rule,
     MatrixType                        &target_full_matrix);
 
   template <int dim1,
             int spacedim1,
-            typename RangeNumberType,
+            typename RangeNumberType1,
             typename MatrixType>
   friend void
   assemble_fem_scaled_mass_matrix_serial(
     const DoFHandler<dim1, spacedim1> &dof_handler_for_test_space,
     const DoFHandler<dim1, spacedim1> &dof_handler_for_trial_space,
-    const RangeNumberType              factor,
+    const RangeNumberType1             factor,
     const Quadrature<dim1>            &quad_rule,
     MatrixType                        &target_full_matrix);
 
   template <int dim1,
             int spacedim1,
             template <int, typename> typename KernelFunctionType,
-            typename KernelNumberType,
+            typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
   friend void
   assemble_bem_full_matrix(
-    const KernelFunctionType<spacedim1, KernelNumberType> &kernel,
-    const KernelNumberType                                 factor,
+    const KernelFunctionType<spacedim1, KernelNumberType1> &kernel,
+    const KernelNumberType1                                 factor,
     const DoFHandler<dim1, spacedim1> &dof_handler_for_test_space,
     const DoFHandler<dim1, spacedim1> &dof_handler_for_trial_space,
     const std::vector<MappingInfo<dim1, spacedim1> *> &mappings,
@@ -767,13 +791,13 @@ private:
   template <int dim1,
             int spacedim1,
             template <int, typename> typename KernelFunctionType,
-            typename KernelNumberType,
+            typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
   friend void
   assemble_bem_full_matrix_serial(
-    const KernelFunctionType<spacedim1, KernelNumberType> &kernel,
-    const KernelNumberType                                 factor,
+    const KernelFunctionType<spacedim1, KernelNumberType1> &kernel,
+    const KernelNumberType1                                 factor,
     const DoFHandler<dim1, spacedim1> &dof_handler_for_test_space,
     const DoFHandler<dim1, spacedim1> &dof_handler_for_trial_space,
     const std::vector<MappingInfo<dim1, spacedim1> *> &mappings,
@@ -787,8 +811,11 @@ private:
 
 #pragma region ****Internal ctor and dtor impls ****
 
-template <int dim, int spacedim>
-LaplaceBEM<dim, spacedim>::Priv::Priv()
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::Priv()
   : project_name_("default")
   , fe_order_for_dirichlet_space_(0)
   , fe_order_for_neumann_space_(0)
@@ -825,12 +852,16 @@ LaplaceBEM<dim, spacedim>::Priv::Priv()
   , operator_preconditioner_neumann_(nullptr)
 {}
 
-template <int dim, int spacedim>
-LaplaceBEM<dim, spacedim>::Priv::Priv(unsigned int fe_order_for_dirichlet_space,
-                                      unsigned int fe_order_for_neumann_space,
-                                      ProblemType  problem_type,
-                                      bool         is_interior_problem,
-                                      unsigned int thread_num)
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::Priv(
+  unsigned int fe_order_for_dirichlet_space,
+  unsigned int fe_order_for_neumann_space,
+  ProblemType  problem_type,
+  bool         is_interior_problem,
+  unsigned int thread_num)
   : project_name_("default")
   , fe_order_for_dirichlet_space_(fe_order_for_dirichlet_space)
   , fe_order_for_neumann_space_(fe_order_for_neumann_space)
@@ -867,20 +898,23 @@ LaplaceBEM<dim, spacedim>::Priv::Priv(unsigned int fe_order_for_dirichlet_space,
   , operator_preconditioner_neumann_(nullptr)
 {}
 
-template <int dim, int spacedim>
-LaplaceBEM<dim, spacedim>::Priv::Priv(
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::Priv(
   unsigned int fe_order_for_dirichlet_space,
   unsigned int fe_order_for_neumann_space,
   ProblemType  problem_type,
   bool         is_interior_problem,
   unsigned int n_min_for_ct,
   unsigned int n_min_for_bct,
-  double       eta,
+  real_type    eta,
   unsigned int max_hmat_rank,
-  double       aca_relative_error,
-  double       eta_for_preconditioner,
+  real_type    aca_relative_error,
+  real_type    eta_for_preconditioner,
   unsigned int max_hmat_rank_for_preconditioner,
-  double       aca_relative_error_for_preconditioner,
+  real_type    aca_relative_error_for_preconditioner,
   unsigned int thread_num)
   : project_name_("default")
   , fe_order_for_dirichlet_space_(fe_order_for_dirichlet_space)
@@ -920,8 +954,11 @@ LaplaceBEM<dim, spacedim>::Priv::Priv(
   , operator_preconditioner_neumann_(nullptr)
 {}
 
-template <int dim, int spacedim>
-LaplaceBEM<dim, spacedim>::Priv::~Priv()
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::~Priv()
 {
   dof_handler_for_dirichlet_space_.clear();
   dof_handler_for_neumann_space_.clear();
@@ -968,9 +1005,13 @@ LaplaceBEM<dim, spacedim>::Priv::~Priv()
 #pragma endregion
 #pragma region ****Internal private member function impls ****
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::collect_cell_iterators()
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  collect_cell_iterators()
 {
   cell_iterators_for_dirichlet_space_.reserve(
     dof_handler_for_dirichlet_space_.get_triangulation().n_active_cells());
@@ -989,9 +1030,13 @@ LaplaceBEM<dim, spacedim>::Priv::collect_cell_iterators()
     }
 }
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::solve_natural_density()
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  solve_natural_density()
 {
   Assert(problem_type_ == ProblemType::NeumannBCProblem, ExcInternalError());
 
@@ -1002,42 +1047,44 @@ LaplaceBEM<dim, spacedim>::Priv::solve_natural_density()
        * Assemble the SLP matrix which is used for solving the natural
        * density \f$w_{\rm eq}\f$.
        */
-      std::cout << "=== Assemble V for solving the natural density === "
+      std::cout << "=== Assemble V for solving natural density === "
                 << std::endl;
 
       assemble_bem_full_matrix<
         dim,
         spacedim,
         HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
-        double,
+        KernelNumberType,
         SurfaceNormalDetector<dim, spacedim>,
-        LAPACKFullMatrixExt<double>>(single_layer_kernel_,
-                                     1.0,
-                                     dof_handler_for_neumann_space_,
-                                     dof_handler_for_neumann_space_,
-                                     mappings_,
-                                     material_id_to_mapping_index_,
-                                     SurfaceNormalDetector<dim, spacedim>(
-                                       subdomain_topology_),
-                                     SauterQuadratureRule<dim>(5, 4, 4, 3),
-                                     V1_matrix_);
+        LAPACKFullMatrixExt<KernelNumberType>>(
+        single_layer_kernel_,
+        1.0,
+        dof_handler_for_neumann_space_,
+        dof_handler_for_neumann_space_,
+        mappings_,
+        material_id_to_mapping_index_,
+        SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+        SauterQuadratureRule<dim>(5, 4, 4, 3),
+        V_matrix_weq_);
     }
   else
     {
       /**
        * Define the @p ACAConfig object.
        */
-      ACAConfig aca_config(max_hmat_rank_, aca_relative_error_, eta_);
+      ACAConfig<real_type> aca_config(max_hmat_rank_,
+                                      aca_relative_error_,
+                                      eta_);
 
-      std::cout << "=== Assemble V for solving the natural density ==="
+      std::cout << "=== Assemble V for solving natural density ==="
                 << std::endl;
 
       fill_hmatrix_with_aca_plus_smp(
         thread_num_,
-        V1_hmat_,
+        V_hmat_weq_,
         aca_config,
         single_layer_kernel_,
-        static_cast<double>(1.0),
+        1.0,
         dof_to_cell_topo_for_neumann_space_,
         dof_to_cell_topo_for_neumann_space_,
         SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -1052,14 +1099,16 @@ LaplaceBEM<dim, spacedim>::Priv::solve_natural_density()
         SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
         true);
 
-      add_memory_consumption_row("V1 H-matrix", V1_hmat_, "After assembly");
+      add_memory_consumption_row("V H-matrix for weq",
+                                 V_hmat_weq_,
+                                 "After assembly");
     }
 
   /**
    * Assemble the RHS vector for solving the natural density \f$w_{\rm
    * eq}\f$.
    */
-  std::cout << "=== Assemble the RHS vector for natural density ==="
+  std::cout << "=== Assemble the RHS vector for solving natural density ==="
             << std::endl;
 
   if (!use_hmat_)
@@ -1068,9 +1117,9 @@ LaplaceBEM<dim, spacedim>::Priv::solve_natural_density()
       // in the external DoF numbering.
       assemble_rhs_linear_form_vector<dim,
                                       spacedim,
-                                      double,
-                                      double,
-                                      Vector<double>>(
+                                      KernelNumberType,
+                                      KernelNumberType,
+                                      Vector<KernelNumberType>>(
         1.0,
         dof_handler_for_neumann_space_,
         QGauss<2>(fe_for_neumann_space_.degree + 1),
@@ -1080,13 +1129,14 @@ LaplaceBEM<dim, spacedim>::Priv::solve_natural_density()
     {
       // When the \hmat version is used, the assembled RHS vector in the
       // external DoF numbering should be converted to the internal numbering.
-      Vector<double> system_rhs_for_natural_density_external_dof_numbering(
-        system_rhs_for_natural_density_.size());
+      Vector<KernelNumberType>
+        system_rhs_for_natural_density_external_dof_numbering(
+          system_rhs_for_natural_density_.size());
       assemble_rhs_linear_form_vector<dim,
                                       spacedim,
-                                      double,
-                                      double,
-                                      Vector<double>>(
+                                      KernelNumberType,
+                                      KernelNumberType,
+                                      Vector<KernelNumberType>>(
         1.0,
         dof_handler_for_neumann_space_,
         QGauss<2>(fe_for_neumann_space_.degree + 1),
@@ -1099,8 +1149,8 @@ LaplaceBEM<dim, spacedim>::Priv::solve_natural_density()
   /**
    * Solve the natural density \f$w_{\rm eq}\f$.
    */
-  SolverControl            solver_control(1000, 1e-6, true, true);
-  SolverCG<Vector<double>> solver(solver_control);
+  SolverControl                      solver_control(1000, 1e-6, true, true);
+  SolverCG<Vector<KernelNumberType>> solver(solver_control);
 
   // When the solution space is \f$H^{1/2}_{\ast}\f$, the domain should not be
   // multiply connected and only one natural density vector is allowed.
@@ -1109,7 +1159,11 @@ LaplaceBEM<dim, spacedim>::Priv::solve_natural_density()
 
   if (!use_hmat_)
     {
-      solver.solve(V1_matrix_,
+      // At the moment, we can only use identity preconditioner.
+      Assert(preconditioner_type_ == PreconditionerType::Identity,
+             ExcInternalError());
+
+      solver.solve(V_matrix_weq_,
                    natural_densities_[0],
                    system_rhs_for_natural_density_,
                    PreconditionIdentity());
@@ -1120,46 +1174,65 @@ LaplaceBEM<dim, spacedim>::Priv::solve_natural_density()
        * \rangle\f$.
        */
       alpha_for_neumann_ =
-        1.0 / 4.0 / (natural_densities_[0] * system_rhs_for_natural_density_);
+        1.0 / 4.0 /
+        LinAlg::inner_product_tbb(natural_densities_[0] *
+                                  system_rhs_for_natural_density_);
+
+      std::cout << "=== Release V for solving natural density ===" << std::endl;
+      V_matrix_weq_.reinit(0);
     }
   else
     {
-      std::cout << "=== Assemble preconditioner for the V matrix ==="
-                << std::endl;
+      // At the moment, we only allow KernelNumberType is real value for this
+      // case, because complex valued H-matrix factorization has not been
+      // implemented yet.
+      static_assert(std::is_same<KernelNumberType, double>()::value ||
+                    std::is_same<KernelNumberType, float>()::value);
+      // At the moment, we can only use H-matrix factorization as the
+      // preconditioner.
+      Assert(preconditioner_type_ == PreconditionerType::HMatrixFactorization,
+             ExcInternalError());
 
-      V1_hmat_preconditioner_ = V1_hmat_;
-      V1_hmat_preconditioner_.truncate_to_rank_preserve_positive_definite(
+      std::cout
+        << "=== Assemble V H-matrix preconditioner for solving natural density ==="
+        << std::endl;
+
+      V_hmat_preconditioner_weq_ = V_hmat_weq_;
+      V_hmat_preconditioner_weq_.truncate_to_rank_preserve_positive_definite(
         max_hmat_rank_for_preconditioner_);
 
-      add_memory_consumption_row("V1 H-matrix preconditioner",
-                                 V1_hmat_preconditioner_,
+      add_memory_consumption_row("V H-matrix preconditioner for weq",
+                                 V_hmat_preconditioner_weq_,
                                  "After assembly");
 
       /**
        * Perform Cholesky factorisation of the preconditioner. Only when the
-       * preconditioner @p V1_hmat_preconditioner has a hierarchical structure,
+       * preconditioner @p V_hmat_preconditioner_weq_ has a hierarchical structure,
        * i.e. it does not contain a root node only, the task parallel Cholesky
        * factorization will be used.
        */
-      std::cout << "=== Cholesky factorization of V ===" << std::endl;
-      if (V1_hmat_preconditioner_.get_type() ==
+      std::cout
+        << "=== Cholesky factorization of V H-matrix preconditioner for solving natural density ==="
+        << std::endl;
+      if (V_hmat_preconditioner_weq_.get_type() ==
           HMatrixType::HierarchicalMatrixType)
         {
-          V1_hmat_preconditioner_.compute_cholesky_factorization_task_parallel(
-            max_hmat_rank_for_preconditioner_);
+          V_hmat_preconditioner_weq_
+            .compute_cholesky_factorization_task_parallel(
+              max_hmat_rank_for_preconditioner_);
         }
       else
         {
-          V1_hmat_preconditioner_.compute_cholesky_factorization(
+          V_hmat_preconditioner_weq_.compute_cholesky_factorization(
             max_hmat_rank_for_preconditioner_);
         }
 
-      Vector<double> natural_density_internal_dof_numbering(
+      Vector<KernelNumberType> natural_density_internal_dof_numbering(
         natural_densities_[0].size());
-      solver.solve(V1_hmat_,
+      solver.solve(V_hmat_weq_,
                    natural_density_internal_dof_numbering,
                    system_rhs_for_natural_density_,
-                   V1_hmat_preconditioner_);
+                   V_hmat_preconditioner_weq_);
       // Convert the natural density from the internal DoF numbering to
       // external, since it is to be multiplied by the mass matrix, which also
       // adopts the external numbering.
@@ -1172,13 +1245,16 @@ LaplaceBEM<dim, spacedim>::Priv::solve_natural_density()
        * product of \f$w_{\rm eq}\f$ and the RHS vector \f$\langle 1, \psi_i
        * \rangle\f$.
        */
-      alpha_for_neumann_ = 1.0 / 4.0 /
-                           (natural_density_internal_dof_numbering *
-                            system_rhs_for_natural_density_);
+      alpha_for_neumann_ =
+        1.0 / 4.0 /
+        LinAlg::inner_product_tbb(natural_density_internal_dof_numbering,
+                                  system_rhs_for_natural_density_);
 
-      std::cout << "=== Release V and its preconditioner ===" << std::endl;
-      V1_hmat_.release();
-      V1_hmat_preconditioner_.release();
+      std::cout
+        << "=== Release V and its preconditioner for solving natural density ==="
+        << std::endl;
+      V_hmat_weq_.release();
+      V_hmat_preconditioner_weq_.release();
     }
 
   std::cout << "=== Release the RHS vector for solving natural density ==="
@@ -1194,29 +1270,36 @@ LaplaceBEM<dim, spacedim>::Priv::solve_natural_density()
                                             natural_densities_);
 
   // The stabilization factor \f$\alpha\f$ is set to 1.
-  alpha_for_neumann_ = 1.0;
+  alpha_for_neumann_ = KernelNumberType(1.0);
 #endif
 
   std::cout << "Neumann stabilization factor: " << alpha_for_neumann_
             << std::endl;
 }
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::initialize_memory_consumption_table_headers()
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  initialize_memory_consumption_table_headers()
 {
   memory_consumption_table_.declare_column("Object");
   memory_consumption_table_.declare_column("Memory (MB)");
   memory_consumption_table_.declare_column("Comment");
 }
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 template <typename T>
 void
-LaplaceBEM<dim, spacedim>::Priv::add_memory_consumption_row(
-  const std::string &name,
-  const T           &obj,
-  const std::string &comment)
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  add_memory_consumption_row(const std::string &name,
+                             const T           &obj,
+                             const std::string &comment)
 {
   memory_consumption_table_.start_new_row();
   memory_consumption_table_.add_value("Object", name);
@@ -1230,12 +1313,16 @@ LaplaceBEM<dim, spacedim>::Priv::add_memory_consumption_row(
 #pragma endregion
 #pragma region ****Internal public member function impls ****
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::extract_surface_triangulation(
-  const Triangulation<dim + 1, spacedim> &volume_triangulation,
-  Triangulation<dim, spacedim>          &&surf_tria,
-  const bool                              debug)
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  extract_surface_triangulation(
+    const Triangulation<dim + 1, spacedim> &volume_triangulation,
+    Triangulation<dim, spacedim>          &&surf_tria,
+    const bool                              debug)
 {
   tria_ = std::move(surf_tria);
 
@@ -1251,9 +1338,13 @@ LaplaceBEM<dim, spacedim>::Priv::extract_surface_triangulation(
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::setup_system()
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  setup_system()
 {
   LogStream::Prefix prefix_string("setup_system");
 #if ENABLE_NVTX == 1
@@ -1344,7 +1435,7 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
                */
               support_points_for_dirichlet_space_on_dirichlet_domain_.resize(
                 n_dofs_for_dirichlet_space);
-              DoFTools::map_dofs_to_support_points(
+              DoFToolsExt::map_dofs_to_support_points(
                 mappings_[0]->get_mapping(),
                 dof_handler_for_dirichlet_space_,
                 support_points_for_dirichlet_space_on_dirichlet_domain_);
@@ -1355,7 +1446,7 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
               // mapping objects, which should be handled separately.
               // Furthermore, the Jacobian of the mapping should also be taken
               // into account in numerical quadrature.
-              DoFTools::map_dofs_to_support_points(
+              DoFToolsExt::map_dofs_to_support_points(
                 mappings_[0]->get_mapping(),
                 dof_handler_for_neumann_space_,
                 support_points_for_neumann_space_on_dirichlet_domain_);
@@ -1381,16 +1472,18 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
               timer.start();
 
               ct_for_dirichlet_space_on_dirichlet_domain_ = ClusterTree<
-                spacedim>(
+                spacedim,
+                real_type>(
                 dof_indices_for_dirichlet_space_on_dirichlet_domain_,
                 support_points_for_dirichlet_space_on_dirichlet_domain_,
                 dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain_,
                 n_min_for_ct_);
-              ct_for_neumann_space_on_dirichlet_domain_ = ClusterTree<spacedim>(
-                dof_indices_for_neumann_space_on_dirichlet_domain_,
-                support_points_for_neumann_space_on_dirichlet_domain_,
-                dof_average_cell_size_for_neumann_space_on_dirichlet_domain_,
-                n_min_for_ct_);
+              ct_for_neumann_space_on_dirichlet_domain_ =
+                ClusterTree<spacedim, real_type>(
+                  dof_indices_for_neumann_space_on_dirichlet_domain_,
+                  support_points_for_neumann_space_on_dirichlet_domain_,
+                  dof_average_cell_size_for_neumann_space_on_dirichlet_domain_,
+                  n_min_for_ct_);
 
               /**
                * Partition the cluster trees.
@@ -1407,7 +1500,8 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
                * @internal Visualize partitioned mesh on different levels
                * (from level #1 to the maximum level) in the cluster trees.
                */
-              std::vector<typename ClusterTree<spacedim>::node_pointer_type>
+              std::vector<
+                typename ClusterTree<spacedim, real_type>::node_pointer_type>
                 cluster_set;
               Vector<float>
                 dof_cluster_indices_for_dirichlet_space_on_dirichlet_domain_(
@@ -1578,12 +1672,12 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
                */
               timer.start();
 
-              bct_for_bilinear_form_V1_ = BlockClusterTree<spacedim>(
+              bct_for_bilinear_form_V1_ = BlockClusterTree<spacedim, real_type>(
                 ct_for_neumann_space_on_dirichlet_domain_,
                 ct_for_neumann_space_on_dirichlet_domain_,
                 eta_,
                 n_min_for_bct_);
-              bct_for_bilinear_form_K2_ = BlockClusterTree<spacedim>(
+              bct_for_bilinear_form_K2_ = BlockClusterTree<spacedim, real_type>(
                 ct_for_neumann_space_on_dirichlet_domain_,
                 ct_for_dirichlet_space_on_dirichlet_domain_,
                 eta_,
@@ -1617,21 +1711,21 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
                */
               timer.start();
 
-              V1_hmat_ =
-                HMatrix<spacedim>(bct_for_bilinear_form_V1_,
-                                  max_hmat_rank_,
-                                  HMatrixSupport::Property::symmetric,
-                                  HMatrixSupport::BlockType::diagonal_block);
+              V1_hmat_ = HMatrix<spacedim, RangeNumberType>(
+                bct_for_bilinear_form_V1_,
+                max_hmat_rank_,
+                HMatrixSupport::Property::symmetric,
+                HMatrixSupport::BlockType::diagonal_block);
 
               std::cout << "=== Leaf set information of V1_hmat ==="
                         << std::endl;
               V1_hmat_.print_leaf_set_info(std::cout);
 
-              K2_hmat_with_mass_matrix_ =
-                HMatrix<spacedim>(bct_for_bilinear_form_K2_,
-                                  max_hmat_rank_,
-                                  HMatrixSupport::Property::general,
-                                  HMatrixSupport::BlockType::diagonal_block);
+              K2_hmat_with_mass_matrix_ = HMatrix<spacedim, RangeNumberType>(
+                bct_for_bilinear_form_K2_,
+                max_hmat_rank_,
+                HMatrixSupport::Property::general,
+                HMatrixSupport::BlockType::diagonal_block);
 
               std::cout
                 << "=== Leaf set information of K2_hmat_with_mass_matrix ==="
@@ -1723,15 +1817,14 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
               /**
                * SLP matrix for solving the natural density \f$w_{\rm eq}\f$.
                */
-              V1_matrix_.reinit(n_dofs_for_neumann_space,
-                                n_dofs_for_neumann_space);
+              V_matrix_weq_.reinit(n_dofs_for_neumann_space,
+                                   n_dofs_for_neumann_space);
+              add_memory_consumption_row("V full matrix for weq",
+                                         V_matrix_weq_);
 #endif
               add_memory_consumption_row("D1 full matrix", D1_matrix_);
               add_memory_consumption_row("K'2 with mass full matrix",
                                          K_prime2_matrix_with_mass_matrix_);
-#if HBEM_NEUMANN_SOLUTION_SPACE == 1
-              add_memory_consumption_row("V1 full matrix", V1_matrix_);
-#endif
             }
           else
             {
@@ -1774,14 +1867,14 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
               // Here we only use the first order mapping to generate the
               // support point coordinates, which is good enough for cluster
               // partition.
-              DoFTools::map_dofs_to_support_points(
+              DoFToolsExt::map_dofs_to_support_points(
                 mappings_[0]->get_mapping(),
                 dof_handler_for_dirichlet_space_,
                 support_points_for_dirichlet_space_on_neumann_domain_);
 
               support_points_for_neumann_space_on_neumann_domain_.resize(
                 n_dofs_for_neumann_space);
-              DoFTools::map_dofs_to_support_points(
+              DoFToolsExt::map_dofs_to_support_points(
                 mappings_[0]->get_mapping(),
                 dof_handler_for_neumann_space_,
                 support_points_for_neumann_space_on_neumann_domain_);
@@ -1806,16 +1899,18 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
                */
               timer.start();
 
-              ct_for_dirichlet_space_on_neumann_domain_ = ClusterTree<spacedim>(
-                dof_indices_for_dirichlet_space_on_neumann_domain_,
-                support_points_for_dirichlet_space_on_neumann_domain_,
-                dof_average_cell_size_for_dirichlet_space_on_neumann_domain_,
-                n_min_for_ct_);
-              ct_for_neumann_space_on_neumann_domain_ = ClusterTree<spacedim>(
-                dof_indices_for_neumann_space_on_neumann_domain_,
-                support_points_for_neumann_space_on_neumann_domain_,
-                dof_average_cell_size_for_neumann_space_on_neumann_domain_,
-                n_min_for_ct_);
+              ct_for_dirichlet_space_on_neumann_domain_ =
+                ClusterTree<spacedim, real_type>(
+                  dof_indices_for_dirichlet_space_on_neumann_domain_,
+                  support_points_for_dirichlet_space_on_neumann_domain_,
+                  dof_average_cell_size_for_dirichlet_space_on_neumann_domain_,
+                  n_min_for_ct_);
+              ct_for_neumann_space_on_neumann_domain_ =
+                ClusterTree<spacedim, real_type>(
+                  dof_indices_for_neumann_space_on_neumann_domain_,
+                  support_points_for_neumann_space_on_neumann_domain_,
+                  dof_average_cell_size_for_neumann_space_on_neumann_domain_,
+                  n_min_for_ct_);
 
               /**
                * Partition the cluster trees.
@@ -1859,19 +1954,20 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
                */
               timer.start();
 
-              bct_for_bilinear_form_D1_ = BlockClusterTree<spacedim>(
+              bct_for_bilinear_form_D1_ = BlockClusterTree<spacedim, real_type>(
                 ct_for_dirichlet_space_on_neumann_domain_,
                 ct_for_dirichlet_space_on_neumann_domain_,
                 eta_,
                 n_min_for_bct_);
-              bct_for_bilinear_form_K_prime2_ = BlockClusterTree<spacedim>(
-                ct_for_dirichlet_space_on_neumann_domain_,
-                ct_for_neumann_space_on_neumann_domain_,
-                eta_,
-                n_min_for_bct_);
+              bct_for_bilinear_form_K_prime2_ =
+                BlockClusterTree<spacedim, real_type>(
+                  ct_for_dirichlet_space_on_neumann_domain_,
+                  ct_for_neumann_space_on_neumann_domain_,
+                  eta_,
+                  n_min_for_bct_);
 
 #if HBEM_NEUMANN_SOLUTION_SPACE == 1
-              bct_for_bilinear_form_V1_ = BlockClusterTree<spacedim>(
+              bct_for_bilinear_form_V1_ = BlockClusterTree<spacedim, real_type>(
                 ct_for_neumann_space_on_neumann_domain_,
                 ct_for_neumann_space_on_neumann_domain_,
                 eta_,
@@ -1918,21 +2014,22 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
                */
               timer.start();
 
-              D1_hmat_ =
-                HMatrix<spacedim>(bct_for_bilinear_form_D1_,
-                                  max_hmat_rank_,
-                                  HMatrixSupport::Property::symmetric,
-                                  HMatrixSupport::BlockType::diagonal_block);
+              D1_hmat_ = HMatrix<spacedim, RangeNumberType>(
+                bct_for_bilinear_form_D1_,
+                max_hmat_rank_,
+                HMatrixSupport::Property::symmetric,
+                HMatrixSupport::BlockType::diagonal_block);
 
               std::cout << "=== Leaf set information of D1_hmat ==="
                         << std::endl;
               D1_hmat_.print_leaf_set_info(std::cout);
 
               K_prime2_hmat_with_mass_matrix_ =
-                HMatrix<spacedim>(bct_for_bilinear_form_K_prime2_,
-                                  max_hmat_rank_,
-                                  HMatrixSupport::Property::general,
-                                  HMatrixSupport::BlockType::diagonal_block);
+                HMatrix<spacedim, RangeNumberType>(
+                  bct_for_bilinear_form_K_prime2_,
+                  max_hmat_rank_,
+                  HMatrixSupport::Property::general,
+                  HMatrixSupport::BlockType::diagonal_block);
 
               std::cout
                 << "=== Leaf set information of K_prime2_hmat_with_mass_matrix ==="
@@ -1943,15 +2040,20 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
               /**
                * SLP matrix for solving the natural density \f$w_{\rm eq}\f$.
                */
-              V1_hmat_ =
-                HMatrix<spacedim>(bct_for_bilinear_form_V1_,
-                                  max_hmat_rank_,
-                                  HMatrixSupport::Property::symmetric,
-                                  HMatrixSupport::BlockType::diagonal_block);
+              V_hmat_weq_ = HMatrix<spacedim, KernelNumberType>(
+                bct_for_bilinear_form_V1_,
+                max_hmat_rank_,
+                HMatrixSupport::Property::symmetric,
+                HMatrixSupport::BlockType::diagonal_block);
 
-              std::cout << "=== Leaf set information of V1_hmat ==="
+              std::cout << "=== Leaf set information of V_hmat_weq ==="
                         << std::endl;
-              V1_hmat_.print_leaf_set_info(std::cout);
+              V_hmat_weq_.print_leaf_set_info(std::cout);
+
+              add_memory_consumption_row(
+                "V H-matrix for weq",
+                V_hmat_weq_,
+                "After initialization and before assembly");
 #endif
 
               timer.stop();
@@ -1965,13 +2067,6 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
                 "K'2 with mass H-matrix",
                 K_prime2_hmat_with_mass_matrix_,
                 "After initialization and before assembly");
-
-#if HBEM_NEUMANN_SOLUTION_SPACE == 1
-              add_memory_consumption_row(
-                "V1 H-matrix",
-                V1_hmat_,
-                "After initialization and before assembly");
-#endif
             }
 
           /**
@@ -2124,13 +2219,14 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
           print_wall_time(deallog, timer, "generate DoF selectors");
 
           // Get the number of effective DoF number for each DoF handler.
-          const unsigned int n_dofs_for_dirichlet_space_on_dirichlet_domain =
-            local_to_full_dirichlet_dof_indices_on_dirichlet_domain_.size();
-          const unsigned int n_dofs_for_dirichlet_space_on_neumann_domain =
+          types::global_dof_index
+            n_dofs_for_dirichlet_space_on_dirichlet_domain =
+              local_to_full_dirichlet_dof_indices_on_dirichlet_domain_.size();
+          types::global_dof_index n_dofs_for_dirichlet_space_on_neumann_domain =
             local_to_full_dirichlet_dof_indices_on_neumann_domain_.size();
-          const unsigned int n_dofs_for_neumann_space_on_dirichlet_domain =
+          types::global_dof_index n_dofs_for_neumann_space_on_dirichlet_domain =
             local_to_full_neumann_dof_indices_on_dirichlet_domain_.size();
-          const unsigned int n_dofs_for_neumann_space_on_neumann_domain =
+          types::global_dof_index n_dofs_for_neumann_space_on_neumann_domain =
             local_to_full_neumann_dof_indices_on_neumann_domain_.size();
 
           std::cout << "=== DoF information ===" << std::endl;
@@ -2259,26 +2355,30 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
            */
           timer.start();
 
-          ct_for_dirichlet_space_on_dirichlet_domain_ = ClusterTree<spacedim>(
-            dof_indices_for_dirichlet_space_on_dirichlet_domain_,
-            support_points_for_dirichlet_space_on_dirichlet_domain_,
-            dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain_,
-            n_min_for_ct_);
-          ct_for_dirichlet_space_on_neumann_domain_ = ClusterTree<spacedim>(
-            dof_indices_for_dirichlet_space_on_neumann_domain_,
-            support_points_for_dirichlet_space_on_neumann_domain_,
-            dof_average_cell_size_for_dirichlet_space_on_neumann_domain_,
-            n_min_for_ct_);
-          ct_for_neumann_space_on_dirichlet_domain_ = ClusterTree<spacedim>(
-            dof_indices_for_neumann_space_on_dirichlet_domain_,
-            support_points_for_neumann_space_on_dirichlet_domain_,
-            dof_average_cell_size_for_neumann_space_on_dirichlet_domain_,
-            n_min_for_ct_);
-          ct_for_neumann_space_on_neumann_domain_ = ClusterTree<spacedim>(
-            dof_indices_for_neumann_space_on_neumann_domain_,
-            support_points_for_neumann_space_on_neumann_domain_,
-            dof_average_cell_size_for_neumann_space_on_neumann_domain_,
-            n_min_for_ct_);
+          ct_for_dirichlet_space_on_dirichlet_domain_ =
+            ClusterTree<spacedim, real_type>(
+              dof_indices_for_dirichlet_space_on_dirichlet_domain_,
+              support_points_for_dirichlet_space_on_dirichlet_domain_,
+              dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain_,
+              n_min_for_ct_);
+          ct_for_dirichlet_space_on_neumann_domain_ =
+            ClusterTree<spacedim, real_type>(
+              dof_indices_for_dirichlet_space_on_neumann_domain_,
+              support_points_for_dirichlet_space_on_neumann_domain_,
+              dof_average_cell_size_for_dirichlet_space_on_neumann_domain_,
+              n_min_for_ct_);
+          ct_for_neumann_space_on_dirichlet_domain_ =
+            ClusterTree<spacedim, real_type>(
+              dof_indices_for_neumann_space_on_dirichlet_domain_,
+              support_points_for_neumann_space_on_dirichlet_domain_,
+              dof_average_cell_size_for_neumann_space_on_dirichlet_domain_,
+              n_min_for_ct_);
+          ct_for_neumann_space_on_neumann_domain_ =
+            ClusterTree<spacedim, real_type>(
+              dof_indices_for_neumann_space_on_neumann_domain_,
+              support_points_for_neumann_space_on_neumann_domain_,
+              dof_average_cell_size_for_neumann_space_on_neumann_domain_,
+              n_min_for_ct_);
 
           /**
            * Partition the cluster trees.
@@ -2346,41 +2446,42 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
            */
           timer.start();
 
-          bct_for_bilinear_form_V1_ = BlockClusterTree<spacedim>(
+          bct_for_bilinear_form_V1_ = BlockClusterTree<spacedim, real_type>(
             ct_for_neumann_space_on_dirichlet_domain_,
             ct_for_neumann_space_on_dirichlet_domain_,
             eta_,
             n_min_for_bct_);
-          bct_for_bilinear_form_K1_ = BlockClusterTree<spacedim>(
+          bct_for_bilinear_form_K1_ = BlockClusterTree<spacedim, real_type>(
             ct_for_neumann_space_on_dirichlet_domain_,
             ct_for_dirichlet_space_on_neumann_domain_,
             eta_,
             n_min_for_bct_);
-          bct_for_bilinear_form_D1_ = BlockClusterTree<spacedim>(
+          bct_for_bilinear_form_D1_ = BlockClusterTree<spacedim, real_type>(
             ct_for_dirichlet_space_on_neumann_domain_,
             ct_for_dirichlet_space_on_neumann_domain_,
             eta_,
             n_min_for_bct_);
-          bct_for_bilinear_form_K2_ = BlockClusterTree<spacedim>(
+          bct_for_bilinear_form_K2_ = BlockClusterTree<spacedim, real_type>(
             ct_for_neumann_space_on_dirichlet_domain_,
             ct_for_dirichlet_space_on_dirichlet_domain_,
             eta_,
             n_min_for_bct_);
-          bct_for_bilinear_form_V2_ = BlockClusterTree<spacedim>(
+          bct_for_bilinear_form_V2_ = BlockClusterTree<spacedim, real_type>(
             ct_for_neumann_space_on_dirichlet_domain_,
             ct_for_neumann_space_on_neumann_domain_,
             eta_,
             n_min_for_bct_);
-          bct_for_bilinear_form_D2_ = BlockClusterTree<spacedim>(
+          bct_for_bilinear_form_D2_ = BlockClusterTree<spacedim, real_type>(
             ct_for_dirichlet_space_on_neumann_domain_,
             ct_for_dirichlet_space_on_dirichlet_domain_,
             eta_,
             n_min_for_bct_);
-          bct_for_bilinear_form_K_prime2_ = BlockClusterTree<spacedim>(
-            ct_for_dirichlet_space_on_neumann_domain_,
-            ct_for_neumann_space_on_neumann_domain_,
-            eta_,
-            n_min_for_bct_);
+          bct_for_bilinear_form_K_prime2_ =
+            BlockClusterTree<spacedim, real_type>(
+              ct_for_dirichlet_space_on_neumann_domain_,
+              ct_for_neumann_space_on_neumann_domain_,
+              eta_,
+              n_min_for_bct_);
 
           /**
            * Partition the block cluster trees.
@@ -2452,67 +2553,67 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
            */
           timer.start();
 
-          V1_hmat_ =
-            HMatrix<spacedim>(bct_for_bilinear_form_V1_,
-                              max_hmat_rank_,
-                              HMatrixSupport::Property::symmetric,
-                              HMatrixSupport::BlockType::diagonal_block);
+          V1_hmat_ = HMatrix<spacedim, RangeNumberType>(
+            bct_for_bilinear_form_V1_,
+            max_hmat_rank_,
+            HMatrixSupport::Property::symmetric,
+            HMatrixSupport::BlockType::diagonal_block);
 
           std::cout << "=== Leaf set information of V1_hmat ===" << std::endl;
           V1_hmat_.print_leaf_set_info(std::cout);
 
-          K1_hmat_ =
-            HMatrix<spacedim>(bct_for_bilinear_form_K1_,
-                              max_hmat_rank_,
-                              HMatrixSupport::Property::general,
-                              HMatrixSupport::BlockType::diagonal_block);
+          K1_hmat_ = HMatrix<spacedim, RangeNumberType>(
+            bct_for_bilinear_form_K1_,
+            max_hmat_rank_,
+            HMatrixSupport::Property::general,
+            HMatrixSupport::BlockType::diagonal_block);
 
           std::cout << "=== Leaf set information of K1_hmat ===" << std::endl;
           K1_hmat_.print_leaf_set_info(std::cout);
 
-          D1_hmat_ =
-            HMatrix<spacedim>(bct_for_bilinear_form_D1_,
-                              max_hmat_rank_,
-                              HMatrixSupport::Property::symmetric,
-                              HMatrixSupport::BlockType::diagonal_block);
+          D1_hmat_ = HMatrix<spacedim, RangeNumberType>(
+            bct_for_bilinear_form_D1_,
+            max_hmat_rank_,
+            HMatrixSupport::Property::symmetric,
+            HMatrixSupport::BlockType::diagonal_block);
 
           std::cout << "=== Leaf set information of D1_hmat ===" << std::endl;
           D1_hmat_.print_leaf_set_info(std::cout);
 
-          K2_hmat_with_mass_matrix_ =
-            HMatrix<spacedim>(bct_for_bilinear_form_K2_,
-                              max_hmat_rank_,
-                              HMatrixSupport::Property::general,
-                              HMatrixSupport::BlockType::diagonal_block);
+          K2_hmat_with_mass_matrix_ = HMatrix<spacedim, RangeNumberType>(
+            bct_for_bilinear_form_K2_,
+            max_hmat_rank_,
+            HMatrixSupport::Property::general,
+            HMatrixSupport::BlockType::diagonal_block);
 
           std::cout
             << "=== Leaf set information of K2_hmat_with_mass_matrix ==="
             << std::endl;
           K2_hmat_with_mass_matrix_.print_leaf_set_info(std::cout);
 
-          V2_hmat_ =
-            HMatrix<spacedim>(bct_for_bilinear_form_V2_,
-                              max_hmat_rank_,
-                              HMatrixSupport::Property::general,
-                              HMatrixSupport::BlockType::diagonal_block);
+          V2_hmat_ = HMatrix<spacedim, RangeNumberType>(
+            bct_for_bilinear_form_V2_,
+            max_hmat_rank_,
+            HMatrixSupport::Property::general,
+            HMatrixSupport::BlockType::diagonal_block);
 
           std::cout << "=== Leaf set information of V2_hmat ===" << std::endl;
           V2_hmat_.print_leaf_set_info(std::cout);
 
-          D2_hmat_ =
-            HMatrix<spacedim>(bct_for_bilinear_form_D2_,
-                              max_hmat_rank_,
-                              HMatrixSupport::Property::general,
-                              HMatrixSupport::BlockType::diagonal_block);
+          D2_hmat_ = HMatrix<spacedim, RangeNumberType>(
+            bct_for_bilinear_form_D2_,
+            max_hmat_rank_,
+            HMatrixSupport::Property::general,
+            HMatrixSupport::BlockType::diagonal_block);
 
           std::cout << "=== Leaf set information of D2_hmat ===" << std::endl;
           D2_hmat_.print_leaf_set_info(std::cout);
 
-          K_prime2_hmat_with_mass_matrix_ =
-            HMatrix<spacedim>(bct_for_bilinear_form_K_prime2_,
-                              max_hmat_rank_,
-                              HMatrixSupport::Property::general,
-                              HMatrixSupport::BlockType::diagonal_block);
+          K_prime2_hmat_with_mass_matrix_ = HMatrix<spacedim, RangeNumberType>(
+            bct_for_bilinear_form_K_prime2_,
+            max_hmat_rank_,
+            HMatrixSupport::Property::general,
+            HMatrixSupport::BlockType::diagonal_block);
 
           std::cout
             << "=== Leaf set information of K_prime2_hmat_with_mass_matrix ==="
@@ -2659,11 +2760,14 @@ LaplaceBEM<dim, spacedim>::Priv::setup_system()
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::assign_dirichlet_bc(
-  Function<spacedim, double> &f,
-  const EntityTag             surface_tag)
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  assign_dirichlet_bc(Function<spacedim, RangeNumberType> &f,
+                      const EntityTag                      surface_tag)
 {
   if (surface_tag == -1)
     {
@@ -2679,11 +2783,14 @@ LaplaceBEM<dim, spacedim>::Priv::assign_dirichlet_bc(
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::assign_dirichlet_bc(
-  Function<spacedim, double>   &f,
-  const std::vector<EntityTag> &surface_tags)
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  assign_dirichlet_bc(Function<spacedim, RangeNumberType> &f,
+                      const std::vector<EntityTag>        &surface_tags)
 {
   for (const auto t : surface_tags)
     {
@@ -2692,11 +2799,14 @@ LaplaceBEM<dim, spacedim>::Priv::assign_dirichlet_bc(
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::assign_neumann_bc(
-  Function<spacedim, double> &f,
-  const EntityTag             surface_tag)
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  assign_neumann_bc(Function<spacedim, RangeNumberType> &f,
+                    const EntityTag                      surface_tag)
 {
   if (surface_tag == -1)
     {
@@ -2712,11 +2822,14 @@ LaplaceBEM<dim, spacedim>::Priv::assign_neumann_bc(
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::assign_neumann_bc(
-  Function<spacedim, double>   &f,
-  const std::vector<EntityTag> &surface_tags)
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  assign_neumann_bc(Function<spacedim, RangeNumberType> &f,
+                    const std::vector<EntityTag>        &surface_tags)
 {
   for (const auto t : surface_tags)
     {
@@ -2725,9 +2838,13 @@ LaplaceBEM<dim, spacedim>::Priv::assign_neumann_bc(
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 bool
-LaplaceBEM<dim, spacedim>::Priv::validate_subdomain_topology() const
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  validate_subdomain_topology() const
 {
   auto &subdomain_to_surface = subdomain_topology_.get_subdomain_to_surface();
   const unsigned int n_subdomains = subdomain_to_surface.size();
@@ -2782,10 +2899,13 @@ LaplaceBEM<dim, spacedim>::Priv::validate_subdomain_topology() const
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim,
-           spacedim>::Priv::initialize_manifolds_from_manifold_description()
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  initialize_manifolds_from_manifold_description()
 {
   // Assign manifold ids to all cells in the triangulation.
   for (auto &cell : tria_.active_cell_iterators())
@@ -2801,9 +2921,13 @@ LaplaceBEM<dim,
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::initialize_mappings()
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  initialize_mappings()
 {
   // Create different orders of mapping.
   mappings_.reserve(max_mapping_order);
@@ -2821,9 +2945,13 @@ LaplaceBEM<dim, spacedim>::Priv::initialize_mappings()
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::interpolate_dirichlet_bc()
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  interpolate_dirichlet_bc()
 {
   dirichlet_bc_.reinit(dof_handler_for_dirichlet_space_.n_dofs());
 
@@ -2842,7 +2970,7 @@ LaplaceBEM<dim, spacedim>::Priv::interpolate_dirichlet_bc()
   // solution.}
   for (const auto &bc : dirichlet_bc_definition_)
     {
-      std::map<types::material_id, const Function<spacedim, double> *>
+      std::map<types::material_id, const Function<spacedim, RangeNumberType> *>
         single_pair_map;
       single_pair_map[static_cast<types::material_id>(bc.first)] = bc.second;
 
@@ -2855,9 +2983,13 @@ LaplaceBEM<dim, spacedim>::Priv::interpolate_dirichlet_bc()
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::interpolate_neumann_bc()
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  interpolate_neumann_bc()
 {
   neumann_bc_.reinit(dof_handler_for_neumann_space_.n_dofs());
 
@@ -2865,7 +2997,7 @@ LaplaceBEM<dim, spacedim>::Priv::interpolate_neumann_bc()
   // interpolate the Neumann boundary condition vector surface by surface.
   for (const auto &bc : neumann_bc_definition_)
     {
-      std::map<types::material_id, const Function<spacedim, double> *>
+      std::map<types::material_id, const Function<spacedim, RangeNumberType> *>
         single_pair_map;
       single_pair_map[static_cast<types::material_id>(bc.first)] = bc.second;
 
@@ -2878,9 +3010,13 @@ LaplaceBEM<dim, spacedim>::Priv::interpolate_neumann_bc()
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  assemble_full_matrix_system()
 {
   LogStream::Prefix prefix_string("assemble_full_matrix");
 
@@ -2912,7 +3048,11 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
             {
               if (cpu_serial_)
                 {
-                  assemble_fem_scaled_mass_matrix_serial(
+                  assemble_fem_scaled_mass_matrix_serial<
+                    dim,
+                    spacedim,
+                    real_type,
+                    LAPACKFullMatrixExt<RangeNumberType>>(
                     dof_handler_for_neumann_space_,
                     dof_handler_for_dirichlet_space_,
                     0.5,
@@ -2921,7 +3061,11 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
                 }
               else
                 {
-                  assemble_fem_scaled_mass_matrix(
+                  assemble_fem_scaled_mass_matrix<
+                    dim,
+                    spacedim,
+                    real_type,
+                    LAPACKFullMatrixExt<RangeNumberType>>(
                     dof_handler_for_neumann_space_,
                     dof_handler_for_dirichlet_space_,
                     0.5,
@@ -2933,7 +3077,11 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
             {
               if (cpu_serial_)
                 {
-                  assemble_fem_scaled_mass_matrix_serial(
+                  assemble_fem_scaled_mass_matrix_serial<
+                    dim,
+                    spacedim,
+                    real_type,
+                    LAPACKFullMatrixExt<RangeNumberType>>(
                     dof_handler_for_neumann_space_,
                     dof_handler_for_dirichlet_space_,
                     -0.5,
@@ -2942,7 +3090,11 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
                 }
               else
                 {
-                  assemble_fem_scaled_mass_matrix(
+                  assemble_fem_scaled_mass_matrix<
+                    dim,
+                    spacedim,
+                    real_type,
+                    LAPACKFullMatrixExt<RangeNumberType>>(
                     dof_handler_for_neumann_space_,
                     dof_handler_for_dirichlet_space_,
                     -0.5,
@@ -2966,9 +3118,9 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
                 dim,
                 spacedim,
                 HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel,
-                double,
+                KernelNumberType,
                 SurfaceNormalDetector<dim, spacedim>,
-                LAPACKFullMatrixExt<double>>(
+                LAPACKFullMatrixExt<RangeNumberType>>(
                 double_layer_kernel_,
                 1.0,
                 dof_handler_for_neumann_space_,
@@ -2985,9 +3137,9 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
                 dim,
                 spacedim,
                 HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel,
-                double,
+                KernelNumberType,
                 SurfaceNormalDetector<dim, spacedim>,
-                LAPACKFullMatrixExt<double>>(
+                LAPACKFullMatrixExt<RangeNumberType>>(
                 double_layer_kernel_,
                 1.0,
                 dof_handler_for_neumann_space_,
@@ -3013,9 +3165,9 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
                 dim,
                 spacedim,
                 HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
-                double,
+                KernelNumberType,
                 SurfaceNormalDetector<dim, spacedim>,
-                LAPACKFullMatrixExt<double>>(
+                LAPACKFullMatrixExt<RangeNumberType>>(
                 single_layer_kernel_,
                 1.0,
                 dof_handler_for_neumann_space_,
@@ -3032,9 +3184,9 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
                 dim,
                 spacedim,
                 HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
-                double,
+                KernelNumberType,
                 SurfaceNormalDetector<dim, spacedim>,
-                LAPACKFullMatrixExt<double>>(
+                LAPACKFullMatrixExt<RangeNumberType>>(
                 single_layer_kernel_,
                 1.0,
                 dof_handler_for_neumann_space_,
@@ -3069,7 +3221,11 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
            */
           if (is_interior_problem_)
             {
-              assemble_fem_scaled_mass_matrix(
+              assemble_fem_scaled_mass_matrix<
+                dim,
+                spacedim,
+                real_type,
+                LAPACKFullMatrixExt<RangeNumberType>>(
                 dof_handler_for_dirichlet_space_,
                 dof_handler_for_neumann_space_,
                 0.5,
@@ -3078,7 +3234,11 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
             }
           else
             {
-              assemble_fem_scaled_mass_matrix(
+              assemble_fem_scaled_mass_matrix<
+                dim,
+                spacedim,
+                real_type,
+                LAPACKFullMatrixExt<RangeNumberType>>(
                 dof_handler_for_dirichlet_space_,
                 dof_handler_for_neumann_space_,
                 -0.5,
@@ -3096,18 +3256,18 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
             dim,
             spacedim,
             HierBEM::PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel,
-            double,
+            KernelNumberType,
             SurfaceNormalDetector<dim, spacedim>,
-            LAPACKFullMatrixExt<double>>(adjoint_double_layer_kernel_,
-                                         -1.0,
-                                         dof_handler_for_dirichlet_space_,
-                                         dof_handler_for_neumann_space_,
-                                         mappings_,
-                                         material_id_to_mapping_index_,
-                                         SurfaceNormalDetector<dim, spacedim>(
-                                           subdomain_topology_),
-                                         SauterQuadratureRule<dim>(5, 4, 4, 3),
-                                         K_prime2_matrix_with_mass_matrix_);
+            LAPACKFullMatrixExt<RangeNumberType>>(
+            adjoint_double_layer_kernel_,
+            -1.0,
+            dof_handler_for_dirichlet_space_,
+            dof_handler_for_neumann_space_,
+            mappings_,
+            material_id_to_mapping_index_,
+            SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+            SauterQuadratureRule<dim>(5, 4, 4, 3),
+            K_prime2_matrix_with_mass_matrix_);
 
           /**
            * Assemble the matrix for the hyper singular operator, where the
@@ -3119,18 +3279,18 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
             dim,
             spacedim,
             HierBEM::PlatformShared::LaplaceKernel::HyperSingularKernelRegular,
-            double,
+            KernelNumberType,
             SurfaceNormalDetector<dim, spacedim>,
-            LAPACKFullMatrixExt<double>>(hyper_singular_kernel_,
-                                         1.0,
-                                         dof_handler_for_dirichlet_space_,
-                                         dof_handler_for_dirichlet_space_,
-                                         mappings_,
-                                         material_id_to_mapping_index_,
-                                         SurfaceNormalDetector<dim, spacedim>(
-                                           subdomain_topology_),
-                                         SauterQuadratureRule<dim>(5, 4, 4, 3),
-                                         D1_matrix_);
+            LAPACKFullMatrixExt<RangeNumberType>>(
+            hyper_singular_kernel_,
+            1.0,
+            dof_handler_for_dirichlet_space_,
+            dof_handler_for_dirichlet_space_,
+            mappings_,
+            material_id_to_mapping_index_,
+            SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+            SauterQuadratureRule<dim>(5, 4, 4, 3),
+            D1_matrix_);
 
           /**
            * Calculate the RHS vector.
@@ -3150,19 +3310,20 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
           compute_stabilization_vectors_for_hyper_singular_bilinear_form<
             dim,
             spacedim,
-            double,
-            Vector<double>>(dof_handler_for_dirichlet_space_,
-                            dof_handler_for_neumann_space_,
-                            QGauss<2>(fe_order_for_dirichlet_space_ + 1),
-                            natural_densities_,
-                            mass_vmult_weq_);
+            Vector<KernelNumberType>>(dof_handler_for_dirichlet_space_,
+                                      dof_handler_for_neumann_space_,
+                                      QGauss<2>(fe_order_for_dirichlet_space_ +
+                                                1),
+                                      natural_densities_,
+                                      mass_vmult_weq_);
 
           /**
            * Add the matrix \f$\alpha a a^T\f$ into \f$D\f$. N.B. The outer
            * product here is only formal and there is no complex conjugation on
            * the second operand in the complex valued case.
            */
-          LAPACKFullMatrixExt<double> aaT(D1_matrix_.m(), D1_matrix_.n());
+          LAPACKFullMatrixExt<KernelNumberType> aaT(D1_matrix_.m(),
+                                                    D1_matrix_.n());
           for (const auto &vec : mass_vmult_weq_)
             {
               aaT.outer_product_formal(vec, vec);
@@ -3183,9 +3344,13 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_full_matrix_system()
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  assemble_hmatrix_system()
 {
   LogStream::Prefix prefix_string("assemble_hmatrix_system");
 #if ENABLE_NVTX == 1
@@ -3199,7 +3364,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
   /**
    * Define the @p ACAConfig object.
    */
-  ACAConfig aca_config(max_hmat_rank_, aca_relative_error_, eta_);
+  ACAConfig<real_type> aca_config(max_hmat_rank_, aca_relative_error_, eta_);
 
   switch (problem_type_)
     {
@@ -3224,8 +3389,8 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
                 K2_hmat_with_mass_matrix_,
                 aca_config,
                 double_layer_kernel_,
-                static_cast<double>(1.0),
-                static_cast<double>(0.5),
+                KernelNumberType(1.0),
+                real_type(0.5),
                 dof_to_cell_topo_for_neumann_space_,
                 dof_to_cell_topo_for_dirichlet_space_,
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -3258,8 +3423,8 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
                 K2_hmat_with_mass_matrix_,
                 aca_config,
                 double_layer_kernel_,
-                static_cast<double>(1.0),
-                static_cast<double>(-0.5),
+                KernelNumberType(1.0),
+                real_type(-0.5),
                 dof_to_cell_topo_for_neumann_space_,
                 dof_to_cell_topo_for_dirichlet_space_,
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -3333,7 +3498,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
               V1_hmat_,
               aca_config,
               single_layer_kernel_,
-              static_cast<double>(1.0),
+              KernelNumberType(1.0),
               dof_to_cell_topo_for_neumann_space_,
               dof_to_cell_topo_for_neumann_space_,
               SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -3383,8 +3548,8 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
                 K_prime2_hmat_with_mass_matrix_,
                 aca_config,
                 adjoint_double_layer_kernel_,
-                static_cast<double>(-1.0),
-                static_cast<double>(0.5),
+                KernelNumberType(-1.0),
+                real_type(0.5),
                 dof_to_cell_topo_for_dirichlet_space_,
                 dof_to_cell_topo_for_neumann_space_,
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -3412,8 +3577,8 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
                 K_prime2_hmat_with_mass_matrix_,
                 aca_config,
                 adjoint_double_layer_kernel_,
-                static_cast<double>(-1.0),
-                static_cast<double>(-0.5),
+                KernelNumberType(-1.0),
+                real_type(-0.5),
                 dof_to_cell_topo_for_dirichlet_space_,
                 dof_to_cell_topo_for_neumann_space_,
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -3499,8 +3664,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
           compute_stabilization_vectors_for_hyper_singular_bilinear_form<
             dim,
             spacedim,
-            double,
-            Vector<double>>(
+            Vector<KernelNumberType>>(
             dof_handler_for_dirichlet_space_,
             dof_handler_for_neumann_space_,
             QGauss<2>(fe_order_for_dirichlet_space_ + 1),
@@ -3524,7 +3688,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
             D1_hmat_,
             aca_config,
             hyper_singular_kernel_,
-            static_cast<double>(1.0),
+            KernelNumberType(1.0),
             mass_vmult_weq_,
             alpha_for_neumann_,
             dof_to_cell_topo_for_dirichlet_space_,
@@ -3581,8 +3745,8 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
                 K2_hmat_with_mass_matrix_,
                 aca_config,
                 double_layer_kernel_,
-                static_cast<double>(1.0),
-                static_cast<double>(0.5),
+                KernelNumberType(1.0),
+                real_type(0.5),
                 dof_to_cell_topo_for_neumann_space_,
                 dof_to_cell_topo_for_dirichlet_space_,
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -3610,8 +3774,8 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
                 K_prime2_hmat_with_mass_matrix_,
                 aca_config,
                 adjoint_double_layer_kernel_,
-                static_cast<double>(-1.0),
-                static_cast<double>(0.5),
+                KernelNumberType(-1.0),
+                real_type(0.5),
                 dof_to_cell_topo_for_dirichlet_space_,
                 dof_to_cell_topo_for_neumann_space_,
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -3639,8 +3803,8 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
                 K2_hmat_with_mass_matrix_,
                 aca_config,
                 double_layer_kernel_,
-                static_cast<double>(1.0),
-                static_cast<double>(-0.5),
+                KernelNumberType(1.0),
+                real_type(-0.5),
                 dof_to_cell_topo_for_neumann_space_,
                 dof_to_cell_topo_for_dirichlet_space_,
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -3668,8 +3832,8 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
                 K_prime2_hmat_with_mass_matrix_,
                 aca_config,
                 adjoint_double_layer_kernel_,
-                static_cast<double>(-1.0),
-                static_cast<double>(-0.5),
+                KernelNumberType(-1.0),
+                real_type(-0.5),
                 dof_to_cell_topo_for_dirichlet_space_,
                 dof_to_cell_topo_for_neumann_space_,
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -3705,7 +3869,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
             V2_hmat_,
             aca_config,
             single_layer_kernel_,
-            static_cast<double>(-1.0),
+            KernelNumberType(-1.0),
             dof_to_cell_topo_for_neumann_space_,
             dof_to_cell_topo_for_neumann_space_,
             SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -3734,7 +3898,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
             D2_hmat_,
             aca_config,
             hyper_singular_kernel_,
-            static_cast<double>(-1.0),
+            KernelNumberType(-1.0),
             dof_to_cell_topo_for_dirichlet_space_,
             dof_to_cell_topo_for_dirichlet_space_,
             SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -3863,7 +4027,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
             V1_hmat_,
             aca_config,
             single_layer_kernel_,
-            static_cast<double>(1.0),
+            KernelNumberType(1.0),
             dof_to_cell_topo_for_neumann_space_,
             dof_to_cell_topo_for_neumann_space_,
             SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -3892,7 +4056,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
             K1_hmat_,
             aca_config,
             double_layer_kernel_,
-            static_cast<double>(-1.0),
+            KernelNumberType(-1.0),
             dof_to_cell_topo_for_neumann_space_,
             dof_to_cell_topo_for_dirichlet_space_,
             SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -3921,7 +4085,7 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
             D1_hmat_,
             aca_config,
             hyper_singular_kernel_,
-            static_cast<double>(1.0),
+            KernelNumberType(1.0),
             dof_to_cell_topo_for_dirichlet_space_,
             dof_to_cell_topo_for_dirichlet_space_,
             SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -3943,8 +4107,9 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
 
           // Assemble the block matrix.
           std::cout << "=== Assemble system block matrix ===" << std::endl;
-          M_hmat_ =
-            HBlockMatrixSkewSymm<spacedim>(&V1_hmat_, &K1_hmat_, &D1_hmat_);
+          M_hmat_ = HBlockMatrixSkewSymm<spacedim, RangeNumberType>(&V1_hmat_,
+                                                                    &K1_hmat_,
+                                                                    &D1_hmat_);
 
 #if ENABLE_MATRIX_EXPORT == 1
           // Print LHS matrices.
@@ -3977,9 +4142,13 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_system()
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_preconditioner()
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  assemble_hmatrix_preconditioner()
 {
   LogStream::Prefix prefix_string("assemble_hmatrix_preconditioner");
 
@@ -4067,7 +4236,8 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_preconditioner()
                   operator_preconditioner_dirichlet_ =
                     new PreconditionerForLaplaceDirichlet<dim,
                                                           spacedim,
-                                                          double>(
+                                                          RangeNumberType,
+                                                          KernelNumberType>(
                       fe_for_neumann_space_,
                       fe_for_dirichlet_space_,
                       mg_tria_for_preconditioner_,
@@ -4181,7 +4351,10 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_preconditioner()
                     }
 
                   operator_preconditioner_neumann_ =
-                    new PreconditionerForLaplaceNeumann<dim, spacedim, double>(
+                    new PreconditionerForLaplaceNeumann<dim,
+                                                        spacedim,
+                                                        RangeNumberType,
+                                                        KernelNumberType>(
                       fe_for_dirichlet_space_,
                       fe_for_neumann_space_,
                       mg_tria_for_preconditioner_,
@@ -4298,7 +4471,8 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_preconditioner()
                                              "After assembly");
 
                   M_hmat_preconditioner_ =
-                    HBlockMatrixSkewSymmPreconditioner<spacedim>(
+                    HBlockMatrixSkewSymmPreconditioner<spacedim,
+                                                       RangeNumberType>(
                       &M11_in_preconditioner_,
                       &M12_in_preconditioner_,
                       &M22_in_preconditioner_);
@@ -4344,7 +4518,8 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_preconditioner()
                   operator_preconditioner_dirichlet_ =
                     new PreconditionerForLaplaceDirichlet<dim,
                                                           spacedim,
-                                                          double>(
+                                                          RangeNumberType,
+                                                          KernelNumberType>(
                       fe_for_neumann_space_,
                       fe_for_dirichlet_space_,
                       mg_tria_for_preconditioner_,
@@ -4359,7 +4534,10 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_preconditioner()
                     }
 
                   operator_preconditioner_neumann_ =
-                    new PreconditionerForLaplaceNeumann<dim, spacedim, double>(
+                    new PreconditionerForLaplaceNeumann<dim,
+                                                        spacedim,
+                                                        RangeNumberType,
+                                                        KernelNumberType>(
                       fe_for_dirichlet_space_,
                       fe_for_neumann_space_,
                       mg_tria_for_preconditioner_,
@@ -4422,9 +4600,12 @@ LaplaceBEM<dim, spacedim>::Priv::assemble_hmatrix_preconditioner()
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::solve()
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
 {
 #if ENABLE_NVTX == 1
   HierBEM::CUDAWrappers::NVTXRange nvtx_range("solve");
@@ -4438,7 +4619,7 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
         {
             case DirichletBCProblem: {
               SolverControl solver_control(1000, 1e-8, true, true);
-              SolverCG<>    solver(solver_control);
+              SolverCG<Vector<RangeNumberType>> solver(solver_control);
 
               solver.solve(V1_matrix_,
                            neumann_data_,
@@ -4449,7 +4630,7 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
             }
             case NeumannBCProblem: {
               SolverControl solver_control(1000, 1e-8, true, true);
-              SolverCG<>    solver(solver_control);
+              SolverCG<Vector<RangeNumberType>> solver(solver_control);
 
               solver.solve(D1_matrix_,
                            dirichlet_data_,
@@ -4473,8 +4654,8 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
       switch (problem_type_)
         {
             case DirichletBCProblem: {
-              SolverControl            solver_control(1000, 1e-8, true, true);
-              SolverCG<Vector<double>> solver(solver_control);
+              SolverControl solver_control(1000, 1e-8, true, true);
+              SolverCG<Vector<RangeNumberType>> solver(solver_control);
 
               switch (preconditioner_type_)
                 {
@@ -4535,8 +4716,8 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
               break;
             }
             case NeumannBCProblem: {
-              SolverControl            solver_control(1000, 1e-8, true, true);
-              SolverCG<Vector<double>> solver(solver_control);
+              SolverControl solver_control(1000, 1e-8, true, true);
+              SolverCG<Vector<RangeNumberType>> solver(solver_control);
 
               switch (preconditioner_type_)
                 {
@@ -4598,7 +4779,7 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
             }
             case MixedBCProblem: {
               SolverControl solver_control(1000, 1e-8, true, true);
-              SolverBicgstab<Vector<double>> solver(solver_control);
+              SolverBicgstab<Vector<RangeNumberType>> solver(solver_control);
 
               // Solve the system of equations and obtain the solution in two
               // block vectors in the internal DoF numbering.
@@ -4773,9 +4954,13 @@ LaplaceBEM<dim, spacedim>::Priv::solve()
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::output_results() const
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  output_results() const
 {
   std::cout << "=== Output results ===" << std::endl;
 
@@ -4789,15 +4974,50 @@ LaplaceBEM<dim, spacedim>::Priv::output_results() const
           vtk_output.open(project_name_ + std::string(".vtk"),
                           std::ofstream::out);
 
-          data_out.add_data_vector(dof_handler_for_neumann_space_,
-                                   neumann_data_,
-                                   "neumann_data");
-          data_out.add_data_vector(dof_handler_for_dirichlet_space_,
-                                   dirichlet_bc_,
-                                   "dirichlet_data");
+          if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+            {
+              Vector<real_type> neumann_data_real_part(neumann_data_.size());
+              Vector<real_type> neumann_data_imag_part(neumann_data_.size());
+              LinAlg::get_vector_real_part(neumann_data_real_part,
+                                           neumann_data_);
+              LinAlg::get_vector_imag_part(neumann_data_imag_part,
+                                           neumann_data_);
 
-          data_out.build_patches();
-          data_out.write_vtk(vtk_output);
+              Vector<real_type> dirichlet_bc_real_part(dirichlet_bc_.size());
+              Vector<real_type> dirichlet_bc_imag_part(dirichlet_bc_.size());
+              LinAlg::get_vector_real_part(dirichlet_bc_real_part,
+                                           dirichlet_bc_);
+              LinAlg::get_vector_imag_part(dirichlet_bc_imag_part,
+                                           dirichlet_bc_);
+
+              data_out.add_data_vector(dof_handler_for_neumann_space_,
+                                       neumann_data_real_part,
+                                       "neumann_data_real");
+              data_out.add_data_vector(dof_handler_for_neumann_space_,
+                                       neumann_data_imag_part,
+                                       "neumann_data_imag");
+              data_out.add_data_vector(dof_handler_for_dirichlet_space_,
+                                       dirichlet_bc_real_part,
+                                       "dirichlet_data_real");
+              data_out.add_data_vector(dof_handler_for_dirichlet_space_,
+                                       dirichlet_bc_imag_part,
+                                       "dirichlet_data_imag");
+
+              data_out.build_patches();
+              data_out.write_vtk(vtk_output);
+            }
+          else
+            {
+              data_out.add_data_vector(dof_handler_for_neumann_space_,
+                                       neumann_data_,
+                                       "neumann_data");
+              data_out.add_data_vector(dof_handler_for_dirichlet_space_,
+                                       dirichlet_bc_,
+                                       "dirichlet_data");
+
+              data_out.build_patches();
+              data_out.write_vtk(vtk_output);
+            }
 
           print_vector_to_mat(data_file, "solution", neumann_data_, false);
 
@@ -4807,15 +5027,50 @@ LaplaceBEM<dim, spacedim>::Priv::output_results() const
           vtk_output.open(project_name_ + std::string(".vtk"),
                           std::ofstream::out);
 
-          data_out.add_data_vector(dof_handler_for_dirichlet_space_,
-                                   dirichlet_data_,
-                                   "dirichlet_data");
-          data_out.add_data_vector(dof_handler_for_neumann_space_,
-                                   neumann_bc_,
-                                   "neumann_data");
+          if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+            {
+              Vector<real_type> dirichlet_data_real_part(
+                dirichlet_data_.size());
+              Vector<real_type> dirichlet_data_imag_part(
+                dirichlet_data_.size());
+              LinAlg::get_vector_real_part(dirichlet_data_real_part,
+                                           dirichlet_data_);
+              LinAlg::get_vector_imag_part(dirichlet_data_imag_part,
+                                           dirichlet_data_);
 
-          data_out.build_patches();
-          data_out.write_vtk(vtk_output);
+              Vector<real_type> neumann_bc_real_part(neumann_bc_.size());
+              Vector<real_type> neumann_bc_imag_part(neumann_bc_.size());
+              LinAlg::get_vector_real_part(neumann_bc_real_part, neumann_bc_);
+              LinAlg::get_vector_imag_part(neumann_bc_imag_part, neumann_bc_);
+
+              data_out.add_data_vector(dof_handler_for_dirichlet_space_,
+                                       dirichlet_data_real_part,
+                                       "dirichlet_data_real");
+              data_out.add_data_vector(dof_handler_for_dirichlet_space_,
+                                       dirichlet_data_imag_part,
+                                       "dirichlet_data_imag");
+              data_out.add_data_vector(dof_handler_for_neumann_space_,
+                                       neumann_bc_real_part,
+                                       "neumann_bc_real");
+              data_out.add_data_vector(dof_handler_for_neumann_space_,
+                                       neumann_bc_imag_part,
+                                       "neumann_bc_imag");
+
+              data_out.build_patches();
+              data_out.write_vtk(vtk_output);
+            }
+          else
+            {
+              data_out.add_data_vector(dof_handler_for_dirichlet_space_,
+                                       dirichlet_data_,
+                                       "dirichlet_data");
+              data_out.add_data_vector(dof_handler_for_neumann_space_,
+                                       neumann_bc_,
+                                       "neumann_data");
+
+              data_out.build_patches();
+              data_out.write_vtk(vtk_output);
+            }
 
           print_vector_to_mat(data_file, "solution", dirichlet_data_, false);
 
@@ -4825,26 +5080,70 @@ LaplaceBEM<dim, spacedim>::Priv::output_results() const
           vtk_output.open(project_name_ + std::string(".vtk"),
                           std::ofstream::out);
 
-          data_out.add_data_vector(dof_handler_for_neumann_space_,
-                                   neumann_data_,
-                                   "neumann_data");
-          data_out.add_data_vector(dof_handler_for_dirichlet_space_,
-                                   dirichlet_data_,
-                                   "dirichlet_data");
-          data_out.build_patches();
-          data_out.write_vtk(vtk_output);
+          if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+            {
+              Vector<real_type> dirichlet_data_real_part(
+                dirichlet_data_.size());
+              Vector<real_type> dirichlet_data_imag_part(
+                dirichlet_data_.size());
+              LinAlg::get_vector_real_part(dirichlet_data_real_part,
+                                           dirichlet_data_);
+              LinAlg::get_vector_imag_part(dirichlet_data_imag_part,
+                                           dirichlet_data_);
 
+              Vector<real_type> neumann_data_real_part(neumann_data_.size());
+              Vector<real_type> neumann_data_imag_part(neumann_data_.size());
+              LinAlg::get_vector_real_part(neumann_data_real_part,
+                                           neumann_data_);
+              LinAlg::get_vector_imag_part(neumann_data_imag_part,
+                                           neumann_data_);
+
+              data_out.add_data_vector(dof_handler_for_dirichlet_space_,
+                                       dirichlet_data_real_part,
+                                       "dirichlet_data_real");
+              data_out.add_data_vector(dof_handler_for_dirichlet_space_,
+                                       dirichlet_data_imag_part,
+                                       "dirichlet_data_imag");
+              data_out.add_data_vector(dof_handler_for_neumann_space_,
+                                       neumann_data_real_part,
+                                       "neumann_data_real");
+              data_out.add_data_vector(dof_handler_for_neumann_space_,
+                                       neumann_data_imag_part,
+                                       "neumann_data_imag");
+
+              data_out.build_patches();
+              data_out.write_vtk(vtk_output);
+            }
+          else
+            {
+              data_out.add_data_vector(dof_handler_for_dirichlet_space_,
+                                       dirichlet_data_,
+                                       "dirichlet_data");
+              data_out.add_data_vector(dof_handler_for_neumann_space_,
+                                       neumann_data_,
+                                       "neumann_data");
+
+              data_out.build_patches();
+              data_out.write_vtk(vtk_output);
+            }
+
+          constexpr unsigned int field_width =
+            numbers::NumberTraits<RangeNumberType>::is_complex ? 35 : 25;
           print_vector_to_mat(
             data_file,
             "solution_on_combined_domain_internal_dof_numbering",
             solution_on_combined_domain_internal_dof_numbering_,
             false,
             15,
-            25);
+            field_width);
           print_vector_to_mat(
-            data_file, "neumann_data", neumann_data_, false, 15, 25);
-          print_vector_to_mat(
-            data_file, "dirichlet_data", dirichlet_data_, false, 15, 25);
+            data_file, "neumann_data", neumann_data_, false, 15, field_width);
+          print_vector_to_mat(data_file,
+                              "dirichlet_data",
+                              dirichlet_data_,
+                              false,
+                              15,
+                              field_width);
 
           break;
         }
@@ -4859,33 +5158,37 @@ LaplaceBEM<dim, spacedim>::Priv::output_results() const
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  output_potential_at_target_points() const
 {
   /**
    * Create a plane of regular grid for potential evaluation.
    */
-  std::vector<Point<spacedim, double>> potential_grid_points;
+  std::vector<Point<spacedim, real_type>> potential_grid_points;
 
   // Number of cells in the X direction.
-  unsigned int nx = 100;
+  const unsigned int nx = 100;
   // Number of cells in the Y direction.
-  unsigned int ny = 100;
+  const unsigned int ny = 100;
   // Plane dimension in the X direction.
-  double grid_plane_xdim = 4.0;
+  const double grid_plane_xdim = 4.0;
   // Plane dimension in the Y direction.
-  double grid_plane_ydim = 4.0;
+  const double grid_plane_ydim = 4.0;
   // Grid point spacing in the X direction.
-  double dx = grid_plane_xdim / nx;
+  const double dx = grid_plane_xdim / nx;
   // Grid point spacing in the Y direction.
-  double dy = grid_plane_ydim / ny;
+  const double dy = grid_plane_ydim / ny;
   // Shift in the X direction.
-  double x_shift = -grid_plane_xdim / 2;
+  const double x_shift = -grid_plane_xdim / 2;
   // Shift in the Y direction.
-  double y_shift = -grid_plane_ydim / 2;
+  const double y_shift = -grid_plane_ydim / 2;
   // Plane Z height
-  double z = 4.0;
+  const double z = 4.0;
 
   /**
    * For visualization in GNU Octave using @p surf, here we generate
@@ -4897,14 +5200,14 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
       for (unsigned int i = 0; i <= nx; i++)
         {
           potential_grid_points.push_back(
-            Point<spacedim, double>(i * dx + x_shift, j * dy + y_shift, z));
+            Point<spacedim, real_type>(i * dx + x_shift, j * dy + y_shift, z));
         }
     }
 
   /**
    * Vector storing the list of evaluated potential values.
    */
-  Vector<double> potential_values(potential_grid_points.size());
+  Vector<RangeNumberType> potential_values(potential_grid_points.size());
 
   switch (problem_type_)
     {
@@ -4924,8 +5227,8 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 dim,
                 spacedim,
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
-                double,
-                double,
+                RangeNumberType,
+                KernelNumberType,
                 Vector>(double_layer_kernel_,
                         -1.0,
                         dof_handler_for_dirichlet_space_,
@@ -4945,8 +5248,8 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 dim,
                 spacedim,
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
-                double,
-                double,
+                RangeNumberType,
+                KernelNumberType,
                 Vector>(single_layer_kernel_,
                         1.0,
                         dof_handler_for_neumann_space_,
@@ -4970,8 +5273,8 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 dim,
                 spacedim,
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
-                double,
-                double,
+                RangeNumberType,
+                KernelNumberType,
                 Vector>(double_layer_kernel_,
                         1.0,
                         dof_handler_for_dirichlet_space_,
@@ -4991,8 +5294,8 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 dim,
                 spacedim,
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
-                double,
-                double,
+                RangeNumberType,
+                KernelNumberType,
                 Vector>(single_layer_kernel_,
                         -1.0,
                         dof_handler_for_neumann_space_,
@@ -5020,8 +5323,8 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 dim,
                 spacedim,
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
-                double,
-                double,
+                RangeNumberType,
+                KernelNumberType,
                 Vector>(double_layer_kernel_,
                         -1.0,
                         dof_handler_for_dirichlet_space_,
@@ -5041,8 +5344,8 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 dim,
                 spacedim,
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
-                double,
-                double,
+                RangeNumberType,
+                KernelNumberType,
                 Vector>(single_layer_kernel_,
                         1.0,
                         dof_handler_for_neumann_space_,
@@ -5066,8 +5369,8 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 dim,
                 spacedim,
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
-                double,
-                double,
+                RangeNumberType,
+                KernelNumberType,
                 Vector>(double_layer_kernel_,
                         1.0,
                         dof_handler_for_dirichlet_space_,
@@ -5087,8 +5390,8 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 dim,
                 spacedim,
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
-                double,
-                double,
+                RangeNumberType,
+                KernelNumberType,
                 Vector>(single_layer_kernel_,
                         -1.0,
                         dof_handler_for_neumann_space_,
@@ -5116,8 +5419,8 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 dim,
                 spacedim,
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
-                double,
-                double,
+                RangeNumberType,
+                KernelNumberType,
                 Vector>(double_layer_kernel_,
                         -1.0,
                         dof_handler_for_dirichlet_space_,
@@ -5137,8 +5440,8 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 dim,
                 spacedim,
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
-                double,
-                double,
+                RangeNumberType,
+                KernelNumberType,
                 Vector>(single_layer_kernel_,
                         1.0,
                         dof_handler_for_neumann_space_,
@@ -5162,8 +5465,8 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 dim,
                 spacedim,
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
-                double,
-                double,
+                RangeNumberType,
+                KernelNumberType,
                 Vector>(double_layer_kernel_,
                         1.0,
                         dof_handler_for_dirichlet_space_,
@@ -5183,8 +5486,8 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
                 dim,
                 spacedim,
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
-                double,
-                double,
+                RangeNumberType,
+                KernelNumberType,
                 Vector>(single_layer_kernel_,
                         -1.0,
                         dof_handler_for_neumann_space_,
@@ -5206,9 +5509,12 @@ LaplaceBEM<dim, spacedim>::Priv::output_potential_at_target_points() const
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::run()
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::run()
 {
   LogStream::Prefix prefix_string("run");
 #if ENABLE_NVTX == 1
@@ -5252,10 +5558,13 @@ LaplaceBEM<dim, spacedim>::Priv::run()
 }
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim>::Priv::print_memory_consumption_table(
-  std::ostream &out) const
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  print_memory_consumption_table(std::ostream &out) const
 {
   memory_consumption_table_.write_text(
     out, TableHandler::TextOutputFormat::org_mode_table);

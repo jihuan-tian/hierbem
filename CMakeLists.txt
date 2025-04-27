@@ -229,6 +229,7 @@ endif()
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/extern/cuda_complex)
 
 # Directories for searching libraries to link
 link_directories(${CMAKE_BINARY_DIR}/src /usr/lib/x86_64-linux-gnu)

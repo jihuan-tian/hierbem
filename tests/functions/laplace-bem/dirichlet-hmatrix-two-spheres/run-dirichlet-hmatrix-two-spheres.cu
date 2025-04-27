@@ -100,11 +100,11 @@ run_dirichlet_hmatrix_two_spheres()
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  const bool                is_interior_problem = false;
-  LaplaceBEM<dim, spacedim> bem(
+  const bool                                is_interior_problem = false;
+  LaplaceBEM<dim, spacedim, double, double> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
-    LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
+    LaplaceBEM<dim, spacedim, double, double>::ProblemType::DirichletBCProblem,
     is_interior_problem,         // is interior problem
     4,                           // n_min for cluster tree
     4,                           // n_min for block cluster tree
