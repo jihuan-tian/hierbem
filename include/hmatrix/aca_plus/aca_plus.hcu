@@ -101,17 +101,19 @@ generate_random_index(const size_type a, const size_type b);
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 void
 assemble_kernel_row(
-  Vector<RangeNumberType>                              &row_vector,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const types::global_dof_index                         row_dof_index,
-  const std::vector<types::global_dof_index>           &column_dof_indices,
+  Vector<RangeNumberType> &row_vector,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                             &kernel,
+  const DeviceNumberType<KernelNumberType>    kernel_factor,
+  const types::global_dof_index               row_dof_index,
+  const std::vector<types::global_dof_index> &column_dof_indices,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
@@ -135,9 +137,10 @@ assemble_kernel_row(
                               &material_id_to_mapping_index,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
-  HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
-                                                           &scratch_data_gpu,
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
@@ -215,19 +218,21 @@ assemble_kernel_row(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 void
 assemble_kernel_row(
-  Vector<RangeNumberType>                              &row_vector,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
-  const KernelNumberType                                stabilization_factor,
-  const types::global_dof_index                         row_dof_index,
-  const std::vector<types::global_dof_index>           &column_dof_indices,
+  Vector<RangeNumberType> &row_vector,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                              &kernel,
+  const DeviceNumberType<KernelNumberType>     kernel_factor,
+  const std::vector<Vector<KernelNumberType>> &mass_vmult_weq,
+  const KernelNumberType                       stabilization_factor,
+  const types::global_dof_index                row_dof_index,
+  const std::vector<types::global_dof_index>  &column_dof_indices,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
@@ -251,9 +256,10 @@ assemble_kernel_row(
                               &material_id_to_mapping_index,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
-  HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
-                                                           &scratch_data_gpu,
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
@@ -311,22 +317,24 @@ assemble_kernel_row(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 void
 assemble_kernel_row(
-  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<dim,
-                                                             spacedim,
-                                                             RangeNumberType,
-                                                             KernelNumberType>
-                                                       &task_buffer,
-  Vector<RangeNumberType>                              &row_vector,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const types::global_dof_index                         row_dof_index,
-  const std::vector<types::global_dof_index>           &column_dof_indices,
+  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    DeviceNumberType<RangeNumberType>,
+    DeviceNumberType<KernelNumberType>> &task_buffer,
+  Vector<RangeNumberType>               &row_vector,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                             &kernel,
+  const DeviceNumberType<KernelNumberType>    kernel_factor,
+  const types::global_dof_index               row_dof_index,
+  const std::vector<types::global_dof_index> &column_dof_indices,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
@@ -418,24 +426,26 @@ assemble_kernel_row(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 void
 assemble_kernel_row(
-  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<dim,
-                                                             spacedim,
-                                                             RangeNumberType,
-                                                             KernelNumberType>
-                                                       &task_buffer,
-  Vector<RangeNumberType>                              &row_vector,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
-  const KernelNumberType                                stabilization_factor,
-  const types::global_dof_index                         row_dof_index,
-  const std::vector<types::global_dof_index>           &column_dof_indices,
+  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    DeviceNumberType<RangeNumberType>,
+    DeviceNumberType<KernelNumberType>> &task_buffer,
+  Vector<RangeNumberType>               &row_vector,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                              &kernel,
+  const DeviceNumberType<KernelNumberType>     kernel_factor,
+  const std::vector<Vector<KernelNumberType>> &mass_vmult_weq,
+  const KernelNumberType                       stabilization_factor,
+  const types::global_dof_index                row_dof_index,
+  const std::vector<types::global_dof_index>  &column_dof_indices,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
@@ -523,17 +533,19 @@ assemble_kernel_row(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 void
 assemble_kernel_column(
-  Vector<RangeNumberType>                              &col_vector,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::vector<types::global_dof_index>           &row_dof_indices,
-  const types::global_dof_index                         col_dof_index,
+  Vector<RangeNumberType> &col_vector,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                             &kernel,
+  const DeviceNumberType<KernelNumberType>    kernel_factor,
+  const std::vector<types::global_dof_index> &row_dof_indices,
+  const types::global_dof_index               col_dof_index,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
@@ -555,9 +567,10 @@ assemble_kernel_column(
                               &material_id_to_mapping_index,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
-  HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
-                                                           &scratch_data_gpu,
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
@@ -632,19 +645,21 @@ assemble_kernel_column(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 void
 assemble_kernel_column(
-  Vector<RangeNumberType>                              &col_vector,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
-  const KernelNumberType                                stabilization_factor,
-  const std::vector<types::global_dof_index>           &row_dof_indices,
-  const types::global_dof_index                         col_dof_index,
+  Vector<RangeNumberType> &col_vector,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                              &kernel,
+  const DeviceNumberType<KernelNumberType>     kernel_factor,
+  const std::vector<Vector<KernelNumberType>> &mass_vmult_weq,
+  const KernelNumberType                       stabilization_factor,
+  const std::vector<types::global_dof_index>  &row_dof_indices,
+  const types::global_dof_index                col_dof_index,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
@@ -666,9 +681,10 @@ assemble_kernel_column(
                               &material_id_to_mapping_index,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
-  HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
-                                                           &scratch_data_gpu,
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
@@ -725,22 +741,24 @@ assemble_kernel_column(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 void
 assemble_kernel_column(
-  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<dim,
-                                                             spacedim,
-                                                             RangeNumberType,
-                                                             KernelNumberType>
-                                                       &task_buffer,
-  Vector<RangeNumberType>                              &col_vector,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::vector<types::global_dof_index>           &row_dof_indices,
-  const types::global_dof_index                         col_dof_index,
+  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    DeviceNumberType<RangeNumberType>,
+    DeviceNumberType<KernelNumberType>> &task_buffer,
+  Vector<RangeNumberType>               &col_vector,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                             &kernel,
+  const DeviceNumberType<KernelNumberType>    kernel_factor,
+  const std::vector<types::global_dof_index> &row_dof_indices,
+  const types::global_dof_index               col_dof_index,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
@@ -828,24 +846,26 @@ assemble_kernel_column(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 void
 assemble_kernel_column(
-  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<dim,
-                                                             spacedim,
-                                                             RangeNumberType,
-                                                             KernelNumberType>
-                                                       &task_buffer,
-  Vector<RangeNumberType>                              &col_vector,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
-  const KernelNumberType                                stabilization_factor,
-  const std::vector<types::global_dof_index>           &row_dof_indices,
-  const types::global_dof_index                         col_dof_index,
+  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    DeviceNumberType<RangeNumberType>,
+    DeviceNumberType<KernelNumberType>> &task_buffer,
+  Vector<RangeNumberType>               &col_vector,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                              &kernel,
+  const DeviceNumberType<KernelNumberType>     kernel_factor,
+  const std::vector<Vector<KernelNumberType>> &mass_vmult_weq,
+  const KernelNumberType                       stabilization_factor,
+  const std::vector<types::global_dof_index>  &row_dof_indices,
+  const types::global_dof_index                col_dof_index,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
@@ -936,17 +956,19 @@ assemble_kernel_column(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 size_type
 random_select_ref_row(
-  Vector<RangeNumberType>                              &row_vector,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  std::forward_list<size_type>                         &remaining_row_indices,
-  const size_type                                       current_ref_row_index,
+  Vector<RangeNumberType> &row_vector,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                             &kernel,
+  const DeviceNumberType<KernelNumberType>    kernel_factor,
+  std::forward_list<size_type>               &remaining_row_indices,
+  const size_type                             current_ref_row_index,
   const size_type                             pass_the_end_ref_row_index,
   const std::vector<types::global_dof_index> &row_dof_indices,
   const std::vector<types::global_dof_index> &col_dof_indices,
@@ -971,9 +993,10 @@ random_select_ref_row(
                               &material_id_to_mapping_index,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
-  HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
-                                                           &scratch_data_gpu,
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
@@ -1113,22 +1136,24 @@ random_select_ref_row(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 size_type
 random_select_ref_row(
-  Vector<RangeNumberType>                              &row_vector,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
-  const KernelNumberType                                stabilization_factor,
-  std::forward_list<size_type>                         &remaining_row_indices,
-  const size_type                                       current_ref_row_index,
-  const size_type                             pass_the_end_ref_row_index,
-  const std::vector<types::global_dof_index> &row_dof_indices,
-  const std::vector<types::global_dof_index> &col_dof_indices,
+  Vector<RangeNumberType> &row_vector,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                              &kernel,
+  const DeviceNumberType<KernelNumberType>     kernel_factor,
+  const std::vector<Vector<KernelNumberType>> &mass_vmult_weq,
+  const KernelNumberType                       stabilization_factor,
+  std::forward_list<size_type>                &remaining_row_indices,
+  const size_type                              current_ref_row_index,
+  const size_type                              pass_the_end_ref_row_index,
+  const std::vector<types::global_dof_index>  &row_dof_indices,
+  const std::vector<types::global_dof_index>  &col_dof_indices,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
@@ -1150,9 +1175,10 @@ random_select_ref_row(
                               &material_id_to_mapping_index,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
-  HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
-                                                           &scratch_data_gpu,
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
@@ -1260,22 +1286,24 @@ random_select_ref_row(
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 size_type
 random_select_ref_row(
-  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<dim,
-                                                             spacedim,
-                                                             RangeNumberType,
-                                                             KernelNumberType>
-                                                       &task_buffer,
-  Vector<RangeNumberType>                              &row_vector,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  std::forward_list<size_type>                         &remaining_row_indices,
-  const size_type                                       current_ref_row_index,
+  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    DeviceNumberType<RangeNumberType>,
+    DeviceNumberType<KernelNumberType>> &task_buffer,
+  Vector<RangeNumberType>               &row_vector,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                             &kernel,
+  const DeviceNumberType<KernelNumberType>    kernel_factor,
+  std::forward_list<size_type>               &remaining_row_indices,
+  const size_type                             current_ref_row_index,
   const size_type                             pass_the_end_ref_row_index,
   const std::vector<types::global_dof_index> &row_dof_indices,
   const std::vector<types::global_dof_index> &col_dof_indices,
@@ -1405,27 +1433,29 @@ random_select_ref_row(
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 size_type
 random_select_ref_row(
-  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<dim,
-                                                             spacedim,
-                                                             RangeNumberType,
-                                                             KernelNumberType>
-                                                       &task_buffer,
-  Vector<RangeNumberType>                              &row_vector,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
-  const KernelNumberType                                stabilization_factor,
-  std::forward_list<size_type>                         &remaining_row_indices,
-  const size_type                                       current_ref_row_index,
-  const size_type                             pass_the_end_ref_row_index,
-  const std::vector<types::global_dof_index> &row_dof_indices,
-  const std::vector<types::global_dof_index> &col_dof_indices,
+  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    DeviceNumberType<RangeNumberType>,
+    DeviceNumberType<KernelNumberType>> &task_buffer,
+  Vector<RangeNumberType>               &row_vector,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                              &kernel,
+  const DeviceNumberType<KernelNumberType>     kernel_factor,
+  const std::vector<Vector<KernelNumberType>> &mass_vmult_weq,
+  const KernelNumberType                       stabilization_factor,
+  std::forward_list<size_type>                &remaining_row_indices,
+  const size_type                              current_ref_row_index,
+  const size_type                              pass_the_end_ref_row_index,
+  const std::vector<types::global_dof_index>  &row_dof_indices,
+  const std::vector<types::global_dof_index>  &col_dof_indices,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
@@ -1676,17 +1706,19 @@ random_select_ref_row(Vector<RangeNumberType>                    &row_vector,
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 size_type
 random_select_ref_column(
-  Vector<RangeNumberType>                              &col_vector,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                factor,
-  std::forward_list<size_type>                         &remaining_col_indices,
-  const size_type                                       current_ref_col_index,
+  Vector<RangeNumberType> &col_vector,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                             &kernel,
+  const DeviceNumberType<KernelNumberType>    factor,
+  std::forward_list<size_type>               &remaining_col_indices,
+  const size_type                             current_ref_col_index,
   const size_type                             pass_the_end_ref_col_index,
   const std::vector<types::global_dof_index> &row_dof_indices,
   const std::vector<types::global_dof_index> &col_dof_indices,
@@ -1711,9 +1743,10 @@ random_select_ref_column(
                               &material_id_to_mapping_index,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
-  HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
-                                                           &scratch_data_gpu,
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
@@ -1854,22 +1887,24 @@ random_select_ref_column(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 size_type
 random_select_ref_column(
-  Vector<RangeNumberType>                              &col_vector,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
-  const KernelNumberType                                stabilization_factor,
-  std::forward_list<size_type>                         &remaining_col_indices,
-  const size_type                                       current_ref_col_index,
-  const size_type                             pass_the_end_ref_col_index,
-  const std::vector<types::global_dof_index> &row_dof_indices,
-  const std::vector<types::global_dof_index> &col_dof_indices,
+  Vector<RangeNumberType> &col_vector,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                              &kernel,
+  const DeviceNumberType<KernelNumberType>     kernel_factor,
+  const std::vector<Vector<KernelNumberType>> &mass_vmult_weq,
+  const KernelNumberType                       stabilization_factor,
+  std::forward_list<size_type>                &remaining_col_indices,
+  const size_type                              current_ref_col_index,
+  const size_type                              pass_the_end_ref_col_index,
+  const std::vector<types::global_dof_index>  &row_dof_indices,
+  const std::vector<types::global_dof_index>  &col_dof_indices,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
@@ -1891,9 +1926,10 @@ random_select_ref_column(
                               &material_id_to_mapping_index,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
-  HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
-                                                           &scratch_data_gpu,
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
@@ -2002,22 +2038,24 @@ random_select_ref_column(
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 size_type
 random_select_ref_column(
-  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<dim,
-                                                             spacedim,
-                                                             RangeNumberType,
-                                                             KernelNumberType>
-                                                       &task_buffer,
-  Vector<RangeNumberType>                              &col_vector,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                factor,
-  std::forward_list<size_type>                         &remaining_col_indices,
-  const size_type                                       current_ref_col_index,
+  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    DeviceNumberType<RangeNumberType>,
+    DeviceNumberType<KernelNumberType>> &task_buffer,
+  Vector<RangeNumberType>               &col_vector,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                             &kernel,
+  const DeviceNumberType<KernelNumberType>    factor,
+  std::forward_list<size_type>               &remaining_col_indices,
+  const size_type                             current_ref_col_index,
   const size_type                             pass_the_end_ref_col_index,
   const std::vector<types::global_dof_index> &row_dof_indices,
   const std::vector<types::global_dof_index> &col_dof_indices,
@@ -2148,27 +2186,29 @@ random_select_ref_column(
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 size_type
 random_select_ref_column(
-  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<dim,
-                                                             spacedim,
-                                                             RangeNumberType,
-                                                             KernelNumberType>
-                                                       &task_buffer,
-  Vector<RangeNumberType>                              &col_vector,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
-  const KernelNumberType                                stabilization_factor,
-  std::forward_list<size_type>                         &remaining_col_indices,
-  const size_type                                       current_ref_col_index,
-  const size_type                             pass_the_end_ref_col_index,
-  const std::vector<types::global_dof_index> &row_dof_indices,
-  const std::vector<types::global_dof_index> &col_dof_indices,
+  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    DeviceNumberType<RangeNumberType>,
+    DeviceNumberType<KernelNumberType>> &task_buffer,
+  Vector<RangeNumberType>               &col_vector,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                              &kernel,
+  const DeviceNumberType<KernelNumberType>     kernel_factor,
+  const std::vector<Vector<KernelNumberType>> &mass_vmult_weq,
+  const KernelNumberType                       stabilization_factor,
+  std::forward_list<size_type>                &remaining_col_indices,
+  const size_type                              current_ref_col_index,
+  const size_type                              pass_the_end_ref_col_index,
+  const std::vector<types::global_dof_index>  &row_dof_indices,
+  const std::vector<types::global_dof_index>  &col_dof_indices,
   const std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
     &kx_dof_to_cell_topo,
@@ -2416,7 +2456,8 @@ random_select_ref_column(Vector<RangeNumberType>                    &col_vector,
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -2424,13 +2465,14 @@ void
 aca_plus_parallel_sauter_quad_for_vector_entry(
   RkMatrix<RangeNumberType> &rkmat,
   const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                                       &aca_config,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::array<types::global_dof_index, 2>         &row_dof_index_range,
-  const std::array<types::global_dof_index, 2>         &col_dof_index_range,
-  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
+    &aca_config,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                               &kernel,
+  const DeviceNumberType<KernelNumberType>      kernel_factor,
+  const std::array<types::global_dof_index, 2> &row_dof_index_range,
+  const std::array<types::global_dof_index, 2> &col_dof_index_range,
+  const DoFToCellTopology<dim, spacedim>       &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>       &ky_dof_to_cell_topo,
   const HierBEM::CUDAWrappers::CUDABEMValues<
     dim,
     spacedim,
@@ -2446,9 +2488,10 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                               &material_id_to_mapping_index,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
-  HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
-                                                           &scratch_data_gpu,
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
 {
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
@@ -3113,7 +3156,8 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -3797,7 +3841,8 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -3805,13 +3850,14 @@ void
 aca_plus_parallel_sauter_quad_for_whole_vector(
   RkMatrix<RangeNumberType> &rkmat,
   const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                                       &aca_config,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::array<types::global_dof_index, 2>         &row_dof_index_range,
-  const std::array<types::global_dof_index, 2>         &col_dof_index_range,
-  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
+    &aca_config,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                               &kernel,
+  const DeviceNumberType<KernelNumberType>      kernel_factor,
+  const std::array<types::global_dof_index, 2> &row_dof_index_range,
+  const std::array<types::global_dof_index, 2> &col_dof_index_range,
+  const DoFToCellTopology<dim, spacedim>       &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>       &ky_dof_to_cell_topo,
   const BEMValues<dim,
                   spacedim,
                   typename numbers::NumberTraits<RangeNumberType>::real_type>
@@ -3834,6 +3880,8 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
 {
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+  using CUDARangeNumberType  = DeviceNumberType<RangeNumberType>;
+  using CUDAKernelNumberType = DeviceNumberType<KernelNumberType>;
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
     std::is_same<
@@ -3853,19 +3901,21 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
    * @internal Create Sauter task buffers for assembling row vectors and
    * column vectors.
    */
-  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<dim,
-                                                             spacedim,
-                                                             RangeNumberType,
-                                                             KernelNumberType>
+  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    CUDARangeNumberType,
+    CUDAKernelNumberType>
     sauter_task_buffer_for_row_vector(n,
                                       kx_dof_to_cell_topo.max_cells_per_dof,
                                       ky_dof_to_cell_topo.max_cells_per_dof,
                                       bem_values,
                                       scratch_data.cuda_stream_handle);
-  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<dim,
-                                                             spacedim,
-                                                             RangeNumberType,
-                                                             KernelNumberType>
+  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    CUDARangeNumberType,
+    CUDAKernelNumberType>
     sauter_task_buffer_for_col_vector(m,
                                       kx_dof_to_cell_topo.max_cells_per_dof,
                                       ky_dof_to_cell_topo.max_cells_per_dof,
@@ -4530,7 +4580,8 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -4569,6 +4620,8 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
 {
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+  using CUDARangeNumberType  = DeviceNumberType<RangeNumberType>;
+  using CUDAKernelNumberType = DeviceNumberType<KernelNumberType>;
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
     std::is_same<
@@ -4588,19 +4641,21 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
    * @internal Create Sauter task buffers for assembling row vectors and
    * column vectors.
    */
-  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<dim,
-                                                             spacedim,
-                                                             RangeNumberType,
-                                                             KernelNumberType>
+  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    CUDARangeNumberType,
+    CUDAKernelNumberType>
     sauter_task_buffer_for_row_vector(n,
                                       kx_dof_to_cell_topo.max_cells_per_dof,
                                       ky_dof_to_cell_topo.max_cells_per_dof,
                                       bem_values,
                                       scratch_data.cuda_stream_handle);
-  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<dim,
-                                                             spacedim,
-                                                             RangeNumberType,
-                                                             KernelNumberType>
+  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    CUDARangeNumberType,
+    CUDAKernelNumberType>
     sauter_task_buffer_for_col_vector(m,
                                       kx_dof_to_cell_topo.max_cells_per_dof,
                                       ky_dof_to_cell_topo.max_cells_per_dof,
@@ -5817,7 +5872,8 @@ aca_plus(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -5825,11 +5881,12 @@ void
 fill_hmatrix_leaf_node_with_aca_plus(
   HMatrix<spacedim, RangeNumberType> *leaf_mat,
   const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                                       &aca_config,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
+    &aca_config,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                          &kernel,
+  const DeviceNumberType<KernelNumberType> kernel_factor,
+  const DoFToCellTopology<dim, spacedim>  &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>  &ky_dof_to_cell_topo,
   const HierBEM::CUDAWrappers::CUDABEMValues<
     dim,
     spacedim,
@@ -5847,9 +5904,10 @@ fill_hmatrix_leaf_node_with_aca_plus(
                               &material_id_to_mapping_index,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
-  HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
-                                                           &scratch_data_gpu,
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
   const bool enable_build_symmetric_hmat = false)
 {
@@ -6233,7 +6291,8 @@ fill_hmatrix_leaf_node_with_aca_plus(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -6241,13 +6300,14 @@ void
 fill_hmatrix_leaf_node_with_aca_plus(
   HMatrix<spacedim, RangeNumberType> *leaf_mat,
   const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                                       &aca_config,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
-  const KernelNumberType                                stabilization_factor,
-  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
+    &aca_config,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                              &kernel,
+  const DeviceNumberType<KernelNumberType>     kernel_factor,
+  const std::vector<Vector<KernelNumberType>> &mass_vmult_weq,
+  const KernelNumberType                       stabilization_factor,
+  const DoFToCellTopology<dim, spacedim>      &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>      &ky_dof_to_cell_topo,
   const HierBEM::CUDAWrappers::CUDABEMValues<
     dim,
     spacedim,
@@ -6265,9 +6325,10 @@ fill_hmatrix_leaf_node_with_aca_plus(
                               &material_id_to_mapping_index,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
-  HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
-                                                           &scratch_data_gpu,
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
   const bool enable_build_symmetric_hmat = false)
 {
@@ -6647,7 +6708,8 @@ fill_hmatrix_leaf_node_with_aca_plus(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -6655,9 +6717,10 @@ void
 fill_hmatrix_leaf_node_with_aca_plus(
   HMatrix<spacedim, RangeNumberType> *leaf_mat,
   const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                                       &aca_config,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
+    &aca_config,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                          &kernel,
+  const DeviceNumberType<KernelNumberType> kernel_factor,
   const typename numbers::NumberTraits<RangeNumberType>::real_type
                                           mass_matrix_factor,
   const DoFToCellTopology<dim, spacedim> &kx_dof_to_cell_topo,
@@ -6680,9 +6743,10 @@ fill_hmatrix_leaf_node_with_aca_plus(
   const SurfaceNormalDetector                     &normal_detector,
   CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
-  HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
-                                                           &scratch_data_gpu,
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
   const bool enable_build_symmetric_hmat = false)
 {
@@ -6978,7 +7042,8 @@ fill_hmatrix_leaf_node_with_aca_plus(
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -6986,11 +7051,12 @@ void
 fill_far_field_hmatrix_leaf_node_with_aca_plus(
   HMatrix<spacedim, RangeNumberType> *leaf_mat,
   const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                                       &aca_config,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
+    &aca_config,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                          &kernel,
+  const DeviceNumberType<KernelNumberType> kernel_factor,
+  const DoFToCellTopology<dim, spacedim>  &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>  &ky_dof_to_cell_topo,
   const BEMValues<dim,
                   spacedim,
                   typename numbers::NumberTraits<RangeNumberType>::real_type>
@@ -7146,7 +7212,8 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -7154,13 +7221,14 @@ void
 fill_far_field_hmatrix_leaf_node_with_aca_plus(
   HMatrix<spacedim, RangeNumberType> *leaf_mat,
   const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                                       &aca_config,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
-  const KernelNumberType                                stabilization_factor,
-  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
+    &aca_config,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                              &kernel,
+  const DeviceNumberType<KernelNumberType>     kernel_factor,
+  const std::vector<Vector<KernelNumberType>> &mass_vmult_weq,
+  const KernelNumberType                       stabilization_factor,
+  const DoFToCellTopology<dim, spacedim>      &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>      &ky_dof_to_cell_topo,
   const BEMValues<dim,
                   spacedim,
                   typename numbers::NumberTraits<RangeNumberType>::real_type>
@@ -7330,7 +7398,8 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -7340,11 +7409,12 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
     typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
     &range,
   const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                                       &aca_config,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
+    &aca_config,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                          &kernel,
+  const DeviceNumberType<KernelNumberType> kernel_factor,
+  const DoFToCellTopology<dim, spacedim>  &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>  &ky_dof_to_cell_topo,
   const BEMValues<dim,
                   spacedim,
                   typename numbers::NumberTraits<RangeNumberType>::real_type>
@@ -7453,7 +7523,8 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -7463,13 +7534,14 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
     typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
     &range,
   const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                                       &aca_config,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
-  const KernelNumberType                                stabilization_factor,
-  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
+    &aca_config,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                              &kernel,
+  const DeviceNumberType<KernelNumberType>     kernel_factor,
+  const std::vector<Vector<KernelNumberType>> &mass_vmult_weq,
+  const KernelNumberType                       stabilization_factor,
+  const DoFToCellTopology<dim, spacedim>      &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>      &ky_dof_to_cell_topo,
   const BEMValues<dim,
                   spacedim,
                   typename numbers::NumberTraits<RangeNumberType>::real_type>
@@ -7729,7 +7801,8 @@ stabilize_near_field_hmatrices_for_hypersingular_kernel(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -7911,7 +7984,8 @@ fill_hmatrix_with_aca_plus_serial(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -8084,7 +8158,8 @@ fill_hmatrix_with_aca_plus_serial(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -8271,7 +8346,8 @@ fill_hmatrix_with_aca_plus_serial(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -8280,14 +8356,15 @@ fill_hmatrix_with_aca_plus_smp(
   const unsigned int                  thread_num,
   HMatrix<spacedim, RangeNumberType> &hmat,
   const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                                       &aca_config,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
-  const SauterQuadratureRule<dim>                      &sauter_quad_rule,
-  const DoFHandler<dim, spacedim>                      &kx_dof_handler,
-  const DoFHandler<dim, spacedim>                      &ky_dof_handler,
+    &aca_config,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                          &kernel,
+  const DeviceNumberType<KernelNumberType> kernel_factor,
+  const DoFToCellTopology<dim, spacedim>  &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>  &ky_dof_to_cell_topo,
+  const SauterQuadratureRule<dim>         &sauter_quad_rule,
+  const DoFHandler<dim, spacedim>         &kx_dof_handler,
+  const DoFHandler<dim, spacedim>         &ky_dof_handler,
   const std::vector<types::global_dof_index>
     *kx_map_from_local_to_full_dof_indices,
   const std::vector<types::global_dof_index>
@@ -8668,7 +8745,8 @@ fill_hmatrix_with_aca_plus_smp(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -8677,16 +8755,17 @@ fill_hmatrix_with_aca_plus_smp(
   const unsigned int                  thread_num,
   HMatrix<spacedim, RangeNumberType> &hmat,
   const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                                       &aca_config,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
-  const KernelNumberType                                stabilization_factor,
-  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
-  const SauterQuadratureRule<dim>                      &sauter_quad_rule,
-  const DoFHandler<dim, spacedim>                      &kx_dof_handler,
-  const DoFHandler<dim, spacedim>                      &ky_dof_handler,
+    &aca_config,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                              &kernel,
+  const DeviceNumberType<KernelNumberType>     kernel_factor,
+  const std::vector<Vector<KernelNumberType>> &mass_vmult_weq,
+  const KernelNumberType                       stabilization_factor,
+  const DoFToCellTopology<dim, spacedim>      &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>      &ky_dof_to_cell_topo,
+  const SauterQuadratureRule<dim>             &sauter_quad_rule,
+  const DoFHandler<dim, spacedim>             &kx_dof_handler,
+  const DoFHandler<dim, spacedim>             &ky_dof_handler,
   const std::vector<types::global_dof_index>
     *kx_map_from_local_to_full_dof_indices,
   const std::vector<types::global_dof_index>
@@ -9097,7 +9176,8 @@ fill_hmatrix_with_aca_plus_smp(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -9106,9 +9186,10 @@ fill_hmatrix_with_aca_plus_smp(
   const unsigned int                  thread_num,
   HMatrix<spacedim, RangeNumberType> &hmat,
   const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                                       &aca_config,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
+    &aca_config,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                          &kernel,
+  const DeviceNumberType<KernelNumberType> kernel_factor,
   const typename numbers::NumberTraits<RangeNumberType>::real_type
                                           mass_matrix_factor,
   const DoFToCellTopology<dim, spacedim> &kx_dof_to_cell_topo,

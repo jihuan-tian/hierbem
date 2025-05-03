@@ -932,14 +932,14 @@ namespace CUDAWrappers
   }
 
 
-  template <int dim, int spacedim = dim, typename RangeNumberType = double>
+  template <int dim, int spacedim = dim, typename CUDAKernelNumberType = double>
   class CUDAPairCellWiseScratchData
   {
   public:
-    using value_type = RangeNumberType;
+    using value_type = CUDAKernelNumberType;
     using size_type  = std::size_t;
     using real_type =
-      typename numbers::NumberTraits<RangeNumberType>::real_type;
+      typename numbers::NumberTraits<CUDAKernelNumberType>::real_type;
 
     /**
      * Allocate global memory on the device according to the data size of
@@ -947,8 +947,9 @@ namespace CUDAWrappers
      *
      * @param bem_values_cpu
      */
+    template <typename KernelNumberType>
     HBEM_ATTR_HOST void
-    allocate(const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
+    allocate(const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
                &scratch_cpu);
 
     /**
@@ -957,9 +958,10 @@ namespace CUDAWrappers
      *
      * @param scratch_cpu
      */
+    template <typename KernelNumberType>
     HBEM_ATTR_HOST void
     assign_from_host(
-      const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
+      const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
         &scratch_cpu);
 
     /**
@@ -1315,14 +1317,15 @@ namespace CUDAWrappers
      * Sauter quadrature values calculated from the accumulation of each
      * thread blocks.
      */
-    RangeNumberType *quad_values_in_thread_blocks;
+    CUDAKernelNumberType *quad_values_in_thread_blocks;
   };
 
 
-  template <int dim, int spacedim, typename RangeNumberType>
+  template <int dim, int spacedim, typename CUDAKernelNumberType>
+  template <typename KernelNumberType>
   HBEM_ATTR_HOST void
-  CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>::allocate(
-    const PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_cpu)
+  CUDAPairCellWiseScratchData<dim, spacedim, CUDAKernelNumberType>::allocate(
+    const PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_cpu)
   {
     kx_mapping_support_points_permuted.allocate(
       TableIndices<1>(scratch_cpu.kx_mapping_support_points_permuted.size()),
@@ -1489,15 +1492,18 @@ namespace CUDAWrappers
                                     scratch_cpu.cuda_stream_handle);
 
     AssertCuda(cudaMallocAsync((void **)&quad_values_in_thread_blocks,
-                               sizeof(RangeNumberType) * 100,
+                               sizeof(CUDAKernelNumberType) * 100,
                                scratch_cpu.cuda_stream_handle));
   }
 
 
-  template <int dim, int spacedim, typename RangeNumberType>
+  template <int dim, int spacedim, typename CUDAKernelNumberType>
+  template <typename KernelNumberType>
   HBEM_ATTR_HOST void
-  CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>::assign_from_host(
-    const PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_cpu)
+  CUDAPairCellWiseScratchData<dim, spacedim, CUDAKernelNumberType>::
+    assign_from_host(
+      const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
+        &scratch_cpu)
   {
     kx_mapping_support_points_permuted.assign_from_host(
       scratch_cpu.kx_mapping_support_points_permuted,
@@ -1529,9 +1535,9 @@ namespace CUDAWrappers
   }
 
 
-  template <int dim, int spacedim, typename RangeNumberType>
+  template <int dim, int spacedim, typename CUDAKernelNumberType>
   HBEM_ATTR_HOST void
-  CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>::release(
+  CUDAPairCellWiseScratchData<dim, spacedim, CUDAKernelNumberType>::release(
     const cudaStream_t stream)
   {
     kx_mapping_support_points_permuted.release(stream);

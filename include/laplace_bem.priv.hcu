@@ -43,6 +43,7 @@
 #include <iostream>
 #include <iterator>
 #include <set>
+#include <type_traits>
 #include <vector>
 
 #include "bem_general.hcu"
@@ -52,6 +53,7 @@
 #include "cluster_tree.h"
 #include "config.h"
 #include "cu_profile.hcu"
+#include "cuda_complex.hcu"
 #include "debug_tools.h"
 #include "gmsh_manipulation.h"
 #include "grid_out_ext.h"
@@ -86,6 +88,14 @@ class LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv
 {
 public:
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+  // Here we define number types to be used on the device. When the original
+  // number types are real values, they are the same on the device. When the
+  // number types are complex values, we use our own complex type instead of
+  // @p std::complex .
+  using CUDAKernelNumberType =
+    std::conditional_t<std::is_floating_point_v<KernelNumberType>,
+                       KernelNumberType,
+                       complex<real_type>>;
 
 #pragma region == == Internal class ctor and dtor decls == ==
   Priv();
@@ -380,27 +390,54 @@ private:
   DoFToCellTopology<dim, spacedim> dof_to_cell_topo_for_neumann_space_;
 
   /**
-   * Kernel function for the single layer potential.
+   * Kernel function for the single layer potential on the host.
    */
-  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<3, KernelNumberType>
-    single_layer_kernel_;
+  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim,
+                                                            KernelNumberType>
+    single_layer_kernel_cpu_;
   /**
-   * Kernel function for the double layer potential.
+   * Kernel function for the double layer potential on the host.
    */
-  HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel<3, KernelNumberType>
-    double_layer_kernel_;
+  HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel<spacedim,
+                                                            KernelNumberType>
+    double_layer_kernel_cpu_;
   /**
-   * Kernel function for the adjoint double layer potential.
+   * Kernel function for the adjoint double layer potential on the host.
    */
   HierBEM::PlatformShared::LaplaceKernel::
-    AdjointDoubleLayerKernel<3, KernelNumberType>
-      adjoint_double_layer_kernel_;
+    AdjointDoubleLayerKernel<spacedim, KernelNumberType>
+      adjoint_double_layer_kernel_cpu_;
   /**
-   * Kernel function for the hyper-singular potential.
+   * Kernel function for the hyper-singular potential on the host.
    */
   HierBEM::PlatformShared::LaplaceKernel::
-    HyperSingularKernelRegular<3, KernelNumberType>
-      hyper_singular_kernel_;
+    HyperSingularKernelRegular<spacedim, KernelNumberType>
+      hyper_singular_kernel_cpu_;
+
+  /**
+   * Kernel function for the single layer potential on the device.
+   */
+  HierBEM::PlatformShared::LaplaceKernel::
+    SingleLayerKernel<spacedim, CUDAKernelNumberType>
+      single_layer_kernel_gpu_;
+  /**
+   * Kernel function for the double layer potential on the device.
+   */
+  HierBEM::PlatformShared::LaplaceKernel::
+    DoubleLayerKernel<spacedim, CUDAKernelNumberType>
+      double_layer_kernel_gpu_;
+  /**
+   * Kernel function for the adjoint double layer potential on the device.
+   */
+  HierBEM::PlatformShared::LaplaceKernel::
+    AdjointDoubleLayerKernel<spacedim, CUDAKernelNumberType>
+      adjoint_double_layer_kernel_gpu_;
+  /**
+   * Kernel function for the hyper-singular potential on the device.
+   */
+  HierBEM::PlatformShared::LaplaceKernel::
+    HyperSingularKernelRegular<spacedim, CUDAKernelNumberType>
+      hyper_singular_kernel_gpu_;
 
   /**
    * Full matrices for verification purpose.
@@ -771,7 +808,8 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -790,7 +828,8 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -1057,7 +1096,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
         KernelNumberType,
         SurfaceNormalDetector<dim, spacedim>,
         LAPACKFullMatrixExt<KernelNumberType>>(
-        single_layer_kernel_,
+        single_layer_kernel_gpu_,
         1.0,
         dof_handler_for_neumann_space_,
         dof_handler_for_neumann_space_,
@@ -1083,8 +1122,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
         thread_num_,
         V_hmat_weq_,
         aca_config,
-        single_layer_kernel_,
-        1.0,
+        single_layer_kernel_gpu_,
+        CUDAKernelNumberType(1.0),
         dof_to_cell_topo_for_neumann_space_,
         dof_to_cell_topo_for_neumann_space_,
         SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -3121,7 +3160,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 KernelNumberType,
                 SurfaceNormalDetector<dim, spacedim>,
                 LAPACKFullMatrixExt<RangeNumberType>>(
-                double_layer_kernel_,
+                double_layer_kernel_cpu_,
                 1.0,
                 dof_handler_for_neumann_space_,
                 dof_handler_for_dirichlet_space_,
@@ -3140,7 +3179,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 KernelNumberType,
                 SurfaceNormalDetector<dim, spacedim>,
                 LAPACKFullMatrixExt<RangeNumberType>>(
-                double_layer_kernel_,
+                double_layer_kernel_cpu_,
                 1.0,
                 dof_handler_for_neumann_space_,
                 dof_handler_for_dirichlet_space_,
@@ -3168,7 +3207,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 KernelNumberType,
                 SurfaceNormalDetector<dim, spacedim>,
                 LAPACKFullMatrixExt<RangeNumberType>>(
-                single_layer_kernel_,
+                single_layer_kernel_cpu_,
                 1.0,
                 dof_handler_for_neumann_space_,
                 dof_handler_for_neumann_space_,
@@ -3187,7 +3226,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 KernelNumberType,
                 SurfaceNormalDetector<dim, spacedim>,
                 LAPACKFullMatrixExt<RangeNumberType>>(
-                single_layer_kernel_,
+                single_layer_kernel_cpu_,
                 1.0,
                 dof_handler_for_neumann_space_,
                 dof_handler_for_neumann_space_,
@@ -3259,7 +3298,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             KernelNumberType,
             SurfaceNormalDetector<dim, spacedim>,
             LAPACKFullMatrixExt<RangeNumberType>>(
-            adjoint_double_layer_kernel_,
+            adjoint_double_layer_kernel_cpu_,
             -1.0,
             dof_handler_for_dirichlet_space_,
             dof_handler_for_neumann_space_,
@@ -3282,7 +3321,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             KernelNumberType,
             SurfaceNormalDetector<dim, spacedim>,
             LAPACKFullMatrixExt<RangeNumberType>>(
-            hyper_singular_kernel_,
+            hyper_singular_kernel_cpu_,
             1.0,
             dof_handler_for_dirichlet_space_,
             dof_handler_for_dirichlet_space_,
@@ -3388,8 +3427,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 thread_num_,
                 K2_hmat_with_mass_matrix_,
                 aca_config,
-                double_layer_kernel_,
-                KernelNumberType(1.0),
+                double_layer_kernel_gpu_,
+                CUDAKernelNumberType(1.0),
                 real_type(0.5),
                 dof_to_cell_topo_for_neumann_space_,
                 dof_to_cell_topo_for_dirichlet_space_,
@@ -3422,8 +3461,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 thread_num_,
                 K2_hmat_with_mass_matrix_,
                 aca_config,
-                double_layer_kernel_,
-                KernelNumberType(1.0),
+                double_layer_kernel_gpu_,
+                CUDAKernelNumberType(1.0),
                 real_type(-0.5),
                 dof_to_cell_topo_for_neumann_space_,
                 dof_to_cell_topo_for_dirichlet_space_,
@@ -3497,8 +3536,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               thread_num_,
               V1_hmat_,
               aca_config,
-              single_layer_kernel_,
-              KernelNumberType(1.0),
+              single_layer_kernel_gpu_,
+              CUDAKernelNumberType(1.0),
               dof_to_cell_topo_for_neumann_space_,
               dof_to_cell_topo_for_neumann_space_,
               SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -3547,8 +3586,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 thread_num_,
                 K_prime2_hmat_with_mass_matrix_,
                 aca_config,
-                adjoint_double_layer_kernel_,
-                KernelNumberType(-1.0),
+                adjoint_double_layer_kernel_gpu_,
+                CUDAKernelNumberType(-1.0),
                 real_type(0.5),
                 dof_to_cell_topo_for_dirichlet_space_,
                 dof_to_cell_topo_for_neumann_space_,
@@ -3576,8 +3615,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 thread_num_,
                 K_prime2_hmat_with_mass_matrix_,
                 aca_config,
-                adjoint_double_layer_kernel_,
-                KernelNumberType(-1.0),
+                adjoint_double_layer_kernel_gpu_,
+                CUDAKernelNumberType(-1.0),
                 real_type(-0.5),
                 dof_to_cell_topo_for_dirichlet_space_,
                 dof_to_cell_topo_for_neumann_space_,
@@ -3687,8 +3726,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             thread_num_,
             D1_hmat_,
             aca_config,
-            hyper_singular_kernel_,
-            KernelNumberType(1.0),
+            hyper_singular_kernel_gpu_,
+            CUDAKernelNumberType(1.0),
             mass_vmult_weq_,
             alpha_for_neumann_,
             dof_to_cell_topo_for_dirichlet_space_,
@@ -3744,8 +3783,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 thread_num_,
                 K2_hmat_with_mass_matrix_,
                 aca_config,
-                double_layer_kernel_,
-                KernelNumberType(1.0),
+                double_layer_kernel_gpu_,
+                CUDAKernelNumberType(1.0),
                 real_type(0.5),
                 dof_to_cell_topo_for_neumann_space_,
                 dof_to_cell_topo_for_dirichlet_space_,
@@ -3773,8 +3812,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 thread_num_,
                 K_prime2_hmat_with_mass_matrix_,
                 aca_config,
-                adjoint_double_layer_kernel_,
-                KernelNumberType(-1.0),
+                adjoint_double_layer_kernel_gpu_,
+                CUDAKernelNumberType(-1.0),
                 real_type(0.5),
                 dof_to_cell_topo_for_dirichlet_space_,
                 dof_to_cell_topo_for_neumann_space_,
@@ -3802,8 +3841,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 thread_num_,
                 K2_hmat_with_mass_matrix_,
                 aca_config,
-                double_layer_kernel_,
-                KernelNumberType(1.0),
+                double_layer_kernel_gpu_,
+                CUDAKernelNumberType(1.0),
                 real_type(-0.5),
                 dof_to_cell_topo_for_neumann_space_,
                 dof_to_cell_topo_for_dirichlet_space_,
@@ -3831,8 +3870,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 thread_num_,
                 K_prime2_hmat_with_mass_matrix_,
                 aca_config,
-                adjoint_double_layer_kernel_,
-                KernelNumberType(-1.0),
+                adjoint_double_layer_kernel_gpu_,
+                CUDAKernelNumberType(-1.0),
                 real_type(-0.5),
                 dof_to_cell_topo_for_dirichlet_space_,
                 dof_to_cell_topo_for_neumann_space_,
@@ -3868,8 +3907,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             thread_num_,
             V2_hmat_,
             aca_config,
-            single_layer_kernel_,
-            KernelNumberType(-1.0),
+            single_layer_kernel_gpu_,
+            CUDAKernelNumberType(-1.0),
             dof_to_cell_topo_for_neumann_space_,
             dof_to_cell_topo_for_neumann_space_,
             SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -3897,8 +3936,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             thread_num_,
             D2_hmat_,
             aca_config,
-            hyper_singular_kernel_,
-            KernelNumberType(-1.0),
+            hyper_singular_kernel_gpu_,
+            CUDAKernelNumberType(-1.0),
             dof_to_cell_topo_for_dirichlet_space_,
             dof_to_cell_topo_for_dirichlet_space_,
             SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -4026,8 +4065,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             thread_num_,
             V1_hmat_,
             aca_config,
-            single_layer_kernel_,
-            KernelNumberType(1.0),
+            single_layer_kernel_gpu_,
+            CUDAKernelNumberType(1.0),
             dof_to_cell_topo_for_neumann_space_,
             dof_to_cell_topo_for_neumann_space_,
             SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -4055,8 +4094,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             thread_num_,
             K1_hmat_,
             aca_config,
-            double_layer_kernel_,
-            KernelNumberType(-1.0),
+            double_layer_kernel_gpu_,
+            CUDAKernelNumberType(-1.0),
             dof_to_cell_topo_for_neumann_space_,
             dof_to_cell_topo_for_dirichlet_space_,
             SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -4084,8 +4123,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             thread_num_,
             D1_hmat_,
             aca_config,
-            hyper_singular_kernel_,
-            KernelNumberType(1.0),
+            hyper_singular_kernel_gpu_,
+            CUDAKernelNumberType(1.0),
             dof_to_cell_topo_for_dirichlet_space_,
             dof_to_cell_topo_for_dirichlet_space_,
             SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -5229,7 +5268,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
                 RangeNumberType,
                 KernelNumberType,
-                Vector>(double_layer_kernel_,
+                Vector>(double_layer_kernel_cpu_,
                         -1.0,
                         dof_handler_for_dirichlet_space_,
                         dirichlet_bc_,
@@ -5250,7 +5289,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
                 RangeNumberType,
                 KernelNumberType,
-                Vector>(single_layer_kernel_,
+                Vector>(single_layer_kernel_cpu_,
                         1.0,
                         dof_handler_for_neumann_space_,
                         neumann_data_,
@@ -5275,7 +5314,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
                 RangeNumberType,
                 KernelNumberType,
-                Vector>(double_layer_kernel_,
+                Vector>(double_layer_kernel_cpu_,
                         1.0,
                         dof_handler_for_dirichlet_space_,
                         dirichlet_bc_,
@@ -5296,7 +5335,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
                 RangeNumberType,
                 KernelNumberType,
-                Vector>(single_layer_kernel_,
+                Vector>(single_layer_kernel_cpu_,
                         -1.0,
                         dof_handler_for_neumann_space_,
                         neumann_data_,
@@ -5325,7 +5364,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
                 RangeNumberType,
                 KernelNumberType,
-                Vector>(double_layer_kernel_,
+                Vector>(double_layer_kernel_cpu_,
                         -1.0,
                         dof_handler_for_dirichlet_space_,
                         dirichlet_data_,
@@ -5346,7 +5385,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
                 RangeNumberType,
                 KernelNumberType,
-                Vector>(single_layer_kernel_,
+                Vector>(single_layer_kernel_cpu_,
                         1.0,
                         dof_handler_for_neumann_space_,
                         neumann_bc_,
@@ -5371,7 +5410,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
                 RangeNumberType,
                 KernelNumberType,
-                Vector>(double_layer_kernel_,
+                Vector>(double_layer_kernel_cpu_,
                         1.0,
                         dof_handler_for_dirichlet_space_,
                         dirichlet_data_,
@@ -5392,7 +5431,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
                 RangeNumberType,
                 KernelNumberType,
-                Vector>(single_layer_kernel_,
+                Vector>(single_layer_kernel_cpu_,
                         -1.0,
                         dof_handler_for_neumann_space_,
                         neumann_bc_,
@@ -5421,7 +5460,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
                 RangeNumberType,
                 KernelNumberType,
-                Vector>(double_layer_kernel_,
+                Vector>(double_layer_kernel_cpu_,
                         -1.0,
                         dof_handler_for_dirichlet_space_,
                         dirichlet_data_,
@@ -5442,7 +5481,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
                 RangeNumberType,
                 KernelNumberType,
-                Vector>(single_layer_kernel_,
+                Vector>(single_layer_kernel_cpu_,
                         1.0,
                         dof_handler_for_neumann_space_,
                         neumann_data_,
@@ -5467,7 +5506,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 PlatformShared::LaplaceKernel::DoubleLayerKernel,
                 RangeNumberType,
                 KernelNumberType,
-                Vector>(double_layer_kernel_,
+                Vector>(double_layer_kernel_cpu_,
                         1.0,
                         dof_handler_for_dirichlet_space_,
                         dirichlet_data_,
@@ -5488,7 +5527,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 PlatformShared::LaplaceKernel::SingleLayerKernel,
                 RangeNumberType,
                 KernelNumberType,
-                Vector>(single_layer_kernel_,
+                Vector>(single_layer_kernel_cpu_,
                         -1.0,
                         dof_handler_for_neumann_space_,
                         neumann_data_,

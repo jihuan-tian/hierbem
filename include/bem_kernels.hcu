@@ -66,13 +66,14 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType = double>
+            template <int, typename>
+            typename KernelFunctionType,
+            typename KernelNumberType = double>
   class KernelPulledbackToUnitCell
   {
   public:
     using real_type =
-      typename numbers::NumberTraits<RangeNumberType>::real_type;
+      typename numbers::NumberTraits<KernelNumberType>::real_type;
     const unsigned int n_components;
 
     /**
@@ -87,7 +88,7 @@ namespace CUDAWrappers
      */
     HBEM_ATTR_HOST HBEM_ATTR_DEV
     KernelPulledbackToUnitCell(
-      const KernelFunctionType<spacedim, RangeNumberType> &kernel_function,
+      const KernelFunctionType<spacedim, KernelNumberType> &kernel_function,
       const CellNeighboringType &cell_neighboring_type,
       const unsigned int         kx_dof_index = 0,
       const unsigned int         ky_dof_index = 0);
@@ -136,11 +137,11 @@ namespace CUDAWrappers
      * @param component
      * @return
      */
-    HBEM_ATTR_HOST RangeNumberType
+    HBEM_ATTR_HOST KernelNumberType
     value(const unsigned int                         k3_index,
           const unsigned int                         quad_no,
           const BEMValues<dim, spacedim, real_type> &bem_values,
-          const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
+          const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
                             &scratch_data,
           const unsigned int component = 0) const;
 
@@ -152,16 +153,16 @@ namespace CUDAWrappers
      * @param component
      * @return
      */
-    HBEM_ATTR_DEV RangeNumberType
+    HBEM_ATTR_DEV KernelNumberType
     value(const unsigned int                             k3_index,
           const unsigned int                             quad_no,
           const CUDABEMValues<dim, spacedim, real_type> &bem_values,
-          const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+          const CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
                             &scratch_data,
           const unsigned int component = 0) const;
 
   private:
-    const KernelFunctionType<spacedim, RangeNumberType> &kernel_function;
+    const KernelFunctionType<spacedim, KernelNumberType> &kernel_function;
 
     CellNeighboringType cell_neighboring_type;
 
@@ -180,15 +181,16 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType>
+            template <int, typename>
+            typename KernelFunctionType,
+            typename KernelNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV
   KernelPulledbackToUnitCell<dim,
                              spacedim,
                              KernelFunctionType,
-                             RangeNumberType>::
+                             KernelNumberType>::
     KernelPulledbackToUnitCell(
-      const KernelFunctionType<spacedim, RangeNumberType> &kernel_function,
+      const KernelFunctionType<spacedim, KernelNumberType> &kernel_function,
       const CellNeighboringType &cell_neighboring_type,
       const unsigned int         kx_dof_index,
       const unsigned int         ky_dof_index)
@@ -202,29 +204,30 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType>
-  HBEM_ATTR_HOST HBEM_ATTR_DEV
-    KernelPulledbackToUnitCell<dim,
-                               spacedim,
-                               KernelFunctionType,
-                               RangeNumberType>::~KernelPulledbackToUnitCell() =
-      default;
+            template <int, typename>
+            typename KernelFunctionType,
+            typename KernelNumberType>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV KernelPulledbackToUnitCell<
+    dim,
+    spacedim,
+    KernelFunctionType,
+    KernelNumberType>::~KernelPulledbackToUnitCell() = default;
 
 
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType>
+            template <int, typename>
+            typename KernelFunctionType,
+            typename KernelNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV KernelPulledbackToUnitCell<dim,
                                                           spacedim,
                                                           KernelFunctionType,
-                                                          RangeNumberType>                              &
+                                                          KernelNumberType>                              &
   KernelPulledbackToUnitCell<
                                  dim,
                                  spacedim,
                                  KernelFunctionType,
-                                 RangeNumberType>::operator=(const KernelPulledbackToUnitCell &f)
+                                 KernelNumberType>::operator=(const KernelPulledbackToUnitCell &f)
   {
     assert(n_components == f.n_components);
 
@@ -239,14 +242,15 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType>
+            template <int, typename>
+            typename KernelFunctionType,
+            typename KernelNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV void
   KernelPulledbackToUnitCell<
     dim,
     spacedim,
     KernelFunctionType,
-    RangeNumberType>::set_kx_dof_index(const unsigned int kx_dof_index)
+    KernelNumberType>::set_kx_dof_index(const unsigned int kx_dof_index)
   {
     this->kx_dof_index = kx_dof_index;
   }
@@ -254,14 +258,15 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType>
+            template <int, typename>
+            typename KernelFunctionType,
+            typename KernelNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV void
   KernelPulledbackToUnitCell<
     dim,
     spacedim,
     KernelFunctionType,
-    RangeNumberType>::set_ky_dof_index(const unsigned int ky_dof_index)
+    KernelNumberType>::set_ky_dof_index(const unsigned int ky_dof_index)
   {
     this->ky_dof_index = ky_dof_index;
   }
@@ -269,17 +274,18 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType>
-  HBEM_ATTR_HOST RangeNumberType
+            template <int, typename>
+            typename KernelFunctionType,
+            typename KernelNumberType>
+  HBEM_ATTR_HOST KernelNumberType
   KernelPulledbackToUnitCell<dim,
                              spacedim,
                              KernelFunctionType,
-                             RangeNumberType>::
+                             KernelNumberType>::
     value(const unsigned int                         k3_index,
           const unsigned int                         quad_no,
           const BEMValues<dim, spacedim, real_type> &bem_values,
-          const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
+          const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
                             &scratch_data,
           const unsigned int component) const
   {
@@ -532,17 +538,18 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType>
-  HBEM_ATTR_DEV RangeNumberType
+            template <int, typename>
+            typename KernelFunctionType,
+            typename KernelNumberType>
+  HBEM_ATTR_DEV KernelNumberType
   KernelPulledbackToUnitCell<dim,
                              spacedim,
                              KernelFunctionType,
-                             RangeNumberType>::
+                             KernelNumberType>::
     value(const unsigned int                             k3_index,
           const unsigned int                             quad_no,
           const CUDABEMValues<dim, spacedim, real_type> &bem_values,
-          const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+          const CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
                             &scratch_data,
           const unsigned int component) const
   {
@@ -806,13 +813,14 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType = double>
+            template <int, typename>
+            typename KernelFunctionType,
+            typename KernelNumberType = double>
   class KernelPulledbackToSauterSpace
   {
   public:
     using real_type =
-      typename numbers::NumberTraits<RangeNumberType>::real_type;
+      typename numbers::NumberTraits<KernelNumberType>::real_type;
     const unsigned int n_components;
 
     /**
@@ -827,8 +835,8 @@ namespace CUDAWrappers
       const KernelPulledbackToUnitCell<dim,
                                        spacedim,
                                        KernelFunctionType,
-                                       RangeNumberType> &kernel,
-      const CellNeighboringType                          cell_neighboring_type);
+                                       KernelNumberType> &kernel,
+      const CellNeighboringType cell_neighboring_type);
 
     /**
      * Destructor.
@@ -859,10 +867,10 @@ namespace CUDAWrappers
      * @param component
      * @return
      */
-    HBEM_ATTR_HOST RangeNumberType
+    HBEM_ATTR_HOST KernelNumberType
     value(const unsigned int                         quad_no,
           const BEMValues<dim, spacedim, real_type> &bem_values,
-          const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
+          const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
                             &scratch_data,
           const unsigned int component = 0) const;
 
@@ -875,10 +883,10 @@ namespace CUDAWrappers
      * @param component
      * @return
      */
-    HBEM_ATTR_DEV RangeNumberType
+    HBEM_ATTR_DEV KernelNumberType
     value(const unsigned int                             quad_no,
           const CUDABEMValues<dim, spacedim, real_type> &bem_values,
-          const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+          const CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
                             &scratch_data,
           const unsigned int component = 0) const;
 
@@ -886,26 +894,27 @@ namespace CUDAWrappers
     const KernelPulledbackToUnitCell<dim,
                                      spacedim,
                                      KernelFunctionType,
-                                     RangeNumberType> &kernel_on_unit_cell;
-    CellNeighboringType                                cell_neighboring_type;
+                                     KernelNumberType> &kernel_on_unit_cell;
+    CellNeighboringType                                 cell_neighboring_type;
   };
 
 
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType>
+            template <int, typename>
+            typename KernelFunctionType,
+            typename KernelNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV
   KernelPulledbackToSauterSpace<dim,
                                 spacedim,
                                 KernelFunctionType,
-                                RangeNumberType>::
+                                KernelNumberType>::
     KernelPulledbackToSauterSpace(
       const KernelPulledbackToUnitCell<dim,
                                        spacedim,
                                        KernelFunctionType,
-                                       RangeNumberType> &kernel,
-      const CellNeighboringType                          cell_neighboring_type)
+                                       KernelNumberType> &kernel,
+      const CellNeighboringType                           cell_neighboring_type)
     : n_components(kernel.n_components)
     , kernel_on_unit_cell(kernel)
     , cell_neighboring_type(cell_neighboring_type)
@@ -914,28 +923,30 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType>
+            template <int, typename>
+            typename KernelFunctionType,
+            typename KernelNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV KernelPulledbackToSauterSpace<
     dim,
     spacedim,
     KernelFunctionType,
-    RangeNumberType>::~KernelPulledbackToSauterSpace() = default;
+    KernelNumberType>::~KernelPulledbackToSauterSpace() = default;
 
 
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType>
+            template <int, typename>
+            typename KernelFunctionType,
+            typename KernelNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV KernelPulledbackToSauterSpace<dim,
                                                              spacedim,
                                                              KernelFunctionType,
-                                                             RangeNumberType>                              &
+                                                             KernelNumberType>                              &
   KernelPulledbackToSauterSpace<
                                  dim,
                                  spacedim,
                                  KernelFunctionType,
-                                 RangeNumberType>::operator=(const KernelPulledbackToSauterSpace &f)
+                                 KernelNumberType>::operator=(const KernelPulledbackToSauterSpace &f)
   {
     assert(n_components == f.n_components);
 
@@ -948,20 +959,21 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType>
-  HBEM_ATTR_HOST RangeNumberType
+            template <int, typename>
+            typename KernelFunctionType,
+            typename KernelNumberType>
+  HBEM_ATTR_HOST KernelNumberType
   KernelPulledbackToSauterSpace<dim,
                                 spacedim,
                                 KernelFunctionType,
-                                RangeNumberType>::
+                                KernelNumberType>::
     value(const unsigned int                         quad_no,
           const BEMValues<dim, spacedim, real_type> &bem_values,
-          const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
+          const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
                             &scratch_data,
           const unsigned int component) const
   {
-    RangeNumberType kernel_value = RangeNumberType();
+    KernelNumberType kernel_value = KernelNumberType();
 
     switch (cell_neighboring_type)
       {
@@ -1048,20 +1060,21 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType>
-  HBEM_ATTR_DEV RangeNumberType
+            template <int, typename>
+            typename KernelFunctionType,
+            typename KernelNumberType>
+  HBEM_ATTR_DEV KernelNumberType
   KernelPulledbackToSauterSpace<dim,
                                 spacedim,
                                 KernelFunctionType,
-                                RangeNumberType>::
+                                KernelNumberType>::
     value(const unsigned int                             quad_no,
           const CUDABEMValues<dim, spacedim, real_type> &bem_values,
-          const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+          const CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
                             &scratch_data,
           const unsigned int component) const
   {
-    RangeNumberType kernel_value = RangeNumberType();
+    KernelNumberType kernel_value = KernelNumberType();
 
     switch (cell_neighboring_type)
       {

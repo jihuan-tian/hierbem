@@ -1839,12 +1839,12 @@ struct CellWisePerTaskDataForPotentialEval
  * Class holding pair-cell-wise local matrix data and DoF indices, which
  * is used for SMP parallel computation of BEM matrices.
  */
-template <int dim, int spacedim = dim, typename RangeNumberType = double>
+template <int dim, int spacedim = dim, typename KernelNumberType = double>
 class PairCellWiseScratchData
 {
 public:
   using FE_Poly_short = FE_Poly<dim, spacedim>;
-  using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+  using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
 
   /**
    * ID for the working thread associated with this scratch data.
@@ -2176,7 +2176,7 @@ public:
   /**
    * Buffer holding quadrature results accumulated from all thread blocks.
    */
-  RangeNumberType *quad_values_in_thread_blocks;
+  KernelNumberType *quad_values_in_thread_blocks;
 
   /**
    * Constructor to be used for assembling full BEM matrix, which does not
@@ -2376,7 +2376,7 @@ public:
                                 0));
 
     AssertCuda(cudaMallocHost((void **)&quad_values_in_thread_blocks,
-                              100 * sizeof(RangeNumberType)));
+                              100 * sizeof(KernelNumberType)));
   }
 
   /**
@@ -2588,7 +2588,7 @@ public:
                                 0));
 
     AssertCuda(cudaMallocHost((void **)&quad_values_in_thread_blocks,
-                              100 * sizeof(RangeNumberType)));
+                              100 * sizeof(KernelNumberType)));
   }
 
 
@@ -2600,7 +2600,7 @@ public:
    * @param
    */
   PairCellWiseScratchData(
-    const PairCellWiseScratchData<dim, spacedim, RangeNumberType> &) = default;
+    const PairCellWiseScratchData<dim, spacedim, KernelNumberType> &) = default;
 
 
   void
@@ -2662,7 +2662,7 @@ public:
 };
 
 
-template <int dim, int spacedim = dim, typename RangeNumberType = double>
+template <int dim, int spacedim = dim, typename KernelNumberType = double>
 class PairCellWisePerTaskData
 {
 public:
@@ -2672,7 +2672,7 @@ public:
    *
    * \comment{Therefore, this data field is only defined for verification.}
    */
-  LAPACKFullMatrixExt<RangeNumberType> local_pair_cell_matrix;
+  LAPACKFullMatrixExt<KernelNumberType> local_pair_cell_matrix;
 
   /**
    * Permuted list of DoF indices in the cell \f$K_x\f$, each element of
@@ -2715,7 +2715,7 @@ public:
    * Default copy constructor.
    */
   PairCellWisePerTaskData(
-    const PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &) = default;
+    const PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &) = default;
 
   void
   release()
