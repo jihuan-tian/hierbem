@@ -126,14 +126,12 @@ namespace LinAlg
   bool
   is_all_zero(const Vector<number> &vec)
   {
-    if (vec.l1_norm() > std::numeric_limits<number>::epsilon())
-      {
-        return false;
-      }
+    if (vec.l1_norm() >
+        std::numeric_limits<
+          typename numbers::NumberTraits<number>::real_type>::epsilon())
+      return false;
     else
-      {
-        return true;
-      }
+      return true;
   }
 
 

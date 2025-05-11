@@ -229,10 +229,10 @@ template <class _Tp>
 class complex;
 
 template <class _Tp>
-complex<_Tp>
+CUDA_CALLABLE_MEMBER complex<_Tp>
 operator*(const complex<_Tp> &__z, const complex<_Tp> &__w);
 template <class _Tp>
-complex<_Tp>
+CUDA_CALLABLE_MEMBER complex<_Tp>
 operator/(const complex<_Tp> &__x, const complex<_Tp> &__y);
 
 template <class _Tp>
@@ -372,7 +372,8 @@ public:
     : __re_(__re)
     , __im_(__im)
   {}
-  explicit /*constexpr*/ complex(const complex<double> &__c);
+  explicit /*constexpr*/ CUDA_CALLABLE_MEMBER
+  complex(const complex<double> &__c);
 
   /*constexpr*/ CUDA_CALLABLE_MEMBER float
   real() const
@@ -484,7 +485,8 @@ public:
     : __re_(__re)
     , __im_(__im)
   {}
-  /*constexpr*/ complex(const complex<float> &__c);
+  /*constexpr*/ CUDA_CALLABLE_MEMBER
+  complex(const complex<float> &__c);
 
   /*constexpr*/ CUDA_CALLABLE_MEMBER double
   real() const
@@ -775,7 +777,7 @@ CUDA_CALLABLE_MEMBER complex<_Tp>
 }
 
 template <>
-CUDA_CALLABLE_MEMBER complex<float>
+inline CUDA_CALLABLE_MEMBER complex<float>
 operator/(const complex<float> &__z, const complex<float> &__w)
 {
   int   __ilogbw = 0;
@@ -797,18 +799,18 @@ operator/(const complex<float> &__z, const complex<float> &__w)
     {
       if ((__denom == float(0)) && (!isnan(__a) || !isnan(__b)))
         {
-#pragma warning(suppress : 4756) // Ignore INFINITY related warning
+          // #pragma warning(suppress : 4756) // Ignore INFINITY related warning
           __x = copysignf(INFINITY, __c) * __a;
-#pragma warning(suppress : 4756) // Ignore INFINITY related warning
+          // #pragma warning(suppress : 4756) // Ignore INFINITY related warning
           __y = copysignf(INFINITY, __c) * __b;
         }
       else if ((isinf(__a) || isinf(__b)) && isfinite(__c) && isfinite(__d))
         {
           __a = copysignf(isinf(__a) ? float(1) : float(0), __a);
           __b = copysignf(isinf(__b) ? float(1) : float(0), __b);
-#pragma warning(suppress : 4756) // Ignore INFINITY related warning
+          // #pragma warning(suppress : 4756) // Ignore INFINITY related warning
           __x = INFINITY * (__a * __c + __b * __d);
-#pragma warning(suppress : 4756) // Ignore INFINITY related warning
+          // #pragma warning(suppress : 4756) // Ignore INFINITY related warning
           __y = INFINITY * (__b * __c - __a * __d);
         }
       else if (isinf(__logbw) && __logbw > float(0) && isfinite(__a) &&

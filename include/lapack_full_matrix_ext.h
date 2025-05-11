@@ -14,6 +14,7 @@
 
 #include <deal.II/lac/lapack_support.h>
 
+#include <complex>
 #include <cstring>
 #include <fstream>
 #include <limits>
@@ -64,7 +65,9 @@ calc_singular_value_threshold(const size_t               m,
                               const size_t               n,
                               const std::vector<Number> &Sigma_r)
 {
-  return std::max(m, n) * Sigma_r[0] * std::numeric_limits<double>::epsilon();
+  return std::max(m, n) * Sigma_r[0] *
+         std::numeric_limits<
+           typename numbers::NumberTraits<Number>::real_type>::epsilon();
 }
 
 
@@ -778,7 +781,7 @@ public:
        const size_type   dst_offset_j = 0,
        const size_type   src_offset_i = 0,
        const size_type   src_offset_j = 0,
-       const Number2     factor       = 1.,
+       const Number2     factor       = Number2(1.),
        const bool        transpose    = false,
        const bool        is_adding    = false);
 
@@ -1051,6 +1054,9 @@ public:
    * Matrix-vector multiplication which also handles the case when the matrix
    * is symmetric and lower triangular.
    *
+   * When @p adding is true, this function computes <code>w = w + alpha*A*v</code>.
+   * Otherwise, it computes <code>w = alpha*A*v</code>.
+   *
    * \mynote{When the matrix is symmetric, the LAPACK function @p symv is
    * adopted. In my implementation, only those lower triangular entries in a
    * symmetric full matrix are used by @p symv.
@@ -1063,10 +1069,39 @@ public:
    * @param v
    * @param adding
    */
+  template <typename Number2>
+  void
+  vmult(Vector<Number>       &w,
+        const Number2         alpha,
+        const Vector<Number> &v,
+        const bool            adding = false) const;
+
+  /**
+   * Matrix-vector multiplication. When @p adding is true, this function
+   * computes <code>w = w + A*v</code>. Otherwise, it computes
+   * <code>w = A*v</code>.
+   */
   void
   vmult(Vector<Number>       &w,
         const Vector<Number> &v,
         const bool            adding = false) const;
+
+  /**
+   * Matrix-vector multiplication with adding and scaling, i.e. <code>w = w +
+   * alpha*A*v</code>.
+   */
+  template <typename Number2>
+  void
+  vmult_add(Vector<Number>       &w,
+            const Number2         alpha,
+            const Vector<Number> &v) const;
+
+  /**
+   * Matrix-vector multiplication with adding and without scaling, i.e. <code>w
+   * = w + A*v</code>.
+   */
+  void
+  vmult_add(Vector<Number> &w, const Vector<Number> &v) const;
 
   /**
    * Matrix-vector multiplication with the matrix applied complex conjugation.
@@ -1485,12 +1520,13 @@ void
 balance_frobenius_norm(LAPACKFullMatrixExt<Number> &A,
                        LAPACKFullMatrixExt<Number> &B)
 {
-  typename numbers::NumberTraits<Number>::real_type norm_A = A.frobenius_norm();
-  typename numbers::NumberTraits<Number>::real_type norm_B = B.frobenius_norm();
-  typename numbers::NumberTraits<Number>::real_type factor =
-    std::sqrt(norm_A / norm_B);
+  using real_type = typename numbers::NumberTraits<Number>::real_type;
 
-  if (std::abs(factor) >= std::numeric_limits<double>::epsilon())
+  real_type norm_A = A.frobenius_norm();
+  real_type norm_B = B.frobenius_norm();
+  real_type factor = std::sqrt(norm_A / norm_B);
+
+  if (std::abs(factor) >= std::numeric_limits<real_type>::epsilon())
     {
       A /= factor;
     }
@@ -2228,8 +2264,8 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBH(
               C.reinit(mm, Sigma_r_error_size);
               D.reinit(Sigma_r_error_size, nn);
 
-              C.fill(U, 0, 0, 0, truncation_rank);
-              D.fill(VT, 0, 0, truncation_rank, 0);
+              C.fill(U, 0, 0, 0, truncation_rank, Number(1.));
+              D.fill(VT, 0, 0, truncation_rank, 0, Number(1.));
 
               if (mm > nn)
                 {
@@ -2600,10 +2636,10 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(const LAPACKFullMatrixExt &M11,
    */
   this->LAPACKFullMatrix<Number>::set_property(LAPACKSupport::general);
 
-  this->fill(M11, 0, 0);
-  this->fill(M12, 0, M11.n());
-  this->fill(M21, M11.m(), 0);
-  this->fill(M22, M11.m(), M11.n());
+  this->fill(M11, 0, 0, 0, 0, Number(1.0));
+  this->fill(M12, 0, M11.n(), 0, 0, Number(1.0));
+  this->fill(M21, M11.m(), 0, 0, 0, Number(1.0));
+  this->fill(M22, M11.m(), M11.n(), 0, 0, Number(1.0));
 }
 
 
@@ -3607,8 +3643,8 @@ LAPACKFullMatrixExt<Number>::reduced_svd(LAPACKFullMatrixExt<Number> &U,
 
               // Copy columns from @p truncation_rank to the end of @p U into @p C.
               // Copy rows from @p truncation_rank to the end of @p VT into @p D.
-              C.fill(U, 0, 0, 0, truncation_rank);
-              D.fill(VT, 0, 0, truncation_rank, 0);
+              C.fill(U, 0, 0, 0, truncation_rank, Number(1.0));
+              D.fill(VT, 0, 0, truncation_rank, 0, Number(1.0));
 
               if (mm > nn)
                 {
@@ -4072,7 +4108,7 @@ LAPACKFullMatrixExt<Number>::reduced_qr(LAPACKFullMatrixExt<Number> &Q,
             {
               // N.B. Conjugation is needed when in the complex valued case.
               H(j, k) =
-                ((j == k) ? 1.0 : 0.) -
+                ((j == k) ? Number(1.0) : Number(0.)) -
                 tau[i] * v(j) * numbers::NumberTraits<Number>::conjugate(v(k));
             }
         }
@@ -4605,8 +4641,8 @@ LAPACKFullMatrixExt<Number>::hstack(LAPACKFullMatrixExt<Number>       &C,
 
   C.reinit(nrows, ncols);
 
-  C.fill((*this), 0, 0, 0, 0);
-  C.fill(B, 0, this->n(), 0, 0);
+  C.fill((*this), 0, 0, 0, 0, Number(1.0));
+  C.fill(B, 0, this->n(), 0, 0, Number(1.0));
 }
 
 
@@ -4622,8 +4658,8 @@ LAPACKFullMatrixExt<Number>::vstack(LAPACKFullMatrixExt<Number>       &C,
 
   C.reinit(nrows, ncols);
 
-  C.fill((*this), 0, 0, 0, 0);
-  C.fill(B, this->m(), 0, 0, 0);
+  C.fill((*this), 0, 0, 0, 0, Number(1.0));
+  C.fill(B, this->m(), 0, 0, 0, Number(1.0));
 }
 
 
@@ -5022,8 +5058,10 @@ LAPACKFullMatrixExt<Number>::outer_product(const Vector<Number> &v,
 
 
 template <typename Number>
+template <typename Number2>
 void
 LAPACKFullMatrixExt<Number>::vmult(Vector<Number>       &w,
+                                   const Number2         alpha,
                                    const Vector<Number> &v,
                                    const bool            adding) const
 {
@@ -5038,7 +5076,7 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number>       &w,
               AssertDimension(this->m(), this->n());
 
               LAPACKHelpers::hemv_helper(LAPACKSupport::L,
-                                         Number(1.0),
+                                         alpha,
                                          this->m(),
                                          this->values,
                                          v.data(),
@@ -5052,7 +5090,7 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number>       &w,
           AssertDimension(this->m(), this->n());
 
           LAPACKHelpers::symv_helper(LAPACKSupport::L,
-                                     Number(1.0),
+                                     alpha,
                                      this->m(),
                                      this->values,
                                      v.data(),
@@ -5062,11 +5100,14 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number>       &w,
           break;
         }
         case LAPACKSupport::Property::general: {
-          /**
-           * Call the matrix-vector multiplication member function of the parent
-           * class.
-           */
-          this->LAPACKFullMatrix<Number>::vmult(w, v, adding);
+          LAPACKHelpers::gemv_helper(LAPACKSupport::N,
+                                     alpha,
+                                     this->m(),
+                                     this->n(),
+                                     this->values,
+                                     v.data(),
+                                     Number((adding ? 1.0 : 0.0)),
+                                     w.data());
 
           break;
         }
@@ -5080,6 +5121,10 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number>       &w,
                                          this->m(),
                                          this->values,
                                          w_tmp.data());
+
+              if (alpha != Number2(1.0))
+                BLASHelpers::scal_helper(w_tmp.size(), Number(alpha), w_tmp);
+
               w += w_tmp;
             }
           else
@@ -5091,6 +5136,9 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number>       &w,
                                          this->m(),
                                          this->values,
                                          w.data());
+
+              if (alpha != Number2(1.0))
+                BLASHelpers::scal_helper(w.size(), Number(alpha), w);
             }
 
           break;
@@ -5105,6 +5153,10 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number>       &w,
                                          this->m(),
                                          this->values,
                                          w_tmp.data());
+
+              if (alpha != Number2(1.0))
+                BLASHelpers::scal_helper(w_tmp.size(), Number(alpha), w_tmp);
+
               w += w_tmp;
             }
           else
@@ -5116,6 +5168,9 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number>       &w,
                                          this->m(),
                                          this->values,
                                          w.data());
+
+              if (alpha != Number2(1.0))
+                BLASHelpers::scal_helper(w.size(), Number(alpha), w);
             }
 
           break;
@@ -5126,6 +5181,36 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number>       &w,
           break;
         }
     }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::vmult(Vector<Number>       &w,
+                                   const Vector<Number> &v,
+                                   const bool            adding) const
+{
+  vmult(w, Number(1.0), v, adding);
+}
+
+
+template <typename Number>
+template <typename Number2>
+void
+LAPACKFullMatrixExt<Number>::vmult_add(Vector<Number>       &w,
+                                       const Number2         alpha,
+                                       const Vector<Number> &v) const
+{
+  vmult(w, alpha, v, true);
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::vmult_add(Vector<Number>       &w,
+                                       const Vector<Number> &v) const
+{
+  vmult(w, v, true);
 }
 
 

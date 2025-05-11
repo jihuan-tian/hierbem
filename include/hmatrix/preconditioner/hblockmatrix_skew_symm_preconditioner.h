@@ -8,6 +8,8 @@
 #ifndef HIERBEM_INCLUDE_HMATRIX_PRECONDITIONER_HBLOCKMATRIX_SKEW_SYMM_PRECONDITIONER_H_
 #define HIERBEM_INCLUDE_HMATRIX_PRECONDITIONER_HBLOCKMATRIX_SKEW_SYMM_PRECONDITIONER_H_
 
+#include <deal.II/base/numbers.h>
+
 #include "config.h"
 #include "hmatrix/hmatrix.h"
 #include "linalg.h"
@@ -191,7 +193,8 @@ HBlockMatrixSkewSymmPreconditioner<spacedim, Number>::vmult(
   Vector<Number> x1(n1);
   Vector<Number> x2(n2);
   M22->solve_cholesky_by_backward_substitution(x2, y2);
-  M12->vmult_add(y1, -1.0, x2);
+  M12->vmult_add(
+    y1, typename dealii::numbers::NumberTraits<Number>::real_type(-1.0), x2);
   M11->solve_cholesky_by_backward_substitution(x1, y1);
 
   // Merge the result vector.

@@ -1,8 +1,10 @@
 #ifndef HIERBEM_INCLUDE_SOLVERS_SCHUR_COMPLEMENT_H_
 #define HIERBEM_INCLUDE_SOLVERS_SCHUR_COMPLEMENT_H_
 
-#include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_control.h>
+
+#include "blas_helpers.h"
+#include "solvers/solver_cg_general.h"
 
 HBEM_NS_OPEN
 
@@ -50,6 +52,10 @@ public:
 
   void
   vmult(VectorType &y, const VectorType &x) const;
+
+  template <typename Number2>
+  void
+  vmult_add(VectorType &y, const Number2 alpha, const VectorType &x) const;
 
 private:
   const SkewSymmetricBlockMatrixType &block_matrix;
@@ -105,11 +111,33 @@ SchurComplement<SkewSymmetricBlockMatrixType,
   // previous values.
   block_matrix.get_M12().vmult(*y1, x);
   SolverControl solver_control(max_iter, tolerance, log_history, log_result);
-  SolverCG<VectorType> solver(solver_control);
+  SolverCGGeneral<VectorType> solver(solver_control);
   solver.solve(block_matrix.get_M11(), *y2, *y1, precond11);
   block_matrix.get_M12().Tvmult(*y3, *y2);
   block_matrix.get_M22().vmult(y, x);
   y += *y3;
+}
+
+
+template <typename SkewSymmetricBlockMatrixType,
+          typename VectorType,
+          typename PrecondM11Type,
+          typename Number>
+template <typename Number2>
+void
+SchurComplement<SkewSymmetricBlockMatrixType,
+                VectorType,
+                PrecondM11Type,
+                Number>::vmult_add(VectorType       &y,
+                                   const Number2     alpha,
+                                   const VectorType &x) const
+{
+  VectorType y_tmp(y.size());
+  vmult(y_tmp, x);
+  BLASHelpers::scal_helper(y_tmp.size(),
+                           typename VectorType::value_type(alpha),
+                           y_tmp);
+  y += y_tmp;
 }
 
 HBEM_NS_CLOSE

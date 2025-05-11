@@ -12799,7 +12799,7 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
                              (*Z.col_index_range)[0] - (*M.col_index_range)[0],
                              0,
                              0,
-                             1.0,
+                             Number(1.0),
                              false,
                              true);
         }
@@ -13231,7 +13231,7 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number>      &M0,
                              (*Z.col_index_range)[0] - (*M.col_index_range)[0],
                              0,
                              0,
-                             1.0,
+                             Number(1.0),
                              false,
                              true);
         }
@@ -13651,7 +13651,7 @@ h_h_mmult_from_leaf_node_for_parallel_lu(
                              (*Z.col_index_range)[0] - (*M.col_index_range)[0],
                              0,
                              0,
-                             1.0,
+                             Number(1.0),
                              false,
                              true);
         }
@@ -14123,7 +14123,7 @@ h_h_mTmult_from_leaf_node(
                              (*Z.col_index_range)[0] - (*M.col_index_range)[0],
                              0,
                              0,
-                             1.0,
+                             Number(1.0),
                              false,
                              true);
         }
@@ -14556,7 +14556,7 @@ h_h_mTmult_from_leaf_node(
                              (*Z.col_index_range)[0] - (*M.col_index_range)[0],
                              0,
                              0,
-                             1.0,
+                             Number(1.0),
                              false,
                              true);
         }
@@ -14976,7 +14976,7 @@ h_h_mTmult_from_leaf_node_for_parallel_cholesky(
                              (*Z.col_index_range)[0] - (*M.col_index_range)[0],
                              0,
                              0,
-                             1.0,
+                             Number(1.0),
                              false,
                              true);
         }
@@ -15431,7 +15431,7 @@ h_h_Tmmult_from_leaf_node(
                              (*Z.col_index_range)[0] - (*M.col_index_range)[0],
                              0,
                              0,
-                             1.0,
+                             Number(1.0),
                              false,
                              true);
         }
@@ -15847,7 +15847,7 @@ h_h_Tmmult_from_leaf_node(
                              (*Z.col_index_range)[0] - (*M.col_index_range)[0],
                              0,
                              0,
-                             1.0,
+                             Number(1.0),
                              false,
                              true);
         }
@@ -20709,7 +20709,7 @@ HMatrix<spacedim, Number>::truncate_to_rank_diag_preserve_positive_definite(
               break;
             }
             case RkMatrixType: {
-              LAPACKFullMatrixExt<double> C, D;
+              LAPACKFullMatrixExt<Number> C, D;
               submatrices[1]->rkmatrix->truncate_to_rank(new_rank, D, C);
 
               // DEBUG
@@ -20749,7 +20749,7 @@ HMatrix<spacedim, Number>::truncate_to_rank_diag_preserve_positive_definite(
           break;
         }
         case RkMatrixType: {
-          LAPACKFullMatrixExt<double> C, D;
+          LAPACKFullMatrixExt<Number> C, D;
           submatrices[2]->rkmatrix->truncate_to_rank(new_rank, D, C);
 
           /**
@@ -20814,7 +20814,7 @@ HMatrix<spacedim, Number>::truncate_to_rank_off_diag_preserve_positive_definite(
               break;
             }
             case RkMatrixType: {
-              LAPACKFullMatrixExt<double> C, D;
+              LAPACKFullMatrixExt<Number> C, D;
               submatrix->rkmatrix->truncate_to_rank(new_rank, D, C);
 
               if (is_compensate_diag_blocks)
@@ -20943,7 +20943,7 @@ HMatrix<spacedim, Number>::vmult(
                    */
                   for (size_type i = 0; i < m; i++)
                     {
-                      y((*row_index_range)[0] + i) += alpha * local_y(i);
+                      y((*row_index_range)[0] + i) += local_y(i) * alpha;
                     }
 
                   break;

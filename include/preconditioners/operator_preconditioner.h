@@ -26,7 +26,6 @@
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/precondition.h>
 #include <deal.II/lac/solver_control.h>
-#include <deal.II/lac/solver_gmres.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/sparsity_pattern.h>
 #include <deal.II/lac/vector.h>
@@ -42,6 +41,7 @@
 #include "bem_kernels.hcu"
 #include "block_cluster_tree.h"
 #include "config.h"
+#include "cuda_complex.hcu"
 #include "debug_tools.h"
 #include "dof_to_cell_topology.h"
 #include "dof_tools_ext.h"
@@ -52,6 +52,7 @@
 #include "hmatrix/hmatrix_parameters.h"
 #include "mapping/mapping_info.h"
 #include "sauter_quadrature_tools.h"
+#include "solvers/solver_gmres_general.h"
 #include "subdomain_topology.h"
 
 HBEM_NS_OPEN
@@ -76,6 +77,10 @@ class OperatorPreconditioner
 {
 public:
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+  using CUDAKernelNumberType =
+    std::conditional_t<std::is_floating_point_v<KernelNumberType>,
+                       KernelNumberType,
+                       complex<real_type>>;
 
   /**
    * Constructor.
@@ -707,7 +712,7 @@ protected:
   /**
    * Kernel function for the preconditioner.
    */
-  KernelFunctionType<spacedim, KernelNumberType> preconditioner_kernel;
+  KernelFunctionType<spacedim, CUDAKernelNumberType> preconditioner_kernel;
 
   /**
    * The Galerkin matrix for the preconditioner. This matrix maps from the
@@ -814,7 +819,7 @@ protected:
   Vector<RangeNumberType> *y_external_dof_numbering;
 
   // Diagonal entries in @p mass_matrix_triple.
-  Vector<RangeNumberType> mass_matrix_triple_diag_reciprocal;
+  Vector<real_type> mass_matrix_triple_diag_reciprocal;
 
   MassMatrixTriple          mass_matrix_triple;
   MassMatrixTransposeTriple mass_matrix_transpose_triple;
@@ -1184,36 +1189,47 @@ OperatorPreconditioner<dim,
                              mass_vmult_weq[i]);
             }
 
-          fill_hmatrix_with_aca_plus_smp(thread_num,
-                                         preconditioner_hmat,
-                                         aca_config,
-                                         preconditioner_kernel,
-                                         KernelNumberType(1.0),
-                                         mass_vmult_weq,
-                                         alpha_for_neumann,
-                                         dof_to_cell_topo_dual_space,
-                                         dof_to_cell_topo_dual_space,
-                                         sauter_quad_rule,
-                                         dof_handler_dual_space,
-                                         dof_handler_dual_space,
-                                         nullptr,
-                                         nullptr,
-                                         dof_i2e_numbering,
-                                         dof_i2e_numbering,
-                                         mappings,
-                                         material_id_to_mapping_index,
-                                         normal_detector,
-                                         true);
+          fill_hmatrix_with_aca_plus_smp<dim,
+                                         spacedim,
+                                         KernelFunctionType,
+                                         RangeNumberType,
+                                         KernelNumberType,
+                                         SurfaceNormalDetector>(
+            thread_num,
+            preconditioner_hmat,
+            aca_config,
+            preconditioner_kernel,
+            CUDAKernelNumberType(1.0),
+            mass_vmult_weq,
+            alpha_for_neumann,
+            dof_to_cell_topo_dual_space,
+            dof_to_cell_topo_dual_space,
+            sauter_quad_rule,
+            dof_handler_dual_space,
+            dof_handler_dual_space,
+            nullptr,
+            nullptr,
+            dof_i2e_numbering,
+            dof_i2e_numbering,
+            mappings,
+            material_id_to_mapping_index,
+            normal_detector,
+            true);
         }
       else
         // When the preconditioner is on a subdomain, there is no need to
         // stablize the hyper singular bilinear form.
-        fill_hmatrix_with_aca_plus_smp(
+        fill_hmatrix_with_aca_plus_smp<dim,
+                                       spacedim,
+                                       KernelFunctionType,
+                                       RangeNumberType,
+                                       KernelNumberType,
+                                       SurfaceNormalDetector>(
           thread_num,
           preconditioner_hmat,
           aca_config,
           preconditioner_kernel,
-          KernelNumberType(1.0),
+          CUDAKernelNumberType(1.0),
           dof_to_cell_topo_dual_space,
           dof_to_cell_topo_dual_space,
           sauter_quad_rule,
@@ -1231,31 +1247,42 @@ OperatorPreconditioner<dim,
   else
     {
       if (is_full_domain)
-        fill_hmatrix_with_aca_plus_smp(thread_num,
-                                       preconditioner_hmat,
-                                       aca_config,
-                                       preconditioner_kernel,
-                                       KernelNumberType(1.0),
-                                       dof_to_cell_topo_dual_space,
-                                       dof_to_cell_topo_dual_space,
-                                       sauter_quad_rule,
-                                       dof_handler_dual_space,
-                                       dof_handler_dual_space,
-                                       nullptr,
-                                       nullptr,
-                                       dof_i2e_numbering,
-                                       dof_i2e_numbering,
-                                       mappings,
-                                       material_id_to_mapping_index,
-                                       normal_detector,
-                                       true);
-      else
-        fill_hmatrix_with_aca_plus_smp(
+        fill_hmatrix_with_aca_plus_smp<dim,
+                                       spacedim,
+                                       KernelFunctionType,
+                                       RangeNumberType,
+                                       KernelNumberType,
+                                       SurfaceNormalDetector>(
           thread_num,
           preconditioner_hmat,
           aca_config,
           preconditioner_kernel,
-          KernelNumberType(1.0),
+          CUDAKernelNumberType(1.0),
+          dof_to_cell_topo_dual_space,
+          dof_to_cell_topo_dual_space,
+          sauter_quad_rule,
+          dof_handler_dual_space,
+          dof_handler_dual_space,
+          nullptr,
+          nullptr,
+          dof_i2e_numbering,
+          dof_i2e_numbering,
+          mappings,
+          material_id_to_mapping_index,
+          normal_detector,
+          true);
+      else
+        fill_hmatrix_with_aca_plus_smp<dim,
+                                       spacedim,
+                                       KernelFunctionType,
+                                       RangeNumberType,
+                                       KernelNumberType,
+                                       SurfaceNormalDetector>(
+          thread_num,
+          preconditioner_hmat,
+          aca_config,
+          preconditioner_kernel,
+          CUDAKernelNumberType(1.0),
           dof_to_cell_topo_dual_space,
           dof_to_cell_topo_dual_space,
           sauter_quad_rule,
@@ -1576,7 +1603,7 @@ OperatorPreconditioner<dim,
                                solve_mass_matrix_tol,
                                solve_mass_matrix_log_history,
                                solve_mass_matrix_log_result);
-  SolverGMRES<Vector<RangeNumberType>> solver(solver_control);
+  SolverGMRESGeneral<Vector<RangeNumberType>> solver(solver_control);
 
   PreconditionJacobi<MassMatrixTriple> precond;
   precond.initialize(
@@ -1607,7 +1634,7 @@ OperatorPreconditioner<dim,
                                solve_mass_matrix_tol,
                                solve_mass_matrix_log_history,
                                solve_mass_matrix_log_result);
-  SolverGMRES<Vector<RangeNumberType>> solver(solver_control);
+  SolverGMRESGeneral<Vector<RangeNumberType>> solver(solver_control);
 
   PreconditionJacobi<MassMatrixTransposeTriple> precond;
   precond.initialize(
@@ -1664,7 +1691,7 @@ OperatorPreconditioner<
   Vector<real_type> v;
 
   // Iterate over each row.
-  for (typename SparseMatrix<RangeNumberType>::size_type i = 0;
+  for (typename SparseMatrix<real_type>::size_type i = 0;
        i < averaging_matrix.m();
        i++)
     {

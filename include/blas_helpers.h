@@ -96,6 +96,15 @@ namespace BLASHelpers
   }
 
 
+  /**
+   * @brief Scale a vector.
+   *
+   * @tparam Number
+   * @param n
+   * @param alpha
+   * @param array
+   * @param incx
+   */
   template <typename Number, template <typename> typename VectorType>
   void
   scal_helper(const size_type     n,

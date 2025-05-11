@@ -60,7 +60,7 @@ namespace numbers
     /**
      * Return the complex-conjugate of the given number.
      */
-    static constexpr HierBEM::complex<number>
+    static constexpr HBEM_ATTR_HOST HBEM_ATTR_DEV HierBEM::complex<number>
     conjugate(const HierBEM::complex<number> &x);
 
     /**
@@ -69,14 +69,14 @@ namespace numbers
      * complex, this function returns the product of a number and its
      * complex conjugate.
      */
-    static constexpr real_type
+    static constexpr HBEM_ATTR_HOST HBEM_ATTR_DEV real_type
     abs_square(const HierBEM::complex<number> &x);
 
 
     /**
      * Return the absolute value of a complex number.
      */
-    static real_type
+    static HBEM_ATTR_HOST HBEM_ATTR_DEV real_type
     abs(const HierBEM::complex<number> &x);
   };
 

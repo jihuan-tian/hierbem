@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <complex>
 #include <condition_variable>
 #include <forward_list>
 #include <functional>
@@ -2629,16 +2630,16 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
    * vectors.
    *
    * \mynote{In the following, we use @p static_cast to explicitly
-   * specify which version of @p std::fabs to call.}
+   * specify which version of @p std::abs to call.}
    */
   std::transform(vr.begin(),
                  vr.end(),
                  vr_abs.begin(),
-                 static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                 static_cast<real_type (*)(RangeNumberType)>(std::abs));
   std::transform(uc.begin(),
                  uc.end(),
                  uc_abs.begin(),
-                 static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                 static_cast<real_type (*)(RangeNumberType)>(std::abs));
 
   /**
    * Row and column indices for the \f$k\f$'th step. The corresponding row
@@ -2746,8 +2747,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
           std::transform(vk.begin(),
                          vk.end(),
                          vk_abs.begin(),
-                         static_cast<real_type (*)(RangeNumberType)>(
-                           std::fabs));
+                         static_cast<real_type (*)(RangeNumberType)>(std::abs));
           jk = std::distance(vk_abs.begin(),
                              std::max_element(vk_abs.begin(), vk_abs.end()));
 
@@ -2837,8 +2837,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
           std::transform(uk.begin(),
                          uk.end(),
                          uk_abs.begin(),
-                         static_cast<real_type (*)(RangeNumberType)>(
-                           std::fabs));
+                         static_cast<real_type (*)(RangeNumberType)>(std::abs));
           ik = std::distance(uk_abs.begin(),
                              std::max_element(uk_abs.begin(), uk_abs.end()));
 
@@ -2981,7 +2980,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       std::transform(vr.begin(),
                      vr.end(),
                      vr_abs.begin(),
-                     static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                     static_cast<real_type (*)(RangeNumberType)>(std::abs));
 
       if (jk == c)
         {
@@ -3064,7 +3063,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       std::transform(uc.begin(),
                      uc.end(),
                      uc_abs.begin(),
-                     static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                     static_cast<real_type (*)(RangeNumberType)>(std::abs));
 
       /**
        * Check the convergence condition.
@@ -3333,16 +3332,16 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
    * vectors.
    *
    * \mynote{In the following, we use @p static_cast to explicitly
-   * specify which version of @p std::fabs to call.}
+   * specify which version of @p std::abs to call.}
    */
   std::transform(vr.begin(),
                  vr.end(),
                  vr_abs.begin(),
-                 static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                 static_cast<real_type (*)(RangeNumberType)>(std::abs));
   std::transform(uc.begin(),
                  uc.end(),
                  uc_abs.begin(),
-                 static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                 static_cast<real_type (*)(RangeNumberType)>(std::abs));
 
   /**
    * Row and column indices for the \f$k\f$'th step. The corresponding row
@@ -3452,8 +3451,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
           std::transform(vk.begin(),
                          vk.end(),
                          vk_abs.begin(),
-                         static_cast<real_type (*)(RangeNumberType)>(
-                           std::fabs));
+                         static_cast<real_type (*)(RangeNumberType)>(std::abs));
           jk = std::distance(vk_abs.begin(),
                              std::max_element(vk_abs.begin(), vk_abs.end()));
 
@@ -3547,8 +3545,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
           std::transform(uk.begin(),
                          uk.end(),
                          uk_abs.begin(),
-                         static_cast<real_type (*)(RangeNumberType)>(
-                           std::fabs));
+                         static_cast<real_type (*)(RangeNumberType)>(std::abs));
           ik = std::distance(uk_abs.begin(),
                              std::max_element(uk_abs.begin(), uk_abs.end()));
 
@@ -3695,7 +3692,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       std::transform(vr.begin(),
                      vr.end(),
                      vr_abs.begin(),
-                     static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                     static_cast<real_type (*)(RangeNumberType)>(std::abs));
 
       if (jk == c)
         {
@@ -3780,7 +3777,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       std::transform(uc.begin(),
                      uc.end(),
                      uc_abs.begin(),
-                     static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                     static_cast<real_type (*)(RangeNumberType)>(std::abs));
 
       /**
        * Check the convergence condition.
@@ -4054,16 +4051,20 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
    * vectors.
    *
    * \mynote{In the following, we use @p static_cast to explicitly
-   * specify which version of @p std::fabs to call.}
+   * specify which version of @p std::abs to call.}
    */
   std::transform(vr.begin(),
                  vr.end(),
                  vr_abs.begin(),
-                 static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                 [](const RangeNumberType &val) -> real_type {
+                   return std::abs(val);
+                 });
   std::transform(uc.begin(),
                  uc.end(),
                  uc_abs.begin(),
-                 static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                 [](const RangeNumberType &val) -> real_type {
+                   return std::abs(val);
+                 });
 
   /**
    * Row and column indices for the \f$k\f$'th step. The corresponding row
@@ -4176,8 +4177,9 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           std::transform(vk.begin(),
                          vk.end(),
                          vk_abs.begin(),
-                         static_cast<real_type (*)(RangeNumberType)>(
-                           std::fabs));
+                         [](const RangeNumberType &val) -> real_type {
+                           return std::abs(val);
+                         });
           jk = std::distance(vk_abs.begin(),
                              std::max_element(vk_abs.begin(), vk_abs.end()));
 
@@ -4267,8 +4269,9 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           std::transform(uk.begin(),
                          uk.end(),
                          uk_abs.begin(),
-                         static_cast<real_type (*)(RangeNumberType)>(
-                           std::fabs));
+                         [](const RangeNumberType &val) -> real_type {
+                           return std::abs(val);
+                         });
           ik = std::distance(uk_abs.begin(),
                              std::max_element(uk_abs.begin(), uk_abs.end()));
 
@@ -4416,7 +4419,9 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       std::transform(vr.begin(),
                      vr.end(),
                      vr_abs.begin(),
-                     static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                     [](const RangeNumberType &val) -> real_type {
+                       return std::abs(val);
+                     });
 
       if (jk == c)
         {
@@ -4504,7 +4509,9 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       std::transform(uc.begin(),
                      uc.end(),
                      uc_abs.begin(),
-                     static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                     [](const RangeNumberType &val) -> real_type {
+                       return std::abs(val);
+                     });
 
       /**
        * Check the convergence condition.
@@ -4798,16 +4805,20 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
    * vectors.
    *
    * \mynote{In the following, we use @p static_cast to explicitly
-   * specify which version of @p std::fabs to call.}
+   * specify which version of @p std::abs to call.}
    */
   std::transform(vr.begin(),
                  vr.end(),
                  vr_abs.begin(),
-                 static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                 [](const RangeNumberType &val) -> real_type {
+                   return std::abs(val);
+                 });
   std::transform(uc.begin(),
                  uc.end(),
                  uc_abs.begin(),
-                 static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                 [](const RangeNumberType &val) -> real_type {
+                   return std::abs(val);
+                 });
 
   /**
    * Row and column indices for the \f$k\f$'th step. The corresponding row
@@ -4922,8 +4933,9 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           std::transform(vk.begin(),
                          vk.end(),
                          vk_abs.begin(),
-                         static_cast<real_type (*)(RangeNumberType)>(
-                           std::fabs));
+                         [](const RangeNumberType &val) -> real_type {
+                           return std::abs(val);
+                         });
           jk = std::distance(vk_abs.begin(),
                              std::max_element(vk_abs.begin(), vk_abs.end()));
 
@@ -5017,8 +5029,9 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           std::transform(uk.begin(),
                          uk.end(),
                          uk_abs.begin(),
-                         static_cast<real_type (*)(RangeNumberType)>(
-                           std::fabs));
+                         [](const RangeNumberType &val) -> real_type {
+                           return std::abs(val);
+                         });
           ik = std::distance(uk_abs.begin(),
                              std::max_element(uk_abs.begin(), uk_abs.end()));
 
@@ -5170,7 +5183,9 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       std::transform(vr.begin(),
                      vr.end(),
                      vr_abs.begin(),
-                     static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                     [](const RangeNumberType &val) -> real_type {
+                       return std::abs(val);
+                     });
 
       if (jk == c)
         {
@@ -5260,7 +5275,9 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       std::transform(uc.begin(),
                      uc.end(),
                      uc_abs.begin(),
-                     static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                     [](const RangeNumberType &val) -> real_type {
+                       return std::abs(val);
+                     });
 
       /**
        * Check the convergence condition.
@@ -5426,16 +5443,20 @@ aca_plus(
    * vectors.
    *
    * \mynote{In the following, we use @p static_cast to explicitly
-   * specify which version of @p std::fabs to call.}
+   * specify which version of @p std::abs to call.}
    */
   std::transform(vr.begin(),
                  vr.end(),
                  vr_abs.begin(),
-                 static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                 [](const RangeNumberType &val) -> real_type {
+                   return std::abs(val);
+                 });
   std::transform(uc.begin(),
                  uc.end(),
                  uc_abs.begin(),
-                 static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                 [](const RangeNumberType &val) -> real_type {
+                   return std::abs(val);
+                 });
 
   /**
    * Row and column indices for the \f$k\f$'th step. The corresponding row
@@ -5521,8 +5542,9 @@ aca_plus(
           std::transform(vk.begin(),
                          vk.end(),
                          vk_abs.begin(),
-                         static_cast<real_type (*)(RangeNumberType)>(
-                           std::fabs));
+                         [](const RangeNumberType &val) -> real_type {
+                           return std::abs(val);
+                         });
           jk = std::distance(vk_abs.begin(),
                              std::max_element(vk_abs.begin(), vk_abs.end()));
 
@@ -5578,8 +5600,9 @@ aca_plus(
           std::transform(uk.begin(),
                          uk.end(),
                          uk_abs.begin(),
-                         static_cast<real_type (*)(RangeNumberType)>(
-                           std::fabs));
+                         [](const RangeNumberType &val) -> real_type {
+                           return std::abs(val);
+                         });
           ik = std::distance(uk_abs.begin(),
                              std::max_element(uk_abs.begin(), uk_abs.end()));
 
@@ -5677,7 +5700,9 @@ aca_plus(
       std::transform(vr.begin(),
                      vr.end(),
                      vr_abs.begin(),
-                     static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                     [](const RangeNumberType &val) -> real_type {
+                       return std::abs(val);
+                     });
 
       if (jk == c)
         {
@@ -5740,7 +5765,9 @@ aca_plus(
       std::transform(uc.begin(),
                      uc.end(),
                      uc_abs.begin(),
-                     static_cast<real_type (*)(RangeNumberType)>(std::fabs));
+                     [](const RangeNumberType &val) -> real_type {
+                       return std::abs(val);
+                     });
 
       /**
        * Check the convergence condition.

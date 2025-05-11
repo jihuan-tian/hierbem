@@ -99,7 +99,7 @@ namespace PlatformShared
         {
           case 2:
 #ifdef __CUDA_ARCH__
-            return (-0.5 / numbers::PI * log(1.0 / (x - y).norm()));
+            return (-0.5 / numbers::PI * ::log(1.0 / (x - y).norm()));
 #else
             return (-0.5 / numbers::PI * std::log(1.0 / (x - y).norm()));
 #endif
@@ -426,7 +426,7 @@ namespace PlatformShared
         {
             case 2: {
 #ifdef __CUDA_ARCH__
-              return (-0.5 / numbers::PI * log((x - y).norm()));
+              return (-0.5 / numbers::PI * ::log((x - y).norm()));
 #else
               return (-0.5 / numbers::PI * std::log((x - y).norm()));
 #endif

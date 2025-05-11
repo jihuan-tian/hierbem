@@ -43,7 +43,8 @@ using namespace LAPACKSupport;
 namespace LAPACKHelpers
 {
   /**
-   * @brief Multiplication of a general matrix and a vector.
+   * @brief Multiplication of a general matrix and a vector, which computes
+   * <code>y = alpha*A*x + beta*y</code>.
    *
    * @tparam T
    * @param trans

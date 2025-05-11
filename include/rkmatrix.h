@@ -1222,7 +1222,7 @@ RkMatrix<Number>::RkMatrix(const size_type              fixed_rank_k,
           /**
            * Handle the case when the source full matrix is a scalar.
            */
-          if (std::abs(M(0, 0)) < std::numeric_limits<double>::epsilon())
+          if (std::abs(M(0, 0)) < std::numeric_limits<real_type>::epsilon())
             {
               /**
                * When the scalar value is zero. We do nothing here and the
@@ -1296,7 +1296,7 @@ RkMatrix<Number>::RkMatrix(const size_type              fixed_rank_k,
           /**
            * Handle the case when the source full matrix is a scalar.
            */
-          if (std::abs(M(0, 0)) < std::numeric_limits<double>::epsilon())
+          if (std::abs(M(0, 0)) < std::numeric_limits<real_type>::epsilon())
             {
               /**
                * When the scalar value is zero. We do nothing here and the
@@ -1367,7 +1367,7 @@ RkMatrix<Number>::RkMatrix(LAPACKFullMatrixExt<Number> &M)
           /**
            * Handle the case when the source full matrix is a scalar.
            */
-          if (std::abs(M(0, 0)) < std::numeric_limits<double>::epsilon())
+          if (std::abs(M(0, 0)) < std::numeric_limits<real_type>::epsilon())
             {
               /**
                * When the scalar value is zero. We do nothing here and the
@@ -1447,7 +1447,7 @@ RkMatrix<Number>::RkMatrix(
           /**
            * Handle the case when the source full matrix is a scalar.
            */
-          if (std::abs(M_b(0, 0)) < std::numeric_limits<double>::epsilon())
+          if (std::abs(M_b(0, 0)) < std::numeric_limits<real_type>::epsilon())
             {
               /**
                * When the scalar value is zero. We do nothing here and the
@@ -1526,7 +1526,7 @@ RkMatrix<Number>::RkMatrix(
           /**
            * Handle the case when the source full matrix is a scalar.
            */
-          if (std::abs(M_b(0, 0)) < std::numeric_limits<double>::epsilon())
+          if (std::abs(M_b(0, 0)) < std::numeric_limits<real_type>::epsilon())
             {
               /**
                * When the scalar value is zero. We do nothing here and the
@@ -1611,7 +1611,7 @@ RkMatrix<Number>::RkMatrix(
           /**
            * Handle the case when the source full matrix is a scalar.
            */
-          if (std::abs(M_b(0, 0)) < std::numeric_limits<double>::epsilon())
+          if (std::abs(M_b(0, 0)) < std::numeric_limits<real_type>::epsilon())
             {
               /**
                * When the scalar value is zero. We do nothing here and the
@@ -1698,7 +1698,7 @@ RkMatrix<Number>::RkMatrix(
           /**
            * Handle the case when the source full matrix is a scalar.
            */
-          if (std::abs(M_b(0, 0)) < std::numeric_limits<double>::epsilon())
+          if (std::abs(M_b(0, 0)) < std::numeric_limits<real_type>::epsilon())
             {
               /**
                * When the scalar value is zero. We do nothing here and the

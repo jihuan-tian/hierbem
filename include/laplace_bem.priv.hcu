@@ -29,8 +29,6 @@
 
 #include <deal.II/lac/full_matrix.templates.h>
 #include <deal.II/lac/precondition.h>
-#include <deal.II/lac/solver_bicgstab.h>
-#include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/vector_operations_internal.h>
 
 #include <deal.II/numerics/data_out.h>
@@ -72,6 +70,8 @@
 #include "quadrature.templates.h"
 #include "read_octave_data.h"
 #include "solvers/solve_hblockmatrix_skew_symm.h"
+#include "solvers/solver_bicgstab_general.h"
+#include "solvers/solver_cg_general.h"
 #include "subdomain_topology.h"
 #include "triangulation_tools.h"
 #include "unary_template_arg_containers.h"
@@ -392,50 +392,48 @@ private:
   /**
    * Kernel function for the single layer potential on the host.
    */
-  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim,
-                                                            KernelNumberType>
+  PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim, KernelNumberType>
     single_layer_kernel_cpu_;
   /**
    * Kernel function for the double layer potential on the host.
    */
-  HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel<spacedim,
-                                                            KernelNumberType>
+  PlatformShared::LaplaceKernel::DoubleLayerKernel<spacedim, KernelNumberType>
     double_layer_kernel_cpu_;
   /**
    * Kernel function for the adjoint double layer potential on the host.
    */
-  HierBEM::PlatformShared::LaplaceKernel::
-    AdjointDoubleLayerKernel<spacedim, KernelNumberType>
-      adjoint_double_layer_kernel_cpu_;
+  PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel<spacedim,
+                                                          KernelNumberType>
+    adjoint_double_layer_kernel_cpu_;
   /**
    * Kernel function for the hyper-singular potential on the host.
    */
-  HierBEM::PlatformShared::LaplaceKernel::
-    HyperSingularKernelRegular<spacedim, KernelNumberType>
-      hyper_singular_kernel_cpu_;
+  PlatformShared::LaplaceKernel::HyperSingularKernelRegular<spacedim,
+                                                            KernelNumberType>
+    hyper_singular_kernel_cpu_;
 
   /**
    * Kernel function for the single layer potential on the device.
    */
-  HierBEM::PlatformShared::LaplaceKernel::
-    SingleLayerKernel<spacedim, CUDAKernelNumberType>
-      single_layer_kernel_gpu_;
+  PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim,
+                                                   CUDAKernelNumberType>
+    single_layer_kernel_gpu_;
   /**
    * Kernel function for the double layer potential on the device.
    */
-  HierBEM::PlatformShared::LaplaceKernel::
-    DoubleLayerKernel<spacedim, CUDAKernelNumberType>
-      double_layer_kernel_gpu_;
+  PlatformShared::LaplaceKernel::DoubleLayerKernel<spacedim,
+                                                   CUDAKernelNumberType>
+    double_layer_kernel_gpu_;
   /**
    * Kernel function for the adjoint double layer potential on the device.
    */
-  HierBEM::PlatformShared::LaplaceKernel::
-    AdjointDoubleLayerKernel<spacedim, CUDAKernelNumberType>
-      adjoint_double_layer_kernel_gpu_;
+  PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel<spacedim,
+                                                          CUDAKernelNumberType>
+    adjoint_double_layer_kernel_gpu_;
   /**
    * Kernel function for the hyper-singular potential on the device.
    */
-  HierBEM::PlatformShared::LaplaceKernel::
+  PlatformShared::LaplaceKernel::
     HyperSingularKernelRegular<spacedim, CUDAKernelNumberType>
       hyper_singular_kernel_gpu_;
 
@@ -808,8 +806,7 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -828,8 +825,7 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -1089,13 +1085,12 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
       std::cout << "=== Assemble V for solving natural density === "
                 << std::endl;
 
-      assemble_bem_full_matrix<
-        dim,
-        spacedim,
-        HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
-        KernelNumberType,
-        SurfaceNormalDetector<dim, spacedim>,
-        LAPACKFullMatrixExt<KernelNumberType>>(
+      assemble_bem_full_matrix<dim,
+                               spacedim,
+                               PlatformShared::LaplaceKernel::SingleLayerKernel,
+                               KernelNumberType,
+                               SurfaceNormalDetector<dim, spacedim>,
+                               LAPACKFullMatrixExt<KernelNumberType>>(
         single_layer_kernel_gpu_,
         1.0,
         dof_handler_for_neumann_space_,
@@ -1118,7 +1113,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
       std::cout << "=== Assemble V for solving natural density ==="
                 << std::endl;
 
-      fill_hmatrix_with_aca_plus_smp(
+      fill_hmatrix_with_aca_plus_smp<
+        dim,
+        spacedim,
+        PlatformShared::LaplaceKernel::SingleLayerKernel,
+        RangeNumberType,
+        KernelNumberType,
+        SurfaceNormalDetector<dim, spacedim>>(
         thread_num_,
         V_hmat_weq_,
         aca_config,
@@ -1188,8 +1189,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   /**
    * Solve the natural density \f$w_{\rm eq}\f$.
    */
-  SolverControl                      solver_control(1000, 1e-6, true, true);
-  SolverCG<Vector<KernelNumberType>> solver(solver_control);
+  SolverControl solver_control(1000, 1e-6, true, true);
+  SolverCGGeneral<Vector<KernelNumberType>> solver(solver_control);
 
   // When the solution space is \f$H^{1/2}_{\ast}\f$, the domain should not be
   // multiply connected and only one natural density vector is allowed.
@@ -3156,7 +3157,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               assemble_bem_full_matrix_serial<
                 dim,
                 spacedim,
-                HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel,
+                PlatformShared::LaplaceKernel::DoubleLayerKernel,
                 KernelNumberType,
                 SurfaceNormalDetector<dim, spacedim>,
                 LAPACKFullMatrixExt<RangeNumberType>>(
@@ -3175,7 +3176,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               assemble_bem_full_matrix<
                 dim,
                 spacedim,
-                HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel,
+                PlatformShared::LaplaceKernel::DoubleLayerKernel,
                 KernelNumberType,
                 SurfaceNormalDetector<dim, spacedim>,
                 LAPACKFullMatrixExt<RangeNumberType>>(
@@ -3203,7 +3204,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               assemble_bem_full_matrix_serial<
                 dim,
                 spacedim,
-                HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
+                PlatformShared::LaplaceKernel::SingleLayerKernel,
                 KernelNumberType,
                 SurfaceNormalDetector<dim, spacedim>,
                 LAPACKFullMatrixExt<RangeNumberType>>(
@@ -3222,7 +3223,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               assemble_bem_full_matrix<
                 dim,
                 spacedim,
-                HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
+                PlatformShared::LaplaceKernel::SingleLayerKernel,
                 KernelNumberType,
                 SurfaceNormalDetector<dim, spacedim>,
                 LAPACKFullMatrixExt<RangeNumberType>>(
@@ -3294,7 +3295,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           assemble_bem_full_matrix<
             dim,
             spacedim,
-            HierBEM::PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel,
+            PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel,
             KernelNumberType,
             SurfaceNormalDetector<dim, spacedim>,
             LAPACKFullMatrixExt<RangeNumberType>>(
@@ -3317,7 +3318,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           assemble_bem_full_matrix<
             dim,
             spacedim,
-            HierBEM::PlatformShared::LaplaceKernel::HyperSingularKernelRegular,
+            PlatformShared::LaplaceKernel::HyperSingularKernelRegular,
             KernelNumberType,
             SurfaceNormalDetector<dim, spacedim>,
             LAPACKFullMatrixExt<RangeNumberType>>(
@@ -3423,7 +3424,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
               std::cout << "=== Assemble sigma*I+K ===" << std::endl;
 
-              fill_hmatrix_with_aca_plus_smp(
+              fill_hmatrix_with_aca_plus_smp<
+                dim,
+                spacedim,
+                PlatformShared::LaplaceKernel::DoubleLayerKernel,
+                RangeNumberType,
+                KernelNumberType,
+                SurfaceNormalDetector<dim, spacedim>>(
                 thread_num_,
                 K2_hmat_with_mass_matrix_,
                 aca_config,
@@ -3457,7 +3464,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
               std::cout << "=== Assemble (sigma-1)*I+K ===" << std::endl;
 
-              fill_hmatrix_with_aca_plus_smp(
+              fill_hmatrix_with_aca_plus_smp<
+                dim,
+                spacedim,
+                PlatformShared::LaplaceKernel::DoubleLayerKernel,
+                RangeNumberType,
+                KernelNumberType,
+                SurfaceNormalDetector<dim, spacedim>>(
                 thread_num_,
                 K2_hmat_with_mass_matrix_,
                 aca_config,
@@ -3532,7 +3545,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
             timer.start();
 
-            fill_hmatrix_with_aca_plus_smp(
+            fill_hmatrix_with_aca_plus_smp<
+              dim,
+              spacedim,
+              PlatformShared::LaplaceKernel::SingleLayerKernel,
+              RangeNumberType,
+              KernelNumberType,
+              SurfaceNormalDetector<dim, spacedim>>(
               thread_num_,
               V1_hmat_,
               aca_config,
@@ -3582,7 +3601,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             {
               std::cout << "=== Assemble (1-sigma)*I-K' ===" << std::endl;
 
-              fill_hmatrix_with_aca_plus_smp(
+              fill_hmatrix_with_aca_plus_smp<
+                dim,
+                spacedim,
+                PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel,
+                RangeNumberType,
+                KernelNumberType,
+                SurfaceNormalDetector<dim, spacedim>>(
                 thread_num_,
                 K_prime2_hmat_with_mass_matrix_,
                 aca_config,
@@ -3611,7 +3636,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             {
               std::cout << "=== Assemble -sigma*I-K' ===" << std::endl;
 
-              fill_hmatrix_with_aca_plus_smp(
+              fill_hmatrix_with_aca_plus_smp<
+                dim,
+                spacedim,
+                PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel,
+                RangeNumberType,
+                KernelNumberType,
+                SurfaceNormalDetector<dim, spacedim>>(
                 thread_num_,
                 K_prime2_hmat_with_mass_matrix_,
                 aca_config,
@@ -3722,7 +3753,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           timer.start();
 
-          fill_hmatrix_with_aca_plus_smp(
+          fill_hmatrix_with_aca_plus_smp<
+            dim,
+            spacedim,
+            PlatformShared::LaplaceKernel::HyperSingularKernelRegular,
+            RangeNumberType,
+            KernelNumberType,
+            SurfaceNormalDetector<dim, spacedim>>(
             thread_num_,
             D1_hmat_,
             aca_config,
@@ -3779,7 +3816,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             {
               std::cout << "=== Assemble sigma*I+K ===" << std::endl;
 
-              fill_hmatrix_with_aca_plus_smp(
+              fill_hmatrix_with_aca_plus_smp<
+                dim,
+                spacedim,
+                PlatformShared::LaplaceKernel::DoubleLayerKernel,
+                RangeNumberType,
+                KernelNumberType,
+                SurfaceNormalDetector<dim, spacedim>>(
                 thread_num_,
                 K2_hmat_with_mass_matrix_,
                 aca_config,
@@ -3808,7 +3851,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
               timer.start();
 
-              fill_hmatrix_with_aca_plus_smp(
+              fill_hmatrix_with_aca_plus_smp<
+                dim,
+                spacedim,
+                PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel,
+                RangeNumberType,
+                KernelNumberType,
+                SurfaceNormalDetector<dim, spacedim>>(
                 thread_num_,
                 K_prime2_hmat_with_mass_matrix_,
                 aca_config,
@@ -3837,7 +3886,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             {
               std::cout << "=== Assemble (sigma-1)*I+K ===" << std::endl;
 
-              fill_hmatrix_with_aca_plus_smp(
+              fill_hmatrix_with_aca_plus_smp<
+                dim,
+                spacedim,
+                PlatformShared::LaplaceKernel::DoubleLayerKernel,
+                RangeNumberType,
+                KernelNumberType,
+                SurfaceNormalDetector<dim, spacedim>>(
                 thread_num_,
                 K2_hmat_with_mass_matrix_,
                 aca_config,
@@ -3866,7 +3921,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
               timer.start();
 
-              fill_hmatrix_with_aca_plus_smp(
+              fill_hmatrix_with_aca_plus_smp<
+                dim,
+                spacedim,
+                PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel,
+                RangeNumberType,
+                KernelNumberType,
+                SurfaceNormalDetector<dim, spacedim>>(
                 thread_num_,
                 K_prime2_hmat_with_mass_matrix_,
                 aca_config,
@@ -3903,7 +3964,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           timer.start();
 
-          fill_hmatrix_with_aca_plus_smp(
+          fill_hmatrix_with_aca_plus_smp<
+            dim,
+            spacedim,
+            PlatformShared::LaplaceKernel::SingleLayerKernel,
+            RangeNumberType,
+            KernelNumberType,
+            SurfaceNormalDetector<dim, spacedim>>(
             thread_num_,
             V2_hmat_,
             aca_config,
@@ -3932,7 +3999,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           timer.start();
 
-          fill_hmatrix_with_aca_plus_smp(
+          fill_hmatrix_with_aca_plus_smp<
+            dim,
+            spacedim,
+            PlatformShared::LaplaceKernel::HyperSingularKernelRegular,
+            RangeNumberType,
+            KernelNumberType,
+            SurfaceNormalDetector<dim, spacedim>>(
             thread_num_,
             D2_hmat_,
             aca_config,
@@ -4061,7 +4134,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           timer.start();
 
-          fill_hmatrix_with_aca_plus_smp(
+          fill_hmatrix_with_aca_plus_smp<
+            dim,
+            spacedim,
+            PlatformShared::LaplaceKernel::SingleLayerKernel,
+            RangeNumberType,
+            KernelNumberType,
+            SurfaceNormalDetector<dim, spacedim>>(
             thread_num_,
             V1_hmat_,
             aca_config,
@@ -4090,7 +4169,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           timer.start();
 
-          fill_hmatrix_with_aca_plus_smp(
+          fill_hmatrix_with_aca_plus_smp<
+            dim,
+            spacedim,
+            PlatformShared::LaplaceKernel::DoubleLayerKernel,
+            RangeNumberType,
+            KernelNumberType,
+            SurfaceNormalDetector<dim, spacedim>>(
             thread_num_,
             K1_hmat_,
             aca_config,
@@ -4119,7 +4204,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           timer.start();
 
-          fill_hmatrix_with_aca_plus_smp(
+          fill_hmatrix_with_aca_plus_smp<
+            dim,
+            spacedim,
+            PlatformShared::LaplaceKernel::HyperSingularKernelRegular,
+            RangeNumberType,
+            KernelNumberType,
+            SurfaceNormalDetector<dim, spacedim>>(
             thread_num_,
             D1_hmat_,
             aca_config,
@@ -4658,7 +4749,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
         {
             case DirichletBCProblem: {
               SolverControl solver_control(1000, 1e-8, true, true);
-              SolverCG<Vector<RangeNumberType>> solver(solver_control);
+              SolverCGGeneral<Vector<RangeNumberType>> solver(solver_control);
 
               solver.solve(V1_matrix_,
                            neumann_data_,
@@ -4669,7 +4760,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
             }
             case NeumannBCProblem: {
               SolverControl solver_control(1000, 1e-8, true, true);
-              SolverCG<Vector<RangeNumberType>> solver(solver_control);
+              SolverCGGeneral<Vector<RangeNumberType>> solver(solver_control);
 
               solver.solve(D1_matrix_,
                            dirichlet_data_,
@@ -4694,7 +4785,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
         {
             case DirichletBCProblem: {
               SolverControl solver_control(1000, 1e-8, true, true);
-              SolverCG<Vector<RangeNumberType>> solver(solver_control);
+              SolverCGGeneral<Vector<RangeNumberType>> solver(solver_control);
 
               switch (preconditioner_type_)
                 {
@@ -4756,7 +4847,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
             }
             case NeumannBCProblem: {
               SolverControl solver_control(1000, 1e-8, true, true);
-              SolverCG<Vector<RangeNumberType>> solver(solver_control);
+              SolverCGGeneral<Vector<RangeNumberType>> solver(solver_control);
 
               switch (preconditioner_type_)
                 {
@@ -4818,7 +4909,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
             }
             case MixedBCProblem: {
               SolverControl solver_control(1000, 1e-8, true, true);
-              SolverBicgstab<Vector<RangeNumberType>> solver(solver_control);
+              SolverBicgstabGeneral<Vector<RangeNumberType>> solver(
+                solver_control);
 
               // Solve the system of equations and obtain the solution in two
               // block vectors in the internal DoF numbering.
@@ -4865,7 +4957,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
                         *operator_preconditioner_dirichlet_,
                         *operator_preconditioner_neumann_,
                         1000,
-                        1e-8,
+                        real_type(1e-8),
                         true,
                         true);
 
@@ -4912,7 +5004,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
                         PreconditionIdentity(),
                         PreconditionIdentity(),
                         1000,
-                        1e-8,
+                        real_type(1e-8),
                         true,
                         true);
 

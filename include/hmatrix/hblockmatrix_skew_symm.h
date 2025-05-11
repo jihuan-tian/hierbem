@@ -8,6 +8,8 @@
 #ifndef HIERBEM_INCLUDE_HMATRIX_HBLOCKMATRIX_SKEW_SYMM_H_
 #define HIERBEM_INCLUDE_HMATRIX_HBLOCKMATRIX_SKEW_SYMM_H_
 
+#include <deal.II/base/numbers.h>
+
 #include "config.h"
 #include "hmatrix/hmatrix.h"
 #include "linalg.h"
@@ -179,7 +181,9 @@ HBlockMatrixSkewSymm<spacedim, Number>::vmult(Vector<Number>       &y,
 
   M11->vmult(y1, x1);
   M12->vmult_add(y1, x2);
-  M12->Tvmult(y2, -1.0, x1);
+  M12->Tvmult(y2,
+              typename dealii::numbers::NumberTraits<Number>::real_type(-1.0),
+              x1);
   M22->vmult_add(y2, x2);
 
   // Merge @p y1 and @p y2 into the result vector @p y.

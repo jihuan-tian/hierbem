@@ -1,10 +1,12 @@
 #ifndef HIERBEM_INCLUDE_SOLVERS_SOLVE_HBLOCKMATRIX_SKEW_SYMM_H_
 #define HIERBEM_INCLUDE_SOLVERS_SOLVE_HBLOCKMATRIX_SKEW_SYMM_H_
 
-#include <deal.II/lac/solver_cg.h>
+#include <deal.II/base/numbers.h>
+
 #include <deal.II/lac/solver_control.h>
 
 #include "solvers/schur_complement.h"
+#include "solvers/solver_cg_general.h"
 
 HBEM_NS_OPEN
 
@@ -50,8 +52,8 @@ solve_hblockmatrix_skew_symm_using_schur_complement(
 {
   // Compute \f$M_{11}^{-1} b_1\f$ and @p b4 stores the result.
   SolverControl solver_control1(max_iter, tolerance, log_history, log_result);
-  SolverCG<VectorType> solver1(solver_control1);
-  VectorType           b4(block_mat.get_M11().get_n());
+  SolverCGGeneral<VectorType> solver1(solver_control1);
+  VectorType                  b4(block_mat.get_M11().get_n());
 
   solver1.solve(block_mat.get_M11(), b4, b1, precond11);
 
@@ -71,16 +73,17 @@ solve_hblockmatrix_skew_symm_using_schur_complement(
     schur_complement(
       block_mat, precond11, max_iter, tolerance, log_history, log_result);
   SolverControl solver_control2(max_iter, tolerance, log_history, log_result);
-  SolverCG<VectorType> solver2(solver_control2);
+  SolverCGGeneral<VectorType> solver2(solver_control2);
   solver2.solve(schur_complement, x2, b3, precond22);
 
   // Compute \f$-M_{12}x_2\f$ and store it into @p b4.
-  block_mat.get_M12().vmult(b4, -1.0, x2);
+  block_mat.get_M12().vmult(
+    b4, typename numbers::NumberTraits<Number>::real_type(-1.0), x2);
   b4 += b1;
 
   // Solve @p x1.
   SolverControl solver_control3(max_iter, tolerance, log_history, log_result);
-  SolverCG<VectorType> solver3(solver_control3);
+  SolverCGGeneral<VectorType> solver3(solver_control3);
   solver3.solve(block_mat.get_M11(), x1, b4, precond11);
 }
 

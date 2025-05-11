@@ -4,7 +4,7 @@
  *
  * At the moment, its purpose is to wrap some member functions of @p HMatrix,
  * such as @p HMatrix::vmult, which will be used as preconditioner in
- * @p SolverCG.
+ * @p SolverCGGeneral.
  *
  * @date 2022-10-27
  * @author Jihuan Tian
