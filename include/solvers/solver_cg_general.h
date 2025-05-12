@@ -72,7 +72,9 @@ SolverCGGeneral<VectorType>::solve(const MatrixType         &A,
 {
   // 2025-05-10: At the moment, @p LAPACKFullMatrixExt uses @p m() and @p n() to
   // get matrix sizes while @p HMaxtrix uses @p get_m() and @p get_n(). Because
-  // they are not consistent, we do not perform a dimension assertion here.
+  // they are not consistent, we do not perform a dimension assertion about the
+  // matrix here.
+  AssertDimension(x.size(), b.size());
   LogStream::Prefix prefix("cg-general");
 
   const size_type n = b.size();
@@ -135,8 +137,8 @@ SolverCGGeneral<VectorType>::solve(const MatrixType         &A,
         {
           // Update the correction vector.
           Number beta = rho / rho_prev;
-          p           = v;
-          p.add(beta, p);
+          p *= beta;
+          p += v;
           rho_prev = rho;
         }
     }
