@@ -52,6 +52,7 @@
 #include "config.h"
 #include "cu_profile.hcu"
 #include "cuda_complex.hcu"
+#include "data_out_ext.h"
 #include "debug_tools.h"
 #include "gmsh_manipulation.h"
 #include "grid_out_ext.h"
@@ -806,7 +807,8 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -825,7 +827,8 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -5107,32 +5110,19 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
             {
-              Vector<real_type> neumann_data_real_part(neumann_data_.size());
-              Vector<real_type> neumann_data_imag_part(neumann_data_.size());
-              LinAlg::get_vector_real_part(neumann_data_real_part,
-                                           neumann_data_);
-              LinAlg::get_vector_imag_part(neumann_data_imag_part,
-                                           neumann_data_);
+              ComplexOutputDataVector<Vector, real_type> neumann_data_vector(
+                neumann_data_);
+              ComplexOutputDataVector<Vector, real_type> dirichlet_data_vector(
+                dirichlet_bc_);
 
-              Vector<real_type> dirichlet_bc_real_part(dirichlet_bc_.size());
-              Vector<real_type> dirichlet_bc_imag_part(dirichlet_bc_.size());
-              LinAlg::get_vector_real_part(dirichlet_bc_real_part,
-                                           dirichlet_bc_);
-              LinAlg::get_vector_imag_part(dirichlet_bc_imag_part,
-                                           dirichlet_bc_);
-
-              data_out.add_data_vector(dof_handler_for_neumann_space_,
-                                       neumann_data_real_part,
-                                       "neumann_data_real");
-              data_out.add_data_vector(dof_handler_for_neumann_space_,
-                                       neumann_data_imag_part,
-                                       "neumann_data_imag");
-              data_out.add_data_vector(dof_handler_for_dirichlet_space_,
-                                       dirichlet_bc_real_part,
-                                       "dirichlet_data_real");
-              data_out.add_data_vector(dof_handler_for_dirichlet_space_,
-                                       dirichlet_bc_imag_part,
-                                       "dirichlet_data_imag");
+              add_complex_data_vector(data_out,
+                                      dof_handler_for_neumann_space_,
+                                      neumann_data_vector,
+                                      "neumann_data");
+              add_complex_data_vector(data_out,
+                                      dof_handler_for_dirichlet_space_,
+                                      dirichlet_data_vector,
+                                      "dirichlet_data");
 
               data_out.build_patches();
               data_out.write_vtk(vtk_output);
@@ -5160,32 +5150,19 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
             {
-              Vector<real_type> dirichlet_data_real_part(
-                dirichlet_data_.size());
-              Vector<real_type> dirichlet_data_imag_part(
-                dirichlet_data_.size());
-              LinAlg::get_vector_real_part(dirichlet_data_real_part,
-                                           dirichlet_data_);
-              LinAlg::get_vector_imag_part(dirichlet_data_imag_part,
-                                           dirichlet_data_);
+              ComplexOutputDataVector<Vector, real_type> dirichlet_data_vector(
+                dirichlet_data_);
+              ComplexOutputDataVector<Vector, real_type> neumann_data_vector(
+                neumann_bc_);
 
-              Vector<real_type> neumann_bc_real_part(neumann_bc_.size());
-              Vector<real_type> neumann_bc_imag_part(neumann_bc_.size());
-              LinAlg::get_vector_real_part(neumann_bc_real_part, neumann_bc_);
-              LinAlg::get_vector_imag_part(neumann_bc_imag_part, neumann_bc_);
-
-              data_out.add_data_vector(dof_handler_for_dirichlet_space_,
-                                       dirichlet_data_real_part,
-                                       "dirichlet_data_real");
-              data_out.add_data_vector(dof_handler_for_dirichlet_space_,
-                                       dirichlet_data_imag_part,
-                                       "dirichlet_data_imag");
-              data_out.add_data_vector(dof_handler_for_neumann_space_,
-                                       neumann_bc_real_part,
-                                       "neumann_bc_real");
-              data_out.add_data_vector(dof_handler_for_neumann_space_,
-                                       neumann_bc_imag_part,
-                                       "neumann_bc_imag");
+              add_complex_data_vector(data_out,
+                                      dof_handler_for_dirichlet_space_,
+                                      dirichlet_data_vector,
+                                      "dirichlet_data");
+              add_complex_data_vector(data_out,
+                                      dof_handler_for_neumann_space_,
+                                      neumann_data_vector,
+                                      "neumann_data");
 
               data_out.build_patches();
               data_out.write_vtk(vtk_output);
@@ -5213,34 +5190,19 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
             {
-              Vector<real_type> dirichlet_data_real_part(
-                dirichlet_data_.size());
-              Vector<real_type> dirichlet_data_imag_part(
-                dirichlet_data_.size());
-              LinAlg::get_vector_real_part(dirichlet_data_real_part,
-                                           dirichlet_data_);
-              LinAlg::get_vector_imag_part(dirichlet_data_imag_part,
-                                           dirichlet_data_);
+              ComplexOutputDataVector<Vector, real_type> dirichlet_data_vector(
+                dirichlet_data_);
+              ComplexOutputDataVector<Vector, real_type> neumann_data_vector(
+                neumann_data_);
 
-              Vector<real_type> neumann_data_real_part(neumann_data_.size());
-              Vector<real_type> neumann_data_imag_part(neumann_data_.size());
-              LinAlg::get_vector_real_part(neumann_data_real_part,
-                                           neumann_data_);
-              LinAlg::get_vector_imag_part(neumann_data_imag_part,
-                                           neumann_data_);
-
-              data_out.add_data_vector(dof_handler_for_dirichlet_space_,
-                                       dirichlet_data_real_part,
-                                       "dirichlet_data_real");
-              data_out.add_data_vector(dof_handler_for_dirichlet_space_,
-                                       dirichlet_data_imag_part,
-                                       "dirichlet_data_imag");
-              data_out.add_data_vector(dof_handler_for_neumann_space_,
-                                       neumann_data_real_part,
-                                       "neumann_data_real");
-              data_out.add_data_vector(dof_handler_for_neumann_space_,
-                                       neumann_data_imag_part,
-                                       "neumann_data_imag");
+              add_complex_data_vector(data_out,
+                                      dof_handler_for_dirichlet_space_,
+                                      dirichlet_data_vector,
+                                      "dirichlet_data");
+              add_complex_data_vector(data_out,
+                                      dof_handler_for_neumann_space_,
+                                      neumann_data_vector,
+                                      "neumann_data");
 
               data_out.build_patches();
               data_out.write_vtk(vtk_output);

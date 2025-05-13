@@ -416,6 +416,64 @@ namespace LinAlg
   };
 
 
+  template <typename Number1, typename Number2>
+  struct Vector_amplitude
+  {
+    Vector_amplitude(const std::complex<Number2> *const src, Number1 *const dst)
+      : src(src)
+      , dst(dst)
+    {
+      static_assert(is_number_larger_or_equal<Number1, Number2>());
+      static_assert(numbers::NumberTraits<Number1>::is_complex == false);
+
+      Assert(src != nullptr, ExcInternalError());
+      Assert(dst != nullptr, ExcInternalError());
+    }
+
+    void
+    operator()(const size_type begin, const size_type end) const
+    {
+      Assert(end >= begin, ExcInternalError());
+
+      DEAL_II_OPENMP_SIMD_PRAGMA
+      for (size_type i = begin; i < end; ++i)
+        dst[i] = std::abs(src[i]);
+    }
+
+    const std::complex<Number2> *const src;
+    Number1 *const                     dst;
+  };
+
+
+  template <typename Number1, typename Number2>
+  struct Vector_angle
+  {
+    Vector_angle(const std::complex<Number2> *const src, Number1 *const dst)
+      : src(src)
+      , dst(dst)
+    {
+      static_assert(is_number_larger_or_equal<Number1, Number2>());
+      static_assert(numbers::NumberTraits<Number1>::is_complex == false);
+
+      Assert(src != nullptr, ExcInternalError());
+      Assert(dst != nullptr, ExcInternalError());
+    }
+
+    void
+    operator()(const size_type begin, const size_type end) const
+    {
+      Assert(end >= begin, ExcInternalError());
+
+      DEAL_II_OPENMP_SIMD_PRAGMA
+      for (size_type i = begin; i < end; ++i)
+        dst[i] = std::arg(src[i]);
+    }
+
+    const std::complex<Number2> *const src;
+    Number1 *const                     dst;
+  };
+
+
   template <typename VectorType1, typename VectorType2>
   void
   get_vector_real_part(VectorType1 &vec1, const VectorType2 &vec2)
@@ -438,6 +496,36 @@ namespace LinAlg
     AssertDimension(vec1.size(), vec2.size());
 
     Vector_imag_part op(vec2.data(), vec1.data());
+    auto partitioner = std::make_shared<parallel::internal::TBBPartitioner>();
+    dealii::internal::VectorOperations::parallel_for(op,
+                                                     0,
+                                                     vec1.size(),
+                                                     partitioner);
+  }
+
+
+  template <typename VectorType1, typename VectorType2>
+  void
+  get_vector_amplitude(VectorType1 &vec1, const VectorType2 &vec2)
+  {
+    AssertDimension(vec1.size(), vec2.size());
+
+    Vector_amplitude op(vec2.data(), vec1.data());
+    auto partitioner = std::make_shared<parallel::internal::TBBPartitioner>();
+    dealii::internal::VectorOperations::parallel_for(op,
+                                                     0,
+                                                     vec1.size(),
+                                                     partitioner);
+  }
+
+
+  template <typename VectorType1, typename VectorType2>
+  void
+  get_vector_angle(VectorType1 &vec1, const VectorType2 &vec2)
+  {
+    AssertDimension(vec1.size(), vec2.size());
+
+    Vector_angle op(vec2.data(), vec1.data());
     auto partitioner = std::make_shared<parallel::internal::TBBPartitioner>();
     dealii::internal::VectorOperations::parallel_for(op,
                                                      0,
