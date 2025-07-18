@@ -57,6 +57,18 @@ HBEMJuliaValue::double_value() const
   return jl_unbox_float64(value);
 }
 
+unsigned int *
+HBEMJuliaValue::uint_array() const
+{
+  return (unsigned int *)jl_array_data((jl_array_t *)value);
+}
+
+int *
+HBEMJuliaValue::int_array() const
+{
+  return (int *)jl_array_data((jl_array_t *)value);
+}
+
 float *
 HBEMJuliaValue::float_array() const
 {
@@ -184,6 +196,20 @@ HBEMJuliaWrapper::get_complex_double_var(const std::string &var_name) const
 
   return std::complex<double>(real_part.double_value(),
                               imag_part.double_value());
+}
+
+unsigned int *
+HBEMJuliaWrapper::get_uint_array_var(const std::string &var_name) const
+{
+  HBEMJuliaValue val = eval_string(var_name);
+  return val.uint_array();
+}
+
+int *
+HBEMJuliaWrapper::get_int_array_var(const std::string &var_name) const
+{
+  HBEMJuliaValue val = eval_string(var_name);
+  return val.int_array();
 }
 
 float *

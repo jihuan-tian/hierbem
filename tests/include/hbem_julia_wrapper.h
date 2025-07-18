@@ -46,6 +46,12 @@ public:
   // @p complex_double_value, because @p std::complex is neither a simple basic
   // type or an array type, which cannot be directly obtained.
 
+  unsigned int *
+  uint_array() const;
+
+  int *
+  int_array() const;
+
   float *
   float_array() const;
 
@@ -127,6 +133,12 @@ public:
 
   std::complex<double>
   get_complex_double_var(const std::string &var_name) const;
+
+  unsigned int *
+  get_uint_array_var(const std::string &var_name) const;
+
+  int *
+  get_int_array_var(const std::string &var_name) const;
 
   float *
   get_float_array_var(const std::string &var_name) const;
