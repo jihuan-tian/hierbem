@@ -106,13 +106,13 @@ run_dirichlet_hmatrix_two_spheres()
     0, // fe order for neumann space
     LaplaceBEM<dim, spacedim, double, double>::ProblemType::DirichletBCProblem,
     is_interior_problem,         // is interior problem
-    4,                           // n_min for cluster tree
-    4,                           // n_min for block cluster tree
+    16,                          // n_min for cluster tree
+    16,                          // n_min for block cluster tree
     0.8,                         // eta for H-matrix
-    5,                           // max rank for H-matrix
+    10,                          // max rank for H-matrix
     0.01,                        // aca epsilon for H-matrix
     1.0,                         // eta for preconditioner
-    2,                           // max rank for preconditioner
+    5,                           // max rank for preconditioner
     0.1,                         // aca epsilon for preconditioner
     MultithreadInfo::n_threads() // Number of threads used for ACA
   );

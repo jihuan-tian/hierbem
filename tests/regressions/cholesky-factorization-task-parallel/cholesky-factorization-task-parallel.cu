@@ -179,25 +179,31 @@ main(int argc, char *argv[])
 
   // Assemble the H-matrix using ACA.
   Timer timer;
-  fill_hmatrix_with_aca_plus_smp(MultithreadInfo::n_threads(),
-                                 V,
-                                 ACAConfig(max_rank, epsilon, eta),
-                                 single_layer_kernel,
-                                 1.0,
-                                 dof_to_cell_topo,
-                                 dof_to_cell_topo,
-                                 SauterQuadratureRule<dim>(5, 4, 4, 3),
-                                 dof_handler,
-                                 dof_handler,
-                                 nullptr,
-                                 nullptr,
-                                 ct.get_internal_to_external_dof_numbering(),
-                                 ct.get_internal_to_external_dof_numbering(),
-                                 mappings,
-                                 material_id_to_mapping_index,
-                                 SurfaceNormalDetector<dim, spacedim>(
-                                   subdomain_topology),
-                                 true);
+  fill_hmatrix_with_aca_plus_smp<
+    dim,
+    spacedim,
+    HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
+    double,
+    double,
+    SurfaceNormalDetector<dim, spacedim>>(
+    MultithreadInfo::n_threads(),
+    V,
+    ACAConfig(max_rank, epsilon, eta),
+    single_layer_kernel,
+    1.0,
+    dof_to_cell_topo,
+    dof_to_cell_topo,
+    SauterQuadratureRule<dim>(5, 4, 4, 3),
+    dof_handler,
+    dof_handler,
+    nullptr,
+    nullptr,
+    ct.get_internal_to_external_dof_numbering(),
+    ct.get_internal_to_external_dof_numbering(),
+    mappings,
+    material_id_to_mapping_index,
+    SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
+    true);
   timer.stop();
   print_wall_time(std::cout, timer, "assemble H-matrix V");
 

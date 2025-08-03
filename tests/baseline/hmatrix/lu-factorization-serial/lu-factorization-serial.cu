@@ -209,7 +209,13 @@ main(int argc, char *argv[])
 
       // Assemble the H-matrix using ACA.
       Timer timer;
-      fill_hmatrix_with_aca_plus_smp(
+      fill_hmatrix_with_aca_plus_smp<
+        dim,
+        spacedim,
+        HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
+        double,
+        double,
+        SurfaceNormalDetector<dim, spacedim>>(
         MultithreadInfo::n_threads(),
         V,
         ACAConfig(max_rank, epsilon, eta),

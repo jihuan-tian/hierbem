@@ -12,6 +12,7 @@
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/thread_management.h>
+#include <deal.II/base/types.h>
 
 #include <deal.II/lac/full_matrix.h>
 
@@ -24,6 +25,7 @@
 #include <queue>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 

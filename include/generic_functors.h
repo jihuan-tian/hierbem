@@ -21,6 +21,7 @@
 #include <forward_list>
 #include <iterator>
 #include <map>
+#include <type_traits>
 #include <vector>
 
 #include "config.h"

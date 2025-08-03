@@ -1,0 +1,57 @@
+using LinearAlgebra
+
+include("@HBEM_ROOT_DIR@scripts/julia/dqgmres.jl")
+
+# Matrix size.
+n = 1000
+
+PreconditionerIdentity(x) = x
+
+@info "=== Solve random SPD real valued matrix ==="
+A1 = rand(Float64, n, n)
+A1 = A1 * transpose(A1)
+b1 = rand(Float64, n)
+
+x1 = zeros(eltype(b1), size(b1))
+residual_norm, iter = dqgmres!(x1, A1, b1, PreconditionerIdentity, krylov_dim=1000, max_iter=1, abs_tol=1e-3, enable_log=false)
+@info "1. No preconditipon"
+println("HierBEM Julia: estimated residual norm=", residual_norm, ",actual residual norm=", norm(A1 * x1 - b1), ",iter=", iter)
+
+# Preconditioner used in my solver.
+function PreconditionerJacobi1(x)
+    return (1.0 ./ diag(A1)) .* x
+end
+
+x1_jacobi_left_precond = zeros(eltype(b1), size(b1))
+residual_norm, iter = dqgmres!(x1_jacobi_left_precond, A1, b1, PreconditionerJacobi1, krylov_dim=1000, max_iter=1, abs_tol=1e-3, is_left_precondition = true, enable_log=false)
+@info "2. Jacobi left precondition"
+println("HierBEM Julia: estimated residual norm=", residual_norm, ",actual residual norm=", norm(A1 * x1_jacobi_left_precond - b1), ",preconditioned actual residual norm=", norm(PreconditionerJacobi1(A1 * x1_jacobi_left_precond - b1)), ",iter=", iter)
+
+x1_jacobi_right_precond = zeros(eltype(b1), size(b1))
+residual_norm, iter = dqgmres!(x1_jacobi_right_precond, A1, b1, PreconditionerJacobi1, krylov_dim=1000, max_iter=1, abs_tol=1e-3, is_left_precondition = false, enable_log=false)
+@info "3. Jacobi right precondition"
+println("HierBEM Julia: estimated residual norm=", residual_norm, ",actual residual norm=", norm(A1 * x1_jacobi_right_precond - b1), ",iter=", iter)
+
+@info "=== Solve random Hermitian complex valued matrix ==="
+A2 = rand(Complex{Float64}, n, n)
+A2 = A2 * adjoint(A2)
+b2 = rand(Complex{Float64}, n)
+
+x2 = zeros(eltype(b2), size(b2))
+residual_norm, iter = dqgmres!(x2, A2, b2, PreconditionerIdentity, krylov_dim=1000, max_iter=1, abs_tol=1e-3, enable_log=false)
+@info "1. No precondition"
+println("HierBEM Julia: estimated residual norm=", residual_norm, ",actual residual norm=", norm(A2 * x2 - b2), ",iter=", iter)
+
+function PreconditionerJacobi2(x)
+    return (1.0 ./ diag(A2)) .* x
+end
+
+x2_jacobi_left_precond = zeros(eltype(b2), size(b2))
+residual_norm, iter = dqgmres!(x2_jacobi_left_precond, A2, b2, PreconditionerJacobi2, krylov_dim=1000, max_iter=1, abs_tol=1e-3, is_left_precondition = true, enable_log=false)
+@info "2. Jacobi left precondition"
+println("HierBEM Julia: estimated residual norm=", residual_norm, ",actual residual norm=", norm(A2 * x2_jacobi_left_precond - b2), ",preconditioned actual residual norm=", norm(PreconditionerJacobi2(A2 * x2_jacobi_left_precond - b2)), ",iter=", iter)
+
+x2_jacobi_right_precond = zeros(eltype(b2), size(b2))
+residual_norm, iter = dqgmres!(x2_jacobi_right_precond, A2, b2, PreconditionerJacobi2, krylov_dim=1000, max_iter=1, abs_tol=1e-3, is_left_precondition = false, enable_log=false)
+@info "3. Jacobi right precondition"
+println("HierBEM Julia: estimated residual norm=", residual_norm, ",actual residual norm=", norm(A2 * x2_jacobi_right_precond - b2), ",iter=", iter)

@@ -486,6 +486,7 @@ protected:
       const RangeNumberType *src_ptr = src.begin();
       const real_type *diag_ptr = mass_matrix_triple_diag_reciprocal.begin();
 
+      // TODO Replace with TBB.
       for (size_type i = 0; i < n; i++, dst_ptr++, src_ptr++, diag_ptr++)
         *dst_ptr = *src_ptr * (*diag_ptr) * omega;
     }
@@ -1603,7 +1604,7 @@ OperatorPreconditioner<dim,
                                solve_mass_matrix_tol,
                                solve_mass_matrix_log_history,
                                solve_mass_matrix_log_result);
-  SolverGMRESGeneral<Vector<RangeNumberType>> solver(solver_control);
+  SolverDQGMRES<Vector<RangeNumberType>> solver(solver_control);
 
   PreconditionJacobi<MassMatrixTriple> precond;
   precond.initialize(
@@ -1634,7 +1635,7 @@ OperatorPreconditioner<dim,
                                solve_mass_matrix_tol,
                                solve_mass_matrix_log_history,
                                solve_mass_matrix_log_result);
-  SolverGMRESGeneral<Vector<RangeNumberType>> solver(solver_control);
+  SolverDQGMRES<Vector<RangeNumberType>> solver(solver_control);
 
   PreconditionJacobi<MassMatrixTransposeTriple> precond;
   precond.initialize(

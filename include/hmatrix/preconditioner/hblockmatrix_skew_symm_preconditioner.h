@@ -44,7 +44,7 @@ template <int spacedim, typename Number = double>
 class HBlockMatrixSkewSymmPreconditioner
 {
 public:
-  using size_type = const typename Vector<Number>::size_type;
+  using size_type = typename Vector<Number>::size_type;
 
   /**
    * Default constructor

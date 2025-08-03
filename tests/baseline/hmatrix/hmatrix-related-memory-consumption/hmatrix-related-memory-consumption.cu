@@ -232,7 +232,13 @@ main(int argc, char *argv[])
                                   HMatrixSupport::BlockType::diagonal_block);
 
       // Assemble the H-matrix using ACA.
-      fill_hmatrix_with_aca_plus_smp(
+      fill_hmatrix_with_aca_plus_smp<
+        dim,
+        spacedim,
+        HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
+        double,
+        double,
+        SurfaceNormalDetector<dim, spacedim>>(
         MultithreadInfo::n_threads(),
         V,
         ACAConfig(opts.max_rank, opts.epsilon, opts.eta),

@@ -20,6 +20,7 @@
 #include <cmath>
 #include <complex>
 #include <map>
+#include <type_traits>
 #include <vector>
 
 #include "config.h"

@@ -12,6 +12,7 @@
 
 #include <deal.II/base/aligned_vector.h>
 #include <deal.II/base/numbers.h>
+#include <deal.II/base/types.h>
 #include <deal.II/base/vectorization.h>
 
 #include <deal.II/lac/lapack_support.h>

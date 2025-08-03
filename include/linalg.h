@@ -35,7 +35,7 @@ HBEM_NS_OPEN
 namespace LinAlg
 {
   using namespace dealii;
-  using size_type = types::blas_int;
+  using size_type = std::make_unsigned<types::blas_int>::type;
 
   /**
    * Calculate the determinant of a $4 \times 4$ matrix.
@@ -531,6 +531,32 @@ namespace LinAlg
                                                      0,
                                                      vec1.size(),
                                                      partitioner);
+  }
+
+
+  /**
+   * @brief Apply a 2x2 Givens rotation matrix to the input vector at the
+   * specified index.
+   *
+   * @tparam VectorType
+   * @tparam MatrixType
+   * @param v
+   * @param givens
+   * @param i
+   */
+  template <typename VectorType, typename MatrixType>
+  void
+  apply_givens_2x2(VectorType &v, const MatrixType &givens, const size_type i)
+  {
+    AssertIndexRange(i, v.size());
+
+    using Number = typename VectorType::value_type;
+
+    const Number vi  = givens(0, 0) * v(i) + givens(0, 1) * v(i + 1);
+    const Number vi1 = givens(1, 0) * v(i) + givens(1, 1) * v(i + 1);
+
+    v(i)     = vi;
+    v(i + 1) = vi1;
   }
 } // namespace LinAlg
 

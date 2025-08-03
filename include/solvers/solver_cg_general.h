@@ -18,6 +18,7 @@
 #include <deal.II/lac/solver_control.h>
 
 #include <iostream>
+#include <type_traits>
 
 #include "blas_helpers.h"
 #include "config.h"
@@ -37,7 +38,7 @@ template <typename VectorType>
 class SolverCGGeneral
 {
 public:
-  using size_type = types::blas_int;
+  using size_type = std::make_unsigned<types::blas_int>::type;
   using Number    = typename VectorType::value_type;
 
   SolverCGGeneral(SolverControl &cn)
@@ -70,10 +71,10 @@ SolverCGGeneral<VectorType>::solve(const MatrixType         &A,
                                    const VectorType         &b,
                                    const PreconditionerType &preconditioner)
 {
-  // 2025-05-10: At the moment, @p LAPACKFullMatrixExt uses @p m() and @p n() to
-  // get matrix sizes while @p HMaxtrix uses @p get_m() and @p get_n(). Because
-  // they are not consistent, we do not perform a dimension assertion about the
-  // matrix here.
+  // At the moment, @p LAPACKFullMatrixExt or @p dealii::SparseMatrix uses
+  // @p m() and @p n() to get matrix sizes while @p HMaxtrix uses @p get_m()
+  // and @p get_n(). Because they are not consistent, we do not perform a
+  // dimension assertion about the matrix here.
   AssertDimension(x.size(), b.size());
   LogStream::Prefix prefix("cg-general");
 

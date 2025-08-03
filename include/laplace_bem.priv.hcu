@@ -807,8 +807,7 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -827,8 +826,7 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -4911,15 +4909,15 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
               break;
             }
             case MixedBCProblem: {
-              SolverControl solver_control(1000, 1e-8, true, true);
-              SolverBicgstabGeneral<Vector<RangeNumberType>> solver(
-                solver_control);
-
               // Solve the system of equations and obtain the solution in two
               // block vectors in the internal DoF numbering.
               switch (preconditioner_type_)
                 {
                     case PreconditionerType::HMatrixFactorization: {
+                      SolverControl solver_control(1000, 1e-8, true, true);
+                      SolverBicgstabGeneral<Vector<RangeNumberType>> solver(
+                        solver_control);
+
                       // In this case, H-LU for skew symmetric block H-matrix is
                       // adopted to solve the system of equations.
                       solver.solve(

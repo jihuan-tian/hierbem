@@ -11,6 +11,7 @@
 #include <deal.II/base/memory_consumption.h>
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/template_constraints.h>
+#include <deal.II/base/types.h>
 
 #include <deal.II/lac/lapack_support.h>
 
@@ -1283,6 +1284,21 @@ public:
          const Number2                      alpha,
          const LAPACKFullMatrixExt<Number> &B,
          bool                               adding = false) const;
+
+
+  /**
+   * This function is required by the class
+   * @p PreconditionJacobi<LAPACKFullMatrix<Number>> when the matrix is solved
+   * with a Jacobi preconditioner.
+   *
+   * Because the matrix is full and will not be solved in an actual case, this
+   * is only for verification purpose.
+   */
+  template <typename Number2>
+  void
+  precondition_Jacobi(Vector<Number2>       &dst,
+                      const Vector<Number2> &src,
+                      const real_type        omega = 1.) const;
 
   /**
    * Calculate the determinant of a \f$2\times 2\f$ matrix.
@@ -6460,6 +6476,26 @@ LAPACKFullMatrixExt<Number>::Hmmult(LAPACKFullMatrixExt<Number>       &C,
     {
       Tmmult(C, alpha, B, adding);
     }
+}
+
+
+template <typename Number>
+template <typename Number2>
+void
+LAPACKFullMatrixExt<Number>::precondition_Jacobi(Vector<Number2>       &dst,
+                                                 const Vector<Number2> &src,
+                                                 const real_type omega) const
+{
+  AssertDimension(this->m(), this->n());
+  AssertDimension(this->m(), src.size());
+  AssertDimension(this->m(), dst.size());
+
+  const size_type n       = src.size();
+  Number2        *dst_ptr = dst.begin();
+  const Number2  *src_ptr = src.begin();
+
+  for (size_type i = 0; i < n; i++, dst_ptr++, src_ptr++)
+    *dst_ptr = *src_ptr * Number2(omega) / Number2((*this)(i, i));
 }
 
 

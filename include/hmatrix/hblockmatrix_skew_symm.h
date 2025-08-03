@@ -33,7 +33,7 @@ template <int spacedim, typename Number = double>
 class HBlockMatrixSkewSymm
 {
 public:
-  using size_type = const typename Vector<Number>::size_type;
+  using size_type = typename Vector<Number>::size_type;
 
   /**
    * Default constructor
