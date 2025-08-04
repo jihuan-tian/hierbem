@@ -1,13 +1,13 @@
 /**
- * \file dirichlet-full-matrix-complex.cc
- * \brief Verify solving the complex valued Laplace problem with Dirichlet
- * boundary condition using full matrix based BEM.
+ * @file dirichlet-hmatrix-op-precond-complex.cc
+ * @brief Verify solving the complex valued Laplace problem with Dirichlet
+ * boundary condition using H-matrix based BEM. Operator preconditioning is
+ * used.
  *
- * \ingroup testers
- * \author Jihuan Tian
- * \date 2025-05-12
+ * @ingroup
+ * @author Jihuan Tian
+ * @date 2025-08-03
  */
-
 #include <catch2/catch_all.hpp>
 
 #include "hbem_octave_wrapper.h"
@@ -17,17 +17,17 @@ using namespace Catch::Matchers;
 using namespace HierBEM;
 
 extern void
-run_dirichlet_full_matrix_complex();
+run_dirichlet_hmatrix_op_precond_complex(const unsigned int refinement);
 
 TEST_CASE(
-  "Solve Laplace problem with complex valued Dirichlet boundary condition using full matrix",
+  "Solve Laplace problem with complex valued Dirichlet boundary condition using operator preconditioning",
   "[laplace]")
 {
   HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
   inst.add_path(HBEM_ROOT_DIR "/scripts");
   inst.add_path(SOURCE_DIR);
 
-  run_dirichlet_full_matrix_complex();
+  run_dirichlet_hmatrix_op_precond_complex(1);
 
   try
     {

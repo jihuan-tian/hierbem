@@ -144,3 +144,4 @@ tests/units/op-precond-hmatrix-for-neumann/process.m
 tests/units/op-precond-hmatrix-for-neumann-subdomain/process.m
 tests/functions/laplace-bem/mixed-hmatrix-op-precond/process.m
 tests/units/solver-dqgmres/process.jl
+tests/functions/laplace-bem/dirichlet-hmatrix-op-precond-complex/process.m

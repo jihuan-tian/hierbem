@@ -41,7 +41,9 @@ public:
   {
     (void)component;
     const double amplitude = 1.0 / 4.0 / numbers::PI / (p - x0).norm();
-    const double angle     = numbers::PI / 3.0;
+    // In the complex valued case, we assign a fixed phase angle to the
+    // potential distribution.
+    const double angle = numbers::PI / 3.0;
     return std::complex<double>(amplitude * std::cos(angle),
                                 amplitude * std::sin(angle));
   }
