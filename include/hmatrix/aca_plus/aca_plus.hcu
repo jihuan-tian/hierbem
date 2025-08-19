@@ -946,7 +946,8 @@ assemble_kernel_column(
  * @param ky_dof_handler
  * @param kx_mapping
  * @param ky_mapping
- * @return The selected reference row index
+ * @return The selected reference row index with respect to the matrix block,
+ * i.e. matrix block index.
  */
 template <int dim,
           int spacedim,
@@ -1125,7 +1126,8 @@ random_select_ref_row(
  * @param ky_mapping
  * @param scratch_data
  * @param copy_data
- * @return
+ * @return The selected reference row index with respect to the matrix block,
+ * i.e. matrix block index.
  */
 template <int dim,
           int spacedim,
@@ -1586,7 +1588,8 @@ random_select_ref_row(
  * reference row, return this invalid index.
  * @param row_dof_indices
  * @param col_dof_indices
- * @return
+ * @return The row index with respect to the matrix block, i.e. matrix block
+ * index.
  */
 template <typename RangeNumberType = double>
 size_type
@@ -2499,9 +2502,9 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
    * Adjust the maximum ACA+ iteration if is larger than the matrix
    * dimension.
    */
-  unsigned int effective_max_iter = (aca_config.max_iter > std::min(m, n)) ?
-                                      std::min(m, n) :
-                                      aca_config.max_iter;
+  const unsigned int effective_max_iter =
+    (aca_config.max_iter > std::min(m, n)) ? std::min(m, n) :
+                                             aca_config.max_iter;
 
   /**
    * Generate lists of internal DoF indices (internal DoF numbering) from
@@ -2518,9 +2521,9 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
    * Create matrix references associated with the component matrices in the
    * rank-k matrix to be returned, which hold the row and column vectors in
    * the selected crosses during the ACA iteration. The number of columns
-   * should be the same as the maximum iteration number in @p aca_config.
+   * should be the same as the effective maximum iteration number.
    */
-  AssertDimension(rkmat.get_formal_rank(), aca_config.max_iter);
+  AssertDimension(rkmat.get_formal_rank(), effective_max_iter);
   LAPACKFullMatrixExt<RangeNumberType> &u_mat = rkmat.get_A();
   LAPACKFullMatrixExt<RangeNumberType> &v_mat = rkmat.get_B();
   u_mat                                       = RangeNumberType();
@@ -3102,7 +3105,17 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
         }
     }
 
-  Assert(false, ExcMessage("ACA+ should not exit from here!"));
+  /**
+   * Apply complex conjugation to the component matrix @p B, when
+   * we're dealing with complex values, because the rank-k matrix
+   * should take the form \f$M=AB^{\mathrm{H}}\f$.
+   */
+  if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+    v_mat.conjugate();
+
+  std::cerr
+    << "Maximum H-matrix rank has been reached and the approximation accuracy has not been achieved, exit early!"
+    << std::endl;
 }
 
 
@@ -3196,9 +3209,9 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
    * Adjust the maximum ACA+ iteration if is larger than the matrix
    * dimension.
    */
-  unsigned int effective_max_iter = (aca_config.max_iter > std::min(m, n)) ?
-                                      std::min(m, n) :
-                                      aca_config.max_iter;
+  const unsigned int effective_max_iter =
+    (aca_config.max_iter > std::min(m, n)) ? std::min(m, n) :
+                                             aca_config.max_iter;
 
   /**
    * Generate lists of internal DoF indices (internal DoF numbering) from
@@ -3215,9 +3228,9 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
    * Create matrix references associated with the component matrices in the
    * rank-k matrix to be returned, which hold the row and column vectors in
    * the selected crosses during the ACA iteration. The number of columns
-   * should be the same as the maximum iteration number in @p aca_config.
+   * should be the same as the effective maximum iteration number.
    */
-  AssertDimension(rkmat.get_formal_rank(), aca_config.max_iter);
+  AssertDimension(rkmat.get_formal_rank(), effective_max_iter);
   LAPACKFullMatrixExt<RangeNumberType> &u_mat = rkmat.get_A();
   LAPACKFullMatrixExt<RangeNumberType> &v_mat = rkmat.get_B();
   u_mat                                       = RangeNumberType();
@@ -3815,10 +3828,26 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
         }
     }
 
-  Assert(false, ExcMessage("ACA+ should not exit from here!"));
+  /**
+   * Apply complex conjugation to the component matrix @p B, when
+   * we're dealing with complex values, because the rank-k matrix
+   * should take the form \f$M=AB^{\mathrm{H}}\f$.
+   */
+  if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+    v_mat.conjugate();
+
+  std::cerr
+    << "Maximum H-matrix rank has been reached and the approximation accuracy has not been achieved, exit early!"
+    << std::endl;
 }
 
 
+/**
+ * @param row_dof_index_range Local DoF index range with internal numbering for
+ * the rows of the current matrix block.
+ * @param col_dof_index_range Local DoF index range with internal numbering for
+ * the columns of the current matrix block.
+ */
 template <int dim,
           int spacedim,
           template <int, typename> typename KernelFunctionType,
@@ -3905,12 +3934,12 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
    * Adjust the maximum ACA+ iteration if is larger than the matrix
    * dimension.
    */
-  unsigned int effective_max_iter = (aca_config.max_iter > std::min(m, n)) ?
-                                      std::min(m, n) :
-                                      aca_config.max_iter;
+  const unsigned int effective_max_iter =
+    (aca_config.max_iter > std::min(m, n)) ? std::min(m, n) :
+                                             aca_config.max_iter;
 
   /**
-   * Generate lists of internal DoF indices (internal DoF numbering) from
+   * Generate lists of local DoF indices with internal DoF numbering from
    * corresponding index ranges.
    */
   std::vector<types::global_dof_index> row_dof_indices(m);
@@ -3924,9 +3953,9 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
    * Create matrix references associated with the component matrices in the
    * rank-k matrix to be returned, which hold the row and column vectors in
    * the selected crosses during the ACA iteration. The number of columns
-   * should be the same as the maximum iteration number in @p aca_config.
+   * should be the same as the effective maximum iteration number.
    */
-  AssertDimension(rkmat.get_formal_rank(), aca_config.max_iter);
+  AssertDimension(rkmat.get_formal_rank(), effective_max_iter);
   LAPACKFullMatrixExt<RangeNumberType> &u_mat = rkmat.get_A();
   LAPACKFullMatrixExt<RangeNumberType> &v_mat = rkmat.get_B();
   u_mat                                       = RangeNumberType();
@@ -4563,7 +4592,17 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   AssertCuda(cudaHostUnregister((void *)(vk.data())));
   AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
-  Assert(false, ExcMessage("ACA+ should not exit from here!"));
+  /**
+   * Apply complex conjugation to the component matrix @p B, when
+   * we're dealing with complex values, because the rank-k matrix
+   * should take the form \f$M=AB^{\mathrm{H}}\f$.
+   */
+  if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+    v_mat.conjugate();
+
+  std::cerr
+    << "Maximum H-matrix rank has been reached and the approximation accuracy has not been achieved, exit early!"
+    << std::endl;
 }
 
 
@@ -4654,9 +4693,9 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
    * Adjust the maximum ACA+ iteration if is larger than the matrix
    * dimension.
    */
-  unsigned int effective_max_iter = (aca_config.max_iter > std::min(m, n)) ?
-                                      std::min(m, n) :
-                                      aca_config.max_iter;
+  const unsigned int effective_max_iter =
+    (aca_config.max_iter > std::min(m, n)) ? std::min(m, n) :
+                                             aca_config.max_iter;
 
   /**
    * Generate lists of internal DoF indices (internal DoF numbering) from
@@ -4673,9 +4712,9 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
    * Create matrix references associated with the component matrices in the
    * rank-k matrix to be returned, which hold the row and column vectors in
    * the selected crosses during the ACA iteration. The number of columns
-   * should be the same as the maximum iteration number in @p aca_config.
+   * should be the same as the effective maximum iteration number.
    */
-  AssertDimension(rkmat.get_formal_rank(), aca_config.max_iter);
+  AssertDimension(rkmat.get_formal_rank(), effective_max_iter);
   LAPACKFullMatrixExt<RangeNumberType> &u_mat = rkmat.get_A();
   LAPACKFullMatrixExt<RangeNumberType> &v_mat = rkmat.get_B();
   u_mat                                       = RangeNumberType();
@@ -5328,7 +5367,17 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   AssertCuda(cudaHostUnregister((void *)(vk.data())));
   AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
-  Assert(false, ExcMessage("ACA+ should not exit from here!"));
+  /**
+   * Apply complex conjugation to the component matrix @p B, when
+   * we're dealing with complex values, because the rank-k matrix
+   * should take the form \f$M=AB^{\mathrm{H}}\f$.
+   */
+  if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+    v_mat.conjugate();
+
+  std::cerr
+    << "Maximum H-matrix rank has been reached and the approximation accuracy has not been achieved, exit early!"
+    << std::endl;
 }
 
 
@@ -5830,7 +5879,17 @@ aca_plus(
         }
     }
 
-  Assert(false, ExcMessage("ACA+ should not exit from here!"));
+  /**
+   * Apply complex conjugation to the component matrix @p B, when
+   * we're dealing with complex values, because the rank-k matrix
+   * should take the form \f$M=AB^{\mathrm{H}}\f$.
+   */
+  if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+    v_mat.conjugate();
+
+  std::cerr
+    << "Maximum H-matrix rank has been reached and the approximation accuracy has not been achieved, exit early!"
+    << std::endl;
 }
 
 

@@ -1,22 +1,17 @@
 #include <deal.II/base/logstream.h>
 
-#include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/manifold_lib.h>
 
 #include <cuda_runtime.h>
+#include <openblas-pthread/cblas.h>
 
 #include <cmath>
 #include <complex>
 #include <fstream>
 #include <iostream>
-#include <string>
 
-#if ENABLE_NVTX == 1
-#  include "cu_profile.hcu"
-#endif
 #include "debug_tools.h"
 #include "grid_in_ext.h"
-#include "grid_out_ext.h"
 #include "hbem_test_config.h"
 #include "laplace_bem.h"
 
@@ -24,46 +19,49 @@ using namespace dealii;
 using namespace HierBEM;
 
 /**
- * Function object for the Dirichlet boundary condition data, which is
- * also the solution of the Neumann problem. The analytical expression is:
- * \f[
- * u=\frac{1}{4\pi\norm{x-x_0}}
- * \f]
+ * Function object for the Dirichlet boundary condition data.
+ *
+ * On the surface at @p z=0, apply constant potential 1. On the surface at
+ * @p z=6, apply constant potential 0.
  */
 class DirichletBC : public Function<3, std::complex<double>>
 {
 public:
-  // N.B. This function should be defined outside class NeumannBC or class
-  // Example2, if no inline.
-  DirichletBC()
-    : Function<3, std::complex<double>>()
-    , x0(0.25, 0.25, 0.25)
-  {}
-
-  DirichletBC(const Point<3> &x0)
-    : Function<3, std::complex<double>>()
-    , x0(x0)
-  {}
-
   std::complex<double>
   value(const Point<3> &p, const unsigned int component = 0) const
   {
     (void)component;
-    const double amplitude = 1.0 / 4.0 / numbers::PI / (p - x0).norm();
-    // In the complex valued case, we assign a fixed phase angle to the
-    // potential distribution.
-    const double angle = numbers::PI / 3.0;
-    return std::complex<double>(amplitude * std::cos(angle),
-                                amplitude * std::sin(angle));
-  }
 
-private:
-  /**
-   * Location of the Dirac point source \f$\delta(x-x_0)\f$.
-   */
-  Point<3> x0;
+    if (p(2) < 3)
+      {
+        const double angle = numbers::PI / 3.0;
+        return std::complex<double>(std::cos(angle), std::sin(angle));
+      }
+    else
+      {
+        return std::complex<double>(0.);
+      }
+  }
 };
 
+/**
+ * Function object for the Neumann boundary condition data.
+ *
+ * For surfaces other than those at @p z=0 and @p z=6, apply homogeneous
+ * Neumann boundary condition.
+ */
+class NeumannBC : public Function<3, std::complex<double>>
+{
+public:
+  std::complex<double>
+  value(const Point<3> &p, const unsigned int component = 0) const
+  {
+    (void)component;
+    (void)p;
+
+    return std::complex<double>(0.);
+  }
+};
 
 namespace HierBEM
 {
@@ -74,27 +72,29 @@ namespace HierBEM
 } // namespace HierBEM
 
 void
-run_dirichlet_hmatrix_op_precond_complex(const unsigned int refinement)
+run_mixed_hmatrix_op_precond_complex()
 {
   /**
    * @internal Pop out the default "DEAL" prefix string.
    */
   // Write run-time logs to file
-  std::ofstream ofs("dirichlet-hmatrix-op-precond-complex.log");
+  std::ofstream ofs("mixed-hmatrix-op-precond-complex.log");
   deallog.pop();
   deallog.depth_console(0);
   deallog.depth_file(5);
   deallog.attach(ofs);
 
   LogStream::Prefix prefix_string("HierBEM");
-#if ENABLE_NVTX == 1
-  HierBEM::CUDAWrappers::NVTXRange nvtx_range("HierBEM");
-#endif
 
   /**
    * @internal Create and start the timer.
    */
   Timer timer;
+
+  /**
+   * @internal Set number of threads used for OpenBLAS.
+   */
+  openblas_set_num_threads(1);
 
   /**
    * @internal Initialize the CUDA device parameters.
@@ -126,7 +126,7 @@ run_dirichlet_hmatrix_op_precond_complex(const unsigned int refinement)
     1, // fe order for dirichlet space
     0, // fe order for neumann space
     LaplaceBEM<dim, spacedim, std::complex<double>, double>::ProblemType::
-      DirichletBCProblem,
+      MixedBCProblem,
     is_interior_problem,         // is interior problem
     4,                           // n_min for cluster tree
     4,                           // n_min for block cluster tree
@@ -138,7 +138,7 @@ run_dirichlet_hmatrix_op_precond_complex(const unsigned int refinement)
     0.1,                         // aca epsilon for preconditioner
     MultithreadInfo::n_threads() // Number of threads used for ACA
   );
-  bem.set_project_name("dirichlet-hmatrix-op-precond-complex");
+  bem.set_project_name("mixed-hmatrix-op-precond-complex");
   bem.set_preconditioner_type(
     LaplaceBEM<dim, spacedim, std::complex<double>, double>::
       PreconditionerType::OperatorPreconditioning);
@@ -148,63 +148,33 @@ run_dirichlet_hmatrix_op_precond_complex(const unsigned int refinement)
 
   timer.start();
 
-  /**
-   * @internal Set the Dirac source location according to interior or exterior
-   * problem.
-   */
-  Point<spacedim> source_loc;
+  std::ifstream mesh_in(HBEM_TEST_MODEL_DIR "bar.msh");
+  read_msh(mesh_in, bem.get_triangulation());
+  bem.get_subdomain_topology().generate_topology(HBEM_TEST_MODEL_DIR "bar.brep",
+                                                 HBEM_TEST_MODEL_DIR "bar.msh");
 
-  if (is_interior_problem)
-    {
-      source_loc = Point<spacedim>(1, 1, 1);
-    }
-  else
-    {
-      source_loc = Point<spacedim>(0.25, 0.25, 0.25);
-    }
+  // Generate flat manifold.
+  FlatManifold<dim, spacedim> *flat_manifold =
+    new FlatManifold<dim, spacedim>();
+  bem.get_manifolds()[0] = flat_manifold;
 
-  const Point<spacedim> center(0, 0, 0);
-  const double          radius(1);
-
-  Triangulation<dim, spacedim> tria;
-  GridGenerator::hyper_sphere(tria, center, radius);
-  tria.refine_global(refinement);
-  std::string   mesh_file("surface-mesh.msh");
-  std::ofstream mesh_out(mesh_file);
-  write_msh_correct(tria, mesh_out);
-  mesh_out.close();
-
-  // Reread the mesh as a single level triangulation.
-  std::ifstream mesh_in(mesh_file);
-  read_msh(mesh_in, bem.get_triangulation(), false, true, false);
-  mesh_in.close();
-
-  // Create the map from material ids to manifold ids. By default, the material
-  // ids of all cells are zero, if the triangulation is created by a deal.ii
-  // function in GridGenerator.
-  bem.get_manifold_description()[0] = 0;
-
-  // Create the map from manifold ids to manifold objects. Because in the
-  // destructor of LaplaceBEM the manifold objects will be released, the
-  // manifold object here is created on the heap.
-  SphericalManifold<dim, spacedim> *spherical_manifold =
-    new SphericalManifold<dim, spacedim>(center);
-  bem.get_manifolds()[0] = spherical_manifold;
+  // Create the map from material ids to manifold ids.
+  for (types::material_id i = 1; i <= 6; i++)
+    bem.get_manifold_description()[i] = 0;
 
   // Create the map from manifold id to mapping order.
   bem.get_manifold_id_to_mapping_order()[0] = 1;
-
-  // Build surface-to-volume and volume-to-surface relationship.
-  bem.get_subdomain_topology().generate_single_domain_topology_for_dealii_model(
-    {0});
 
   timer.stop();
   print_wall_time(deallog, timer, "read mesh");
 
   timer.start();
 
-  DirichletBC dirichlet_bc(source_loc);
-  bem.assign_dirichlet_bc(dirichlet_bc);
+  DirichletBC dirichlet_bc;
+  NeumannBC   neumann_bc;
+
+  bem.assign_dirichlet_bc(dirichlet_bc, {5, 6});
+  bem.assign_neumann_bc(neumann_bc, {1, 2, 3, 4});
 
   timer.stop();
   print_wall_time(deallog, timer, "assign boundary conditions");

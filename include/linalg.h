@@ -358,6 +358,42 @@ namespace LinAlg
   }
 
 
+  template <typename Number>
+  struct Vector_conjugate
+  {
+    Vector_conjugate(Number *const v_)
+      : v(v_)
+    {
+      Assert(v != nullptr, ExcInternalError());
+    }
+
+    void
+    operator()(const size_type begin, const size_type end) const
+    {
+      Assert(end >= begin, ExcInternalError());
+
+      DEAL_II_OPENMP_SIMD_PRAGMA
+      for (size_type i = begin; i < end; ++i)
+        v[i] = numbers::NumberTraits<Number>::conj(v[i]);
+    }
+
+    Number *const v;
+  };
+
+
+  template <typename VectorType>
+  void
+  conjugate_vector(VectorType &v)
+  {
+    Vector_conjugate op(v.data());
+    auto partitioner = std::make_shared<parallel::internal::TBBPartitioner>();
+    dealii::internal::VectorOperations::parallel_for(op,
+                                                     0,
+                                                     v.size(),
+                                                     partitioner);
+  }
+
+
   template <typename Number1, typename Number2>
   struct Vector_real_part
   {

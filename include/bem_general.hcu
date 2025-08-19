@@ -22,9 +22,7 @@
 
 #include <deal.II/fe/fe_update_flags.h>
 
-#include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/sparse_matrix.h>
-#include <deal.II/lac/sparsity_pattern.h>
 
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/vector_tools_interpolate.templates.h>
@@ -1358,12 +1356,15 @@ assemble_rhs_linear_form_vector(
  * surface may be assigned a different manifold and accordingly a different
  * mapping order may be used, the interpolation is performed surface by surface.
  *
+ * TODO: Handle the case when a subdomain is multiply connected so it has
+ * multiple boundary components.
+ *
  * @param indicator_vectors The memory for these vectors should be allocated
  * before calling this function.
  */
 template <int dim, int spacedim, typename VectorType>
 void
-assemble_indicator_vectors_for_subdomains(
+interpolate_indicator_vectors_for_subdomains(
   const DoFHandler<dim, spacedim>                 &dof_handler,
   const SubdomainTopology<dim, spacedim>          &subdomain_topology,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
@@ -1371,6 +1372,8 @@ assemble_indicator_vectors_for_subdomains(
                           &material_id_to_mapping_index,
   std::vector<VectorType> &indicator_vectors)
 {
+  // At the moment, all subdomains are considered to be singly connected and the
+  // number of subdomains should be equal to the number of indicator vectors.
   AssertDimension(subdomain_topology.get_subdomain_to_surface().size(),
                   indicator_vectors.size());
 
@@ -1383,7 +1386,9 @@ assemble_indicator_vectors_for_subdomains(
   for (const auto &subdomain_to_surface :
        subdomain_topology.get_subdomain_to_surface())
     {
-      // Iterate over each surface belonging to the subdomain.
+      // Iterate over each surface belonging to the subdomain. The interpolation
+      // results will be appended to the indictor vector for the current
+      // subdomain.
       for (auto surface_tag : subdomain_to_surface.second)
         {
           std::map<types::material_id, const Function<spacedim, value_type> *>
@@ -1402,116 +1407,6 @@ assemble_indicator_vectors_for_subdomains(
         }
 
       subdomain_counter++;
-    }
-}
-
-
-/**
- * Assemble the stabilization vectors for the hyper singular bilinear form by
- * multiplying the mass matrix with the list of natural density vectors.
- *
- * The stabilization vectors adopt the external DoF numbering, which can be
- * directly used in the full matrix solver.
- *
- * The memory of the stabilization vectors should be allocated before calling
- * this function.
- */
-template <int dim, int spacedim, typename VectorType>
-void
-compute_stabilization_vectors_for_hyper_singular_bilinear_form(
-  const DoFHandler<dim, spacedim> &dof_handler_for_dirichlet_space,
-  const DoFHandler<dim, spacedim> &dof_handler_for_neumann_space,
-  const Quadrature<dim>           &quad_rule,
-  const std::vector<VectorType>   &natural_density_vectors,
-  std::vector<VectorType>         &stabilization_vectors)
-{
-  using real_type =
-    typename numbers::NumberTraits<typename VectorType::value_type>::real_type;
-  AssertDimension(natural_density_vectors.size(), stabilization_vectors.size());
-
-  SparseMatrix<real_type> mass_matrix;
-  SparsityPattern         mass_matrix_sp;
-
-  // Generate the sparsity pattern for the mass matrix.
-  DynamicSparsityPattern dsp(dof_handler_for_dirichlet_space.n_dofs(),
-                             dof_handler_for_neumann_space.n_dofs());
-  // N.B. DoFTools::make_sparsity_pattern operates on active cells, which just
-  // corresponds to the refined mesh that we desire.
-  DoFTools::make_sparsity_pattern(dof_handler_for_dirichlet_space,
-                                  dof_handler_for_neumann_space,
-                                  dsp);
-
-  mass_matrix_sp.copy_from(dsp);
-  mass_matrix.reinit(mass_matrix_sp);
-
-  // Assemble the mass matrix.
-  assemble_fem_scaled_mass_matrix(dof_handler_for_dirichlet_space,
-                                  dof_handler_for_neumann_space,
-                                  1.0,
-                                  quad_rule,
-                                  mass_matrix);
-
-  for (unsigned int i = 0; i < natural_density_vectors.size(); i++)
-    mass_matrix.vmult(stabilization_vectors[i], natural_density_vectors[i]);
-}
-
-
-/**
- * Assemble the stabilization vectors for the hyper singular bilinear form by
- * multiplying the mass matrix with the list of natural density vectors.
- *
- * The stabilization vectors adopt the internal DoF numbering, which is
- * consistent with that used by the hyper singular \hmat.
- *
- * The memory of the stabilization vectors should be allocated before calling
- * this function.
- */
-template <int dim, int spacedim, typename VectorType>
-void
-compute_stabilization_vectors_for_hyper_singular_bilinear_form(
-  const DoFHandler<dim, spacedim> &dof_handler_for_dirichlet_space,
-  const DoFHandler<dim, spacedim> &dof_handler_for_neumann_space,
-  const Quadrature<dim>           &quad_rule,
-  const std::vector<types::global_dof_index>
-                                &dof_i2e_numbering_for_dirichlet_space,
-  const std::vector<VectorType> &natural_density_vectors,
-  std::vector<VectorType>       &stabilization_vectors)
-{
-  using real_type =
-    typename numbers::NumberTraits<typename VectorType::value_type>::real_type;
-  AssertDimension(natural_density_vectors.size(), stabilization_vectors.size());
-
-  SparseMatrix<real_type> mass_matrix;
-  SparsityPattern         mass_matrix_sp;
-
-  // Generate the sparsity pattern for the mass matrix.
-  DynamicSparsityPattern dsp(dof_handler_for_dirichlet_space.n_dofs(),
-                             dof_handler_for_neumann_space.n_dofs());
-  // N.B. DoFTools::make_sparsity_pattern operates on active cells, which just
-  // corresponds to the refined mesh that we desire.
-  DoFTools::make_sparsity_pattern(dof_handler_for_dirichlet_space,
-                                  dof_handler_for_neumann_space,
-                                  dsp);
-
-  mass_matrix_sp.copy_from(dsp);
-  mass_matrix.reinit(mass_matrix_sp);
-
-  // Assemble the mass matrix.
-  assemble_fem_scaled_mass_matrix(dof_handler_for_dirichlet_space,
-                                  dof_handler_for_neumann_space,
-                                  1.0,
-                                  quad_rule,
-                                  mass_matrix);
-
-  VectorType stabilization_vector_external_dof_numbering(
-    stabilization_vectors[0].size());
-  for (unsigned int i = 0; i < natural_density_vectors.size(); i++)
-    {
-      mass_matrix.vmult(stabilization_vector_external_dof_numbering,
-                        natural_density_vectors[i]);
-      permute_vector(stabilization_vector_external_dof_numbering,
-                     dof_i2e_numbering_for_dirichlet_space,
-                     stabilization_vectors[i]);
     }
 }
 

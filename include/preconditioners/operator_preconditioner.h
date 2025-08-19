@@ -69,8 +69,7 @@ using namespace dealii;
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 class OperatorPreconditioner
@@ -834,8 +833,7 @@ protected:
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 OperatorPreconditioner<dim,
@@ -898,8 +896,7 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 OperatorPreconditioner<dim,
@@ -923,8 +920,7 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -998,8 +994,7 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1093,8 +1088,7 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 template <typename SurfaceNormalDetector>
@@ -1144,51 +1138,43 @@ OperatorPreconditioner<dim,
       if (is_full_domain)
         {
           // When the preconditioner is on the full domain, the hyper singular
-          // bilinear form should be stabilized.
-
-          /**
-           * Set natural density as constant vector 1 on each subdomain and set
-           * the alpha factor as 1.
-           */
-          const unsigned int n_subdomains =
+          // operator is not elliptic and should be stabilized.
+          const unsigned int n_boundary_components =
             subdomain_topology.get_subdomain_to_surface().size();
-          std::vector<Vector<KernelNumberType>> natural_densities(n_subdomains);
-          for (auto &vec : natural_densities)
+          std::vector<Vector<real_type>> boundary_indicators(
+            n_boundary_components);
+          for (auto &vec : boundary_indicators)
             vec.reinit(dof_handler_primal_space.n_dofs(1));
 
-          assemble_indicator_vectors_for_subdomains(
+          interpolate_indicator_vectors_for_subdomains(
             dof_handler_primal_space,
             subdomain_topology,
             mappings,
             material_id_to_mapping_index,
-            natural_densities);
+            boundary_indicators);
 
-          const real_type alpha_for_neumann = 1.0;
-
-          /**
-           * Calculate the vector \f$a\f$ in \f$\alpha a a^T\f$, where \f$a\f$
-           * is the multiplication of the mass matrix and the natural density.
-           *
-           * N.B. The mass matrix on the refined mesh maps from the primal
-           * function space to the dual space, which is consistent with the
-           * vector
-           * size of the input vector @p natural_density and the output vector
-           * @p mass_vmult_weq.
-           */
-          std::vector<Vector<KernelNumberType>> mass_vmult_weq(n_subdomains);
+          // Initialize the stabilization vectors.
+          std::vector<Vector<KernelNumberType>> mass_vmult_weq(
+            n_boundary_components);
           for (auto &vec : mass_vmult_weq)
             vec.reinit(dof_handler_dual_space.n_dofs(1));
 
-          Vector<KernelNumberType> mass_vmult_weq_external_dof_numbering(
+          Vector<KernelNumberType> mass_vmult_weq_external_numbering(
             dof_handler_dual_space.n_dofs(1));
-          for (unsigned int i = 0; i < n_subdomains; i++)
+
+          // Compute the stabilization vectors.
+          for (unsigned int i = 0; i < n_boundary_components; i++)
             {
-              mass_matrix.vmult(mass_vmult_weq_external_dof_numbering,
-                                natural_densities[i]);
-              permute_vector(mass_vmult_weq_external_dof_numbering,
+              mass_matrix.vmult(mass_vmult_weq_external_numbering,
+                                boundary_indicators[i]);
+              permute_vector(mass_vmult_weq_external_numbering,
                              dof_i2e_numbering,
                              mass_vmult_weq[i]);
             }
+          // The stabilization factor \f$\alpha\f$ is set to 1.
+          // TODO: Use the average eigenvalue of the matrix D as the
+          // stabilization factor.
+          const KernelNumberType alpha_for_neumann(1.0);
 
           fill_hmatrix_with_aca_plus_smp<dim,
                                          spacedim,
@@ -1303,8 +1289,7 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1379,8 +1364,7 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1421,8 +1405,7 @@ OperatorPreconditioner<
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1445,8 +1428,7 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1504,8 +1486,7 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 template <typename SurfaceNormalDetector>
@@ -1587,8 +1568,7 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1618,8 +1598,7 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1649,8 +1628,7 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1674,8 +1652,7 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1722,8 +1699,7 @@ OperatorPreconditioner<
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void

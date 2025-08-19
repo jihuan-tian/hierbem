@@ -3,6 +3,8 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/manifold_lib.h>
 
+#include <cmath>
+#include <complex>
 #include <fstream>
 #include <iostream>
 
@@ -20,34 +22,40 @@ using namespace HierBEM;
  * \rangle}{4\pi\norm{x_0-x}^3\rho}
  * \f]
  */
-class NeumannBC : public Function<3>
+class NeumannBC : public Function<3, std::complex<double>>
 {
 public:
   // N.B. This function should be defined outside class NeumannBC and
   // class Example2, if not inline.
   NeumannBC()
-    : Function<3>()
+    : Function<3, std::complex<double>>()
     , x0(0.25, 0.25, 0.25)
     , model_sphere_center(0.0, 0.0, 0.0)
     , model_sphere_radius(1.0)
   {}
 
   NeumannBC(const Point<3> &x0, const Point<3> &center, double radius)
-    : Function<3>()
+    : Function<3, std::complex<double>>()
     , x0(x0)
     , model_sphere_center(center)
     , model_sphere_radius(radius)
   {}
 
-  double
+  std::complex<double>
   value(const Point<3> &p, const unsigned int component = 0) const
   {
     (void)component;
 
     Tensor<1, 3> diff_vector = x0 - p;
+    const double amplitude   = ((p - model_sphere_center) * diff_vector) / 4.0 /
+                             numbers::PI / std::pow(diff_vector.norm(), 3) /
+                             model_sphere_radius;
 
-    return ((p - model_sphere_center) * diff_vector) / 4.0 / numbers::PI /
-           std::pow(diff_vector.norm(), 3) / model_sphere_radius;
+    // In the complex valued case, we assign a fixed phase angle to the
+    // Neumann trace distribution.
+    const double angle = numbers::PI / 3.0;
+    return std::complex(amplitude * std::cos(angle),
+                        amplitude * std::sin(angle));
   }
 
 private:
@@ -60,10 +68,10 @@ private:
 };
 
 void
-run_neumann_full_matrix()
+run_neumann_full_matrix_complex()
 {
   // Write run-time logs to file
-  std::ofstream ofs("neumann-full-matrix.log");
+  std::ofstream ofs("neumann-full-matrix-complex.log");
   deallog.pop();
   deallog.depth_console(0);
   deallog.depth_file(5);
@@ -72,16 +80,18 @@ run_neumann_full_matrix()
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  const bool                                is_interior_problem = false;
-  LaplaceBEM<dim, spacedim, double, double> bem(
+  const bool is_interior_problem = false;
+  LaplaceBEM<dim, spacedim, std::complex<double>, double> bem(
     1,
     0,
-    LaplaceBEM<dim, spacedim, double, double>::ProblemType::NeumannBCProblem,
+    LaplaceBEM<dim, spacedim, std::complex<double>, double>::ProblemType::
+      NeumannBCProblem,
     is_interior_problem,
     MultithreadInfo::n_threads());
-  bem.set_project_name("neumann-full-matrix");
+  bem.set_project_name("neumann-full-matrix-complex");
   bem.set_preconditioner_type(
-    LaplaceBEM<dim, spacedim, double, double>::PreconditionerType::Identity);
+    LaplaceBEM<dim, spacedim, std::complex<double>, double>::
+      PreconditionerType::Identity);
 
   /**
    * @internal Set the Dirac source location according to interior or exterior

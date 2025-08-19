@@ -1,11 +1,13 @@
 #ifndef HIERBEM_INCLUDE_LAPLACE_BEM_PRIV_H_
 #define HIERBEM_INCLUDE_LAPLACE_BEM_PRIV_H_
 
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/memory_consumption.h>
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/subscriptor.h>
 #include <deal.II/base/table_handler.h>
 #include <deal.II/base/timer.h>
@@ -27,8 +29,11 @@
 #include <deal.II/grid/manifold_lib.h>
 #include <deal.II/grid/tria.h>
 
+#include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/full_matrix.templates.h>
 #include <deal.II/lac/precondition.h>
+#include <deal.II/lac/sparse_matrix.h>
+#include <deal.II/lac/sparsity_pattern.h>
 #include <deal.II/lac/vector_operations_internal.h>
 
 #include <deal.II/numerics/data_out.h>
@@ -56,6 +61,7 @@
 #include "debug_tools.h"
 #include "gmsh_manipulation.h"
 #include "grid_out_ext.h"
+#include "hmatrix/aca_plus/aca_config.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "hmatrix/hblockmatrix_skew_symm.h"
 #include "hmatrix/hmatrix.h"
@@ -205,11 +211,42 @@ private:
   collect_cell_iterators();
 
   /**
-   * Solve the equation \f$Vw_{\rm eq}=1\f$ for the natural density \f$w_{\rm
-   * eq}\f$ and calculate the stabilization factor \f$\alpha\f$.
+   * Compute the stabilization vectors and factor for the full matrix of the
+   * hypersingular operator D.
+   *
+   * Procedures
+   * 1. Build the mass matrix which maps from the Neumann to Dirichlet
+   * space.
+   * 2. Solve the natural density. In the complex valued case, the
+   * natural density will be conjugated.
+   * 3. Compute the stabilization factor.
+   * 4. Compute the stabilization vectors in the internal DoF numbering. Each
+   * stabilization vector is the product of the mass matrix and a natural
+   * density vector. The formal outer (without complex conjugation) product of
+   * each stabilization vector with itself will be appended into the Galerkin
+   * matrix for the hypersingular operator.
    */
   void
-  solve_natural_density();
+  compute_stabilization_terms_for_D1_fullmat();
+
+  /**
+   * Compute the stabilization vectors and factor for the H-matrix of the
+   * hypersingular operator D.
+   *
+   * Procedures
+   * 1. Build the mass matrix which maps from the Neumann to Dirichlet
+   * space.
+   * 2. Solve the natural density. In the complex valued case, the
+   * natural density will be conjugated.
+   * 3. Compute the stabilization factor.
+   * 4. Compute the stabilization vectors in the internal DoF numbering. Each
+   * stabilization vector is the product of the mass matrix and a natural
+   * density vector. The formal outer (without complex conjugation) product of
+   * each stabilization vector with itself will be appended into the Galerkin
+   * matrix for the hypersingular operator.
+   */
+  void
+  compute_stabilization_terms_for_D1_hmat();
 
   /**
    * Initialize the header string for each column.
@@ -441,15 +478,14 @@ private:
   /**
    * Full matrices for verification purpose.
    */
-  LAPACKFullMatrixExt<RangeNumberType>  V1_matrix_;
-  LAPACKFullMatrixExt<KernelNumberType> V_matrix_weq_;
-  LAPACKFullMatrixExt<RangeNumberType>  K1_matrix_;
-  LAPACKFullMatrixExt<RangeNumberType>  K_prime1_matrix_;
-  LAPACKFullMatrixExt<RangeNumberType>  D1_matrix_;
-  LAPACKFullMatrixExt<RangeNumberType>  K2_matrix_with_mass_matrix_;
-  LAPACKFullMatrixExt<RangeNumberType>  V2_matrix_;
-  LAPACKFullMatrixExt<RangeNumberType>  D2_matrix_;
-  LAPACKFullMatrixExt<RangeNumberType>  K_prime2_matrix_with_mass_matrix_;
+  LAPACKFullMatrixExt<RangeNumberType> V1_matrix_;
+  LAPACKFullMatrixExt<RangeNumberType> K1_matrix_;
+  LAPACKFullMatrixExt<RangeNumberType> K_prime1_matrix_;
+  LAPACKFullMatrixExt<RangeNumberType> D1_matrix_;
+  LAPACKFullMatrixExt<RangeNumberType> K2_matrix_with_mass_matrix_;
+  LAPACKFullMatrixExt<RangeNumberType> V2_matrix_;
+  LAPACKFullMatrixExt<RangeNumberType> D2_matrix_;
+  LAPACKFullMatrixExt<RangeNumberType> K_prime2_matrix_with_mass_matrix_;
 
   /**
    * Whether \hmatrix is used.
@@ -499,23 +535,20 @@ private:
    * \hmatrices corresponding to discretized bilinear forms in the
    * mixed boundary value problem, which contain all possible cases.
    */
-  HMatrix<spacedim, RangeNumberType>  V1_hmat_;
-  HMatrix<spacedim, KernelNumberType> V_hmat_weq_;
-  HMatrix<spacedim, RangeNumberType>  K1_hmat_;
-  HMatrix<spacedim, RangeNumberType>  K_prime1_hmat_;
-  HMatrix<spacedim, RangeNumberType>  D1_hmat_;
-  HMatrix<spacedim, RangeNumberType>  V2_hmat_;
-  HMatrix<spacedim, RangeNumberType>  K2_hmat_with_mass_matrix_;
-  HMatrix<spacedim, RangeNumberType>  K_prime2_hmat_with_mass_matrix_;
-  HMatrix<spacedim, RangeNumberType>  D2_hmat_;
+  HMatrix<spacedim, RangeNumberType> V1_hmat_;
+  HMatrix<spacedim, RangeNumberType> K1_hmat_;
+  HMatrix<spacedim, RangeNumberType> K_prime1_hmat_;
+  HMatrix<spacedim, RangeNumberType> D1_hmat_;
+  HMatrix<spacedim, RangeNumberType> V2_hmat_;
+  HMatrix<spacedim, RangeNumberType> K2_hmat_with_mass_matrix_;
+  HMatrix<spacedim, RangeNumberType> K_prime2_hmat_with_mass_matrix_;
+  HMatrix<spacedim, RangeNumberType> D2_hmat_;
   HBlockMatrixSkewSymm<spacedim, RangeNumberType> M_hmat_;
 
   /**
    * Preconditioners
    */
   HMatrixSymmPreconditioner<spacedim, RangeNumberType> V1_hmat_preconditioner_;
-  HMatrixSymmPreconditioner<spacedim, KernelNumberType>
-    V_hmat_preconditioner_weq_;
   HMatrixSymmPreconditioner<spacedim, RangeNumberType> D1_hmat_preconditioner_;
   HMatrix<spacedim, RangeNumberType>                   M11_in_preconditioner_;
   HMatrix<spacedim, RangeNumberType>                   M12_in_preconditioner_;
@@ -666,43 +699,15 @@ private:
   Vector<RangeNumberType> system_rhs_on_combined_domain_;
 
   /**
-   * A list of natural density \f$w_{\mathrm{eq}}\f$ vectors used in the Neumann
-   * problem.
-   *
-   * When the solution space for the Neumann problem is \f$H^{1/2}_{\ast}\f$,
-   * only one such vector is currently allowed, which is the solution by solving
-   * \f$V w_{\mathrm{eq}}\f$.
-   *
-   * When the solution space for the Neumann problem is \f$H^{1/2}_{\ast}\f$ and
-   * the problem type is exterior, multiple such vectors may exist, each of
-   * which corresponds to a hole in the domain.
-   *
-   * \alert{It adopts the external DoF numbering, since it will be multiplied by
-   * the mass matrix, which is also built with this numbering.}
-   */
-  std::vector<Vector<KernelNumberType>> natural_densities_;
-
-  /**
-   * A list of result vectors for the multiplication of the mass matrix and the
-   * natural density \f$w_{\rm eq}\f$. Each result vector corresponds to an
-   * independent volume in the model, when exterior problem is considered. In
-   * other cases, there is only one such vector.
+   * A list of stabilization vectors for the hypersingular operator, which is
+   * the multiplication of the mass matrix and the natural density \f$w_{\rm
+   * eq}\f$.
    *
    * \alert{Because the outer product of this vector with itself will be added
    * to the hyper singular matrix \f$\mathcal{D}\f$, when \f$\mathcal{D}\f$ is
    * an \hmat, it adopts the internal DoF numbering.}
    */
   std::vector<Vector<KernelNumberType>> mass_vmult_weq_;
-
-  /**
-   * Right hand side vector, which is used in the equation \f$\mathscr{V}
-   * w_{\rm eq} = 1\f$ for solving the natural density \f$w_{\rm eq}\f$. Each
-   * component in this vector is actually an integration of each test
-   * function.
-   *
-   * \alert{This vector adopts the internal DoF numbering.}
-   */
-  Vector<KernelNumberType> system_rhs_for_natural_density_;
 
   /**
    * Numerical solution on the Dirichlet domain for full matrix version or in
@@ -1066,251 +1071,428 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
     }
 }
 
+
 template <int dim,
           int spacedim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
 LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
-  solve_natural_density()
+  compute_stabilization_terms_for_D1_fullmat()
 {
-  Assert(problem_type_ == ProblemType::NeumannBCProblem, ExcInternalError());
+  const types::global_dof_index n_dofs_for_dirichlet_space =
+    dof_handler_for_dirichlet_space_.n_dofs();
+  const types::global_dof_index n_dofs_for_neumann_space =
+    dof_handler_for_neumann_space_.n_dofs();
+
+  // Create the mass matrix mapping from the Neumann space to the Dirichlet
+  // space.
+  SparsityPattern         M_sp;
+  SparseMatrix<real_type> M;
+  DynamicSparsityPattern  M_dsp(n_dofs_for_dirichlet_space,
+                               n_dofs_for_neumann_space);
+  DoFTools::make_sparsity_pattern(dof_handler_for_dirichlet_space_,
+                                  dof_handler_for_neumann_space_,
+                                  M_dsp);
+  M_sp.copy_from(M_dsp);
+  M.reinit(M_sp);
+  assemble_fem_scaled_mass_matrix(dof_handler_for_dirichlet_space_,
+                                  dof_handler_for_neumann_space_,
+                                  real_type(1.0),
+                                  QGauss<dim>(fe_for_dirichlet_space_.degree +
+                                              1),
+                                  M);
+
+  const unsigned int n_boundary_components =
+    subdomain_topology_.get_subdomain_to_surface().size();
+
+  // Initialize stabilization vectors.
+  mass_vmult_weq_.resize(n_boundary_components);
+  for (auto &vec : mass_vmult_weq_)
+    vec.reinit(n_dofs_for_dirichlet_space);
 
 #if HBEM_NEUMANN_SOLUTION_SPACE == 1
-  if (!use_hmat_)
+  std::cout << "=== Assemble V for solving natural density ===" << std::endl;
+
+  LAPACKFullMatrixExt<KernelNumberType> V(n_dofs_for_neumann_space,
+                                          n_dofs_for_neumann_space);
+  assemble_bem_full_matrix<dim,
+                           spacedim,
+                           PlatformShared::LaplaceKernel::SingleLayerKernel,
+                           KernelNumberType,
+                           SurfaceNormalDetector<dim, spacedim>,
+                           LAPACKFullMatrixExt<KernelNumberType>>(
+    single_layer_kernel_cpu_,
+    KernelNumberType(1.0),
+    dof_handler_for_neumann_space_,
+    dof_handler_for_neumann_space_,
+    mappings_,
+    material_id_to_mapping_index_,
+    SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+    SauterQuadratureRule<dim>(5, 4, 4, 3),
+    V);
+
+  // Natural density vector in the Neumann space \f$H^{-1/2}{\Gamma}\f$.
+  Vector<KernelNumberType> natural_density(n_dofs_for_neumann_space);
+
+  // Boundary indicator vectors \f$\{\chi_k\}_{k=1}^r\f$ as RHS vectors in the
+  // operator equation \f$Vw_{\mathrm{eq},k}=\chi_k\f$. They are in the
+  // Dirichlet space (primal space) and have the strong form.
+  std::vector<Vector<real_type>> boundary_indicators(n_boundary_components);
+  for (auto &vec : boundary_indicators)
+    vec.reinit(n_dofs_for_dirichlet_space);
+
+  // Interpolate the boundary indicator vectors in the Dirichlet space.
+  interpolate_indicator_vectors_for_subdomains(dof_handler_for_dirichlet_space_,
+                                               subdomain_topology_,
+                                               mappings_,
+                                               material_id_to_mapping_index_,
+                                               boundary_indicators);
+
+  // RHS vector in the variational equation \f$\langle Vw_{\mathrm{eq},k},v
+  // \rangle_{\Gamma}=\langle \chi_k,v \rangle\f$. It is in the Neumann space
+  // (dual space) and has the weak form.
+  Vector<KernelNumberType> rhs(n_dofs_for_neumann_space);
+
+  // Initialize the stabilization factor, which will be the average of the
+  // optimal values for all boundary components.
+  alpha_for_neumann_ = KernelNumberType(0.);
+  for (unsigned int i = 0; i < n_boundary_components; i++)
     {
-      /**
-       * Assemble the SLP matrix which is used for solving the natural
-       * density \f$w_{\rm eq}\f$.
-       */
-      std::cout << "=== Assemble V for solving natural density === "
-                << std::endl;
+      // Assemble the rhs vector for solving the current natural density on the
+      // i-th boundary component.
+      M.Tvmult(rhs, boundary_indicators[i]);
 
-      assemble_bem_full_matrix<dim,
-                               spacedim,
-                               PlatformShared::LaplaceKernel::SingleLayerKernel,
-                               KernelNumberType,
-                               SurfaceNormalDetector<dim, spacedim>,
-                               LAPACKFullMatrixExt<KernelNumberType>>(
-        single_layer_kernel_gpu_,
-        1.0,
-        dof_handler_for_neumann_space_,
-        dof_handler_for_neumann_space_,
-        mappings_,
-        material_id_to_mapping_index_,
-        SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-        SauterQuadratureRule<dim>(5, 4, 4, 3),
-        V_matrix_weq_);
-    }
-  else
-    {
-      /**
-       * Define the @p ACAConfig object.
-       */
-      ACAConfig<real_type> aca_config(max_hmat_rank_,
-                                      aca_relative_error_,
-                                      eta_);
+      // Solve the natural density \f$w_{\rm eq}\f$.
+      SolverControl solver_control(1000, 1e-6, true, true);
+      SolverCGGeneral<Vector<KernelNumberType>> solver(solver_control);
 
-      std::cout << "=== Assemble V for solving natural density ==="
-                << std::endl;
-
-      fill_hmatrix_with_aca_plus_smp<
-        dim,
-        spacedim,
-        PlatformShared::LaplaceKernel::SingleLayerKernel,
-        RangeNumberType,
-        KernelNumberType,
-        SurfaceNormalDetector<dim, spacedim>>(
-        thread_num_,
-        V_hmat_weq_,
-        aca_config,
-        single_layer_kernel_gpu_,
-        CUDAKernelNumberType(1.0),
-        dof_to_cell_topo_for_neumann_space_,
-        dof_to_cell_topo_for_neumann_space_,
-        SauterQuadratureRule<dim>(5, 4, 4, 3),
-        dof_handler_for_neumann_space_,
-        dof_handler_for_neumann_space_,
-        nullptr,
-        nullptr,
-        *dof_i2e_numbering_for_neumann_space_on_neumann_domain_,
-        *dof_i2e_numbering_for_neumann_space_on_neumann_domain_,
-        mappings_,
-        material_id_to_mapping_index_,
-        SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-        true);
-
-      add_memory_consumption_row("V H-matrix for weq",
-                                 V_hmat_weq_,
-                                 "After assembly");
-    }
-
-  /**
-   * Assemble the RHS vector for solving the natural density \f$w_{\rm
-   * eq}\f$.
-   */
-  std::cout << "=== Assemble the RHS vector for solving natural density ==="
-            << std::endl;
-
-  if (!use_hmat_)
-    {
-      // When the full matrix version is used, directly assemble the RHS vector
-      // in the external DoF numbering.
-      assemble_rhs_linear_form_vector<dim,
-                                      spacedim,
-                                      KernelNumberType,
-                                      KernelNumberType,
-                                      Vector<KernelNumberType>>(
-        1.0,
-        dof_handler_for_neumann_space_,
-        QGauss<2>(fe_for_neumann_space_.degree + 1),
-        system_rhs_for_natural_density_);
-    }
-  else
-    {
-      // When the \hmat version is used, the assembled RHS vector in the
-      // external DoF numbering should be converted to the internal numbering.
-      Vector<KernelNumberType>
-        system_rhs_for_natural_density_external_dof_numbering(
-          system_rhs_for_natural_density_.size());
-      assemble_rhs_linear_form_vector<dim,
-                                      spacedim,
-                                      KernelNumberType,
-                                      KernelNumberType,
-                                      Vector<KernelNumberType>>(
-        1.0,
-        dof_handler_for_neumann_space_,
-        QGauss<2>(fe_for_neumann_space_.degree + 1),
-        system_rhs_for_natural_density_external_dof_numbering);
-      permute_vector(system_rhs_for_natural_density_external_dof_numbering,
-                     *dof_i2e_numbering_for_neumann_space_on_neumann_domain_,
-                     system_rhs_for_natural_density_);
-    }
-
-  /**
-   * Solve the natural density \f$w_{\rm eq}\f$.
-   */
-  SolverControl solver_control(1000, 1e-6, true, true);
-  SolverCGGeneral<Vector<KernelNumberType>> solver(solver_control);
-
-  // When the solution space is \f$H^{1/2}_{\ast}\f$, the domain should not be
-  // multiply connected and only one natural density vector is allowed.
-  AssertDimension(natural_densities_.size(), 1);
-  AssertDimension(mass_vmult_weq_.size(), 1);
-
-  if (!use_hmat_)
-    {
       // At the moment, we can only use identity preconditioner.
       Assert(preconditioner_type_ == PreconditionerType::Identity,
              ExcInternalError());
 
-      solver.solve(V_matrix_weq_,
-                   natural_densities_[0],
-                   system_rhs_for_natural_density_,
-                   PreconditionIdentity());
+      natural_density.reinit(n_dofs_for_neumann_space);
+      solver.solve(V, natural_density, rhs, PreconditionIdentity());
 
-      /**
-       * Calculate the stabilization factor \f$\alpha\f$, which is the inner
-       * product of \f$w_{\rm eq}\f$ and the RHS vector \f$\langle 1, \psi_i
-       * \rangle\f$.
-       */
-      alpha_for_neumann_ =
-        1.0 / 4.0 /
-        LinAlg::inner_product_tbb(natural_densities_[0] *
-                                  system_rhs_for_natural_density_);
+      // Apply complex conjugation to the natural density in the complex valued
+      // case.
+      if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
+        LinAlg::conjugate_vector(natural_density);
 
-      std::cout << "=== Release V for solving natural density ===" << std::endl;
-      V_matrix_weq_.reinit(0);
+      // Compute the stabilization vector.
+      M.vmult(mass_vmult_weq_[i], natural_density);
+
+      // Calculate the optimal stabilization factor for the current natural
+      // density.
+      alpha_for_neumann_ +=
+        1.0 / 4.0 / LinAlg::linear_combination_tbb(rhs, natural_density);
     }
-  else
+  // The stabilization factors for different natural densities are averaged.
+  alpha_for_neumann_ /= n_boundary_components;
+
+#elif HBEM_NEUMANN_SOLUTION_SPACE == 2
+  // Boundary indicator vectors \f$\{\chi_k\}_{k=1}^r\f$ in the stabilization
+  // term \f$\langle u,\chi_k \rangle_{\Gamma}\f$. They are in the Neumann space
+  // (dual space) and have the weak form.
+  std::vector<Vector<real_type>> boundary_indicators(n_boundary_components);
+  for (auto &vec : boundary_indicators)
+    vec.reinit(n_dofs_for_neumann_space);
+
+  // Interpolate the boundary indicator vectors in the Neumann space.
+  interpolate_indicator_vectors_for_subdomains(dof_handler_for_neumann_space_,
+                                               subdomain_topology_,
+                                               mappings_,
+                                               material_id_to_mapping_index_,
+                                               boundary_indicators);
+  // Compute the stabilization vectors.
+  for (unsigned int i = 0; i < n_boundary_components; i++)
+    M.vmult(mass_vmult_weq_[i], boundary_indicators[i]);
+
+  // The stabilization factor \f$\alpha\f$ is set to 1.
+  // TODO: Use the average eigenvalue of the matrix D as the stabilization
+  // factor.
+  alpha_for_neumann_ = KernelNumberType(1.0);
+#endif
+
+  std::cout << "Neumann stabilization factor: " << alpha_for_neumann_
+            << std::endl;
+}
+
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  compute_stabilization_terms_for_D1_hmat()
+{
+  const types::global_dof_index n_dofs_for_dirichlet_space =
+    dof_handler_for_dirichlet_space_.n_dofs();
+  const types::global_dof_index n_dofs_for_neumann_space =
+    dof_handler_for_neumann_space_.n_dofs();
+
+  // Create the mass matrix mapping from the Neumann space to the Dirichlet
+  // space.
+  SparsityPattern         M_sp;
+  SparseMatrix<real_type> M;
+  DynamicSparsityPattern  M_dsp(n_dofs_for_dirichlet_space,
+                               n_dofs_for_neumann_space);
+  DoFTools::make_sparsity_pattern(dof_handler_for_dirichlet_space_,
+                                  dof_handler_for_neumann_space_,
+                                  M_dsp);
+  M_sp.copy_from(M_dsp);
+  M.reinit(M_sp);
+  assemble_fem_scaled_mass_matrix(dof_handler_for_dirichlet_space_,
+                                  dof_handler_for_neumann_space_,
+                                  real_type(1.0),
+                                  QGauss<dim>(fe_for_dirichlet_space_.degree +
+                                              1),
+                                  M);
+
+  const unsigned int n_boundary_components =
+    subdomain_topology_.get_subdomain_to_surface().size();
+
+  // Initialize stabilization vectors.
+  mass_vmult_weq_.resize(n_boundary_components);
+  for (auto &vec : mass_vmult_weq_)
+    vec.reinit(n_dofs_for_dirichlet_space);
+
+  Vector<KernelNumberType> mass_vmult_weq_external_numbering(
+    n_dofs_for_dirichlet_space);
+
+#if HBEM_NEUMANN_SOLUTION_SPACE == 1
+  std::cout << "=== Assemble V for solving natural density ===" << std::endl;
+
+  bct_for_bilinear_form_V1_ = BlockClusterTree<spacedim, real_type>(
+    ct_for_neumann_space_on_neumann_domain_,
+    ct_for_neumann_space_on_neumann_domain_,
+    eta_,
+    n_min_for_bct_);
+  bct_for_bilinear_form_V1_.partition(
+    *dof_i2e_numbering_for_neumann_space_on_neumann_domain_,
+    support_points_for_neumann_space_on_neumann_domain_,
+    dof_average_cell_size_for_neumann_space_on_neumann_domain_);
+  add_memory_consumption_row("Block cluster tree for V1",
+                             bct_for_bilinear_form_V1_);
+
+  HMatrix<spacedim, KernelNumberType> V(
+    bct_for_bilinear_form_V1_,
+    max_hmat_rank_,
+    HMatrixSupport::Property::symmetric,
+    HMatrixSupport::BlockType::diagonal_block);
+
+  std::cout << "=== Leaf set information of V ===" << std::endl;
+  V.print_leaf_set_info(std::cout);
+
+  add_memory_consumption_row("V H-matrix for weq",
+                             V,
+                             "After initialization and before assembly");
+
+  ACAConfig<real_type> aca_config(max_hmat_rank_, aca_relative_error_, eta_);
+
+  // N.B. For the H-matrix V for solving the natural density, RangeNumberType
+  // for the underlying matrix and vectors is the same as KernelNumberType,
+  // which is enough.
+  fill_hmatrix_with_aca_plus_smp<
+    dim,
+    spacedim,
+    PlatformShared::LaplaceKernel::SingleLayerKernel,
+    KernelNumberType,
+    KernelNumberType,
+    SurfaceNormalDetector<dim, spacedim>>(
+    thread_num_,
+    V,
+    aca_config,
+    single_layer_kernel_gpu_,
+    CUDAKernelNumberType(1.0),
+    dof_to_cell_topo_for_neumann_space_,
+    dof_to_cell_topo_for_neumann_space_,
+    SauterQuadratureRule<dim>(5, 4, 4, 3),
+    dof_handler_for_neumann_space_,
+    dof_handler_for_neumann_space_,
+    nullptr,
+    nullptr,
+    *dof_i2e_numbering_for_neumann_space_on_neumann_domain_,
+    *dof_i2e_numbering_for_neumann_space_on_neumann_domain_,
+    mappings_,
+    material_id_to_mapping_index_,
+    SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+    true);
+
+  add_memory_consumption_row("V H-matrix for weq", V, "After assembly");
+
+  HMatrixSymmPreconditioner<spacedim, KernelNumberType> V_precond;
+  if (preconditioner_type_ == PreconditionerType::HMatrixFactorization)
     {
-      // At the moment, we only allow KernelNumberType is real value for this
-      // case, because complex valued H-matrix factorization has not been
-      // implemented yet.
-      static_assert(std::is_same<KernelNumberType, double>()::value ||
-                    std::is_same<KernelNumberType, float>()::value);
-      // At the moment, we can only use H-matrix factorization as the
-      // preconditioner.
-      Assert(preconditioner_type_ == PreconditionerType::HMatrixFactorization,
-             ExcInternalError());
+      // Build the H-Cholesky preconditioner for @p V when H-matrix is used.
+      // TODO: At the moment, we only allow KernelNumberType is real value for
+      // this case, because complex valued H-matrix factorization has not
+      // been implemented yet.
+      static_assert(std::is_same<KernelNumberType, double>::value ||
+                    std::is_same<KernelNumberType, float>::value);
 
       std::cout
         << "=== Assemble V H-matrix preconditioner for solving natural density ==="
         << std::endl;
 
-      V_hmat_preconditioner_weq_ = V_hmat_weq_;
-      V_hmat_preconditioner_weq_.truncate_to_rank_preserve_positive_definite(
+      V_precond = V;
+      V_precond.truncate_to_rank_preserve_positive_definite(
         max_hmat_rank_for_preconditioner_);
 
       add_memory_consumption_row("V H-matrix preconditioner for weq",
-                                 V_hmat_preconditioner_weq_,
+                                 V_precond,
                                  "After assembly");
 
       /**
        * Perform Cholesky factorisation of the preconditioner. Only when the
-       * preconditioner @p V_hmat_preconditioner_weq_ has a hierarchical structure,
-       * i.e. it does not contain a root node only, the task parallel Cholesky
-       * factorization will be used.
+       * preconditioner @p V_precond has a hierarchical structure,
+       * i.e. it does not contain a root node only, the task parallel
+       * Cholesky factorization will be used.
        */
       std::cout
         << "=== Cholesky factorization of V H-matrix preconditioner for solving natural density ==="
         << std::endl;
-      if (V_hmat_preconditioner_weq_.get_type() ==
-          HMatrixType::HierarchicalMatrixType)
-        {
-          V_hmat_preconditioner_weq_
-            .compute_cholesky_factorization_task_parallel(
-              max_hmat_rank_for_preconditioner_);
-        }
+      if (V_precond.get_type() == HMatrixType::HierarchicalMatrixType)
+        V_precond.compute_cholesky_factorization_task_parallel(
+          max_hmat_rank_for_preconditioner_);
       else
-        {
-          V_hmat_preconditioner_weq_.compute_cholesky_factorization(
-            max_hmat_rank_for_preconditioner_);
-        }
-
-      Vector<KernelNumberType> natural_density_internal_dof_numbering(
-        natural_densities_[0].size());
-      solver.solve(V_hmat_weq_,
-                   natural_density_internal_dof_numbering,
-                   system_rhs_for_natural_density_,
-                   V_hmat_preconditioner_weq_);
-      // Convert the natural density from the internal DoF numbering to
-      // external, since it is to be multiplied by the mass matrix, which also
-      // adopts the external numbering.
-      permute_vector(natural_density_internal_dof_numbering,
-                     *dof_e2i_numbering_for_neumann_space_on_neumann_domain_,
-                     natural_densities_[0]);
-
-      /**
-       * Calculate the stabilization factor \f$\alpha\f$, which is the inner
-       * product of \f$w_{\rm eq}\f$ and the RHS vector \f$\langle 1, \psi_i
-       * \rangle\f$.
-       */
-      alpha_for_neumann_ =
-        1.0 / 4.0 /
-        LinAlg::inner_product_tbb(natural_density_internal_dof_numbering,
-                                  system_rhs_for_natural_density_);
-
-      std::cout
-        << "=== Release V and its preconditioner for solving natural density ==="
-        << std::endl;
-      V_hmat_weq_.release();
-      V_hmat_preconditioner_weq_.release();
+        V_precond.compute_cholesky_factorization(
+          max_hmat_rank_for_preconditioner_);
     }
 
-  std::cout << "=== Release the RHS vector for solving natural density ==="
-            << std::endl;
-  system_rhs_for_natural_density_.reinit(0);
-#endif
+  // Natural density vector in the Neumann space \f$H^{-1/2}{\Gamma}\f$.
+  Vector<KernelNumberType> natural_density_external_numbering(
+    n_dofs_for_neumann_space);
+  Vector<KernelNumberType> natural_density_internal_numbering(
+    n_dofs_for_neumann_space);
 
-#if HBEM_NEUMANN_SOLUTION_SPACE == 2
-  assemble_indicator_vectors_for_subdomains(dof_handler_for_neumann_space_,
-                                            subdomain_topology_,
-                                            mappings_,
-                                            material_id_to_mapping_index_,
-                                            natural_densities_);
+  // Boundary indicator vectors \f$\{\chi_k\}_{k=1}^r\f$ in the external DoF
+  // numbering as RHS vectors in the operator equation
+  // \f$Vw_{\mathrm{eq},k}=\chi_k\f$. They are in the Dirichlet space (primal
+  // space) and have the strong form.
+  std::vector<Vector<real_type>> boundary_indicators(n_boundary_components);
+  for (auto &vec : boundary_indicators)
+    vec.reinit(n_dofs_for_dirichlet_space);
+
+  // Interpolate the boundary indicator vectors in the Dirichlet space.
+  interpolate_indicator_vectors_for_subdomains(dof_handler_for_dirichlet_space_,
+                                               subdomain_topology_,
+                                               mappings_,
+                                               material_id_to_mapping_index_,
+                                               boundary_indicators);
+
+  // RHS vector in the internal DoF numbering in the variational equation
+  // \f$\langle Vw_{\mathrm{eq},k},v
+  // \rangle_{\Gamma}=\langle \chi_k,v \rangle\f$. It is in the Neumann space
+  // (dual space) and has the weak form.
+  Vector<KernelNumberType> rhs_internal_numbering(n_dofs_for_neumann_space);
+  // RHS vector in the external DoF numbering.
+  Vector<KernelNumberType> rhs_external_numbering(n_dofs_for_neumann_space);
+
+  // Initialize the stabilization factor, which will be the average of the
+  // optimal values for all boundary components.
+  alpha_for_neumann_ = KernelNumberType(0.);
+  for (unsigned int i = 0; i < n_boundary_components; i++)
+    {
+      // Assemble the rhs vector for solving the current natural density on the
+      // i-th boundary component.
+      M.Tvmult(rhs_external_numbering, boundary_indicators[i]);
+      permute_vector(rhs_external_numbering,
+                     *dof_i2e_numbering_for_neumann_space_on_neumann_domain_,
+                     rhs_internal_numbering);
+
+      // Solve the natural density \f$w_{\rm eq}\f$ in the internal DoF
+      // numbering.
+      SolverControl solver_control(1000, 1e-6, true, true);
+      SolverCGGeneral<Vector<KernelNumberType>> solver(solver_control);
+
+      natural_density_internal_numbering.reinit(n_dofs_for_neumann_space);
+      switch (preconditioner_type_)
+        {
+            case PreconditionerType::HMatrixFactorization: {
+              solver.solve(V,
+                           natural_density_internal_numbering,
+                           rhs_internal_numbering,
+                           V_precond);
+              break;
+            }
+            case PreconditionerType::Identity: {
+              solver.solve(V,
+                           natural_density_internal_numbering,
+                           rhs_internal_numbering,
+                           PreconditionIdentity());
+              break;
+            }
+            case PreconditionerType::OperatorPreconditioning: {
+              Assert(false, ExcNotImplemented());
+              break;
+            }
+            case PreconditionerType::Jacobi: {
+              Assert(false, ExcNotImplemented());
+              break;
+            }
+            default: {
+              Assert(false, ExcInternalError());
+              break;
+            }
+        }
+      // Convert the natural density from the internal DoF numbering to the
+      // external numbering, since it is to be multiplied by the mass matrix
+      // mapping the Neumann space to the Dirichlet space, which also adopts the
+      // external numbering.
+      permute_vector(natural_density_internal_numbering,
+                     *dof_e2i_numbering_for_neumann_space_on_neumann_domain_,
+                     natural_density_external_numbering);
+
+      // Apply complex conjugation to the natural density in the complex valued
+      // case.
+      if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
+        LinAlg::conjugate_vector(natural_density_external_numbering);
+
+      // Compute the stabilization vector.
+      M.vmult(mass_vmult_weq_external_numbering,
+              natural_density_external_numbering);
+      permute_vector(mass_vmult_weq_external_numbering,
+                     *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain_,
+                     mass_vmult_weq_[i]);
+
+      // Calculate the optimal stabilization factor for the current natural
+      // density.
+      alpha_for_neumann_ +=
+        1.0 / 4.0 /
+        LinAlg::linear_combination_tbb(rhs_external_numbering,
+                                       natural_density_external_numbering);
+    }
+  // The stabilization factors for different natural densities are averaged.
+  alpha_for_neumann_ /= n_boundary_components;
+
+#elif HBEM_NEUMANN_SOLUTION_SPACE == 2
+  // Boundary indicator vectors \f$\{\chi_k\}_{k=1}^r\f$ in the stabilization
+  // term \f$\langle u,\chi_k \rangle_{\Gamma}\f$ They are in the Neumann space
+  // (dual space) and have the weak form.
+  std::vector<Vector<real_type>> boundary_indicators(n_boundary_components);
+  for (auto &vec : boundary_indicators)
+    vec.reinit(n_dofs_for_neumann_space);
+
+  // Interpolate the boundary indicator vectors in the Neumann space.
+  interpolate_indicator_vectors_for_subdomains(dof_handler_for_neumann_space_,
+                                               subdomain_topology_,
+                                               mappings_,
+                                               material_id_to_mapping_index_,
+                                               boundary_indicators);
+  // Compute the stabilization vector.
+  for (unsigned int i = 0; i < n_boundary_components; i++)
+    {
+      M.vmult(mass_vmult_weq_external_numbering, boundary_indicators[i]);
+      permute_vector(mass_vmult_weq_external_numbering,
+                     *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain_,
+                     mass_vmult_weq_[i]);
+    }
 
   // The stabilization factor \f$\alpha\f$ is set to 1.
+  // TODO: Use the average eigenvalue of the matrix D as the stabilization
+  // factor.
   alpha_for_neumann_ = KernelNumberType(1.0);
 #endif
 
@@ -1407,9 +1589,9 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           dof_handler_for_neumann_space_.reinit(tria_);
           dof_handler_for_neumann_space_.distribute_dofs(fe_for_neumann_space_);
 
-          const unsigned int n_dofs_for_dirichlet_space =
+          const types::global_dof_index n_dofs_for_dirichlet_space =
             dof_handler_for_dirichlet_space_.n_dofs();
-          const unsigned int n_dofs_for_neumann_space =
+          const types::global_dof_index n_dofs_for_neumann_space =
             dof_handler_for_neumann_space_.n_dofs();
 
           std::cout << "=== DoF information ===" << std::endl;
@@ -1833,9 +2015,9 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           dof_handler_for_neumann_space_.reinit(tria_);
           dof_handler_for_neumann_space_.distribute_dofs(fe_for_neumann_space_);
 
-          const unsigned int n_dofs_for_dirichlet_space =
+          const types::global_dof_index n_dofs_for_dirichlet_space =
             dof_handler_for_dirichlet_space_.n_dofs();
-          const unsigned int n_dofs_for_neumann_space =
+          const types::global_dof_index n_dofs_for_neumann_space =
             dof_handler_for_neumann_space_.n_dofs();
 
           std::cout << "=== DoF information ===" << std::endl;
@@ -1854,15 +2036,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                 n_dofs_for_dirichlet_space);
               K_prime2_matrix_with_mass_matrix_.reinit(
                 n_dofs_for_dirichlet_space, n_dofs_for_neumann_space);
-#if HBEM_NEUMANN_SOLUTION_SPACE == 1
-              /**
-               * SLP matrix for solving the natural density \f$w_{\rm eq}\f$.
-               */
-              V_matrix_weq_.reinit(n_dofs_for_neumann_space,
-                                   n_dofs_for_neumann_space);
-              add_memory_consumption_row("V full matrix for weq",
-                                         V_matrix_weq_);
-#endif
+
               add_memory_consumption_row("D1 full matrix", D1_matrix_);
               add_memory_consumption_row("K'2 with mass full matrix",
                                          K_prime2_matrix_with_mass_matrix_);
@@ -2007,14 +2181,6 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   eta_,
                   n_min_for_bct_);
 
-#if HBEM_NEUMANN_SOLUTION_SPACE == 1
-              bct_for_bilinear_form_V1_ = BlockClusterTree<spacedim, real_type>(
-                ct_for_neumann_space_on_neumann_domain_,
-                ct_for_neumann_space_on_neumann_domain_,
-                eta_,
-                n_min_for_bct_);
-#endif
-
               /**
                * Partition the block cluster trees.
                */
@@ -2030,13 +2196,6 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_average_cell_size_for_dirichlet_space_on_neumann_domain_,
                 dof_average_cell_size_for_neumann_space_on_neumann_domain_);
 
-#if HBEM_NEUMANN_SOLUTION_SPACE == 1
-              bct_for_bilinear_form_V1_.partition(
-                *dof_i2e_numbering_for_neumann_space_on_neumann_domain_,
-                support_points_for_neumann_space_on_neumann_domain_,
-                dof_average_cell_size_for_neumann_space_on_neumann_domain_);
-#endif
-
               timer.stop();
               print_wall_time(deallog, timer, "build block cluster trees");
 
@@ -2044,11 +2203,6 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                          bct_for_bilinear_form_D1_);
               add_memory_consumption_row("Block cluster tree for K'2 with mass",
                                          bct_for_bilinear_form_K_prime2_);
-
-#if HBEM_NEUMANN_SOLUTION_SPACE == 1
-              add_memory_consumption_row("Block cluster tree for V1",
-                                         bct_for_bilinear_form_V1_);
-#endif
 
               /**
                * Initialize \hmatrices.
@@ -2076,26 +2230,6 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 << "=== Leaf set information of K_prime2_hmat_with_mass_matrix ==="
                 << std::endl;
               K_prime2_hmat_with_mass_matrix_.print_leaf_set_info(std::cout);
-
-#if HBEM_NEUMANN_SOLUTION_SPACE == 1
-              /**
-               * SLP matrix for solving the natural density \f$w_{\rm eq}\f$.
-               */
-              V_hmat_weq_ = HMatrix<spacedim, KernelNumberType>(
-                bct_for_bilinear_form_V1_,
-                max_hmat_rank_,
-                HMatrixSupport::Property::symmetric,
-                HMatrixSupport::BlockType::diagonal_block);
-
-              std::cout << "=== Leaf set information of V_hmat_weq ==="
-                        << std::endl;
-              V_hmat_weq_.print_leaf_set_info(std::cout);
-
-              add_memory_consumption_row(
-                "V H-matrix for weq",
-                V_hmat_weq_,
-                "After initialization and before assembly");
-#endif
 
               timer.stop();
               print_wall_time(deallog, timer, "initialize H-matrices");
@@ -2133,30 +2267,6 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           timer.stop();
           print_wall_time(deallog, timer, "interpolate boundary condition");
-
-          /**
-           * Allocate memory for the natural density \f$w_{\rm eq}\in
-           * H^{-1/2}(\Gamma)\f$ vectors.
-           */
-          natural_densities_.resize(
-            subdomain_topology_.get_subdomain_to_surface().size());
-          for (auto &vec : natural_densities_)
-            vec.reinit(n_dofs_for_neumann_space);
-
-#if HBEM_NEUMANN_SOLUTION_SPACE == 1
-          // Allocate the right hand side vector, which is used to solve the
-          // natural density, when the solution space is \f$H^{1/2}_{\ast}\f$.
-          system_rhs_for_natural_density_.reinit(n_dofs_for_neumann_space);
-#endif
-
-          /**
-           * Allocate memory for the product of mass matrix and the natural
-           * density vectors.
-           */
-          mass_vmult_weq_.resize(
-            subdomain_topology_.get_subdomain_to_surface().size());
-          for (auto &vec : mass_vmult_weq_)
-            vec.reinit(n_dofs_for_dirichlet_space);
 
           /**
            * Allocate memory for the right-hand-side vector and solution
@@ -2890,53 +3000,40 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   auto &subdomain_to_surface = subdomain_topology_.get_subdomain_to_surface();
   const unsigned int n_subdomains = subdomain_to_surface.size();
 
-  if (is_interior_problem_)
-    // When the problem type is interior, only one subdomain should exist.
-    return n_subdomains == 1;
-  else
+  // There should be at least one subdomain.
+  if (n_subdomains > 0)
     {
-      // When the problem type is exterior, multiple subdomains are allowed, but
-      // they should not touch each other.
-      if (n_subdomains > 0)
+      if (n_subdomains > 1)
         {
-          if (n_subdomains > 1)
+          // When there are more than 1 subdomains, they should be disjoint.
+          for (auto iter1 = subdomain_to_surface.begin();
+               iter1 != subdomain_to_surface.end();
+               iter1++)
             {
-#if HBEM_NEUMANN_SOLUTION_SPACE == 1
-              // At the moment, we don't allow multiply connected domain when
-              // the Neumann solution space is \f$H^{1/2}_{\ast}\f$.
-              if (problem_type_ == ProblemType::NeumannBCProblem)
-                return false;
-#endif
-
-              for (auto iter1 = subdomain_to_surface.begin();
-                   iter1 != subdomain_to_surface.end();
-                   iter1++)
+              for (auto iter2 = std::next(iter1);
+                   iter2 != subdomain_to_surface.end();
+                   iter2++)
                 {
-                  for (auto iter2 = std::next(iter1);
-                       iter2 != subdomain_to_surface.end();
-                       iter2++)
-                    {
-                      std::vector<EntityTag> surface_tag_intersection;
-                      std::set_intersection(iter1->second.begin(),
-                                            iter1->second.end(),
-                                            iter2->second.begin(),
-                                            iter2->second.end(),
-                                            std::back_inserter(
-                                              surface_tag_intersection));
+                  std::vector<EntityTag> surface_tag_intersection;
+                  std::set_intersection(iter1->second.begin(),
+                                        iter1->second.end(),
+                                        iter2->second.begin(),
+                                        iter2->second.end(),
+                                        std::back_inserter(
+                                          surface_tag_intersection));
 
-                      if (!surface_tag_intersection.empty())
-                        return false;
-                    }
+                  if (!surface_tag_intersection.empty())
+                    return false;
                 }
-
-              return true;
             }
-          else
-            return true;
+
+          return true;
         }
       else
-        return false;
+        return true;
     }
+  else
+    return false;
 }
 
 
@@ -3339,29 +3436,12 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           K_prime2_matrix_with_mass_matrix_.vmult(system_rhs_on_neumann_domain_,
                                                   neumann_bc_);
 
-          /**
-           * Solve the natural density.
-           */
-          solve_natural_density();
-
-          /**
-           * Calculate the vector \f$a\f$ in \f$\alpha a a^T\f$, where \f$a\f$
-           * is the multiplication of the mass matrix and the natural density.
-           */
-          compute_stabilization_vectors_for_hyper_singular_bilinear_form<
-            dim,
-            spacedim,
-            Vector<KernelNumberType>>(dof_handler_for_dirichlet_space_,
-                                      dof_handler_for_neumann_space_,
-                                      QGauss<2>(fe_order_for_dirichlet_space_ +
-                                                1),
-                                      natural_densities_,
-                                      mass_vmult_weq_);
+          compute_stabilization_terms_for_D1_fullmat();
 
           /**
            * Add the matrix \f$\alpha a a^T\f$ into \f$D\f$. N.B. The outer
-           * product here is only formal and there is no complex conjugation on
-           * the second operand in the complex valued case.
+           * product here is only formal and there is no complex conjugation
+           * on the second operand in the complex valued case.
            */
           LAPACKFullMatrixExt<KernelNumberType> aaT(D1_matrix_.m(),
                                                     D1_matrix_.n());
@@ -3712,39 +3792,11 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           std::cout << "=== Release K' ===" << std::endl;
           K_prime2_hmat_with_mass_matrix_.release();
 
-          /**
-           * Solve the natural density.
-           */
-          std::cout << "=== Solve the natural density weq ===" << std::endl;
-
+          std::cout << "=== Compute stabilization terms ===" << std::endl;
           timer.start();
-
-          solve_natural_density();
-
+          compute_stabilization_terms_for_D1_hmat();
           timer.stop();
-          print_wall_time(deallog, timer, "solve natural density weq");
-
-          /**
-           * Calculate the vector \f$a\f$ in \f$\alpha a a^T\f$, where \f$a\f$
-           * is the multiplication of the mass matrix and the natural density.
-           */
-          std::cout << "=== Calculate the vector a=M*weq ===" << std::endl;
-
-          timer.start();
-
-          compute_stabilization_vectors_for_hyper_singular_bilinear_form<
-            dim,
-            spacedim,
-            Vector<KernelNumberType>>(
-            dof_handler_for_dirichlet_space_,
-            dof_handler_for_neumann_space_,
-            QGauss<2>(fe_order_for_dirichlet_space_ + 1),
-            *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain_,
-            natural_densities_,
-            mass_vmult_weq_);
-
-          timer.stop();
-          print_wall_time(deallog, timer, "calculate a=M*weq");
+          print_wall_time(deallog, timer, "compute stabilization terms");
 
           /**
            * Assemble the regularized bilinear form for the hyper-singular
