@@ -2934,7 +2934,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                * we're dealing with complex values, because the rank-k matrix
                * should take the form \f$M=AB^{\mathrm{H}}\f$.
                */
-              if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+              if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
 
               return;
@@ -3017,7 +3017,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                * we're dealing with complex values, because the rank-k matrix
                * should take the form \f$M=AB^{\mathrm{H}}\f$.
                */
-              if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+              if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
 
               return;
@@ -3072,7 +3072,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
            * we're dealing with complex values, because the rank-k matrix
            * should take the form \f$M=AB^{\mathrm{H}}\f$.
            */
-          if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+          if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
             v_mat.conjugate();
 
           return;
@@ -3097,7 +3097,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                * we're dealing with complex values, because the rank-k matrix
                * should take the form \f$M=AB^{\mathrm{H}}\f$.
                */
-              if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+              if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
 
               return;
@@ -3110,7 +3110,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
    * we're dealing with complex values, because the rank-k matrix
    * should take the form \f$M=AB^{\mathrm{H}}\f$.
    */
-  if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+  if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
     v_mat.conjugate();
 
   std::cerr
@@ -3655,7 +3655,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                * we're dealing with complex values, because the rank-k matrix
                * should take the form \f$M=AB^{\mathrm{H}}\f$.
                */
-              if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+              if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
 
               return;
@@ -3740,7 +3740,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                * we're dealing with complex values, because the rank-k matrix
                * should take the form \f$M=AB^{\mathrm{H}}\f$.
                */
-              if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+              if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
 
               return;
@@ -3795,7 +3795,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
            * we're dealing with complex values, because the rank-k matrix
            * should take the form \f$M=AB^{\mathrm{H}}\f$.
            */
-          if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+          if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
             v_mat.conjugate();
 
           return;
@@ -3820,7 +3820,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                * we're dealing with complex values, because the rank-k matrix
                * should take the form \f$M=AB^{\mathrm{H}}\f$.
                */
-              if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+              if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
 
               return;
@@ -3833,7 +3833,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
    * we're dealing with complex values, because the rank-k matrix
    * should take the form \f$M=AB^{\mathrm{H}}\f$.
    */
-  if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+  if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
     v_mat.conjugate();
 
   std::cerr
@@ -4397,7 +4397,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                * we're dealing with complex values, because the rank-k matrix
                * should take the form \f$M=AB^{\mathrm{H}}\f$.
                */
-              if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+              if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
 
               return;
@@ -4487,7 +4487,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                * we're dealing with complex values, because the rank-k matrix
                * should take the form \f$M=AB^{\mathrm{H}}\f$.
                */
-              if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+              if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
 
               return;
@@ -4549,7 +4549,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            * we're dealing with complex values, because the rank-k matrix
            * should take the form \f$M=AB^{\mathrm{H}}\f$.
            */
-          if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+          if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
             v_mat.conjugate();
 
           return;
@@ -4579,7 +4579,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                * we're dealing with complex values, because the rank-k matrix
                * should take the form \f$M=AB^{\mathrm{H}}\f$.
                */
-              if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+              if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
 
               return;
@@ -4597,7 +4597,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
    * we're dealing with complex values, because the rank-k matrix
    * should take the form \f$M=AB^{\mathrm{H}}\f$.
    */
-  if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+  if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
     v_mat.conjugate();
 
   std::cerr
@@ -5170,7 +5170,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                * we're dealing with complex values, because the rank-k matrix
                * should take the form \f$M=AB^{\mathrm{H}}\f$.
                */
-              if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+              if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
 
               return;
@@ -5262,7 +5262,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                * we're dealing with complex values, because the rank-k matrix
                * should take the form \f$M=AB^{\mathrm{H}}\f$.
                */
-              if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+              if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
 
               return;
@@ -5324,7 +5324,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            * we're dealing with complex values, because the rank-k matrix
            * should take the form \f$M=AB^{\mathrm{H}}\f$.
            */
-          if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+          if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
             v_mat.conjugate();
 
           return;
@@ -5354,7 +5354,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                * we're dealing with complex values, because the rank-k matrix
                * should take the form \f$M=AB^{\mathrm{H}}\f$.
                */
-              if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+              if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
 
               return;
@@ -5372,7 +5372,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
    * we're dealing with complex values, because the rank-k matrix
    * should take the form \f$M=AB^{\mathrm{H}}\f$.
    */
-  if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+  if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
     v_mat.conjugate();
 
   std::cerr
