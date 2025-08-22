@@ -20,7 +20,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/draw.jl.in
 
 target_link_libraries(
   ${_target}
-  generic_tools
+  hierbem
   boost_program_options
   dl # Lazy way: always link with libdl no matter if CUDA is used or not
   julia

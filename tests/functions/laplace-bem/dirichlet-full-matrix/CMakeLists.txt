@@ -19,7 +19,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/process.m.in
 target_link_libraries(
   ${_target}
   hbem_octave_wrapper
-  generic_tools
+  hierbem
   boost_program_options
   dl
   ${OCTAVE_LIBRARIES}

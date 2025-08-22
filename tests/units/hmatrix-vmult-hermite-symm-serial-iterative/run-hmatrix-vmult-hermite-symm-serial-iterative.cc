@@ -1,5 +1,4 @@
 #include <catch2/catch_all.hpp>
-#include <openblas-pthread/cblas.h>
 
 #include <complex>
 #include <fstream>

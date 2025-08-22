@@ -4,7 +4,6 @@
 #include <deal.II/grid/manifold_lib.h>
 
 #include <cuda_runtime.h>
-#include <openblas-pthread/cblas.h>
 
 #include <cmath>
 #include <complex>
@@ -107,11 +106,6 @@ run_neumann_hmatrix_op_precond_complex(const unsigned int refinement)
    * @internal Create and start the timer.
    */
   Timer timer;
-
-  /**
-   * @internal Set number of threads used for OpenBLAS.
-   */
-  openblas_set_num_threads(1);
 
   /**
    * @internal Initialize the CUDA device parameters.

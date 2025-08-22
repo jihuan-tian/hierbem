@@ -1,14 +1,16 @@
 include(macro_hbem_std_compile_flags)
 
 # ##############################################################################
-# Library target: generic_tools
+# Library target: hierbem
 # ##############################################################################
 
 # Enable more strict compilation for C++ and CUDA
 hbem_std_compile_flags()
 
+set(_target hierbem)
+
 add_library(
-  generic_tools SHARED
+  ${_target} SHARED
   debug_tools.cc
   dof_tools_ext.cc
   hmatrix/aca_plus/aca_plus.cu
@@ -17,7 +19,9 @@ add_library(
   sauter_quadrature.cu
   regex_tools.cc
   laplace_bem.cu)
-# Because my library generic_tools has included deal.ii header files, dependent
-# include paths and library paths need to be imported by calling this macro
-# DEAL_II_SETUP_TARGET.
-deal_ii_setup_target(generic_tools)
+# Because hierbem has included deal.ii header files, dependent include paths and
+# library paths need to be imported by calling this macro DEAL_II_SETUP_TARGET.
+deal_ii_setup_target(${_target})
+
+# HMatrix class depends on openblas.
+target_link_libraries(${_target} openblas)

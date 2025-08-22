@@ -17,7 +17,6 @@
 #include <boost/program_options.hpp>
 
 #include <cuda_runtime.h>
-#include <openblas-pthread/cblas.h>
 
 #include <fstream>
 #include <iostream>
@@ -74,11 +73,6 @@ int
 main(int argc, char *argv[])
 {
   CmdOpts opts = parse_cmdline(argc, argv);
-
-  /**
-   * @internal Set number of threads used for OpenBLAS.
-   */
-  openblas_set_num_threads(1);
 
   /**
    * Initialize the CUDA device parameters.

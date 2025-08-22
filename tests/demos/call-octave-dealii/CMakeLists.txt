@@ -5,8 +5,8 @@ include_directories(${OCTAVE_INCLUDE_DIRS})
 
 set(TEST_TARGET call-octave-dealii)
 
-# Link TEST_TARGET to my generic_tools library.
-set(TEST_LIBRARIES generic_tools boost_program_options dl ${OCTAVE_LIBRARIES})
+# Link TEST_TARGET to hierbem library.
+set(TEST_LIBRARIES hierbem boost_program_options dl ${OCTAVE_LIBRARIES})
 
 # XXX Relax compiler's pedantic checks to include buggy Octave headers. deal.ii
 # testing framework could generate multiple actual targets based on the given

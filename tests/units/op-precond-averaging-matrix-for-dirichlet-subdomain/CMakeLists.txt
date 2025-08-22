@@ -16,7 +16,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/draw.jl.in
                ${CMAKE_CURRENT_SOURCE_DIR}/draw.jl)
 
 target_link_libraries(
-  ${_target} generic_tools dl # Lazy way: always link with libdl no matter if
+  ${_target} hierbem dl # Lazy way: always link with libdl no matter if
                               # CUDA is used or not
   Catch2::Catch2WithMain)
 

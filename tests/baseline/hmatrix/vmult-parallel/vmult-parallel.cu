@@ -15,7 +15,6 @@
 #include <boost/program_options.hpp>
 
 #include <cuda_runtime.h>
-#include <openblas-pthread/cblas.h>
 
 #include <algorithm>
 #include <fstream>
@@ -78,11 +77,6 @@ int
 main(int argc, char *argv[])
 {
   CmdOpts opts = parse_cmdline(argc, argv);
-
-  /**
-   * @internal Set number of threads used for OpenBLAS.
-   */
-  openblas_set_num_threads(1);
 
   /**
    * Initialize the CUDA device parameters.
@@ -254,11 +248,6 @@ main(int argc, char *argv[])
           std::uniform_real_distribution<double> uniform_distribution(1, 10);
           x(j) = uniform_distribution(rand_engine);
         }
-
-      /**
-       * Limit the number of OpenBLAS threads.
-       */
-      openblas_set_num_threads(1);
 
       Timer timer;
       V.prepare_for_vmult_or_tvmult(true, true);

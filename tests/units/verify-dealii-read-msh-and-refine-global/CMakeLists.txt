@@ -1,8 +1,8 @@
 set(TEST_TARGET verify-dealii-read-msh-and-refine-global)
 
-# Link TEST_TARGET to my generic_tools library.
+# Link TEST_TARGET to hierbem library.
 set(TEST_LIBRARIES
-    generic_tools
+    hierbem
     boost_program_options
     dl  # Lazy way: always link with libdl no matter if CUDA is used or not
 )

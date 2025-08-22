@@ -5,7 +5,6 @@
 #include <deal.II/grid/tria.h>
 
 #include <cuda_runtime.h>
-#include <openblas-pthread/cblas.h>
 
 #include <fstream>
 #include <iostream>
@@ -77,11 +76,6 @@ run_mixed_l_shape_op_precond()
    * @internal Create and start the timer.
    */
   Timer timer;
-
-  /**
-   * @internal Set number of threads used for OpenBLAS.
-   */
-  openblas_set_num_threads(1);
 
   const size_t stack_size = 1024 * 10;
   AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));

@@ -14,7 +14,6 @@
 #include <deal.II/grid/manifold_lib.h>
 
 #include <cuda_runtime.h>
-#include <openblas-pthread/cblas.h>
 
 #include <cstdlib>
 #include <fstream>
@@ -40,11 +39,6 @@ main(int argc, char *argv[])
 
   // Repetitions to run H-Cholesky.
   const unsigned int REPEATS = atoi(argv[1]);
-
-  /**
-   * @internal Set number of threads used for OpenBLAS.
-   */
-  openblas_set_num_threads(1);
 
   /**
    * Initialize the CUDA device parameters.

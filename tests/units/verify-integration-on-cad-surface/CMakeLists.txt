@@ -1,7 +1,7 @@
 SET(TEST_TARGET verify-integration-on-cad-surface)
 
-# Link TEST_TARGET to my generic_tools library as well as dl library for NVTX
+# Link TEST_TARGET to hierbem library as well as dl library for NVTX
 # instrumentation.
-SET(TEST_LIBRARIES generic_tools boost_program_options dl)
+SET(TEST_LIBRARIES hierbem boost_program_options dl)
 
 DEAL_II_PICKUP_TESTS()

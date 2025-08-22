@@ -1,5 +1,4 @@
 #include <catch2/catch_all.hpp>
-#include <openblas-pthread/cblas.h>
 
 #include <complex>
 #include <fstream>
@@ -130,12 +129,6 @@ run_hmatrix_Tvmult_symm_parallel()
   H_full.print_formatted_to_mat(ofs, "H_full", 15, false, 25, "0");
   H_full_complex.print_formatted_to_mat(
     ofs, "H_full_complex", 15, false, 45, "0");
-
-  /**
-   * Limit the number of OpenBLAS threads, because we will use TBB task
-   * parallelism.
-   */
-  openblas_set_num_threads(1);
 
   /**
    * Perform \hmatrix/vector multiplication. N.B. For a symmetric matrix,

@@ -1,5 +1,5 @@
 set(TEST_TARGET bct-extend-finer-than-partition)
-set(TEST_LIBRARIES generic_tools)
+set(TEST_LIBRARIES hierbem)
 deal_ii_pickup_tests()
 
 # Get the last folder name in ${CMAKE_CURRENT_SOURCE_DIR} as the category of the

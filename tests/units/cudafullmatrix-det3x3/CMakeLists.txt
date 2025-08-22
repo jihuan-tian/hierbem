@@ -6,7 +6,7 @@ ADD_EXECUTABLE(${_target} cudafullmatrix-det3x3.cu)
 DEAL_II_SETUP_TARGET(${_target})
 TARGET_LINK_LIBRARIES(
     ${_target}
-    generic_tools
+    hierbem
     boost_program_options
     Catch2::Catch2WithMain
 )

@@ -8,7 +8,7 @@ add_executable(${_target}
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})
 
-target_link_libraries(${_target} generic_tools hbem_julia_wrapper
+target_link_libraries(${_target} hierbem hbem_julia_wrapper
                       Catch2::Catch2WithMain)
 
 # Discover Catch2 testcases

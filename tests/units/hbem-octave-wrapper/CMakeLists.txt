@@ -10,7 +10,7 @@ TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_
 TARGET_LINK_LIBRARIES(
     ${_target}
     hbem_octave_wrapper
-    generic_tools
+    hierbem
     boost_program_options
     dl  # Lazy way: always link with libdl no matter if CUDA is used or not
     Catch2::Catch2WithMain

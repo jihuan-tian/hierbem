@@ -1,7 +1,7 @@
 set(TEST_TARGET bct-overloaded-assignment)
 
-# Link TEST_TARGET to my generic_tools library.
-set(TEST_LIBRARIES generic_tools)
+# Link TEST_TARGET to hierbem library.
+set(TEST_LIBRARIES hierbem)
 
 deal_ii_pickup_tests()
 

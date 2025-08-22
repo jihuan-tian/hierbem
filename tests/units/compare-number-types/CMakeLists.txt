@@ -13,7 +13,7 @@ target_compile_definitions(${_target}
 
 target_link_libraries(
   ${_target}
-  generic_tools
+  hierbem
   boost_program_options
   dl # Lazy way: always link with libdl no matter if CUDA is used or not
   Catch2::Catch2WithMain)

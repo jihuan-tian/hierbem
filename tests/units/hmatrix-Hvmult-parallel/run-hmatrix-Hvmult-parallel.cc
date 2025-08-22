@@ -1,5 +1,4 @@
 #include <catch2/catch_all.hpp>
-#include <openblas-pthread/cblas.h>
 
 #include <complex>
 #include <fstream>
@@ -100,12 +99,6 @@ run_hmatrix_Hvmult_parallel()
 
   REQUIRE(x_complex.size() == M_complex.size()[1]);
   REQUIRE(y_complex.size() == M_complex.size()[0]);
-
-  /**
-   * Limit the number of OpenBLAS threads, because we will use TBB task
-   * parallelism.
-   */
-  openblas_set_num_threads(1);
 
   /**
    * Perform \hmatrix/vector multiplication.

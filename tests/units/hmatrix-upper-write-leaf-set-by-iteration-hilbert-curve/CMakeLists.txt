@@ -2,8 +2,8 @@ find_package(Octave REQUIRED)
 
 set(TEST_TARGET hmatrix-upper-write-leaf-set-by-iteration-hilbert-curve)
 
-# Link TEST_TARGET to my generic_tools library.
-set(TEST_LIBRARIES generic_tools hbem_octave_wrapper ${OCTAVE_LIBRARIES})
+# Link TEST_TARGET to hierbem library.
+set(TEST_LIBRARIES hierbem hbem_octave_wrapper ${OCTAVE_LIBRARIES})
 
 deal_ii_pickup_tests()
 

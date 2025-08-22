@@ -1,6 +1,6 @@
 SET(TEST_TARGET dof-to-cell-topology)
 
-# Link TEST_TARGET to my generic_tools library.
-SET(TEST_LIBRARIES generic_tools)
+# Link TEST_TARGET to hierbem library.
+SET(TEST_LIBRARIES hierbem)
 
 DEAL_II_PICKUP_TESTS()

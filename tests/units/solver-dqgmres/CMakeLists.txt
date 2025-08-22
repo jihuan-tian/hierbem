@@ -16,7 +16,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/process.jl.in
 
 target_link_libraries(
   ${_target}
-  generic_tools
+  hierbem
   hbem_julia_wrapper
   dl # Lazy way: always link with libdl no matter if CUDA is used or not
   Catch2::Catch2WithMain)

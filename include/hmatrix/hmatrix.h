@@ -16,6 +16,7 @@
 
 #include <deal.II/lac/full_matrix.h>
 
+#include <openblas-pthread/cblas.h>
 #include <tbb/tbb.h>
 
 #include <algorithm>
@@ -3646,7 +3647,7 @@ public:
                                      const bool is_tvmult) const;
 
   /**
-   * Prepare thread data for taskparallel \hmatrix/vector multiplication,
+   * Prepare thread data for task parallel \hmatrix/vector multiplication,
    * including @p vmult , @p Tvmult and @p Hvmult .
    *
    * This function is called once before multiple calls of task parallel
@@ -21897,6 +21898,10 @@ HMatrix<spacedim, Number>::vmult_task_parallel(const Number2         beta,
    */
   if (thread_num > 1)
     {
+      // Set OpenBLAS num threads to 1 when task parallelization is used.
+      const int blas_num_threads = openblas_get_num_threads();
+      openblas_set_num_threads(1);
+
       /**
        * Perform thread local scaling of the result vector and
        * multiplications. The multiplication results are stored locally in
@@ -22180,6 +22185,9 @@ HMatrix<spacedim, Number>::vmult_task_parallel(const Number2         beta,
         }
 
       assembly_tasks.join_all();
+
+      // Restore the original OpenBLAS num threads.
+      openblas_set_num_threads(blas_num_threads);
     }
   else
     {
@@ -24488,6 +24496,10 @@ HMatrix<spacedim, Number>::Tvmult_task_parallel(const Number2         beta,
        */
       if (thread_num > 1)
         {
+          // Set OpenBLAS num threads to 1 when task parallelization is used.
+          const int blas_num_threads = openblas_get_num_threads();
+          openblas_set_num_threads(1);
+
           /**
            * Perform thread local scaling of the result vector and
            * multiplications. The multiplication results are stored locally in
@@ -24708,6 +24720,9 @@ HMatrix<spacedim, Number>::Tvmult_task_parallel(const Number2         beta,
             }
 
           assembly_tasks.join_all();
+
+          // Restore the original OpenBLAS num threads.
+          openblas_set_num_threads(blas_num_threads);
         }
       else
         {
@@ -28117,6 +28132,11 @@ HMatrix<spacedim, Number>::Hvmult_task_parallel(const Number2         beta,
            */
           if (thread_num > 1)
             {
+              // Set OpenBLAS num threads to 1 when task parallelization is
+              // used.
+              const int blas_num_threads = openblas_get_num_threads();
+              openblas_set_num_threads(1);
+
               /**
                * Perform thread local scaling of the result vector and
                * multiplications. The multiplication results are stored locally
@@ -28344,6 +28364,9 @@ HMatrix<spacedim, Number>::Hvmult_task_parallel(const Number2         beta,
                 }
 
               assembly_tasks.join_all();
+
+              // Restore the original OpenBLAS num threads.
+              openblas_set_num_threads(blas_num_threads);
             }
           else
             {
@@ -32491,6 +32514,10 @@ void
 HMatrix<spacedim, Number>::compute_lu_factorization_task_parallel(
   const unsigned int fixed_rank)
 {
+  // Set OpenBLAS num threads to 1 when task parallelization is used.
+  const int blas_num_threads = openblas_get_num_threads();
+  openblas_set_num_threads(1);
+
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
   Timer timer;
 #endif
@@ -32554,6 +32581,9 @@ HMatrix<spacedim, Number>::compute_lu_factorization_task_parallel(
    * After LU factorization, set the state of the current matrix to be @p lu.
    */
   this->set_state(HMatrixSupport::lu);
+
+  // Restore the original OpenBLAS num threads.
+  openblas_set_num_threads(blas_num_threads);
 }
 
 
@@ -35073,6 +35103,10 @@ void
 HMatrix<spacedim, Number>::compute_cholesky_factorization_task_parallel(
   const unsigned int fixed_rank)
 {
+  // Set OpenBLAS num threads to 1 when task parallelization is used.
+  const int blas_num_threads = openblas_get_num_threads();
+  openblas_set_num_threads(1);
+
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
   Timer timer;
 #endif
@@ -35138,6 +35172,9 @@ HMatrix<spacedim, Number>::compute_cholesky_factorization_task_parallel(
    */
   this->set_state(HMatrixSupport::cholesky);
   this->set_property(HMatrixSupport::Property::lower_triangular);
+
+  // Restore the original OpenBLAS num threads.
+  openblas_set_num_threads(blas_num_threads);
 }
 
 
