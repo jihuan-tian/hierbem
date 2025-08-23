@@ -34589,7 +34589,7 @@ HMatrix<spacedim, Number>::compute_near_field_hmat_assembly_task_cost(
           switch (block_type)
             {
                 case HMatrixSupport::BlockType::diagonal_block: {
-                  return m * n / 2.0;
+                  return m * n / 2.0 + m / 2.0;
                 }
                 case HMatrixSupport::BlockType::lower_triangular_block: {
                   return m * n;
@@ -34605,7 +34605,7 @@ HMatrix<spacedim, Number>::compute_near_field_hmat_assembly_task_cost(
           switch (block_type)
             {
                 case HMatrixSupport::BlockType::diagonal_block: {
-                  return m * n / 2.0;
+                  return m * n / 2.0 + m / 2.0;
                 }
                 case HMatrixSupport::BlockType::upper_triangular_block: {
                   return m * n;

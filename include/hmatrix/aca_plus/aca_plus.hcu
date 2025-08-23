@@ -28,6 +28,7 @@
 #include <cmath>
 #include <complex>
 #include <condition_variable>
+#include <cstdint>
 #include <forward_list>
 #include <functional>
 #include <iostream>
@@ -36,6 +37,7 @@
 #include <random>
 #include <thread>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "bem_kernels.hcu"
@@ -52,6 +54,7 @@
 #include "mapping/mapping_info.h"
 #include "number_traits.h"
 #include "sauter_quadrature.hcu"
+#include "sequence_partition/sequence_partition.h"
 #include "unary_template_arg_containers.h"
 
 HBEM_NS_OPEN
@@ -8495,6 +8498,7 @@ fill_hmatrix_with_aca_plus_smp(
   const unsigned int capacity            = batch_size * 8 + 1;
   unsigned int       producer_thread_num = 4;
 
+  // Create ring buffers for various cell neighboring types.
   HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
                                                         dim,
                                                         spacedim,
@@ -8541,30 +8545,47 @@ fill_hmatrix_with_aca_plus_smp(
   Assert(near_field_set_size > 0, ExcLowerRange(near_field_set_size, 1));
 
   if (near_field_set_size < producer_thread_num)
-    {
-      producer_thread_num = near_field_set_size;
-    }
+    producer_thread_num = near_field_set_size;
 
   std::vector<std::thread> producers;
   producers.reserve(producer_thread_num);
 
-  const unsigned int number_of_hmat_nodes_per_thread =
-    std::ceil(static_cast<double>(near_field_set_size) /
-              static_cast<double>(producer_thread_num));
+  // Use sequence partition to generate closed ranges of near field H-matrix
+  // nodes.
+  std::vector<double> near_field_leaf_set_storage(near_field_set_size);
+  hmat.compute_near_field_leaf_set_assembly_task_costs(
+    near_field_leaf_set_storage);
+  // Generate the cost function for sequence partition, which accumulates the
+  // memory costs for all H-matrix leaf nodes in the closed range [i,j].
+  auto near_field_storage_cost_func =
+    [&near_field_leaf_set_storage](int64_t i, int64_t j) -> double {
+    double sum = 0.0;
+    for (int64_t k = i; k <= j; k++)
+      {
+        sum += near_field_leaf_set_storage[k];
+      }
+    return sum;
+  };
+
+  SequencePartitioner<decltype(near_field_storage_cost_func)>
+    near_field_storage_sp(near_field_set_size,
+                          producer_thread_num,
+                          near_field_storage_cost_func);
+  near_field_storage_sp.partition();
+  std::vector<std::pair<int64_t, int64_t>> near_field_partitions;
+  near_field_storage_sp.get_partitions(near_field_partitions);
 
   /**
    * @internal Start the producer threads.
    */
-  for (unsigned int i = 0; i < producer_thread_num; i++)
+  for (const auto &partition : near_field_partitions)
     {
-      producers.emplace_back([&, i]() {
+      producers.emplace_back([&]() {
         HierBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_producer(
             near_field_leaf_set,
-            i * number_of_hmat_nodes_per_thread,
-            (i + 1) * number_of_hmat_nodes_per_thread > near_field_set_size ?
-              near_field_set_size :
-              (i + 1) * number_of_hmat_nodes_per_thread,
+            partition.first,
+            partition.second + 1,
             ring_buffer_for_same_panel,
             ring_buffer_for_common_edge,
             ring_buffer_for_common_vertex,
@@ -8943,30 +8964,47 @@ fill_hmatrix_with_aca_plus_smp(
   Assert(near_field_set_size > 0, ExcLowerRange(near_field_set_size, 1));
 
   if (near_field_set_size < producer_thread_num)
-    {
-      producer_thread_num = near_field_set_size;
-    }
+    producer_thread_num = near_field_set_size;
 
   std::vector<std::thread> producers;
   producers.reserve(producer_thread_num);
 
-  const unsigned int number_of_hmat_nodes_per_thread =
-    std::ceil(static_cast<double>(near_field_set_size) /
-              static_cast<double>(producer_thread_num));
+  // Use sequence partition to generate closed ranges of near field H-matrix
+  // nodes.
+  std::vector<double> near_field_leaf_set_storage(near_field_set_size);
+  hmat.compute_near_field_leaf_set_assembly_task_costs(
+    near_field_leaf_set_storage);
+  // Generate the cost function for sequence partition, which accumulates the
+  // memory costs for all H-matrix leaf nodes in the closed range [i,j].
+  auto near_field_storage_cost_func =
+    [&near_field_leaf_set_storage](int64_t i, int64_t j) -> double {
+    double sum = 0.0;
+    for (int64_t k = i; k <= j; k++)
+      {
+        sum += near_field_leaf_set_storage[k];
+      }
+    return sum;
+  };
+
+  SequencePartitioner<decltype(near_field_storage_cost_func)>
+    near_field_storage_sp(near_field_set_size,
+                          producer_thread_num,
+                          near_field_storage_cost_func);
+  near_field_storage_sp.partition();
+  std::vector<std::pair<int64_t, int64_t>> near_field_partitions;
+  near_field_storage_sp.get_partitions(near_field_partitions);
 
   /**
    * @internal Start the producer threads.
    */
-  for (unsigned int i = 0; i < producer_thread_num; i++)
+  for (const auto &partition : near_field_partitions)
     {
-      producers.emplace_back([&, i]() {
+      producers.emplace_back([&]() {
         HierBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_producer(
             near_field_leaf_set,
-            i * number_of_hmat_nodes_per_thread,
-            (i + 1) * number_of_hmat_nodes_per_thread > near_field_set_size ?
-              near_field_set_size :
-              (i + 1) * number_of_hmat_nodes_per_thread,
+            partition.first,
+            partition.second + 1,
             ring_buffer_for_same_panel,
             ring_buffer_for_common_edge,
             ring_buffer_for_common_vertex,
@@ -9374,30 +9412,47 @@ fill_hmatrix_with_aca_plus_smp(
   Assert(near_field_set_size > 0, ExcLowerRange(near_field_set_size, 1));
 
   if (near_field_set_size < producer_thread_num)
-    {
-      producer_thread_num = near_field_set_size;
-    }
+    producer_thread_num = near_field_set_size;
 
   std::vector<std::thread> producers;
   producers.reserve(producer_thread_num);
 
-  const unsigned int number_of_hmat_nodes_per_thread =
-    std::ceil(static_cast<double>(near_field_set_size) /
-              static_cast<double>(producer_thread_num));
+  // Use sequence partition to generate closed ranges of near field H-matrix
+  // nodes.
+  std::vector<double> near_field_leaf_set_storage(near_field_set_size);
+  hmat.compute_near_field_leaf_set_assembly_task_costs(
+    near_field_leaf_set_storage);
+  // Generate the cost function for sequence partition, which accumulates the
+  // memory costs for all H-matrix leaf nodes in the closed range [i,j].
+  auto near_field_storage_cost_func =
+    [&near_field_leaf_set_storage](int64_t i, int64_t j) -> double {
+    double sum = 0.0;
+    for (int64_t k = i; k <= j; k++)
+      {
+        sum += near_field_leaf_set_storage[k];
+      }
+    return sum;
+  };
+
+  SequencePartitioner<decltype(near_field_storage_cost_func)>
+    near_field_storage_sp(near_field_set_size,
+                          producer_thread_num,
+                          near_field_storage_cost_func);
+  near_field_storage_sp.partition();
+  std::vector<std::pair<int64_t, int64_t>> near_field_partitions;
+  near_field_storage_sp.get_partitions(near_field_partitions);
 
   /**
    * @internal Start the producer threads.
    */
-  for (unsigned int i = 0; i < producer_thread_num; i++)
+  for (const auto &partition : near_field_partitions)
     {
-      producers.emplace_back([&, i]() {
+      producers.emplace_back([&]() {
         HierBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_producer(
             near_field_leaf_set,
-            i * number_of_hmat_nodes_per_thread,
-            (i + 1) * number_of_hmat_nodes_per_thread > near_field_set_size ?
-              near_field_set_size :
-              (i + 1) * number_of_hmat_nodes_per_thread,
+            partition.first,
+            partition.second + 1,
             ring_buffer_for_same_panel,
             ring_buffer_for_common_edge,
             ring_buffer_for_common_vertex,
