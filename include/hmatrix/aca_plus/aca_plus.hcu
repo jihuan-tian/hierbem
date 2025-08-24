@@ -8723,10 +8723,13 @@ fill_hmatrix_with_aca_plus_smp(
         "build far field hmatrix nodes");
 #endif
 
+      const unsigned int grain_size =
+        std::max(static_cast<unsigned long>(1),
+                 far_field_leaf_set.size() / thread_num / 2);
       tbb::parallel_for(
         tbb::blocked_range<
           typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>(
-          far_field_leaf_set.begin(), far_field_leaf_set.end()),
+          far_field_leaf_set.begin(), far_field_leaf_set.end(), grain_size),
         [&](const tbb::blocked_range<typename std::vector<
               HMatrix<spacedim, RangeNumberType> *>::iterator> &range) {
           fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus<
@@ -9125,10 +9128,13 @@ fill_hmatrix_with_aca_plus_smp(
       "regularize hypersingular kernel");
 #endif
 
+    const unsigned int grain_size =
+      std::max(static_cast<unsigned long>(1),
+               near_field_leaf_set.size() / thread_num / 2);
     tbb::parallel_for(
       tbb::blocked_range<
         typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>(
-        near_field_leaf_set.begin(), near_field_leaf_set.end()),
+        near_field_leaf_set.begin(), near_field_leaf_set.end(), grain_size),
       [&](const tbb::blocked_range<typename std::vector<
             HMatrix<spacedim, RangeNumberType> *>::iterator> &range) {
         stabilize_near_field_hmatrices_for_hypersingular_kernel<
@@ -9161,10 +9167,13 @@ fill_hmatrix_with_aca_plus_smp(
         "build far field hmatrix nodes");
 #endif
 
+      const unsigned int grain_size =
+        std::max(static_cast<unsigned long>(1),
+                 far_field_leaf_set.size() / thread_num / 2);
       tbb::parallel_for(
         tbb::blocked_range<
           typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>(
-          far_field_leaf_set.begin(), far_field_leaf_set.end()),
+          far_field_leaf_set.begin(), far_field_leaf_set.end(), grain_size),
         [&](const tbb::blocked_range<typename std::vector<
               HMatrix<spacedim, RangeNumberType> *>::iterator> &range) {
           fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus<
@@ -9581,10 +9590,13 @@ fill_hmatrix_with_aca_plus_smp(
         "build far field hmatrix nodes");
 #endif
 
+      const unsigned int grain_size =
+        std::max(static_cast<unsigned long>(1),
+                 far_field_leaf_set.size() / thread_num / 2);
       tbb::parallel_for(
         tbb::blocked_range<
           typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>(
-          far_field_leaf_set.begin(), far_field_leaf_set.end()),
+          far_field_leaf_set.begin(), far_field_leaf_set.end(), grain_size),
         [&](const tbb::blocked_range<typename std::vector<
               HMatrix<spacedim, RangeNumberType> *>::iterator> &range) {
           fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus<
