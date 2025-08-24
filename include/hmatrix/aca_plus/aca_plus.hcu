@@ -8492,11 +8492,12 @@ fill_hmatrix_with_aca_plus_smp(
    */
   timer.start();
 
-  const unsigned int block_size          = 256;
-  const unsigned int block_num           = 8;
-  const unsigned int batch_size          = block_size * block_num;
-  const unsigned int capacity            = batch_size * 8 + 1;
-  unsigned int       producer_thread_num = 4;
+  const unsigned int block_size = 256;
+  const unsigned int block_num  = 8;
+  const unsigned int batch_size = block_size * block_num;
+  const unsigned int capacity   = batch_size * 8 + 1;
+  unsigned int       producer_thread_num =
+    std::max(static_cast<unsigned int>(4), thread_num / 2);
 
   // Create ring buffers for various cell neighboring types.
   HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
@@ -8611,7 +8612,8 @@ fill_hmatrix_with_aca_plus_smp(
    * @internal Start the consumer threads.
    */
   std::vector<std::thread> consumers;
-  const unsigned int       consumer_multiplicity = 1;
+  const unsigned int       consumer_multiplicity =
+    std::max(static_cast<unsigned int>(1), thread_num / 2 / 4);
   consumers.reserve(4 * consumer_multiplicity);
 
   for (unsigned int m = 0; m < consumer_multiplicity; m++)
@@ -8721,16 +8723,10 @@ fill_hmatrix_with_aca_plus_smp(
         "build far field hmatrix nodes");
 #endif
 
-      /**
-       * Estimate the grain size.
-       */
-      unsigned int grain_size = far_field_leaf_set.size() / thread_num;
-      if (grain_size == 0)
-        grain_size = 1;
-
-      parallel::internal::parallel_for(
-        far_field_leaf_set.begin(),
-        far_field_leaf_set.end(),
+      tbb::parallel_for(
+        tbb::blocked_range<
+          typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>(
+          far_field_leaf_set.begin(), far_field_leaf_set.end()),
         [&](const tbb::blocked_range<typename std::vector<
               HMatrix<spacedim, RangeNumberType> *>::iterator> &range) {
           fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus<
@@ -8758,7 +8754,7 @@ fill_hmatrix_with_aca_plus_smp(
                                    normal_detector,
                                    enable_build_symmetric_hmat);
         },
-        grain_size);
+        tbb::auto_partitioner());
     }
 
   timer.stop();
@@ -8912,11 +8908,12 @@ fill_hmatrix_with_aca_plus_smp(
    */
   timer.start();
 
-  const unsigned int block_size          = 256;
-  const unsigned int block_num           = 8;
-  const unsigned int batch_size          = block_size * block_num;
-  const unsigned int capacity            = batch_size * 8 + 1;
-  unsigned int       producer_thread_num = 4;
+  const unsigned int block_size = 256;
+  const unsigned int block_num  = 8;
+  const unsigned int batch_size = block_size * block_num;
+  const unsigned int capacity   = batch_size * 8 + 1;
+  unsigned int       producer_thread_num =
+    std::max(static_cast<unsigned int>(4), thread_num / 2);
 
   HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
                                                         dim,
@@ -9030,7 +9027,8 @@ fill_hmatrix_with_aca_plus_smp(
    * @internal Start the consumer threads.
    */
   std::vector<std::thread> consumers;
-  const unsigned int       consumer_multiplicity = 1;
+  const unsigned int       consumer_multiplicity =
+    std::max(static_cast<unsigned int>(1), thread_num / 2 / 4);
   consumers.reserve(4 * consumer_multiplicity);
 
   for (unsigned int m = 0; m < consumer_multiplicity; m++)
@@ -9121,22 +9119,16 @@ fill_hmatrix_with_aca_plus_smp(
   ring_buffer_for_common_vertex.release();
   ring_buffer_for_regular.release();
 
-  /**
-   * @internal Perform stabilization to the kernel.
-   */
-  unsigned int grain_size = near_field_set_size / thread_num;
-  if (grain_size == 0)
-    grain_size = 1;
-
   {
 #if ENABLE_NVTX == 1
     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
       "regularize hypersingular kernel");
 #endif
 
-    parallel::internal::parallel_for(
-      near_field_leaf_set.begin(),
-      near_field_leaf_set.end(),
+    tbb::parallel_for(
+      tbb::blocked_range<
+        typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>(
+        near_field_leaf_set.begin(), near_field_leaf_set.end()),
       [&](const tbb::blocked_range<typename std::vector<
             HMatrix<spacedim, RangeNumberType> *>::iterator> &range) {
         stabilize_near_field_hmatrices_for_hypersingular_kernel<
@@ -9147,7 +9139,7 @@ fill_hmatrix_with_aca_plus_smp(
                             stabilization_factor,
                             enable_build_symmetric_hmat);
       },
-      grain_size);
+      tbb::auto_partitioner());
   }
 
   timer.stop();
@@ -9169,13 +9161,10 @@ fill_hmatrix_with_aca_plus_smp(
         "build far field hmatrix nodes");
 #endif
 
-      unsigned int grain_size = far_field_leaf_set.size() / thread_num;
-      if (grain_size == 0)
-        grain_size = 1;
-
-      parallel::internal::parallel_for(
-        far_field_leaf_set.begin(),
-        far_field_leaf_set.end(),
+      tbb::parallel_for(
+        tbb::blocked_range<
+          typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>(
+          far_field_leaf_set.begin(), far_field_leaf_set.end()),
         [&](const tbb::blocked_range<typename std::vector<
               HMatrix<spacedim, RangeNumberType> *>::iterator> &range) {
           fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus<
@@ -9205,7 +9194,7 @@ fill_hmatrix_with_aca_plus_smp(
                                    normal_detector,
                                    enable_build_symmetric_hmat);
         },
-        grain_size);
+        tbb::auto_partitioner());
     }
 
   timer.stop();
@@ -9360,11 +9349,12 @@ fill_hmatrix_with_aca_plus_smp(
    */
   timer.start();
 
-  const unsigned int block_size          = 256;
-  const unsigned int block_num           = 8;
-  const unsigned int batch_size          = block_size * block_num;
-  const unsigned int capacity            = batch_size * 8 + 1;
-  unsigned int       producer_thread_num = 4;
+  const unsigned int block_size = 256;
+  const unsigned int block_num  = 8;
+  const unsigned int batch_size = block_size * block_num;
+  const unsigned int capacity   = batch_size * 8 + 1;
+  unsigned int       producer_thread_num =
+    std::max(static_cast<unsigned int>(4), thread_num / 2);
 
   HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
                                                         dim,
@@ -9480,7 +9470,8 @@ fill_hmatrix_with_aca_plus_smp(
    * @internal Start the consumer threads.
    */
   std::vector<std::thread> consumers;
-  const unsigned int       consumer_multiplicity = 1;
+  const unsigned int       consumer_multiplicity =
+    std::max(static_cast<unsigned int>(1), thread_num / 2 / 4);
   consumers.reserve(4 * consumer_multiplicity);
 
   for (unsigned int m = 0; m < consumer_multiplicity; m++)
@@ -9590,16 +9581,10 @@ fill_hmatrix_with_aca_plus_smp(
         "build far field hmatrix nodes");
 #endif
 
-      /**
-       * Estimate the grain size.
-       */
-      unsigned int grain_size = far_field_leaf_set.size() / thread_num;
-      if (grain_size == 0)
-        grain_size = 1;
-
-      parallel::internal::parallel_for(
-        far_field_leaf_set.begin(),
-        far_field_leaf_set.end(),
+      tbb::parallel_for(
+        tbb::blocked_range<
+          typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>(
+          far_field_leaf_set.begin(), far_field_leaf_set.end()),
         [&](const tbb::blocked_range<typename std::vector<
               HMatrix<spacedim, RangeNumberType> *>::iterator> &range) {
           fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus<
@@ -9627,7 +9612,7 @@ fill_hmatrix_with_aca_plus_smp(
                                    normal_detector,
                                    enable_build_symmetric_hmat);
         },
-        grain_size);
+        tbb::auto_partitioner());
     }
 
   timer.stop();
