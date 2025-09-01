@@ -208,18 +208,19 @@ PreconditionerForLaplaceDirichlet<dim,
   // Generate the dynamic sparsity pattern.
   DynamicSparsityPattern dsp(
     this->is_full_domain ?
-      this->dof_handler_primal_space.n_dofs(0) :
+      this->dof_handler_primal_space.n_dofs(this->primal_mesh_level) :
       this->primal_space_local_to_full_dof_id_map_on_primal_mesh.size(),
     this->is_full_domain ?
-      this->dof_handler_primal_space.n_dofs(1) :
+      this->dof_handler_primal_space.n_dofs(this->refined_mesh_level) :
       this->primal_space_local_to_full_dof_id_map_on_refined_mesh.size());
 
   std::vector<types::global_dof_index> dof_indices_in_cell(
     this->fe_primal_space.dofs_per_cell);
 
-  // Iterate over each cell in the primal mesh, i.e. on level 0.
+  // Iterate over each cell in the primal mesh.
   for (const auto &cell :
-       this->dof_handler_primal_space.mg_cell_iterators_on_level(0))
+       this->dof_handler_primal_space.mg_cell_iterators_on_level(
+         this->primal_mesh_level))
     {
       if (!this->is_full_domain)
         {
@@ -242,8 +243,7 @@ PreconditionerForLaplaceDirichlet<dim,
           dof_indices_in_cell[0] :
           this->primal_space_full_to_local_dof_id_map_on_primal_mesh
             [dof_indices_in_cell[0]];
-      // Iterate over each child iterator of the current cell, i.e. on
-      // level 1.
+      // Iterate over each child iterator of the current cell.
       for (const auto &child : cell->child_iterators())
         {
           child->get_mg_dof_indices(dof_indices_in_cell);
@@ -271,9 +271,10 @@ PreconditionerForLaplaceDirichlet<dim,
 
   // Fill values into the coupling matrix.
 
-  // Iterate over each cell in the primal mesh, i.e. on level 0.
+  // Iterate over each cell in the primal mesh.
   for (const auto &cell :
-       this->dof_handler_primal_space.mg_cell_iterators_on_level(0))
+       this->dof_handler_primal_space.mg_cell_iterators_on_level(
+         this->primal_mesh_level))
     {
       if (!this->is_full_domain)
         {
@@ -296,8 +297,7 @@ PreconditionerForLaplaceDirichlet<dim,
           dof_indices_in_cell[0] :
           this->primal_space_full_to_local_dof_id_map_on_primal_mesh
             [dof_indices_in_cell[0]];
-      // Iterate over each child iterator of the current cell, i.e. on
-      // level 1.
+      // Iterate over each child iterator of the current cell.
       for (const auto &child : cell->child_iterators())
         {
           child->get_mg_dof_indices(dof_indices_in_cell);
@@ -336,15 +336,15 @@ PreconditionerForLaplaceDirichlet<dim,
   // same as the number of primal cells.
   AssertDimension(
     this->is_full_domain ?
-      this->tria.n_cells(0) :
+      this->tria.n_cells(this->primal_mesh_level) :
       this->primal_space_local_to_full_dof_id_map_on_primal_mesh.size(),
     this->primal_space_dof_i2e_numbering.size());
   DynamicSparsityPattern dsp(
     this->is_full_domain ?
-      this->tria.n_cells(0) :
+      this->tria.n_cells(this->primal_mesh_level) :
       this->primal_space_local_to_full_dof_id_map_on_primal_mesh.size(),
     this->is_full_domain ?
-      this->dof_handler_dual_space.n_dofs(1) :
+      this->dof_handler_dual_space.n_dofs(this->refined_mesh_level) :
       this->dual_space_local_to_full_dof_id_map_on_refined_mesh.size());
 
   // Store the local DoF indices.
@@ -359,7 +359,8 @@ PreconditionerForLaplaceDirichlet<dim,
   // only cells in the subdomain are included.
   types::global_dof_index dof_index_in_dual_mesh = 0;
   for (const auto &cell :
-       this->dof_handler_dual_space.mg_cell_iterators_on_level(0))
+       this->dof_handler_dual_space.mg_cell_iterators_on_level(
+         this->primal_mesh_level))
     {
       if (!this->is_full_domain)
         {
@@ -441,11 +442,12 @@ PreconditionerForLaplaceDirichlet<dim,
 
   // Fill values into the averaging matrix.
 
-  // Iterate over each cell in the primal mesh, i.e. on level 0. When subdomain
+  // Iterate over each cell in the primal mesh. When subdomain
   // is considered, only cells in the subdomain are included.
   dof_index_in_dual_mesh = 0;
   for (const auto &cell :
-       this->dof_handler_dual_space.mg_cell_iterators_on_level(0))
+       this->dof_handler_dual_space.mg_cell_iterators_on_level(
+         this->primal_mesh_level))
     {
       if (!this->is_full_domain)
         {

@@ -69,7 +69,8 @@ using namespace dealii;
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 class OperatorPreconditioner
@@ -602,9 +603,19 @@ protected:
   std::string type;
 
   /**
-   * Triangulation with two levels, i.e. orginal mesh and its refinement.
+   * Triangulation with >=2 levels.
    */
   const Triangulation<dim, spacedim> &tria;
+
+  /**
+   * Level of the primal mesh in the multigrid.
+   */
+  unsigned int primal_mesh_level;
+
+  /**
+   * Level of the refined mesh in the multigrid.
+   */
+  unsigned int refined_mesh_level;
 
   /**
    * If the preconditioner is built on the full domain.
@@ -753,14 +764,14 @@ protected:
   /**
    * DoF handler for the finite element on the primal space.
    *
-   * Because the triangulation has two levels, this DoF handler should be
+   * Because the triangulation has multiple levels, this DoF handler should be
    * distributed its DoFs to the multigrid.
    */
   DoFHandler<dim, spacedim> dof_handler_primal_space;
   /**
    * DoF handler for the finite element on the dual space.
    *
-   * Because the triangulation has two levels, this DoF handler should be
+   * Because the triangulation has multiple levels, this DoF handler should be
    * distributed its DoFs to the multigrid.
    */
   DoFHandler<dim, spacedim> dof_handler_dual_space;
@@ -833,7 +844,8 @@ protected:
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 OperatorPreconditioner<dim,
@@ -860,6 +872,8 @@ OperatorPreconditioner<dim,
     const bool         log_result)
   : type(type_)
   , tria(tria_)
+  , primal_mesh_level(tria.n_levels() - 2)
+  , refined_mesh_level(primal_mesh_level + 1)
   , is_full_domain(is_full_domain_)
   , is_subdomain_open(is_subdomain_open_)
   , truncate_function_space_dof_support_within_subdomain(
@@ -896,7 +910,8 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 OperatorPreconditioner<dim,
@@ -920,7 +935,8 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -934,8 +950,9 @@ OperatorPreconditioner<dim,
   // Generate the sparsity pattern for the mass matrix.
   if (is_full_domain)
     {
-      DynamicSparsityPattern dsp(dof_handler_dual_space.n_dofs(1),
-                                 dof_handler_primal_space.n_dofs(1));
+      DynamicSparsityPattern dsp(
+        dof_handler_dual_space.n_dofs(refined_mesh_level),
+        dof_handler_primal_space.n_dofs(refined_mesh_level));
       // N.B. DoFTools::make_sparsity_pattern operates on active cells, which
       // just corresponds to the refined mesh that we desire.
       DoFTools::make_sparsity_pattern(dof_handler_dual_space,
@@ -994,7 +1011,8 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1011,7 +1029,7 @@ OperatorPreconditioner<dim,
    * Generate lists of DoF indices.
    */
   const unsigned int n_dofs =
-    is_full_domain ? dof_handler_dual_space.n_dofs(1) :
+    is_full_domain ? dof_handler_dual_space.n_dofs(refined_mesh_level) :
                      dual_space_local_to_full_dof_id_map_on_refined_mesh.size();
   std::vector<types::global_dof_index> dof_indices_in_dual_space(n_dofs);
   gen_linear_indices<vector_uta, types::global_dof_index>(
@@ -1027,10 +1045,10 @@ OperatorPreconditioner<dim,
     {
       DoFToolsExt::map_mg_dofs_to_support_points(mappings[0]->get_mapping(),
                                                  dof_handler_dual_space,
-                                                 1,
+                                                 refined_mesh_level,
                                                  support_points_in_dual_space);
       DoFToolsExt::map_mg_dofs_to_average_cell_size(dof_handler_dual_space,
-                                                    1,
+                                                    refined_mesh_level,
                                                     dof_average_cell_size_list);
     }
   else
@@ -1038,14 +1056,14 @@ OperatorPreconditioner<dim,
       DoFToolsExt::map_mg_dofs_to_support_points(
         mappings[0]->get_mapping(),
         dof_handler_dual_space,
-        1,
+        refined_mesh_level,
         subdomain_material_ids,
         dual_space_dof_selectors_on_refined_mesh,
         dual_space_full_to_local_dof_id_map_on_refined_mesh,
         support_points_in_dual_space);
       DoFToolsExt::map_mg_dofs_to_average_cell_size(
         dof_handler_dual_space,
-        1,
+        refined_mesh_level,
         dual_space_local_to_full_dof_id_map_on_refined_mesh,
         dof_average_cell_size_list);
     }
@@ -1088,7 +1106,8 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 template <typename SurfaceNormalDetector>
@@ -1144,7 +1163,7 @@ OperatorPreconditioner<dim,
           std::vector<Vector<real_type>> boundary_indicators(
             n_boundary_components);
           for (auto &vec : boundary_indicators)
-            vec.reinit(dof_handler_primal_space.n_dofs(1));
+            vec.reinit(dof_handler_primal_space.n_dofs(refined_mesh_level));
 
           interpolate_indicator_vectors_for_subdomains(
             dof_handler_primal_space,
@@ -1157,10 +1176,10 @@ OperatorPreconditioner<dim,
           std::vector<Vector<KernelNumberType>> mass_vmult_weq(
             n_boundary_components);
           for (auto &vec : mass_vmult_weq)
-            vec.reinit(dof_handler_dual_space.n_dofs(1));
+            vec.reinit(dof_handler_dual_space.n_dofs(refined_mesh_level));
 
           Vector<KernelNumberType> mass_vmult_weq_external_numbering(
-            dof_handler_dual_space.n_dofs(1));
+            dof_handler_dual_space.n_dofs(refined_mesh_level));
 
           // Compute the stabilization vectors.
           for (unsigned int i = 0; i < n_boundary_components; i++)
@@ -1289,7 +1308,8 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1301,11 +1321,11 @@ OperatorPreconditioner<dim,
 {
   // Allocate memory for DoF selectors..
   primal_space_dof_selectors_on_primal_mesh.resize(
-    dof_handler_primal_space.n_dofs(0));
+    dof_handler_primal_space.n_dofs(primal_mesh_level));
   primal_space_dof_selectors_on_refined_mesh.resize(
-    dof_handler_primal_space.n_dofs(1));
+    dof_handler_primal_space.n_dofs(refined_mesh_level));
   dual_space_dof_selectors_on_refined_mesh.resize(
-    dof_handler_dual_space.n_dofs(1));
+    dof_handler_dual_space.n_dofs(refined_mesh_level));
 
   if (is_subdomain_open && dof_handler_primal_space.get_fe().conforms(
                              FiniteElementData<dim>::Conformity::H1))
@@ -1314,13 +1334,13 @@ OperatorPreconditioner<dim,
       DoFToolsExt::
         extract_material_domain_mg_dofs_by_excluding_complement_subdomain(
           dof_handler_primal_space,
-          0,
+          primal_mesh_level,
           subdomain_complement_material_ids,
           primal_space_dof_selectors_on_primal_mesh);
       DoFToolsExt::
         extract_material_domain_mg_dofs_by_excluding_complement_subdomain(
           dof_handler_primal_space,
-          1,
+          refined_mesh_level,
           subdomain_complement_material_ids,
           primal_space_dof_selectors_on_refined_mesh);
     }
@@ -1329,12 +1349,12 @@ OperatorPreconditioner<dim,
       // Select DoFs in the subdomain.
       DoFToolsExt::extract_material_domain_mg_dofs(
         dof_handler_primal_space,
-        0,
+        primal_mesh_level,
         subdomain_material_ids,
         primal_space_dof_selectors_on_primal_mesh);
       DoFToolsExt::extract_material_domain_mg_dofs(
         dof_handler_primal_space,
-        1,
+        refined_mesh_level,
         subdomain_material_ids,
         primal_space_dof_selectors_on_refined_mesh);
     }
@@ -1346,7 +1366,7 @@ OperatorPreconditioner<dim,
       DoFToolsExt::
         extract_material_domain_mg_dofs_by_excluding_complement_subdomain(
           dof_handler_dual_space,
-          1,
+          refined_mesh_level,
           subdomain_complement_material_ids,
           dual_space_dof_selectors_on_refined_mesh);
     }
@@ -1355,7 +1375,7 @@ OperatorPreconditioner<dim,
       // Select DoFs in the subdomain.
       DoFToolsExt::extract_material_domain_mg_dofs(
         dof_handler_dual_space,
-        1,
+        refined_mesh_level,
         subdomain_material_ids,
         dual_space_dof_selectors_on_refined_mesh);
     }
@@ -1364,7 +1384,8 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1376,17 +1397,17 @@ OperatorPreconditioner<
   KernelNumberType>::generate_maps_between_full_and_local_dof_ids()
 {
   primal_space_full_to_local_dof_id_map_on_primal_mesh.resize(
-    dof_handler_primal_space.n_dofs(0));
+    dof_handler_primal_space.n_dofs(primal_mesh_level));
   primal_space_local_to_full_dof_id_map_on_primal_mesh.reserve(
-    dof_handler_primal_space.n_dofs(0));
+    dof_handler_primal_space.n_dofs(primal_mesh_level));
   primal_space_full_to_local_dof_id_map_on_refined_mesh.resize(
-    dof_handler_primal_space.n_dofs(1));
+    dof_handler_primal_space.n_dofs(refined_mesh_level));
   primal_space_local_to_full_dof_id_map_on_refined_mesh.reserve(
-    dof_handler_primal_space.n_dofs(1));
+    dof_handler_primal_space.n_dofs(refined_mesh_level));
   dual_space_full_to_local_dof_id_map_on_refined_mesh.resize(
-    dof_handler_dual_space.n_dofs(1));
+    dof_handler_dual_space.n_dofs(refined_mesh_level));
   dual_space_local_to_full_dof_id_map_on_refined_mesh.reserve(
-    dof_handler_dual_space.n_dofs(1));
+    dof_handler_dual_space.n_dofs(refined_mesh_level));
 
   DoFToolsExt::generate_maps_between_full_and_local_dof_ids(
     primal_space_dof_selectors_on_primal_mesh,
@@ -1405,7 +1426,8 @@ OperatorPreconditioner<
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1428,7 +1450,8 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1440,25 +1463,26 @@ OperatorPreconditioner<dim,
 {
   // Generate DoF-to-cell topologies for the dual function space on the
   // refined mesh.
-  cell_iterators_dual_space.reserve(tria.n_cells(1));
+  cell_iterators_dual_space.reserve(tria.n_cells(refined_mesh_level));
 
   if (is_full_domain)
     {
-      for (const auto &cell :
-           dof_handler_dual_space.mg_cell_iterators_on_level(1))
+      for (const auto &cell : dof_handler_dual_space.mg_cell_iterators_on_level(
+             refined_mesh_level))
         cell_iterators_dual_space.push_back(cell);
 
       DoFToolsExt::build_mg_dof_to_cell_topology(dof_to_cell_topo_dual_space,
                                                  cell_iterators_dual_space,
                                                  dof_handler_dual_space,
-                                                 1);
+                                                 refined_mesh_level);
     }
   else
     {
       if (truncate_function_space_dof_support_within_subdomain)
         {
           for (const auto &cell :
-               dof_handler_dual_space.mg_cell_iterators_on_level(1))
+               dof_handler_dual_space.mg_cell_iterators_on_level(
+                 refined_mesh_level))
             {
               auto found_iter =
                 subdomain_material_ids.find(cell->material_id());
@@ -1470,7 +1494,8 @@ OperatorPreconditioner<dim,
       else
         {
           for (const auto &cell :
-               dof_handler_dual_space.mg_cell_iterators_on_level(1))
+               dof_handler_dual_space.mg_cell_iterators_on_level(
+                 refined_mesh_level))
             cell_iterators_dual_space.push_back(cell);
         }
 
@@ -1479,14 +1504,15 @@ OperatorPreconditioner<dim,
         cell_iterators_dual_space,
         dof_handler_dual_space,
         dual_space_dof_selectors_on_refined_mesh,
-        1);
+        refined_mesh_level);
     }
 }
 
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 template <typename SurfaceNormalDetector>
@@ -1568,7 +1594,8 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1598,7 +1625,8 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1628,7 +1656,8 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1652,7 +1681,8 @@ OperatorPreconditioner<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -1699,7 +1729,8 @@ OperatorPreconditioner<
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void

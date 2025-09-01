@@ -234,24 +234,27 @@ PreconditionerForLaplaceNeumann<dim,
     KernelNumberType>::build_dof_to_cell_topology();
 
   // Build the DoF-to-cell topology for the primal space on the primal mesh.
-  cell_iterators_primal_space.reserve(this->tria.n_cells(0));
+  cell_iterators_primal_space.reserve(
+    this->tria.n_cells(this->primal_mesh_level));
   if (this->is_full_domain)
     {
       for (const auto &cell :
-           this->dof_handler_primal_space.mg_cell_iterators_on_level(0))
+           this->dof_handler_primal_space.mg_cell_iterators_on_level(
+             this->primal_mesh_level))
         cell_iterators_primal_space.push_back(cell);
 
       DoFToolsExt::build_mg_dof_to_cell_topology(dof_to_cell_topo_primal_space,
                                                  cell_iterators_primal_space,
                                                  this->dof_handler_primal_space,
-                                                 0);
+                                                 this->primal_mesh_level);
     }
   else
     {
       if (this->truncate_function_space_dof_support_within_subdomain)
         {
           for (const auto &cell :
-               this->dof_handler_primal_space.mg_cell_iterators_on_level(0))
+               this->dof_handler_primal_space.mg_cell_iterators_on_level(
+                 this->primal_mesh_level))
             {
               auto found_iter =
                 this->subdomain_material_ids.find(cell->material_id());
@@ -263,7 +266,8 @@ PreconditionerForLaplaceNeumann<dim,
       else
         {
           for (const auto &cell :
-               this->dof_handler_primal_space.mg_cell_iterators_on_level(0))
+               this->dof_handler_primal_space.mg_cell_iterators_on_level(
+                 this->primal_mesh_level))
             cell_iterators_primal_space.push_back(cell);
         }
 
@@ -272,7 +276,7 @@ PreconditionerForLaplaceNeumann<dim,
         cell_iterators_primal_space,
         this->dof_handler_primal_space,
         this->primal_space_dof_selectors_on_primal_mesh,
-        0);
+        this->primal_mesh_level);
     }
 }
 
@@ -290,10 +294,10 @@ PreconditionerForLaplaceNeumann<dim,
   // Generate the dynamic sparsity pattern.
   DynamicSparsityPattern dsp(
     this->is_full_domain ?
-      this->dof_handler_primal_space.n_dofs(0) :
+      this->dof_handler_primal_space.n_dofs(this->primal_mesh_level) :
       this->primal_space_local_to_full_dof_id_map_on_primal_mesh.size(),
     this->is_full_domain ?
-      this->dof_handler_primal_space.n_dofs(1) :
+      this->dof_handler_primal_space.n_dofs(this->refined_mesh_level) :
       this->primal_space_local_to_full_dof_id_map_on_refined_mesh.size());
 
   std::vector<types::global_dof_index> dof_indices_in_primal_cell(
@@ -301,9 +305,10 @@ PreconditionerForLaplaceNeumann<dim,
   std::vector<types::global_dof_index> dof_indices_in_refined_cell(
     this->fe_primal_space.dofs_per_cell);
 
-  // Iterate over each cell in the primal mesh, i.e. on level 0.
+  // Iterate over each cell in the primal mesh.
   for (const auto &cell :
-       this->dof_handler_primal_space.mg_cell_iterators_on_level(0))
+       this->dof_handler_primal_space.mg_cell_iterators_on_level(
+         this->primal_mesh_level))
     {
       if (!this->is_full_domain)
         {
@@ -314,8 +319,7 @@ PreconditionerForLaplaceNeumann<dim,
         }
 
       cell->get_mg_dof_indices(dof_indices_in_primal_cell);
-      // Iterate over each child iterator of the current cell, i.e. on
-      // level 1.
+      // Iterate over each child iterator of the current cell.
       unsigned int child_index = 0;
       for (const auto &child : cell->child_iterators())
         {
@@ -569,9 +573,10 @@ PreconditionerForLaplaceNeumann<dim,
   this->coupling_matrix.reinit(this->coupling_matrix_sp);
 
   // Fill values into the coupling matrix.
-  // Iterate over each cell in the primal mesh, i.e. on level 0.
+  // Iterate over each cell in the primal mesh.
   for (const auto &cell :
-       this->dof_handler_primal_space.mg_cell_iterators_on_level(0))
+       this->dof_handler_primal_space.mg_cell_iterators_on_level(
+         this->primal_mesh_level))
     {
       if (!this->is_full_domain)
         {
@@ -582,8 +587,7 @@ PreconditionerForLaplaceNeumann<dim,
         }
 
       cell->get_mg_dof_indices(dof_indices_in_primal_cell);
-      // Iterate over each child iterator of the current cell, i.e. on
-      // level 1.
+      // Iterate over each child iterator of the current cell.
       unsigned int child_index = 0;
       for (const auto &child : cell->child_iterators())
         {
@@ -912,14 +916,15 @@ PreconditionerForLaplaceNeumann<dim,
   // of rows in \f$C_d\f$.
   DynamicSparsityPattern dsp(
     this->is_full_domain ?
-      this->dof_handler_primal_space.n_dofs(0) :
+      this->dof_handler_primal_space.n_dofs(this->primal_mesh_level) :
       this->primal_space_local_to_full_dof_id_map_on_primal_mesh.size(),
     this->is_full_domain ?
-      this->dof_handler_dual_space.n_dofs(1) :
+      this->dof_handler_dual_space.n_dofs(this->refined_mesh_level) :
       this->dual_space_local_to_full_dof_id_map_on_refined_mesh.size());
 
   // Iterate over each cell in the primal space on the primal mesh.
-  auto primal_cell_in_primal_space = this->dof_handler_primal_space.begin_mg(0);
+  auto primal_cell_in_primal_space =
+    this->dof_handler_primal_space.begin_mg(this->primal_mesh_level);
   // Because the DoF numbering adopted for the dual space on the dual mesh can
   // be arbitrary, we use the DoF indices held in the DoF handler for the primal
   // space on the primal mesh.
@@ -928,11 +933,12 @@ PreconditionerForLaplaceNeumann<dim,
 
   // We need the primal cell in the dual space to traverse its four children in
   // the refined mesh.
-  auto primal_cell_in_dual_space = this->dof_handler_dual_space.begin_mg(0);
+  auto primal_cell_in_dual_space =
+    this->dof_handler_dual_space.begin_mg(this->primal_mesh_level);
   std::vector<types::global_dof_index> cell_dof_indices_in_dual_space(
     this->fe_dual_space.dofs_per_cell);
-  for (;
-       primal_cell_in_primal_space != this->dof_handler_primal_space.end_mg(0);
+  for (; primal_cell_in_primal_space !=
+         this->dof_handler_primal_space.end_mg(this->primal_mesh_level);
        primal_cell_in_primal_space++, primal_cell_in_dual_space++)
     {
       // We are relying on the fact that for a given triangulation, different
@@ -983,10 +989,12 @@ PreconditionerForLaplaceNeumann<dim,
 
   // Fill values into the averaging matrix.
 
-  primal_cell_in_primal_space = this->dof_handler_primal_space.begin_mg(0);
-  primal_cell_in_dual_space   = this->dof_handler_dual_space.begin_mg(0);
-  for (;
-       primal_cell_in_primal_space != this->dof_handler_primal_space.end_mg(0);
+  primal_cell_in_primal_space =
+    this->dof_handler_primal_space.begin_mg(this->primal_mesh_level);
+  primal_cell_in_dual_space =
+    this->dof_handler_dual_space.begin_mg(this->primal_mesh_level);
+  for (; primal_cell_in_primal_space !=
+         this->dof_handler_primal_space.end_mg(this->primal_mesh_level);
        primal_cell_in_primal_space++, primal_cell_in_dual_space++)
     {
       if (!this->is_full_domain)
