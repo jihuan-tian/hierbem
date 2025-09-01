@@ -12,6 +12,8 @@
 #include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/manifold_lib.h>
 
+#include <boost/program_options.hpp>
+
 #include <cuda_runtime.h>
 
 #include <fstream>
@@ -19,11 +21,96 @@
 
 #include "debug_tools.h"
 #include "hbem_test_config.h"
+#include "hmatrix/hmatrix_vmult_strategy.h"
 #include "laplace_bem.h"
-
+#include "preconditioners/preconditioner_type.h"
 
 using namespace dealii;
 using namespace HierBEM;
+
+namespace po = boost::program_options;
+
+struct CmdOpts
+{
+  unsigned int             dirichlet_space_fe_order;
+  unsigned int             neumann_space_fe_order;
+  unsigned int             mapping_order;
+  PreconditionerType       precond_type;
+  IterativeSolverVmultType vmult_type;
+};
+
+CmdOpts
+parse_cmdline(int argc, char *argv[])
+{
+  CmdOpts                 opts;
+  po::options_description desc("Allowed options");
+
+  // clang-format off
+  desc.add_options()
+    ("help,h", "show help message")
+    ("dirichlet-order,d", po::value<unsigned int>()->default_value(1), "Finite element space order for the Dirichlet data")
+    ("neumann-order,n", po::value<unsigned int>()->default_value(0), "Finite element space order for the Neumann data")
+    ("mapping-order,m", po::value<unsigned int>()->default_value(1), "Mapping order for the sphere")
+    ("precond-type,p", po::value<unsigned int>()->default_value(0), "Preconditioner for iterative solver: 0:H-Cholesky, 1:operator preconditioner, 2:identity")
+    ("vmult-type,v", po::value<unsigned int>()->default_value(0), "H-matrix vmult type: 0:serial recursive, 1:serial iterative, 2:task parallel");
+  // clang-format on
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+  po::notify(vm);
+
+  if (vm.count("help"))
+    {
+      std::cout << desc << std::endl;
+      std::exit(EXIT_SUCCESS);
+    }
+
+  opts.dirichlet_space_fe_order = vm["dirichlet-order"].as<unsigned int>();
+  opts.neumann_space_fe_order   = vm["neumann-order"].as<unsigned int>();
+  opts.mapping_order            = vm["mapping-order"].as<unsigned int>();
+
+  switch (vm["precond-type"].as<unsigned int>())
+    {
+        case 0: {
+          opts.precond_type = PreconditionerType::HMatrixFactorization;
+          break;
+        }
+        case 1: {
+          opts.precond_type = PreconditionerType::OperatorPreconditioning;
+          break;
+        }
+        case 2: {
+          opts.precond_type = PreconditionerType::Identity;
+          break;
+        }
+        default: {
+          opts.precond_type = PreconditionerType::HMatrixFactorization;
+          break;
+        }
+    }
+
+  switch (vm["vmult-type"].as<unsigned int>())
+    {
+        case 0: {
+          opts.vmult_type = IterativeSolverVmultType::SerialRecursive;
+          break;
+        }
+        case 1: {
+          opts.vmult_type = IterativeSolverVmultType::SerialIterative;
+          break;
+        }
+        case 2: {
+          opts.vmult_type = IterativeSolverVmultType::TaskParallel;
+          break;
+        }
+        default: {
+          opts.vmult_type = IterativeSolverVmultType::SerialRecursive;
+          break;
+        }
+    }
+
+  return opts;
+}
 
 /**
  * Function object for the Dirichlet boundary condition data.
@@ -72,8 +159,10 @@ namespace HierBEM
 } // namespace HierBEM
 
 int
-main()
+main(int argc, char *argv[])
 {
+  CmdOpts opts = parse_cmdline(argc, argv);
+
   /**
    * @internal Pop out the default "DEAL" prefix string.
    */
@@ -118,8 +207,8 @@ main()
 
   const bool                is_interior_problem = true;
   LaplaceBEM<dim, spacedim> bem(
-    1, // fe order for dirichlet space
-    0, // fe order for neumann space
+    opts.dirichlet_space_fe_order, // fe order for dirichlet space
+    opts.neumann_space_fe_order,   // fe order for neumann space
     LaplaceBEM<dim, spacedim>::ProblemType::MixedBCProblem,
     is_interior_problem,         // is interior problem
     64,                          // n_min for cluster tree
@@ -133,6 +222,8 @@ main()
     MultithreadInfo::n_threads() // Number of threads used for ACA
   );
   bem.set_project_name("laplace-bem-mixed-spanner");
+  bem.set_preconditioner_type(opts.precond_type);
+  bem.set_iterative_solver_vmult_type(opts.vmult_type);
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");
@@ -159,7 +250,7 @@ main()
   bem.extract_surface_triangulation(tria, std::move(surface_tria), true);
 
   // Create the map from manifold id to mapping order.
-  bem.get_manifold_id_to_mapping_order()[0] = 1;
+  bem.get_manifold_id_to_mapping_order()[0] = opts.mapping_order;
 
   // Build surface-to-volume and volume-to-surface relationship.
   bem.get_subdomain_topology().generate_single_domain_topology_for_dealii_model(

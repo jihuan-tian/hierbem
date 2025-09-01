@@ -8,6 +8,7 @@
 
 #include "hbem_test_config.h"
 #include "laplace_bem.h"
+#include "preconditioners/preconditioner_type.h"
 
 using namespace dealii;
 using namespace HierBEM;
@@ -80,8 +81,7 @@ run_neumann_full_matrix()
     is_interior_problem,
     MultithreadInfo::n_threads());
   bem.set_project_name("neumann-full-matrix");
-  bem.set_preconditioner_type(
-    LaplaceBEM<dim, spacedim, double, double>::PreconditionerType::Identity);
+  bem.set_preconditioner_type(PreconditionerType::Identity);
 
   /**
    * @internal Set the Dirac source location according to interior or exterior

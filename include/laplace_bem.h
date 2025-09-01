@@ -17,6 +17,8 @@
 
 #include <deal.II/grid/tria.h>
 
+#include <deal.II/lac/vector.h>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -24,7 +26,9 @@
 #include "config.h"
 #include "dof_tools_ext.h"
 #include "gmsh_manipulation.h"
+#include "hmatrix/hmatrix_vmult_strategy.h"
 #include "mapping/mapping_info.h"
+#include "preconditioners/preconditioner_type.h"
 #include "sauter_quadrature_tools.h"
 #include "subdomain_topology.h"
 #include <experimental/propagate_const>
@@ -50,17 +54,6 @@ public:
     DirichletBCProblem, //!< DirichletBCProblem
     MixedBCProblem,     //!< MixedBCProblem
     UndefinedProblem
-  };
-
-  /**
-   * Enum for types of preconditioners.
-   */
-  enum PreconditionerType
-  {
-    HMatrixFactorization,
-    OperatorPreconditioning,
-    Identity,
-    Jacobi
   };
 
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
@@ -288,6 +281,9 @@ public:
 
   void
   set_use_hmat(bool useHmat);
+
+  void
+  set_iterative_solver_vmult_type(const IterativeSolverVmultType type);
 
   void
   set_preconditioner_type(const PreconditionerType type);

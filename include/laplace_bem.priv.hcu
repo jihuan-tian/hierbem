@@ -32,8 +32,10 @@
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/full_matrix.templates.h>
 #include <deal.II/lac/precondition.h>
+#include <deal.II/lac/solver_control.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/sparsity_pattern.h>
+#include <deal.II/lac/vector.h>
 #include <deal.II/lac/vector_operations_internal.h>
 
 #include <deal.II/numerics/data_out.h>
@@ -66,6 +68,7 @@
 #include "hmatrix/hblockmatrix_skew_symm.h"
 #include "hmatrix/hmatrix.h"
 #include "hmatrix/hmatrix_parameters.h"
+#include "hmatrix/hmatrix_vmult_strategy.h"
 #include "hmatrix/preconditioner/hblockmatrix_skew_symm_preconditioner.h"
 #include "hmatrix/preconditioner/hmatrix_symm_preconditioner.h"
 #include "laplace_bem.h"
@@ -74,6 +77,7 @@
 #include "platform_shared/laplace_kernels.h"
 #include "preconditioners/preconditioner_for_laplace_dirichlet.h"
 #include "preconditioners/preconditioner_for_laplace_neumann.h"
+#include "preconditioners/preconditioner_type.h"
 #include "quadrature.templates.h"
 #include "read_octave_data.h"
 #include "solvers/solve_hblockmatrix_skew_symm.h"
@@ -755,6 +759,11 @@ private:
   Vector<RangeNumberType> analytical_solution_on_neumann_domain_;
 
   /**
+   * H-matrix vmult method used by iterative solvers.
+   */
+  IterativeSolverVmultType vmult_type_;
+
+  /**
    * Type of the preconditioner.
    */
   PreconditionerType preconditioner_type_;
@@ -888,6 +897,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::Priv()
   , max_hmat_rank_for_preconditioner_(0)
   , aca_relative_error_for_preconditioner_(0)
   , alpha_for_neumann_(1.0)
+  , vmult_type_(IterativeSolverVmultType::SerialRecursive)
   , preconditioner_type_(PreconditionerType::HMatrixFactorization)
   , operator_preconditioner_dirichlet_(nullptr)
   , operator_preconditioner_neumann_(nullptr)
@@ -934,6 +944,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::Priv(
   , max_hmat_rank_for_preconditioner_(0)
   , aca_relative_error_for_preconditioner_(0)
   , alpha_for_neumann_(1.0)
+  , vmult_type_(IterativeSolverVmultType::SerialRecursive)
   , preconditioner_type_(PreconditionerType::HMatrixFactorization)
   , operator_preconditioner_dirichlet_(nullptr)
   , operator_preconditioner_neumann_(nullptr)
@@ -990,6 +1001,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::Priv(
   , aca_relative_error_for_preconditioner_(
       aca_relative_error_for_preconditioner)
   , alpha_for_neumann_(1.0)
+  , vmult_type_(IterativeSolverVmultType::SerialRecursive)
   , preconditioner_type_(PreconditionerType::HMatrixFactorization)
   , operator_preconditioner_dirichlet_(nullptr)
   , operator_preconditioner_neumann_(nullptr)
@@ -1408,6 +1420,10 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
       SolverCGGeneral<Vector<KernelNumberType>> solver(solver_control);
 
       natural_density_internal_numbering.reinit(n_dofs_for_neumann_space);
+      set_hmatrix_vmult_strategy_for_iterative_solver(V,
+                                                      vmult_type_,
+                                                      true,
+                                                      true);
       switch (preconditioner_type_)
         {
             case PreconditionerType::HMatrixFactorization: {
@@ -4840,6 +4856,10 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
               SolverControl solver_control(1000, 1e-8, true, true);
               SolverCGGeneral<Vector<RangeNumberType>> solver(solver_control);
 
+              set_hmatrix_vmult_strategy_for_iterative_solver(V1_hmat_,
+                                                              vmult_type_,
+                                                              true,
+                                                              true);
               switch (preconditioner_type_)
                 {
                     case PreconditionerType::HMatrixFactorization: {
@@ -4852,6 +4872,12 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
                       break;
                     }
                     case PreconditionerType::OperatorPreconditioning: {
+                      set_hmatrix_vmult_strategy_for_iterative_solver(
+                        operator_preconditioner_dirichlet_
+                          ->get_preconditioner_hmatrix(),
+                        vmult_type_,
+                        true,
+                        true);
                       solver.solve(
                         V1_hmat_,
                         neumann_data_on_dirichlet_domain_internal_dof_numbering_,
@@ -4902,6 +4928,10 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
               SolverControl solver_control(1000, 1e-8, true, true);
               SolverCGGeneral<Vector<RangeNumberType>> solver(solver_control);
 
+              set_hmatrix_vmult_strategy_for_iterative_solver(D1_hmat_,
+                                                              vmult_type_,
+                                                              true,
+                                                              true);
               switch (preconditioner_type_)
                 {
                     case PreconditionerType::HMatrixFactorization: {
@@ -4914,6 +4944,12 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
                       break;
                     }
                     case PreconditionerType::OperatorPreconditioning: {
+                      set_hmatrix_vmult_strategy_for_iterative_solver(
+                        operator_preconditioner_neumann_
+                          ->get_preconditioner_hmatrix(),
+                        vmult_type_,
+                        true,
+                        true);
                       solver.solve(
                         D1_hmat_,
                         dirichlet_data_on_neumann_domain_internal_dof_numbering_,
@@ -4963,6 +4999,18 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
             case MixedBCProblem: {
               // Solve the system of equations and obtain the solution in two
               // block vectors in the internal DoF numbering.
+              set_hmatrix_vmult_strategy_for_iterative_solver(M_hmat_.get_M11(),
+                                                              vmult_type_,
+                                                              true,
+                                                              true);
+              set_hmatrix_vmult_strategy_for_iterative_solver(M_hmat_.get_M12(),
+                                                              vmult_type_,
+                                                              true,
+                                                              true);
+              set_hmatrix_vmult_strategy_for_iterative_solver(M_hmat_.get_M22(),
+                                                              vmult_type_,
+                                                              true,
+                                                              true);
               switch (preconditioner_type_)
                 {
                     case PreconditionerType::HMatrixFactorization: {
@@ -5001,6 +5049,18 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
                       // In this case, Schur complement method is adopted to
                       // solve the system of equations, which is different from
                       // using the H-matrix factorization method.
+                      set_hmatrix_vmult_strategy_for_iterative_solver(
+                        operator_preconditioner_dirichlet_
+                          ->get_preconditioner_hmatrix(),
+                        vmult_type_,
+                        true,
+                        true);
+                      set_hmatrix_vmult_strategy_for_iterative_solver(
+                        operator_preconditioner_neumann_
+                          ->get_preconditioner_hmatrix(),
+                        vmult_type_,
+                        true,
+                        true);
                       solve_hblockmatrix_skew_symm_using_schur_complement(
                         M_hmat_,
                         neumann_data_on_dirichlet_domain_internal_dof_numbering_,

@@ -15,6 +15,7 @@
 #include <deal.II/base/types.h>
 
 #include <deal.II/lac/full_matrix.h>
+#include <deal.II/lac/vector.h>
 
 #include <openblas-pthread/cblas.h>
 #include <tbb/tbb.h>
@@ -22,6 +23,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <mutex>
 #include <queue>
 #include <sstream>
@@ -35,6 +37,7 @@
 #include "config.h"
 #include "generic_functors.h"
 #include "hmatrix/hmatrix_support.h"
+#include "hmatrix/hmatrix_vmult_strategy.h"
 #include "lapack_full_matrix_ext.h"
 #include "number_traits.h"
 #include "rkmatrix.h"
@@ -1172,10 +1175,19 @@ public:
 
   /**
    * Get the matrix type of the current \hmatnode.
+   *
    * @return
    */
   HMatrixType
   get_type() const;
+
+  /**
+   * If the \hmatnode is a root node.
+   *
+   * @return
+   */
+  bool
+  is_root() const;
 
   /**
    * If the \hmatnode belongs to the near field leaf set.
@@ -1630,7 +1642,26 @@ public:
     const bool is_compensate_diag_blocks = true);
 
   /**
-   * Calculate \hmatrix/vector multiplication as \f$y = y + M \cdot x\f$.
+   * Set the default strategy for the top level H-matrix/vector multiplication,
+   * which influences @p vmult, @p Tvmult and @p Hvmult.
+   */
+  void
+  set_default_vmult_strategy();
+
+  /**
+   * Set the strategy for the top level H-matrix/vector multiplication, which
+   * influences @p vmult, @p Tvmult and @p Hvmult.
+   */
+  void
+  set_vmult_strategy(
+    std::unique_ptr<HMatrixVmultStrategy<spacedim, Number>> strategy);
+
+  /**
+   * Calculate \hmatrix/vector multiplication as \f$y = y + M \cdot x\f$ using
+   * the serial recursive mode.
+   *
+   * The said **serial** means the TBB task parallelization is not adopted, but
+   * the multithreaded OpenBLAS is still used.
    *
    * \mynote{
    * 1. The recursive algorithm for \hmatrix/vector multiplication needs to
@@ -1650,7 +1681,7 @@ public:
    * @param y Result vector
    * @param x Input vector
    * @param top_hmat_property The \hmatrix property (of type
-   * @p HMatrixSupport::Property) of the top level \hmatrix, which can be
+   * @p HMatrixSupport::Property) of the top level \hmatrix node, which can be
    * @p general, @p symmetric, @p hermite_symmetric and @p lower_triangular .
    */
   void
@@ -1659,24 +1690,11 @@ public:
         const HMatrixSupport::Property top_hmat_property) const;
 
   /**
-   * Perform task parallel \hmatrix/vector multiplication as \f$y = y + M
-   * \cdot x\f$.
+   * Calculate \hmatrix/vector multiplication as \f$y = y + \alpha \cdot M \cdot
+   * x\f$ using the serial recursive mode.
    *
-   * \mynote{
-   * 1. The algorithm iterates over each \hmatrix node in the leaf set.
-   * 2. The input vector \p x and result vector \p y are built with respect to
-   * corresponding root cluster nodes and should be directly accessed via
-   * **global** DoF indices.}
-   *
-   * @param y Result vector
-   * @param x Input vector
-   */
-  void
-  vmult_task_parallel(Vector<Number> &y, const Vector<Number> &x);
-
-  /**
-   * Calculate \hmatrix/vector multiplication as \f$y = y + \alpha \cdot M
-   * \cdot x\f$.
+   * The said **serial** means the TBB task parallelization is not adopted, but
+   * the multithreaded OpenBLAS is still used.
    *
    * \mynote{
    * 1. The recursive algorithm for \hmatrix/vector multiplication needs to
@@ -1708,47 +1726,10 @@ public:
         const HMatrixSupport::Property top_hmat_property) const;
 
   /**
-   * Perform task parallel \hmatrix/vector multiplication as \f$y = \beta y +
-   * \alpha \cdot M \cdot x\f$.
-   *
-   * \mynote{
-   * 1. The algorithm iterates over each \hmatrix node in the leaf set.
-   * 2. The input vector \p x and result vector \p y are built with respect to
-   * corresponding root cluster nodes and should be directly accessed via
-   * **global** DoF indices.}
-   *
-   * @param beta Scalar factor before \f$y\f$
-   * @param y Result vector
-   * @param alpha Scalar factor before \f$x\f$
-   * @param x Input vector
-   */
-  template <typename Number2, typename Number3>
-  void
-  vmult_task_parallel(const Number2         beta,
-                      Vector<Number>       &y,
-                      const Number3         alpha,
-                      const Vector<Number> &x);
-
-  /**
-   * Perform serial \hmatrix/vector multiplication as \f$y = \beta y +
-   * \alpha \cdot M \cdot x\f$ by iterating over the leaf set.
-   *
-   * @param beta Scalar factor before \f$y\f$
-   * @param y Result vector
-   * @param alpha Scalar factor before \f$x\f$
-   * @param x Input vector
-   */
-  template <typename Number2, typename Number3>
-  void
-  vmult_serial_iterative(const Number2         beta,
-                         Vector<Number>       &y,
-                         const Number3         alpha,
-                         const Vector<Number> &x);
-
-  /**
    * Calculate \hmatrix/vector multiplication as \f$y = y + M \cdot x\f$ by
-   * starting from a block in the matrix and vector. Therefore, the starting
-   * \hmat should be explicitly specified.
+   * starting from a block in the matrix and vector and using the serial
+   * recursive mode. Therefore, the starting \hmat should be explicitly
+   * specified.
    *
    * @param y Result vector as a section of the corresponding global vector
    * @param x Input vector as a section of the corresponding global vector
@@ -1765,8 +1746,9 @@ public:
 
   /**
    * Calculate \hmatrix/vector multiplication as \f$y = y + \alpha \cdot M
-   * \cdot x\f$ by starting from a block in the matrix and vector. Therefore,
-   * the starting \hmat should be explicitly specified.
+   * \cdot x\f$ by starting from a block in the matrix and vector and using the
+   * serial recursive mode. Therefore, the starting \hmat should be explicitly
+   * specified.
    *
    * @param y Result vector as a section of the corresponding global vector
    * @param alpha Scalar factor before \f$x\f$
@@ -1785,28 +1767,71 @@ public:
         const HMatrixSupport::Property   top_hmat_property) const;
 
   /**
-   * Calculate the top level \hmat/vector multiplication \f$y= M \cdot x\f$.
+   * Calculate the top level \hmatrix/vector multiplication as \f$y = \beta y +
+   * \alpha \cdot M \cdot x\f$ by iterating over the leaf set.
+   *
+   * The TBB task parallelization is not adopted, but the multithreaded OpenBLAS
+   * is still used.
+   *
+   * @param beta Scalar factor before \f$y\f$
+   * @param y Result vector
+   * @param alpha Scalar factor before \f$x\f$
+   * @param x Input vector
+   */
+  template <typename Number2, typename Number3>
+  void
+  vmult_serial_iterative(const Number2         beta,
+                         Vector<Number>       &y,
+                         const Number3         alpha,
+                         const Vector<Number> &x) const;
+
+  /**
+   * Calculate the top level \hmatrix/vector multiplication as \f$y = \beta y +
+   * \alpha \cdot M \cdot x\f$ using TBB task parallelization.
+   *
+   * \mynote{
+   * 1. The algorithm iterates over each \hmatrix node in the leaf set.
+   * 2. The input vector \p x and result vector \p y are built with respect to
+   * corresponding root cluster nodes and should be directly accessed via
+   * **global** DoF indices.}
+   *
+   * @param beta Scalar factor before \f$y\f$
+   * @param y Result vector
+   * @param alpha Scalar factor before \f$x\f$
+   * @param x Input vector
+   */
+  template <typename Number2, typename Number3>
+  void
+  vmult_task_parallel(const Number2         beta,
+                      Vector<Number>       &y,
+                      const Number3         alpha,
+                      const Vector<Number> &x) const;
+
+  /**
+   * Calculate the top level \hmat/vector multiplication \f$y= M \cdot x\f$,
+   * where different strategies can be selected.
    */
   void
   vmult(Vector<Number> &y, const Vector<Number> &x) const;
 
   /**
-   * Calculate the top level \hmat/vector multiplication \f$y= \alpha \cdot M
-   * \cdot x\f$.
+   * Calculate the top level \hmat/vector multiplication \f$y= y + M \cdot x\f$
+   * with adding, where different strategies can be selected.
+   */
+  void
+  vmult_add(Vector<Number> &y, const Vector<Number> &x) const;
+
+  /**
+   * Calculate the top level \hmat/vector multiplication \f$y= \alpha M \cdot
+   * x\f$, where different strategies can be selected.
    */
   template <typename Number2>
   void
   vmult(Vector<Number> &y, const Number2 alpha, const Vector<Number> &x) const;
 
   /**
-   * Calculate the top level \hmat/vector multiplication \f$y= y + M \cdot x\f$.
-   */
-  void
-  vmult_add(Vector<Number> &y, const Vector<Number> &x) const;
-
-  /**
-   * Calculate the top level \hmat/vector multiplication \f$y= y + \alpha \cdot
-   * M \cdot x\f$.
+   * Calculate the top level \hmat/vector multiplication \f$y= y + \alpha M
+   * \cdot x\f$ with adding, where different strategies can be selected.
    */
   template <typename Number2>
   void
@@ -1815,11 +1840,14 @@ public:
             const Vector<Number> &x) const;
 
   /**
-   * Calculate \hmatrix/vector multiplication as \f$y = y + M^T \cdot x\f$,
-   * i.e. the matrix \f$M\f$ is transposed.
+   * Calculate the top level \hmatrix/vector multiplication as \f$y = y + M^T
+   * \cdot x\f$ using the serial recursive mode.
    *
-   * Because the matrix \f$M\f$ is transposed, the roles for \p row_index_range
-   * and \p col_index_range should be swapped. Also refer to HMatrix::vmult.
+   * The said **serial** means the TBB task parallelization is not adopted, but
+   * the multithreaded OpenBLAS is still used.
+   *
+   * Because the matrix \f$M\f$ is transposed, the roles for \p row_index_range and
+   * \p col_index_range should be swapped. Also refer to @p HMatrix::vmult.
    *
    * \mynote{The input vector \p x and result vector \p y are built with respect
    * to corresponding root cluster nodes and should be directly accessed via
@@ -1837,33 +1865,14 @@ public:
          const HMatrixSupport::Property top_hmat_property) const;
 
   /**
-   * Perform task parallel \hmatrix/vector multiplication as \f$y = y + M^T
-   * \cdot x\f$, i.e. the matrix \f$M\f$ is transposed.
+   * Calculate the top level \hmatrix/vector multiplication as \f$y = y + \alpha
+   * \cdot M^T \cdot x\f$ using the serial recursive mode.
    *
-   * Because the matrix \f$M\f$ is transposed, the roles for \p row_index_range
-   * and \p col_index_range should be swapped. Also refer to HMatrix::vmult.
-   *
-   * \mynote{
-   * 1. The algorithm iterates over each \hmatrix node in the leaf set.
-   * 2. The input vector \p x and result vector \p y are built with respect to
-   * corresponding root cluster nodes and should be directly accessed via
-   * **global** DoF indices.}
-   *
-   * @param y Result vector
-   * @param x Input vector
-   * @param top_hmat_property The \hmatrix property (of type
-   * @p HMatrixSupport::Property) of the top level \hmatrix, which can be
-   * @p general, @p symmetric, @p hermite_symmetric and @p lower_triangular .
-   */
-  void
-  Tvmult_task_parallel(Vector<Number> &y, const Vector<Number> &x);
-
-  /**
-   * Calculate \hmatrix/vector multiplication as \f$y = y + \alpha \cdot M^T
-   * \cdot x\f$, i.e. the matrix \f$M\f$ is transposed.
+   * The said **serial** means the TBB task parallelization is not adopted, but
+   * the multithreaded OpenBLAS is still used.
    *
    * Because the matrix \f$M\f$ is transposed, the roles for \p row_index_range and
-   * \p col_index_range should be swapped. Also refer to HMatrix::vmult.
+   * \p col_index_range should be swapped. Also refer to @p HMatrix::vmult.
    *
    * \mynote{The input vector \p x and result vector \p y are built with respect
    * to corresponding root cluster nodes and should be directly accessed via
@@ -1882,47 +1891,6 @@ public:
          const Number2                  alpha,
          const Vector<Number>          &x,
          const HMatrixSupport::Property top_hmat_property) const;
-
-  /**
-   * Perform task parallel \hmatrix/vector multiplication as \f$y = y + \alpha
-   * \cdot M^T \cdot x\f$, i.e. the matrix \f$M\f$ is transposed.
-   *
-   * Because the matrix \f$M\f$ is transposed, the roles for \p row_index_range and
-   * \p col_index_range should be swapped. Also refer to HMatrix::vmult.
-   *
-   * \mynote{
-   * 1. The algorithm iterates over each \hmatrix node in the leaf set.
-   * 2. The input vector \p x and result vector \p y are built with respect to
-   * corresponding root cluster nodes and should be directly accessed via
-   * **global** DoF indices.}
-   *
-   * @param beta Scalar factor before \f$y\f$
-   * @param y Result vector
-   * @param alpha Scalar factor before \f$x\f$
-   * @param x Input vector
-   */
-  template <typename Number2, typename Number3>
-  void
-  Tvmult_task_parallel(const Number2         beta,
-                       Vector<Number>       &y,
-                       const Number3         alpha,
-                       const Vector<Number> &x);
-
-  /**
-   * Perform serial \hmatrix/vector multiplication as \f$y = y + \alpha
-   * \cdot M^T \cdot x\f$ by iterating over the leaf set.
-   *
-   * @param beta Scalar factor before \f$y\f$
-   * @param y Result vector
-   * @param alpha Scalar factor before \f$x\f$
-   * @param x Input vector
-   */
-  template <typename Number2, typename Number3>
-  void
-  Tvmult_serial_iterative(const Number2         beta,
-                          Vector<Number>       &y,
-                          const Number3         alpha,
-                          const Vector<Number> &x);
 
   /**
    * Calculate \hmatrix/vector multiplication as \f$y = y + M^T \cdot x\f$ by
@@ -1964,30 +1932,76 @@ public:
          const HMatrixSupport::Property   top_hmat_property) const;
 
   /**
+   * Calculate the top level \hmatrix/vector multiplication as \f$y = \beta y +
+   * \alpha \cdot M^T \cdot x\f$ by iterating over the leaf set.
+   *
+   * The TBB task parallelization is not adopted, but the multithreaded OpenBLAS
+   * is still used.
+   *
+   * @param beta Scalar factor before \f$y\f$
+   * @param y Result vector
+   * @param alpha Scalar factor before \f$x\f$
+   * @param x Input vector
+   */
+  template <typename Number2, typename Number3>
+  void
+  Tvmult_serial_iterative(const Number2         beta,
+                          Vector<Number>       &y,
+                          const Number3         alpha,
+                          const Vector<Number> &x) const;
+
+  /**
+   * Calculate the top level \hmatrix/vector multiplication as \f$y = \beta y +
+   * \alpha \cdot M^T \cdot x\f$ using TBB task paralellization.
+   *
+   * Because the matrix \f$M\f$ is transposed, the roles for \p row_index_range and
+   * \p col_index_range should be swapped. Also refer to @p HMatrix::vmult_task_parallel.
+   *
+   * \mynote{
+   * 1. The algorithm iterates over each \hmatrix node in the leaf set.
+   * 2. The input vector \p x and result vector \p y are built with respect to
+   * corresponding root cluster nodes and should be directly accessed via
+   * **global** DoF indices.}
+   *
+   * @param beta Scalar factor before \f$y\f$
+   * @param y Result vector
+   * @param alpha Scalar factor before \f$x\f$
+   * @param x Input vector
+   */
+  template <typename Number2, typename Number3>
+  void
+  Tvmult_task_parallel(const Number2         beta,
+                       Vector<Number>       &y,
+                       const Number3         alpha,
+                       const Vector<Number> &x) const;
+
+  /**
    * Calculate the top level \hmat/vector multiplication \f$y= M^{\mathrm{T}}
-   * \cdot x\f$.
+   * \cdot x\f$, where different strategies can be selected.
    */
   void
   Tvmult(Vector<Number> &y, const Vector<Number> &x) const;
 
   /**
+   * Calculate the top level \hmat/vector multiplication \f$y= y +
+   * M^{\mathrm{T}} \cdot x\f$ with adding, where different strategies can be
+   * selected.
+   */
+  void
+  Tvmult_add(Vector<Number> &y, const Vector<Number> &x) const;
+
+  /**
    * Calculate the top level \hmat/vector multiplication \f$y= \alpha \cdot
-   * M^{\mathrm{T}} \cdot x\f$.
+   * M^{\mathrm{T}} \cdot x\f$, where different strategies can be selected.
    */
   template <typename Number2>
   void
   Tvmult(Vector<Number> &y, const Number2 alpha, const Vector<Number> &x) const;
 
   /**
-   * Calculate the top level \hmat/vector multiplication \f$y= y +
-   * M^{\mathrm{T}} \cdot x\f$.
-   */
-  void
-  Tvmult_add(Vector<Number> &y, const Vector<Number> &x) const;
-
-  /**
    * Calculate the top level \hmat/vector multiplication \f$y= y + \alpha \cdot
-   * M^{\mathrm{T}} \cdot x\f$.
+   * M^{\mathrm{T}} \cdot x\f$ with adding, where different strategies can be
+   * selected.
    */
   template <typename Number2>
   void
@@ -1995,11 +2009,38 @@ public:
              const Number2         alpha,
              const Vector<Number> &x) const;
 
+  /**
+   * Calculate \hmatrix/vector multiplication as \f$y = y + M^H \cdot x\f$ using
+   * the serial recursive mode.
+   *
+   * The said **serial** means the TBB task parallelization is not adopted, but
+   * the multithreaded OpenBLAS is still used.
+   *
+   * @param y Result vector
+   * @param x Input vector
+   * @param top_hmat_property The \hmatrix property (of type
+   * @p HMatrixSupport::Property) of the top level \hmatrix, which can be
+   * @p general, @p symmetric, @p hermite_symmetric and @p lower_triangular .
+   */
   void
   Hvmult(Vector<Number>                &y,
          const Vector<Number>          &x,
          const HMatrixSupport::Property top_hmat_property) const;
 
+  /**
+   * Calculate \hmatrix/vector multiplication as \f$y = y + \alpha \cdot M^H
+   * \cdot x\f$ using the serial recursive mode.
+   *
+   * The said **serial** means the TBB task parallelization is not adopted, but
+   * the multithreaded OpenBLAS is still used.
+   *
+   * @param y Result vector
+   * @param alpha Scalar factor before \f$x\f$
+   * @param x Input vector
+   * @param top_hmat_property The \hmatrix property (of type
+   * @p HMatrixSupport::Property) of the top level \hmatrix, which can be
+   * @p general, @p symmetric, @p hermite_symmetric and @p lower_triangular .
+   */
   template <typename Number2>
   void
   Hvmult(Vector<Number>                &y,
@@ -2007,12 +2048,74 @@ public:
          const Vector<Number>          &x,
          const HMatrixSupport::Property top_hmat_property) const;
 
+  /**
+   * Calculate the top level \hmatrix/vector multiplication as \f$y = \beta y +
+   * \alpha \cdot M^H \cdot x\f$ using TBB task parallelization.
+   *
+   * @param beta Scalar factor before \f$y\f$
+   * @param y Result vector
+   * @param alpha Scalar factor before \f$x\f$
+   * @param x Input vector
+   */
+  template <typename Number2, typename Number3>
+  void
+  Hvmult_task_parallel(const Number2         beta,
+                       Vector<Number>       &y,
+                       const Number3         alpha,
+                       const Vector<Number> &x) const;
+
+  /**
+   * @brief Calculate the top level \hmatrix/vector multiplication as \f$y =
+   * \beta y + \alpha \cdot M^H \cdot x\f$ by iterating over the leaf set.
+   *
+   * The TBB task parallelization is not adopted, but the multithreaded OpenBLAS
+   * is still used.
+   *
+   * @tparam Number2
+   * @tparam Number3
+   * @param beta Scalar factor before \f$y\f$
+   * @param y Result vector
+   * @param alpha Scalar factor before \f$x\f$
+   * @param x Input vector
+   */
+  template <typename Number2, typename Number3>
+  void
+  Hvmult_serial_iterative(const Number2         beta,
+                          Vector<Number>       &y,
+                          const Number3         alpha,
+                          const Vector<Number> &x) const;
+
+  /**
+   * Calculate \hmatrix/vector multiplication as \f$y = y + M^H \cdot x\f$ by
+   * starting from a block in the matrix and vector. Therefore, the starting
+   * \hmat is specified.
+   *
+   * @param y Result vector as a section of the corresponding global vector
+   * @param x Input vector as a section of the corresponding global vector
+   * @param starting_hmat Top level \hmatrix
+   * @param top_hmat_property The \hmatrix property (of type
+   * @p HMatrixSupport::Property) of the top level \hmatrix node, which can be
+   * @p general, @p symmetric, @p hermite_symmetric and @p lower_triangular .
+   */
   void
   Hvmult(Vector<Number>                  &y,
          const Vector<Number>            &x,
          const HMatrix<spacedim, Number> &starting_hmat,
          const HMatrixSupport::Property   top_hmat_property) const;
 
+  /**
+   * Calculate \hmatrix/vector multiplication as \f$y = y + \alpha \cdot M^H
+   * \cdot x\f$ by starting from a block in the matrix and vector. Therefore,
+   * the starting \hmat is specified.
+   *
+   * @param y Result vector as a section of the corresponding global vector
+   * @param alpha Scalar factor before \f$x\f$
+   * @param x Input vector as a section of the corresponding global vector
+   * @param starting_hmat Top level \hmatrix
+   * @param top_hmat_property The \hmatrix property (of type
+   * @p HMatrixSupport::Property) of the top level \hmatrix node, which can be
+   * @p general, @p symmetric, @p hermite_symmetric and @p lower_triangular .
+   */
   template <typename Number2>
   void
   Hvmult(Vector<Number>                  &y,
@@ -2021,38 +2124,39 @@ public:
          const HMatrix<spacedim, Number> &starting_hmat,
          const HMatrixSupport::Property   top_hmat_property) const;
 
+  /**
+   * Calculate the top level \hmat/vector multiplication \f$y= M^{\mathrm{H}}
+   * \cdot x\f$, where different strategies can be selected.
+   */
   void
   Hvmult(Vector<Number> &y, const Vector<Number> &x) const;
 
+  /**
+   * Calculate the top level \hmat/vector multiplication \f$y= y +
+   * M^{\mathrm{H}} \cdot x\f$ with adding, where different strategies can be
+   * selected.
+   */
+  void
+  Hvmult_add(Vector<Number> &y, const Vector<Number> &x) const;
+
+  /**
+   * Calculate the top level \hmat/vector multiplication \f$y= \alpha \cdot
+   * M^{\mathrm{H}} \cdot x\f$, where different strategies can be selected.
+   */
   template <typename Number2>
   void
   Hvmult(Vector<Number> &y, const Number2 alpha, const Vector<Number> &x) const;
 
-  void
-  Hvmult_add(Vector<Number> &y, const Vector<Number> &x) const;
-
+  /**
+   * Calculate the top level \hmat/vector multiplication \f$y= y + \alpha \cdot
+   * M^{\mathrm{H}} \cdot x\f$ with adding, where different strategies can be
+   * selected.
+   */
   template <typename Number2>
   void
   Hvmult_add(Vector<Number>       &y,
              const Number2         alpha,
              const Vector<Number> &x) const;
-
-  void
-  Hvmult_task_parallel(Vector<Number> &y, const Vector<Number> &x);
-
-  template <typename Number2, typename Number3>
-  void
-  Hvmult_task_parallel(const Number2         beta,
-                       Vector<Number>       &y,
-                       const Number3         alpha,
-                       const Vector<Number> &x);
-
-  template <typename Number2, typename Number3>
-  void
-  Hvmult_serial_iterative(const Number2         beta,
-                          Vector<Number>       &y,
-                          const Number3         alpha,
-                          const Vector<Number> &x);
 
   /**
    * Perform \hmatrix MM multiplication reduction. This is
@@ -4139,6 +4243,11 @@ private:
   HMatrixSupport::BlockType block_type;
 
   /**
+   * The strategy adopted for @p vmult, @p Tvmult and @p Hvmult.
+   */
+  std::unique_ptr<HMatrixVmultStrategy<spacedim, Number>> vmult_strategy;
+
+  /**
    * Node ID used for generating the directed graph in GraphViz dot.
    */
   size_type dot_node_id;
@@ -4292,8 +4401,13 @@ private:
   /**
    * The data for each thread which are used in (transposed) \hmatrix/vector
    * multiplication.
+   *
+   * The reason we wrap it in a @p unique_ptr is that we want to make the task
+   * parallel H-matrix/vector multiplication member functions @p const, as
+   * required by iterative solvers.
    */
-  std::vector<VmultOrTvmultThreadData> data_for_vmult_or_tvmult_threads;
+  std::unique_ptr<std::vector<VmultOrTvmultThreadData>>
+    data_for_vmult_or_tvmult_threads;
 };
 
 // Initialization of the static member of \hmatrix to Z curve.
@@ -17525,6 +17639,7 @@ HMatrix<spacedim, Number>::HMatrix(
   InitAndCreateHMatrixChildren(this, bct.get_root(), fixed_rank_k, property);
   build_leaf_set();
   link_hmat_nodes_on_same_levels();
+  set_default_vmult_strategy();
 }
 
 
@@ -17566,6 +17681,7 @@ HMatrix<spacedim, Number>::HMatrix(
   InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k, property);
   build_leaf_set();
   link_hmat_nodes_on_same_levels();
+  set_default_vmult_strategy();
 }
 
 
@@ -17611,6 +17727,7 @@ HMatrix<spacedim, Number>::HMatrix(
   InitAndCreateHMatrixChildren(this, bct.get_root(), fixed_rank_k, M, property);
   build_leaf_set();
   link_hmat_nodes_on_same_levels();
+  set_default_vmult_strategy();
 }
 
 
@@ -17655,6 +17772,7 @@ HMatrix<spacedim, Number>::HMatrix(
   InitAndCreateHMatrixChildren(this, bct.get_root(), M, property);
   build_leaf_set();
   link_hmat_nodes_on_same_levels();
+  set_default_vmult_strategy();
 }
 
 
@@ -17697,6 +17815,7 @@ HMatrix<spacedim, Number>::HMatrix(
   InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k, M, property);
   build_leaf_set();
   link_hmat_nodes_on_same_levels();
+  set_default_vmult_strategy();
 }
 
 
@@ -17738,6 +17857,7 @@ HMatrix<spacedim, Number>::HMatrix(
   InitAndCreateHMatrixChildren(this, bc_node, M, property);
   build_leaf_set();
   link_hmat_nodes_on_same_levels();
+  set_default_vmult_strategy();
 }
 
 
@@ -17779,6 +17899,7 @@ HMatrix<spacedim, Number>::HMatrix(
   InitAndCreateHMatrixChildren(this, bc_node, std::move(H));
   build_leaf_set();
   link_hmat_nodes_on_same_levels();
+  set_default_vmult_strategy();
 }
 
 
@@ -17819,6 +17940,7 @@ HMatrix<spacedim, Number>::HMatrix(
   InitAndCreateHMatrixChildren(this, bct.get_root(), std::move(H));
   build_leaf_set();
   link_hmat_nodes_on_same_levels();
+  set_default_vmult_strategy();
 }
 
 
@@ -17855,6 +17977,7 @@ HMatrix<spacedim, Number>::HMatrix(const HMatrix<spacedim, Number> &H)
   copy_hmatrix(*this, H);
   build_leaf_set();
   link_hmat_nodes_on_same_levels();
+  set_default_vmult_strategy();
 }
 
 
@@ -17916,6 +18039,7 @@ HMatrix<spacedim, Number>::reinit(
                                this->property);
   build_leaf_set();
   link_hmat_nodes_on_same_levels();
+  set_default_vmult_strategy();
 }
 
 
@@ -17936,6 +18060,7 @@ HMatrix<spacedim, Number>::reinit(
   InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k, this->property);
   build_leaf_set();
   link_hmat_nodes_on_same_levels();
+  set_default_vmult_strategy();
 }
 
 
@@ -17976,6 +18101,8 @@ HMatrix<spacedim, Number>::operator=(HMatrix<spacedim, Number> &&H) noexcept
            * no need to link nodes on same levels.
            */
         }
+
+      set_default_vmult_strategy();
     }
 
   return (*this);
@@ -17990,6 +18117,7 @@ HMatrix<spacedim, Number>::operator=(const HMatrix<spacedim, Number> &H)
   copy_hmatrix(*this, H);
   build_leaf_set();
   link_hmat_nodes_on_same_levels();
+  set_default_vmult_strategy();
 
   return (*this);
 }
@@ -18898,6 +19026,14 @@ inline HMatrixType
 HMatrix<spacedim, Number>::get_type() const
 {
   return type;
+}
+
+
+template <int spacedim, typename Number>
+inline bool
+HMatrix<spacedim, Number>::is_root() const
+{
+  return bc_node->is_root();
 }
 
 
@@ -20867,21 +21003,32 @@ HMatrix<spacedim, Number>::truncate_to_rank_off_diag_preserve_positive_definite(
 
 template <int spacedim, typename Number>
 void
+HMatrix<spacedim, Number>::set_default_vmult_strategy()
+{
+  if (bc_node->is_root())
+    vmult_strategy =
+      std::make_unique<HMatrixVmultSerialRecursive<spacedim, Number>>();
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::set_vmult_strategy(
+  std::unique_ptr<HMatrixVmultStrategy<spacedim, Number>> strategy)
+{
+  if (bc_node->is_root())
+    vmult_strategy = std::move(strategy);
+}
+
+
+template <int spacedim, typename Number>
+void
 HMatrix<spacedim, Number>::vmult(
   Vector<Number>                &y,
   const Vector<Number>          &x,
   const HMatrixSupport::Property top_hmat_property) const
 {
   vmult(y, real_type(1.0), x, top_hmat_property);
-}
-
-
-template <int spacedim, typename Number>
-void
-HMatrix<spacedim, Number>::vmult_task_parallel(Vector<Number>       &y,
-                                               const Vector<Number> &x)
-{
-  vmult_task_parallel(real_type(1.), y, real_type(1.0), x);
 }
 
 
@@ -21870,509 +22017,6 @@ HMatrix<spacedim, Number>::vmult(
         default: {
           Assert(false, ExcInvalidHMatrixType(type));
           break;
-        }
-    }
-}
-
-
-template <int spacedim, typename Number>
-template <typename Number2, typename Number3>
-void
-HMatrix<spacedim, Number>::vmult_task_parallel(const Number2         beta,
-                                               Vector<Number>       &y,
-                                               const Number3         alpha,
-                                               const Vector<Number> &x)
-{
-  static_assert(is_number_larger_or_equal<Number, Number2>());
-  static_assert(is_number_larger_or_equal<Number, Number3>());
-  /**
-   * The current \hmatrix node should be at the top level.
-   */
-  Assert(parent == nullptr, ExcInternalError());
-
-  const unsigned int thread_num = data_for_vmult_or_tvmult_threads.size();
-
-  /**
-   * Only perform parallel multiplication when the thread number is larger
-   * than 1. Otherwise, switch to the iterative serial version.
-   */
-  if (thread_num > 1)
-    {
-      // Set OpenBLAS num threads to 1 when task parallelization is used.
-      const int blas_num_threads = openblas_get_num_threads();
-      openblas_set_num_threads(1);
-
-      /**
-       * Perform thread local scaling of the result vector and
-       * multiplications. The multiplication results are stored locally in
-       * each thread.
-       */
-      auto local_scale_and_multiplication =
-        [this, beta, alpha, &y, &x](const unsigned int thread_no) -> void {
-        /**
-         * Local scaling: \f$y_q = \beta y_q\f$.
-         */
-        for (size_type i = this->data_for_vmult_or_tvmult_threads[thread_no]
-                             .vmult_result_index_range[0];
-             i < this->data_for_vmult_or_tvmult_threads[thread_no]
-                   .vmult_result_index_range[1];
-             i++)
-          {
-            y[i] *= beta;
-          }
-
-        /**
-         * Clear the local result vector before the multiplication begins.
-         */
-        this->data_for_vmult_or_tvmult_threads[thread_no].local_vmult_result =
-          Number(0.);
-        if (this->property == HMatrixSupport::Property::symmetric ||
-            this->property == HMatrixSupport::Property::hermite_symmetric)
-          this->data_for_vmult_or_tvmult_threads[thread_no]
-            .local_tvmult_result = Number(0.);
-
-        /**
-         * Iterate over each \hmatrix node in the interval of the leaf set for
-         * local multiplication: \f$y_q' = \alpha \sum_i A_{q,i} x\f$.
-         */
-        for (size_type l = this->data_for_vmult_or_tvmult_threads[thread_no]
-                             .leaf_set_interval.first;
-             l <= this->data_for_vmult_or_tvmult_threads[thread_no]
-                    .leaf_set_interval.second;
-             l++)
-          {
-            const size_type m = this->leaf_set[l]->m;
-            const size_type n = this->leaf_set[l]->n;
-
-            /**
-             * Result vector and input vector with respect to the current
-             * matrix node.
-             */
-            Vector<Number> local_y(m);
-            Vector<Number> local_x(n);
-
-            /**
-             * Restrict the global vector @p x to the local vector.
-             */
-            for (size_type j = 0; j < n; j++)
-              {
-                local_x(j) = x((*this->leaf_set[l]->col_index_range)[0] + j);
-              }
-
-            switch (this->leaf_set[l]->type)
-              {
-                  case HMatrixType::FullMatrixType: {
-                    this->leaf_set[l]->fullmatrix->vmult(local_y, local_x);
-
-                    break;
-                  }
-                  case HMatrixType::RkMatrixType: {
-                    this->leaf_set[l]->rkmatrix->vmult(local_y, local_x);
-
-                    break;
-                  }
-                  default: {
-                    Assert(false,
-                           ExcInvalidHMatrixType(this->leaf_set[l]->type));
-
-                    break;
-                  }
-              }
-
-            /**
-             * Merge back the result vector @p local_y obtained from the
-             * current leaf set matrix node to the thread local result
-             * vector.
-             */
-            for (size_type i = 0; i < m; i++)
-              {
-                this->data_for_vmult_or_tvmult_threads[thread_no]
-                  .local_vmult_result(
-                    (*this->leaf_set[l]->row_index_range)[0] -
-                    this->data_for_vmult_or_tvmult_threads[thread_no]
-                      .local_vmult_result_index_range[0] +
-                    i) += alpha * local_y(i);
-              }
-
-            if (this->property == HMatrixSupport::Property::symmetric &&
-                this->leaf_set[l]->block_type ==
-                  HMatrixSupport::BlockType::lower_triangular_block)
-              {
-                /**
-                 * When the top level \hmatrix is symmetric and the current
-                 * leaf
-                 * \hmatrix block type is @p lower_triangular_block, @p Tvmult
-                 * should also be performed.
-                 */
-                Vector<Number> local_y_for_Tvmult(n);
-                Vector<Number> local_x_for_Tvmult(m);
-
-                /**
-                 * Restrict the global vector @p x to the local vector.
-                 */
-                for (size_type i = 0; i < m; i++)
-                  {
-                    local_x_for_Tvmult(i) =
-                      x((*this->leaf_set[l]->row_index_range)[0] + i);
-                  }
-
-                switch (this->leaf_set[l]->type)
-                  {
-                      case HMatrixType::FullMatrixType: {
-                        this->leaf_set[l]->fullmatrix->Tvmult(
-                          local_y_for_Tvmult, local_x_for_Tvmult);
-
-                        break;
-                      }
-                      case HMatrixType::RkMatrixType: {
-                        this->leaf_set[l]->rkmatrix->Tvmult(local_y_for_Tvmult,
-                                                            local_x_for_Tvmult);
-
-                        break;
-                      }
-                      default: {
-                        Assert(false,
-                               ExcInvalidHMatrixType(this->leaf_set[l]->type));
-
-                        break;
-                      }
-                  }
-
-                /**
-                 * Merge back the result vector @p local_y_for_Tvmult obtained
-                 * from the current leaf set matrix node to the thread local
-                 * result vector.
-                 */
-                for (size_type j = 0; j < n; j++)
-                  {
-                    this->data_for_vmult_or_tvmult_threads[thread_no]
-                      .local_tvmult_result(
-                        (*this->leaf_set[l]->col_index_range)[0] -
-                        this->data_for_vmult_or_tvmult_threads[thread_no]
-                          .local_tvmult_result_index_range[0] +
-                        j) += alpha * local_y_for_Tvmult(j);
-                  }
-              }
-            else if (this->property ==
-                       HMatrixSupport::Property::hermite_symmetric &&
-                     this->leaf_set[l]->block_type ==
-                       HMatrixSupport::BlockType::lower_triangular_block)
-              {
-                /**
-                 * When the top level \hmatrix is Hermite symmetric and the
-                 * current leaf
-                 * \hmatrix block type is @p lower_triangular_block, @p Hvmult
-                 * should also be performed.
-                 */
-                Vector<Number> local_y_for_Hvmult(n);
-                Vector<Number> local_x_for_Hvmult(m);
-
-                /**
-                 * Restrict the global vector @p x to the local vector.
-                 */
-                for (size_type i = 0; i < m; i++)
-                  {
-                    local_x_for_Hvmult(i) =
-                      x((*this->leaf_set[l]->row_index_range)[0] + i);
-                  }
-
-                switch (this->leaf_set[l]->type)
-                  {
-                      case HMatrixType::FullMatrixType: {
-                        this->leaf_set[l]->fullmatrix->Hvmult(
-                          local_y_for_Hvmult, local_x_for_Hvmult);
-
-                        break;
-                      }
-                      case HMatrixType::RkMatrixType: {
-                        this->leaf_set[l]->rkmatrix->Hvmult(local_y_for_Hvmult,
-                                                            local_x_for_Hvmult);
-
-                        break;
-                      }
-                      default: {
-                        Assert(false,
-                               ExcInvalidHMatrixType(this->leaf_set[l]->type));
-
-                        break;
-                      }
-                  }
-
-                /**
-                 * Merge back the result vector @p local_y_for_Hvmult obtained
-                 * from the current leaf set matrix node to the thread local
-                 * result vector.
-                 */
-                for (size_type j = 0; j < n; j++)
-                  {
-                    this->data_for_vmult_or_tvmult_threads[thread_no]
-                      .local_tvmult_result(
-                        (*this->leaf_set[l]->col_index_range)[0] -
-                        this->data_for_vmult_or_tvmult_threads[thread_no]
-                          .local_tvmult_result_index_range[0] +
-                        j) += alpha * local_y_for_Hvmult(j);
-                  }
-              }
-          }
-      };
-
-      Threads::TaskGroup<void> local_scaling_and_multiplication_tasks;
-      for (unsigned int i = 0; i < thread_num; i++)
-        {
-          local_scaling_and_multiplication_tasks +=
-            Threads::new_task(std::bind(local_scale_and_multiplication, i));
-        }
-
-      local_scaling_and_multiplication_tasks.join_all();
-
-      auto assemble_contribution_from_all_threads =
-        [this, &y](const unsigned int thread_no) -> void {
-        unsigned int other_thread_no = 0;
-        for (const auto &range_intersection :
-             this->data_for_vmult_or_tvmult_threads[thread_no]
-               .vmult_result_index_ranges_contributed_from_other_threads)
-          {
-            for (size_type i = range_intersection[0]; i < range_intersection[1];
-                 i++)
-              {
-                y(i) +=
-                  this->data_for_vmult_or_tvmult_threads[other_thread_no]
-                    .local_vmult_result(
-                      i -
-                      this->data_for_vmult_or_tvmult_threads[other_thread_no]
-                        .local_vmult_result_index_range[0]);
-              }
-
-            other_thread_no++;
-          }
-
-        if (this->property == HMatrixSupport::Property::symmetric ||
-            this->property == HMatrixSupport::Property::hermite_symmetric)
-          {
-            /**
-             * When the top level \hmatrix is symmetric or Hermite, also merge
-             * the
-             * @p Tvmult or @p Hvmult results from other threads.
-             */
-            unsigned int other_thread_no = 0;
-            for (const auto &range_intersection :
-                 this->data_for_vmult_or_tvmult_threads[thread_no]
-                   .tvmult_result_index_ranges_contributed_from_other_threads)
-              {
-                for (size_type i = range_intersection[0];
-                     i < range_intersection[1];
-                     i++)
-                  {
-                    y(i) +=
-                      this->data_for_vmult_or_tvmult_threads[other_thread_no]
-                        .local_tvmult_result(
-                          i -
-                          this
-                            ->data_for_vmult_or_tvmult_threads[other_thread_no]
-                            .local_tvmult_result_index_range[0]);
-                  }
-
-                other_thread_no++;
-              }
-          }
-      };
-
-      Threads::TaskGroup<void> assembly_tasks;
-      for (unsigned int i = 0; i < thread_num; i++)
-        {
-          assembly_tasks += Threads::new_task(
-            std::bind(assemble_contribution_from_all_threads, i));
-        }
-
-      assembly_tasks.join_all();
-
-      // Restore the original OpenBLAS num threads.
-      openblas_set_num_threads(blas_num_threads);
-    }
-  else
-    {
-      vmult_serial_iterative(beta, y, alpha, x);
-    }
-}
-
-
-template <int spacedim, typename Number>
-template <typename Number2, typename Number3>
-void
-HMatrix<spacedim, Number>::vmult_serial_iterative(const Number2         beta,
-                                                  Vector<Number>       &y,
-                                                  const Number3         alpha,
-                                                  const Vector<Number> &x)
-{
-  static_assert(is_number_larger_or_equal<Number, Number2>());
-  static_assert(is_number_larger_or_equal<Number, Number3>());
-  /**
-   * The current \hmatrix node should be at the top level.
-   */
-  Assert(parent == nullptr, ExcInternalError());
-
-  /**
-   * Scale \f$y\f$.
-   */
-  y *= beta;
-
-  /**
-   * Iterate over each \hmatrix node in the leaf set.
-   */
-  for (size_type l = 0; l < leaf_set.size(); l++)
-    {
-      const size_type m = this->leaf_set[l]->m;
-      const size_type n = this->leaf_set[l]->n;
-
-      /**
-       * Result vector and input vector with respect to the current
-       * matrix node.
-       */
-      Vector<Number> local_y(m);
-      Vector<Number> local_x(n);
-
-      /**
-       * Restrict the global vector @p x to the current matrix block.
-       */
-      for (size_type j = 0; j < n; j++)
-        {
-          local_x(j) = x((*this->leaf_set[l]->col_index_range)[0] + j);
-        }
-
-      switch (this->leaf_set[l]->type)
-        {
-            case HMatrixType::FullMatrixType: {
-              this->leaf_set[l]->fullmatrix->vmult(local_y, local_x);
-
-              break;
-            }
-            case HMatrixType::RkMatrixType: {
-              this->leaf_set[l]->rkmatrix->vmult(local_y, local_x);
-
-              break;
-            }
-            default: {
-              Assert(false, ExcInvalidHMatrixType(this->leaf_set[l]->type));
-
-              break;
-            }
-        }
-
-      /**
-       * Merge back the result vector @p local_y to the global vector @p y.
-       */
-      for (size_type i = 0; i < m; i++)
-        {
-          y((*this->leaf_set[l]->row_index_range)[0] + i) += alpha * local_y(i);
-        }
-
-      if (this->property == HMatrixSupport::Property::symmetric &&
-          this->leaf_set[l]->block_type ==
-            HMatrixSupport::BlockType::lower_triangular_block)
-        {
-          /**
-           * When the top level \hmatrix is symmetric and the current
-           * leaf
-           * \hmatrix block type is @p lower_triangular_block, @p Tvmult
-           * should also be performed.
-           */
-          Vector<Number> local_y_for_Tvmult(n);
-          Vector<Number> local_x_for_Tvmult(m);
-
-          /**
-           * Restrict the global vector @p x to the local vector with respect
-           * to the transposed matrix block.
-           */
-          for (size_type i = 0; i < m; i++)
-            {
-              local_x_for_Tvmult(i) =
-                x((*this->leaf_set[l]->row_index_range)[0] + i);
-            }
-
-          switch (this->leaf_set[l]->type)
-            {
-                case HMatrixType::FullMatrixType: {
-                  this->leaf_set[l]->fullmatrix->Tvmult(local_y_for_Tvmult,
-                                                        local_x_for_Tvmult);
-
-                  break;
-                }
-                case HMatrixType::RkMatrixType: {
-                  this->leaf_set[l]->rkmatrix->Tvmult(local_y_for_Tvmult,
-                                                      local_x_for_Tvmult);
-
-                  break;
-                }
-                default: {
-                  Assert(false, ExcInvalidHMatrixType(this->leaf_set[l]->type));
-
-                  break;
-                }
-            }
-
-          /**
-           * Merge back the result vector @p local_y_for_Tvmult to the global
-           * vector @p y.
-           */
-          for (size_type j = 0; j < n; j++)
-            {
-              y((*this->leaf_set[l]->col_index_range)[0] + j) +=
-                alpha * local_y_for_Tvmult(j);
-            }
-        }
-      else if (this->property == HMatrixSupport::Property::hermite_symmetric &&
-               this->leaf_set[l]->block_type ==
-                 HMatrixSupport::BlockType::lower_triangular_block)
-        {
-          /**
-           * When the top level \hmatrix is Hermite symmetric and the current
-           * leaf
-           * \hmatrix block type is @p lower_triangular_block, @p Hvmult
-           * should also be performed.
-           */
-          Vector<Number> local_y_for_Hvmult(n);
-          Vector<Number> local_x_for_Hvmult(m);
-
-          /**
-           * Restrict the global vector @p x to the local vector with respect
-           * to the transposed matrix block.
-           */
-          for (size_type i = 0; i < m; i++)
-            {
-              local_x_for_Hvmult(i) =
-                x((*this->leaf_set[l]->row_index_range)[0] + i);
-            }
-
-          switch (this->leaf_set[l]->type)
-            {
-                case HMatrixType::FullMatrixType: {
-                  this->leaf_set[l]->fullmatrix->Hvmult(local_y_for_Hvmult,
-                                                        local_x_for_Hvmult);
-
-                  break;
-                }
-                case HMatrixType::RkMatrixType: {
-                  this->leaf_set[l]->rkmatrix->Hvmult(local_y_for_Hvmult,
-                                                      local_x_for_Hvmult);
-
-                  break;
-                }
-                default: {
-                  Assert(false, ExcInvalidHMatrixType(this->leaf_set[l]->type));
-
-                  break;
-                }
-            }
-
-          /**
-           * Merge back the result vector @p local_y_for_Hvmult to the global
-           * vector @p y.
-           */
-          for (size_type j = 0; j < n; j++)
-            {
-              y((*this->leaf_set[l]->col_index_range)[0] + j) +=
-                alpha * local_y_for_Hvmult(j);
-            }
         }
     }
 }
@@ -23429,12 +23073,518 @@ HMatrix<spacedim, Number>::vmult(
 
 
 template <int spacedim, typename Number>
+template <typename Number2, typename Number3>
+void
+HMatrix<spacedim, Number>::vmult_serial_iterative(const Number2         beta,
+                                                  Vector<Number>       &y,
+                                                  const Number3         alpha,
+                                                  const Vector<Number> &x) const
+{
+  static_assert(is_number_larger_or_equal<Number, Number2>());
+  static_assert(is_number_larger_or_equal<Number, Number3>());
+  /**
+   * The current \hmatrix node should be at the top level.
+   */
+  Assert(parent == nullptr, ExcInternalError());
+
+  /**
+   * Scale \f$y\f$.
+   */
+  y *= beta;
+
+  /**
+   * Iterate over each \hmatrix node in the leaf set.
+   */
+  for (size_type l = 0; l < leaf_set.size(); l++)
+    {
+      const size_type m = this->leaf_set[l]->m;
+      const size_type n = this->leaf_set[l]->n;
+
+      /**
+       * Result vector and input vector with respect to the current
+       * matrix node.
+       */
+      Vector<Number> local_y(m);
+      Vector<Number> local_x(n);
+
+      /**
+       * Restrict the global vector @p x to the current matrix block.
+       */
+      for (size_type j = 0; j < n; j++)
+        {
+          local_x(j) = x((*this->leaf_set[l]->col_index_range)[0] + j);
+        }
+
+      switch (this->leaf_set[l]->type)
+        {
+            case HMatrixType::FullMatrixType: {
+              this->leaf_set[l]->fullmatrix->vmult(local_y, local_x);
+
+              break;
+            }
+            case HMatrixType::RkMatrixType: {
+              this->leaf_set[l]->rkmatrix->vmult(local_y, local_x);
+
+              break;
+            }
+            default: {
+              Assert(false, ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+              break;
+            }
+        }
+
+      /**
+       * Merge back the result vector @p local_y to the global vector @p y.
+       */
+      for (size_type i = 0; i < m; i++)
+        {
+          y((*this->leaf_set[l]->row_index_range)[0] + i) += alpha * local_y(i);
+        }
+
+      if (this->property == HMatrixSupport::Property::symmetric &&
+          this->leaf_set[l]->block_type ==
+            HMatrixSupport::BlockType::lower_triangular_block)
+        {
+          /**
+           * When the top level \hmatrix is symmetric and the current
+           * leaf
+           * \hmatrix block type is @p lower_triangular_block, @p Tvmult
+           * should also be performed.
+           */
+          Vector<Number> local_y_for_Tvmult(n);
+          Vector<Number> local_x_for_Tvmult(m);
+
+          /**
+           * Restrict the global vector @p x to the local vector with respect
+           * to the transposed matrix block.
+           */
+          for (size_type i = 0; i < m; i++)
+            {
+              local_x_for_Tvmult(i) =
+                x((*this->leaf_set[l]->row_index_range)[0] + i);
+            }
+
+          switch (this->leaf_set[l]->type)
+            {
+                case HMatrixType::FullMatrixType: {
+                  this->leaf_set[l]->fullmatrix->Tvmult(local_y_for_Tvmult,
+                                                        local_x_for_Tvmult);
+
+                  break;
+                }
+                case HMatrixType::RkMatrixType: {
+                  this->leaf_set[l]->rkmatrix->Tvmult(local_y_for_Tvmult,
+                                                      local_x_for_Tvmult);
+
+                  break;
+                }
+                default: {
+                  Assert(false, ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+                  break;
+                }
+            }
+
+          /**
+           * Merge back the result vector @p local_y_for_Tvmult to the global
+           * vector @p y.
+           */
+          for (size_type j = 0; j < n; j++)
+            {
+              y((*this->leaf_set[l]->col_index_range)[0] + j) +=
+                alpha * local_y_for_Tvmult(j);
+            }
+        }
+      else if (this->property == HMatrixSupport::Property::hermite_symmetric &&
+               this->leaf_set[l]->block_type ==
+                 HMatrixSupport::BlockType::lower_triangular_block)
+        {
+          /**
+           * When the top level \hmatrix is Hermite symmetric and the current
+           * leaf
+           * \hmatrix block type is @p lower_triangular_block, @p Hvmult
+           * should also be performed.
+           */
+          Vector<Number> local_y_for_Hvmult(n);
+          Vector<Number> local_x_for_Hvmult(m);
+
+          /**
+           * Restrict the global vector @p x to the local vector with respect
+           * to the transposed matrix block.
+           */
+          for (size_type i = 0; i < m; i++)
+            {
+              local_x_for_Hvmult(i) =
+                x((*this->leaf_set[l]->row_index_range)[0] + i);
+            }
+
+          switch (this->leaf_set[l]->type)
+            {
+                case HMatrixType::FullMatrixType: {
+                  this->leaf_set[l]->fullmatrix->Hvmult(local_y_for_Hvmult,
+                                                        local_x_for_Hvmult);
+
+                  break;
+                }
+                case HMatrixType::RkMatrixType: {
+                  this->leaf_set[l]->rkmatrix->Hvmult(local_y_for_Hvmult,
+                                                      local_x_for_Hvmult);
+
+                  break;
+                }
+                default: {
+                  Assert(false, ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+                  break;
+                }
+            }
+
+          /**
+           * Merge back the result vector @p local_y_for_Hvmult to the global
+           * vector @p y.
+           */
+          for (size_type j = 0; j < n; j++)
+            {
+              y((*this->leaf_set[l]->col_index_range)[0] + j) +=
+                alpha * local_y_for_Hvmult(j);
+            }
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+template <typename Number2, typename Number3>
+void
+HMatrix<spacedim, Number>::vmult_task_parallel(const Number2         beta,
+                                               Vector<Number>       &y,
+                                               const Number3         alpha,
+                                               const Vector<Number> &x) const
+{
+  static_assert(is_number_larger_or_equal<Number, Number2>());
+  static_assert(is_number_larger_or_equal<Number, Number3>());
+  /**
+   * The current \hmatrix node should be at the top level.
+   */
+  Assert(parent == nullptr, ExcInternalError());
+
+  const unsigned int thread_num = data_for_vmult_or_tvmult_threads->size();
+
+  /**
+   * Only perform parallel multiplication when the thread number is larger
+   * than 1. Otherwise, switch to the iterative serial version.
+   */
+  if (thread_num > 1)
+    {
+      // Set OpenBLAS num threads to 1 when task parallelization is used.
+      const int blas_num_threads = openblas_get_num_threads();
+      openblas_set_num_threads(1);
+
+      /**
+       * Perform thread local scaling of the result vector and
+       * multiplications. The multiplication results are stored locally in
+       * each thread.
+       */
+      auto local_scale_and_multiplication =
+        [this, beta, alpha, &y, &x](const unsigned int thread_no) -> void {
+        /**
+         * Local scaling: \f$y_q = \beta y_q\f$.
+         */
+        for (size_type i = (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                             .vmult_result_index_range[0];
+             i < (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                   .vmult_result_index_range[1];
+             i++)
+          {
+            y[i] *= beta;
+          }
+
+        /**
+         * Clear the local result vector before the multiplication begins.
+         */
+        (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+          .local_vmult_result = Number(0.);
+        if (this->property == HMatrixSupport::Property::symmetric ||
+            this->property == HMatrixSupport::Property::hermite_symmetric)
+          (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+            .local_tvmult_result = Number(0.);
+
+        /**
+         * Iterate over each \hmatrix node in the interval of the leaf set for
+         * local multiplication: \f$y_q' = \alpha \sum_i A_{q,i} x\f$.
+         */
+        for (size_type l = (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                             .leaf_set_interval.first;
+             l <= (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                    .leaf_set_interval.second;
+             l++)
+          {
+            const size_type m = this->leaf_set[l]->m;
+            const size_type n = this->leaf_set[l]->n;
+
+            /**
+             * Result vector and input vector with respect to the current
+             * matrix node.
+             */
+            Vector<Number> local_y(m);
+            Vector<Number> local_x(n);
+
+            /**
+             * Restrict the global vector @p x to the local vector.
+             */
+            for (size_type j = 0; j < n; j++)
+              {
+                local_x(j) = x((*this->leaf_set[l]->col_index_range)[0] + j);
+              }
+
+            switch (this->leaf_set[l]->type)
+              {
+                  case HMatrixType::FullMatrixType: {
+                    this->leaf_set[l]->fullmatrix->vmult(local_y, local_x);
+
+                    break;
+                  }
+                  case HMatrixType::RkMatrixType: {
+                    this->leaf_set[l]->rkmatrix->vmult(local_y, local_x);
+
+                    break;
+                  }
+                  default: {
+                    Assert(false,
+                           ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+                    break;
+                  }
+              }
+
+            /**
+             * Merge back the result vector @p local_y obtained from the
+             * current leaf set matrix node to the thread local result
+             * vector.
+             */
+            for (size_type i = 0; i < m; i++)
+              {
+                (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                  .local_vmult_result(
+                    (*this->leaf_set[l]->row_index_range)[0] -
+                    (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                      .local_vmult_result_index_range[0] +
+                    i) += alpha * local_y(i);
+              }
+
+            if (this->property == HMatrixSupport::Property::symmetric &&
+                this->leaf_set[l]->block_type ==
+                  HMatrixSupport::BlockType::lower_triangular_block)
+              {
+                /**
+                 * When the top level \hmatrix is symmetric and the current
+                 * leaf
+                 * \hmatrix block type is @p lower_triangular_block, @p Tvmult
+                 * should also be performed.
+                 */
+                Vector<Number> local_y_for_Tvmult(n);
+                Vector<Number> local_x_for_Tvmult(m);
+
+                /**
+                 * Restrict the global vector @p x to the local vector.
+                 */
+                for (size_type i = 0; i < m; i++)
+                  {
+                    local_x_for_Tvmult(i) =
+                      x((*this->leaf_set[l]->row_index_range)[0] + i);
+                  }
+
+                switch (this->leaf_set[l]->type)
+                  {
+                      case HMatrixType::FullMatrixType: {
+                        this->leaf_set[l]->fullmatrix->Tvmult(
+                          local_y_for_Tvmult, local_x_for_Tvmult);
+
+                        break;
+                      }
+                      case HMatrixType::RkMatrixType: {
+                        this->leaf_set[l]->rkmatrix->Tvmult(local_y_for_Tvmult,
+                                                            local_x_for_Tvmult);
+
+                        break;
+                      }
+                      default: {
+                        Assert(false,
+                               ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+                        break;
+                      }
+                  }
+
+                /**
+                 * Merge back the result vector @p local_y_for_Tvmult obtained
+                 * from the current leaf set matrix node to the thread local
+                 * result vector.
+                 */
+                for (size_type j = 0; j < n; j++)
+                  {
+                    (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                      .local_tvmult_result(
+                        (*this->leaf_set[l]->col_index_range)[0] -
+                        (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                          .local_tvmult_result_index_range[0] +
+                        j) += alpha * local_y_for_Tvmult(j);
+                  }
+              }
+            else if (this->property ==
+                       HMatrixSupport::Property::hermite_symmetric &&
+                     this->leaf_set[l]->block_type ==
+                       HMatrixSupport::BlockType::lower_triangular_block)
+              {
+                /**
+                 * When the top level \hmatrix is Hermite symmetric and the
+                 * current leaf
+                 * \hmatrix block type is @p lower_triangular_block, @p Hvmult
+                 * should also be performed.
+                 */
+                Vector<Number> local_y_for_Hvmult(n);
+                Vector<Number> local_x_for_Hvmult(m);
+
+                /**
+                 * Restrict the global vector @p x to the local vector.
+                 */
+                for (size_type i = 0; i < m; i++)
+                  {
+                    local_x_for_Hvmult(i) =
+                      x((*this->leaf_set[l]->row_index_range)[0] + i);
+                  }
+
+                switch (this->leaf_set[l]->type)
+                  {
+                      case HMatrixType::FullMatrixType: {
+                        this->leaf_set[l]->fullmatrix->Hvmult(
+                          local_y_for_Hvmult, local_x_for_Hvmult);
+
+                        break;
+                      }
+                      case HMatrixType::RkMatrixType: {
+                        this->leaf_set[l]->rkmatrix->Hvmult(local_y_for_Hvmult,
+                                                            local_x_for_Hvmult);
+
+                        break;
+                      }
+                      default: {
+                        Assert(false,
+                               ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+                        break;
+                      }
+                  }
+
+                /**
+                 * Merge back the result vector @p local_y_for_Hvmult obtained
+                 * from the current leaf set matrix node to the thread local
+                 * result vector.
+                 */
+                for (size_type j = 0; j < n; j++)
+                  {
+                    (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                      .local_tvmult_result(
+                        (*this->leaf_set[l]->col_index_range)[0] -
+                        (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                          .local_tvmult_result_index_range[0] +
+                        j) += alpha * local_y_for_Hvmult(j);
+                  }
+              }
+          }
+      };
+
+      Threads::TaskGroup<void> local_scaling_and_multiplication_tasks;
+      for (unsigned int i = 0; i < thread_num; i++)
+        {
+          local_scaling_and_multiplication_tasks +=
+            Threads::new_task(std::bind(local_scale_and_multiplication, i));
+        }
+
+      local_scaling_and_multiplication_tasks.join_all();
+
+      auto assemble_contribution_from_all_threads =
+        [this, &y](const unsigned int thread_no) -> void {
+        unsigned int other_thread_no = 0;
+        for (const auto &range_intersection :
+             (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+               .vmult_result_index_ranges_contributed_from_other_threads)
+          {
+            for (size_type i = range_intersection[0]; i < range_intersection[1];
+                 i++)
+              {
+                y(i) +=
+                  (*this->data_for_vmult_or_tvmult_threads)[other_thread_no]
+                    .local_vmult_result(
+                      i -
+                      (*this->data_for_vmult_or_tvmult_threads)[other_thread_no]
+                        .local_vmult_result_index_range[0]);
+              }
+
+            other_thread_no++;
+          }
+
+        if (this->property == HMatrixSupport::Property::symmetric ||
+            this->property == HMatrixSupport::Property::hermite_symmetric)
+          {
+            /**
+             * When the top level \hmatrix is symmetric or Hermite, also merge
+             * the
+             * @p Tvmult or @p Hvmult results from other threads.
+             */
+            unsigned int other_thread_no = 0;
+            for (const auto &range_intersection :
+                 (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                   .tvmult_result_index_ranges_contributed_from_other_threads)
+              {
+                for (size_type i = range_intersection[0];
+                     i < range_intersection[1];
+                     i++)
+                  {
+                    y(i) +=
+                      (*this->data_for_vmult_or_tvmult_threads)[other_thread_no]
+                        .local_tvmult_result(
+                          i - (*this->data_for_vmult_or_tvmult_threads)
+                                [other_thread_no]
+                                  .local_tvmult_result_index_range[0]);
+                  }
+
+                other_thread_no++;
+              }
+          }
+      };
+
+      Threads::TaskGroup<void> assembly_tasks;
+      for (unsigned int i = 0; i < thread_num; i++)
+        {
+          assembly_tasks += Threads::new_task(
+            std::bind(assemble_contribution_from_all_threads, i));
+        }
+
+      assembly_tasks.join_all();
+
+      // Restore the original OpenBLAS num threads.
+      openblas_set_num_threads(blas_num_threads);
+    }
+  else
+    {
+      vmult_serial_iterative(beta, y, alpha, x);
+    }
+}
+
+
+template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::vmult(Vector<Number>       &y,
                                  const Vector<Number> &x) const
 {
-  y = Number(0.);
-  this->vmult(y, x, this->property);
+  if (!vmult_strategy)
+    {
+      Assert(false, ExcInternalError());
+    }
+  else
+    vmult_strategy->vmult(y, *this, x);
 }
 
 
@@ -23443,7 +23593,12 @@ void
 HMatrix<spacedim, Number>::vmult_add(Vector<Number>       &y,
                                      const Vector<Number> &x) const
 {
-  this->vmult(y, x, this->property);
+  if (!vmult_strategy)
+    {
+      Assert(false, ExcInternalError());
+    }
+  else
+    vmult_strategy->vmult_add(y, *this, x);
 }
 
 
@@ -23454,9 +23609,12 @@ HMatrix<spacedim, Number>::vmult(Vector<Number>       &y,
                                  const Number2         alpha,
                                  const Vector<Number> &x) const
 {
-  static_assert(is_number_larger_or_equal<Number, Number2>());
-  y = Number(0.);
-  this->vmult(y, alpha, x, this->property);
+  if (!vmult_strategy)
+    {
+      Assert(false, ExcInternalError());
+    }
+  else
+    vmult_strategy->vmult(y, alpha, *this, x);
 }
 
 
@@ -23467,8 +23625,12 @@ HMatrix<spacedim, Number>::vmult_add(Vector<Number>       &y,
                                      const Number2         alpha,
                                      const Vector<Number> &x) const
 {
-  static_assert(is_number_larger_or_equal<Number, Number2>());
-  this->vmult(y, alpha, x, this->property);
+  if (!vmult_strategy)
+    {
+      Assert(false, ExcInternalError());
+    }
+  else
+    vmult_strategy->vmult_add(y, alpha, *this, x);
 }
 
 
@@ -23480,15 +23642,6 @@ HMatrix<spacedim, Number>::Tvmult(
   const HMatrixSupport::Property top_hmat_property) const
 {
   Tvmult(y, real_type(1.0), x, top_hmat_property);
-}
-
-
-template <int spacedim, typename Number>
-void
-HMatrix<spacedim, Number>::Tvmult_task_parallel(Vector<Number>       &y,
-                                                const Vector<Number> &x)
-{
-  Tvmult_task_parallel(real_type(1.0), y, real_type(1.0), x);
 }
 
 
@@ -24462,402 +24615,6 @@ HMatrix<spacedim, Number>::Tvmult(
         default: {
           Assert(false, ExcInvalidHMatrixType(type));
           break;
-        }
-    }
-}
-
-
-template <int spacedim, typename Number>
-template <typename Number2, typename Number3>
-void
-HMatrix<spacedim, Number>::Tvmult_task_parallel(const Number2         beta,
-                                                Vector<Number>       &y,
-                                                const Number3         alpha,
-                                                const Vector<Number> &x)
-{
-  static_assert(is_number_larger_or_equal<Number, Number2>());
-  static_assert(is_number_larger_or_equal<Number, Number3>());
-  /**
-   * The current \hmatrix node should be at the top level.
-   */
-  Assert(parent == nullptr, ExcInternalError());
-
-  if (property == HMatrixSupport::Property::symmetric)
-    {
-      vmult_task_parallel(beta, y, alpha, x);
-    }
-  else
-    {
-      const unsigned int thread_num = data_for_vmult_or_tvmult_threads.size();
-
-      /**
-       * Only perform parallel multiplication when the thread number is larger
-       * than 1. Otherwise, switch to the iterative serial version.
-       */
-      if (thread_num > 1)
-        {
-          // Set OpenBLAS num threads to 1 when task parallelization is used.
-          const int blas_num_threads = openblas_get_num_threads();
-          openblas_set_num_threads(1);
-
-          /**
-           * Perform thread local scaling of the result vector and
-           * multiplications. The multiplication results are stored locally in
-           * each thread.
-           */
-          auto local_scale_and_multiplication =
-            [this, beta, alpha, &y, &x](const unsigned int thread_no) -> void {
-            /**
-             * Local scaling: \f$y_q = \beta y_q\f$.
-             */
-            for (size_type i = this->data_for_vmult_or_tvmult_threads[thread_no]
-                                 .tvmult_result_index_range[0];
-                 i < this->data_for_vmult_or_tvmult_threads[thread_no]
-                       .tvmult_result_index_range[1];
-                 i++)
-              {
-                y[i] *= beta;
-              }
-
-            /**
-             * Clear the local result vector before the multiplication begins.
-             */
-            this->data_for_vmult_or_tvmult_threads[thread_no]
-              .local_tvmult_result = Number(0.);
-            if (this->property == HMatrixSupport::Property::hermite_symmetric)
-              this->data_for_vmult_or_tvmult_threads[thread_no]
-                .local_vmult_result = Number(0.);
-
-            /**
-             * Iterate over each \hmatrix node in the interval of the leaf
-             * set.
-             */
-            for (unsigned int l =
-                   this->data_for_vmult_or_tvmult_threads[thread_no]
-                     .leaf_set_interval.first;
-                 l <= this->data_for_vmult_or_tvmult_threads[thread_no]
-                        .leaf_set_interval.second;
-                 l++)
-              {
-                const size_type m = this->leaf_set[l]->m;
-                const size_type n = this->leaf_set[l]->n;
-
-                Vector<Number> local_y_for_Tvmult(n);
-                Vector<Number> local_x_for_Tvmult(m);
-
-                /**
-                 * Restrict the global vector @p x to the local vector.
-                 */
-                for (size_type i = 0; i < m; i++)
-                  {
-                    local_x_for_Tvmult(i) =
-                      x((*this->leaf_set[l]->row_index_range)[0] + i);
-                  }
-
-                switch (this->leaf_set[l]->type)
-                  {
-                      case HMatrixType::FullMatrixType: {
-                        this->leaf_set[l]->fullmatrix->Tvmult(
-                          local_y_for_Tvmult, local_x_for_Tvmult);
-
-                        break;
-                      }
-                      case HMatrixType::RkMatrixType: {
-                        this->leaf_set[l]->rkmatrix->Tvmult(local_y_for_Tvmult,
-                                                            local_x_for_Tvmult);
-
-                        break;
-                      }
-                      default: {
-                        Assert(false,
-                               ExcInvalidHMatrixType(this->leaf_set[l]->type));
-
-                        break;
-                      }
-                  }
-
-                /**
-                 * Merge back the result vector @p local_y_for_Tvmult obtained
-                 * from the current leaf set matrix block to the thread local
-                 * result vector.
-                 */
-                for (size_type j = 0; j < n; j++)
-                  {
-                    this->data_for_vmult_or_tvmult_threads[thread_no]
-                      .local_tvmult_result(
-                        (*this->leaf_set[l]->col_index_range)[0] -
-                        this->data_for_vmult_or_tvmult_threads[thread_no]
-                          .local_tvmult_result_index_range[0] +
-                        j) += alpha * local_y_for_Tvmult(j);
-                  }
-
-                if (this->property ==
-                      HMatrixSupport::Property::hermite_symmetric &&
-                    this->leaf_set[l]->block_type ==
-                      HMatrixSupport::BlockType::lower_triangular_block)
-                  {
-                    /**
-                     * Result vector and input vector with respect to the
-                     * current matrix node.
-                     */
-                    Vector<Number> local_y(m);
-                    Vector<Number> local_x(n);
-
-                    /**
-                     * Restrict the global vector @p x to the local vector.
-                     */
-                    for (size_type j = 0; j < n; j++)
-                      {
-                        local_x(j) =
-                          x((*this->leaf_set[l]->col_index_range)[0] + j);
-                      }
-
-                    switch (this->leaf_set[l]->type)
-                      {
-                          case HMatrixType::FullMatrixType: {
-                            this->leaf_set[l]->fullmatrix->Cvmult(local_y,
-                                                                  local_x);
-
-                            break;
-                          }
-                          case HMatrixType::RkMatrixType: {
-                            this->leaf_set[l]->rkmatrix->Cvmult(local_y,
-                                                                local_x);
-
-                            break;
-                          }
-                          default: {
-                            Assert(false,
-                                   ExcInvalidHMatrixType(
-                                     this->leaf_set[l]->type));
-
-                            break;
-                          }
-                      }
-
-                    /**
-                     * Merge back the result vector @p local_y obtained from the
-                     * current leaf set matrix node to the thread local result
-                     * vector.
-                     */
-                    for (size_type i = 0; i < m; i++)
-                      {
-                        this->data_for_vmult_or_tvmult_threads[thread_no]
-                          .local_vmult_result(
-                            (*this->leaf_set[l]->row_index_range)[0] -
-                            this->data_for_vmult_or_tvmult_threads[thread_no]
-                              .local_vmult_result_index_range[0] +
-                            i) += alpha * local_y(i);
-                      }
-                  }
-              }
-          };
-
-          Threads::TaskGroup<void> local_scaling_and_multiplication_tasks;
-          for (unsigned int i = 0; i < thread_num; i++)
-            {
-              local_scaling_and_multiplication_tasks +=
-                Threads::new_task(std::bind(local_scale_and_multiplication, i));
-            }
-
-          local_scaling_and_multiplication_tasks.join_all();
-
-          auto assemble_contribution_from_all_threads =
-            [this, &y](const unsigned int thread_no) -> void {
-            unsigned int other_thread_no = 0;
-            for (const auto &range_intersection :
-                 this->data_for_vmult_or_tvmult_threads[thread_no]
-                   .tvmult_result_index_ranges_contributed_from_other_threads)
-              {
-                for (size_type i = range_intersection[0];
-                     i < range_intersection[1];
-                     i++)
-                  {
-                    y(i) +=
-                      this->data_for_vmult_or_tvmult_threads[other_thread_no]
-                        .local_tvmult_result(
-                          i -
-                          this
-                            ->data_for_vmult_or_tvmult_threads[other_thread_no]
-                            .local_tvmult_result_index_range[0]);
-                  }
-
-                other_thread_no++;
-              }
-
-            if (this->property == HMatrixSupport::Property::hermite_symmetric)
-              {
-                unsigned int other_thread_no = 0;
-                for (
-                  const auto &range_intersection :
-                  this->data_for_vmult_or_tvmult_threads[thread_no]
-                    .vmult_result_index_ranges_contributed_from_other_threads)
-                  {
-                    for (size_type i = range_intersection[0];
-                         i < range_intersection[1];
-                         i++)
-                      {
-                        y(i) +=
-                          this
-                            ->data_for_vmult_or_tvmult_threads[other_thread_no]
-                            .local_vmult_result(
-                              i - this
-                                    ->data_for_vmult_or_tvmult_threads
-                                      [other_thread_no]
-                                    .local_vmult_result_index_range[0]);
-                      }
-
-                    other_thread_no++;
-                  }
-              }
-          };
-
-          Threads::TaskGroup<void> assembly_tasks;
-          for (unsigned int i = 0; i < thread_num; i++)
-            {
-              assembly_tasks += Threads::new_task(
-                std::bind(assemble_contribution_from_all_threads, i));
-            }
-
-          assembly_tasks.join_all();
-
-          // Restore the original OpenBLAS num threads.
-          openblas_set_num_threads(blas_num_threads);
-        }
-      else
-        {
-          Tvmult_serial_iterative(beta, y, alpha, x);
-        }
-    }
-}
-
-
-template <int spacedim, typename Number>
-template <typename Number2, typename Number3>
-void
-HMatrix<spacedim, Number>::Tvmult_serial_iterative(const Number2         beta,
-                                                   Vector<Number>       &y,
-                                                   const Number3         alpha,
-                                                   const Vector<Number> &x)
-{
-  static_assert(is_number_larger_or_equal<Number, Number2>());
-  static_assert(is_number_larger_or_equal<Number, Number3>());
-  /**
-   * The current \hmatrix node should be at the top level.
-   */
-  Assert(parent == nullptr, ExcInternalError());
-
-  if (property == HMatrixSupport::Property::symmetric)
-    {
-      vmult_serial_iterative(beta, y, alpha, x);
-    }
-  else
-    {
-      /**
-       * Scale \f$y\f$.
-       */
-      y *= beta;
-
-      /**
-       * Iterate over each \hmatrix node in the leaf set.
-       */
-      for (size_type l = 0; l < leaf_set.size(); l++)
-        {
-          const size_type m = this->leaf_set[l]->m;
-          const size_type n = this->leaf_set[l]->n;
-
-          Vector<Number> local_y_for_Tvmult(n);
-          Vector<Number> local_x_for_Tvmult(m);
-
-          /**
-           * Restrict the global vector @p x to the local vector with respect
-           * to the transposed matrix block..
-           */
-          for (size_type i = 0; i < m; i++)
-            {
-              local_x_for_Tvmult(i) =
-                x((*this->leaf_set[l]->row_index_range)[0] + i);
-            }
-
-          switch (this->leaf_set[l]->type)
-            {
-                case HMatrixType::FullMatrixType: {
-                  this->leaf_set[l]->fullmatrix->Tvmult(local_y_for_Tvmult,
-                                                        local_x_for_Tvmult);
-
-                  break;
-                }
-                case HMatrixType::RkMatrixType: {
-                  this->leaf_set[l]->rkmatrix->Tvmult(local_y_for_Tvmult,
-                                                      local_x_for_Tvmult);
-
-                  break;
-                }
-                default: {
-                  Assert(false, ExcInvalidHMatrixType(this->leaf_set[l]->type));
-
-                  break;
-                }
-            }
-
-          /**
-           * Merge back the result vector @p local_y_for_Tvmult to the global
-           * vector @p y.
-           */
-          for (size_type j = 0; j < n; j++)
-            {
-              y((*this->leaf_set[l]->col_index_range)[0] + j) +=
-                alpha * local_y_for_Tvmult(j);
-            }
-
-          if (this->property == HMatrixSupport::Property::hermite_symmetric &&
-              this->leaf_set[l]->block_type ==
-                HMatrixSupport::BlockType::lower_triangular_block)
-            {
-              /**
-               * Result vector and input vector with respect to the current
-               * matrix node.
-               */
-              Vector<Number> local_y(m);
-              Vector<Number> local_x(n);
-
-              /**
-               * Restrict the global vector @p x to the current matrix block.
-               */
-              for (size_type j = 0; j < n; j++)
-                {
-                  local_x(j) = x((*this->leaf_set[l]->col_index_range)[0] + j);
-                }
-
-              switch (this->leaf_set[l]->type)
-                {
-                    case HMatrixType::FullMatrixType: {
-                      this->leaf_set[l]->fullmatrix->Cvmult(local_y, local_x);
-
-                      break;
-                    }
-                    case HMatrixType::RkMatrixType: {
-                      this->leaf_set[l]->rkmatrix->Cvmult(local_y, local_x);
-
-                      break;
-                    }
-                    default: {
-                      Assert(false,
-                             ExcInvalidHMatrixType(this->leaf_set[l]->type));
-
-                      break;
-                    }
-                }
-
-              /**
-               * Merge back the result vector @p local_y to the global vector @p y.
-               */
-              for (size_type i = 0; i < m; i++)
-                {
-                  y((*this->leaf_set[l]->row_index_range)[0] + i) +=
-                    alpha * local_y(i);
-                }
-            }
         }
     }
 }
@@ -25901,12 +25658,412 @@ HMatrix<spacedim, Number>::Tvmult(
 
 
 template <int spacedim, typename Number>
+template <typename Number2, typename Number3>
+void
+HMatrix<spacedim, Number>::Tvmult_serial_iterative(
+  const Number2         beta,
+  Vector<Number>       &y,
+  const Number3         alpha,
+  const Vector<Number> &x) const
+{
+  static_assert(is_number_larger_or_equal<Number, Number2>());
+  static_assert(is_number_larger_or_equal<Number, Number3>());
+  /**
+   * The current \hmatrix node should be at the top level.
+   */
+  Assert(parent == nullptr, ExcInternalError());
+
+  if (property == HMatrixSupport::Property::symmetric)
+    {
+      vmult_serial_iterative(beta, y, alpha, x);
+    }
+  else
+    {
+      /**
+       * Scale \f$y\f$.
+       */
+      y *= beta;
+
+      /**
+       * Iterate over each \hmatrix node in the leaf set.
+       */
+      for (size_type l = 0; l < leaf_set.size(); l++)
+        {
+          const size_type m = this->leaf_set[l]->m;
+          const size_type n = this->leaf_set[l]->n;
+
+          Vector<Number> local_y_for_Tvmult(n);
+          Vector<Number> local_x_for_Tvmult(m);
+
+          /**
+           * Restrict the global vector @p x to the local vector with respect
+           * to the transposed matrix block..
+           */
+          for (size_type i = 0; i < m; i++)
+            {
+              local_x_for_Tvmult(i) =
+                x((*this->leaf_set[l]->row_index_range)[0] + i);
+            }
+
+          switch (this->leaf_set[l]->type)
+            {
+                case HMatrixType::FullMatrixType: {
+                  this->leaf_set[l]->fullmatrix->Tvmult(local_y_for_Tvmult,
+                                                        local_x_for_Tvmult);
+
+                  break;
+                }
+                case HMatrixType::RkMatrixType: {
+                  this->leaf_set[l]->rkmatrix->Tvmult(local_y_for_Tvmult,
+                                                      local_x_for_Tvmult);
+
+                  break;
+                }
+                default: {
+                  Assert(false, ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+                  break;
+                }
+            }
+
+          /**
+           * Merge back the result vector @p local_y_for_Tvmult to the global
+           * vector @p y.
+           */
+          for (size_type j = 0; j < n; j++)
+            {
+              y((*this->leaf_set[l]->col_index_range)[0] + j) +=
+                alpha * local_y_for_Tvmult(j);
+            }
+
+          if (this->property == HMatrixSupport::Property::hermite_symmetric &&
+              this->leaf_set[l]->block_type ==
+                HMatrixSupport::BlockType::lower_triangular_block)
+            {
+              /**
+               * Result vector and input vector with respect to the current
+               * matrix node.
+               */
+              Vector<Number> local_y(m);
+              Vector<Number> local_x(n);
+
+              /**
+               * Restrict the global vector @p x to the current matrix block.
+               */
+              for (size_type j = 0; j < n; j++)
+                {
+                  local_x(j) = x((*this->leaf_set[l]->col_index_range)[0] + j);
+                }
+
+              switch (this->leaf_set[l]->type)
+                {
+                    case HMatrixType::FullMatrixType: {
+                      this->leaf_set[l]->fullmatrix->Cvmult(local_y, local_x);
+
+                      break;
+                    }
+                    case HMatrixType::RkMatrixType: {
+                      this->leaf_set[l]->rkmatrix->Cvmult(local_y, local_x);
+
+                      break;
+                    }
+                    default: {
+                      Assert(false,
+                             ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+                      break;
+                    }
+                }
+
+              /**
+               * Merge back the result vector @p local_y to the global vector @p y.
+               */
+              for (size_type i = 0; i < m; i++)
+                {
+                  y((*this->leaf_set[l]->row_index_range)[0] + i) +=
+                    alpha * local_y(i);
+                }
+            }
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+template <typename Number2, typename Number3>
+void
+HMatrix<spacedim, Number>::Tvmult_task_parallel(const Number2         beta,
+                                                Vector<Number>       &y,
+                                                const Number3         alpha,
+                                                const Vector<Number> &x) const
+{
+  static_assert(is_number_larger_or_equal<Number, Number2>());
+  static_assert(is_number_larger_or_equal<Number, Number3>());
+  /**
+   * The current \hmatrix node should be at the top level.
+   */
+  Assert(parent == nullptr, ExcInternalError());
+
+  if (property == HMatrixSupport::Property::symmetric)
+    {
+      vmult_task_parallel(beta, y, alpha, x);
+    }
+  else
+    {
+      const unsigned int thread_num = data_for_vmult_or_tvmult_threads->size();
+
+      /**
+       * Only perform parallel multiplication when the thread number is larger
+       * than 1. Otherwise, switch to the iterative serial version.
+       */
+      if (thread_num > 1)
+        {
+          // Set OpenBLAS num threads to 1 when task parallelization is used.
+          const int blas_num_threads = openblas_get_num_threads();
+          openblas_set_num_threads(1);
+
+          /**
+           * Perform thread local scaling of the result vector and
+           * multiplications. The multiplication results are stored locally in
+           * each thread.
+           */
+          auto local_scale_and_multiplication =
+            [this, beta, alpha, &y, &x](const unsigned int thread_no) -> void {
+            /**
+             * Local scaling: \f$y_q = \beta y_q\f$.
+             */
+            for (size_type i =
+                   (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                     .tvmult_result_index_range[0];
+                 i < (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                       .tvmult_result_index_range[1];
+                 i++)
+              {
+                y[i] *= beta;
+              }
+
+            /**
+             * Clear the local result vector before the multiplication begins.
+             */
+            (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+              .local_tvmult_result = Number(0.);
+            if (this->property == HMatrixSupport::Property::hermite_symmetric)
+              (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                .local_vmult_result = Number(0.);
+
+            /**
+             * Iterate over each \hmatrix node in the interval of the leaf
+             * set.
+             */
+            for (unsigned int l =
+                   (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                     .leaf_set_interval.first;
+                 l <= (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                        .leaf_set_interval.second;
+                 l++)
+              {
+                const size_type m = this->leaf_set[l]->m;
+                const size_type n = this->leaf_set[l]->n;
+
+                Vector<Number> local_y_for_Tvmult(n);
+                Vector<Number> local_x_for_Tvmult(m);
+
+                /**
+                 * Restrict the global vector @p x to the local vector.
+                 */
+                for (size_type i = 0; i < m; i++)
+                  {
+                    local_x_for_Tvmult(i) =
+                      x((*this->leaf_set[l]->row_index_range)[0] + i);
+                  }
+
+                switch (this->leaf_set[l]->type)
+                  {
+                      case HMatrixType::FullMatrixType: {
+                        this->leaf_set[l]->fullmatrix->Tvmult(
+                          local_y_for_Tvmult, local_x_for_Tvmult);
+
+                        break;
+                      }
+                      case HMatrixType::RkMatrixType: {
+                        this->leaf_set[l]->rkmatrix->Tvmult(local_y_for_Tvmult,
+                                                            local_x_for_Tvmult);
+
+                        break;
+                      }
+                      default: {
+                        Assert(false,
+                               ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+                        break;
+                      }
+                  }
+
+                /**
+                 * Merge back the result vector @p local_y_for_Tvmult obtained
+                 * from the current leaf set matrix block to the thread local
+                 * result vector.
+                 */
+                for (size_type j = 0; j < n; j++)
+                  {
+                    (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                      .local_tvmult_result(
+                        (*this->leaf_set[l]->col_index_range)[0] -
+                        (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                          .local_tvmult_result_index_range[0] +
+                        j) += alpha * local_y_for_Tvmult(j);
+                  }
+
+                if (this->property ==
+                      HMatrixSupport::Property::hermite_symmetric &&
+                    this->leaf_set[l]->block_type ==
+                      HMatrixSupport::BlockType::lower_triangular_block)
+                  {
+                    /**
+                     * Result vector and input vector with respect to the
+                     * current matrix node.
+                     */
+                    Vector<Number> local_y(m);
+                    Vector<Number> local_x(n);
+
+                    /**
+                     * Restrict the global vector @p x to the local vector.
+                     */
+                    for (size_type j = 0; j < n; j++)
+                      {
+                        local_x(j) =
+                          x((*this->leaf_set[l]->col_index_range)[0] + j);
+                      }
+
+                    switch (this->leaf_set[l]->type)
+                      {
+                          case HMatrixType::FullMatrixType: {
+                            this->leaf_set[l]->fullmatrix->Cvmult(local_y,
+                                                                  local_x);
+
+                            break;
+                          }
+                          case HMatrixType::RkMatrixType: {
+                            this->leaf_set[l]->rkmatrix->Cvmult(local_y,
+                                                                local_x);
+
+                            break;
+                          }
+                          default: {
+                            Assert(false,
+                                   ExcInvalidHMatrixType(
+                                     this->leaf_set[l]->type));
+
+                            break;
+                          }
+                      }
+
+                    /**
+                     * Merge back the result vector @p local_y obtained from the
+                     * current leaf set matrix node to the thread local result
+                     * vector.
+                     */
+                    for (size_type i = 0; i < m; i++)
+                      {
+                        (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                          .local_vmult_result(
+                            (*this->leaf_set[l]->row_index_range)[0] -
+                            (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                              .local_vmult_result_index_range[0] +
+                            i) += alpha * local_y(i);
+                      }
+                  }
+              }
+          };
+
+          Threads::TaskGroup<void> local_scaling_and_multiplication_tasks;
+          for (unsigned int i = 0; i < thread_num; i++)
+            {
+              local_scaling_and_multiplication_tasks +=
+                Threads::new_task(std::bind(local_scale_and_multiplication, i));
+            }
+
+          local_scaling_and_multiplication_tasks.join_all();
+
+          auto assemble_contribution_from_all_threads =
+            [this, &y](const unsigned int thread_no) -> void {
+            unsigned int other_thread_no = 0;
+            for (const auto &range_intersection :
+                 (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                   .tvmult_result_index_ranges_contributed_from_other_threads)
+              {
+                for (size_type i = range_intersection[0];
+                     i < range_intersection[1];
+                     i++)
+                  {
+                    y(i) +=
+                      (*this->data_for_vmult_or_tvmult_threads)[other_thread_no]
+                        .local_tvmult_result(
+                          i - (*this->data_for_vmult_or_tvmult_threads)
+                                [other_thread_no]
+                                  .local_tvmult_result_index_range[0]);
+                  }
+
+                other_thread_no++;
+              }
+
+            if (this->property == HMatrixSupport::Property::hermite_symmetric)
+              {
+                unsigned int other_thread_no = 0;
+                for (
+                  const auto &range_intersection :
+                  (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                    .vmult_result_index_ranges_contributed_from_other_threads)
+                  {
+                    for (size_type i = range_intersection[0];
+                         i < range_intersection[1];
+                         i++)
+                      {
+                        y(i) +=
+                          (*this->data_for_vmult_or_tvmult_threads)
+                            [other_thread_no]
+                              .local_vmult_result(
+                                i - (*this->data_for_vmult_or_tvmult_threads)
+                                      [other_thread_no]
+                                        .local_vmult_result_index_range[0]);
+                      }
+
+                    other_thread_no++;
+                  }
+              }
+          };
+
+          Threads::TaskGroup<void> assembly_tasks;
+          for (unsigned int i = 0; i < thread_num; i++)
+            {
+              assembly_tasks += Threads::new_task(
+                std::bind(assemble_contribution_from_all_threads, i));
+            }
+
+          assembly_tasks.join_all();
+
+          // Restore the original OpenBLAS num threads.
+          openblas_set_num_threads(blas_num_threads);
+        }
+      else
+        {
+          Tvmult_serial_iterative(beta, y, alpha, x);
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::Tvmult(Vector<Number>       &y,
                                   const Vector<Number> &x) const
 {
-  y = Number(0.);
-  this->Tvmult(y, x, this->property);
+  if (!vmult_strategy)
+    {
+      Assert(false, ExcInternalError());
+    }
+  else
+    vmult_strategy->Tvmult(y, *this, x);
 }
 
 
@@ -25915,7 +26072,12 @@ void
 HMatrix<spacedim, Number>::Tvmult_add(Vector<Number>       &y,
                                       const Vector<Number> &x) const
 {
-  this->Tvmult(y, x, this->property);
+  if (!vmult_strategy)
+    {
+      Assert(false, ExcInternalError());
+    }
+  else
+    vmult_strategy->Tvmult_add(y, *this, x);
 }
 
 
@@ -25926,9 +26088,12 @@ HMatrix<spacedim, Number>::Tvmult(Vector<Number>       &y,
                                   const Number2         alpha,
                                   const Vector<Number> &x) const
 {
-  static_assert(is_number_larger_or_equal<Number, Number2>());
-  y = Number(0.);
-  this->Tvmult(y, alpha, x, this->property);
+  if (!vmult_strategy)
+    {
+      Assert(false, ExcInternalError());
+    }
+  else
+    vmult_strategy->Tvmult(y, alpha, *this, x);
 }
 
 
@@ -25939,8 +26104,12 @@ HMatrix<spacedim, Number>::Tvmult_add(Vector<Number>       &y,
                                       const Number2         alpha,
                                       const Vector<Number> &x) const
 {
-  static_assert(is_number_larger_or_equal<Number, Number2>());
-  this->Tvmult(y, alpha, x, this->property);
+  if (!vmult_strategy)
+    {
+      Assert(false, ExcInternalError());
+    }
+  else
+    vmult_strategy->Tvmult_add(y, alpha, *this, x);
 }
 
 
@@ -28048,346 +28217,13 @@ HMatrix<spacedim, Number>::Hvmult(
 
 
 template <int spacedim, typename Number>
-void
-HMatrix<spacedim, Number>::Hvmult(Vector<Number>       &y,
-                                  const Vector<Number> &x) const
-{
-  y = Number(0.);
-  this->Hvmult(y, x, this->property);
-}
-
-
-template <int spacedim, typename Number>
-void
-HMatrix<spacedim, Number>::Hvmult_add(Vector<Number>       &y,
-                                      const Vector<Number> &x) const
-{
-  this->Hvmult(y, x, this->property);
-}
-
-
-template <int spacedim, typename Number>
-template <typename Number2>
-void
-HMatrix<spacedim, Number>::Hvmult(Vector<Number>       &y,
-                                  const Number2         alpha,
-                                  const Vector<Number> &x) const
-{
-  static_assert(is_number_larger_or_equal<Number, Number2>());
-  y = Number(0.);
-  this->Hvmult(y, alpha, x, this->property);
-}
-
-
-template <int spacedim, typename Number>
-template <typename Number2>
-void
-HMatrix<spacedim, Number>::Hvmult_add(Vector<Number>       &y,
-                                      const Number2         alpha,
-                                      const Vector<Number> &x) const
-{
-  static_assert(is_number_larger_or_equal<Number, Number2>());
-  this->Hvmult(y, alpha, x, this->property);
-}
-
-
-template <int spacedim, typename Number>
-void
-HMatrix<spacedim, Number>::Hvmult_task_parallel(Vector<Number>       &y,
-                                                const Vector<Number> &x)
-{
-  Hvmult_task_parallel(1.0, y, 1.0, x);
-}
-
-
-template <int spacedim, typename Number>
 template <typename Number2, typename Number3>
 void
-HMatrix<spacedim, Number>::Hvmult_task_parallel(const Number2         beta,
-                                                Vector<Number>       &y,
-                                                const Number3         alpha,
-                                                const Vector<Number> &x)
-{
-  static_assert(is_number_larger_or_equal<Number, Number2>());
-  static_assert(is_number_larger_or_equal<Number, Number3>());
-  /**
-   * The current \hmatrix node should be at the top level.
-   */
-  Assert(parent == nullptr, ExcInternalError());
-
-  if constexpr (numbers::NumberTraits<Number>::is_complex)
-    {
-      if (property == HMatrixSupport::Property::hermite_symmetric)
-        {
-          vmult_task_parallel(beta, y, alpha, x);
-        }
-      else
-        {
-          const unsigned int thread_num =
-            data_for_vmult_or_tvmult_threads.size();
-
-          /**
-           * Only perform parallel multiplication when the thread number is
-           * larger than 1. Otherwise, switch to the iterative serial version.
-           */
-          if (thread_num > 1)
-            {
-              // Set OpenBLAS num threads to 1 when task parallelization is
-              // used.
-              const int blas_num_threads = openblas_get_num_threads();
-              openblas_set_num_threads(1);
-
-              /**
-               * Perform thread local scaling of the result vector and
-               * multiplications. The multiplication results are stored locally
-               * in each thread.
-               */
-              auto local_scale_and_multiplication =
-                [this, beta, alpha, &y, &x](
-                  const unsigned int thread_no) -> void {
-                /**
-                 * Local scaling: \f$y_q = \beta y_q\f$.
-                 */
-                for (size_type i =
-                       this->data_for_vmult_or_tvmult_threads[thread_no]
-                         .tvmult_result_index_range[0];
-                     i < this->data_for_vmult_or_tvmult_threads[thread_no]
-                           .tvmult_result_index_range[1];
-                     i++)
-                  {
-                    y[i] *= beta;
-                  }
-
-                /**
-                 * Clear the local result vector before the multiplication
-                 * begins.
-                 */
-                this->data_for_vmult_or_tvmult_threads[thread_no]
-                  .local_tvmult_result = Number(0.);
-                if (this->property == HMatrixSupport::Property::symmetric)
-                  this->data_for_vmult_or_tvmult_threads[thread_no]
-                    .local_vmult_result = Number(0.);
-
-                /**
-                 * Iterate over each \hmatrix node in the interval of the leaf
-                 * set.
-                 */
-                for (unsigned int l =
-                       this->data_for_vmult_or_tvmult_threads[thread_no]
-                         .leaf_set_interval.first;
-                     l <= this->data_for_vmult_or_tvmult_threads[thread_no]
-                            .leaf_set_interval.second;
-                     l++)
-                  {
-                    const size_type m = this->leaf_set[l]->m;
-                    const size_type n = this->leaf_set[l]->n;
-
-                    Vector<Number> local_y_for_Hvmult(n);
-                    Vector<Number> local_x_for_Hvmult(m);
-
-                    /**
-                     * Restrict the global vector @p x to the local vector.
-                     */
-                    for (size_type i = 0; i < m; i++)
-                      {
-                        local_x_for_Hvmult(i) =
-                          x((*this->leaf_set[l]->row_index_range)[0] + i);
-                      }
-
-                    switch (this->leaf_set[l]->type)
-                      {
-                          case HMatrixType::FullMatrixType: {
-                            this->leaf_set[l]->fullmatrix->Hvmult(
-                              local_y_for_Hvmult, local_x_for_Hvmult);
-
-                            break;
-                          }
-                          case HMatrixType::RkMatrixType: {
-                            this->leaf_set[l]->rkmatrix->Hvmult(
-                              local_y_for_Hvmult, local_x_for_Hvmult);
-
-                            break;
-                          }
-                          default: {
-                            Assert(false,
-                                   ExcInvalidHMatrixType(
-                                     this->leaf_set[l]->type));
-
-                            break;
-                          }
-                      }
-
-                    /**
-                     * Merge back the result vector @p local_y_for_Hvmult obtained
-                     * from the current leaf set matrix block to the thread
-                     * local result vector.
-                     */
-                    for (size_type j = 0; j < n; j++)
-                      {
-                        this->data_for_vmult_or_tvmult_threads[thread_no]
-                          .local_tvmult_result(
-                            (*this->leaf_set[l]->col_index_range)[0] -
-                            this->data_for_vmult_or_tvmult_threads[thread_no]
-                              .local_tvmult_result_index_range[0] +
-                            j) += alpha * local_y_for_Hvmult(j);
-                      }
-
-                    if (this->property == HMatrixSupport::Property::symmetric &&
-                        this->leaf_set[l]->block_type ==
-                          HMatrixSupport::BlockType::lower_triangular_block)
-                      {
-                        /**
-                         * Result vector and input vector with respect to the
-                         * current matrix node.
-                         */
-                        Vector<Number> local_y(m);
-                        Vector<Number> local_x(n);
-
-                        /**
-                         * Restrict the global vector @p x to the local vector.
-                         */
-                        for (size_type j = 0; j < n; j++)
-                          {
-                            local_x(j) =
-                              x((*this->leaf_set[l]->col_index_range)[0] + j);
-                          }
-
-                        switch (this->leaf_set[l]->type)
-                          {
-                              case HMatrixType::FullMatrixType: {
-                                this->leaf_set[l]->fullmatrix->Cvmult(local_y,
-                                                                      local_x);
-
-                                break;
-                              }
-                              case HMatrixType::RkMatrixType: {
-                                this->leaf_set[l]->rkmatrix->Cvmult(local_y,
-                                                                    local_x);
-
-                                break;
-                              }
-                              default: {
-                                Assert(false,
-                                       ExcInvalidHMatrixType(
-                                         this->leaf_set[l]->type));
-
-                                break;
-                              }
-                          }
-
-                        /**
-                         * Merge back the result vector @p local_y obtained from the
-                         * current leaf set matrix node to the thread local
-                         * result vector.
-                         */
-                        for (size_type i = 0; i < m; i++)
-                          {
-                            this->data_for_vmult_or_tvmult_threads[thread_no]
-                              .local_vmult_result(
-                                (*this->leaf_set[l]->row_index_range)[0] -
-                                this
-                                  ->data_for_vmult_or_tvmult_threads[thread_no]
-                                  .local_vmult_result_index_range[0] +
-                                i) += alpha * local_y(i);
-                          }
-                      }
-                  }
-              };
-
-              Threads::TaskGroup<void> local_scaling_and_multiplication_tasks;
-              for (unsigned int i = 0; i < thread_num; i++)
-                {
-                  local_scaling_and_multiplication_tasks += Threads::new_task(
-                    std::bind(local_scale_and_multiplication, i));
-                }
-
-              local_scaling_and_multiplication_tasks.join_all();
-
-              auto assemble_contribution_from_all_threads =
-                [this, &y](const unsigned int thread_no) -> void {
-                unsigned int other_thread_no = 0;
-                for (
-                  const auto &range_intersection :
-                  this->data_for_vmult_or_tvmult_threads[thread_no]
-                    .tvmult_result_index_ranges_contributed_from_other_threads)
-                  {
-                    for (size_type i = range_intersection[0];
-                         i < range_intersection[1];
-                         i++)
-                      {
-                        y(i) +=
-                          this
-                            ->data_for_vmult_or_tvmult_threads[other_thread_no]
-                            .local_tvmult_result(
-                              i - this
-                                    ->data_for_vmult_or_tvmult_threads
-                                      [other_thread_no]
-                                    .local_tvmult_result_index_range[0]);
-                      }
-
-                    other_thread_no++;
-                  }
-
-                if (this->property == HMatrixSupport::Property::symmetric)
-                  {
-                    unsigned int other_thread_no = 0;
-                    for (
-                      const auto &range_intersection :
-                      this->data_for_vmult_or_tvmult_threads[thread_no]
-                        .vmult_result_index_ranges_contributed_from_other_threads)
-                      {
-                        for (size_type i = range_intersection[0];
-                             i < range_intersection[1];
-                             i++)
-                          {
-                            y(i) +=
-                              this
-                                ->data_for_vmult_or_tvmult_threads
-                                  [other_thread_no]
-                                .local_vmult_result(
-                                  i - this
-                                        ->data_for_vmult_or_tvmult_threads
-                                          [other_thread_no]
-                                        .local_vmult_result_index_range[0]);
-                          }
-
-                        other_thread_no++;
-                      }
-                  }
-              };
-
-              Threads::TaskGroup<void> assembly_tasks;
-              for (unsigned int i = 0; i < thread_num; i++)
-                {
-                  assembly_tasks += Threads::new_task(
-                    std::bind(assemble_contribution_from_all_threads, i));
-                }
-
-              assembly_tasks.join_all();
-
-              // Restore the original OpenBLAS num threads.
-              openblas_set_num_threads(blas_num_threads);
-            }
-          else
-            {
-              Hvmult_serial_iterative(beta, y, alpha, x);
-            }
-        }
-    }
-  else
-    {
-      Tvmult_task_parallel(beta, y, alpha, x);
-    }
-}
-
-
-template <int spacedim, typename Number>
-template <typename Number2, typename Number3>
-void
-HMatrix<spacedim, Number>::Hvmult_serial_iterative(const Number2         beta,
-                                                   Vector<Number>       &y,
-                                                   const Number3         alpha,
-                                                   const Vector<Number> &x)
+HMatrix<spacedim, Number>::Hvmult_serial_iterative(
+  const Number2         beta,
+  Vector<Number>       &y,
+  const Number3         alpha,
+  const Vector<Number> &x) const
 {
   static_assert(is_number_larger_or_equal<Number, Number2>());
   static_assert(is_number_larger_or_equal<Number, Number3>());
@@ -28520,6 +28356,345 @@ HMatrix<spacedim, Number>::Hvmult_serial_iterative(const Number2         beta,
     {
       this->Tvmult_serial_iterative(beta, y, alpha, x);
     }
+}
+
+
+template <int spacedim, typename Number>
+template <typename Number2, typename Number3>
+void
+HMatrix<spacedim, Number>::Hvmult_task_parallel(const Number2         beta,
+                                                Vector<Number>       &y,
+                                                const Number3         alpha,
+                                                const Vector<Number> &x) const
+{
+  static_assert(is_number_larger_or_equal<Number, Number2>());
+  static_assert(is_number_larger_or_equal<Number, Number3>());
+  /**
+   * The current \hmatrix node should be at the top level.
+   */
+  Assert(parent == nullptr, ExcInternalError());
+
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
+    {
+      if (property == HMatrixSupport::Property::hermite_symmetric)
+        {
+          vmult_task_parallel(beta, y, alpha, x);
+        }
+      else
+        {
+          const unsigned int thread_num =
+            data_for_vmult_or_tvmult_threads->size();
+
+          /**
+           * Only perform parallel multiplication when the thread number is
+           * larger than 1. Otherwise, switch to the iterative serial version.
+           */
+          if (thread_num > 1)
+            {
+              // Set OpenBLAS num threads to 1 when task parallelization is
+              // used.
+              const int blas_num_threads = openblas_get_num_threads();
+              openblas_set_num_threads(1);
+
+              /**
+               * Perform thread local scaling of the result vector and
+               * multiplications. The multiplication results are stored locally
+               * in each thread.
+               */
+              auto local_scale_and_multiplication =
+                [this, beta, alpha, &y, &x](
+                  const unsigned int thread_no) -> void {
+                /**
+                 * Local scaling: \f$y_q = \beta y_q\f$.
+                 */
+                for (size_type i =
+                       (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                         .tvmult_result_index_range[0];
+                     i < (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                           .tvmult_result_index_range[1];
+                     i++)
+                  {
+                    y[i] *= beta;
+                  }
+
+                /**
+                 * Clear the local result vector before the multiplication
+                 * begins.
+                 */
+                (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                  .local_tvmult_result = Number(0.);
+                if (this->property == HMatrixSupport::Property::symmetric)
+                  (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                    .local_vmult_result = Number(0.);
+
+                /**
+                 * Iterate over each \hmatrix node in the interval of the leaf
+                 * set.
+                 */
+                for (unsigned int l =
+                       (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                         .leaf_set_interval.first;
+                     l <= (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                            .leaf_set_interval.second;
+                     l++)
+                  {
+                    const size_type m = this->leaf_set[l]->m;
+                    const size_type n = this->leaf_set[l]->n;
+
+                    Vector<Number> local_y_for_Hvmult(n);
+                    Vector<Number> local_x_for_Hvmult(m);
+
+                    /**
+                     * Restrict the global vector @p x to the local vector.
+                     */
+                    for (size_type i = 0; i < m; i++)
+                      {
+                        local_x_for_Hvmult(i) =
+                          x((*this->leaf_set[l]->row_index_range)[0] + i);
+                      }
+
+                    switch (this->leaf_set[l]->type)
+                      {
+                          case HMatrixType::FullMatrixType: {
+                            this->leaf_set[l]->fullmatrix->Hvmult(
+                              local_y_for_Hvmult, local_x_for_Hvmult);
+
+                            break;
+                          }
+                          case HMatrixType::RkMatrixType: {
+                            this->leaf_set[l]->rkmatrix->Hvmult(
+                              local_y_for_Hvmult, local_x_for_Hvmult);
+
+                            break;
+                          }
+                          default: {
+                            Assert(false,
+                                   ExcInvalidHMatrixType(
+                                     this->leaf_set[l]->type));
+
+                            break;
+                          }
+                      }
+
+                    /**
+                     * Merge back the result vector @p local_y_for_Hvmult obtained
+                     * from the current leaf set matrix block to the thread
+                     * local result vector.
+                     */
+                    for (size_type j = 0; j < n; j++)
+                      {
+                        (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                          .local_tvmult_result(
+                            (*this->leaf_set[l]->col_index_range)[0] -
+                            (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                              .local_tvmult_result_index_range[0] +
+                            j) += alpha * local_y_for_Hvmult(j);
+                      }
+
+                    if (this->property == HMatrixSupport::Property::symmetric &&
+                        this->leaf_set[l]->block_type ==
+                          HMatrixSupport::BlockType::lower_triangular_block)
+                      {
+                        /**
+                         * Result vector and input vector with respect to the
+                         * current matrix node.
+                         */
+                        Vector<Number> local_y(m);
+                        Vector<Number> local_x(n);
+
+                        /**
+                         * Restrict the global vector @p x to the local vector.
+                         */
+                        for (size_type j = 0; j < n; j++)
+                          {
+                            local_x(j) =
+                              x((*this->leaf_set[l]->col_index_range)[0] + j);
+                          }
+
+                        switch (this->leaf_set[l]->type)
+                          {
+                              case HMatrixType::FullMatrixType: {
+                                this->leaf_set[l]->fullmatrix->Cvmult(local_y,
+                                                                      local_x);
+
+                                break;
+                              }
+                              case HMatrixType::RkMatrixType: {
+                                this->leaf_set[l]->rkmatrix->Cvmult(local_y,
+                                                                    local_x);
+
+                                break;
+                              }
+                              default: {
+                                Assert(false,
+                                       ExcInvalidHMatrixType(
+                                         this->leaf_set[l]->type));
+
+                                break;
+                              }
+                          }
+
+                        /**
+                         * Merge back the result vector @p local_y obtained from the
+                         * current leaf set matrix node to the thread local
+                         * result vector.
+                         */
+                        for (size_type i = 0; i < m; i++)
+                          {
+                            (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                              .local_vmult_result(
+                                (*this->leaf_set[l]->row_index_range)[0] -
+                                (*this->data_for_vmult_or_tvmult_threads)
+                                  [thread_no]
+                                    .local_vmult_result_index_range[0] +
+                                i) += alpha * local_y(i);
+                          }
+                      }
+                  }
+              };
+
+              Threads::TaskGroup<void> local_scaling_and_multiplication_tasks;
+              for (unsigned int i = 0; i < thread_num; i++)
+                {
+                  local_scaling_and_multiplication_tasks += Threads::new_task(
+                    std::bind(local_scale_and_multiplication, i));
+                }
+
+              local_scaling_and_multiplication_tasks.join_all();
+
+              auto assemble_contribution_from_all_threads =
+                [this, &y](const unsigned int thread_no) -> void {
+                unsigned int other_thread_no = 0;
+                for (
+                  const auto &range_intersection :
+                  (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                    .tvmult_result_index_ranges_contributed_from_other_threads)
+                  {
+                    for (size_type i = range_intersection[0];
+                         i < range_intersection[1];
+                         i++)
+                      {
+                        y(i) +=
+                          (*this->data_for_vmult_or_tvmult_threads)
+                            [other_thread_no]
+                              .local_tvmult_result(
+                                i - (*this->data_for_vmult_or_tvmult_threads)
+                                      [other_thread_no]
+                                        .local_tvmult_result_index_range[0]);
+                      }
+
+                    other_thread_no++;
+                  }
+
+                if (this->property == HMatrixSupport::Property::symmetric)
+                  {
+                    unsigned int other_thread_no = 0;
+                    for (
+                      const auto &range_intersection :
+                      (*this->data_for_vmult_or_tvmult_threads)[thread_no]
+                        .vmult_result_index_ranges_contributed_from_other_threads)
+                      {
+                        for (size_type i = range_intersection[0];
+                             i < range_intersection[1];
+                             i++)
+                          {
+                            y(i) +=
+                              (*this->data_for_vmult_or_tvmult_threads)
+                                [other_thread_no]
+                                  .local_vmult_result(
+                                    i -
+                                    (*this->data_for_vmult_or_tvmult_threads)
+                                      [other_thread_no]
+                                        .local_vmult_result_index_range[0]);
+                          }
+
+                        other_thread_no++;
+                      }
+                  }
+              };
+
+              Threads::TaskGroup<void> assembly_tasks;
+              for (unsigned int i = 0; i < thread_num; i++)
+                {
+                  assembly_tasks += Threads::new_task(
+                    std::bind(assemble_contribution_from_all_threads, i));
+                }
+
+              assembly_tasks.join_all();
+
+              // Restore the original OpenBLAS num threads.
+              openblas_set_num_threads(blas_num_threads);
+            }
+          else
+            {
+              Hvmult_serial_iterative(beta, y, alpha, x);
+            }
+        }
+    }
+  else
+    {
+      Tvmult_task_parallel(beta, y, alpha, x);
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::Hvmult(Vector<Number>       &y,
+                                  const Vector<Number> &x) const
+{
+  if (!vmult_strategy)
+    {
+      Assert(false, ExcInternalError());
+    }
+  else
+    vmult_strategy->Hvmult(y, *this, x);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::Hvmult_add(Vector<Number>       &y,
+                                      const Vector<Number> &x) const
+{
+  if (!vmult_strategy)
+    {
+      Assert(false, ExcInternalError());
+    }
+  else
+    vmult_strategy->Hvmult_add(y, *this, x);
+}
+
+
+template <int spacedim, typename Number>
+template <typename Number2>
+void
+HMatrix<spacedim, Number>::Hvmult(Vector<Number>       &y,
+                                  const Number2         alpha,
+                                  const Vector<Number> &x) const
+{
+  if (!vmult_strategy)
+    {
+      Assert(false, ExcInternalError());
+    }
+  else
+    vmult_strategy->Hvmult(y, alpha, *this, x);
+}
+
+
+template <int spacedim, typename Number>
+template <typename Number2>
+void
+HMatrix<spacedim, Number>::Hvmult_add(Vector<Number>       &y,
+                                      const Number2         alpha,
+                                      const Vector<Number> &x) const
+{
+  if (!vmult_strategy)
+    {
+      Assert(false, ExcInternalError());
+    }
+  else
+    vmult_strategy->Hvmult_add(y, alpha, *this, x);
 }
 
 
@@ -34758,14 +34933,14 @@ HMatrix<spacedim, Number>::get_row_index_range_for_leaf_set_interval(
     std::max_element(index_range_upper_bound.begin(),
                      index_range_upper_bound.end());
 
-  data_for_vmult_or_tvmult_threads[thread_no]
+  (*data_for_vmult_or_tvmult_threads)[thread_no]
     .local_vmult_result_index_range[0] = *min_it;
-  data_for_vmult_or_tvmult_threads[thread_no]
+  (*data_for_vmult_or_tvmult_threads)[thread_no]
     .local_vmult_result_index_range[1] = *max_it;
 
-  Assert(data_for_vmult_or_tvmult_threads[thread_no]
+  Assert((*data_for_vmult_or_tvmult_threads)[thread_no]
              .local_vmult_result_index_range[1] >
-           data_for_vmult_or_tvmult_threads[thread_no]
+           (*data_for_vmult_or_tvmult_threads)[thread_no]
              .local_vmult_result_index_range[0],
          ExcInternalError());
 }
@@ -34802,14 +34977,14 @@ HMatrix<spacedim, Number>::get_column_index_range_for_leaf_set_interval(
     std::max_element(index_range_upper_bound.begin(),
                      index_range_upper_bound.end());
 
-  data_for_vmult_or_tvmult_threads[thread_no]
+  (*data_for_vmult_or_tvmult_threads)[thread_no]
     .local_tvmult_result_index_range[0] = *min_it;
-  data_for_vmult_or_tvmult_threads[thread_no]
+  (*data_for_vmult_or_tvmult_threads)[thread_no]
     .local_tvmult_result_index_range[1] = *max_it;
 
-  Assert(data_for_vmult_or_tvmult_threads[thread_no]
+  Assert((*data_for_vmult_or_tvmult_threads)[thread_no]
              .local_tvmult_result_index_range[1] >
-           data_for_vmult_or_tvmult_threads[thread_no]
+           (*data_for_vmult_or_tvmult_threads)[thread_no]
              .local_tvmult_result_index_range[0],
          ExcInternalError());
 }
@@ -34821,11 +34996,11 @@ HMatrix<spacedim, Number>::
   compute_vmult_contributing_index_ranges_from_all_threads(
     const unsigned int thread_no)
 {
-  const unsigned int thread_num = data_for_vmult_or_tvmult_threads.size();
+  const unsigned int thread_num = data_for_vmult_or_tvmult_threads->size();
 
-  data_for_vmult_or_tvmult_threads[thread_no]
+  (*data_for_vmult_or_tvmult_threads)[thread_no]
     .vmult_result_index_ranges_contributed_from_other_threads.clear();
-  data_for_vmult_or_tvmult_threads[thread_no]
+  (*data_for_vmult_or_tvmult_threads)[thread_no]
     .vmult_result_index_ranges_contributed_from_other_threads.resize(
       thread_num);
 
@@ -34834,11 +35009,11 @@ HMatrix<spacedim, Number>::
   for (unsigned int i = 0; i < thread_num; i++)
     {
       intersect(
-        data_for_vmult_or_tvmult_threads[thread_no].vmult_result_index_range,
-        data_for_vmult_or_tvmult_threads[i].local_vmult_result_index_range,
+        (*data_for_vmult_or_tvmult_threads)[thread_no].vmult_result_index_range,
+        (*data_for_vmult_or_tvmult_threads)[i].local_vmult_result_index_range,
         range_intersection);
 
-      data_for_vmult_or_tvmult_threads[thread_no]
+      (*data_for_vmult_or_tvmult_threads)[thread_no]
         .vmult_result_index_ranges_contributed_from_other_threads[i] =
         range_intersection;
     }
@@ -34851,11 +35026,11 @@ HMatrix<spacedim, Number>::
   compute_tvmult_contributing_index_ranges_from_all_threads(
     const unsigned int thread_no)
 {
-  const unsigned int thread_num = data_for_vmult_or_tvmult_threads.size();
+  const unsigned int thread_num = data_for_vmult_or_tvmult_threads->size();
 
-  data_for_vmult_or_tvmult_threads[thread_no]
+  (*data_for_vmult_or_tvmult_threads)[thread_no]
     .tvmult_result_index_ranges_contributed_from_other_threads.clear();
-  data_for_vmult_or_tvmult_threads[thread_no]
+  (*data_for_vmult_or_tvmult_threads)[thread_no]
     .tvmult_result_index_ranges_contributed_from_other_threads.resize(
       thread_num);
 
@@ -34864,11 +35039,12 @@ HMatrix<spacedim, Number>::
   for (unsigned int i = 0; i < thread_num; i++)
     {
       intersect(
-        data_for_vmult_or_tvmult_threads[thread_no].tvmult_result_index_range,
-        data_for_vmult_or_tvmult_threads[i].local_tvmult_result_index_range,
+        (*data_for_vmult_or_tvmult_threads)[thread_no]
+          .tvmult_result_index_range,
+        (*data_for_vmult_or_tvmult_threads)[i].local_tvmult_result_index_range,
         range_intersection);
 
-      data_for_vmult_or_tvmult_threads[thread_no]
+      (*data_for_vmult_or_tvmult_threads)[thread_no]
         .tvmult_result_index_ranges_contributed_from_other_threads[i] =
         range_intersection;
     }
@@ -34938,7 +35114,8 @@ HMatrix<spacedim, Number>::prepare_for_vmult_or_tvmult(const bool is_vmult,
    */
   if (thread_num > 1)
     {
-      data_for_vmult_or_tvmult_threads.resize(thread_num);
+      data_for_vmult_or_tvmult_threads =
+        std::make_unique<std::vector<VmultOrTvmultThreadData>>(thread_num);
 
       /**
        * Compute the task costs for all leaf \hmatrix nodes.
@@ -34974,7 +35151,7 @@ HMatrix<spacedim, Number>::prepare_for_vmult_or_tvmult(const bool is_vmult,
          is_vmult,
          is_tvmult](const std::pair<int64_t, int64_t> &interval,
                     const unsigned int                 thread_no) -> void {
-        this->data_for_vmult_or_tvmult_threads[thread_no].leaf_set_interval =
+        (*this->data_for_vmult_or_tvmult_threads)[thread_no].leaf_set_interval =
           interval;
 
         if (is_vmult)
@@ -34988,11 +35165,11 @@ HMatrix<spacedim, Number>::prepare_for_vmult_or_tvmult(const bool is_vmult,
             /**
              * Initialize local result vector.
              */
-            this->data_for_vmult_or_tvmult_threads[thread_no]
+            (*this->data_for_vmult_or_tvmult_threads)[thread_no]
               .local_vmult_result.reinit(
-                this->data_for_vmult_or_tvmult_threads[thread_no]
+                (*this->data_for_vmult_or_tvmult_threads)[thread_no]
                   .local_vmult_result_index_range[1] -
-                this->data_for_vmult_or_tvmult_threads[thread_no]
+                (*this->data_for_vmult_or_tvmult_threads)[thread_no]
                   .local_vmult_result_index_range[0]);
 
             /**
@@ -35003,10 +35180,10 @@ HMatrix<spacedim, Number>::prepare_for_vmult_or_tvmult(const bool is_vmult,
               this->m / thread_num;
             Assert(vmult_result_vector_size > 0, ExcInternalError());
 
-            this->data_for_vmult_or_tvmult_threads[thread_no]
+            (*this->data_for_vmult_or_tvmult_threads)[thread_no]
               .vmult_result_index_range[0] =
               thread_no * vmult_result_vector_size;
-            this->data_for_vmult_or_tvmult_threads[thread_no]
+            (*this->data_for_vmult_or_tvmult_threads)[thread_no]
               .vmult_result_index_range[1] =
               thread_no == thread_num - 1 ?
                 m :
@@ -35024,11 +35201,11 @@ HMatrix<spacedim, Number>::prepare_for_vmult_or_tvmult(const bool is_vmult,
             /**
              * Initialize local result vector.
              */
-            this->data_for_vmult_or_tvmult_threads[thread_no]
+            (*this->data_for_vmult_or_tvmult_threads)[thread_no]
               .local_tvmult_result.reinit(
-                this->data_for_vmult_or_tvmult_threads[thread_no]
+                (*this->data_for_vmult_or_tvmult_threads)[thread_no]
                   .local_tvmult_result_index_range[1] -
-                this->data_for_vmult_or_tvmult_threads[thread_no]
+                (*this->data_for_vmult_or_tvmult_threads)[thread_no]
                   .local_tvmult_result_index_range[0]);
 
             /**
@@ -35039,10 +35216,10 @@ HMatrix<spacedim, Number>::prepare_for_vmult_or_tvmult(const bool is_vmult,
               this->n / thread_num;
             Assert(tvmult_result_vector_size > 0, ExcInternalError());
 
-            this->data_for_vmult_or_tvmult_threads[thread_no]
+            (*this->data_for_vmult_or_tvmult_threads)[thread_no]
               .tvmult_result_index_range[0] =
               thread_no * tvmult_result_vector_size;
-            this->data_for_vmult_or_tvmult_threads[thread_no]
+            (*this->data_for_vmult_or_tvmult_threads)[thread_no]
               .tvmult_result_index_range[1] =
               thread_no == thread_num - 1 ?
                 n :
@@ -35090,10 +35267,6 @@ HMatrix<spacedim, Number>::prepare_for_vmult_or_tvmult(const bool is_vmult,
         }
 
       thread_mutual_preparation_tasks.join_all();
-    }
-  else
-    {
-      data_for_vmult_or_tvmult_threads.clear();
     }
 }
 
@@ -36146,8 +36319,11 @@ HMatrix<spacedim, Number>::memory_consumption_of_current_hmat_node() const
     (MemoryConsumption::memory_consumption(Sigma_P) - sizeof(Sigma_P)) +
     (MemoryConsumption::memory_consumption(Sigma_R) - sizeof(Sigma_R)) +
     (MemoryConsumption::memory_consumption(Sigma_F) - sizeof(Sigma_F)) +
-    (MemoryConsumption::memory_consumption(data_for_vmult_or_tvmult_threads) -
-     sizeof(data_for_vmult_or_tvmult_threads));
+    sizeof(data_for_vmult_or_tvmult_threads);
+
+  if (data_for_vmult_or_tvmult_threads != nullptr)
+    memory_for_hmat_node +=
+      MemoryConsumption::memory_consumption(*data_for_vmult_or_tvmult_threads);
 
   return memory_for_hmat_node;
 }

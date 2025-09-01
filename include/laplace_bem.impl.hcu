@@ -17,6 +17,8 @@
 
 #include <deal.II/grid/tria.h>
 
+#include <deal.II/lac/vector.h>
+
 #include <iostream>
 #include <memory>
 #include <string>
@@ -155,6 +157,17 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::set_use_hmat(
   bool useHmat)
 {
   priv_->use_hmat_ = useHmat;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+inline void
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  set_iterative_solver_vmult_type(const IterativeSolverVmultType type)
+{
+  priv_->vmult_type_ = type;
 }
 
 template <int dim,

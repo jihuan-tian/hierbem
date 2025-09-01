@@ -7,6 +7,7 @@
  */
 
 #include <deal.II/base/logstream.h>
+
 #include <deal.II/grid/manifold_lib.h>
 
 #include <boost/program_options.hpp>
@@ -20,7 +21,9 @@
 #include "debug_tools.h"
 #include "grid_in_ext.h"
 #include "hbem_test_config.h"
+#include "hmatrix/hmatrix_vmult_strategy.h"
 #include "laplace_bem.h"
+#include "preconditioners/preconditioner_type.h"
 
 using namespace dealii;
 using namespace HierBEM;
@@ -28,9 +31,11 @@ namespace po = boost::program_options;
 
 struct CmdOpts
 {
-  unsigned int dirichlet_space_fe_order;
-  unsigned int neumann_space_fe_order;
-  unsigned int mapping_order;
+  unsigned int             dirichlet_space_fe_order;
+  unsigned int             neumann_space_fe_order;
+  unsigned int             mapping_order;
+  PreconditionerType       precond_type;
+  IterativeSolverVmultType vmult_type;
 };
 
 CmdOpts
@@ -44,7 +49,9 @@ parse_cmdline(int argc, char *argv[])
     ("help,h", "show help message")
     ("dirichlet-order,d", po::value<unsigned int>()->default_value(1), "Finite element space order for the Dirichlet data")
     ("neumann-order,n", po::value<unsigned int>()->default_value(0), "Finite element space order for the Neumann data")
-    ("mapping-order,m", po::value<unsigned int>()->default_value(1), "Mapping order for the sphere");
+    ("mapping-order,m", po::value<unsigned int>()->default_value(1), "Mapping order for the sphere")
+    ("precond-type,p", po::value<unsigned int>()->default_value(0), "Preconditioner for iterative solver: 0:H-Cholesky, 1:operator preconditioner, 2:identity")
+    ("vmult-type,v", po::value<unsigned int>()->default_value(0), "H-matrix vmult type: 0:serial recursive, 1:serial iterative, 2:task parallel");
   // clang-format on
 
   po::variables_map vm;
@@ -60,6 +67,46 @@ parse_cmdline(int argc, char *argv[])
   opts.dirichlet_space_fe_order = vm["dirichlet-order"].as<unsigned int>();
   opts.neumann_space_fe_order   = vm["neumann-order"].as<unsigned int>();
   opts.mapping_order            = vm["mapping-order"].as<unsigned int>();
+
+  switch (vm["precond-type"].as<unsigned int>())
+    {
+        case 0: {
+          opts.precond_type = PreconditionerType::HMatrixFactorization;
+          break;
+        }
+        case 1: {
+          opts.precond_type = PreconditionerType::OperatorPreconditioning;
+          break;
+        }
+        case 2: {
+          opts.precond_type = PreconditionerType::Identity;
+          break;
+        }
+        default: {
+          opts.precond_type = PreconditionerType::HMatrixFactorization;
+          break;
+        }
+    }
+
+  switch (vm["vmult-type"].as<unsigned int>())
+    {
+        case 0: {
+          opts.vmult_type = IterativeSolverVmultType::SerialRecursive;
+          break;
+        }
+        case 1: {
+          opts.vmult_type = IterativeSolverVmultType::SerialIterative;
+          break;
+        }
+        case 2: {
+          opts.vmult_type = IterativeSolverVmultType::TaskParallel;
+          break;
+        }
+        default: {
+          opts.vmult_type = IterativeSolverVmultType::SerialRecursive;
+          break;
+        }
+    }
 
   return opts;
 }
@@ -161,6 +208,8 @@ main(int argc, char *argv[])
     MultithreadInfo::n_threads() // Number of threads used for ACA
   );
   bem.set_project_name("laplace-bem-dirichlet-hmatrix-two-spheres");
+  bem.set_preconditioner_type(opts.precond_type);
+  bem.set_iterative_solver_vmult_type(opts.vmult_type);
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");

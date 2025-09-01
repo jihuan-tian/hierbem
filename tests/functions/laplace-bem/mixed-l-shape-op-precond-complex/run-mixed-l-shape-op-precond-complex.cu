@@ -13,7 +13,9 @@
 
 #include "debug_tools.h"
 #include "hbem_test_config.h"
+#include "hmatrix/hmatrix_vmult_strategy.h"
 #include "laplace_bem.h"
+#include "preconditioners/preconditioner_type.h"
 
 using namespace dealii;
 using namespace HierBEM;
@@ -64,10 +66,12 @@ namespace HierBEM
 } // namespace HierBEM
 
 void
-run_mixed_l_shape_op_precond_complex()
+run_mixed_l_shape_op_precond_complex(const IterativeSolverVmultType vmult_type)
 {
   // Write run-time logs to file
-  std::ofstream ofs("mixed-l-shape-op-precond-complex.log");
+  std::ofstream ofs(std::string("mixed-l-shape-op-precond-complex-vmult-") +
+                    std::string(vmult_type_name(vmult_type)) +
+                    std::string(".log"));
   deallog.pop();
   deallog.depth_console(0);
   deallog.depth_file(5);
@@ -111,9 +115,8 @@ run_mixed_l_shape_op_precond_complex()
     MultithreadInfo::n_threads() // Number of threads used for ACA
   );
   bem.set_project_name("mixed-l-shape-op-precond-complex");
-  bem.set_preconditioner_type(
-    LaplaceBEM<dim, spacedim, std::complex<double>, double>::
-      PreconditionerType::OperatorPreconditioning);
+  bem.set_preconditioner_type(PreconditionerType::OperatorPreconditioning);
+  bem.set_iterative_solver_vmult_type(vmult_type);
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");
