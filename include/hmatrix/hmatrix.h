@@ -3483,6 +3483,22 @@ public:
     const HMatrixSupport::Property top_hmat_property);
 
   /**
+   * @brief Get the pointer to the top left leaf node in the \hmatrix.
+   *
+   * @return Pointer to the \hmatrix leaf node
+   */
+  HMatrix<spacedim, Number> *
+  get_top_left_leaf_node();
+
+  /**
+   * @brief Get the pointer to the top left leaf node in the \hmatrix.
+   *
+   * @return Pointer to the \hmatrix leaf node
+   */
+  const HMatrix<spacedim, Number> *
+  get_top_left_leaf_node() const;
+
+  /**
    * Build the leaf set of the current \hmatnode.
    */
   void
@@ -32737,12 +32753,15 @@ HMatrix<spacedim, Number>::compute_lu_factorization_task_parallel(
    * Send a message to the starting task node, i.e. the first leaf node, and
    * trigger the parallel execution of the factorization.
    */
-  Assert(leaf_set[0]->factorize_lu_or_cholesky_graph_node, ExcInternalError());
+  HMatrix<spacedim, Number> *top_left_node = this->get_top_left_leaf_node();
+  Assert(top_left_node != nullptr, ExcInternalError());
+  Assert(top_left_node->factorize_lu_or_cholesky_graph_node,
+         ExcInternalError());
 
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
   timer.start();
 #endif
-  leaf_set[0]->factorize_lu_or_cholesky_graph_node->try_put(
+  top_left_node->factorize_lu_or_cholesky_graph_node->try_put(
     tbb::flow::continue_msg());
 
   dag.wait_for_all();
@@ -35324,12 +35343,15 @@ HMatrix<spacedim, Number>::compute_cholesky_factorization_task_parallel(
    * Send a message to the starting task node, i.e. the first leaf node, and
    * trigger the parallel execution of the factorization.
    */
-  Assert(leaf_set[0]->factorize_lu_or_cholesky_graph_node, ExcInternalError());
+  HMatrix<spacedim, Number> *top_left_node = this->get_top_left_leaf_node();
+  Assert(top_left_node != nullptr, ExcInternalError());
+  Assert(top_left_node->factorize_lu_or_cholesky_graph_node,
+         ExcInternalError());
 
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
   timer.start();
 #endif
-  leaf_set[0]->factorize_lu_or_cholesky_graph_node->try_put(
+  top_left_node->factorize_lu_or_cholesky_graph_node->try_put(
     tbb::flow::continue_msg());
 
   dag.wait_for_all();
@@ -35831,6 +35853,42 @@ HMatrix<spacedim, Number>::link_hmat_nodes_on_cross_from_diagonal_blocks(
           submatrices[i * n_col_blocks + i]
             ->link_hmat_nodes_on_cross_from_diagonal_blocks(top_hmat_property);
         }
+    }
+}
+
+
+template <int spacedim, typename Number>
+HMatrix<spacedim, Number> *
+HMatrix<spacedim, Number>::get_top_left_leaf_node()
+{
+  Assert(block_type == HMatrixSupport::BlockType::diagonal_block,
+         ExcInvalidHMatrixBlockType(block_type));
+
+  HMatrix<spacedim, Number> *current_node = this;
+  while (true)
+    {
+      if (current_node->submatrices.size() == 0)
+        return current_node;
+      else
+        current_node = current_node->submatrices[0];
+    }
+}
+
+
+template <int spacedim, typename Number>
+const HMatrix<spacedim, Number> *
+HMatrix<spacedim, Number>::get_top_left_leaf_node() const
+{
+  Assert(block_type == HMatrixSupport::BlockType::diagonal_block,
+         ExcInvalidHMatrixBlockType(block_type));
+
+  const HMatrix<spacedim, Number> *current_node = this;
+  while (true)
+    {
+      if (current_node->submatrices.size() == 0)
+        return current_node;
+      else
+        current_node = current_node->submatrices[0];
     }
 }
 

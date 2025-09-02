@@ -24,6 +24,7 @@
 #include "grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
+#include "hmatrix/hmatrix.h"
 #include "laplace_bem.h"
 #include "mapping/mapping_info.h"
 #include "sauter_quadrature.hcu"

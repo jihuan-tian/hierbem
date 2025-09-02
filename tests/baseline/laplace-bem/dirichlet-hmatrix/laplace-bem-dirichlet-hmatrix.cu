@@ -25,6 +25,7 @@
 #include "cu_profile.hcu"
 #include "debug_tools.h"
 #include "hbem_test_config.h"
+#include "hmatrix/hmatrix.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
 #include "laplace_bem.h"
 #include "preconditioners/preconditioner_type.h"
@@ -232,6 +233,8 @@ main(int argc, char *argv[])
   bem.set_project_name("laplace-bem-dirichlet-hmatrix");
   bem.set_preconditioner_type(opts.precond_type);
   bem.set_iterative_solver_vmult_type(opts.vmult_type);
+  HMatrix<spacedim, double>::set_leaf_set_traversal_method(
+    HMatrix<spacedim, double>::SpaceFillingCurveType::Hilbert);
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");
