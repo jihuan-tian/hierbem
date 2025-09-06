@@ -35287,6 +35287,12 @@ HMatrix<spacedim, Number>::prepare_for_vmult_or_tvmult(const bool is_vmult,
 
       thread_mutual_preparation_tasks.join_all();
     }
+  else
+    {
+      // Fallback to the serial recursive mode.
+      this->set_vmult_strategy(
+        std::make_unique<HMatrixVmultSerialRecursive<spacedim, Number>>());
+    }
 }
 
 
