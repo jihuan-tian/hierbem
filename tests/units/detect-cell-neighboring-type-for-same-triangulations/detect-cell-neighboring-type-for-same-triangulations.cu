@@ -14,7 +14,7 @@
 
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
-#include <deal.II/fe/mapping_q_generic.h>
+#include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_out.h>
@@ -81,7 +81,7 @@ main()
     /**
      * Use a same mapping object for two cells.
      */
-    const MappingQGeneric<dim, spacedim> mapping(1);
+    const MappingQ<dim, spacedim> mapping(1);
 
     /**
      * Check the cell neighboring type for each pair of cells.
@@ -149,7 +149,7 @@ main()
     /**
      * Use a same mapping object for two cells.
      */
-    const MappingQGeneric<dim, spacedim> mapping(1);
+    const MappingQ<dim, spacedim> mapping(1);
 
     /**
      * Check the cell neighboring type for each pair of cells.
@@ -217,7 +217,7 @@ main()
     /**
      * Use a same mapping object for two cells.
      */
-    const MappingQGeneric<dim, spacedim> mapping(1);
+    const MappingQ<dim, spacedim> mapping(1);
 
     /**
      * Check the cell neighboring type for each pair of cells.

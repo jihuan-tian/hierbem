@@ -24,6 +24,7 @@
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_tools.h>
 #include <deal.II/fe/fe_values.h>
+#include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/grid/tria.h>
 
@@ -41,7 +42,7 @@
 #include "config.h"
 #include "generic_functors.h"
 #include "lapack_full_matrix_ext.h"
-#include "mapping/mapping_q_generic_ext.h"
+#include "mapping/mapping_q_ext.h"
 
 HBEM_NS_OPEN
 
@@ -372,6 +373,40 @@ namespace BEMTools
       }
 
     return grad_matrix;
+  }
+
+
+  /**
+   * Collect the gradient of @p MappingQ shape functions into a matrix.
+   *
+   * The shape functions and their derivatives of the mapping object have been
+   * evaluated at a list of points in the unit cell, therefore we need to
+   * specify at which point we will collect the data.
+   *
+   * @param mapping_data The @p InternalData within @p MappingQ .
+   * @param quad_no  The index of the point in the unit cell
+   */
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  mappingq_shape_grad_matrix(
+    const typename MappingQ<dim, spacedim>::InternalData &mapping_data,
+    const unsigned int                                    point_no,
+    LAPACKFullMatrixExt<RangeNumberType>                 &grad_matrix)
+  {
+    AssertDimension(dim, grad_matrix.n());
+    Assert(mapping_data.n_shape_functions >= grad_matrix.m(),
+           ExcInternalError());
+
+    // Iterate over each effective shape function of the mapping.
+    for (unsigned int s = 0; s < grad_matrix.m(); s++)
+      {
+        // Iterate over each manifold dimension.
+        for (unsigned int d = 0; d < dim; d++)
+          {
+            grad_matrix(s, d) = static_cast<RangeNumberType>(
+              mapping_data.derivative(point_no, s)[d]);
+          }
+      }
   }
 
 
@@ -850,7 +885,7 @@ namespace BEMTools
   get_support_points_in_real_cell(
     const typename Triangulation<dim, spacedim>::cell_iterator &cell,
     const FiniteElement<dim, spacedim>                         &fe,
-    const MappingQGeneric<dim, spacedim>                       &mapping,
+    const MappingQ<dim, spacedim>                              &mapping,
     const std::vector<unsigned int>                            &dof_permutation)
   {
     Assert(fe.has_support_points(),
@@ -899,7 +934,7 @@ namespace BEMTools
   get_support_points_in_real_cell(
     const typename Triangulation<dim, spacedim>::cell_iterator &cell,
     const FiniteElement<dim, spacedim>                         &fe,
-    const MappingQGeneric<dim, spacedim>                       &mapping,
+    const MappingQ<dim, spacedim>                              &mapping,
     const std::vector<unsigned int>                            &dof_permutation,
     std::vector<Point<spacedim>> &support_points_in_real_cell)
   {
@@ -951,7 +986,7 @@ namespace BEMTools
   get_support_points_in_default_dof_order_in_real_cell(
     const typename Triangulation<dim, spacedim>::cell_iterator &cell,
     const FiniteElement<dim, spacedim>                         &fe,
-    const MappingQGeneric<dim, spacedim>                       &mapping)
+    const MappingQ<dim, spacedim>                              &mapping)
   {
     Assert(fe.has_support_points(),
            ExcMessage("The finite element should have support points."));
@@ -997,7 +1032,7 @@ namespace BEMTools
   get_support_points_in_default_dof_order_in_real_cell(
     const typename Triangulation<dim, spacedim>::cell_iterator &cell,
     const FiniteElement<dim, spacedim>                         &fe,
-    const MappingQGeneric<dim, spacedim>                       &mapping,
+    const MappingQ<dim, spacedim>                              &mapping,
     std::vector<Point<spacedim>> &support_points_in_reall_cell)
   {
     const unsigned int dofs_per_cell = fe.dofs_per_cell;
@@ -1045,7 +1080,7 @@ namespace BEMTools
   get_lexicographic_support_points_in_real_cell(
     const typename Triangulation<dim, spacedim>::cell_iterator &cell,
     const FiniteElement<dim, spacedim>                         &fe,
-    const MappingQGeneric<dim, spacedim>                       &mapping)
+    const MappingQ<dim, spacedim>                              &mapping)
   {
     Assert(fe.has_support_points(),
            ExcMessage("The finite element should have support points."));
@@ -1081,7 +1116,7 @@ namespace BEMTools
   get_lexicographic_support_points_in_real_cell(
     const typename Triangulation<dim, spacedim>::cell_iterator &cell,
     const FiniteElement<dim, spacedim>                         &fe,
-    const MappingQGeneric<dim, spacedim>                       &mapping,
+    const MappingQ<dim, spacedim>                              &mapping,
     std::vector<Point<spacedim>> &support_points_in_real_cell)
   {
     Assert(fe.has_support_points(),
@@ -3066,6 +3101,67 @@ namespace BEMTools
 
 
   /**
+   * Compute the Jacobian determinant and normal vector at a given point in the
+   * unit cell.
+   *
+   * The point in the unit cell is not explicitly given, but the mapping shape
+   * function's gradient matrix provided has been evaluated at this point.
+   */
+  template <int spacedim, typename RangeNumberType = double>
+  RangeNumberType
+  surface_jacobian_det_and_normal_vector(
+    const std::vector<Point<spacedim, RangeNumberType>> &mapping_support_points,
+    const LAPACKFullMatrixExt<RangeNumberType> &mapping_shape_grad_matrix,
+    Tensor<1, spacedim, RangeNumberType>       &normal_vector,
+    const bool is_normal_vector_negated = false)
+  {
+    // Currently, only @p spacedim=3 is supported.
+    Assert(spacedim == 3, ExcInternalError());
+
+    RangeNumberType surface_jacobian_det = RangeNumberType();
+    LAPACKFullMatrixExt<RangeNumberType> jacobian_matrix_2x2(2, 2);
+    RangeNumberType surface_jacobian_det_components[spacedim];
+    for (unsigned int i = 0; i < spacedim; i++)
+      {
+        LAPACKFullMatrixExt<RangeNumberType> support_point_components =
+          collect_two_components_from_point3(mapping_support_points,
+                                             i,
+                                             (i + 1) % spacedim);
+        support_point_components.mmult(jacobian_matrix_2x2,
+                                       mapping_shape_grad_matrix);
+        surface_jacobian_det_components[i] =
+          jacobian_matrix_2x2.determinant2x2();
+        surface_jacobian_det +=
+          Utilities::fixed_power<2>(surface_jacobian_det_components[i]);
+      }
+
+    surface_jacobian_det = std::sqrt(surface_jacobian_det);
+
+    /**
+     * This loop transform the vector \f$[J_{01}, J_{12}, J_{20}]/\abs{J}\f$
+     * to \f$[J_{12}, J_{20}, J_{01}]/\abs{J}\f$, which is the normal vector.
+     */
+    for (unsigned int i = 0; i < spacedim; i++)
+      {
+        if (is_normal_vector_negated)
+          {
+            normal_vector[i] =
+              -surface_jacobian_det_components[(i + 1) % spacedim] /
+              surface_jacobian_det;
+          }
+        else
+          {
+            normal_vector[i] =
+              surface_jacobian_det_components[(i + 1) % spacedim] /
+              surface_jacobian_det;
+          }
+      }
+
+    return surface_jacobian_det;
+  }
+
+
+  /**
    * Calculate the covariant transformation matrix for mapping the gradient in
    * local coordinate chart to global coordinates.
    *
@@ -3384,8 +3480,8 @@ namespace BEMTools
   template <int dim, int spacedim>
   std::vector<unsigned int>
   generate_forward_mapping_support_point_permutation(
-    const MappingQGenericExt<dim, spacedim> &mapping,
-    unsigned int                             starting_corner)
+    const MappingQExt<dim, spacedim> &mapping,
+    unsigned int                      starting_corner)
   {
     // Currently, only dim=2 and spacedim=3 are supported.
     Assert((dim == 2) && (spacedim == 3), ExcInternalError());
@@ -3467,9 +3563,9 @@ namespace BEMTools
   template <int dim, int spacedim>
   void
   generate_forward_mapping_support_point_permutation(
-    const MappingQGenericExt<dim, spacedim> &mapping,
-    unsigned int                             starting_corner,
-    std::vector<unsigned int>               &support_point_permutation)
+    const MappingQExt<dim, spacedim> &mapping,
+    unsigned int                      starting_corner,
+    std::vector<unsigned int>        &support_point_permutation)
   {
     // Currently, only dim=2 and spacedim=3 are supported.
     Assert((dim == 2) && (spacedim == 3), ExcInternalError());
@@ -3756,8 +3852,8 @@ namespace BEMTools
   template <int dim, int spacedim>
   std::vector<unsigned int>
   generate_backward_mapping_support_point_permutation(
-    const MappingQGenericExt<dim, spacedim> &mapping,
-    unsigned int                             starting_corner)
+    const MappingQExt<dim, spacedim> &mapping,
+    unsigned int                      starting_corner)
   {
     // Currently, only dim=2 and spacedim=3 are supported.
     Assert((dim == 2) && (spacedim == 3), ExcInternalError());
@@ -3848,9 +3944,9 @@ namespace BEMTools
   template <int dim, int spacedim>
   void
   generate_backward_mapping_support_point_permutation(
-    const MappingQGenericExt<dim, spacedim> &mapping,
-    unsigned int                             starting_corner,
-    std::vector<unsigned int>               &support_point_permutation)
+    const MappingQExt<dim, spacedim> &mapping,
+    unsigned int                      starting_corner,
+    std::vector<unsigned int>        &support_point_permutation)
   {
     // Currently, only dim=2 and spacedim=3 are supported.
     Assert((dim == 2) && (spacedim == 3), ExcInternalError());

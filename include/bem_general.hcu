@@ -14,6 +14,7 @@
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature.h>
 #include <deal.II/base/quadrature_lib.h>
+#include <deal.II/base/tensor.h>
 #include <deal.II/base/types.h>
 #include <deal.II/base/work_stream.h>
 
@@ -21,6 +22,7 @@
 #include <deal.II/dofs/dof_tools.h>
 
 #include <deal.II/fe/fe_update_flags.h>
+#include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/lac/sparse_matrix.h>
 
@@ -38,6 +40,7 @@
 #include "bem_tools.h"
 #include "bem_values.hcu"
 #include "config.h"
+#include "dof_tools_ext.h"
 #include "gmsh_manipulation.h"
 #include "linalg.h"
 #include "mapping/mapping_info.h"
@@ -1420,7 +1423,7 @@ interpolate_indicator_vectors_for_subdomains(
  * @param factor
  * @param cell_iter
  * @param mapping
- * @param is_normal_vector_negated
+ * @param is_source_point_normal_vector_negated
  * @param scratch
  * @param data
  */
@@ -1429,15 +1432,19 @@ template <int dim,
           template <int, typename> typename KernelFunctionType,
           typename KernelNumberType>
 void
-evaluate_potential_on_one_cell(
+integral_transform_of_trial_bases_on_one_cell(
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
   const Point<spacedim,
               typename numbers::NumberTraits<KernelNumberType>::real_type>
-                                                                 &target_point,
-  const KernelNumberType                                          factor,
+    &target_point,
+  const Tensor<1,
+               spacedim,
+               typename numbers::NumberTraits<KernelNumberType>::real_type>
+                        &target_normal_vector,
+  const KernelNumberType factor,
   const typename DoFHandler<dim, spacedim>::active_cell_iterator &cell_iter,
-  const bool                                          is_normal_vector_negated,
-  CellWiseScratchDataForPotentialEval<dim, spacedim> &scratch,
+  const bool is_source_point_normal_vector_negated,
+  CellWiseScratchDataForPotentialEval<dim, spacedim>                   &scratch,
   CellWisePerTaskDataForPotentialEval<dim, spacedim, KernelNumberType> &data)
 {
   using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
@@ -1477,8 +1484,8 @@ evaluate_potential_on_one_cell(
         kernel.value(target_point,
                      static_cast<Point<spacedim, real_type>>(
                        scratch.fe_values_for_trial_space.quadrature_point(q)),
-                     Tensor<1, spacedim, real_type>(),
-                     (is_normal_vector_negated ? -1.0 : 1.0) *
+                     target_normal_vector,
+                     (is_source_point_normal_vector_negated ? -1.0 : 1.0) *
                        static_cast<Tensor<1, spacedim, real_type>>(
                          scratch.fe_values_for_trial_space.normal_vector(q))) *
         factor;
@@ -1549,8 +1556,8 @@ copy_cell_local_to_global_for_potential_eval(
  * @param dof_values_in_trial_space DoF values related to either the
  * Dirichlet data or Neumann data on the boundary.
  * @param mapping
- * @param is_normal_vector_negated When the boundary surface mesh is
- * extracted from a volume mesh and an exterior problem is solved, this flag
+ * @param is_source_point_normal_vector_negated When the boundary surface mesh
+ * is extracted from a volume mesh and an exterior problem is solved, this flag
  * should be true.
  * @param point_list
  * @param potential_values
@@ -1567,12 +1574,12 @@ evaluate_potential_at_points(
   const KernelNumberType                                factor,
   const DoFHandler<dim, spacedim>   &dof_handler_for_trial_space,
   const VectorType<RangeNumberType> &dof_values_in_trial_space,
-  const bool                         is_normal_vector_negated,
   const std::vector<
     Point<spacedim,
           typename numbers::NumberTraits<KernelNumberType>::real_type>>
-                              &target_point_list,
-  VectorType<RangeNumberType> &potential_values)
+                              &target_points,
+  VectorType<RangeNumberType> &potential_values,
+  const bool                   is_source_point_normal_vector_negated = false)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
@@ -1580,7 +1587,7 @@ evaluate_potential_at_points(
       typename numbers::NumberTraits<RangeNumberType>::real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
-  AssertDimension(target_point_list.size(), potential_values.size());
+  AssertDimension(target_points.size(), potential_values.size());
 
   const FiniteElement<dim, spacedim> &fe = dof_handler_for_trial_space.get_fe();
 
@@ -1592,8 +1599,14 @@ evaluate_potential_at_points(
   /**
    * Iterate over each target point.
    */
-  const unsigned int n_target_points = target_point_list.size();
+  const unsigned int n_target_points = target_points.size();
 
+  // Dummy normal vector at the target point, which will not needed by the
+  // kernel function.
+  Tensor<1,
+         spacedim,
+         typename numbers::NumberTraits<KernelNumberType>::real_type>
+    target_normal_vector_dummy;
   for (unsigned int i = 0; i < n_target_points; i++)
     {
       kernel_evaluation_discretized_to_dofs.reinit(n_dofs);
@@ -1601,15 +1614,23 @@ evaluate_potential_at_points(
       WorkStream::run(
         dof_handler_for_trial_space.begin_active(),
         dof_handler_for_trial_space.end(),
-        [&kernel, &target_point_list, i, factor, is_normal_vector_negated](
-          const auto &cell_iter, auto &scratch, auto &data) {
-          evaluate_potential_on_one_cell(kernel,
-                                         target_point_list[i],
-                                         factor,
-                                         cell_iter,
-                                         is_normal_vector_negated,
-                                         scratch,
-                                         data);
+        [&kernel,
+         &target_points,
+         &target_normal_vector_dummy,
+         i,
+         factor,
+         is_source_point_normal_vector_negated](const auto &cell_iter,
+                                                auto       &scratch,
+                                                auto       &data) {
+          integral_transform_of_trial_bases_on_one_cell(
+            kernel,
+            target_points[i],
+            target_normal_vector_dummy,
+            factor,
+            cell_iter,
+            is_source_point_normal_vector_negated,
+            scratch,
+            data);
         },
         [&kernel_evaluation_discretized_to_dofs](const auto &copy_data) {
           copy_cell_local_to_global_for_potential_eval(
@@ -1637,6 +1658,230 @@ evaluate_potential_at_points(
         LinAlg::linear_combination_tbb(dof_values_in_trial_space,
                                        kernel_evaluation_discretized_to_dofs);
     }
+}
+
+
+template <int dim,
+          int spacedim,
+          template <int, typename> typename KernelFunctionType,
+          typename RangeNumberType,
+          typename KernelNumberType,
+          template <typename> typename VectorType>
+void
+evaluate_conormal_trace_at_points(
+  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
+  const KernelNumberType                                factor,
+  const DoFHandler<dim, spacedim>   &dof_handler_for_trial_space,
+  const VectorType<RangeNumberType> &dof_values_in_trial_space,
+  const std::vector<
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+    &target_points,
+  const std::vector<
+    Tensor<1,
+           spacedim,
+           typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &target_normal_vectors,
+  VectorType<RangeNumberType> &conormal_traces,
+  const bool                   is_source_point_normal_vector_negated = false)
+{
+  static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
+  static_assert(
+    std::is_same<
+      typename numbers::NumberTraits<RangeNumberType>::real_type,
+      typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
+  AssertDimension(target_points.size(), conormal_traces.size());
+
+  const FiniteElement<dim, spacedim> &fe = dof_handler_for_trial_space.get_fe();
+
+  const types::global_dof_index n_dofs = dof_handler_for_trial_space.n_dofs();
+  VectorType<KernelNumberType>  kernel_evaluation_discretized_to_dofs(n_dofs);
+
+  QGauss<dim> quad_rule(fe.degree + 1);
+
+  /**
+   * Iterate over each target point.
+   */
+  const unsigned int n_target_points = target_points.size();
+
+  for (unsigned int i = 0; i < n_target_points; i++)
+    {
+      kernel_evaluation_discretized_to_dofs.reinit(n_dofs);
+
+      WorkStream::run(
+        dof_handler_for_trial_space.begin_active(),
+        dof_handler_for_trial_space.end(),
+        [&kernel,
+         &target_points,
+         &target_normal_vectors,
+         i,
+         factor,
+         is_source_point_normal_vector_negated](const auto &cell_iter,
+                                                auto       &scratch,
+                                                auto       &data) {
+          integral_transform_of_trial_bases_on_one_cell(
+            kernel,
+            target_points[i],
+            target_normal_vectors[i],
+            factor,
+            cell_iter,
+            is_source_point_normal_vector_negated,
+            scratch,
+            data);
+        },
+        [&kernel_evaluation_discretized_to_dofs](const auto &copy_data) {
+          copy_cell_local_to_global_for_potential_eval(
+            copy_data, kernel_evaluation_discretized_to_dofs);
+        },
+        CellWiseScratchDataForPotentialEval<dim, spacedim>(
+          fe,
+          quad_rule,
+          update_quadrature_points | update_values | update_JxW_values |
+            update_normal_vectors),
+        CellWisePerTaskDataForPotentialEval<dim, spacedim, KernelNumberType>(
+          fe));
+
+      /**
+       * Calculate the linear combination of the kernel evaluation and DoF
+       * values. N.B. The implementation here appends the results to the result
+       * vector, so that a single vector can accumulate the contribution from
+       * both the single layer and double layer potentials.
+       *
+       * In the linear combination, @p dof_values_in_trial_space is placed before
+       * @p kernel_evaluation_discretized_to_dofs, since it has a larger number
+       * type.
+       */
+      conormal_traces(i) +=
+        LinAlg::linear_combination_tbb(dof_values_in_trial_space,
+                                       kernel_evaluation_discretized_to_dofs);
+    }
+}
+
+
+/**
+ * @tparam target_dim The manifold dimensional of the target, which can be a surface or a volume.
+ */
+template <int dim,
+          int spacedim,
+          int target_dim,
+          template <int, typename> typename SLPKernelType,
+          template <int, typename> typename DLPKernelType,
+          typename RangeNumberType,
+          typename KernelNumberType,
+          template <typename> typename VectorType>
+void
+evaluate_representation_formula_for_potential(
+  const SLPKernelType<spacedim, KernelNumberType> &slp_kernel,
+  const DLPKernelType<spacedim, KernelNumberType> &dlp_kernel,
+  const DoFHandler<dim, spacedim>        &dof_handler_for_dirichlet_space,
+  const DoFHandler<dim, spacedim>        &dof_handler_for_neumann_space,
+  const VectorType<RangeNumberType>      &dirichlet_data,
+  const VectorType<RangeNumberType>      &neumann_data,
+  const DoFHandler<target_dim, spacedim> &dof_handler_for_target,
+  const unsigned int                      mapping_order_for_target,
+  VectorType<RangeNumberType>            &potential_values,
+  const bool                              is_interior_domain,
+  const bool is_source_point_normal_vector_negated = false)
+{
+  std::vector<
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+    target_points(dof_handler_for_target.n_dofs());
+
+  // Create a @p MappingInfo object with the given order.
+  MappingQ<target_dim, spacedim> mapping(mapping_order_for_target);
+  // Compute target support points.
+  DoFToolsExt::map_dofs_to_support_points(mapping,
+                                          dof_handler_for_target,
+                                          target_points);
+
+  // Single layer potential
+  evaluate_potential_at_points(slp_kernel,
+                               KernelNumberType(is_interior_domain ? 1.0 :
+                                                                     -1.0),
+                               dof_handler_for_neumann_space,
+                               neumann_data,
+                               target_points,
+                               potential_values,
+                               is_source_point_normal_vector_negated);
+
+  // Double layer potential
+  evaluate_potential_at_points(dlp_kernel,
+                               KernelNumberType(is_interior_domain ? -1.0 :
+                                                                     1.0),
+                               dof_handler_for_dirichlet_space,
+                               dirichlet_data,
+                               target_points,
+                               potential_values,
+                               is_source_point_normal_vector_negated);
+}
+
+
+template <int dim,
+          int spacedim,
+          template <int, typename> typename ADLPKernelType,
+          template <int, typename> typename HyperSingularKernelType,
+          typename RangeNumberType,
+          typename KernelNumberType,
+          template <typename> typename VectorType>
+void
+evaluate_representation_formula_for_conormal_trace(
+  const ADLPKernelType<spacedim, KernelNumberType> &adlp_kernel,
+  const HyperSingularKernelType<spacedim, KernelNumberType>
+                                    &hypersingular_kernel,
+  const DoFHandler<dim, spacedim>   &dof_handler_for_dirichlet_space,
+  const DoFHandler<dim, spacedim>   &dof_handler_for_neumann_space,
+  const VectorType<RangeNumberType> &dirichlet_data,
+  const VectorType<RangeNumberType> &neumann_data,
+  const DoFHandler<dim, spacedim>   &dof_handler_for_target_surface,
+  const unsigned int                 mapping_order_for_target_surface,
+  VectorType<RangeNumberType>       &conormal_traces,
+  const bool                         is_interior_domain,
+  const bool is_target_point_normal_vector_negated = false,
+  const bool is_source_point_normal_vector_negated = false)
+{
+  std::vector<
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+    target_points(dof_handler_for_target_surface.n_dofs());
+  std::vector<
+    Tensor<1,
+           spacedim,
+           typename numbers::NumberTraits<KernelNumberType>::real_type>>
+    target_normal_vectors(dof_handler_for_target_surface.n_dofs());
+
+  // Create a @p MappingInfo object with the given order.
+  MappingInfo<dim, spacedim> mapping_info(mapping_order_for_target_surface);
+  // Compute target support points.
+  DoFToolsExt::map_dofs_to_support_points_and_normal_vectors(
+    mapping_info,
+    dof_handler_for_target_surface,
+    target_points,
+    target_normal_vectors,
+    is_target_point_normal_vector_negated);
+
+  // Adjoint double layer potential
+  evaluate_conormal_trace_at_points(adlp_kernel,
+                                    KernelNumberType(is_interior_domain ? 1.0 :
+                                                                          -1.0),
+                                    dof_handler_for_neumann_space,
+                                    neumann_data,
+                                    target_points,
+                                    target_normal_vectors,
+                                    conormal_traces,
+                                    is_source_point_normal_vector_negated);
+
+  // Hypersingular potential
+  evaluate_conormal_trace_at_points(hypersingular_kernel,
+                                    KernelNumberType(is_interior_domain ? 1.0 :
+                                                                          -1.0),
+                                    dof_handler_for_dirichlet_space,
+                                    dirichlet_data,
+                                    target_points,
+                                    target_normal_vectors,
+                                    conormal_traces,
+                                    is_source_point_normal_vector_negated);
 }
 
 HBEM_NS_CLOSE

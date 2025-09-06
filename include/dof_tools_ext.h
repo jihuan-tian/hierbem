@@ -11,9 +11,14 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/geometry_info.h>
+#include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/types.h>
 
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_tools.h>
+
+#include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/grid/grid_tools.h>
 
@@ -21,12 +26,16 @@
 
 #include <algorithm>
 #include <map>
+#include <memory>
 #include <set>
 #include <vector>
 
+#include "bem_tools.h"
 #include "config.h"
 #include "dof_to_cell_topology.h"
 #include "gmsh_manipulation.h"
+#include "lapack_full_matrix_ext.h"
+#include "mapping/mapping_info.h"
 
 using namespace dealii;
 
@@ -469,6 +478,12 @@ namespace DoFToolsExt
   }
 
 
+  /**
+   * Get the coordinates for all support points in the DoF handler.
+   *
+   * This function returns the coordinates of the given template type, while
+   * deal.ii's implementation only returns the double type.
+   */
   template <int dim, int spacedim, typename Number = double>
   void
   map_dofs_to_support_points(
@@ -538,6 +553,111 @@ namespace DoFToolsExt
       {
         support_points[d] =
           full_support_points[map_from_local_to_full_dof_indices[d]];
+      }
+  }
+
+
+  /**
+   * Compute point coordinates and normal vectors at the support points of the
+   * finite element in the DoF handler.
+   *
+   * @param mapping_order Polynomial order of the Lagrange shape functions used
+   * for the mapping.
+   * @param dof_handler DoF handler for the target triangulation on which the
+   * support points and normal vectors will be computed.
+   * @param support_points
+   * @param normal_vectors
+   * @param is_normal_vector_negated Whether the computed normal vectors should
+   * be negated in case the original norma directions are not what we desire.
+   */
+  template <int dim, int spacedim, typename Number = double>
+  void
+  map_dofs_to_support_points_and_normal_vectors(
+    MappingInfo<dim, spacedim>               &mapping_info,
+    const DoFHandler<dim, spacedim>          &dof_handler,
+    std::vector<Point<spacedim, Number>>     &support_points,
+    std::vector<Tensor<1, spacedim, Number>> &normal_vectors,
+    const bool                                is_normal_vector_negated = false)
+  {
+    const types::global_dof_index n_dofs = dof_handler.n_dofs();
+    const unsigned n_dofs_per_cell       = dof_handler.get_fe().dofs_per_cell;
+    AssertDimension(n_dofs, support_points.size());
+    AssertDimension(n_dofs, normal_vectors.size());
+
+    // Flags indicating if a support point or normal vector at a DoF support
+    // point has been computed.
+    std::vector<bool> dof_flags;
+    dof_flags.assign(n_dofs, false);
+
+    // Get the unit support points of the finite element space.
+    const std::vector<Point<dim>> &fe_unit_support_points =
+      dof_handler.get_fe().get_unit_support_points();
+
+    std::unique_ptr<typename MappingQ<dim, spacedim>::InternalData>
+                      &mapping_data = mapping_info.get_data();
+    const unsigned int mapping_n_shape_functions =
+      mapping_data->n_shape_functions;
+    mapping_info.resize_internal_data(n_dofs_per_cell);
+
+    // Compute mapping shape function values and their derivatives at the
+    // support points of the finite element.
+    mapping_data->compute_shape_function_values(fe_unit_support_points);
+
+    // Collect gradient matrices of mapping shape functions, which are evaluated
+    // at the finite element support points.
+    std::vector<LAPACKFullMatrixExt<Number>> mapping_grad_matrices(
+      n_dofs_per_cell);
+    for (unsigned int d = 0; d < n_dofs_per_cell; d++)
+      {
+        mapping_grad_matrices[d].reinit(mapping_n_shape_functions, dim);
+        BEMTools::mappingq_shape_grad_matrix<dim, spacedim, Number>(
+          *mapping_data, d, mapping_grad_matrices[d]);
+      }
+
+    // Iterate over each cell in the DoF handler.
+    std::vector<types::global_dof_index> cell_dof_indices(n_dofs_per_cell);
+    for (const auto &cell : dof_handler.active_cell_iterators())
+      {
+        // Compute the support points of the mapping in the current cell.
+        mapping_info.get_mapping().compute_mapping_support_points(cell);
+        const std::vector<Point<spacedim>> &mapping_support_points =
+          mapping_info.get_mapping().get_support_points();
+        // Get the DoF indices in the current cell.
+        cell->get_dof_indices(cell_dof_indices);
+
+        for (unsigned int d = 0; d < n_dofs_per_cell; d++)
+          {
+            const types::global_dof_index dof_index = cell_dof_indices[d];
+            if (!dof_flags[dof_index])
+              {
+                // Compute support point.
+                const Point<spacedim> fe_support_point =
+                  mapping_info.get_mapping().transform_unit_to_real_cell(
+                    fe_unit_support_points[d]);
+                support_points[dof_index] = fe_support_point;
+
+                // Compute normal vector.
+                Tensor<1, spacedim> normal_vector;
+                BEMTools::surface_jacobian_det_and_normal_vector(
+                  mapping_support_points,
+                  mapping_grad_matrices[d],
+                  normal_vector,
+                  is_normal_vector_negated);
+                normal_vectors[dof_index] = normal_vector;
+
+                dof_flags[dof_index] = true;
+              }
+          }
+      }
+
+    std::vector<Point<spacedim>> support_points_double(n_dofs);
+    DoFTools::map_dofs_to_support_points(mapping_info.get_mapping(),
+                                         dof_handler,
+                                         support_points_double);
+
+    for (types::global_dof_index d = 0; d < n_dofs; d++)
+      {
+        support_points[d] = support_points_double[d];
       }
   }
 

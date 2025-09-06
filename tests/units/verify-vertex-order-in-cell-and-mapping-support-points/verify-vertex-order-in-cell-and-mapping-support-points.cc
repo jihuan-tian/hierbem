@@ -1,8 +1,8 @@
 /**
  * \file verify-vertex-order-in-cell-and-mapping-support-points.cc
  * \brief Verify the consistency between the order of vertices in a cell and the
- * support points in both @p MappingQGenericExt calculated by
- * @p MappingQGenericExt::compute_mapping_support_points
+ * support points in both @p MappingQExt calculated by
+ * @p MappingQExt::compute_mapping_support_points
  *
  * \ingroup testers
  * \author Jihuan Tian
@@ -18,7 +18,7 @@
 #include <iostream>
 
 #include "debug_tools.h"
-#include "mapping/mapping_q_generic_ext.h"
+#include "mapping/mapping_q_ext.h"
 
 using namespace dealii;
 
@@ -57,9 +57,9 @@ main()
    * cell.
    */
   std::cout
-    << "=== Support points obtained via MappingQGenericExt in the hierarchic order ==="
+    << "=== Support points obtained via MappingQExt in the hierarchic order ==="
     << std::endl;
-  MappingQGenericExt<dim, spacedim> mapping(mapping_order);
+  MappingQExt<dim, spacedim> mapping(mapping_order);
   mapping.compute_mapping_support_points(cell);
   print_vector_values(std::cout, mapping.get_support_points(), "\n", true);
 

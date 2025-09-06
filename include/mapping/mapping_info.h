@@ -12,9 +12,11 @@
 
 #include <deal.II/fe/fe_tools.h>
 
+#include <memory>
+
 #include "bem_tools.h"
 #include "config.h"
-#include "mapping_q_generic_ext.h"
+#include "mapping_q_ext.h"
 
 HBEM_NS_OPEN
 
@@ -71,6 +73,10 @@ public:
   /**
    * Resize the data tables in the internal data.
    *
+   * This function should be called when the number of points in the unit cell
+   * for evaluation are settled or have changed. These points can be quadrature
+   * points or support points of a finite element, etc.
+   *
    * The data tables depend on the number of mapping shape functions and the
    * number of quadrature points. After resizing and computing shape function
    * values including their derivatives, the values in the data tables will be
@@ -79,30 +85,30 @@ public:
    *
    * @pre
    * @post
-   * @param n_q_points
+   * @param n_points_in_unit_cell
    */
   void
-  resize_internal_data(const unsigned int n_q_points) const;
+  resize_internal_data(const unsigned int n_points_in_unit_cell) const;
 
-  std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData> &
+  std::unique_ptr<typename MappingQ<dim, spacedim>::InternalData> &
   get_data()
   {
     return data;
   }
 
-  MappingQGenericExt<dim, spacedim> &
+  MappingQExt<dim, spacedim> &
   get_mapping()
   {
     return mapping;
   }
 
-  const std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData> &
+  const std::unique_ptr<typename MappingQ<dim, spacedim>::InternalData> &
   get_data() const
   {
     return data;
   }
 
-  const MappingQGenericExt<dim, spacedim> &
+  const MappingQExt<dim, spacedim> &
   get_mapping() const
   {
     return mapping;
@@ -145,12 +151,12 @@ private:
   /**
    * Mapping object.
    */
-  MappingQGenericExt<dim, spacedim> mapping;
+  MappingQExt<dim, spacedim> mapping;
 
   /**
    * Pointer to the InternalData in the mapping.
    */
-  std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData> data;
+  std::unique_ptr<typename MappingQ<dim, spacedim>::InternalData> data;
 
   /**
    * The numbering used for accessing the list of support points in the
@@ -199,12 +205,13 @@ MappingInfo<dim, spacedim>::MappingInfo(const unsigned int order)
 template <int dim, int spacedim>
 void
 MappingInfo<dim, spacedim>::resize_internal_data(
-  const unsigned int n_q_points) const
+  const unsigned int n_points_in_unit_cell) const
 {
   const unsigned int mapping_n_shape_functions = data->n_shape_functions;
 
-  data->shape_values.resize(mapping_n_shape_functions * n_q_points);
-  data->shape_derivatives.resize(mapping_n_shape_functions * n_q_points);
+  data->shape_values.resize(mapping_n_shape_functions * n_points_in_unit_cell);
+  data->shape_derivatives.resize(mapping_n_shape_functions *
+                                 n_points_in_unit_cell);
 }
 
 
@@ -216,11 +223,11 @@ MappingInfo<dim, spacedim>::init_mapping_data()
     mapping.get_data(update_default, QGauss<dim>(1));
   /**
    * Downcast the smart pointer of @p Mapping<dim, spacedim>::InternalDataBase to
-   * @p MappingQGeneric<dim,spacedim>::InternalData by first unwrapping
+   * @p MappingQ<dim,spacedim>::InternalData by first unwrapping
    * the original smart pointer via @p static_cast then wrapping it again.
    */
-  data = std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>(
-    static_cast<typename MappingQGeneric<dim, spacedim>::InternalData *>(
+  data = std::unique_ptr<typename MappingQ<dim, spacedim>::InternalData>(
+    static_cast<typename MappingQ<dim, spacedim>::InternalData *>(
       database.release()));
 }
 

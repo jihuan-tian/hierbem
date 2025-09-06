@@ -26,12 +26,12 @@ main()
   FE_Q<dim, spacedim>   fe_for_dirichlet_space(3);
   FE_DGQ<dim, spacedim> fe_for_neumann_space(2);
 
-  MappingQGenericExt<dim, spacedim> kx_mapping(1);
-  MappingQGenericExt<dim, spacedim> ky_mapping(1);
+  MappingQExt<dim, spacedim> kx_mapping(1);
+  MappingQExt<dim, spacedim> ky_mapping(1);
 
-  std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>
+  std::unique_ptr<typename MappingQ<dim, spacedim>::InternalData>
     kx_mapping_data;
-  std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>
+  std::unique_ptr<typename MappingQ<dim, spacedim>::InternalData>
     ky_mapping_data;
 
   std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
@@ -39,20 +39,20 @@ main()
 
   /**
    * Downcast the smart pointer of @p Mapping<dim, spacedim>::InternalDataBase to
-   * @p MappingQGeneric<dim,spacedim>::InternalData by first unwrapping
+   * @p MappingQ<dim,spacedim>::InternalData by first unwrapping
    * the original smart pointer via @p static_cast then wrapping it again.
    */
   kx_mapping_data =
-    std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>(
-      static_cast<typename MappingQGeneric<dim, spacedim>::InternalData *>(
+    std::unique_ptr<typename MappingQ<dim, spacedim>::InternalData>(
+      static_cast<typename MappingQ<dim, spacedim>::InternalData *>(
         kx_mapping_database.release()));
 
   std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
     ky_mapping_database = ky_mapping.get_data(update_default, QGauss<dim>(1));
 
   ky_mapping_data =
-    std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>(
-      static_cast<typename MappingQGeneric<dim, spacedim>::InternalData *>(
+    std::unique_ptr<typename MappingQ<dim, spacedim>::InternalData>(
+      static_cast<typename MappingQ<dim, spacedim>::InternalData *>(
         ky_mapping_database.release()));
 
   SauterQuadratureRule<dim> sauter_quad_rule(5, 4, 4, 3);

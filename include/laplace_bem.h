@@ -249,8 +249,10 @@ public:
   void
   output_results() const;
 
+  template <int TargetDim>
   void
-  output_potential_at_target_points() const;
+  output_results_on_target_tria(const std::string                   vtk_file,
+                                Triangulation<TargetDim, spacedim> &tria) const;
 
   void
   run();

@@ -14,7 +14,7 @@
 #include <iostream>
 
 #include "debug_tools.h"
-#include "mapping/mapping_q_generic_ext.h"
+#include "mapping/mapping_q_ext.h"
 
 using namespace dealii;
 

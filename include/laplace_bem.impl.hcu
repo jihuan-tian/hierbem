@@ -471,17 +471,6 @@ template <int dim,
           typename KernelNumberType>
 void
 LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
-  output_potential_at_target_points() const
-{
-  priv_->output_potential_at_target_points();
-}
-
-template <int dim,
-          int spacedim,
-          typename RangeNumberType,
-          typename KernelNumberType>
-void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
   extract_surface_triangulation(
     const Triangulation<dim + 1, spacedim> &volume_triangulation,
     Triangulation<dim, spacedim>          &&surf_tria,
@@ -657,6 +646,19 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::output_results()
   const
 {
   priv_->output_results();
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+template <int TargetDim>
+void
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  output_results_on_target_tria(const std::string                   vtk_file,
+                                Triangulation<TargetDim, spacedim> &tria) const
+{
+  priv_->output_results_on_target_tria(vtk_file, tria);
 }
 
 #pragma endregion

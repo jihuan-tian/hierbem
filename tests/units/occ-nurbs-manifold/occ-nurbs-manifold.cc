@@ -33,7 +33,7 @@
 #include "gmsh_manipulation.h"
 #include "grid_in_ext.h"
 #include "hbem_test_config.h"
-#include "mapping/mapping_q_generic_ext.h"
+#include "mapping/mapping_q_ext.h"
 
 using namespace dealii;
 using namespace HierBEM;
@@ -48,7 +48,7 @@ enum ManifoldType
 
 enum MappingType
 {
-  // MappingQGenericExt
+  // MappingQExt
   LAGRANGE,
   // MappingManifold, i.e. manifold conforming
   MANIFOLD
@@ -148,9 +148,8 @@ parse_cmdline(int argc, char *argv[])
   opts.mapping_order = vm["mapping-order"].as<unsigned int>();
   if (opts.mapping_order == 0)
     {
-      std::cerr
-        << "Mapping order for MappingQGenericExt should be larger than 0!"
-        << std::endl;
+      std::cerr << "Mapping order for MappingQExt should be larger than 0!"
+                << std::endl;
       std::exit(EXIT_FAILURE);
     }
 
@@ -305,7 +304,7 @@ main(int argc, char *argv[])
   switch (opts.mapping_type)
     {
         case MappingType::LAGRANGE: {
-          mapping = new MappingQGenericExt<dim, spacedim>(opts.mapping_order);
+          mapping = new MappingQExt<dim, spacedim>(opts.mapping_order);
           break;
         }
         case MappingType::MANIFOLD: {

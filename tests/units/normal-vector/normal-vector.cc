@@ -26,9 +26,9 @@ main()
   triangulation.refine_global(1);
 
   // Use isometric element of 2nd order.
-  const unsigned int    fe_order = 2;
-  FE_Q<2, 3>            fe(fe_order);
-  MappingQGeneric<2, 3> mapping(fe_order);
+  const unsigned int fe_order = 2;
+  FE_Q<2, 3>         fe(fe_order);
+  MappingQ<2, 3>     mapping(fe_order);
 
   // Iterate over each cell in the triangulation.
   std::vector<Tensor<1, 3>> normal_vector_list;
@@ -38,9 +38,7 @@ main()
     {
       // Get the support points in tensor product order.
       std::vector<Point<3>> support_points =
-        HierBEM::tensor_product_support_points_in_real_cell(cell,
-                                                               fe,
-                                                               mapping);
+        HierBEM::tensor_product_support_points_in_real_cell(cell, fe, mapping);
 
       // Print each support point.
       for (unsigned int i = 0; i < support_points.size(); i++)
@@ -51,9 +49,9 @@ main()
       // Calculate the normal vector is the current cell.
       Tensor<1, 3> normal_vector;
       HierBEM::surface_jacobian_det_and_normal_vector(fe,
-                                                         support_points,
-                                                         Point<2>(0.5, 0.5),
-                                                         normal_vector);
+                                                      support_points,
+                                                      Point<2>(0.5, 0.5),
+                                                      normal_vector);
       normal_vector_list.push_back(normal_vector);
 
       counter++;

@@ -1,4 +1,5 @@
 #include <deal.II/base/logstream.h>
+#include <deal.II/base/numbers.h>
 
 #include <deal.II/dofs/dof_handler.h>
 
@@ -16,36 +17,42 @@
 
 #include <cuda_runtime.h>
 
+#include <cmath>
+#include <complex>
 #include <fstream>
 #include <iostream>
 
 #include "bem_general.hcu"
 #include "cu_profile.hcu"
+#include "data_out_ext.h"
 #include "debug_tools.h"
 #include "grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
 #include "laplace_bem.h"
 #include "platform_shared/laplace_kernels.h"
+#include "preconditioners/preconditioner_type.h"
 
 using namespace dealii;
 using namespace HierBEM;
 
-class DirichletBC : public Function<3>
+class DirichletBC : public Function<3, std::complex<double>>
 {
 public:
-  double
+  std::complex<double>
   value(const Point<3> &p, const unsigned int component = 0) const
   {
     (void)component;
 
+    const double angle = numbers::PI / 3.0;
     if (p(0) < 0)
       {
-        return 10;
+        return std::complex<double>(10 * std::cos(angle), 10 * std::sin(angle));
       }
     else
       {
-        return -10;
+        return std::complex<double>(-10 * std::cos(angle),
+                                    -10 * std::sin(angle));
       }
   }
 };
@@ -64,14 +71,14 @@ namespace HierBEM
  * of potential for a volume.
  */
 void
-output_results_at_targets(LaplaceBEM<2, 3, double, double> &bem)
+output_results_at_targets(LaplaceBEM<2, 3, std::complex<double>, double> &bem)
 {
-  const auto           &fe_dirichlet = bem.get_dof_handler_dirichlet().get_fe();
-  const auto           &fe_neumann   = bem.get_dof_handler_neumann().get_fe();
-  const Vector<double> &dirichlet_data        = bem.get_dirichlet_data();
-  const Vector<double> &neumann_data          = bem.get_neumann_data();
-  const auto           &dof_handler_dirichlet = bem.get_dof_handler_dirichlet();
-  const auto           &dof_handler_neumann   = bem.get_dof_handler_neumann();
+  const auto &fe_dirichlet = bem.get_dof_handler_dirichlet().get_fe();
+  const auto &fe_neumann   = bem.get_dof_handler_neumann().get_fe();
+  const Vector<std::complex<double>> &dirichlet_data = bem.get_dirichlet_data();
+  const Vector<std::complex<double>> &neumann_data   = bem.get_neumann_data();
+  const auto &dof_handler_dirichlet = bem.get_dof_handler_dirichlet();
+  const auto &dof_handler_neumann   = bem.get_dof_handler_neumann();
 
   PlatformShared::LaplaceKernel::SingleLayerKernel<3, double>        V;
   PlatformShared::LaplaceKernel::DoubleLayerKernel<3, double>        K;
@@ -92,8 +99,9 @@ output_results_at_targets(LaplaceBEM<2, 3, double, double> &bem)
     dof_handler_potential.distribute_dofs(fe_dirichlet);
     dof_handler_conormal_trace.distribute_dofs(fe_neumann);
 
-    Vector<double> potentials(dof_handler_potential.n_dofs());
-    Vector<double> conormal_traces(dof_handler_conormal_trace.n_dofs());
+    Vector<std::complex<double>> potentials(dof_handler_potential.n_dofs());
+    Vector<std::complex<double>> conormal_traces(
+      dof_handler_conormal_trace.n_dofs());
 
     evaluate_representation_formula_for_potential(V,
                                                   K,
@@ -118,12 +126,19 @@ output_results_at_targets(LaplaceBEM<2, 3, double, double> &bem)
       conormal_traces,
       false);
 
-    std::ofstream vtk_result("plane.vtk");
-    DataOut<2, 3> data_out;
-    data_out.add_data_vector(dof_handler_potential, potentials, "potential");
-    data_out.add_data_vector(dof_handler_conormal_trace,
-                             conormal_traces,
-                             "conormal_traces");
+    std::ofstream                           vtk_result("plane.vtk");
+    DataOut<2, 3>                           data_out;
+    ComplexOutputDataVector<Vector, double> potentials_vector(potentials);
+    ComplexOutputDataVector<Vector, double> conormal_traces_vector(
+      conormal_traces);
+    add_complex_data_vector(data_out,
+                            dof_handler_potential,
+                            potentials_vector,
+                            "potential");
+    add_complex_data_vector(data_out,
+                            dof_handler_conormal_trace,
+                            conormal_traces_vector,
+                            "conormal_traces");
     data_out.build_patches();
     data_out.write_vtk(vtk_result);
   }
@@ -142,8 +157,9 @@ output_results_at_targets(LaplaceBEM<2, 3, double, double> &bem)
     dof_handler_potential.distribute_dofs(fe_dirichlet);
     dof_handler_conormal_trace.distribute_dofs(fe_neumann);
 
-    Vector<double> potentials(dof_handler_potential.n_dofs());
-    Vector<double> conormal_traces(dof_handler_conormal_trace.n_dofs());
+    Vector<std::complex<double>> potentials(dof_handler_potential.n_dofs());
+    Vector<std::complex<double>> conormal_traces(
+      dof_handler_conormal_trace.n_dofs());
 
     evaluate_representation_formula_for_potential(V,
                                                   K,
@@ -156,24 +172,29 @@ output_results_at_targets(LaplaceBEM<2, 3, double, double> &bem)
                                                   potentials,
                                                   false);
 
-    std::ofstream vtk_result("cube.vtk");
-    DataOut<3, 3> data_out;
-    data_out.add_data_vector(dof_handler_potential, potentials, "potential");
+    std::ofstream                           vtk_result("cube.vtk");
+    DataOut<3, 3>                           data_out;
+    ComplexOutputDataVector<Vector, double> potentials_vector(potentials);
+    add_complex_data_vector(data_out,
+                            dof_handler_potential,
+                            potentials_vector,
+                            "potential");
     data_out.build_patches();
     data_out.write_vtk(vtk_result);
   }
 }
 
 void
-run_dirichlet_hmatrix_two_spheres(const IterativeSolverVmultType vmult_type)
+run_dirichlet_hmatrix_two_spheres_op_precond_complex(
+  const IterativeSolverVmultType vmult_type)
 {
   /**
    * @internal Pop out the default "DEAL" prefix string.
    */
   // Write run-time logs to file
-  std::ofstream ofs(std::string("dirichlet-hmatrix-two-spheres-vmult-") +
-                    std::string(vmult_type_name(vmult_type)) +
-                    std::string(".log"));
+  std::ofstream ofs(
+    std::string("dirichlet-hmatrix-two-spheres-op-precond-complex-vmult-") +
+    std::string(vmult_type_name(vmult_type)) + std::string(".log"));
   deallog.pop();
   deallog.depth_console(0);
   deallog.depth_file(5);
@@ -216,11 +237,12 @@ run_dirichlet_hmatrix_two_spheres(const IterativeSolverVmultType vmult_type)
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  const bool                                is_interior_problem = false;
-  LaplaceBEM<dim, spacedim, double, double> bem(
+  const bool is_interior_problem = false;
+  LaplaceBEM<dim, spacedim, std::complex<double>, double> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
-    LaplaceBEM<dim, spacedim, double, double>::ProblemType::DirichletBCProblem,
+    LaplaceBEM<dim, spacedim, std::complex<double>, double>::ProblemType::
+      DirichletBCProblem,
     is_interior_problem,         // is interior problem
     16,                          // n_min for cluster tree
     16,                          // n_min for block cluster tree
@@ -232,7 +254,8 @@ run_dirichlet_hmatrix_two_spheres(const IterativeSolverVmultType vmult_type)
     0.1,                         // aca epsilon for preconditioner
     MultithreadInfo::n_threads() // Number of threads used for ACA
   );
-  bem.set_project_name("dirichlet-hmatrix-two-spheres");
+  bem.set_project_name("dirichlet-hmatrix-two-spheres-op-precond-complex");
+  bem.set_preconditioner_type(PreconditionerType::OperatorPreconditioning);
   bem.set_iterative_solver_vmult_type(vmult_type);
 
   timer.stop();

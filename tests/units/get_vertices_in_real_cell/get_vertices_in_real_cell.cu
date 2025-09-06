@@ -10,7 +10,7 @@
 #include <deal.II/base/point.h>
 
 #include <deal.II/fe/fe_dgq.h>
-#include <deal.II/fe/mapping_q_generic.h>
+#include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_out.h>
@@ -37,7 +37,7 @@ main()
   std::ofstream mesh_file("square.msh");
   GridOut().write_msh(tria, mesh_file);
 
-  MappingQGeneric<2, 3> mapping(1);
+  MappingQ<2, 3> mapping(1);
 
   {
     FE_DGQ<2, 3> fe(2);

@@ -7,7 +7,7 @@
 #include <deal.II/base/point.h>
 
 #include <deal.II/fe/fe_q.h>
-#include <deal.II/fe/mapping_q_generic.h>
+#include <deal.II/fe/mapping_q.h>
 
 // Grid input and output
 #include <deal.II/grid/grid_generator.h>
@@ -71,7 +71,7 @@ main()
    * Create a mapping object, which is required in generating the map from
    * DoF indices to support points.
    */
-  const MappingQGeneric<dim, dim> mapping(fe_order);
+  const MappingQ<dim, dim> mapping(fe_order);
 
   /**
    * Generate a list of all DoF indices.

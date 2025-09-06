@@ -1,6 +1,6 @@
 /**
  * \file verify-mapping-q-generic.cc
- * \brief Verify the functions provided by the @p MappingQGeneric class.
+ * \brief Verify the functions provided by the @p MappingQ class.
  *
  * \ingroup testers dealii_verify
  * \author Jihuan Tian
@@ -11,7 +11,7 @@
 
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_values.h>
-#include <deal.II/fe/mapping_q_generic.h>
+#include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_out.h>
@@ -20,7 +20,7 @@
 #include <fstream>
 
 #include "debug_tools.h"
-#include "mapping/mapping_q_generic_ext.h"
+#include "mapping/mapping_q_ext.h"
 
 using namespace dealii;
 
@@ -42,9 +42,8 @@ main()
                                     quad,
                                     update_values | update_JxW_values);
 
-  const MappingQGeneric<dim, spacedim> &mapping =
-    dynamic_cast<const MappingQGeneric<dim, spacedim> &>(
-      fe_values.get_mapping());
+  const MappingQ<dim, spacedim> &mapping =
+    dynamic_cast<const MappingQ<dim, spacedim> &>(fe_values.get_mapping());
 
   std::cout << "Degree of the default mapping object in FEValues: "
             << mapping.get_degree() << std::endl;
@@ -53,7 +52,7 @@ main()
     /**
      * Create an independent mapping object.
      */
-    MappingQGenericExt<dim, spacedim> mapping(3);
+    MappingQExt<dim, spacedim> mapping(3);
 
     std::cout << "Degree of the mapping object: " << mapping.get_degree()
               << std::endl;
@@ -68,10 +67,10 @@ main()
       database = mapping.get_data(update_default, QGauss<dim>(1));
     /**
      * Downcast the pointer of Mapping<dim, spacedim>::InternalDataBase to
-     * MappingQGeneric<dim,spacedim>::InternalData.
+     * MappingQ<dim,spacedim>::InternalData.
      */
-    std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData> data(
-      static_cast<typename MappingQGeneric<dim, spacedim>::InternalData *>(
+    std::unique_ptr<typename MappingQ<dim, spacedim>::InternalData> data(
+      static_cast<typename MappingQ<dim, spacedim>::InternalData *>(
         database.release()));
 
     /**
@@ -116,7 +115,7 @@ main()
      * Create an extended mapping object and output the list of real support
      * points.
      */
-    MappingQGenericExt<dim, spacedim> mapping_ext(3);
+    MappingQExt<dim, spacedim> mapping_ext(3);
     for (const auto &e : tria.active_cell_iterators())
       {
         mapping_ext.compute_mapping_support_points(e);
@@ -135,9 +134,9 @@ main()
      * Create a finite element object with the same degree (order) as the
      * mapping and output the list of real support points.
      */
-    FE_Q<dim, spacedim>            fe(3);
-    MappingQGeneric<dim, spacedim> mapping(3);
-    DoFHandler<dim, spacedim>      dof_handler(tria);
+    FE_Q<dim, spacedim>       fe(3);
+    MappingQ<dim, spacedim>   mapping(3);
+    DoFHandler<dim, spacedim> dof_handler(tria);
     dof_handler.distribute_dofs(fe);
     print_support_point_info(fe, mapping, dof_handler, "fe_q_support_points");
 

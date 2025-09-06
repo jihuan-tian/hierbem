@@ -22,7 +22,7 @@
 #include <iostream>
 
 #include "debug_tools.h"
-#include "mapping/mapping_q_generic_ext.h"
+#include "mapping/mapping_q_ext.h"
 
 int
 main()
@@ -62,9 +62,9 @@ main()
   std::cout
     << "=== Support points obtained via FE_Q in the hierarchic order ==="
     << std::endl;
-  FE_Q<dim, spacedim>               fe_q(fe_order);
-  MappingQGenericExt<dim, spacedim> mapping(mapping_order);
-  const std::vector<Point<dim>>    &fe_q_unit_support_points =
+  FE_Q<dim, spacedim>            fe_q(fe_order);
+  MappingQExt<dim, spacedim>     mapping(mapping_order);
+  const std::vector<Point<dim>> &fe_q_unit_support_points =
     fe_q.get_unit_support_points();
   for (const auto p : fe_q_unit_support_points)
     {

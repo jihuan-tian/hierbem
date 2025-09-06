@@ -23,7 +23,7 @@
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_tools.h>
 #include <deal.II/fe/fe_values.h>
-#include <deal.II/fe/mapping_q_generic.h>
+#include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/grid/tria.h>
 
@@ -66,8 +66,7 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType = double>
   class KernelPulledbackToUnitCell
   {
@@ -181,8 +180,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV
   KernelPulledbackToUnitCell<dim,
@@ -204,8 +202,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV KernelPulledbackToUnitCell<
     dim,
@@ -216,8 +213,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV KernelPulledbackToUnitCell<dim,
                                                           spacedim,
@@ -242,8 +238,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV void
   KernelPulledbackToUnitCell<
@@ -258,8 +253,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV void
   KernelPulledbackToUnitCell<
@@ -274,8 +268,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType>
   HBEM_ATTR_HOST KernelNumberType
   KernelPulledbackToUnitCell<dim,
@@ -538,8 +531,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType>
   HBEM_ATTR_DEV KernelNumberType
   KernelPulledbackToUnitCell<dim,
@@ -813,8 +805,7 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType = double>
   class KernelPulledbackToSauterSpace
   {
@@ -901,8 +892,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV
   KernelPulledbackToSauterSpace<dim,
@@ -923,8 +913,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV KernelPulledbackToSauterSpace<
     dim,
@@ -935,8 +924,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType>
   HBEM_ATTR_HOST HBEM_ATTR_DEV KernelPulledbackToSauterSpace<dim,
                                                              spacedim,
@@ -959,8 +947,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType>
   HBEM_ATTR_HOST KernelNumberType
   KernelPulledbackToSauterSpace<dim,
@@ -1060,8 +1047,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType>
   HBEM_ATTR_DEV KernelNumberType
   KernelPulledbackToSauterSpace<dim,

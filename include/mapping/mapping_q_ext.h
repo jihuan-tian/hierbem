@@ -1,12 +1,12 @@
 /**
- * @file mapping_q_generic_ext.h
- * @brief Extend the class @p MappingQGeneric
+ * @file mapping_q_ext.h
+ * @brief Extend the class @p MappingQ
  *
  * @date 2022-07-08
  * @author Jihuan Tian
  */
-#ifndef HIERBEM_INCLUDE_MAPPING_MAPPING_Q_GENERIC_EXT_H_
-#define HIERBEM_INCLUDE_MAPPING_MAPPING_Q_GENERIC_EXT_H_
+#ifndef HIERBEM_INCLUDE_MAPPING_MAPPING_Q_EXT_H_
+#define HIERBEM_INCLUDE_MAPPING_MAPPING_Q_EXT_H_
 
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor_product_polynomials.h>
@@ -14,7 +14,7 @@
 #include <deal.II/fe/fe_data.h>
 #include <deal.II/fe/fe_q_base.h>
 #include <deal.II/fe/fe_tools.h>
-#include <deal.II/fe/mapping_q_generic.h>
+#include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/grid/tria.h>
 
@@ -23,22 +23,22 @@
 DEAL_II_NAMESPACE_OPEN
 
 template <int dim, int spacedim = dim>
-class MappingQGenericExt : public MappingQGeneric<dim, spacedim>
+class MappingQExt : public MappingQ<dim, spacedim>
 {
 public:
   /**
    * Default constructor
    */
-  MappingQGenericExt();
+  MappingQExt();
 
-  MappingQGenericExt(const unsigned int polynomial_degree);
+  MappingQExt(const unsigned int polynomial_degree);
 
   /**
    * Copy constructor
    *
    * @param mapping
    */
-  MappingQGenericExt(const MappingQGenericExt<dim, spacedim> &mapping);
+  MappingQExt(const MappingQExt<dim, spacedim> &mapping);
 
   /**
    * Compute a list of support points in the real cell in the hierarchic
@@ -52,7 +52,7 @@ public:
    *
    * @param cell
    */
-  using MappingQGeneric<dim, spacedim>::compute_mapping_support_points;
+  using MappingQ<dim, spacedim>::compute_mapping_support_points;
   void
   compute_mapping_support_points(
     const typename Triangulation<dim, spacedim>::cell_iterator &cell);
@@ -60,7 +60,7 @@ public:
   /**
    * Transform the point in the unit to the real cell, assuming that the
    * @p support_points have already been computed using the function
-   * @p MappingQGenericExt<dim, spacedim>::compute_mapping_support_points.
+   * @p MappingQExt<dim, spacedim>::compute_mapping_support_points.
    *
    * \alert{Because this function has non-covariant return type and different
    * cv-qualifier (non-const here) from the function with the same name in the
@@ -71,7 +71,7 @@ public:
    * @param p
    * @return
    */
-  using MappingQGeneric<dim, spacedim>::transform_unit_to_real_cell;
+  using MappingQ<dim, spacedim>::transform_unit_to_real_cell;
   Point<spacedim>
   transform_unit_to_real_cell(const Point<dim> &p) const;
 
@@ -103,47 +103,45 @@ private:
 
 
 template <int dim, int spacedim>
-MappingQGenericExt<dim, spacedim>::MappingQGenericExt()
-  : MappingQGeneric<dim, spacedim>(1)
+MappingQExt<dim, spacedim>::MappingQExt()
+  : MappingQ<dim, spacedim>(1)
   , support_points(0)
 {}
 
 
 template <int dim, int spacedim>
-MappingQGenericExt<dim, spacedim>::MappingQGenericExt(
-  const unsigned int polynomial_degree)
-  : MappingQGeneric<dim, spacedim>(polynomial_degree)
+MappingQExt<dim, spacedim>::MappingQExt(const unsigned int polynomial_degree)
+  : MappingQ<dim, spacedim>(polynomial_degree)
   , support_points(0)
 {}
 
 
 template <int dim, int spacedim>
-MappingQGenericExt<dim, spacedim>::MappingQGenericExt(
-  const MappingQGenericExt<dim, spacedim> &mapping)
-  : MappingQGeneric<dim, spacedim>(mapping)
+MappingQExt<dim, spacedim>::MappingQExt(
+  const MappingQExt<dim, spacedim> &mapping)
+  : MappingQ<dim, spacedim>(mapping)
   , support_points(mapping.support_points)
 {}
 
 
 template <int dim, int spacedim>
 void
-MappingQGenericExt<dim, spacedim>::compute_mapping_support_points(
+MappingQExt<dim, spacedim>::compute_mapping_support_points(
   const typename Triangulation<dim, spacedim>::cell_iterator &cell)
 {
   support_points =
-    MappingQGeneric<dim, spacedim>::compute_mapping_support_points(cell);
+    MappingQ<dim, spacedim>::compute_mapping_support_points(cell);
 }
 
 
 template <int dim, int spacedim>
 Point<spacedim>
-MappingQGenericExt<dim, spacedim>::transform_unit_to_real_cell(
+MappingQExt<dim, spacedim>::transform_unit_to_real_cell(
   const Point<dim> &p) const
 {
   // Set up the polynomial space in the lexicographic order.
   const TensorProductPolynomials<dim> tensor_pols(
-    Polynomials::generate_complete_Lagrange_basis(
-      this->line_support_points.get_points()));
+    Polynomials::generate_complete_Lagrange_basis(this->line_support_points));
   Assert(tensor_pols.n() ==
            Utilities::fixed_power<dim>(this->polynomial_degree + 1),
          ExcInternalError());
@@ -151,7 +149,8 @@ MappingQGenericExt<dim, spacedim>::transform_unit_to_real_cell(
   // Get the numbering for accessing the support points in the lexicographic
   // ordering which are stored in the hierarchic ordering.
   const std::vector<unsigned int> renumber(
-    FETools::lexicographic_to_hierarchic_numbering(this->polynomial_degree));
+    FETools::lexicographic_to_hierarchic_numbering<dim>(
+      this->polynomial_degree));
 
   Point<spacedim> mapped_point;
   for (unsigned int i = 0; i < tensor_pols.n(); ++i)
@@ -164,7 +163,7 @@ MappingQGenericExt<dim, spacedim>::transform_unit_to_real_cell(
 
 template <int dim, int spacedim>
 const std::vector<Point<spacedim>> &
-MappingQGenericExt<dim, spacedim>::get_support_points() const
+MappingQExt<dim, spacedim>::get_support_points() const
 {
   return support_points;
 }
@@ -172,7 +171,7 @@ MappingQGenericExt<dim, spacedim>::get_support_points() const
 
 template <int dim, int spacedim>
 std::vector<Point<spacedim>> &
-MappingQGenericExt<dim, spacedim>::get_support_points()
+MappingQExt<dim, spacedim>::get_support_points()
 {
   return support_points;
 }
@@ -180,13 +179,12 @@ MappingQGenericExt<dim, spacedim>::get_support_points()
 
 template <int dim, int spacedim>
 std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
-MappingQGenericExt<dim, spacedim>::get_data(
-  const UpdateFlags      update_flags,
-  const Quadrature<dim> &quadrature) const
+MappingQExt<dim, spacedim>::get_data(const UpdateFlags      update_flags,
+                                     const Quadrature<dim> &quadrature) const
 {
-  return MappingQGeneric<dim, spacedim>::get_data(update_flags, quadrature);
+  return MappingQ<dim, spacedim>::get_data(update_flags, quadrature);
 }
 
 DEAL_II_NAMESPACE_CLOSE
 
-#endif // HIERBEM_INCLUDE_MAPPING_MAPPING_Q_GENERIC_EXT_H_
+#endif // HIERBEM_INCLUDE_MAPPING_MAPPING_Q_EXT_H_

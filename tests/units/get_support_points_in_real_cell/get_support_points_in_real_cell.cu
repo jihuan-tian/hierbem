@@ -38,7 +38,7 @@ main()
   std::ofstream mesh_file("square.msh");
   GridOut().write_msh(tria, mesh_file);
 
-  MappingQGeneric<2, 3> mapping(1);
+  MappingQ<2, 3> mapping(1);
 
   std::cout << "FE_Q" << std::endl;
   {

@@ -12,7 +12,7 @@
 
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
-#include <deal.II/fe/mapping_q_generic.h>
+#include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_out.h>
@@ -48,7 +48,7 @@ main()
   GridOut().write_msh(tria, mesh_file);
   mesh_file.close();
 
-  MappingQGeneric<dim, spacedim> mapping(1);
+  MappingQ<dim, spacedim> mapping(1);
 
   {
     FE_Q<dim, spacedim>       fe(3);

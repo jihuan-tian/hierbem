@@ -20,7 +20,7 @@
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_tools.h>
 #include <deal.II/fe/mapping.h>
-#include <deal.II/fe/mapping_q_generic.h>
+#include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/grid/tria.h>
 
@@ -530,9 +530,9 @@ print_support_point_info(const FESystem<dim, spacedim>   &fe_system,
 
 template <int dim, int spacedim>
 void
-print_support_point_info(const MappingQGeneric<dim, spacedim> &mapping,
-                         const DoFHandler<dim, spacedim>      &dof_handler,
-                         const std::string                    &fe_name)
+print_support_point_info(const MappingQ<dim, spacedim>   &mapping,
+                         const DoFHandler<dim, spacedim> &dof_handler,
+                         const std::string               &fe_name)
 {
   if (dof_handler.get_fe().has_support_points())
     {

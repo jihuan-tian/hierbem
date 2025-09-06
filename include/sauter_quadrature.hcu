@@ -47,7 +47,7 @@
 #include "debug_tools.h"
 #include "dof_to_cell_topology.h"
 #include "hmatrix/hmatrix.h"
-#include "mapping/mapping_q_generic_ext.h"
+#include "mapping/mapping_q_ext.h"
 #include "number_traits.h"
 #include "sauter_quadrature_tools.h"
 
@@ -1422,8 +1422,7 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
   ApplyQuadratureUsingBEMValuesSamePanel(
@@ -1641,8 +1640,7 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
   ApplyQuadratureUsingBEMValuesCommonEdge(
@@ -1862,8 +1860,7 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
   ApplyQuadratureUsingBEMValuesCommonVertex(
@@ -2079,8 +2076,7 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
   ApplyQuadratureUsingBEMValuesRegular(
@@ -2881,8 +2877,7 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
   process_sauter_task_on_one_pair_of_dofs_same_panel(
@@ -3168,8 +3163,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
   process_sauter_task_on_one_pair_of_dofs_common_edge(
@@ -3465,8 +3459,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
   process_sauter_task_on_one_pair_of_dofs_common_vertex(
@@ -3754,8 +3747,7 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
   process_sauter_task_on_one_pair_of_dofs_regular(
@@ -4005,8 +3997,7 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType = double>
   __global__ void
   process_sauter_tasks_in_buffer_for_far_field_hmat_vector(
@@ -6353,8 +6344,7 @@ namespace CUDAWrappers
   template <int capacity,
             int dim,
             int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename RangeNumberType,
             typename KernelNumberType>
   void
@@ -6556,7 +6546,7 @@ namespace CUDAWrappers
          * producer threads, computation of the mapping support points should
          * be performed in a local copy of @p kx_mapping.
          */
-        MappingQGenericExt<dim, spacedim> kx_mapping_copy(
+        MappingQExt<dim, spacedim> kx_mapping_copy(
           kx_mapping_info.get_mapping());
         kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
         /**
@@ -6601,7 +6591,7 @@ namespace CUDAWrappers
               normal_detector.is_normal_vector_inward(
                 ky_cell_iter->material_id());
 
-            MappingQGenericExt<dim, spacedim> ky_mapping_copy(
+            MappingQExt<dim, spacedim> ky_mapping_copy(
               ky_mapping_info.get_mapping());
             ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
             /**
@@ -6913,7 +6903,7 @@ namespace CUDAWrappers
          * producer threads, computation of the mapping support points should
          * be performed in a local copy of @p kx_mapping.
          */
-        MappingQGenericExt<dim, spacedim> kx_mapping_copy(
+        MappingQExt<dim, spacedim> kx_mapping_copy(
           kx_mapping_info.get_mapping());
         kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
         /**
@@ -6960,7 +6950,7 @@ namespace CUDAWrappers
               normal_detector.is_normal_vector_inward(
                 ky_cell_iter->material_id());
 
-            MappingQGenericExt<dim, spacedim> ky_mapping_copy(
+            MappingQExt<dim, spacedim> ky_mapping_copy(
               ky_mapping_info.get_mapping());
             ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
             /**
@@ -7350,7 +7340,7 @@ namespace CUDAWrappers
          * producer threads, computation of the mapping support points should
          * be performed in a local copy of @p kx_mapping.
          */
-        MappingQGenericExt<dim, spacedim> kx_mapping_copy(
+        MappingQExt<dim, spacedim> kx_mapping_copy(
           kx_mapping_info.get_mapping());
         kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
         /**
@@ -7384,7 +7374,7 @@ namespace CUDAWrappers
               normal_detector.is_normal_vector_inward(
                 ky_cell_iter->material_id());
 
-            MappingQGenericExt<dim, spacedim> ky_mapping_copy(
+            MappingQExt<dim, spacedim> ky_mapping_copy(
               ky_mapping_info.get_mapping());
             ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
             /**
@@ -7923,8 +7913,7 @@ calc_covariant_transformations(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename KernelNumberType>
 HBEM_ATTR_HOST KernelNumberType
 ApplyQuadratureUsingBEMValues(
@@ -8038,8 +8027,7 @@ select_sauter_quad_rule_from_bem_values(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 void
@@ -8092,10 +8080,8 @@ sauter_quadrature_on_one_pair_of_cells(
    * @p ky_mapping is passed as const reference into this function and a
    * local copy @p ky_mapping_copy of it is made.
    */
-  MappingQGenericExt<dim, spacedim> kx_mapping_copy(
-    kx_mapping_info.get_mapping());
-  MappingQGenericExt<dim, spacedim> ky_mapping_copy(
-    ky_mapping_info.get_mapping());
+  MappingQExt<dim, spacedim> kx_mapping_copy(kx_mapping_info.get_mapping());
+  MappingQExt<dim, spacedim> ky_mapping_copy(ky_mapping_info.get_mapping());
 
   if (!is_kx_mapping_internaldata_computed)
     {
@@ -8212,8 +8198,7 @@ sauter_quadrature_on_one_pair_of_cells(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 void
@@ -8255,8 +8240,7 @@ sauter_quadrature_on_one_pair_of_cells_parallel_over_ky(
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 KernelNumberType
@@ -8310,10 +8294,8 @@ sauter_quadrature_on_one_pair_of_shape_functions(
    * @p ky_mapping is passed as const reference into this function and a
    * local copy @p ky_mapping_copy of it is made.
    */
-  MappingQGenericExt<dim, spacedim> kx_mapping_copy(
-    kx_mapping_info.get_mapping());
-  MappingQGenericExt<dim, spacedim> ky_mapping_copy(
-    ky_mapping_info.get_mapping());
+  MappingQExt<dim, spacedim> kx_mapping_copy(kx_mapping_info.get_mapping());
+  MappingQExt<dim, spacedim> ky_mapping_copy(ky_mapping_info.get_mapping());
 
   kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
   scratch_data.kx_mapping_support_points_in_default_order =
@@ -8448,8 +8430,7 @@ sauter_quadrature_on_one_pair_of_shape_functions(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 KernelNumberType
@@ -8521,8 +8502,7 @@ sauter_quadrature_on_one_pair_of_dofs(
        * support points should be performed in thread dependent local copies
        * of @p kx_mapping.
        */
-      MappingQGenericExt<dim, spacedim> kx_mapping_copy(
-        kx_mapping_info.get_mapping());
+      MappingQExt<dim, spacedim> kx_mapping_copy(kx_mapping_info.get_mapping());
       kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
       /**
        * Copy the newly calculated support points into @p ScratchData.
@@ -8563,7 +8543,7 @@ sauter_quadrature_on_one_pair_of_dofs(
             normal_detector.is_normal_vector_inward(
               ky_cell_iter->material_id());
 
-          MappingQGenericExt<dim, spacedim> ky_mapping_copy(
+          MappingQExt<dim, spacedim> ky_mapping_copy(
             ky_mapping_info.get_mapping());
           ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
           /**
@@ -9031,8 +9011,7 @@ sauter_quadrature_on_one_pair_of_dofs(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 KernelNumberType
@@ -9106,8 +9085,7 @@ sauter_quadrature_on_one_pair_of_dofs(
        * support points should be performed in thread dependent local copies
        * of @p kx_mapping.
        */
-      MappingQGenericExt<dim, spacedim> kx_mapping_copy(
-        kx_mapping_info.get_mapping());
+      MappingQExt<dim, spacedim> kx_mapping_copy(kx_mapping_info.get_mapping());
       kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
       /**
        * Copy the newly calculated support points into @p ScratchData.
@@ -9156,7 +9134,7 @@ sauter_quadrature_on_one_pair_of_dofs(
            * working function by const reference, a copy of it should be
            * made.
            */
-          MappingQGenericExt<dim, spacedim> ky_mapping_copy(
+          MappingQExt<dim, spacedim> ky_mapping_copy(
             ky_mapping_info.get_mapping());
           ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
           /**
@@ -9682,8 +9660,7 @@ sauter_quadrature_on_one_pair_of_dofs(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 KernelNumberType
@@ -9755,8 +9732,7 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
        * support points should be performed in thread dependent local copies
        * of @p kx_mapping.
        */
-      MappingQGenericExt<dim, spacedim> kx_mapping_copy(
-        kx_mapping_info.get_mapping());
+      MappingQExt<dim, spacedim> kx_mapping_copy(kx_mapping_info.get_mapping());
       kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
       /**
        * Copy the newly calculated support points into @p ScratchData.
@@ -9788,7 +9764,7 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
             normal_detector.is_normal_vector_inward(
               ky_cell_iter->material_id());
 
-          MappingQGenericExt<dim, spacedim> ky_mapping_copy(
+          MappingQExt<dim, spacedim> ky_mapping_copy(
             ky_mapping_info.get_mapping());
           ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
           /**
