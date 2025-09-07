@@ -20,7 +20,7 @@
 
 #include "hbem_julia_cpp_compare.h"
 #include "hbem_julia_wrapper.h"
-#include "linalg.h"
+#include "linear_algebra/linalg.h"
 
 using namespace Catch::Matchers;
 using namespace dealii;

@@ -2,7 +2,7 @@
  * \file lapack-matrix-solve-by-cholesky.cc
  * \brief Verify solving a full matrix using Cholesky decomposition.
  *
- * \ingroup testers linalg
+ * \ingroup test_cases linalg
  * \author Jihuan Tian
  * \date 2021-10-22
  */
@@ -12,9 +12,9 @@
 #include <fstream>
 #include <iostream>
 
-#include "debug_tools.h"
-#include "lapack_full_matrix_ext.h"
-#include "read_octave_data.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
+#include "utilities/debug_tools.h"
+#include "utilities/read_octave_data.h"
 
 int
 main()

@@ -2,7 +2,7 @@
  * @file create-efield-subdomains.cu
  * @brief
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author
  * @date 2024-08-06
  */

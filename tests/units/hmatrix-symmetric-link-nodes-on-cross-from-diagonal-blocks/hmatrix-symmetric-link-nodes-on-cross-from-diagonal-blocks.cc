@@ -3,7 +3,7 @@
  * @brief Link all \hmatrix nodes on a same level and on a same column with
  * respect to a diagonal block. The \hmatrix is symmetric.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2024-01-05
  */
@@ -12,7 +12,7 @@
 
 #include "hbem_octave_wrapper.h"
 #include "hmatrix/hmatrix.h"
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 using namespace HierBEM;
 using namespace std;

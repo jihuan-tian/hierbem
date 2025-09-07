@@ -3,7 +3,7 @@
  * \brief Get the cell neighboring type for two same DoF handlers and check the
  * returned pairs of DoF indices associated with common vertices.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-06-10
  */
@@ -24,8 +24,8 @@
 #include <set>
 #include <vector>
 
-#include "bem_tools.h"
-#include "debug_tools.h"
+#include "bem/bem_tools.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 using namespace HierBEM;

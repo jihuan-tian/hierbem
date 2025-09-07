@@ -14,7 +14,7 @@
 
 #include "hbem_julia_cpp_compare.h"
 #include "hbem_julia_wrapper.h"
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 using namespace Catch::Matchers;
 using namespace dealii;

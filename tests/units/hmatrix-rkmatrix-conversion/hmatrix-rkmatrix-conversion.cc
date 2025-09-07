@@ -1,7 +1,7 @@
 /**
  * \file hmatrix-rkmatrix-conversion.cc
  * \brief Verify the conversion from an H-matrix to a rank-k matrix.
- * \ingroup hierarchical_matrices testers
+ * \ingroup hierarchical_matrices test_cases
  * \author Jihuan Tian
  * \date 2021-07-09
  */
@@ -10,7 +10,7 @@
 #include <iostream>
 
 #include "hmatrix/hmatrix.h"
-#include "rkmatrix.h"
+#include "hmatrix/rkmatrix.h"
 
 int
 main()

@@ -1,0 +1,456 @@
+/**
+ * @file cu_table_indices.h
+ * @brief Introduction of cu_table_indices.h
+ *
+ * @date 2023-01-24
+ * @author Jihuan Tian
+ */
+#ifndef HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_INDICES_H_
+#define HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_INDICES_H_
+
+#include <deal.II/base/table_indices.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <iostream>
+
+#include "config.h"
+
+HBEM_NS_OPEN
+
+using namespace dealii;
+
+namespace CUDAWrappers
+{
+  /**
+   * The counterpart of @p TableIndices for use on the GPU device.
+   */
+  template <int N>
+  class CUDATableIndices
+  {
+  public:
+    using size_type = std::size_t;
+
+    template <int N1>
+    friend HBEM_ATTR_HOST std::ostream &
+    operator<<(std::ostream &out, const CUDATableIndices<N1> &indices);
+
+    /**
+     * Default constructor synthesized by the compiler, which assigns zero to
+     * all indices.
+     *
+     * \mycomment{The member variable @p indices is declared with the empty
+     * initializer list @p {}. This will be adopted by this default constructor.}
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV constexpr CUDATableIndices() = default;
+
+    /**
+     * Constructor with arbitrary (but fixed) number of input arguments to
+     * initialize the indices.
+     *
+     * \mycomment{The number of arguments should be the same as the template
+     * argument @p N.}
+     *
+     * @param args Arbitrary (but fixed) number of input arguments which have
+     * the
+     * same type @p T.
+     */
+    template <typename... T>
+    HBEM_ATTR_HOST HBEM_ATTR_DEV constexpr CUDATableIndices(const T... args);
+
+    /**
+     * Copy constructor from a @p TableIndices on CPU.
+     *
+     * \mycomment{This function can only run on the host.}
+     *
+     * @param table_indices_cpu
+     */
+    HBEM_ATTR_HOST
+    CUDATableIndices(const TableIndices<N> &table_indices_cpu);
+
+    /**
+     * Copy constructor.
+     *
+     * \mycomment{This function can run on both the host and device.}
+     *
+     * @param table_indices
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV
+    CUDATableIndices(const CUDATableIndices<N> &table_indices);
+
+    /**
+     * Get the i'th index, which is returned by value.
+     *
+     * @param i
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV constexpr std::size_t
+                   operator[](const unsigned int i) const;
+
+    /**
+     * Get the i'th index, which is returned by reference.
+     *
+     * @param i
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV constexpr std::size_t                &
+    operator[](const unsigned int i);
+
+    /**
+     * Assign values from a @TableIndices object to the current
+     * @p CUDATableIndices object on the host.
+     *
+     * \mycomment{This function can only run on the host, because the input
+     * argument is on the host.}
+     */
+    HBEM_ATTR_HOST CUDATableIndices<N>                &
+    operator=(const TableIndices<N> &table_indices_cpu);
+
+    /**
+     * Assignment operator.
+     *
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV CUDATableIndices<N> &
+    operator=(const CUDATableIndices<N> &table_indices);
+
+    /**
+     * Check the equality of the two table indices.
+     *
+     * @param T2
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+    operator==(const CUDATableIndices<N> &T2) const;
+
+    /**
+     * Check the equality of @p CUDATableIndices and @p TableIndices.
+     *
+     * @param T2
+     * @return
+     */
+    HBEM_ATTR_HOST bool
+    operator==(const TableIndices<N> &T2) const;
+
+    /**
+     * Check the inequality of the two table indices.
+     *
+     * @param T2
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+    operator!=(const CUDATableIndices<N> &T2) const;
+
+    /**
+     * Check the inequality of @p CUDATableIndices and @p TableIndices.
+     *
+     * @param T2
+     * @return
+     */
+    HBEM_ATTR_HOST bool
+    operator!=(const TableIndices<N> &T2) const;
+
+    /**
+     * Print the indices to the standard output. This function can run on both
+     * the host and device.
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV void
+    print() const;
+
+  private:
+    std::size_t indices[N]{};
+  };
+
+  template <int N>
+  template <typename... T>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV constexpr CUDATableIndices<N>::CUDATableIndices(
+    const T... args)
+    : indices{static_cast<std::size_t>(args)...}
+  {
+    static_assert(sizeof...(T) == N, "Wrong number of constructor arguments!");
+  }
+
+
+  template <int N>
+  HBEM_ATTR_HOST
+  CUDATableIndices<N>::CUDATableIndices(
+    const TableIndices<N> &table_indices_cpu)
+  {
+    for (size_type i = 0; i < N; i++)
+      {
+        indices[i] = table_indices_cpu[i];
+      }
+  }
+
+
+  template <int N>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV
+  CUDATableIndices<N>::CUDATableIndices(
+    const CUDATableIndices<N> &table_indices)
+  {
+#ifdef __CUDA_ARCH__
+#  pragma unroll
+#endif
+    for (size_type i = 0; i < N; i++)
+      {
+        indices[i] = table_indices[i];
+      }
+  }
+
+
+  template <int N>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV constexpr std::size_t
+                 CUDATableIndices<N>::operator[](const unsigned int i) const
+  {
+    return indices[i];
+  }
+
+
+  template <int N>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV constexpr std::size_t                &
+  CUDATableIndices<N>::operator[](const unsigned int i)
+  {
+    return indices[i];
+  }
+
+
+  template <int N>
+  HBEM_ATTR_HOST CUDATableIndices<N> &
+  CUDATableIndices<N>::operator=(const TableIndices<N> &table_indices_cpu)
+  {
+    for (size_type i = 0; i < N; i++)
+      {
+        indices[i] = table_indices_cpu[i];
+      }
+
+    return *this;
+  }
+
+
+  template <int N>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV CUDATableIndices<N> &
+  CUDATableIndices<N>::operator=(const CUDATableIndices<N> &table_indices)
+  {
+#ifdef __CUDA_ARCH__
+#  pragma unroll
+#endif
+    for (size_type i = 0; i < N; i++)
+      {
+        indices[i] = table_indices[i];
+      }
+
+    return *this;
+  }
+
+
+  template <int N>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+  CUDATableIndices<N>::operator==(const CUDATableIndices<N> &T2) const
+  {
+#ifdef __CUDA_ARCH__
+#  pragma unroll
+#endif
+    for (size_type i = 0; i < N; i++)
+      {
+        if (indices[i] != T2.indices[i])
+          {
+            return false;
+          }
+      }
+
+    return true;
+  }
+
+
+  template <int N>
+  HBEM_ATTR_HOST bool
+  CUDATableIndices<N>::operator==(const TableIndices<N> &T2) const
+  {
+    for (size_type i = 0; i < N; i++)
+      {
+        if (indices[i] != T2[i])
+          {
+            return false;
+          }
+      }
+
+    return true;
+  }
+
+
+  template <int N>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+  CUDATableIndices<N>::operator!=(const CUDATableIndices<N> &T2) const
+  {
+    return !(*this == T2);
+  }
+
+
+  template <int N>
+  HBEM_ATTR_HOST bool
+  CUDATableIndices<N>::operator!=(const TableIndices<N> &T2) const
+  {
+    return !(*this == T2);
+  }
+
+
+  template <int N>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV void
+  CUDATableIndices<N>::print() const
+  {
+    printf("[");
+    for (unsigned int i = 0; i < N; ++i)
+      {
+        printf("%d", indices[i]);
+        if (i + 1 != N)
+          printf(",");
+      }
+    printf("]");
+  }
+
+
+  template <int N>
+  HBEM_ATTR_HOST std::ostream &
+  operator<<(std::ostream &out, const CUDATableIndices<N> &indices)
+  {
+    out << "[";
+    for (unsigned int i = 0; i < N; ++i)
+      {
+        out << indices[i];
+        if (i + 1 != N)
+          out << ",";
+      }
+    out << "]";
+
+    return out;
+  }
+
+
+  /**
+   * Copy @p CUDATableIndices to @p TableIndices. Both of them are on the
+   * host.
+   *
+   * @tparam N
+   * @param dest
+   * @param src
+   */
+  template <int N>
+  HBEM_ATTR_HOST void
+  copy_table_indices(TableIndices<N> &dest, const CUDATableIndices<N> &src)
+  {
+    for (int i = 0; i < N; i++)
+      {
+        dest[i] = src[i];
+      }
+  }
+
+
+  /**
+   * Copy @p TableIndices to @p CUDATableIndices. Both of them are on the
+   * host.
+   *
+   * @tparam N
+   * @param dest
+   * @param src
+   */
+  template <int N>
+  HBEM_ATTR_HOST void
+  copy_table_indices(CUDATableIndices<N> &dest, const TableIndices<N> &src)
+  {
+    for (int i = 0; i < N; i++)
+      {
+        dest[i] = src[i];
+      }
+  }
+
+
+  /**
+   * Convert a multi-dimensional table indices to a linear index according to
+   * the specified style, either C or Fortran.
+   *
+   * @tparam N
+   * @param indices
+   * @param sizes
+   * @param C_style_index
+   * @return
+   */
+  template <int N>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV inline std::size_t
+  ndarray_indices_to_linear_index(const CUDATableIndices<N> &indices,
+                                  const CUDATableIndices<N> &sizes,
+                                  const bool C_style_index = true)
+  {
+    if (C_style_index)
+      {
+        std::size_t index = indices[0];
+
+#ifdef __CUDA_ARCH__
+#  pragma unroll
+#endif
+        for (int i = 1; i < N; i++)
+          {
+            index = index * sizes[i] + indices[i];
+          }
+
+        return index;
+      }
+    else
+      {
+        std::size_t index = indices[N - 1];
+
+        /**
+         * @internal TODO Can this decreasing loop be unrolled?
+         */
+#ifdef __CUDA_ARCH__
+#  pragma unroll
+#endif
+        for (int i = N - 2; i >= 0; i--)
+          {
+            index = index * sizes[i] + indices[i];
+          }
+
+        return index;
+      }
+  }
+
+  template <int N>
+  HBEM_ATTR_HOST HBEM_ATTR_DEV inline void
+  linear_index_to_ndarray_indices(CUDATableIndices<N>       &indices,
+                                  const CUDATableIndices<N> &sizes,
+                                  std::size_t                index,
+                                  const bool C_style_index = true)
+  {
+    if (C_style_index)
+      {
+        /**
+         * @internal TODO Can this decreasing loop be unrolled?
+         */
+#ifdef __CUDA_ARCH__
+#  pragma unroll
+#endif
+        for (int i = N - 1; i >= 1; i--)
+          {
+            indices[i] = index % sizes[i];
+            index /= sizes[i];
+          }
+
+        indices[0] = index;
+      }
+    else
+      {
+#ifdef __CUDA_ARCH__
+#  pragma unroll
+#endif
+        for (int i = 0; i < N - 1; i++)
+          {
+            indices[i] = index % sizes[i];
+            index /= sizes[i];
+          }
+
+        indices[N - 1] = index;
+      }
+  }
+} // namespace CUDAWrappers
+
+HBEM_NS_CLOSE
+
+#endif // HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_INDICES_H_

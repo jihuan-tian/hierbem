@@ -4,7 +4,7 @@
  * refine automatically with the volume mesh. The conclusion is the surface mesh
  * will not be refined auotmatically with the volume mesh.
  *
- * \ingroup testers dealii_verify
+ * \ingroup test_cases dealii_verify
  * \author Jihuan Tian
  * \date 2022-06-06
  */
@@ -16,7 +16,7 @@
 
 #include <iostream>
 
-#include "debug_tools.h"
+#include "utilities/debug_tools.h"
 
 int
 main()

@@ -1,9 +1,10 @@
 /**
  * @file verify-integration-on-cylinder-hull.cu
- * @brief Verify the accuracy of manifold mapping used for computing the surface area of a cylinder hull.
+ * @brief Verify the accuracy of manifold mapping used for computing the surface
+ * area of a cylinder hull.
  * Compare with the results using different orders of @p MappingQ.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2023-09-25
  */
@@ -28,9 +29,9 @@
 #include <iostream>
 #include <set>
 
-#include "debug_tools.h"
-#include "grid_out_ext.h"
-#include "lapack_full_matrix_ext.h"
+#include "grid/grid_out_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 

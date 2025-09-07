@@ -4,7 +4,7 @@
  * operands and the result matrices have the fine non-tensor product partitions.
  * The calculation results will be added to the first operand.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-08-30
  */

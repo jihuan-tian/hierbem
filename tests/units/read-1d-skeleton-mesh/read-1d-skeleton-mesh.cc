@@ -2,13 +2,13 @@
  * @file read-1d-skeleton-mesh.cc
  * @brief Verify reading 1D skeleton mesh, which is used in 2D BEM.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2024-08-05
  */
 
 #include "electric_field/ddm_efield.h"
-#include "grid_in_ext.h"
+#include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
 
 using namespace HierBEM;

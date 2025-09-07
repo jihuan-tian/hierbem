@@ -3,7 +3,7 @@
  * @brief Baseline test for solving Laplace problem with Dirichlet boundary
  * condition based on full matrix BEM, which runs in a single thread.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2023-10-24
  */
@@ -21,11 +21,11 @@
 #include <fstream>
 #include <iostream>
 
-#include "debug_tools.h"
-#include "grid_in_ext.h"
-#include "grid_out_ext.h"
+#include "grid/grid_in_ext.h"
+#include "grid/grid_out_ext.h"
 #include "hbem_test_config.h"
-#include "laplace_bem.h"
+#include "laplace/laplace_bem.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 using namespace HierBEM;

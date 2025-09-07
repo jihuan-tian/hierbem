@@ -5,7 +5,7 @@
  * should be additional work to create a mapping relation between between the
  * two triangulations for those shared vertices.
  *
- * \ingroup testers dealii_verify
+ * \ingroup test_cases dealii_verify
  * \author Jihuan Tian
  * \date 2022-06-06
  */
@@ -22,8 +22,8 @@
 #include <map>
 #include <set>
 
-#include "bem_tools.h"
-#include "debug_tools.h"
+#include "bem/bem_tools.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 

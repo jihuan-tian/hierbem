@@ -15,7 +15,7 @@
 
 #include <fstream>
 
-#include "sauter_quadrature.hcu"
+#include "quadrature/sauter_quadrature.hcu"
 
 using namespace dealii;
 using namespace HierBEM;
@@ -121,7 +121,7 @@ main()
     HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim> slp;
     HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
     HierBEM::PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
-                                                                         adlp;
+                                                                          adlp;
     HierBEM::PlatformShared::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
 
     /**
@@ -324,7 +324,7 @@ main()
     HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim> slp;
     HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
     HierBEM::PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel<spacedim>
-                                                                         adlp;
+                                                                          adlp;
     HierBEM::PlatformShared::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
 
     /**

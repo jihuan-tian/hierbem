@@ -2,7 +2,7 @@
  * \file hmatrix-add-rkmatrix-into-new-hmatrix.cc
  * \brief Verify the addition of a rank-k matrix and an \hmatrix into a new
  * \hmatrix.
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-09-28
  */

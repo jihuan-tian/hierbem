@@ -3,7 +3,7 @@
  * \brief Verify the consistency between the order of vertices in a cell and the
  * support points transformed from unit support points via a mapping object.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-07-12
  */
@@ -21,8 +21,8 @@
 #include <cmath>
 #include <iostream>
 
-#include "debug_tools.h"
 #include "mapping/mapping_q_ext.h"
+#include "utilities/debug_tools.h"
 
 int
 main()

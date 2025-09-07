@@ -3,7 +3,7 @@
  * \brief Verify solving the Laplace problem with Dirichlet boundary condition
  * using full matrix based BEM.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2024-02-02
  */

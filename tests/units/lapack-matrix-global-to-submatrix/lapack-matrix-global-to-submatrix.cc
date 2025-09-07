@@ -1,7 +1,7 @@
 /**
  * \file lapack-matrix-global-to-submatrix.cc
  * \brief Verify the restriction of a global full matrix to sub full matrix.
- * \ingroup testers linalg
+ * \ingroup test_cases linalg
  * \author Jihuan Tian
  * \date 2021-07-28
  */
@@ -10,7 +10,7 @@
 
 #include <iostream>
 
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 int
 main()
@@ -28,9 +28,9 @@ main()
     }
   M.print_formatted_to_mat(std::cout, "M");
 
-  std::array<types::global_dof_index, 2> tau{7,11};
-  std::array<types::global_dof_index, 2> sigma{3,7};
-  LAPACKFullMatrixExt<double>          M_b(tau, sigma, M);
+  std::array<types::global_dof_index, 2> tau{7, 11};
+  std::array<types::global_dof_index, 2> sigma{3, 7};
+  LAPACKFullMatrixExt<double>            M_b(tau, sigma, M);
 
   M_b.print_formatted_to_mat(std::cout, "M_b");
 

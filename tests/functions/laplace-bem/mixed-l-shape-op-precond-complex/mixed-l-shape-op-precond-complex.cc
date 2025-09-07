@@ -2,7 +2,7 @@
  * @file mixed-l-shape-op-precond-complex.cu
  * @brief
  *
- * @ingroup preconditioner
+ * @ingroup preconditioners
  * @author Jihuan Tian
  * @date 2025-08-19
  */

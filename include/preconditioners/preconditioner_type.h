@@ -1,14 +1,14 @@
 /**
  * @file preconditioner_type.h
  * @brief Definition of preconditioner types
- * @ingroup preconditioner
+ * @ingroup preconditioners
  *
  * @date 2025-09-01
  * @author Jihuan Tian
  */
 
-#ifndef HIERBEM_INCLUDE_PRECONDITIONERS_H_
-#define HIERBEM_INCLUDE_PRECONDITIONERS_H_
+#ifndef HIERBEM_INCLUDE_PRECONDITIONERS_PRECONDITIONER_TYPE_H_
+#define HIERBEM_INCLUDE_PRECONDITIONERS_PRECONDITIONER_TYPE_H_
 
 #include "config.h"
 
@@ -27,4 +27,4 @@ enum PreconditionerType
 
 HBEM_NS_CLOSE
 
-#endif // HIERBEM_INCLUDE_PRECONDITIONERS_H_
+#endif // HIERBEM_INCLUDE_PRECONDITIONERS_PRECONDITIONER_TYPE_H_

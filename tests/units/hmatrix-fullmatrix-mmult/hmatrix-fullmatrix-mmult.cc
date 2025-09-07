@@ -1,7 +1,7 @@
 /**
  * \file hmatrix-fullmatrix-mmult.cc
  * \brief Verify the H-matrix/full matrix multiplication.
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-08-14
  */

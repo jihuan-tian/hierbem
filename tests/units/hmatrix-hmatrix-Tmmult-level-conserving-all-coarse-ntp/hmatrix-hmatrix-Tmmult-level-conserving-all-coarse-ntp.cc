@@ -4,7 +4,7 @@
  * \f$\mathcal{H}\f$-matrices with the first operand transposed. Both operands
  * and the result matrices have the coarse non-tensor product partitions.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2022-11-28
  */

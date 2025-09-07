@@ -2,7 +2,7 @@
  * @file verify-dealii-read-msh-and-refine-global.cc
  * @brief
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author
  * @date 2024-12-09
  */
@@ -16,8 +16,8 @@
 #include <fstream>
 #include <iostream>
 
-#include "grid_in_ext.h"
-#include "grid_out_ext.h"
+#include "grid/grid_in_ext.h"
+#include "grid/grid_out_ext.h"
 #include "hbem_test_config.h"
 
 using namespace HierBEM;

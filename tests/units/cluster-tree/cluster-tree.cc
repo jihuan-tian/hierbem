@@ -14,11 +14,11 @@
 #include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/grid_out.h>
 
-#include <simple_bounding_box.h>
+#include <cluster_tree/simple_bounding_box.h>
 
 #include <fstream>
 
-#include "cluster_tree.h"
+#include "cluster_tree/cluster_tree.h"
 
 using namespace HierBEM;
 using namespace dealii;

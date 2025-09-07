@@ -10,8 +10,8 @@
 #include <fstream>
 #include <iostream>
 
-#include "block_cluster_tree.h"
-#include "debug_tools.h"
+#include "cluster_tree/block_cluster_tree.h"
+#include "utilities/debug_tools.h"
 
 using namespace HierBEM;
 

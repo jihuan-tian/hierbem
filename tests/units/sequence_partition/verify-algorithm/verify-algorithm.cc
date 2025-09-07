@@ -2,7 +2,7 @@
  * @file verify-algorithm.cc
  * @brief
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author
  * @date 2024-02-04
  */
@@ -116,7 +116,7 @@ TEST_CASE("Non-empty partition and correct minmax cost test", "[seq_part]")
     INFO("n=" << n << ", p=" << p);
 
     auto task_costs = generate_random_task_costs(FIXED_SEED + trial_no, n);
-    auto cost_func = [&task_costs](int i, int j) -> double {
+    auto cost_func  = [&task_costs](int i, int j) -> double {
       double sum = 0.0;
       for (int k = i; k <= j; k++)
         {

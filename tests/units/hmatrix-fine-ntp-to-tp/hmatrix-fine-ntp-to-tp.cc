@@ -2,7 +2,7 @@
  * \file hmatrix-fine-ntp-to-tp.cc
  * \brief Verify the conversion of an \f$\mathcal{H}\f$-matrix from fine
  * non-tensor product structure to tensor product structure.
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-07-30
  */

@@ -2,7 +2,7 @@
  * \file hmatrix-hmatrix-mmult-all-fine-ntp.cc
  * \brief Verify the multiplication of two \f$\mathcal{H}\f$-matrices. Both
  * operands and the result matrices have the fine non-tensor product partitions.
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-08-19
  */
@@ -33,13 +33,14 @@ main()
       index_set.at(i) = i;
     }
 
-  const unsigned int n_min = 1;
+  const unsigned int n_min        = 1;
   unsigned int       fixed_rank_k = 2;
 
   //! options_description opts("hmatrix-hmatrix-mmult-all-fine-ntp options");
   //! opts.add_options()("help,h", "Display this help")("rank,r",
   //!                                                   value<unsigned int>(),
-  //!                                                   "Rank for rank-k matrix");
+  //!                                                   "Rank for rank-k
+  //!                                                   matrix");
 
   //! variables_map vm;
   //! store(parse_command_line(argc, argv, opts), vm);

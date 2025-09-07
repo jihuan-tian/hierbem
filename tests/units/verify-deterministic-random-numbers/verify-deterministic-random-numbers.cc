@@ -2,7 +2,7 @@
  * @file verify-deterministic-random-numbers.cc
  * @brief Verify generating a sequence of deterministic random numbers.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2023-10-29
  */

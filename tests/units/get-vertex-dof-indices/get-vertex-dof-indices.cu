@@ -3,7 +3,7 @@
  * \brief Verify the extraction of vertex DoF indices for both @p FE_Q and
  * @p FE_DGQ.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-06-15
  */
@@ -24,8 +24,8 @@
 #include <set>
 #include <vector>
 
-#include "bem_tools.h"
-#include "debug_tools.h"
+#include "bem/bem_tools.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 

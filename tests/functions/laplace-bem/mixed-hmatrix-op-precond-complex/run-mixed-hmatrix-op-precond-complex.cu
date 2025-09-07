@@ -9,12 +9,12 @@
 #include <fstream>
 #include <iostream>
 
-#include "debug_tools.h"
-#include "grid_in_ext.h"
+#include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
-#include "laplace_bem.h"
+#include "laplace/laplace_bem.h"
 #include "preconditioners/preconditioner_type.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 using namespace HierBEM;

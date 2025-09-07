@@ -2,7 +2,7 @@
  * \file hmatrix-vmult.cc
  * \brief Verify \hmatrix/vector multiplication.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-06-23
  */

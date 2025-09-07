@@ -3,7 +3,7 @@
  * \brief Verify the detection of cell neighboring type, where the surface
  * triangulation used is extracted from a volume mesh.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-06-06
  */
@@ -20,8 +20,8 @@
 #include <fstream>
 #include <iostream>
 
-#include "bem_tools.h"
-#include "debug_tools.h"
+#include "bem/bem_tools.h"
+#include "utilities/debug_tools.h"
 
 int
 main()

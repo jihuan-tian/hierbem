@@ -1,19 +1,19 @@
 /**
  * \file rkmatrix-assemble-from-rkmatrix.cc
  * \brief Verify assemble a rank-k matrix into a larger rank-k matrix.
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-09-27
  */
 
-#include "rkmatrix.h"
+#include "hmatrix/rkmatrix.h"
 
 #include <deal.II/base/types.h>
 
 #include <iostream>
 
-#include "generic_functors.h"
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
+#include "utilities/generic_functors.h"
 
 int
 main()

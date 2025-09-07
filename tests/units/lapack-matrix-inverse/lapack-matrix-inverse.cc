@@ -2,7 +2,7 @@
  * \file lapack-matrix-inverse.cc
  * \brief Verify matrix inverse computed by Gauss elimination, which is compared
  * with the standard function in deal.ii.
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-08-30
  */
@@ -11,7 +11,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 int
 main()

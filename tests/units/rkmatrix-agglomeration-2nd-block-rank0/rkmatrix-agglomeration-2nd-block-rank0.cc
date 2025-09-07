@@ -3,15 +3,15 @@
  * \brief Verify the agglomeration of four rank-k submatrices into a larger
  * rank-k matrix. Some of the submatrices have rank zero.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-10-09
  */
 
 #include <iostream>
 
-#include "lapack_full_matrix_ext.h"
-#include "rkmatrix.h"
+#include "hmatrix/rkmatrix.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 int
 main()

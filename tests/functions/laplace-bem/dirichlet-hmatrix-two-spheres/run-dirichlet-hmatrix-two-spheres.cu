@@ -19,14 +19,14 @@
 #include <fstream>
 #include <iostream>
 
-#include "bem_general.hcu"
-#include "cu_profile.hcu"
-#include "debug_tools.h"
-#include "grid_in_ext.h"
+#include "bem/bem_general.hcu"
+#include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
-#include "laplace_bem.h"
+#include "laplace/laplace_bem.h"
 #include "platform_shared/laplace_kernels.h"
+#include "utilities/cu_profile.hcu"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 using namespace HierBEM;

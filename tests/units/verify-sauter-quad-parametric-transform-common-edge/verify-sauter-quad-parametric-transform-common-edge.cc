@@ -1,17 +1,18 @@
 /**
  * @file verify-sauter-quad-parametric-transform-common-edge.cu
- * @brief Verify the Sauter quadrature point distribution for the common edge case.
+ * @brief Verify the Sauter quadrature point distribution for the common edge
+ * case.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2023-03-22
  */
 
 #include <iostream>
 
-#include "debug_tools.h"
-#include "quadrature.templates.h"
-#include "sauter_quadrature_tools.h"
+#include "quadrature/quadrature.templates.h"
+#include "quadrature/sauter_quadrature_tools.h"
+#include "utilities/debug_tools.h"
 
 using namespace std;
 using namespace dealii;

@@ -2,7 +2,7 @@
  * \file get_support_points_in_real_cell.cc
  * \brief Verify extracting support points in a real cell.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-06-13
  */
@@ -20,8 +20,8 @@
 #include <fstream>
 #include <iostream>
 
-#include "bem_tools.h"
-#include "debug_tools.h"
+#include "bem/bem_tools.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 

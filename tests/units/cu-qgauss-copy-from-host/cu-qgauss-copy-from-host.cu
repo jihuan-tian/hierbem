@@ -3,14 +3,14 @@
  * @brief Verify the creation of @p CUDAQGauss object and copying data from the
  * host object @p QGauss.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2023-01-30
  */
 
 #include <iostream>
 
-#include "cu_qgauss.hcu"
+#include "quadrature/cu_qgauss.hcu"
 
 using namespace dealii;
 using namespace HierBEM;

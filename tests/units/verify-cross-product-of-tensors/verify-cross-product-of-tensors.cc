@@ -1,7 +1,7 @@
 /**
  * \file verify-cross-product-of-tensors.cc
  * \brief Verify the cross product in 3D of two rank-1 tensors.
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-09-18
  */
@@ -12,7 +12,7 @@
 
 #include <iostream>
 
-#include "generic_functors.h"
+#include "utilities/generic_functors.h"
 
 using namespace dealii;
 

@@ -2,7 +2,7 @@
  * \file laplace-bem-mixed-hmatrix.cc
  * \brief Verify solve Laplace mixed boundary value problem using \hmat.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-11-21
  */

@@ -11,7 +11,7 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/tria.h>
 
-#include <laplace_bem.h>
+#include "laplace/laplace_bem.h"
 
 using namespace dealii;
 

@@ -2,7 +2,7 @@
  * \file get_dofs_per_face_for_fe.cc
  * \brief Verify calculating the number of DoFs per face for a finite element.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-06-14
  */
@@ -12,8 +12,8 @@
 
 #include <iostream>
 
-#include "bem_tools.h"
-#include "debug_tools.h"
+#include "bem/bem_tools.h"
+#include "utilities/debug_tools.h"
 
 int
 main()

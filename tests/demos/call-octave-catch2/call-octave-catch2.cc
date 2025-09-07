@@ -2,7 +2,7 @@
  * @file call-octave.cc
  * @brief Demostration for using Octave in Catch2 testing framework
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author
  * @date 2023-10-08
  */

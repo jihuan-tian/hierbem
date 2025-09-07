@@ -1,7 +1,7 @@
 /**
  * \file aca-random-select-ref-row.cc
  * \brief Verify random reference row selection used in ACA+.
- * \ingroup testers aca
+ * \ingroup test_cases aca
  * \author Jihuan Tian
  * \date 2022-03-09
  */

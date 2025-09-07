@@ -21,7 +21,7 @@
 
 #include "config.h"
 #include "hbem_julia_wrapper.h"
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 HBEM_NS_OPEN
 

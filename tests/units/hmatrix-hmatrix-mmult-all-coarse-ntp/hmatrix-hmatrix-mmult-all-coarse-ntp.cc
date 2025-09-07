@@ -3,7 +3,7 @@
  * \brief Verify the multiplication of two \f$\mathcal{H}\f$-matrices. Both
  * operands and the result matrices have the coarse non-tensor product
  * partitions.
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-08-26
  */

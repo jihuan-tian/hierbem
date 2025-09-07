@@ -16,7 +16,7 @@
 #include <iostream>
 
 #include "hbem_cpp_validate.h"
-#include "number_traits.h"
+#include "utilities/number_traits.h"
 
 using namespace Catch::Matchers;
 using namespace HierBEM;

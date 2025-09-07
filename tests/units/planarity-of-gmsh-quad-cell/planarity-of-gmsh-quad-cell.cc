@@ -2,11 +2,11 @@
 
 #include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/tria.h>
-#include <laplace_bem.h>
 
 #include <fstream>
 
-#include "linalg.h"
+#include "laplace/laplace_bem.h"
+#include "linear_algebra/linalg.h"
 
 using namespace dealii;
 using namespace LinAlg;

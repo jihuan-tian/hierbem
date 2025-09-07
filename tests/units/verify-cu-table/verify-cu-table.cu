@@ -3,7 +3,7 @@
  * @brief Verify the implementation of @p CUDATable class, whose memory is
  * managed from the host.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2023-01-16
  */
@@ -11,7 +11,7 @@
 #include <iostream>
 #include <vector>
 
-#include "cu_table.hcu"
+#include "linear_algebra/cu_table.hcu"
 
 
 using namespace HierBEM;

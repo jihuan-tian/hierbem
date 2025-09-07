@@ -2,7 +2,7 @@
  * @file verify-dealii-vector-memory.cc
  * @brief Verify the internal memory of @p dealii::Vector.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2022-12-04
  */

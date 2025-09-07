@@ -1,0 +1,499 @@
+#ifndef HIERBEM_INCLUDE_BEM_CU_BEM_TOOLS_H_
+#define HIERBEM_INCLUDE_BEM_CU_BEM_TOOLS_H_
+
+#include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
+
+#include <cmath>
+
+#include "config.h"
+#include "linear_algebra/cu_fullmatrix.hcu"
+#include "linear_algebra/cu_table.hcu"
+
+HBEM_NS_OPEN
+
+using namespace dealii;
+
+namespace BEMTools
+{
+  namespace CUDAWrappers
+  {
+    /**
+     * Collect two coordinate components from the list of points in 3D space.
+     * This version runs on the GPU device.
+     *
+     * \mynote{This function is useful in constructing the surface metric
+     * tensor or surface normal vector.}
+     *
+     * @tparam spacedim
+     * @tparam RangeNumberType
+     * @param points
+     * @param first_component Must be in the range @p [0, 3).
+     * @param second_component Must be in the range @p [0, 3).
+     * @param two_component_coords A matrix storing the two coordinate
+     * components for all points. Its dimension is @p 2*points.size().
+     */
+    template <int spacedim, typename RangeNumberType = double>
+    HBEM_ATTR_DEV void
+    collect_two_components_from_point3(
+      const HierBEM::CUDAWrappers::CUDATable<1,
+                                             Point<spacedim, RangeNumberType>>
+                        &points,
+      const unsigned int first_component,
+      const unsigned int second_component,
+      HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+        &two_component_coords)
+    {
+      assert(first_component < spacedim);
+      assert(second_component < spacedim);
+      assert(two_component_coords.m() == 2);
+      assert(points.size(0) == two_component_coords.n());
+
+      for (unsigned int i = 0; i < points.size(0); i++)
+        {
+          two_component_coords(0, i) = points(i)(first_component);
+          two_component_coords(1, i) = points(i)(second_component);
+        }
+    }
+
+
+    /**
+     * Collect coordinate components from the list of points in
+     * \f$\mathbb{R}^d\f$. This version runs on the GPU device.
+     *
+     * The obtained coordinate matrix has this format:
+     * \f[
+     * \begin{pmatrix}
+     * x_1(1) & \cdots & x_1(k) \\
+     * \vdots & \vdots & \vdots \\
+     * x_d(1) & \cdots & x_d(k)
+     * \end{pmatrix}
+     * \f]
+     * where \f$k\f$ is the number of points and \f$x(i)\f$ is the i-th point
+     * in the list.
+     *
+     * \mynote{This function will be used for calculating the Jacobian matrix.
+     * Let \f$DN\f$ be the matrix of first order derivatives of shape
+     * functions and \f$P\f$ be the resulted coordinate matrix. Then
+     * \[
+     * J = P \cdot DN
+     * \]}
+     *
+     * @tparam spacedim
+     * @tparam RangeNumberType
+     * @param points
+     * @param point_coords
+     */
+    template <int spacedim, typename RangeNumberType = double>
+    HBEM_ATTR_DEV void
+    collect_components_from_points(
+      const HierBEM::CUDAWrappers::CUDATable<1,
+                                             Point<spacedim, RangeNumberType>>
+                                                             &points,
+      HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> &point_coords)
+    {
+      for (unsigned int i = 0; i < points.size(0); i++)
+        {
+#pragma unroll
+          for (unsigned int j = 0; j < spacedim; j++)
+            {
+              point_coords(j, i) = points(i)(j);
+            }
+        }
+    }
+
+
+    /**
+     * @brief Calculate the surface Jacobian determinant and the normal vector
+     * at the quadrature point specified by its index. This version runs on
+     * the GPU device.
+     *
+     * \mynote{N.B. The reversed lexicographic order appears for \f$K_y\f$
+     * when the cell neighboring type is common edge. Then the calculated
+     * normal vector \f$n_y\f$ has the opposite direction of the real one,
+     * which should be negated in the subsequent calculation.}
+     *
+     * @tparam RangeNumberType
+     * @tparam spacedim
+     * @param k3_index
+     * @param quad_no
+     * @param mapping_shape_grad_matrix_table
+     * @param mapping_index
+     * @param mapping_n_shape_functions
+     * @param mapping_support_points_in_real_cell_xy_components
+     * @param mapping_support_points_in_real_cell_yz_components
+     * @param mapping_support_points_in_real_cell_zx_components
+     * @param normal_vector
+     * @param is_normal_vector_negated
+     * @return
+     */
+    template <int spacedim, typename RangeNumberType = double>
+    HBEM_ATTR_DEV RangeNumberType
+    surface_jacobian_det_and_normal_vector(
+      const unsigned int k3_index,
+      const unsigned int quad_no,
+      const HierBEM::CUDAWrappers::CUDATable<4, RangeNumberType>
+                        &mapping_shape_grad_matrix_table,
+      const unsigned int mapping_index,
+      const unsigned int mapping_n_shape_functions,
+      const HierBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
+        &mapping_support_points_in_real_cell_xy_components,
+      const HierBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
+        &mapping_support_points_in_real_cell_yz_components,
+      const HierBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
+        &mapping_support_points_in_real_cell_zx_components,
+      Tensor<1, spacedim, RangeNumberType> &normal_vector,
+      const bool                            is_normal_vector_negated = false)
+    {
+      /**
+       * @internal Currently, only @p spacedim=3 is supported.
+       */
+      assert(spacedim == 3);
+
+      /**
+       * Extract the shape function's gradient matrix under the specified
+       * \f$k_3\f$ index and quadrature point. @p CUDAFullMatrix is just a
+       * wrapper of the existing linear memory allocated for the matrix. Its
+       * first dimension is the shape function index and its second dimension
+       * is coordinate component index in the unit cell.
+       */
+      HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+        mapping_shape_grad_matrix_at_quad_point(
+          const_cast<RangeNumberType *>(&mapping_shape_grad_matrix_table(
+            mapping_index, k3_index, quad_no, 0)),
+          mapping_n_shape_functions,
+          2);
+
+      RangeNumberType jacobian_matrix_2x2_data[4];
+      HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+        jacobian_matrix_2x2(jacobian_matrix_2x2_data, 2, 2);
+
+      RangeNumberType surface_jacobian_det = RangeNumberType();
+      RangeNumberType surface_jacobian_det_components[spacedim];
+
+      HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+        two_component_coords(
+          (RangeNumberType *)(mapping_support_points_in_real_cell_xy_components
+                                .data()),
+          2,
+          mapping_n_shape_functions);
+      two_component_coords.mmult(jacobian_matrix_2x2,
+                                 mapping_shape_grad_matrix_at_quad_point);
+      surface_jacobian_det_components[0] = jacobian_matrix_2x2.determinant2x2();
+      surface_jacobian_det +=
+        surface_jacobian_det_components[0] * surface_jacobian_det_components[0];
+
+      two_component_coords.reinit(
+        (RangeNumberType *)(mapping_support_points_in_real_cell_yz_components
+                              .data()),
+        2,
+        mapping_n_shape_functions);
+      two_component_coords.mmult(jacobian_matrix_2x2,
+                                 mapping_shape_grad_matrix_at_quad_point);
+      surface_jacobian_det_components[1] = jacobian_matrix_2x2.determinant2x2();
+      surface_jacobian_det +=
+        surface_jacobian_det_components[1] * surface_jacobian_det_components[1];
+
+      two_component_coords.reinit(
+        (RangeNumberType *)(mapping_support_points_in_real_cell_zx_components
+                              .data()),
+        2,
+        mapping_n_shape_functions);
+      two_component_coords.mmult(jacobian_matrix_2x2,
+                                 mapping_shape_grad_matrix_at_quad_point);
+      surface_jacobian_det_components[2] = jacobian_matrix_2x2.determinant2x2();
+      surface_jacobian_det +=
+        surface_jacobian_det_components[2] * surface_jacobian_det_components[2];
+
+      surface_jacobian_det = std::sqrt(surface_jacobian_det);
+
+      /**
+       * This loop transform the vector \f$[J_{01}, J_{12}, J_{20}]/\abs{J}\f$
+       * to \f$[J_{12}, J_{20}, J_{01}]/\abs{J}\f$, which is the normal
+       * vector.
+       */
+#pragma unroll
+      for (unsigned int i = 0; i < spacedim; i++)
+        {
+          if (is_normal_vector_negated)
+            {
+              normal_vector[i] =
+                -surface_jacobian_det_components[(i + 1) % spacedim] /
+                surface_jacobian_det;
+            }
+          else
+            {
+              normal_vector[i] =
+                surface_jacobian_det_components[(i + 1) % spacedim] /
+                surface_jacobian_det;
+            }
+        }
+
+      return surface_jacobian_det;
+    }
+
+
+    /**
+     * Calculate Jacobian determinant, normal vector and covariant matrix (if
+     * the kernel function is hypersingular) at the specified k3 term and
+     * quadrature point.
+     *
+     * @tparam spacedim
+     * @tparam RangeNumberType
+     * @param k3_index
+     * @param quad_no
+     * @param mapping_shape_grad_matrix_table
+     * @param mapping_support_points_in_real_cell Starting address of the list
+     * of support points in the real cell
+     * @param normal_vector
+     * @param covariant_matrix
+     * @param is_normal_vector_negated
+     * @param if_calculate_covariant
+     * @return Jacobian determinant
+     */
+    template <int spacedim, typename RangeNumberType = double>
+    HBEM_ATTR_DEV RangeNumberType
+    surface_jacobian_det_normal_vector_and_covariant(
+      const unsigned int k3_index,
+      const unsigned int quad_no,
+      const HierBEM::CUDAWrappers::CUDATable<4, RangeNumberType>
+                                           &mapping_shape_grad_matrix_table,
+      const unsigned int                    mapping_index,
+      const unsigned int                    mapping_n_shape_functions,
+      Point<spacedim, RangeNumberType>     *mapping_support_points_in_real_cell,
+      Tensor<1, spacedim, RangeNumberType> &normal_vector,
+      HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> &covariant_matrix,
+      const bool is_normal_vector_negated,
+      const bool if_calculate_covariant)
+    {
+      /**
+       * @internal Currently, only @p spacedim=3 is supported.
+       */
+      assert(spacedim == 3);
+
+      /**
+       * Extract the shape function's gradient matrix under the specified
+       * \f$k_3\f$ index and quadrature point. @p CUDAFullMatrix is just a
+       * wrapper of the existing linear memory allocated for the matrix. Its
+       * first dimension is the shape function index and its second dimension
+       * is coordinate component index in the unit cell.
+       */
+      HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+        mapping_shape_grad_matrix_at_quad_point(
+          const_cast<RangeNumberType *>(&mapping_shape_grad_matrix_table(
+            mapping_index, k3_index, quad_no, 0)),
+          mapping_n_shape_functions,
+          2);
+
+      HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+        mapping_support_point_coordinate_matrix(
+          (RangeNumberType *)(mapping_support_points_in_real_cell),
+          spacedim,
+          mapping_n_shape_functions);
+
+      RangeNumberType jacobian_matrix_data[spacedim * 2];
+      HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> jacobian_matrix(
+        jacobian_matrix_data, spacedim, 2);
+
+      mapping_support_point_coordinate_matrix.mmult(
+        jacobian_matrix, mapping_shape_grad_matrix_at_quad_point);
+      /**
+       * @internal Compute the Gramian matrix.
+       */
+      RangeNumberType                                        G_data[4];
+      HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G(G_data, 2, 2);
+      jacobian_matrix.Tmmult(G, jacobian_matrix);
+
+      if (if_calculate_covariant)
+        {
+          /**
+           * @internal Compute the inverse of the Gramian matrix.
+           */
+          RangeNumberType                                        G_inv_data[4];
+          HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G_inv(
+            G_inv_data, 2, 2);
+          G_inv.invert2x2(G);
+          /**
+           * @internal Compute the covariant matrix.
+           */
+          jacobian_matrix.mmult(covariant_matrix, G_inv);
+        }
+
+      RangeNumberType surface_jacobian_det = std::sqrt(G.determinant2x2());
+
+      if (is_normal_vector_negated)
+        {
+          normal_vector[0] =
+            (jacobian_matrix_data[2] * jacobian_matrix_data[4] -
+             jacobian_matrix_data[1] * jacobian_matrix_data[5]) /
+            surface_jacobian_det;
+          normal_vector[1] =
+            (jacobian_matrix_data[0] * jacobian_matrix_data[5] -
+             jacobian_matrix_data[2] * jacobian_matrix_data[3]) /
+            surface_jacobian_det;
+          normal_vector[2] =
+            (jacobian_matrix_data[1] * jacobian_matrix_data[3] -
+             jacobian_matrix_data[0] * jacobian_matrix_data[4]) /
+            surface_jacobian_det;
+        }
+      else
+        {
+          normal_vector[0] =
+            (jacobian_matrix_data[1] * jacobian_matrix_data[5] -
+             jacobian_matrix_data[2] * jacobian_matrix_data[4]) /
+            surface_jacobian_det;
+          normal_vector[1] =
+            (jacobian_matrix_data[2] * jacobian_matrix_data[3] -
+             jacobian_matrix_data[0] * jacobian_matrix_data[5]) /
+            surface_jacobian_det;
+          normal_vector[2] =
+            (jacobian_matrix_data[0] * jacobian_matrix_data[4] -
+             jacobian_matrix_data[1] * jacobian_matrix_data[3]) /
+            surface_jacobian_det;
+        }
+
+      return surface_jacobian_det;
+    }
+
+
+    /**
+     * Calculate the covariant transformation matrix for mapping the gradient
+     * in local coordinate chart to global coordinates. This version runs on
+     * the GPU device.
+     *
+     * The formula for calculating the covariant transformation matrix:
+     * \f[
+     * J G^{-1} = J (J^T J)^{-1}.
+     * \f]
+     * N.B. \f$J\f$ is the Jacobian matrix in \f$\mathbb{R}^{{\rm
+     * spacedim}\times{\rm dim}}\f$. Therefore, the covariant transformation
+     * matrix has the same sizes as \f$J\f$.
+     *
+     * @tparam spacedim
+     * @tparam RangeNumberType
+     * @param k3_index
+     * @param quad_no
+     * @param mapping_shape_grad_matrix_table
+     * @param mapping_support_points_in_real_cell
+     * @param support_points_all_components
+     * @param jacobian_matrix_data
+     * @param metric_tensor_data
+     * @param metric_tensor_inv_data
+     * @param covariant
+     */
+    template <int spacedim, typename RangeNumberType = double>
+    HBEM_ATTR_DEV void
+    surface_covariant_transformation(
+      const unsigned int k3_index,
+      const unsigned int quad_no,
+      const HierBEM::CUDAWrappers::CUDATable<4, RangeNumberType>
+                        &mapping_shape_grad_matrix_table,
+      const unsigned int mapping_index,
+      const unsigned int mapping_n_shape_functions,
+      const HierBEM::CUDAWrappers::CUDATable<1,
+                                             Point<spacedim, RangeNumberType>>
+        &mapping_support_points_in_real_cell,
+      HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> &covariant)
+    {
+      /**
+       * @internal Currently, only @p spacedim=3 is supported.
+       */
+      assert(spacedim == 3);
+
+      /**
+       * @internal Extract the shape function's gradient matrix under the
+       * specified \f$k_3\f$ index and quadrature point, which will then be
+       * used for calculating the Jacobian matrix.
+       */
+      HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+        mapping_shape_grad_matrix_at_quad_point(
+          const_cast<RangeNumberType *>(&mapping_shape_grad_matrix_table(
+            mapping_index, k3_index, quad_no, 0)),
+          mapping_n_shape_functions,
+          2);
+
+      HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+        all_component_coords(
+          (RangeNumberType *)(mapping_support_points_in_real_cell.data()),
+          spacedim,
+          mapping_n_shape_functions);
+
+      RangeNumberType jacobian_matrix_data[spacedim * 2];
+      HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> jacobian_matrix(
+        jacobian_matrix_data, spacedim, 2);
+      all_component_coords.mmult(jacobian_matrix,
+                                 mapping_shape_grad_matrix_at_quad_point);
+
+      // Gramian tensor
+      RangeNumberType                                        G_data[4];
+      HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G(G_data, 2, 2);
+      // Inverse of the metric tensor
+      RangeNumberType                                        G_inv_data[4];
+      HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G_inv(G_inv_data,
+                                                                   2,
+                                                                   2);
+
+      // Compute \f$G=J^T J\f$.
+      jacobian_matrix.Tmmult(G, jacobian_matrix);
+
+      G_inv.invert2x2(G);
+
+      jacobian_matrix.mmult(covariant, G_inv);
+    }
+
+
+    /**
+     * @brief Coordinate transformation of the specified quadrature point in
+     * the unit cell to the real cell based on a list of mapping support
+     * points in the real cell. This version runs on the GPU device.
+     *
+     * @param k3_index
+     * @param quad_no
+     * @param mapping_shape_value_table
+     * @param mapping_index
+     * @param mapping_n_shape_functions
+     * @param mapping_support_points_in_real_cell
+     * @param quad_point_in_real_cell
+     * @return
+     */
+    template <int spacedim, typename RangeNumberType = double>
+    HBEM_ATTR_DEV void
+    transform_quad_point_from_unit_to_permuted_real_cell(
+      const unsigned int k3_index,
+      const unsigned int quad_no,
+      const HierBEM::CUDAWrappers::CUDATable<4, RangeNumberType>
+                        &mapping_shape_value_table,
+      const unsigned int mapping_index,
+      const unsigned int mapping_n_shape_functions,
+      const Point<spacedim, RangeNumberType>
+                                       *mapping_support_points_in_real_cell,
+      Point<spacedim, RangeNumberType> &quad_point_in_real_cell)
+    {
+      // Reset all coordinate components to zero.
+      Point<spacedim, RangeNumberType> local_quad_point_in_real_cell;
+
+#pragma unroll
+      for (unsigned int i = 0; i < spacedim; i++)
+        local_quad_point_in_real_cell(i) = RangeNumberType();
+
+      /**
+       * Linear combination of support point coordinates and evaluation of
+       * mapping shape functions at the specified area coordinates.
+       */
+      for (unsigned int i = 0; i < mapping_n_shape_functions; i++)
+        {
+          local_quad_point_in_real_cell =
+            local_quad_point_in_real_cell +
+            mapping_shape_value_table(mapping_index, i, k3_index, quad_no) *
+              (*(mapping_support_points_in_real_cell + i));
+        }
+
+      quad_point_in_real_cell = local_quad_point_in_real_cell;
+    }
+  } // namespace CUDAWrappers
+
+} // namespace BEMTools
+
+HBEM_NS_CLOSE
+
+#endif // HIERBEM_INCLUDE_BEM_CU_BEM_TOOLS_H_

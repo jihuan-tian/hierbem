@@ -1,7 +1,7 @@
 /**
  * \file hmatrix-coarsening.cc
  * \brief Coarsen a H-matrix to its subtree.
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-07-19
  */
@@ -9,9 +9,9 @@
 #include <fstream>
 #include <iostream>
 
-#include "block_cluster_tree.h"
-#include "debug_tools.h"
+#include "cluster_tree/block_cluster_tree.h"
 #include "hmatrix/hmatrix.h"
+#include "utilities/debug_tools.h"
 
 int
 main()

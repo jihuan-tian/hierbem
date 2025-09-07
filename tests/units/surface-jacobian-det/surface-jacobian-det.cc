@@ -15,10 +15,10 @@
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/full_matrix.templates.h>
 
-#include <laplace_bem.h>
-
 #include <fstream>
 #include <iostream>
+
+#include "laplace/laplace_bem.h"
 
 int
 main()

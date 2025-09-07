@@ -2,7 +2,7 @@
  * \file hmatrix-find-diagonal-blocks.cc
  * \brief Find the diagonal blocks related to the current \hmatnode.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-11-28
  */
@@ -104,7 +104,7 @@ main()
   off_diag_hmat =
     hmat.get_submatrices()[0]->get_submatrices()[2]->get_submatrices()[2];
   out << "*** Find the diagonal blocks for the H-matrix node " << std::hex
-            << off_diag_hmat << "\n";
+      << off_diag_hmat << "\n";
   off_diag_hmat->find_row_diag_block_for_offdiag_block()
     ->print_current_matrix_info(out);
   off_diag_hmat->find_col_diag_block_for_offdiag_block()
@@ -113,7 +113,7 @@ main()
   off_diag_hmat =
     hmat.get_submatrices()[0]->get_submatrices()[2]->get_submatrices()[3];
   out << "*** Find the diagonal blocks for the H-matrix node " << std::hex
-            << off_diag_hmat << "\n";
+      << off_diag_hmat << "\n";
   off_diag_hmat->find_row_diag_block_for_offdiag_block()
     ->print_current_matrix_info(out);
   off_diag_hmat->find_col_diag_block_for_offdiag_block()
@@ -122,7 +122,7 @@ main()
   off_diag_hmat =
     hmat.get_submatrices()[2]->get_submatrices()[1]->get_submatrices()[0];
   out << "*** Find the diagonal blocks for the H-matrix node " << std::hex
-            << off_diag_hmat << "\n";
+      << off_diag_hmat << "\n";
   off_diag_hmat->find_row_diag_block_for_offdiag_block()
     ->print_current_matrix_info(out);
   off_diag_hmat->find_col_diag_block_for_offdiag_block()
@@ -131,7 +131,7 @@ main()
   off_diag_hmat =
     hmat.get_submatrices()[2]->get_submatrices()[1]->get_submatrices()[3];
   out << "*** Find the diagonal blocks for the H-matrix node " << std::hex
-            << off_diag_hmat << "\n";
+      << off_diag_hmat << "\n";
   off_diag_hmat->find_row_diag_block_for_offdiag_block()
     ->print_current_matrix_info(out);
   off_diag_hmat->find_col_diag_block_for_offdiag_block()

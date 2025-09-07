@@ -14,7 +14,7 @@
 
 #include <memory>
 
-#include "bem_tools.h"
+#include "bem/bem_tools.h"
 #include "config.h"
 #include "mapping_q_ext.h"
 

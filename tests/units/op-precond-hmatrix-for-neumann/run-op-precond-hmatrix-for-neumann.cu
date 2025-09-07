@@ -15,12 +15,12 @@
 #include <map>
 #include <vector>
 
-#include "debug_tools.h"
-#include "grid_in_ext.h"
-#include "grid_out_ext.h"
+#include "cad_mesh/subdomain_topology.h"
+#include "grid/grid_in_ext.h"
+#include "grid/grid_out_ext.h"
 #include "hmatrix/hmatrix_parameters.h"
 #include "preconditioners/preconditioner_for_laplace_neumann.h"
-#include "subdomain_topology.h"
+#include "utilities/debug_tools.h"
 
 using namespace Catch::Matchers;
 using namespace HierBEM;

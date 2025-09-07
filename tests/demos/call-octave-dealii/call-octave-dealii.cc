@@ -2,7 +2,7 @@
  * @file call-octave-dealii.cc
  * @brief
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author
  * @date 2023-10-09
  */

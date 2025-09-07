@@ -7,8 +7,8 @@
  * \date 2021-06-24
  */
 
-#include "debug_tools.h"
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 

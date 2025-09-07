@@ -3,7 +3,7 @@
  * @brief Verify building the averaging matrix for operator preconditioning used
  * in Laplace Dirichlet problem.
  *
- * @ingroup preconditioner
+ * @ingroup preconditioners
  * @author Jihuan Tian
  * @date 2024-12-05
  */
@@ -21,9 +21,9 @@
 #include <iostream>
 #include <vector>
 
-#include "debug_tools.h"
-#include "grid_out_ext.h"
+#include "grid/grid_out_ext.h"
 #include "preconditioners/preconditioner_for_laplace_dirichlet.h"
+#include "utilities/debug_tools.h"
 
 using namespace HierBEM;
 using namespace dealii;

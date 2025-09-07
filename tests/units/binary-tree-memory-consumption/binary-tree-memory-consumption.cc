@@ -2,7 +2,7 @@
  * @file binary-tree-memory-consumption.cc
  * @brief Compute the memory consumption of a binary tree.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2024-02-19
  */
@@ -11,7 +11,7 @@
 
 #include <iostream>
 
-#include "tree.h"
+#include "cluster_tree/tree.h"
 
 using namespace HierBEM;
 

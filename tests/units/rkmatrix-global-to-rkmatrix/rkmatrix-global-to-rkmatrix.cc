@@ -7,7 +7,7 @@
  * \date 2021-07-28
  */
 
-#include "rkmatrix.h"
+#include "hmatrix/rkmatrix.h"
 
 #include <iostream>
 

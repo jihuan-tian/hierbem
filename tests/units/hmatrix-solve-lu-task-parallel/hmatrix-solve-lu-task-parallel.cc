@@ -3,7 +3,7 @@
  * \brief Verify LU parallel factorization of an \hmatrix and solve this matrix
  * using forward and backward substitution.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-11-02
  */

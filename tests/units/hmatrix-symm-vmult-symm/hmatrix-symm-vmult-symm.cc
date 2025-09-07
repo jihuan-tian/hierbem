@@ -5,7 +5,7 @@
  *
  * In this test case, the type of the \hmatrix is @p HMatrixSymm.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2022-05-14
  */

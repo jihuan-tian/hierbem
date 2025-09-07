@@ -40,22 +40,22 @@
 #include <utility>
 #include <vector>
 
-#include "bem_kernels.hcu"
-#include "bem_tools.h"
+#include "bem/bem_kernels.hcu"
+#include "bem/bem_tools.h"
+#include "bem/cu_bem_values.hcu"
 #include "config.h"
-#include "cu_bem_values.hcu"
-#include "cu_table.hcu"
-#include "debug_tools.h"
-#include "generic_functors.h"
 #include "hmatrix/aca_plus/aca_config.h"
 #include "hmatrix/hmatrix.h"
-#include "lapack_full_matrix_ext.h"
-#include "linalg.h"
+#include "linear_algebra/cu_table.hcu"
+#include "linear_algebra/lapack_full_matrix_ext.h"
+#include "linear_algebra/linalg.h"
 #include "mapping/mapping_info.h"
-#include "number_traits.h"
-#include "sauter_quadrature.hcu"
+#include "quadrature/sauter_quadrature.hcu"
 #include "sequence_partition/sequence_partition.h"
-#include "unary_template_arg_containers.h"
+#include "utilities/debug_tools.h"
+#include "utilities/generic_functors.h"
+#include "utilities/number_traits.h"
+#include "utilities/unary_template_arg_containers.h"
 
 HBEM_NS_OPEN
 

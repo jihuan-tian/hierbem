@@ -2,7 +2,7 @@
  * @file hmatrix-symmetric-link-nodes-on-same-levels.cu
  * @brief Link all \hmatrix nodes on a same level. The \hmatrix is symmetric.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2024-01-04
  */
@@ -11,7 +11,7 @@
 
 #include "hbem_octave_wrapper.h"
 #include "hmatrix/hmatrix.h"
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 using namespace std;
 using namespace HierBEM;

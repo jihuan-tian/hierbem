@@ -2,13 +2,13 @@
  * @file assign-entity-tag-to-cell.cc
  * @brief
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author
  * @date 2024-07-28
  */
 
 #include "electric_field/ddm_efield.h"
-#include "grid_in_ext.h"
+#include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
 
 using namespace HierBEM;

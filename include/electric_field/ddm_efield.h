@@ -47,20 +47,20 @@
 #include <utility>
 #include <vector>
 
+#include "cad_mesh/subdomain_topology.h"
 #include "config.h"
 #include "ddm_efield_global_preconditioner.h"
 #include "ddm_efield_matrix.h"
-#include "dof_to_cell_topology.h"
-#include "dof_tools_ext.h"
-#include "generic_functors.h"
-#include "grid_out_ext.h"
+#include "dofs/dof_to_cell_topology.h"
+#include "dofs/dof_tools_ext.h"
+#include "grid/grid_out_ext.h"
 #include "hmatrix/aca_plus/aca_config.h"
 #include "hmatrix/hmatrix.h"
 #include "mapping/mapping_info.h"
 #include "platform_shared/laplace_kernels.h"
 #include "subdomain_steklov_poincare_hmatrix.h"
-#include "subdomain_topology.h"
-#include "unary_template_arg_containers.h"
+#include "utilities/generic_functors.h"
+#include "utilities/unary_template_arg_containers.h"
 
 HBEM_NS_OPEN
 

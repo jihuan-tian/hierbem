@@ -3,7 +3,7 @@
  * \brief Verify the ordering of cell vertices when they are returned from two
  * DoFHandlers on a same triangulation.
  *
- * \ingroup testers dealii_verify
+ * \ingroup test_cases dealii_verify
  * \author Jihuan Tian
  * \date 2022-06-08
  */
@@ -29,8 +29,8 @@
 #include <map>
 #include <set>
 
-#include "bem_tools.h"
-#include "debug_tools.h"
+#include "bem/bem_tools.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 

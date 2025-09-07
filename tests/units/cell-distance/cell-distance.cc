@@ -1,27 +1,31 @@
 #include <deal.II/base/logstream.h>
+
+#include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/grid_out.h>
-#include <deal.II/grid/grid_generator.h>
+
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/full_matrix.templates.h>
-#include <laplace_bem.h>
 
 #include <fstream>
 #include <iostream>
 
-int main()
+#include "laplace/laplace_bem.h"
+
+int
+main()
 {
-  deallog.pop ();
+  deallog.pop();
   deallog.depth_console(2);
 
-  const unsigned int dim = 2;
+  const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
   // Generate a grid.
   Triangulation<dim, spacedim> triangulation;
   GridGenerator::hyper_cube(triangulation);
   triangulation.refine_global(2);
-  GridOut gridout;
+  GridOut       gridout;
   std::ofstream mesh_file("./cell-distance.msh");
   gridout.write_msh(triangulation, mesh_file);
 
@@ -31,18 +35,19 @@ int main()
   types::global_vertex_index i = 0;
 
   for (const auto first_cell : triangulation.active_cell_iterators())
-  {
-    types::global_vertex_index j = 0;
-    for (const auto second_cell : triangulation.active_cell_iterators())
     {
-      cell_distance_matrix(i, j) =
-          HierBEM::cell_distance<dim, spacedim, double>(first_cell, second_cell);
+      types::global_vertex_index j = 0;
+      for (const auto second_cell : triangulation.active_cell_iterators())
+        {
+          cell_distance_matrix(i, j) =
+            HierBEM::cell_distance<dim, spacedim, double>(first_cell,
+                                                          second_cell);
 
-      j++;
+          j++;
+        }
+
+      i++;
     }
-
-    i++;
-  }
 
   cell_distance_matrix.print(deallog);
 

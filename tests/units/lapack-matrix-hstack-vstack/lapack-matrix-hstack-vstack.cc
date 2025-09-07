@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 int
 main()

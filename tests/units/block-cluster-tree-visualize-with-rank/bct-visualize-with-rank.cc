@@ -10,8 +10,8 @@
 #include <fstream>
 #include <iostream>
 
-#include "block_cluster_tree.h"
-#include "lapack_full_matrix_ext.h"
+#include "cluster_tree/block_cluster_tree.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 using namespace HierBEM;
 

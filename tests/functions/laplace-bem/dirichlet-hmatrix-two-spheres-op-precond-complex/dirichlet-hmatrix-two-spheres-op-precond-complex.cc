@@ -1,7 +1,7 @@
 /**
  * \file dirichlet-hmatrix-two-spheres-op-precond-complex.cc
  * \brief
- * \ingroup preconditioner
+ * \ingroup preconditioners
  *
  * \author Jihuan Tian
  * \date 2025-09-06

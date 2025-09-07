@@ -2,7 +2,7 @@
  * @file fmt-output.cc
  * @brief Demostration for using fmt library in Catch2 testing framework
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author
  * @date 2024-05-15
  */

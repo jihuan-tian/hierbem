@@ -1,7 +1,7 @@
 /**
  * \file dealii-vector-argmax-argmin.cc
  * \brief
- * \ingroup testers
+ * \ingroup test_cases
  *
  * \author Jihuan Tian
  * \date 2022-03-10

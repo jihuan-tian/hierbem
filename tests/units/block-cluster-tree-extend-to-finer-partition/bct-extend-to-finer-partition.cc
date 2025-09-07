@@ -1,7 +1,7 @@
 /**
  * \file bct-extend-to-finer-partition.cc
  * \brief Verify extend a block cluster tree to a given finer partition.
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-07-23
  */
@@ -9,7 +9,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "block_cluster_tree.h"
+#include "cluster_tree/block_cluster_tree.h"
 
 using namespace HierBEM;
 

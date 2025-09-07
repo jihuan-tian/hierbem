@@ -11,7 +11,7 @@
  * must be good enough so that the positive definiteness of the original matrix
  * is preserved and Cholesky factorization is applicable.}
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2024-01-06
  */

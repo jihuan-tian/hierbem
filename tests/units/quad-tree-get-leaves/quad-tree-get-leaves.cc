@@ -9,8 +9,8 @@
 #include <iostream>
 #include <vector>
 
-#include "debug_tools.h"
-#include "tree.h"
+#include "cluster_tree/tree.h"
+#include "utilities/debug_tools.h"
 
 using namespace HierBEM;
 

@@ -37,23 +37,23 @@
 #include <string>
 #include <vector>
 
-#include "bem_general.hcu"
-#include "bem_kernels.hcu"
-#include "block_cluster_tree.h"
+#include "bem/bem_general.hcu"
+#include "bem/bem_kernels.hcu"
+#include "cad_mesh/subdomain_topology.h"
+#include "cluster_tree/block_cluster_tree.h"
 #include "config.h"
 #include "cuda_complex.hcu"
-#include "debug_tools.h"
-#include "dof_to_cell_topology.h"
-#include "dof_tools_ext.h"
-#include "generic_functors.h"
-#include "grid_out_ext.h"
+#include "dofs/dof_to_cell_topology.h"
+#include "dofs/dof_tools_ext.h"
+#include "grid/grid_out_ext.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "hmatrix/hmatrix.h"
 #include "hmatrix/hmatrix_parameters.h"
 #include "mapping/mapping_info.h"
-#include "sauter_quadrature_tools.h"
+#include "quadrature/sauter_quadrature_tools.h"
 #include "solvers/solver_gmres_general.h"
-#include "subdomain_topology.h"
+#include "utilities/debug_tools.h"
+#include "utilities/generic_functors.h"
 
 HBEM_NS_OPEN
 

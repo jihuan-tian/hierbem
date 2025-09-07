@@ -2,7 +2,7 @@
  * @file hmatrix-link-nodes-on-same-levels.cc
  * @brief Link all \hmatrix nodes on a same level.
  *
- * @ingroup testers hierarchical_matrices
+ * @ingroup test_cases hierarchical_matrices
  * @author Jihuan Tian
  * @date 2023-11-10
  */
@@ -11,7 +11,7 @@
 
 #include "hbem_octave_wrapper.h"
 #include "hmatrix/hmatrix.h"
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 using namespace HierBEM;
 

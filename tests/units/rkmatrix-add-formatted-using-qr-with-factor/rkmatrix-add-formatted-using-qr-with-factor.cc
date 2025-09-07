@@ -5,7 +5,7 @@
  * by using the QR decomposition. This requires that the component matrices of
  * rank-k matrices should be wide matrix, i.e. having more rows than columns.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-10-05
  */
@@ -13,8 +13,8 @@
 #include <iostream>
 #include <string>
 
-#include "debug_tools.h"
-#include "rkmatrix.h"
+#include "hmatrix/rkmatrix.h"
+#include "utilities/debug_tools.h"
 
 int
 main()

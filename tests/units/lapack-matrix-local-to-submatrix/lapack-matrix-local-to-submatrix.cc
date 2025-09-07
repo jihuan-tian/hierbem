@@ -1,7 +1,7 @@
 /**
  * \file lapack-matrix-local-to-submatrix.cc
  * \brief Verify the restriction of a local full matrix to sub full matrix.
- * \ingroup linalg testers
+ * \ingroup linalg test_cases
  * \author Jihuan Tian
  * \date 2021-07-28
  */
@@ -11,7 +11,7 @@
 #include <iostream>
 
 #include "hmatrix/hmatrix.h"
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 int
 main()
@@ -34,7 +34,7 @@ main()
    */
   std::array<types::global_dof_index, 2> tau{5, 13};
   std::array<types::global_dof_index, 2> sigma{7, 15};
-  LAPACKFullMatrixExt<double>          M_b(tau, sigma, M);
+  LAPACKFullMatrixExt<double>            M_b(tau, sigma, M);
   M_b.print_formatted_to_mat(std::cout, "M_b");
 
   /**
@@ -43,11 +43,8 @@ main()
    */
   std::array<types::global_dof_index, 2> tau_subset{7, 11};
   std::array<types::global_dof_index, 2> sigma_subset{10, 13};
-  LAPACKFullMatrixExt<double>          M_b_submatrix(tau_subset,
-                                            sigma_subset,
-                                            M_b,
-                                            tau,
-                                            sigma);
+  LAPACKFullMatrixExt<double>            M_b_submatrix(
+    tau_subset, sigma_subset, M_b, tau, sigma);
   M_b_submatrix.print_formatted_to_mat(std::cout, "M_b_submatrix");
 
   return 0;

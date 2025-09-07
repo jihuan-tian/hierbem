@@ -1,9 +1,9 @@
 /**
  * @file verify-gmsh-cell-indices-in-refined-mesh.cc
- * @brief 
+ * @brief
  *
- * @ingroup testers
- * @author 
+ * @ingroup test_cases
+ * @author
  * @date 2024-12-13
  */
 
@@ -11,7 +11,8 @@
 
 using namespace std;
 
-int main(int argc, const char *argv[])
+int
+main(int argc, const char *argv[])
 {
-    return 0;
+  return 0;
 }

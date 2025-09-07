@@ -5,16 +5,16 @@
  * child clusters are interwoven together into the index set of the parent
  * cluster.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-08-05
  */
 
 #include <iostream>
 
-#include "generic_functors.h"
-#include "lapack_full_matrix_ext.h"
-#include "rkmatrix.h"
+#include "hmatrix/rkmatrix.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
+#include "utilities/generic_functors.h"
 
 int
 main()

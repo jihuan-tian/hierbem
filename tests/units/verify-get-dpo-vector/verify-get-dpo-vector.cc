@@ -3,7 +3,7 @@
  * \brief Verify the function @p get_dpo_vector for generating the numbering
  * from lexicographic to hierarchic order.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-07-18
  */
@@ -13,8 +13,8 @@
 
 #include <iostream>
 
-#include "debug_tools.h"
 #include "mapping/mapping_q_ext.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 

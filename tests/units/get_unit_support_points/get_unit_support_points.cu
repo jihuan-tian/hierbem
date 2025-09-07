@@ -2,7 +2,7 @@
  * \file get_unit_support_points.cc
  * \brief Verify extracting the unit support points in a finite element.
  *
- * \ingroup testers support_points_manip
+ * \ingroup test_cases support_points_manip
  * \author Jihuan Tian
  * \date 2022-06-13
  */
@@ -15,8 +15,8 @@
 #include <iostream>
 #include <vector>
 
-#include "bem_tools.h"
-#include "debug_tools.h"
+#include "bem/bem_tools.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 

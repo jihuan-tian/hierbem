@@ -2,7 +2,7 @@
  * \file hmatrix-tvmult-tril.cc
  * \brief Verify transposed lower triangular \hmatrix/vector multiplication.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2022-12-01
  */

@@ -2,7 +2,7 @@
  * @file cudafullmatrix-det3x3.cu
  * @brief Verify the calculation of the determinant of a 3x3 matrix.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2023-02-24
  */
@@ -12,7 +12,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "cu_fullmatrix.hcu"
+#include "linear_algebra/cu_fullmatrix.hcu"
 
 using namespace HierBEM::CUDAWrappers;
 using namespace Catch::Matchers;

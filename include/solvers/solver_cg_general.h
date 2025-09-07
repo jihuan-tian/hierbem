@@ -20,9 +20,9 @@
 #include <iostream>
 #include <type_traits>
 
-#include "blas_helpers.h"
 #include "config.h"
-#include "linalg.h"
+#include "linear_algebra/blas_helpers.h"
+#include "linear_algebra/linalg.h"
 
 HBEM_NS_OPEN
 

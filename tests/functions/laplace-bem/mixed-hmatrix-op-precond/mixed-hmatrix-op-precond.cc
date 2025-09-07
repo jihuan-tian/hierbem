@@ -3,7 +3,7 @@
  * \brief Verify solve Laplace mixed boundary value problem using \hmat based
  * BEM. Operator preconditioning is used.
  *
- * \ingroup preconditioner
+ * \ingroup preconditioners
  * \author Jihuan Tian
  * \date 2025-02-04
  */

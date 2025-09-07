@@ -3,7 +3,7 @@
  * \brief Verify solving the Laplace problem with Dirichlet boundary condition
  * using H-matrix based BEM. Operator preconditioning is used.
  *
- * \ingroup preconditioner
+ * \ingroup preconditioners
  * \author Jihuan Tian
  * \date 2024-12-17
  */

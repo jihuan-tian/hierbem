@@ -2,7 +2,7 @@
  * \file verify-fe-info.cc
  * \brief Verify the information for typical finite elements.
  *
- * \ingroup testers dealii_verify
+ * \ingroup test_cases dealii_verify
  * \author Jihuan Tian
  * \date 2022-06-11
  */
@@ -14,7 +14,7 @@
 
 #include <iostream>
 
-#include "debug_tools.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 

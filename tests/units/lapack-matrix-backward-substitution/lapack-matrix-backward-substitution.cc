@@ -1,14 +1,14 @@
 /**
  * \file lapack-matrix-backward-substitution.cc
  * \brief Verify backward substitution of an upper triangle matrix.
- * \ingroup testers linalg
+ * \ingroup test_cases linalg
  * \author Jihuan Tian
  * \date 2021-10-16
  */
 
 #include <iostream>
 
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 int
 main()

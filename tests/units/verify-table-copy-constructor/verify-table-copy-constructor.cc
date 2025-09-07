@@ -2,7 +2,7 @@
  * \file verify-table-copy-constructor.cc
  * \brief Verify the copy constructor (deep copy) of @p Table<N,T>.
  *
- * \ingroup testers dealii_verify
+ * \ingroup test_cases dealii_verify
  * \author Jihuan Tian
  * \date 2022-07-14
  */
@@ -15,7 +15,7 @@
 
 #include <iostream>
 
-#include "debug_tools.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 

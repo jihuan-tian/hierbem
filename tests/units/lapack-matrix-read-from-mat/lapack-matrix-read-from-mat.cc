@@ -3,14 +3,14 @@
  * \brief Verify reading a matrix from a file saved from Octave in text format,
  * i.e. saved with the option \p -text.
  *
- * \ingroup testers linalg
+ * \ingroup test_cases linalg
  * \author Jihuan Tian
  * \date 2021-10-20
  */
 
 #include <fstream>
 
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 int
 main()

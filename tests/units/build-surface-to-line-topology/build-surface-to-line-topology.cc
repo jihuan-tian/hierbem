@@ -2,7 +2,7 @@
  * @file build-surface-to-line-topology.cc
  * @brief
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author
  * @date 2024-08-05
  */

@@ -3,7 +3,7 @@
  * \brief Verify parallel transposed lower triangular \hmatrix/vector
  * multiplication.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2024-03-18
  */

@@ -2,7 +2,7 @@
  * @file occ-nurbs-manifold.cc
  * @brief
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author
  * @date 2024-09-14
  */
@@ -30,8 +30,8 @@
 #include <map>
 #include <vector>
 
-#include "gmsh_manipulation.h"
-#include "grid_in_ext.h"
+#include "cad_mesh/gmsh_manipulation.h"
+#include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "mapping/mapping_q_ext.h"
 

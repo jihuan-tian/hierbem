@@ -2,7 +2,7 @@
  * \file hmatrix-set-block-type.cc
  * \brief Verify setting \hmatrix block type recursively.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2022-04-20
  */
@@ -10,10 +10,10 @@
 #include <fstream>
 #include <iostream>
 
-#include "debug_tools.h"
 #include "hmatrix/hmatrix.h"
-#include "lapack_full_matrix_ext.h"
-#include "read_octave_data.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
+#include "utilities/debug_tools.h"
+#include "utilities/read_octave_data.h"
 
 int
 main()

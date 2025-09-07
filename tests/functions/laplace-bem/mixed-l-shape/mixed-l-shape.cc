@@ -2,7 +2,7 @@
  * @file lshape-mixed-hmatrix.cu
  * @brief
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author
  * @date 2023-10-27
  */

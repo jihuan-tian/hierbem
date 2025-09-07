@@ -8,7 +8,7 @@
  * fine non-tensor product partitions. This version uses the member function
  * call of multiplication.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-11-11
  */

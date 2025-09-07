@@ -3,7 +3,7 @@
  * \brief Verify Hermite transposed \hmatrix/vector multiplication. The \hmatrix
  * is Hermite symmetric and only its lower triangular part is stored.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2022-11-28
  */

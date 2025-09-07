@@ -3,7 +3,7 @@
  * \brief Verify backward substitution of an upper block triangle \hmatrix. The
  * \bct partition structure is fine non-tensor product.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-10-22
  */
@@ -11,10 +11,10 @@
 #include <fstream>
 #include <iostream>
 
-#include "debug_tools.h"
 #include "hmatrix/hmatrix.h"
-#include "lapack_full_matrix_ext.h"
-#include "read_octave_data.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
+#include "utilities/debug_tools.h"
+#include "utilities/read_octave_data.h"
 
 int
 main()

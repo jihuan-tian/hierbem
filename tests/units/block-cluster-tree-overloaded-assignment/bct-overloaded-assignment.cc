@@ -2,7 +2,7 @@
  * \file bct-overloaded-assignment.cc
  * \brief Verify the deep and shallow overloaded assignment operators for \p
  * BlockClusterTree.
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-08-23
  */
@@ -10,8 +10,8 @@
 #include <fstream>
 #include <iostream>
 
-#include "block_cluster_tree.h"
-#include "debug_tools.h"
+#include "cluster_tree/block_cluster_tree.h"
+#include "utilities/debug_tools.h"
 
 using namespace HierBEM;
 

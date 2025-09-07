@@ -21,7 +21,7 @@
 
 #include <fstream>
 
-#include "debug_tools.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 

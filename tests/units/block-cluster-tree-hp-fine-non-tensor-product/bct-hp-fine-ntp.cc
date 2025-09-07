@@ -6,8 +6,8 @@
  * \date 2021-06-23
  */
 
-#include "block_cluster_tree.h"
-#include "cluster_tree.h"
+#include "cluster_tree/block_cluster_tree.h"
+#include "cluster_tree/cluster_tree.h"
 
 using namespace HierBEM;
 

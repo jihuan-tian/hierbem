@@ -3,14 +3,14 @@
  * \brief Verify reading a vector from a file saved from Octave in text format,
  * i.e. saved with the option \p -text.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-10-20
  */
 
 #include <fstream>
 
-#include "read_octave_data.h"
+#include "utilities/read_octave_data.h"
 
 using namespace dealii;
 

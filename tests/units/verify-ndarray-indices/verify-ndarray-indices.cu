@@ -3,14 +3,14 @@
  * @brief Verify the conversion from multi-dimensional array indices into a
  * linearized index.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2023-01-29
  */
 
 #include <iostream>
 
-#include "cu_table_indices.hcu"
+#include "linear_algebra/cu_table_indices.hcu"
 
 using namespace dealii;
 using namespace std;

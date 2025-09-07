@@ -2,14 +2,14 @@
  * \file rkmatrix-to-fullmatrix-rank0.cc
  * \brief Verify the conversion of a rank-0 matrix to a full matrix.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-10-09
  */
 
 #include <iostream>
 
-#include "rkmatrix.h"
+#include "hmatrix/rkmatrix.h"
 
 int
 main()

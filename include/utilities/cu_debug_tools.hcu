@@ -1,0 +1,1993 @@
+#ifndef HIERBEM_INCLUDE_UTILITIES_CU_DEBUG_TOOLS_H_
+#define HIERBEM_INCLUDE_UTILITIES_CU_DEBUG_TOOLS_H_
+
+#include <deal.II/base/logstream.h>
+#include <deal.II/base/table.h>
+#include <deal.II/base/timer.h>
+
+#include <deal.II/dofs/dof_handler.h>
+#include <deal.II/dofs/dof_tools.h>
+
+#include <deal.II/fe/fe.h>
+#include <deal.II/fe/fe_system.h>
+#include <deal.II/fe/fe_tools.h>
+#include <deal.II/fe/mapping.h>
+#include <deal.II/fe/mapping_q.h>
+
+#include <deal.II/grid/tria.h>
+
+#include <iomanip>
+#include <iostream>
+#include <iterator>
+#include <string>
+#include <utility>
+
+#include "bem/bem_values.hcu"
+#include "bem/cu_bem_values.hcu"
+#include "config.h"
+#include "linear_algebra/cu_table.hcu"
+#include "linear_algebra/lapack_full_matrix_ext.h"
+#include "quadrature/cu_qgauss.hcu"
+#include "quadrature/quadrature.templates.h"
+
+HBEM_NS_OPEN
+
+using namespace dealii;
+
+/**
+ * Check the equality of the quadrature objects on CPU and GPU.
+ *
+ * @tparam dim
+ * @param quad_cpu
+ * @param quad_gpu
+ * @return
+ */
+template <int dim>
+bool
+is_equal(const QGauss<dim>                            &quad_cpu,
+         const HierBEM::CUDAWrappers::CUDAQGauss<dim> &quad_gpu)
+{
+  if (quad_cpu.size() == quad_gpu.size())
+    {
+      const unsigned int quad_num = quad_cpu.size();
+      // Extract quadrature points and weights from the device for comparison.
+      Table<2, double> quad_points_from_gpu(quad_num, dim);
+      quad_gpu.get_points().copy_to_host(quad_points_from_gpu);
+
+      double *weights_from_gpu = new double[quad_num];
+      AssertCuda(cudaMemcpy((void *)weights_from_gpu,
+                            (void *)(quad_gpu.get_weights()),
+                            sizeof(double) * quad_num,
+                            cudaMemcpyDeviceToHost));
+
+      for (unsigned int q = 0; q < quad_num; q++)
+        {
+          for (unsigned int i = 0; i < dim; i++)
+            {
+              if (quad_points_from_gpu(q, i) != quad_cpu.point(q)(i))
+                {
+                  std::cout << "(" << quad_cpu.point(q)(i) << ","
+                            << quad_points_from_gpu(q, i) << ")" << std::endl;
+                  delete weights_from_gpu;
+                  return false;
+                }
+            }
+
+          if (*(weights_from_gpu + q) != quad_cpu.weight(q))
+            {
+              std::cout << "(" << quad_cpu.weight(q) << ","
+                        << *(weights_from_gpu + q) << ")" << std::endl;
+              delete weights_from_gpu;
+              return false;
+            }
+        }
+
+      delete weights_from_gpu;
+      return true;
+    }
+  else
+    {
+      std::cout << "(" << quad_cpu.size() << "," << quad_gpu.size() << ")"
+                << std::endl;
+      return false;
+    }
+}
+
+
+/**
+ * Check the equality of the vector of values on the CPU and the table (1
+ * dimension) of values on the GPU.
+ *
+ * @tparam T
+ * @param table_cpu
+ * @param table_gpu
+ * @return
+ */
+template <typename T>
+bool
+is_equal(const std::vector<T>                         &vector_cpu,
+         const HierBEM::CUDAWrappers::CUDATable<1, T> &table_gpu)
+{
+  const unsigned int N = 1;
+
+  // Make a copy of the GPU table on the host.
+  TableIndices<N> table_sizes;
+  HierBEM::CUDAWrappers::copy_table_indices(table_sizes, table_gpu.size());
+  Table<N, T> table_copied_from_gpu(table_sizes[0]);
+  table_gpu.copy_to_host(table_copied_from_gpu);
+
+  // Check the equality of number of elements.
+  if (vector_cpu.size() == table_copied_from_gpu.n_elements())
+    {
+      // Get the pointers to the first element in the two tables.
+      const T *vector_cpu_ptr     = vector_cpu.data();
+      const T *table_from_gpu_ptr = &(table_copied_from_gpu(TableIndices<N>()));
+
+      for (std::size_t i = 0; i < vector_cpu.size(); i++)
+        {
+          if (*(vector_cpu_ptr + i) != *(table_from_gpu_ptr + i))
+            {
+              return false;
+            }
+        }
+
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+/**
+ * Check the equality of the vector of values on the CPU and the table (1
+ * dimension) of values on the GPU (asynchronous).
+ *
+ * @tparam T
+ * @param vector_cpu
+ * @param table_gpu
+ * @param stream
+ * @return
+ */
+template <typename T>
+bool
+is_equal(const std::vector<T>                         &vector_cpu,
+         const HierBEM::CUDAWrappers::CUDATable<1, T> &table_gpu,
+         const cudaStream_t                            stream)
+{
+  const unsigned int N = 1;
+
+  // Make a copy of the GPU table on the host.
+  TableIndices<N> table_sizes;
+  HierBEM::CUDAWrappers::copy_table_indices(table_sizes, table_gpu.size());
+  Table<N, T> table_copied_from_gpu(table_sizes[0]);
+  AssertCuda(cudaHostRegister((void *)&(table_copied_from_gpu(0)),
+                              table_copied_from_gpu.n_elements() * sizeof(T),
+                              0));
+
+  table_gpu.copy_to_host(table_copied_from_gpu, stream);
+
+  AssertCuda(cudaStreamSynchronize(stream));
+
+  // Check the equality of number of elements.
+  if (vector_cpu.size() == table_copied_from_gpu.n_elements())
+    {
+      // Get the pointers to the first element in the two tables.
+      const T *vector_cpu_ptr     = vector_cpu.data();
+      const T *table_from_gpu_ptr = &(table_copied_from_gpu(TableIndices<N>()));
+
+      for (std::size_t i = 0; i < vector_cpu.size(); i++)
+        {
+          if (*(vector_cpu_ptr + i) != *(table_from_gpu_ptr + i))
+            {
+              AssertCuda(
+                cudaHostUnregister((void *)&(table_copied_from_gpu(0))));
+              return false;
+            }
+        }
+
+      AssertCuda(cudaHostUnregister((void *)&(table_copied_from_gpu(0))));
+      return true;
+    }
+  else
+    {
+      AssertCuda(cudaHostUnregister((void *)&(table_copied_from_gpu(0))));
+      return false;
+    }
+}
+
+
+/**
+ * Check the numerical equality of a vector of @p Tensor objects on CPU and a
+ * table of @p Tensor objects on GPU.
+ *
+ * @tparam spacedim
+ * @tparam RangeNumberType
+ * @param vector_cpu
+ * @param table_gpu
+ * @param eps
+ * @param stream
+ * @return
+ */
+template <int spacedim, typename RangeNumberType>
+bool
+is_equal(const std::vector<Tensor<1, spacedim, RangeNumberType>> &vector_cpu,
+         const HierBEM::CUDAWrappers::
+           CUDATable<1, Tensor<1, spacedim, RangeNumberType>> &table_gpu,
+         const RangeNumberType                                 eps,
+         const cudaStream_t                                    stream)
+{
+  const unsigned int N = 1;
+
+  // Make a copy of the GPU table on the host.
+  TableIndices<N> table_sizes;
+  HierBEM::CUDAWrappers::copy_table_indices(table_sizes, table_gpu.size());
+  Table<N, Tensor<1, spacedim, RangeNumberType>> table_copied_from_gpu(
+    table_sizes[0]);
+  AssertCuda(cudaHostRegister((void *)&(table_copied_from_gpu(0)),
+                              table_copied_from_gpu.n_elements() *
+                                sizeof(Tensor<1, spacedim, RangeNumberType>),
+                              0));
+
+  table_gpu.copy_to_host(table_copied_from_gpu, stream);
+
+  AssertCuda(cudaStreamSynchronize(stream));
+
+  // Check the equality of number of elements.
+  if (vector_cpu.size() == table_copied_from_gpu.n_elements())
+    {
+      for (std::size_t i = 0; i < vector_cpu.size(); i++)
+        {
+          for (unsigned int d = 0; d < spacedim; d++)
+            {
+              deallog << "(" << vector_cpu[i][d] << ","
+                      << table_copied_from_gpu(i)[d] << ")" << std::endl;
+
+              if (std::fabs(vector_cpu[i][d] - table_copied_from_gpu(i)[d]) >
+                  eps)
+                {
+                  AssertCuda(
+                    cudaHostUnregister((void *)&(table_copied_from_gpu(0))));
+                  return false;
+                }
+            }
+        }
+
+      AssertCuda(cudaHostUnregister((void *)&(table_copied_from_gpu(0))));
+      return true;
+    }
+  else
+    {
+      AssertCuda(cudaHostUnregister((void *)&(table_copied_from_gpu(0))));
+      return false;
+    }
+}
+
+
+/**
+ * Check the numerical equality of a vector of @p Point objects on CPU and a
+ * table of @p Point objects on GPU.
+ *
+ * @tparam spacedim
+ * @tparam RangeNumberType
+ * @param vector_cpu
+ * @param table_gpu
+ * @param eps
+ * @param stream
+ * @return
+ */
+template <int spacedim, typename RangeNumberType>
+bool
+is_equal(
+  const std::vector<Point<spacedim, RangeNumberType>> &vector_cpu,
+  const HierBEM::CUDAWrappers::CUDATable<1, Point<spacedim, RangeNumberType>>
+                       &table_gpu,
+  const RangeNumberType eps,
+  const cudaStream_t    stream)
+{
+  const unsigned int N = 1;
+
+  // Make a copy of the GPU table on the host.
+  TableIndices<N> table_sizes;
+  HierBEM::CUDAWrappers::copy_table_indices(table_sizes, table_gpu.size());
+  Table<N, Point<spacedim, RangeNumberType>> table_copied_from_gpu(
+    table_sizes[0]);
+  AssertCuda(cudaHostRegister((void *)&(table_copied_from_gpu(0)),
+                              table_copied_from_gpu.n_elements() *
+                                sizeof(Point<spacedim, RangeNumberType>),
+                              0));
+
+  table_gpu.copy_to_host(table_copied_from_gpu, stream);
+
+  AssertCuda(cudaStreamSynchronize(stream));
+
+  // Check the equality of number of elements.
+  if (vector_cpu.size() == table_copied_from_gpu.n_elements())
+    {
+      for (std::size_t i = 0; i < vector_cpu.size(); i++)
+        {
+          for (unsigned int d = 0; d < spacedim; d++)
+            {
+              deallog << "(" << vector_cpu[i][d] << ","
+                      << table_copied_from_gpu(i)[d] << ")" << std::endl;
+
+              if (std::fabs(vector_cpu[i](d) - table_copied_from_gpu(i)(d)) >
+                  eps)
+                {
+                  AssertCuda(
+                    cudaHostUnregister((void *)&(table_copied_from_gpu(0))));
+                  return false;
+                }
+            }
+        }
+
+      AssertCuda(cudaHostUnregister((void *)&(table_copied_from_gpu(0))));
+      return true;
+    }
+  else
+    {
+      AssertCuda(cudaHostUnregister((void *)&(table_copied_from_gpu(0))));
+      return false;
+    }
+}
+
+
+/**
+ * Check the equality of the table (2 dimensions) of scalar values on CPU and
+ * GPU.
+ *
+ * @tparam T
+ * @param table_cpu
+ * @param table_gpu
+ * @return
+ */
+template <typename T>
+bool
+is_equal(const Table<2, T>                            &table_cpu,
+         const HierBEM::CUDAWrappers::CUDATable<2, T> &table_gpu)
+{
+  const unsigned int N = 2;
+
+  // Make a copy of the GPU table on the host.
+  TableIndices<N> table_sizes;
+  HierBEM::CUDAWrappers::copy_table_indices(table_sizes, table_gpu.size());
+  Table<N, T> table_copied_from_gpu(table_sizes[0], table_sizes[1]);
+  table_gpu.copy_to_host(table_copied_from_gpu);
+
+  // Check the equality of number of elements.
+  if (table_cpu.n_elements() == table_copied_from_gpu.n_elements())
+    {
+      // Get the pointers to the first element in the two tables.
+      const T *table_cpu_ptr      = &(table_cpu(TableIndices<N>()));
+      const T *table_from_gpu_ptr = &(table_copied_from_gpu(TableIndices<N>()));
+
+      for (std::size_t i = 0; i < table_cpu.n_elements(); i++)
+        {
+          if (*(table_cpu_ptr + i) != *(table_from_gpu_ptr + i))
+            {
+              return false;
+            }
+        }
+
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+/**
+ * Check the equality of the table (2 dimensions) of scalar values on CPU and
+ * GPU (asynchronous).
+ *
+ * @tparam T
+ * @param table_cpu
+ * @param table_gpu
+ * @param stream
+ * @return
+ */
+template <typename T>
+bool
+is_equal(const Table<2, T>                            &table_cpu,
+         const HierBEM::CUDAWrappers::CUDATable<2, T> &table_gpu,
+         const cudaStream_t                            stream)
+{
+  const unsigned int N = 2;
+
+  // Make a copy of the GPU table on the host.
+  TableIndices<N> table_sizes;
+  HierBEM::CUDAWrappers::copy_table_indices(table_sizes, table_gpu.size());
+  Table<N, T> table_copied_from_gpu(table_sizes[0], table_sizes[1]);
+  AssertCuda(cudaHostRegister((void *)&(table_copied_from_gpu(0, 0)),
+                              table_copied_from_gpu.n_elements() * sizeof(T),
+                              0));
+
+  table_gpu.copy_to_host(table_copied_from_gpu, stream);
+
+  AssertCuda(cudaStreamSynchronize(stream));
+
+  // Check the equality of number of elements.
+  if (table_cpu.n_elements() == table_copied_from_gpu.n_elements())
+    {
+      // Get the pointers to the first element in the two tables.
+      const T *table_cpu_ptr      = &(table_cpu(TableIndices<N>()));
+      const T *table_from_gpu_ptr = &(table_copied_from_gpu(TableIndices<N>()));
+
+      for (std::size_t i = 0; i < table_cpu.n_elements(); i++)
+        {
+          if (*(table_cpu_ptr + i) != *(table_from_gpu_ptr + i))
+            {
+              AssertCuda(
+                cudaHostUnregister((void *)&(table_copied_from_gpu(0, 0))));
+              return false;
+            }
+        }
+
+      AssertCuda(cudaHostUnregister((void *)&(table_copied_from_gpu(0, 0))));
+      return true;
+    }
+  else
+    {
+      AssertCuda(cudaHostUnregister((void *)&(table_copied_from_gpu(0, 0))));
+      return false;
+    }
+}
+
+
+/**
+ * Check the numerical equality of the table (2 dimensions) of scalar values
+ * on CPU and GPU (asynchronous).
+ *
+ * @tparam T
+ * @param table_cpu
+ * @param table_gpu
+ * @param eps
+ * @param stream
+ * @return
+ */
+template <typename T>
+bool
+is_equal(const Table<2, T>                            &table_cpu,
+         const HierBEM::CUDAWrappers::CUDATable<2, T> &table_gpu,
+         const T                                       eps,
+         const cudaStream_t                            stream)
+{
+  const unsigned int N = 2;
+
+  // Make a copy of the GPU table on the host.
+  TableIndices<N> table_sizes;
+  HierBEM::CUDAWrappers::copy_table_indices(table_sizes, table_gpu.size());
+  Table<N, T> table_copied_from_gpu(table_sizes[0], table_sizes[1]);
+  AssertCuda(cudaHostRegister((void *)&(table_copied_from_gpu(0, 0)),
+                              table_copied_from_gpu.n_elements() * sizeof(T),
+                              0));
+
+  table_gpu.copy_to_host(table_copied_from_gpu, stream);
+
+  AssertCuda(cudaStreamSynchronize(stream));
+
+  // Check the equality of number of elements.
+  if (table_cpu.n_elements() == table_copied_from_gpu.n_elements())
+    {
+      // Get the pointers to the first element in the two tables.
+      const T *table_cpu_ptr      = &(table_cpu(TableIndices<N>()));
+      const T *table_from_gpu_ptr = &(table_copied_from_gpu(TableIndices<N>()));
+
+      for (std::size_t i = 0; i < table_cpu.n_elements(); i++)
+        {
+          deallog << "(" << *(table_cpu_ptr + i) << ","
+                  << *(table_from_gpu_ptr + i) << ")" << std::endl;
+
+          if (std::fabs(*(table_cpu_ptr + i) - *(table_from_gpu_ptr + i)) > eps)
+            {
+              AssertCuda(
+                cudaHostUnregister((void *)&(table_copied_from_gpu(0, 0))));
+              return false;
+            }
+        }
+
+      AssertCuda(cudaHostUnregister((void *)&(table_copied_from_gpu(0, 0))));
+      return true;
+    }
+  else
+    {
+      AssertCuda(cudaHostUnregister((void *)&(table_copied_from_gpu(0, 0))));
+      return false;
+    }
+}
+
+
+/**
+ * Check the numerical equality of the table (2 dimensions) of @p Tensor
+ * objects on CPU and on GPU (asynchronous).
+ *
+ * @tparam spacedim
+ * @tparam RangeNumberType
+ * @param table_cpu
+ * @param table_gpu
+ * @param eps
+ * @param stream
+ * @return
+ */
+template <int spacedim, typename RangeNumberType>
+bool
+is_equal(const Table<2, Tensor<1, spacedim, RangeNumberType>> &table_cpu,
+         const HierBEM::CUDAWrappers::
+           CUDATable<2, Tensor<1, spacedim, RangeNumberType>> &table_gpu,
+         const RangeNumberType                                 eps,
+         const cudaStream_t                                    stream)
+{
+  const unsigned int N = 2;
+
+  // Make a copy of the GPU table on the host.
+  TableIndices<N> table_sizes;
+  HierBEM::CUDAWrappers::copy_table_indices(table_sizes, table_gpu.size());
+  Table<N, Tensor<1, spacedim, RangeNumberType>> table_copied_from_gpu(
+    table_sizes[0], table_sizes[1]);
+  AssertCuda(cudaHostRegister((void *)&(table_copied_from_gpu(0, 0)),
+                              table_copied_from_gpu.n_elements() *
+                                sizeof(Tensor<1, spacedim, RangeNumberType>),
+                              0));
+
+  table_gpu.copy_to_host(table_copied_from_gpu, stream);
+
+  AssertCuda(cudaStreamSynchronize(stream));
+
+  // Check the equality of number of elements.
+  if (table_cpu.n_elements() == table_copied_from_gpu.n_elements())
+    {
+      for (std::size_t i = 0; i < table_cpu.n_rows(); i++)
+        {
+          for (std::size_t j = 0; j < table_cpu.n_cols(); j++)
+            {
+              for (unsigned int d = 0; d < spacedim; d++)
+                {
+                  deallog << "(" << table_cpu(i, j)[d] << ","
+                          << table_copied_from_gpu(i, j)[d] << ")" << std::endl;
+
+                  if (std::fabs(table_cpu(i, j)[d] -
+                                table_copied_from_gpu(i, j)[d]) > eps)
+                    {
+                      AssertCuda(cudaHostUnregister(
+                        (void *)&(table_copied_from_gpu(0, 0))));
+                      return false;
+                    }
+                }
+            }
+        }
+
+      AssertCuda(cudaHostUnregister((void *)&(table_copied_from_gpu(0, 0))));
+      return true;
+    }
+  else
+    {
+      AssertCuda(cudaHostUnregister((void *)&(table_copied_from_gpu(0, 0))));
+      return false;
+    }
+}
+
+
+template <int spacedim, typename RangeNumberType>
+bool
+is_equal(
+  const Table<2, Point<spacedim, RangeNumberType>> &table_cpu,
+  const HierBEM::CUDAWrappers::CUDATable<2, Point<spacedim, RangeNumberType>>
+                       &table_gpu,
+  const RangeNumberType eps,
+  const cudaStream_t    stream)
+{
+  const unsigned int N = 2;
+
+  // Make a copy of the GPU table on the host.
+  TableIndices<N> table_sizes;
+  HierBEM::CUDAWrappers::copy_table_indices(table_sizes, table_gpu.size());
+  Table<N, Point<spacedim, RangeNumberType>> table_copied_from_gpu(
+    table_sizes[0], table_sizes[1]);
+  AssertCuda(cudaHostRegister((void *)&(table_copied_from_gpu(0, 0)),
+                              table_copied_from_gpu.n_elements() *
+                                sizeof(Point<spacedim, RangeNumberType>),
+                              0));
+
+  table_gpu.copy_to_host(table_copied_from_gpu, stream);
+
+  AssertCuda(cudaStreamSynchronize(stream));
+
+  // Check the equality of number of elements.
+  if (table_cpu.n_elements() == table_copied_from_gpu.n_elements())
+    {
+      for (std::size_t i = 0; i < table_cpu.n_rows(); i++)
+        {
+          for (std::size_t j = 0; j < table_cpu.n_cols(); j++)
+            {
+              for (unsigned int d = 0; d < spacedim; d++)
+                {
+                  deallog << "(" << table_cpu(i, j)[d] << ","
+                          << table_copied_from_gpu(i, j)[d] << ")" << std::endl;
+
+                  if (std::fabs(table_cpu(i, j)(d) -
+                                table_copied_from_gpu(i, j)(d)) > eps)
+                    {
+                      AssertCuda(cudaHostUnregister(
+                        (void *)&(table_copied_from_gpu(0, 0))));
+                      return false;
+                    }
+                }
+            }
+        }
+
+      AssertCuda(cudaHostUnregister((void *)&(table_copied_from_gpu(0, 0))));
+      return true;
+    }
+  else
+    {
+      AssertCuda(cudaHostUnregister((void *)&(table_copied_from_gpu(0, 0))));
+      return false;
+    }
+}
+
+
+/**
+ * Check the equality of the table (3 dimensions) of scalar values on CPU and
+ * GPU.
+ *
+ * @tparam T
+ * @param table_cpu
+ * @param table_gpu
+ * @return
+ */
+template <typename T>
+bool
+is_equal(const Table<3, T>                            &table_cpu,
+         const HierBEM::CUDAWrappers::CUDATable<3, T> &table_gpu)
+{
+  const unsigned int N = 3;
+
+  // Make a copy of the GPU table on the host.
+  TableIndices<N> table_sizes;
+  HierBEM::CUDAWrappers::copy_table_indices(table_sizes, table_gpu.size());
+  Table<N, T> table_copied_from_gpu(table_sizes[0],
+                                    table_sizes[1],
+                                    table_sizes[2]);
+  table_gpu.copy_to_host(table_copied_from_gpu);
+
+  // Check the equality of number of elements.
+  if (table_cpu.n_elements() == table_copied_from_gpu.n_elements())
+    {
+      // Get the pointers to the first element in the two tables.
+      const T *table_cpu_ptr      = &(table_cpu(TableIndices<N>()));
+      const T *table_from_gpu_ptr = &(table_copied_from_gpu(TableIndices<N>()));
+
+      for (std::size_t i = 0; i < table_cpu.n_elements(); i++)
+        {
+          if (*(table_cpu_ptr + i) != *(table_from_gpu_ptr + i))
+            {
+              return false;
+            }
+        }
+
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+/**
+ * Check the equality of the table of matrices for the gradient of shape
+ * functions.
+ *
+ * @tparam T
+ * @param table_cpu
+ * @param table_gpu
+ * @return
+ */
+template <typename T>
+bool
+is_equal(const Table<2, LAPACKFullMatrixExt<T>>       &table_cpu,
+         const HierBEM::CUDAWrappers::CUDATable<4, T> &table_gpu)
+{
+  const unsigned int N = 4;
+
+  // Make a copy of the GPU table on the host.
+  TableIndices<N> table_sizes;
+  HierBEM::CUDAWrappers::copy_table_indices(table_sizes, table_gpu.size());
+  Table<N, T> table_copied_from_gpu(table_sizes[0],
+                                    table_sizes[1],
+                                    table_sizes[2],
+                                    table_sizes[3]);
+  table_gpu.copy_to_host(table_copied_from_gpu);
+
+  // Get the gradient matrix sizes.
+  const unsigned int m = table_cpu(0, 0).m();
+  const unsigned int n = table_cpu(0, 0).n();
+
+  // Check the equality of number of elements.
+  if (table_cpu.n_elements() * m * n == table_copied_from_gpu.n_elements())
+    {
+      // Get table sizes.
+      const unsigned int k3_terms = table_cpu.n_rows();
+      const unsigned int quad_num = table_cpu.n_cols();
+
+      std::size_t counter         = 0;
+      const T *table_from_gpu_ptr = &(table_copied_from_gpu(TableIndices<N>()));
+
+      for (unsigned int k = 0; k < k3_terms; k++)
+        {
+          for (unsigned int q = 0; q < quad_num; q++)
+            {
+              for (unsigned int j = 0; j < n; j++)
+                {
+                  for (unsigned int i = 0; i < m; i++)
+                    {
+                      if (*(table_from_gpu_ptr + counter) !=
+                          table_cpu(k, q)(i, j))
+                        {
+                          std::cout << "(" << table_cpu(k, q)(i, j) << ","
+                                    << *(table_from_gpu_ptr + counter) << ")"
+                                    << std::endl;
+                          return false;
+                        }
+                      else
+                        {
+                          counter++;
+                        }
+                    }
+                }
+            }
+        }
+
+      return true;
+    }
+  else
+    {
+      std::cout << "(" << table_cpu.n_elements() * m * n << ","
+                << table_copied_from_gpu.n_elements() << ")" << std::endl;
+      return false;
+    }
+}
+
+
+/**
+ * Check the equality of the table of matrices for the gradient of shape
+ * functions (asynchronous).
+ *
+ * @tparam T
+ * @param table_cpu
+ * @param table_gpu
+ * @param stream
+ * @return
+ */
+template <typename T>
+bool
+is_equal(const Table<2, LAPACKFullMatrixExt<T>>       &table_cpu,
+         const HierBEM::CUDAWrappers::CUDATable<4, T> &table_gpu,
+         const cudaStream_t                            stream)
+{
+  const unsigned int N = 4;
+
+  // Make a copy of the GPU table on the host.
+  TableIndices<N> table_sizes;
+  HierBEM::CUDAWrappers::copy_table_indices(table_sizes, table_gpu.size());
+  Table<N, T> table_copied_from_gpu(table_sizes[0],
+                                    table_sizes[1],
+                                    table_sizes[2],
+                                    table_sizes[3]);
+  AssertCuda(cudaHostRegister((void *)&(table_copied_from_gpu(0, 0, 0, 0)),
+                              table_copied_from_gpu.n_elements() * sizeof(T),
+                              0));
+
+  table_gpu.copy_to_host(table_copied_from_gpu);
+
+  AssertCuda(cudaStreamSynchronize(stream));
+
+  // Get the gradient matrix sizes.
+  const unsigned int m = table_cpu(0, 0).m();
+  const unsigned int n = table_cpu(0, 0).n();
+
+  // Check the equality of number of elements.
+  if (table_cpu.n_elements() * m * n == table_copied_from_gpu.n_elements())
+    {
+      // Get table sizes.
+      const unsigned int k3_terms = table_cpu.n_rows();
+      const unsigned int quad_num = table_cpu.n_cols();
+
+      std::size_t counter         = 0;
+      const T *table_from_gpu_ptr = &(table_copied_from_gpu(TableIndices<N>()));
+
+      for (unsigned int k = 0; k < k3_terms; k++)
+        {
+          for (unsigned int q = 0; q < quad_num; q++)
+            {
+              for (unsigned int j = 0; j < n; j++)
+                {
+                  for (unsigned int i = 0; i < m; i++)
+                    {
+                      if (*(table_from_gpu_ptr + counter) !=
+                          table_cpu(k, q)(i, j))
+                        {
+                          std::cout << "(" << table_cpu(k, q)(i, j) << ","
+                                    << *(table_from_gpu_ptr + counter) << ")"
+                                    << std::endl;
+                          AssertCuda(cudaHostUnregister(
+                            (void *)&(table_copied_from_gpu(0, 0, 0, 0))));
+                          return false;
+                        }
+                      else
+                        {
+                          counter++;
+                        }
+                    }
+                }
+            }
+        }
+
+      AssertCuda(
+        cudaHostUnregister((void *)&(table_copied_from_gpu(0, 0, 0, 0))));
+      return true;
+    }
+  else
+    {
+      std::cout << "(" << table_cpu.n_elements() * m * n << ","
+                << table_copied_from_gpu.n_elements() << ")" << std::endl;
+      AssertCuda(
+        cudaHostUnregister((void *)&(table_copied_from_gpu(0, 0, 0, 0))));
+      return false;
+    }
+}
+
+
+/**
+ * Check the numerical equality of the table of matrices for the gradient of
+ * shape functions (asynchronous).
+ *
+ * @tparam T
+ * @param table_cpu
+ * @param table_gpu
+ * @param eps
+ * @param stream
+ * @return
+ */
+template <typename T>
+bool
+is_equal(const Table<2, LAPACKFullMatrixExt<T>>       &table_cpu,
+         const HierBEM::CUDAWrappers::CUDATable<4, T> &table_gpu,
+         const T                                       eps,
+         const cudaStream_t                            stream)
+{
+  const unsigned int N = 4;
+
+  // Make a copy of the GPU table on the host.
+  TableIndices<N> table_sizes;
+  HierBEM::CUDAWrappers::copy_table_indices(table_sizes, table_gpu.size());
+  Table<N, T> table_copied_from_gpu(table_sizes[0],
+                                    table_sizes[1],
+                                    table_sizes[2],
+                                    table_sizes[3]);
+  AssertCuda(cudaHostRegister((void *)&(table_copied_from_gpu(0, 0, 0, 0)),
+                              table_copied_from_gpu.n_elements() * sizeof(T),
+                              0));
+
+  table_gpu.copy_to_host(table_copied_from_gpu);
+
+  AssertCuda(cudaStreamSynchronize(stream));
+
+  // Get the gradient matrix sizes.
+  const unsigned int m = table_cpu(0, 0).m();
+  const unsigned int n = table_cpu(0, 0).n();
+
+  // Check the equality of number of elements.
+  if (table_cpu.n_elements() * m * n == table_copied_from_gpu.n_elements())
+    {
+      // Get table sizes.
+      const unsigned int k3_terms = table_cpu.n_rows();
+      const unsigned int quad_num = table_cpu.n_cols();
+
+      std::size_t counter         = 0;
+      const T *table_from_gpu_ptr = &(table_copied_from_gpu(TableIndices<N>()));
+
+      for (unsigned int k = 0; k < k3_terms; k++)
+        {
+          for (unsigned int q = 0; q < quad_num; q++)
+            {
+              for (unsigned int j = 0; j < n; j++)
+                {
+                  for (unsigned int i = 0; i < m; i++)
+                    {
+                      deallog << "(" << table_cpu(k, q)(i, j) << ","
+                              << *(table_from_gpu_ptr + counter) << ")"
+                              << std::endl;
+
+                      if (std::fabs(*(table_from_gpu_ptr + counter) -
+                                    table_cpu(k, q)(i, j)) > eps)
+                        {
+                          AssertCuda(cudaHostUnregister(
+                            (void *)&(table_copied_from_gpu(0, 0, 0, 0))));
+                          return false;
+                        }
+                    }
+                }
+            }
+        }
+
+      AssertCuda(
+        cudaHostUnregister((void *)&(table_copied_from_gpu(0, 0, 0, 0))));
+      return true;
+    }
+  else
+    {
+      std::cout << "(" << table_cpu.n_elements() * m * n << ","
+                << table_copied_from_gpu.n_elements() << ")" << std::endl;
+      AssertCuda(
+        cudaHostUnregister((void *)&(table_copied_from_gpu(0, 0, 0, 0))));
+      return false;
+    }
+}
+
+
+/**
+ * Check the equality of @p BEMValues and @p CUDABEMValues.
+ *
+ * @tparam dim
+ * @tparam spacedim
+ * @tparam RangeNumberType
+ * @param bem_values_cpu
+ * @param bem_values_gpu
+ * @return
+ */
+template <int dim, int spacedim, typename RangeNumberType = double>
+bool
+is_equal(
+  const BEMValues<dim, spacedim, RangeNumberType> &bem_values_cpu,
+  const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    &bem_values_gpu)
+{
+  if (is_equal(bem_values_cpu.quad_rule_for_same_panel,
+               bem_values_gpu.quad_rule_for_same_panel))
+    {
+      std::cout << "quad_rule_for_same_panel is equal" << std::endl;
+    }
+  else
+    {
+      std::cout << "quad_rule_for_same_panel is not equal" << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.quad_rule_for_common_edge,
+               bem_values_gpu.quad_rule_for_common_edge))
+    {
+      std::cout << "quad_rule_for_common_edge is equal" << std::endl;
+    }
+  else
+    {
+      std::cout << "quad_rule_for_common_edge is not equal" << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.quad_rule_for_common_vertex,
+               bem_values_gpu.quad_rule_for_common_vertex))
+    {
+      std::cout << "quad_rule_for_common_vertex is equal" << std::endl;
+    }
+  else
+    {
+      std::cout << "quad_rule_for_common_vertex is not equal" << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.quad_rule_for_regular,
+               bem_values_gpu.quad_rule_for_regular))
+    {
+      std::cout << "quad_rule_for_regular is equal" << std::endl;
+    }
+  else
+    {
+      std::cout << "quad_rule_for_regular is not equal" << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.kx_shape_value_table_for_same_panel,
+               bem_values_gpu.kx_shape_value_table_for_same_panel))
+    {
+      std::cout << "kx_shape_value_table_for_same_panel is equal" << std::endl;
+    }
+  else
+    {
+      std::cout << "kx_shape_value_table_for_same_panel is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.ky_shape_value_table_for_same_panel,
+               bem_values_gpu.ky_shape_value_table_for_same_panel))
+    {
+      std::cout << "ky_shape_value_table_for_same_panel is equal" << std::endl;
+    }
+  else
+    {
+      std::cout << "ky_shape_value_table_for_same_panel is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.kx_shape_value_table_for_common_edge,
+               bem_values_gpu.kx_shape_value_table_for_common_edge))
+    {
+      std::cout << "kx_shape_value_table_for_common_edge is equal" << std::endl;
+    }
+  else
+    {
+      std::cout << "kx_shape_value_table_for_common_edge is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.ky_shape_value_table_for_common_edge,
+               bem_values_gpu.ky_shape_value_table_for_common_edge))
+    {
+      std::cout << "ky_shape_value_table_for_common_edge is equal" << std::endl;
+    }
+  else
+    {
+      std::cout << "ky_shape_value_table_for_common_edge is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.kx_shape_value_table_for_common_vertex,
+               bem_values_gpu.kx_shape_value_table_for_common_vertex))
+    {
+      std::cout << "kx_shape_value_table_for_common_vertex is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "kx_shape_value_table_for_common_vertex is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.ky_shape_value_table_for_common_vertex,
+               bem_values_gpu.ky_shape_value_table_for_common_vertex))
+    {
+      std::cout << "ky_shape_value_table_for_common_vertex is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "ky_shape_value_table_for_common_vertex is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.kx_shape_value_table_for_regular,
+               bem_values_gpu.kx_shape_value_table_for_regular))
+    {
+      std::cout << "kx_shape_value_table_for_regular is equal" << std::endl;
+    }
+  else
+    {
+      std::cout << "kx_shape_value_table_for_regular is not equal" << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.ky_shape_value_table_for_regular,
+               bem_values_gpu.ky_shape_value_table_for_regular))
+    {
+      std::cout << "ky_shape_value_table_for_regular is equal" << std::endl;
+    }
+  else
+    {
+      std::cout << "ky_shape_value_table_for_regular is not equal" << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.kx_mapping_shape_value_table_for_same_panel,
+               bem_values_gpu.kx_mapping_shape_value_table_for_same_panel))
+    {
+      std::cout << "kx_mapping_shape_value_table_for_same_panel is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "kx_mapping_shape_value_table_for_same_panel is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.ky_mapping_shape_value_table_for_same_panel,
+               bem_values_gpu.ky_mapping_shape_value_table_for_same_panel))
+    {
+      std::cout << "ky_mapping_shape_value_table_for_same_panel is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "ky_mapping_shape_value_table_for_same_panel is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.kx_mapping_shape_value_table_for_common_edge,
+               bem_values_gpu.kx_mapping_shape_value_table_for_common_edge))
+    {
+      std::cout << "kx_mapping_shape_value_table_for_common_edge is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "kx_mapping_shape_value_table_for_common_edge is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.ky_mapping_shape_value_table_for_common_edge,
+               bem_values_gpu.ky_mapping_shape_value_table_for_common_edge))
+    {
+      std::cout << "ky_mapping_shape_value_table_for_common_edge is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "ky_mapping_shape_value_table_for_common_edge is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.kx_mapping_shape_value_table_for_common_vertex,
+               bem_values_gpu.kx_mapping_shape_value_table_for_common_vertex))
+    {
+      std::cout << "kx_mapping_shape_value_table_for_common_vertex is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "kx_mapping_shape_value_table_for_common_vertex is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.ky_mapping_shape_value_table_for_common_vertex,
+               bem_values_gpu.ky_mapping_shape_value_table_for_common_vertex))
+    {
+      std::cout << "ky_mapping_shape_value_table_for_common_vertex is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "ky_mapping_shape_value_table_for_common_vertex is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.kx_mapping_shape_value_table_for_regular,
+               bem_values_gpu.kx_mapping_shape_value_table_for_regular))
+    {
+      std::cout << "kx_mapping_shape_value_table_for_regular is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "kx_mapping_shape_value_table_for_regular is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.ky_mapping_shape_value_table_for_regular,
+               bem_values_gpu.ky_mapping_shape_value_table_for_regular))
+    {
+      std::cout << "ky_mapping_shape_value_table_for_regular is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "ky_mapping_shape_value_table_for_regular is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.kx_shape_grad_matrix_table_for_same_panel,
+               bem_values_gpu.kx_shape_grad_matrix_table_for_same_panel))
+    {
+      std::cout << "kx_shape_grad_matrix_table_for_same_panel is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "kx_shape_grad_matrix_table_for_same_panel is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.ky_shape_grad_matrix_table_for_same_panel,
+               bem_values_gpu.ky_shape_grad_matrix_table_for_same_panel))
+    {
+      std::cout << "ky_shape_grad_matrix_table_for_same_panel is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "ky_shape_grad_matrix_table_for_same_panel is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.kx_shape_grad_matrix_table_for_common_edge,
+               bem_values_gpu.kx_shape_grad_matrix_table_for_common_edge))
+    {
+      std::cout << "kx_shape_grad_matrix_table_for_common_edge is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "kx_shape_grad_matrix_table_for_common_edge is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.ky_shape_grad_matrix_table_for_common_edge,
+               bem_values_gpu.ky_shape_grad_matrix_table_for_common_edge))
+    {
+      std::cout << "ky_shape_grad_matrix_table_for_common_edge is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "ky_shape_grad_matrix_table_for_common_edge is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.kx_shape_grad_matrix_table_for_common_vertex,
+               bem_values_gpu.kx_shape_grad_matrix_table_for_common_vertex))
+    {
+      std::cout << "kx_shape_grad_matrix_table_for_common_vertex is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "kx_shape_grad_matrix_table_for_common_vertex is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.ky_shape_grad_matrix_table_for_common_vertex,
+               bem_values_gpu.ky_shape_grad_matrix_table_for_common_vertex))
+    {
+      std::cout << "ky_shape_grad_matrix_table_for_common_vertex is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "ky_shape_grad_matrix_table_for_common_vertex is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.kx_shape_grad_matrix_table_for_regular,
+               bem_values_gpu.kx_shape_grad_matrix_table_for_regular))
+    {
+      std::cout << "kx_shape_grad_matrix_table_for_regular is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "kx_shape_grad_matrix_table_for_regular is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.ky_shape_grad_matrix_table_for_regular,
+               bem_values_gpu.ky_shape_grad_matrix_table_for_regular))
+    {
+      std::cout << "ky_shape_grad_matrix_table_for_regular is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "ky_shape_grad_matrix_table_for_regular is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(
+        bem_values_cpu.kx_mapping_shape_grad_matrix_table_for_same_panel,
+        bem_values_gpu.kx_mapping_shape_grad_matrix_table_for_same_panel))
+    {
+      std::cout << "kx_mapping_shape_grad_matrix_table_for_same_panel is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout
+        << "kx_mapping_shape_grad_matrix_table_for_same_panel is not equal"
+        << std::endl;
+      return false;
+    }
+
+  if (is_equal(
+        bem_values_cpu.ky_mapping_shape_grad_matrix_table_for_same_panel,
+        bem_values_gpu.ky_mapping_shape_grad_matrix_table_for_same_panel))
+    {
+      std::cout << "ky_mapping_shape_grad_matrix_table_for_same_panel is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout
+        << "ky_mapping_shape_grad_matrix_table_for_same_panel is not equal"
+        << std::endl;
+      return false;
+    }
+
+  if (is_equal(
+        bem_values_cpu.kx_mapping_shape_grad_matrix_table_for_common_edge,
+        bem_values_gpu.kx_mapping_shape_grad_matrix_table_for_common_edge))
+    {
+      std::cout << "kx_mapping_shape_grad_matrix_table_for_common_edge is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout
+        << "kx_mapping_shape_grad_matrix_table_for_common_edge is not equal"
+        << std::endl;
+      return false;
+    }
+
+  if (is_equal(
+        bem_values_cpu.ky_mapping_shape_grad_matrix_table_for_common_edge,
+        bem_values_gpu.ky_mapping_shape_grad_matrix_table_for_common_edge))
+    {
+      std::cout << "ky_mapping_shape_grad_matrix_table_for_common_edge is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout
+        << "ky_mapping_shape_grad_matrix_table_for_common_edge is not equal"
+        << std::endl;
+      return false;
+    }
+
+  if (is_equal(
+        bem_values_cpu.kx_mapping_shape_grad_matrix_table_for_common_vertex,
+        bem_values_gpu.kx_mapping_shape_grad_matrix_table_for_common_vertex))
+    {
+      std::cout
+        << "kx_mapping_shape_grad_matrix_table_for_common_vertex is equal"
+        << std::endl;
+    }
+  else
+    {
+      std::cout
+        << "kx_mapping_shape_grad_matrix_table_for_common_vertex is not equal"
+        << std::endl;
+      return false;
+    }
+
+  if (is_equal(
+        bem_values_cpu.ky_mapping_shape_grad_matrix_table_for_common_vertex,
+        bem_values_gpu.ky_mapping_shape_grad_matrix_table_for_common_vertex))
+    {
+      std::cout
+        << "ky_mapping_shape_grad_matrix_table_for_common_vertex is equal"
+        << std::endl;
+    }
+  else
+    {
+      std::cout
+        << "ky_mapping_shape_grad_matrix_table_for_common_vertex is not equal"
+        << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.kx_mapping_shape_grad_matrix_table_for_regular,
+               bem_values_gpu.kx_mapping_shape_grad_matrix_table_for_regular))
+    {
+      std::cout << "kx_mapping_shape_grad_matrix_table_for_regular is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "kx_mapping_shape_grad_matrix_table_for_regular is not equal"
+                << std::endl;
+      return false;
+    }
+
+  if (is_equal(bem_values_cpu.ky_mapping_shape_grad_matrix_table_for_regular,
+               bem_values_gpu.ky_mapping_shape_grad_matrix_table_for_regular))
+    {
+      std::cout << "ky_mapping_shape_grad_matrix_table_for_regular is equal"
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "ky_mapping_shape_grad_matrix_table_for_regular is not equal"
+                << std::endl;
+      return false;
+    }
+
+  return true;
+}
+
+
+/**
+ * Check the equality of @p PairCellWiseScratchData and @p CUDAPairCellWiseScratchData.
+ *
+ * @tparam dim
+ * @tparam spacedim
+ * @tparam RangeNumberType
+ * @param scratch_data_cpu
+ * @param scratch_data_gpu
+ * @param stream
+ * @return
+ */
+template <int dim, int spacedim, typename RangeNumberType = double>
+bool
+is_equal(const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
+           &scratch_data_cpu,
+         const HierBEM::CUDAWrappers::
+           CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                              &scratch_data_gpu,
+         const RangeNumberType eps,
+         const cudaStream_t    stream,
+         const bool            is_covariants_calculated)
+{
+  LogStream::Prefix prefix_string("Check ScratchData");
+
+  bool check_result;
+
+  if (is_equal(scratch_data_cpu.kx_mapping_support_points_permuted,
+               scratch_data_gpu.kx_mapping_support_points_permuted,
+               eps,
+               stream))
+    {
+      deallog << "kx_mapping_support_points_permuted is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "kx_mapping_support_points_permuted is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.ky_mapping_support_points_permuted,
+               scratch_data_gpu.ky_mapping_support_points_permuted,
+               eps,
+               stream))
+    {
+      deallog << "ky_mapping_support_points_permuted is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "ky_mapping_support_points_permuted is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(
+        scratch_data_cpu.kx_mapping_support_points_permuted_xy_components,
+        scratch_data_gpu.kx_mapping_support_points_permuted_xy_components,
+        eps,
+        stream))
+    {
+      deallog << "kx_mapping_support_points_permuted_xy_components is equal"
+              << std::endl;
+    }
+  else
+    {
+      deallog << "kx_mapping_support_points_permuted_xy_components is not equal"
+              << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(
+        scratch_data_cpu.kx_mapping_support_points_permuted_yz_components,
+        scratch_data_gpu.kx_mapping_support_points_permuted_yz_components,
+        eps,
+        stream))
+    {
+      deallog << "kx_mapping_support_points_permuted_yz_components is equal"
+              << std::endl;
+    }
+  else
+    {
+      deallog << "kx_mapping_support_points_permuted_yz_components is not equal"
+              << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(
+        scratch_data_cpu.kx_mapping_support_points_permuted_zx_components,
+        scratch_data_gpu.kx_mapping_support_points_permuted_zx_components,
+        eps,
+        stream))
+    {
+      deallog << "kx_mapping_support_points_permuted_zx_components is equal"
+              << std::endl;
+    }
+  else
+    {
+      deallog << "kx_mapping_support_points_permuted_zx_components is not equal"
+              << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(
+        scratch_data_cpu.ky_mapping_support_points_permuted_xy_components,
+        scratch_data_gpu.ky_mapping_support_points_permuted_xy_components,
+        eps,
+        stream))
+    {
+      deallog << "ky_mapping_support_points_permuted_xy_components is equal"
+              << std::endl;
+    }
+  else
+    {
+      deallog << "ky_mapping_support_points_permuted_xy_components is not equal"
+              << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(
+        scratch_data_cpu.ky_mapping_support_points_permuted_yz_components,
+        scratch_data_gpu.ky_mapping_support_points_permuted_yz_components,
+        eps,
+        stream))
+    {
+      deallog << "ky_mapping_support_points_permuted_yz_components is equal"
+              << std::endl;
+    }
+  else
+    {
+      deallog << "ky_mapping_support_points_permuted_yz_components is not equal"
+              << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(
+        scratch_data_cpu.ky_mapping_support_points_permuted_zx_components,
+        scratch_data_gpu.ky_mapping_support_points_permuted_zx_components,
+        eps,
+        stream))
+    {
+      deallog << "ky_mapping_support_points_permuted_zx_components is equal"
+              << std::endl;
+    }
+  else
+    {
+      deallog << "ky_mapping_support_points_permuted_zx_components is not equal"
+              << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.kx_jacobians_same_panel,
+               scratch_data_gpu.kx_jacobians_same_panel,
+               eps,
+               stream))
+    {
+      deallog << "kx_jacobians_same_panel is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "kx_jacobians_same_panel is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.kx_jacobians_common_edge,
+               scratch_data_gpu.kx_jacobians_common_edge,
+               eps,
+               stream))
+    {
+      deallog << "kx_jacobians_common_edge is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "kx_jacobians_common_edge is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.kx_jacobians_common_vertex,
+               scratch_data_gpu.kx_jacobians_common_vertex,
+               eps,
+               stream))
+    {
+      deallog << "kx_jacobians_common_vertex is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "kx_jacobians_common_vertex is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.kx_jacobians_regular,
+               scratch_data_gpu.kx_jacobians_regular,
+               eps,
+               stream))
+    {
+      deallog << "kx_jacobians_regular is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "kx_jacobians_regular is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.ky_jacobians_same_panel,
+               scratch_data_gpu.ky_jacobians_same_panel,
+               eps,
+               stream))
+    {
+      deallog << "ky_jacobians_same_panel is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "ky_jacobians_same_panel is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.ky_jacobians_common_edge,
+               scratch_data_gpu.ky_jacobians_common_edge,
+               eps,
+               stream))
+    {
+      deallog << "ky_jacobians_common_edge is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "ky_jacobians_common_edge is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.ky_jacobians_common_vertex,
+               scratch_data_gpu.ky_jacobians_common_vertex,
+               eps,
+               stream))
+    {
+      deallog << "ky_jacobians_common_vertex is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "ky_jacobians_common_vertex is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.ky_jacobians_regular,
+               scratch_data_gpu.ky_jacobians_regular,
+               eps,
+               stream))
+    {
+      deallog << "ky_jacobians_regular is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "ky_jacobians_regular is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.kx_normals_same_panel,
+               scratch_data_gpu.kx_normals_same_panel,
+               eps,
+               stream))
+    {
+      deallog << "kx_normals_same_panel is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "kx_normals_same_panel is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.kx_normals_common_edge,
+               scratch_data_gpu.kx_normals_common_edge,
+               eps,
+               stream))
+    {
+      deallog << "kx_normals_common_edge is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "kx_normals_common_edge is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.kx_normals_common_vertex,
+               scratch_data_gpu.kx_normals_common_vertex,
+               eps,
+               stream))
+    {
+      deallog << "kx_normals_common_vertex is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "kx_normals_common_vertex is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.kx_normals_regular,
+               scratch_data_gpu.kx_normals_regular,
+               eps,
+               stream))
+    {
+      deallog << "kx_normals_regular is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "kx_normals_regular is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.ky_normals_same_panel,
+               scratch_data_gpu.ky_normals_same_panel,
+               eps,
+               stream))
+    {
+      deallog << "ky_normals_same_panel is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "ky_normals_same_panel is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.ky_normals_common_edge,
+               scratch_data_gpu.ky_normals_common_edge,
+               eps,
+               stream))
+    {
+      deallog << "ky_normals_common_edge is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "ky_normals_common_edge is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.ky_normals_common_vertex,
+               scratch_data_gpu.ky_normals_common_vertex,
+               eps,
+               stream))
+    {
+      deallog << "ky_normals_common_vertex is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "ky_normals_common_vertex is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.ky_normals_regular,
+               scratch_data_gpu.ky_normals_regular,
+               eps,
+               stream))
+    {
+      deallog << "ky_normals_regular is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "ky_normals_regular is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_covariants_calculated)
+    {
+      if (is_equal(scratch_data_cpu.kx_covariants_same_panel,
+                   scratch_data_gpu.kx_covariants_same_panel,
+                   eps,
+                   stream))
+        {
+          deallog << "kx_covariants_same_panel is equal" << std::endl;
+        }
+      else
+        {
+          deallog << "kx_covariants_same_panel is not equal" << std::endl;
+          check_result = false;
+        }
+
+      if (is_equal(scratch_data_cpu.kx_covariants_common_edge,
+                   scratch_data_gpu.kx_covariants_common_edge,
+                   eps,
+                   stream))
+        {
+          deallog << "kx_covariants_common_edge is equal" << std::endl;
+        }
+      else
+        {
+          deallog << "kx_covariants_common_edge is not equal" << std::endl;
+          check_result = false;
+        }
+
+      if (is_equal(scratch_data_cpu.kx_covariants_common_vertex,
+                   scratch_data_gpu.kx_covariants_common_vertex,
+                   eps,
+                   stream))
+        {
+          deallog << "kx_covariants_common_vertex is equal" << std::endl;
+        }
+      else
+        {
+          deallog << "kx_covariants_common_vertex is not equal" << std::endl;
+          check_result = false;
+        }
+
+      if (is_equal(scratch_data_cpu.kx_covariants_regular,
+                   scratch_data_gpu.kx_covariants_regular,
+                   eps,
+                   stream))
+        {
+          deallog << "kx_covariants_regular is equal" << std::endl;
+        }
+      else
+        {
+          deallog << "kx_covariants_regular is not equal" << std::endl;
+          check_result = false;
+        }
+
+      if (is_equal(scratch_data_cpu.ky_covariants_same_panel,
+                   scratch_data_gpu.ky_covariants_same_panel,
+                   eps,
+                   stream))
+        {
+          deallog << "ky_covariants_same_panel is equal" << std::endl;
+        }
+      else
+        {
+          deallog << "ky_covariants_same_panel is not equal" << std::endl;
+          check_result = false;
+        }
+
+      if (is_equal(scratch_data_cpu.ky_covariants_common_edge,
+                   scratch_data_gpu.ky_covariants_common_edge,
+                   eps,
+                   stream))
+        {
+          deallog << "ky_covariants_common_edge is equal" << std::endl;
+        }
+      else
+        {
+          deallog << "ky_covariants_common_edge is not equal" << std::endl;
+          check_result = false;
+        }
+
+      if (is_equal(scratch_data_cpu.ky_covariants_common_vertex,
+                   scratch_data_gpu.ky_covariants_common_vertex,
+                   eps,
+                   stream))
+        {
+          deallog << "ky_covariants_common_vertex is equal" << std::endl;
+        }
+      else
+        {
+          deallog << "ky_covariants_common_vertex is not equal" << std::endl;
+          check_result = false;
+        }
+
+      if (is_equal(scratch_data_cpu.ky_covariants_regular,
+                   scratch_data_gpu.ky_covariants_regular,
+                   eps,
+                   stream))
+        {
+          deallog << "ky_covariants_regular is equal" << std::endl;
+        }
+      else
+        {
+          deallog << "ky_covariants_regular is not equal" << std::endl;
+          check_result = false;
+        }
+    }
+
+  if (is_equal(scratch_data_cpu.kx_quad_points_same_panel,
+               scratch_data_gpu.kx_quad_points_same_panel,
+               eps,
+               stream))
+    {
+      deallog << "kx_quad_points_same_panel is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "kx_quad_points_same_panel is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.kx_quad_points_common_edge,
+               scratch_data_gpu.kx_quad_points_common_edge,
+               eps,
+               stream))
+    {
+      deallog << "kx_quad_points_common_edge is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "kx_quad_points_common_edge is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.kx_quad_points_common_vertex,
+               scratch_data_gpu.kx_quad_points_common_vertex,
+               eps,
+               stream))
+    {
+      deallog << "kx_quad_points_common_vertex is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "kx_quad_points_common_vertex is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.kx_quad_points_regular,
+               scratch_data_gpu.kx_quad_points_regular,
+               eps,
+               stream))
+    {
+      deallog << "kx_quad_points_regular is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "kx_quad_points_regular is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.ky_quad_points_same_panel,
+               scratch_data_gpu.ky_quad_points_same_panel,
+               eps,
+               stream))
+    {
+      deallog << "ky_quad_points_same_panel is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "ky_quad_points_same_panel is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.ky_quad_points_common_edge,
+               scratch_data_gpu.ky_quad_points_common_edge,
+               eps,
+               stream))
+    {
+      deallog << "ky_quad_points_common_edge is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "ky_quad_points_common_edge is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.ky_quad_points_common_vertex,
+               scratch_data_gpu.ky_quad_points_common_vertex,
+               eps,
+               stream))
+    {
+      deallog << "ky_quad_points_common_vertex is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "ky_quad_points_common_vertex is not equal" << std::endl;
+      check_result = false;
+    }
+
+  if (is_equal(scratch_data_cpu.ky_quad_points_regular,
+               scratch_data_gpu.ky_quad_points_regular,
+               eps,
+               stream))
+    {
+      deallog << "ky_quad_points_regular is equal" << std::endl;
+    }
+  else
+    {
+      deallog << "ky_quad_points_regular is not equal" << std::endl;
+      check_result = false;
+    }
+
+  check_result = true;
+
+  return check_result;
+}
+
+HBEM_NS_CLOSE
+
+#endif // HIERBEM_INCLUDE_UTILITIES_CU_DEBUG_TOOLS_H_

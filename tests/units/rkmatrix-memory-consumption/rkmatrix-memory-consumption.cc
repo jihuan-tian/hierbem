@@ -2,14 +2,14 @@
  * \file rkmatrix-memory-consumption.cc
  * \brief Verify the memory consumption calculation for a rank-k matrix.
  *
- * \ingroup testers rkmatrices
+ * \ingroup test_cases rkmatrices
  * \author Jihuan Tian
  * \date 2022-05-06
  */
 
 #include <iostream>
 
-#include "rkmatrix.h"
+#include "hmatrix/rkmatrix.h"
 
 using namespace HierBEM;
 

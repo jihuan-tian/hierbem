@@ -3,7 +3,7 @@
  * \brief Verify the \hmat multiplication \f$M^T \cdot M\f$, hence the result
  * matrix is symmetric.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2022-11-28
  */

@@ -2,7 +2,7 @@
  * \file stl-memory-consumption-of-map.cc
  * \brief Verify the memory consumption calculation for @p std::map
  *
- * \ingroup testers stl
+ * \ingroup test_cases stl
  * \author Jihuan Tian
  * \date 2022-05-06
  */
@@ -10,7 +10,7 @@
 #include <iostream>
 #include <map>
 
-#include "generic_functors.h"
+#include "utilities/generic_functors.h"
 
 int
 main()

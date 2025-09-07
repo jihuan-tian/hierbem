@@ -1,14 +1,14 @@
 /**
  * \file lapack-matrix-mmult.cc
  * \brief Verify the multiplication of two \p LAPACKFullMatrixExt.
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-08-19
  */
 
 #include <iostream>
 
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 int
 main()

@@ -9,8 +9,8 @@
 
 #include <iostream>
 
-#include "lapack_full_matrix_ext.h"
-#include "rkmatrix.h"
+#include "hmatrix/rkmatrix.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 int
 main()

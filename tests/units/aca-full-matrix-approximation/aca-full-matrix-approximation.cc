@@ -1,7 +1,7 @@
 /**
  * \file aca-full-matrix-approximation.cc
  * \brief
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-03-16
  */
@@ -12,7 +12,7 @@
 #include <iostream>
 
 #include "hmatrix/aca_plus/aca_plus.hcu"
-#include "read_octave_data.h"
+#include "utilities/read_octave_data.h"
 
 using namespace HierBEM;
 using namespace boost::program_options;

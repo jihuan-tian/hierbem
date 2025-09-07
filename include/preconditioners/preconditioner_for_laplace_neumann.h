@@ -25,8 +25,8 @@
 #include <vector>
 
 #include "config.h"
-#include "dof_to_cell_topology.h"
-#include "dof_tools_ext.h"
+#include "dofs/dof_to_cell_topology.h"
+#include "dofs/dof_tools_ext.h"
 #include "platform_shared/laplace_kernels.h"
 #include "preconditioners/operator_preconditioner.h"
 

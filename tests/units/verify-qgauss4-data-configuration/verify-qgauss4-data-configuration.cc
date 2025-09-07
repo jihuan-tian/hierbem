@@ -4,15 +4,15 @@
  * tensor product of two @p QGauss<2> objects with the iteration index for the
  * first one runs faster.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2023-03-22
  */
 
 #include <iostream>
 
-#include "debug_tools.h"
-#include "quadrature.templates.h"
+#include "quadrature/quadrature.templates.h"
+#include "utilities/debug_tools.h"
 
 using namespace std;
 using namespace dealii;

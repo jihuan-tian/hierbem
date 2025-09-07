@@ -17,10 +17,10 @@
 #include <type_traits>
 #include <vector>
 
-#include "debug_tools.h"
 #include "hbem_julia_cpp_compare.h"
 #include "hbem_julia_wrapper.h"
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
+#include "utilities/debug_tools.h"
 
 using namespace Catch::Matchers;
 using namespace dealii;

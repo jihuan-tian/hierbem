@@ -2,14 +2,14 @@
  * \file lapack-matrix-agglomeration-of-two-submatrices.cc
  * \brief Verify the agglomeration of two full submatrices which have been
  * obtained from horizontal or vertical splitting.
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-08-04
  */
 
 #include <iostream>
 
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 int
 main()

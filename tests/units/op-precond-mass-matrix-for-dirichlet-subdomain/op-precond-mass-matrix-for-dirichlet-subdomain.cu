@@ -3,7 +3,7 @@
  * @brief Verify building the mass matrix for operator preconditioning on a
  * subdomain used in Laplace Dirichlet problem.
  *
- * @ingroup preconditioner
+ * @ingroup preconditioners
  * @author Jihuan Tian
  * @date 2025-01-25
  */
@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-#include "grid_out_ext.h"
+#include "grid/grid_out_ext.h"
 #include "preconditioners/preconditioner_for_laplace_dirichlet.h"
 
 using namespace Catch::Matchers;

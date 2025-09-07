@@ -2,7 +2,7 @@
  * @file lshape-mixed-hmatrix-op-precond.cu
  * @brief
  *
- * @ingroup preconditioner
+ * @ingroup preconditioners
  * @author Jihuan Tian
  * @date 2025-02-10
  */

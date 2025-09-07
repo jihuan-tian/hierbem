@@ -3,7 +3,7 @@
 
 #include <deal.II/lac/solver_control.h>
 
-#include "blas_helpers.h"
+#include "linear_algebra/blas_helpers.h"
 #include "solvers/solver_cg_general.h"
 
 HBEM_NS_OPEN

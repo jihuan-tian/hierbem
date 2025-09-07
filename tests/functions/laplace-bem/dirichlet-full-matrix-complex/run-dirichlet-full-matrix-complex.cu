@@ -9,7 +9,7 @@
 #include <iostream>
 
 #include "hbem_test_config.h"
-#include "laplace_bem.h"
+#include "laplace/laplace_bem.h"
 
 using namespace dealii;
 using namespace HierBEM;

@@ -3,14 +3,14 @@
  * \brief Verify parsing file name into base name and extension using regular
  * expressions.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-03-16
  */
 
 #include <iostream>
 
-#include "regex_tools.h"
+#include "utilities/regex_tools.h"
 
 using namespace std;
 using namespace RegexTools;

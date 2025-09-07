@@ -4,7 +4,7 @@
  * support points in both @p MappingQExt calculated by
  * @p MappingQExt::compute_mapping_support_points
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-07-12
  */
@@ -17,8 +17,8 @@
 #include <cmath>
 #include <iostream>
 
-#include "debug_tools.h"
 #include "mapping/mapping_q_ext.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 

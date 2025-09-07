@@ -1,15 +1,15 @@
 /**
  * \file rkmatrix-add-formatted.cc
  * \brief Verify the formatted addition of two rank-k matrices.
- * \ingroup testers linalg
+ * \ingroup test_cases linalg
  * \author Jihuan Tian
  * \date 2021-06-30
  */
 
 #include <iostream>
 
-#include "debug_tools.h"
-#include "rkmatrix.h"
+#include "hmatrix/rkmatrix.h"
+#include "utilities/debug_tools.h"
 
 int
 main()

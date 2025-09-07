@@ -8,7 +8,7 @@
  * structure can be different from that of \f$U\f$. The \bct partition structure
  * is fine non-tensor product.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-10-29
  */

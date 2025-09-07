@@ -3,7 +3,7 @@
  * @brief Verify if a @p dealii::Vector is assigned with zeros after its
  * construction or reinitialization.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2022-12-04
  */
@@ -12,7 +12,7 @@
 
 #include <iostream>
 
-#include "debug_tools.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 

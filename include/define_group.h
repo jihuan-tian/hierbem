@@ -17,12 +17,6 @@
  */
 
 /**
- * \defgroup toolbox Toolbox
- * \brief This is my toolbox for assisting program debugging, function
- * verification and information visualization.
- */
-
-/**
  * \defgroup linalg Linear algebra
  * \brief Linear algebra computation.
  */
@@ -38,30 +32,16 @@
  */
 
 /**
- * \defgroup programming_tech Programming techniques
- * \brief Programming techniques for C++ and software engineering.
- */
-
-/**
  * \defgroup dealii_verify deal.ii verification
  * \brief Verify the features and implementation details provided by deal.ii
  */
 
 /**
- * \defgroup testers Test cases
+ * \defgroup test_cases Test cases
  * \brief Test cases for verifying code design and algorithms.
  */
 
 /**
- * \defgroup bem_tools Tool functions for BEM
- * \brief Tool functions related to geometric, mesh, finite element manipulation
- * for BEM.
- * @{
- * \defgroup support_points_manip Manipulation of support points
- * @}
- */
-
-/**
- * \defgroup preconditioner Preconditioner
+ * \defgroup preconditioners Preconditioner
  * \brief Various types of preconditioners, such as operator preconditioning.
  */

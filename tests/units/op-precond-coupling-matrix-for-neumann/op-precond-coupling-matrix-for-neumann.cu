@@ -3,7 +3,7 @@
  * @brief Verify building the coupling matrix for operator preconditioning used
  * in Laplace Neumann problem.
  *
- * @ingroup preconditioner
+ * @ingroup preconditioners
  * @author Jihuan Tian
  * @date 2025-01-09
  */
@@ -22,7 +22,7 @@
 #include <fstream>
 #include <vector>
 
-#include "grid_out_ext.h"
+#include "grid/grid_out_ext.h"
 #include "preconditioners/preconditioner_for_laplace_neumann.h"
 
 using namespace Catch::Matchers;

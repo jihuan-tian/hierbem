@@ -1,7 +1,7 @@
 /**
  * \file dirichlet-hmatrix-two-spheres.cc
  * \brief
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-09-23
  */

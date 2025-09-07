@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "config.h"
-#include "linalg.h"
+#include "linear_algebra/linalg.h"
 
 HBEM_NS_OPEN
 

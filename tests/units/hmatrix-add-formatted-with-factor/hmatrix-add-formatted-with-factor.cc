@@ -1,7 +1,7 @@
 /**
  * \file hmatrix-add-formatted-with-factor.cc
  * \brief Verify formatted addition of two \hmatrices \f$C = A + b B\f$.
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-10-05
  */

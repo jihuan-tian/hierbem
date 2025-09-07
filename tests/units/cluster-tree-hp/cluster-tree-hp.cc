@@ -8,7 +8,7 @@
 
 #include <deal.II/base/logstream.h>
 
-#include "cluster_tree.h"
+#include "cluster_tree/cluster_tree.h"
 
 using namespace HierBEM;
 using namespace dealii;

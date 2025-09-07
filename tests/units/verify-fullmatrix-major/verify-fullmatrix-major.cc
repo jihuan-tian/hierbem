@@ -2,7 +2,7 @@
  * @file verify-fullmatrix-major.cc
  * @brief Verify the major of the internal data in @p FullMatrix.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2023-01-30
  */

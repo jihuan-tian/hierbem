@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-#include "cluster.h"
+#include "cluster_tree/cluster.h"
 
 int
 main()

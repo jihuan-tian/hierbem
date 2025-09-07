@@ -7,7 +7,7 @@
  * fine non-tensor product partitions. This version uses the member function
  * call of multiplication.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-10-03
  */

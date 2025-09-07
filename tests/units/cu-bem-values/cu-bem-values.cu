@@ -2,15 +2,15 @@
  * @file cu-bem-values.cu
  * @brief Verify the initialization of BEMValues on GPU.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2023-02-01
  */
 
 #include <iostream>
 
-#include "cu_bem_values.hcu"
-#include "laplace_bem.h"
+#include "bem/cu_bem_values.hcu"
+#include "laplace/laplace_bem.h"
 
 using namespace dealii;
 using namespace HierBEM;

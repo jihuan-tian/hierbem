@@ -2,7 +2,7 @@
  * @file verify-memory-continuity-for-point-table.cc
  * @brief
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2023-02-07
  */

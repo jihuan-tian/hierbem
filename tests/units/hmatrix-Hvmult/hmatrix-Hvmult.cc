@@ -2,7 +2,7 @@
  * \file hmatrix-Hvmult.cc
  * \brief Verify Hermite transposed \hmatrix/vector multiplication.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2025-04-07
  */

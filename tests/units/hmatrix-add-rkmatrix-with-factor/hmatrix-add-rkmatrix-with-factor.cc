@@ -4,7 +4,7 @@
  * \brief Verify the addition of a rank-k matrix multiplied by a factor into an
  * \hmatrix.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-10-05
  */

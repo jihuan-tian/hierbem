@@ -2,7 +2,7 @@
  * \file get_vertices_in_real_cell.cc
  * \brief Verify the extraction of vertices in the real cell.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-06-14
  */
@@ -19,8 +19,8 @@
 #include <array>
 #include <iostream>
 
-#include "bem_tools.h"
-#include "debug_tools.h"
+#include "bem/bem_tools.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 

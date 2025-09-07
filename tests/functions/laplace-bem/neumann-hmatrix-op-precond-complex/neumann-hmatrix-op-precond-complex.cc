@@ -4,7 +4,7 @@
  * boundary condition using H-matrix based BEM. Operator preconditioning is
  * used.
  *
- * \ingroup preconditioner
+ * \ingroup preconditioners
  * \author Jihuan Tian
  * \date 2025-08-19
  */

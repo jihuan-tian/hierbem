@@ -2,7 +2,7 @@
  * @file hbem-octave-wrapper-matrix-value.cc
  * @brief Generate an Octave matrix and load it into @p LAPACKFullMatrixExt.
  *
- * @ingroup testers octave
+ * @ingroup test_cases octave
  * @author Jihuan Tian
  * @date 2023-11-10
  */
@@ -10,7 +10,7 @@
 #include <iostream>
 
 #include "hbem_octave_wrapper.h"
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 using namespace std;
 using namespace HierBEM;

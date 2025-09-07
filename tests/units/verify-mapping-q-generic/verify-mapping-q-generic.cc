@@ -2,7 +2,7 @@
  * \file verify-mapping-q-generic.cc
  * \brief Verify the functions provided by the @p MappingQ class.
  *
- * \ingroup testers dealii_verify
+ * \ingroup test_cases dealii_verify
  * \author Jihuan Tian
  * \date 2022-06-30
  */
@@ -19,8 +19,8 @@
 
 #include <fstream>
 
-#include "debug_tools.h"
 #include "mapping/mapping_q_ext.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 

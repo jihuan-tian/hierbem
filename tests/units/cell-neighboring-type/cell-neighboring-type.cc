@@ -2,7 +2,7 @@
  * \file cell-neighboring-type.cc
  * \brief Verify the detection of cell neighboring type.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2020-11-10
  */
@@ -16,10 +16,10 @@
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/full_matrix.templates.h>
 
-#include <laplace_bem.h>
-
 #include <fstream>
 #include <iostream>
+
+#include "laplace/laplace_bem.h"
 
 int
 main()

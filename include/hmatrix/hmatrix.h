@@ -32,16 +32,16 @@
 #include <utility>
 #include <vector>
 
-#include "block_cluster.h"
-#include "block_cluster_tree.h"
+#include "cluster_tree/block_cluster.h"
+#include "cluster_tree/block_cluster_tree.h"
 #include "config.h"
-#include "generic_functors.h"
 #include "hmatrix/hmatrix_support.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
-#include "lapack_full_matrix_ext.h"
-#include "number_traits.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 #include "rkmatrix.h"
 #include "sequence_partition/sequence_partition.h"
+#include "utilities/generic_functors.h"
+#include "utilities/number_traits.h"
 
 HBEM_NS_OPEN
 

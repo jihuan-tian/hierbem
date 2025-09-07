@@ -2,7 +2,7 @@
  * \file hmatrix-vmult-triu.cc
  * \brief Verify upper triangular \hmatrix/vector multiplication.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2024-03-18
  */

@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "quadrature.templates.h"
+#include "quadrature/quadrature.templates.h"
 
 using namespace dealii;
 
@@ -20,7 +20,7 @@ main()
   QGauss<dim> quad_rule(n);
 
   const std::vector<Point<dim>> &qpts = quad_rule.get_points();
-  const std::vector<double> &    qwts = quad_rule.get_weights();
+  const std::vector<double>     &qwts = quad_rule.get_weights();
 
   deallog << n << "th order quadrature points:\n";
   deallog << "Number of points: " << qpts.size() << "\n";

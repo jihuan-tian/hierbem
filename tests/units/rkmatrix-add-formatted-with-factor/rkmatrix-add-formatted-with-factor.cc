@@ -4,15 +4,15 @@
  * \brief Verify the formatted addition of two rank-k matrices \f$C = A + b
  * B\f$.
  *
- * \ingroup testers linalg
+ * \ingroup test_cases linalg
  * \author Jihuan Tian
  * \date 2021-10-05
  */
 
 #include <iostream>
 
-#include "debug_tools.h"
-#include "rkmatrix.h"
+#include "hmatrix/rkmatrix.h"
+#include "utilities/debug_tools.h"
 
 int
 main()

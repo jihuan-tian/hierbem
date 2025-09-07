@@ -1,16 +1,16 @@
 /**
  * \file raw-lapack-ctrsv.cc
  * \brief Verify the LAPACK function \p ctrsv for solving triangular system.
- * \ingroup testers lapack
+ * \ingroup test_cases lapack
  * \author Jihuan Tian
  * \date 2021-10-14
  */
 
 #include <iostream>
 
-#include "debug_tools.h"
-#include "lapack_full_matrix_ext.h"
-#include "lapack_templates_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_templates_ext.h"
+#include "utilities/debug_tools.h"
 
 int
 main()

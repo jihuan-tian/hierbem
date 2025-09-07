@@ -2,7 +2,7 @@
  * \file hp-matrix.cc
  * \brief Test the \f$H^p\f$ matrix.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-06-23
  */

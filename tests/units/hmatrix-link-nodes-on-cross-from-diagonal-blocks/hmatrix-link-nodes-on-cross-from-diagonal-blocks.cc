@@ -3,7 +3,7 @@
  * @brief Link all \hmatrix nodes on a same level and on a same row as well as
  * on a same column with respect to a diagonal block.
  *
- * @ingroup testers hierarchical_matrices
+ * @ingroup test_cases hierarchical_matrices
  * @author Jihuan Tian
  * @date 2023-11-11
  */
@@ -12,7 +12,7 @@
 
 #include "hbem_octave_wrapper.h"
 #include "hmatrix/hmatrix.h"
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 using namespace HierBEM;
 using namespace std;

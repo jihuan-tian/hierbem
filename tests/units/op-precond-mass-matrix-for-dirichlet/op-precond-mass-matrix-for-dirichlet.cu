@@ -3,7 +3,7 @@
  * @brief Verify building the mass matrix for operator preconditioning used
  * in Laplace Dirichlet problem.
  *
- * @ingroup preconditioner
+ * @ingroup preconditioners
  * @author Jihuan Tian
  * @date 2024-12-06
  */
@@ -20,7 +20,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "grid_out_ext.h"
+#include "grid/grid_out_ext.h"
 #include "preconditioners/preconditioner_for_laplace_dirichlet.h"
 
 using namespace HierBEM;

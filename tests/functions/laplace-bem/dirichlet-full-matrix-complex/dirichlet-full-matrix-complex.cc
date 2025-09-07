@@ -3,7 +3,7 @@
  * \brief Verify solving the complex valued Laplace problem with Dirichlet
  * boundary condition using full matrix based BEM.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2025-05-12
  */

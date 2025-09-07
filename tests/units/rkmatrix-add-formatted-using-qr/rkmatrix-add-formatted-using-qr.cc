@@ -7,7 +7,7 @@
  * N.B. Because the data of the two operand matrices are created by hand, it
  * cannot ensure a exponential decrease of singular values like that generated
  * from a integral operator. Hence, the approximation accuracy is not high.
- * \ingroup linalg testers
+ * \ingroup linalg test_cases
  * \author Jihuan Tian
  * \date 2021-07-02
  */
@@ -15,8 +15,8 @@
 #include <iostream>
 #include <string>
 
-#include "debug_tools.h"
-#include "rkmatrix.h"
+#include "hmatrix/rkmatrix.h"
+#include "utilities/debug_tools.h"
 
 int
 main()

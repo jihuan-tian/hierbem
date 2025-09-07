@@ -2,7 +2,7 @@
  * \file verify-dof-support-points.cc
  * \brief Verify DoF support points for typical finite elements.
  *
- * \ingroup testers dealii_verify
+ * \ingroup test_cases dealii_verify
  * \author Jihuan Tian
  * \date 2022-05-27
  */
@@ -30,9 +30,9 @@ namespace dealii
 {
   template <int dim, int spacedim>
   void
-  print_support_point_info(const MappingQ<dim, spacedim> &  mapping,
+  print_support_point_info(const MappingQ<dim, spacedim>   &mapping,
                            const DoFHandler<dim, spacedim> &dof_handler,
-                           const std::string &              fe_name)
+                           const std::string               &fe_name)
   {
     if (dof_handler.get_fe().has_support_points())
       {

@@ -1,7 +1,7 @@
 /**
  * \file hmatrix-add-rkmatrix.cc
  * \brief Verify the addition of a rank-k matrix into an \hmatrix.
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-09-28
  */

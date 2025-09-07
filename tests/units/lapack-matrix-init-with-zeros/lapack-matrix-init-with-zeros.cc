@@ -1,7 +1,7 @@
 /**
  * \file lapack-matrix-init-with-zeros.cc
  * \brief Verify if a LAPACKFullMatrixExt is initialized with zeros.
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-09-28
  */
@@ -10,7 +10,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 int
 main()

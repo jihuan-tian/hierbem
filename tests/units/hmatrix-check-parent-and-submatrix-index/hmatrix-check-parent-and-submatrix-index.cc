@@ -4,7 +4,7 @@
  * \hmatrix by visualizing the hierarchical structure of the block cluster tree
  * with the help of the tool @p dot in @p Graphviz.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-11-27
  */
@@ -18,7 +18,7 @@ int
 main()
 {
   std::ofstream out("hmatrix-check-parent-and-submatrix-index.dat");
-  
+
   const unsigned int                   p = 5;
   const unsigned int                   n = std::pow(2, p);
   std::vector<types::global_dof_index> index_set(n);

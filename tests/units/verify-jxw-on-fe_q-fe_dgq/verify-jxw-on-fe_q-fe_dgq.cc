@@ -3,7 +3,7 @@
  * \brief Compare the values of @p JxW obtained from @p FEValues on each
  * quadrature point by using two finite elements @p FE_Q and @p FE_DGQ.
  *
- * \ingroup testers dealii_verify
+ * \ingroup test_cases dealii_verify
  * \author Jihuan Tian
  * \date 2022-05-27
  */

@@ -3,7 +3,7 @@
  * \brief Verify serial transposed upper triangular \hmatrix/vector
  * multiplication by iterating over the leaf set.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2024-03-20
  */

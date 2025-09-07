@@ -1,16 +1,16 @@
 /**
  * \file rkmatrix-frobenius-norm.cc
  * \brief Verify the calculation of the Frobenius norm for a rank-k matrix.
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-03-15
  */
 
 #include <iostream>
 
-#include "lapack_full_matrix_ext.h"
-#include "rkmatrix.h"
-#include "unary_template_arg_containers.h"
+#include "hmatrix/rkmatrix.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
+#include "utilities/unary_template_arg_containers.h"
 
 int
 main()

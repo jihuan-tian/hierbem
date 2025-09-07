@@ -3,7 +3,7 @@
  * @brief Verify estimating the task costs for \hmatrix/vector multiplication
  * for all \hmatrix nodes in the leaf set.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2024-03-14
  */
@@ -18,15 +18,15 @@
 #include <fstream>
 #include <iostream>
 
-#include "grid_in_ext.h"
+#include "cad_mesh/subdomain_topology.h"
+#include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
-#include "laplace_bem.h"
+#include "laplace/laplace_bem.h"
 #include "mapping/mapping_info.h"
-#include "sauter_quadrature.hcu"
+#include "quadrature/sauter_quadrature.hcu"
 #include "sequence_partition/sequence_partition.h"
-#include "subdomain_topology.h"
-#include "unary_template_arg_containers.h"
+#include "utilities/unary_template_arg_containers.h"
 
 using namespace dealii;
 using namespace HierBEM;

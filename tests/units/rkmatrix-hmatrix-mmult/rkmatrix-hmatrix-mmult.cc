@@ -1,7 +1,7 @@
 /**
  * \file rkmatrix-hmatrix-mmult.cc
  * \brief Verify the rank-k/H-matrix matrix multiplication.
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-08-14
  */

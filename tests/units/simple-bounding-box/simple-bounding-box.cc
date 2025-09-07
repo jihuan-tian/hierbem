@@ -16,7 +16,7 @@
 
 #include <fstream>
 
-#include "simple_bounding_box.h"
+#include "cluster_tree/simple_bounding_box.h"
 
 using namespace HierBEM;
 using namespace dealii;

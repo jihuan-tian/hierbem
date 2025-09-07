@@ -2,7 +2,7 @@
  * \file hmatrix-truncate-to-fixed-rank.cc
  * \brief Verify the rank truncation of an \hmatrix.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-06-24
  */

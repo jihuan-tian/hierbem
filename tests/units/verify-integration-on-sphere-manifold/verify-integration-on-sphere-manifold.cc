@@ -1,8 +1,9 @@
 /**
  * @file verify-integration-on-sphere-manifold.cc
- * @brief Verify the accuracy of high order mapping used for computing the surface area of a sphere.
+ * @brief Verify the accuracy of high order mapping used for computing the
+ * surface area of a sphere.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2023-09-23
  */
@@ -25,9 +26,9 @@
 #include <iomanip>
 #include <iostream>
 
-#include "debug_tools.h"
-#include "grid_out_ext.h"
-#include "lapack_full_matrix_ext.h"
+#include "grid/grid_out_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 

@@ -1,14 +1,14 @@
 /**
  * \file lapack-matrix-fill-rows.cc
  * \brief Verify filling the rows of a @p LAPACKFullMatrixExt.
- * \ingroup testers linalg
+ * \ingroup test_cases linalg
  * \author Jihuan Tian
  * \date 2022-11-02
  */
 
 #include <iostream>
 
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 int
 main()

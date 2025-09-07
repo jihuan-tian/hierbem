@@ -2,7 +2,7 @@
  * @file create-efield-subdomain-hmatrices.cu
  * @brief
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author
  * @date 2024-08-09
  */
@@ -12,10 +12,10 @@
 #include <fstream>
 
 #include "electric_field/ddm_efield.h"
-#include "grid_in_ext.h"
-#include "grid_out_ext.h"
+#include "grid/grid_in_ext.h"
+#include "grid/grid_out_ext.h"
 #include "hbem_test_config.h"
-#include "sauter_quadrature.hcu"
+#include "quadrature/sauter_quadrature.hcu"
 
 using namespace dealii;
 using namespace HierBEM;

@@ -1,14 +1,14 @@
 /**
  * \file stl-gen-linear-indices.cc
  * \brief
- * \ingroup testers stl
+ * \ingroup test_cases stl
  * \author Jihuan Tian
  * \date 2022-03-10
  */
 
-#include "debug_tools.h"
-#include "generic_functors.h"
-#include "unary_template_arg_containers.h"
+#include "utilities/debug_tools.h"
+#include "utilities/generic_functors.h"
+#include "utilities/unary_template_arg_containers.h"
 
 using namespace std;
 

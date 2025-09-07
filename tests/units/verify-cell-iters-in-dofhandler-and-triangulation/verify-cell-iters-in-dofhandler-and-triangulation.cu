@@ -3,7 +3,7 @@
  * \brief Verify if the cell iterator obtained from a DoF handler is the same as
  * the cell iterator obtained from a triangulation.
  *
- * \ingroup testers dealii_verify
+ * \ingroup test_cases dealii_verify
  * \author Jihuan Tian
  * \date 2022-06-09
  */
@@ -29,8 +29,8 @@
 #include <map>
 #include <set>
 
-#include "bem_tools.h"
-#include "debug_tools.h"
+#include "bem/bem_tools.h"
+#include "utilities/debug_tools.h"
 
 using namespace dealii;
 

@@ -17,8 +17,8 @@
 #include <string>
 
 #include "config.h"
-#include "debug_tools.h"
-#include "lapack_full_matrix_ext.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
+#include "utilities/debug_tools.h"
 
 HBEM_NS_OPEN
 

@@ -3,7 +3,7 @@
  * @brief Verify building the preconditioner matrix on refined mesh for
  * operator preconditioning used in Laplace Dirichlet problem.
  *
- * @ingroup preconditioner
+ * @ingroup preconditioners
  * @author Jihuan Tian
  * @date 2024-12-07
  */

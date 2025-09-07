@@ -5,7 +5,7 @@
  * @p MemoryConsumption::memory_consumption will not count the allocated memory
  * associated with each pointer.
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author Jihuan Tian
  * @date 2024-02-18
  */

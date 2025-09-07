@@ -2,7 +2,7 @@
  * @file build-volume-to-surface-topology.cc
  * @brief
  *
- * @ingroup testers
+ * @ingroup test_cases
  * @author
  * @date 2024-07-30
  */

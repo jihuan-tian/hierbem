@@ -9,8 +9,8 @@
 #include <iostream>
 
 #include "hmatrix/hmatrix.h"
-#include "lapack_full_matrix_ext.h"
-#include "rkmatrix.h"
+#include "hmatrix/rkmatrix.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 int
 main()
@@ -33,7 +33,7 @@ main()
    */
   std::array<types::global_dof_index, 2> tau{5, 13};
   std::array<types::global_dof_index, 2> sigma{7, 15};
-  LAPACKFullMatrixExt<double>          M_b(tau, sigma, M);
+  LAPACKFullMatrixExt<double>            M_b(tau, sigma, M);
   M_b.print_formatted_to_mat(std::cout, "M_b");
 
   /**
@@ -42,20 +42,11 @@ main()
    */
   std::array<types::global_dof_index, 2> tau_subset{7, 11};
   std::array<types::global_dof_index, 2> sigma_subset{10, 13};
-  RkMatrix<double>                     rkmat_no_trunc(tau_subset,
-                                                      sigma_subset,
-                                                      M_b,
-                                                      tau,
-                                                      sigma);
+  RkMatrix<double> rkmat_no_trunc(tau_subset, sigma_subset, M_b, tau, sigma);
   rkmat_no_trunc.print_formatted_to_mat(
     std::cout, "rkmat_no_trunc", 8, false, 16, "0");
 
-  RkMatrix<double> rk1mat(tau_subset,
-                          sigma_subset,
-                          1,
-                          M_b,
-                          tau,
-                          sigma);
+  RkMatrix<double> rk1mat(tau_subset, sigma_subset, 1, M_b, tau, sigma);
   rk1mat.print_formatted_to_mat(std::cout, "rk1mat", 8, false, 16, "0");
 
   return 0;

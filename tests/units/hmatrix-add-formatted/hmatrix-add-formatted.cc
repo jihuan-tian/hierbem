@@ -1,7 +1,7 @@
 /**
  * \file hmatrix-add-formatted.cc
  * \brief Verify formatted addition of two \hmatrices.
- * \ingroup hierarchical_matrices testers
+ * \ingroup hierarchical_matrices test_cases
  * \author Jihuan Tian
  * \date 2021-07-03
  */

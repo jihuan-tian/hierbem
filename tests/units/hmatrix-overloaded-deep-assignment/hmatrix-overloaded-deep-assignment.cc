@@ -2,7 +2,7 @@
  * \file hmatrix-overloaded-deep-assignment.cc
  * \brief Verify the overloaded deep assignment operator of
  * \f$\mathcal{H}\f$-matrix.
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-08-24
  */

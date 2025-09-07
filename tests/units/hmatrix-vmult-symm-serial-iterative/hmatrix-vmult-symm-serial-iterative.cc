@@ -4,7 +4,7 @@
  * leaf set. The \hmatrix is symmetric and only its lower triangular part is
  * stored.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2024-03-20
  */

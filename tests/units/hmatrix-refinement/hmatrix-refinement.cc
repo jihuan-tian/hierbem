@@ -2,7 +2,7 @@
  * \file hmatrix-refinement.cc
  * \brief Verify the refinement of an \f$\mathcal{H}\f$-matrix hierarchy with
  * respect to its extended block cluster tree.
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-07-29
  */

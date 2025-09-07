@@ -4,15 +4,15 @@
  * obtained from horizontal or vertical splitting. One of the submatrices has
  * rank 0.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-10-09
  */
 
 #include <iostream>
 
-#include "lapack_full_matrix_ext.h"
-#include "rkmatrix.h"
+#include "hmatrix/rkmatrix.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 int
 main()

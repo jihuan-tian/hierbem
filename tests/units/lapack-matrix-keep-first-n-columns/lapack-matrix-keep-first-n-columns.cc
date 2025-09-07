@@ -2,16 +2,16 @@
  * @file lapack-matrix-keep-first-n-columns.cc
  * @brief
  *
- * @ingroup linalg testers
+ * @ingroup linalg test_cases
  * @author
  * @date 2024-01-31
  */
 
 #include <iostream>
 
-#include "generic_functors.h"
-#include "lapack_full_matrix_ext.h"
-#include "unary_template_arg_containers.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
+#include "utilities/generic_functors.h"
+#include "utilities/unary_template_arg_containers.h"
 
 using namespace std;
 using namespace HierBEM;

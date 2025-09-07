@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-#include "tree.h"
+#include "cluster_tree/tree.h"
 
 using namespace HierBEM;
 

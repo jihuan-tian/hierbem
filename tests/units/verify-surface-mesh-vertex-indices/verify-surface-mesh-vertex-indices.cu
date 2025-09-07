@@ -4,7 +4,7 @@
  * @p extract_boundary_mesh are consistent with vertex indices in the original
  * volume mesh.
  *
- * \ingroup testers dealii_verify
+ * \ingroup test_cases dealii_verify
  * \author Jihuan Tian
  * \date 2022-06-06
  */
@@ -17,8 +17,8 @@
 #include <iostream>
 #include <map>
 
-#include "bem_tools.h"
-#include "debug_tools.h"
+#include "bem/bem_tools.h"
+#include "utilities/debug_tools.h"
 
 int
 main()

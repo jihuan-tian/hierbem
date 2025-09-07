@@ -1,7 +1,7 @@
 /**
  * \file hmatrix-shallow-copy-constructor.cc
  * \brief Verify the deep copy constructor of \f$\mathcal{H}\f$-matrix.
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2021-08-24
  */

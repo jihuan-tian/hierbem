@@ -3,7 +3,7 @@
  * \brief Verify the evaluation of a inherited deal.ii function after being
  * copied to the parent class @p Function.
  *
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-06-22
  */

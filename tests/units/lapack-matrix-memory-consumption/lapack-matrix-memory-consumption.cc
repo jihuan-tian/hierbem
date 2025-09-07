@@ -2,15 +2,15 @@
  * \file lapack-matrix-memory-consumption.cc
  * \brief Verify the memory consumption calculation for a @p LAPACKFullMatrixExt.
  *
- * \ingroup testers linalg
+ * \ingroup test_cases linalg
  * \author Jihuan Tian
  * \date 2022-05-06
  */
 
 #include <iostream>
 
-#include "lapack_full_matrix_ext.h"
-#include "unary_template_arg_containers.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
+#include "utilities/unary_template_arg_containers.h"
 
 using namespace HierBEM;
 

@@ -2,7 +2,7 @@
  * \file hmatrix-memory-consumption.cc
  * \brief Verify the memory consumption calculation for \hmatrix.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2022-05-06
  */

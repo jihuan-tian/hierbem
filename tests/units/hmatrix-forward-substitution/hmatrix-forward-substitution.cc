@@ -3,7 +3,7 @@
  * \brief Verify forward substitution of a lower triangle \hmatrix. The \bct
  * partition structure is fine non-tensor product.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-10-19
  */

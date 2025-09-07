@@ -3,7 +3,7 @@
  * \brief Verify Hermite transposed upper triangular \hmatrix/vector
  * multiplication.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \author Jihuan Tian
  * \date 2025-04-07
  */

@@ -1,7 +1,7 @@
 /**
  * \file verify-copy-vector.cc
  * \brief Verify copy deal.ii Vector via memcpy
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-11-25
  */
@@ -15,9 +15,9 @@ using namespace dealii;
 
 template <typename number>
 void
-copy_vector(Vector<number> &                         dst_vec,
+copy_vector(Vector<number>                          &dst_vec,
             const typename Vector<number>::size_type dst_start_index,
-            const Vector<number> &                   src_vec,
+            const Vector<number>                    &src_vec,
             const typename Vector<number>::size_type src_start_index,
             const typename Vector<number>::size_type number_of_data)
 {

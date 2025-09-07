@@ -1,7 +1,7 @@
 /**
  * \file dof-to-cell-topology.cc
  * \brief
- * \ingroup testers
+ * \ingroup test_cases
  * \author Jihuan Tian
  * \date 2022-03-02
  */
@@ -18,7 +18,7 @@
 #include <iostream>
 #include <vector>
 
-#inlcude "dof_tools_ext.h"
+#inlcude "dofs/dof_tools_ext.h"
 
 using namespace HierBEM;
 using namespace dealii;

@@ -3,7 +3,7 @@
  * \brief This files verifies the admissible block cluster partition for a
  * mesh.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup test_cases hierarchical_matrices
  * \date 2021-04-28
  * \author Jihuan Tian
  */
@@ -26,11 +26,11 @@
 
 #include <fstream>
 
-#include "block_cluster_tree.h"
-#include "cluster_tree.h"
-#include "debug_tools.h"
-#include "dof_tools_ext.h"
-#include "simple_bounding_box.h"
+#include "cluster_tree/block_cluster_tree.h"
+#include "cluster_tree/cluster_tree.h"
+#include "cluster_tree/simple_bounding_box.h"
+#include "dofs/dof_tools_ext.h"
+#include "utilities/debug_tools.h"
 
 using namespace HierBEM;
 
