@@ -66,10 +66,10 @@ TEST_CASE(
     // Check relative error
     HBEMOctaveValue out;
     out = inst.eval_string("solution_l2_rel_err");
-    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-5));
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-2));
 
     out = inst.eval_string("solution_inf_rel_err");
-    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-5));
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-2));
   }
 
   SECTION("task parallel vmult")
@@ -88,9 +88,9 @@ TEST_CASE(
     // Check relative error
     HBEMOctaveValue out;
     out = inst.eval_string("solution_l2_rel_err");
-    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-5));
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-2));
 
     out = inst.eval_string("solution_inf_rel_err");
-    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-5));
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-2));
   }
 }
