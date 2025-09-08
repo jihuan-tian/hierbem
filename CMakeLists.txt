@@ -1,3 +1,16 @@
+# Copyright (C) 2021-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+#
+# Copyright (C) 2023-2025 Xiaozhe Wang <chaoslawful@gmail.com>
+#
+# This file is part of the HierBEM library.
+#
+# HierBEM is free software: you can use it, redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version. The full text of the license can be found in the file
+# LICENSE at the top level directory of HierBEM.
+# ------------------------------------------------------------------------------
+#
 # Older CMake versions do not support nvcc with c++20 standard.
 cmake_minimum_required(VERSION 3.25.2)
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27.0")

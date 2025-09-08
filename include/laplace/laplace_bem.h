@@ -1,10 +1,22 @@
-/** \file laplace_bem.h
- * \brief Implementation of BEM involving kernel functions and singular
+// Copyright (C) 2020-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2023-2024 Xiaozhe Wang <chaoslawful@gmail.com>
+//
+// This file is part of the HierBEM library.
+//
+// HierBEM is free software: you can use it, redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License as published by the
+// Free Software Foundation, either version 3 of the License, or (at your
+// option) any later version. The full text of the license can be found in the
+// file LICENSE at the top level directory of HierBEM.
+
+/**
+ * @file laplace_bem.h
+ * @brief Implementation of BEM involving kernel functions and singular
  * numerical quadratures.
  *
- * \ingroup sauter_quadrature
- * \date 2020-11-02
- * \author Jihuan Tian
+ * @ingroup sauter_quadrature
+ * @date 2020-11-02
+ * @author Jihuan Tian
  */
 
 #ifndef HIERBEM_INCLUDE_LAPLACE_LAPLACE_BEM_H_

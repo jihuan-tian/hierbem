@@ -153,7 +153,7 @@ PenaltyBreakBeforeFirstCallParameter: 90
 PointerAlignment: Right
 
 ReflowComments: true
-CommentPragmas: '( \| |\*--|<li>|@ref | @p |@p |@name |@returns |@warning |@ingroup |@author |@date |@related |@relates |@relatesalso |@deprecated |@image |@attention |@copydoc |@addtogroup |@todo |@tparam |@see |@note |@skip |@skipline |@until |@line |@dontinclude |@include| \\p |\\p |@file |\\file )'
+CommentPragmas: '( \| |\*--|<li>|@ref | @p |@p |@name |@returns |@warning |@ingroup |@author |@date |@related |@relates |@relatesalso |@deprecated |@image |@attention |@copydoc |@addtogroup |@todo |@tparam |@see |@note |@skip |@skipline |@until |@line |@dontinclude |@include| \\p |\\p |@file |\\file |Copyright \(C\))'
 
 SortIncludes: true
 SortUsingDeclarations: true

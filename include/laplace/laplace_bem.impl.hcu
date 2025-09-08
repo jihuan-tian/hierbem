@@ -1,10 +1,22 @@
-/** \file laplace_bem.h
- * \brief Implementation of BEM involving kernel functions and singular
+// Copyright (C) 2020-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2024 Xiaozhe Wang <chaoslawful@gmail.com>
+//
+// This file is part of the HierBEM library.
+//
+// HierBEM is free software: you can use it, redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License as published by the
+// Free Software Foundation, either version 3 of the License, or (at your
+// option) any later version. The full text of the license can be found in the
+// file LICENSE at the top level directory of HierBEM.
+
+/**
+ * @file laplace_bem.h
+ * @brief Implementation of BEM involving kernel functions and singular
  * numerical quadratures.
  *
- * \ingroup sauter_quadrature
- * \date 2020-11-02
- * \author Jihuan Tian
+ * @ingroup sauter_quadrature
+ * @date 2020-11-02
+ * @author Jihuan Tian
  */
 
 #ifndef HIERBEM_INCLUDE_LAPLACE_LAPLACE_BEM_IMPL_H_
@@ -37,7 +49,7 @@ HBEM_NS_OPEN
 
 using namespace dealii;
 
-#pragma region **** LaplaceBEM ctor and dtor impls ****
+#pragma region ****LaplaceBEM ctor and dtor impls ****
 
 template <int dim,
           int spacedim,
@@ -113,7 +125,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::~LaplaceBEM()
 {}
 
 #pragma endregion
-#pragma region **** LaplaceBEM accessors ****
+#pragma region ****LaplaceBEM accessors ****
 
 template <int dim,
           int spacedim,
@@ -442,7 +454,9 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::get_neumann_data()
 }
 
 #pragma endregion
-#pragma region **** LaplaceBEM public member function impls (wrapper to internals) ****
+#pragma region ****LaplaceBEM public member function impls( \
+  wrapper to internals) *                                   \
+  ***
 
 template <int dim,
           int spacedim,

@@ -1,3 +1,13 @@
+// Copyright (C) 2023-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+//
+// This file is part of the HierBEM library.
+//
+// HierBEM is free software: you can use it, redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License as published by the
+// Free Software Foundation, either version 3 of the License, or (at your
+// option) any later version. The full text of the license can be found in the
+// file LICENSE at the top level directory of HierBEM.
+
 /**
  * @file cu_vector.hcu
  * @brief Introduction of cu_vector.hcu
@@ -214,7 +224,7 @@ namespace CUDAWrappers
 
 
   template <typename T>
-  HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAVector<T>                              &
+  HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAVector<T> &
   CUDAVector<T>::operator=(CUDAVector<T> &&vec)
   {
     values = vec.values;
@@ -269,7 +279,7 @@ namespace CUDAWrappers
 
   template <typename T>
   HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::reference
-                 CUDAVector<T>::operator()(const size_type i)
+  CUDAVector<T>::operator()(const size_type i)
   {
     return values[i];
   }
@@ -277,7 +287,7 @@ namespace CUDAWrappers
 
   template <typename T>
   HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::reference
-                 CUDAVector<T>::operator[](const size_type i)
+  CUDAVector<T>::operator[](const size_type i)
   {
     return values[i];
   }
@@ -285,7 +295,7 @@ namespace CUDAWrappers
 
   template <typename T>
   HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::const_reference
-                 CUDAVector<T>::operator()(const size_type i) const
+  CUDAVector<T>::operator()(const size_type i) const
   {
     return values[i];
   }
@@ -293,7 +303,7 @@ namespace CUDAWrappers
 
   template <typename T>
   HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAVector<T>::const_reference
-                 CUDAVector<T>::operator[](const size_type i) const
+  CUDAVector<T>::operator[](const size_type i) const
   {
     return values[i];
   }

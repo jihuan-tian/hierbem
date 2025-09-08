@@ -1,6 +1,16 @@
+// Copyright (C) 2021-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+//
+// This file is part of the HierBEM library.
+//
+// HierBEM is free software: you can use it, redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License as published by the
+// Free Software Foundation, either version 3 of the License, or (at your
+// option) any later version. The full text of the license can be found in the
+// file LICENSE at the top level directory of HierBEM.
+
 /**
- * \file lapack_helpers.h
- * \brief Exposes LAPACK helper functions defined in @p lapack_full_matrix.cc and
+ * @file lapack_helpers.h
+ * @brief Exposes LAPACK helper functions defined in @p lapack_full_matrix.cc and
  * define new ones by following them as examples. \mynote{Because helper
  * functions in @p lapack_full_matrix.cc are template functions and they are not
  * defined in a header file, their instantiation is limited within the
@@ -9,9 +19,9 @@
  * But why they are available in the Debug mode library is still a mystery.
  * Comment on 2022-03-23 by Jihuan Tian.}
  *
- * \ingroup linalg
- * \date 2021-06-09
- * \author Jihuan Tian
+ * @ingroup linalg
+ * @date 2021-06-09
+ * @author Jihuan Tian
  */
 
 #ifndef HIERBEM_INCLUDE_LINEAR_ALGEBRA_LAPACK_HELPERS_H_

@@ -1,3 +1,14 @@
+# Copyright (C) 2021-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+# Copyright (C) 2023-2024 Xiaozhe Wang <chaoslawful@gmail.com>
+#
+# This file is part of the HierBEM library.
+#
+# HierBEM is free software: you can use it, redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version. The full text of the license can be found in the file
+# LICENSE at the top level directory of HierBEM.
+
 include(macro_hbem_std_compile_flags)
 
 # ##############################################################################
@@ -15,7 +26,6 @@ add_library(
   dofs/dof_tools_ext.cc
   hmatrix/aca_plus/aca_plus.cu
   hmatrix/hmatrix_support.cc
-  utilities/generic_functors.cc
   quadrature/sauter_quadrature.cu
   utilities/regex_tools.cc
   laplace/laplace_bem.cu)

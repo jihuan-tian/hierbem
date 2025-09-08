@@ -1,3 +1,13 @@
+// Copyright (C) 2023-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+//
+// This file is part of the HierBEM library.
+//
+// HierBEM is free software: you can use it, redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License as published by the
+// Free Software Foundation, either version 3 of the License, or (at your
+// option) any later version. The full text of the license can be found in the
+// file LICENSE at the top level directory of HierBEM.
+
 /**
  * @file cu_fullmatrix.hcu
  * @brief Introduction of cu_fullmatrix.hcu
@@ -463,7 +473,7 @@ namespace CUDAWrappers
 
   template <typename T>
   HBEM_ATTR_HOST HBEM_ATTR_DEV inline typename CUDAFullMatrix<T>::reference
-                 CUDAFullMatrix<T>::operator()(const size_type i,
+  CUDAFullMatrix<T>::operator()(const size_type i,
                                 const size_type j,
                                 const bool      is_column_major)
   {
@@ -758,7 +768,7 @@ namespace CUDAWrappers
 
 
   template <typename T>
-  HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAFullMatrix<T>                              &
+  HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAFullMatrix<T> &
   CUDAFullMatrix<T>::operator*=(const T factor)
   {
     for (size_type i = 0; i < n_elements(); i++)
@@ -771,7 +781,7 @@ namespace CUDAWrappers
 
 
   template <typename T>
-  HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAFullMatrix<T>                              &
+  HBEM_ATTR_HOST HBEM_ATTR_DEV CUDAFullMatrix<T> &
   CUDAFullMatrix<T>::operator/=(const T factor)
   {
     for (size_type i = 0; i < n_elements(); i++)

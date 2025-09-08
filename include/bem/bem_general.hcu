@@ -1,3 +1,13 @@
+// Copyright (C) 2022-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+//
+// This file is part of the HierBEM library.
+//
+// HierBEM is free software: you can use it, redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License as published by the
+// Free Software Foundation, either version 3 of the License, or (at your
+// option) any later version. The full text of the license can be found in the
+// file LICENSE at the top level directory of HierBEM.
+
 /**
  * @file bem_general.h
  * @brief Introduction of bem_general.h
@@ -777,7 +787,8 @@ copy_pair_of_cells_local_to_global_for_bem_full_matrix(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename KernelNumberType,
           typename SurfaceNormalDetector,
           typename MatrixType>
@@ -921,7 +932,8 @@ assemble_bem_full_matrix(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename KernelNumberType,
           typename SurfaceNormalDetector,
           typename MatrixType>
@@ -1429,7 +1441,8 @@ interpolate_indicator_vectors_for_subdomains(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename KernelNumberType>
 void
 integral_transform_of_trial_bases_on_one_cell(
@@ -1513,7 +1526,8 @@ template <int dim,
           int spacedim,
           typename RangeNumberType,
           typename KernelNumberType,
-          template <typename> typename VectorType>
+          template <typename>
+          typename VectorType>
 void
 copy_cell_local_to_global_for_potential_eval(
   const CellWisePerTaskDataForPotentialEval<dim, spacedim, KernelNumberType>
@@ -1564,10 +1578,12 @@ copy_cell_local_to_global_for_potential_eval(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
-          template <typename> typename VectorType>
+          template <typename>
+          typename VectorType>
 void
 evaluate_potential_at_points(
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
@@ -1663,10 +1679,12 @@ evaluate_potential_at_points(
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
-          template <typename> typename VectorType>
+          template <typename>
+          typename VectorType>
 void
 evaluate_conormal_trace_at_points(
   const KernelFunctionType<spacedim, KernelNumberType> &kernel,
@@ -1765,11 +1783,14 @@ evaluate_conormal_trace_at_points(
 template <int dim,
           int spacedim,
           int target_dim,
-          template <int, typename> typename SLPKernelType,
-          template <int, typename> typename DLPKernelType,
+          template <int, typename>
+          typename SLPKernelType,
+          template <int, typename>
+          typename DLPKernelType,
           typename RangeNumberType,
           typename KernelNumberType,
-          template <typename> typename VectorType>
+          template <typename>
+          typename VectorType>
 void
 evaluate_representation_formula_for_potential(
   const SLPKernelType<spacedim, KernelNumberType> &slp_kernel,
@@ -1820,11 +1841,14 @@ evaluate_representation_formula_for_potential(
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename ADLPKernelType,
-          template <int, typename> typename HyperSingularKernelType,
+          template <int, typename>
+          typename ADLPKernelType,
+          template <int, typename>
+          typename HyperSingularKernelType,
           typename RangeNumberType,
           typename KernelNumberType,
-          template <typename> typename VectorType>
+          template <typename>
+          typename VectorType>
 void
 evaluate_representation_formula_for_conormal_trace(
   const ADLPKernelType<spacedim, KernelNumberType> &adlp_kernel,

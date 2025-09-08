@@ -33,7 +33,7 @@ with section("format"):
 with section("markup"):
   bullet_char = '*'
   enum_char = '.'
-  first_comment_is_literal = False
+  first_comment_is_literal = True
   literal_comment_pattern = None
   fence_pattern = '^\\s*([`~]{3}[`~]*)(.*)$'
   ruler_pattern = '^\\s*[^\\w\\s]{3}.*[^\\w\\s]{3}$'
