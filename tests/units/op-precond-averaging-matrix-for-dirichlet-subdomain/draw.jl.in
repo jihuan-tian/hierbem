@@ -1,3 +1,13 @@
+#Copyright(C) 2025 Jihuan Tian < jihuan_tian @hotmail.com>
+#
+#This file is part of the HierBEM library.
+#
+#HierBEM is free software : you can use it, redistribute it and / or modify it
+#under the terms of the GNU Lesser General Public License as published by the
+#Free Software Foundation, either version 3 of the License, or (at your
+#option) any later version.The full text of the license can be found in the
+#file LICENSE at the top level directory of                             HierBEM.
+
 using Colors
 using Meshes, Gmsh, GLMakie
 using CSV, DataFrames
@@ -15,17 +25,17 @@ viz!(ax, refined_mesh_viz, showsegments=true, segmentcolor=:red, segmentsize=1, 
 viz!(ax, mesh_viz, showsegments=true, segmentcolor=:black, segmentsize=3, color=:burlywood, alpha=0)
 display(fig)
 
-# Read the support point data and their weights.
+#Read the support point data and their                            weights.
 df = CSV.read("dual-space-dofs-on-refined-mesh.output", DataFrame; delim=' ', header=false, comment="#")
 
 df_rows = size(df)[1]
-# Mark DoF ids and weights in the first child cell of each primal cell.
+#Mark DoF ids and weights in the first child cell of each primal  cell.
 text!(ax, Matrix(df[1:4:df_rows, 4:6]), text="#(" .* string.(df[1:4:df_rows, 2]) .* "," .* string.(df[1:4:df_rows, 3]) .* "):" .* string.(df[1:4:df_rows, 7]), align=(:left, :bottom), fontsize=12, color=:white)
-# Mark DoF ids and weights in the second child cell of each primal cell.
+#Mark DoF ids and weights in the second child cell of each primal cell.
 text!(ax, Matrix(df[2:4:df_rows, 4:6]), text="#(" .* string.(df[2:4:df_rows, 2]) .* "," .* string.(df[2:4:df_rows, 3]) .* "):" .* string.(df[2:4:df_rows, 7]), align=(:right, :bottom), fontsize=12, color=:white)
-# Mark DoF ids and weights in the third child cell of each primal cell.
+#Mark DoF ids and weights in the third child cell of each primal  cell.
 text!(ax, Matrix(df[3:4:df_rows, 4:6]), text="#(" .* string.(df[3:4:df_rows, 2]) .* "," .* string.(df[3:4:df_rows, 3]) .* "):" .* string.(df[3:4:df_rows, 7]), align=(:left, :top), fontsize=12, color=:white)
-# Mark DoF ids and weights in the fourth child cell of each primal cell.
+#Mark DoF ids and weights in the fourth child cell of each primal cell.
 text!(ax, Matrix(df[4:4:df_rows, 4:6]), text="#(" .* string.(df[4:4:df_rows, 2]) .* "," .* string.(df[4:4:df_rows, 3]) .* "):" .* string.(df[4:4:df_rows, 7]), align=(:right, :top), fontsize=12, color=:white)
 
 GLMakie.save("dual-space-dofs-on-refined-mesh.png", fig)

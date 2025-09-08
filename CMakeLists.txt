@@ -1,6 +1,5 @@
 # Copyright (C) 2021-2025 Jihuan Tian <jihuan_tian@hotmail.com>
-#
-# Copyright (C) 2023-2025 Xiaozhe Wang <chaoslawful@gmail.com>
+# Copyright (C) 2023-2024 Xiaozhe Wang <chaoslawful@gmail.com>
 #
 # This file is part of the HierBEM library.
 #

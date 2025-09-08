@@ -1,15 +1,40 @@
-using CSV, DataFrames
-using LinearAlgebra
+#Copyright(C) 2025 Jihuan Tian < jihuan_tian @hotmail.com>
+#
+#This file is part of the HierBEM library.
+#
+#HierBEM is free software : you can use it, redistribute it and / or modify it
+#under the terms of the GNU Lesser General Public License as published by the
+#Free Software Foundation, either version 3 of the License, or (at your
+#option) any later version.The full text of the license can be found in the
+#file LICENSE at the top level directory of                             HierBEM.
 
-# Load the data.
-Cd = CSV.read("Cd.output", DataFrame; delim=' ', header=false, ignorerepeated=true)
-support_points_in_dual_mesh = CSV.read("support-points-in-dual-space-on-dual-mesh.output", DataFrame; delim=' ', header=false)
-support_points_in_refined_mesh = CSV.read("support-points-in-dual-space-on-refined-mesh.output", DataFrame; delim=' ', header=false)
+using CSV,
+  DataFrames using LinearAlgebra
 
-Cd_ref = CSV.read("@CMAKE_CURRENT_SOURCE_DIR@/Cd.output", DataFrame; delim=' ', header=false, ignorerepeated=true)
-support_points_in_dual_mesh_ref = CSV.read("@CMAKE_CURRENT_SOURCE_DIR@/support-points-in-dual-space-on-dual-mesh.output", DataFrame; delim=' ', header=false)
-support_points_in_refined_mesh_ref = CSV.read("@CMAKE_CURRENT_SOURCE_DIR@/support-points-in-dual-space-on-refined-mesh.output", DataFrame; delim=' ', header=false)
+#Load the data.
+          Cd                           = CSV.read("Cd.output", DataFrame;
+                  delim = ' ', header = false, ignorerepeated = true)
+           support_points_in_dual_mesh = CSV.read(
+      "support-points-in-dual-space-on-dual-mesh.output", DataFrame;
+      delim = ' ', header = false) support_points_in_refined_mesh =
+      CSV.read("support-points-in-dual-space-on-refined-mesh.output", DataFrame;
+               delim = ' ', header = false)
 
-Cd_err = norm(Matrix(Cd_ref) - Matrix(Cd))
-support_points_in_dual_mesh_err = norm(Matrix(support_points_in_dual_mesh_ref) - Matrix(support_points_in_dual_mesh))
-support_points_in_refined_mesh_err = norm(Matrix(support_points_in_refined_mesh_ref) - Matrix(support_points_in_refined_mesh))
+        Cd_ref = CSV.read("@CMAKE_CURRENT_SOURCE_DIR@/Cd.output", DataFrame;
+                          delim = ' ', header = false, ignorerepeated = true)
+                   support_points_in_dual_mesh_ref = CSV.read(
+        "@CMAKE_CURRENT_SOURCE_DIR@/support-points-in-dual-space-on-dual-mesh.output",
+        DataFrame;
+        delim = ' ', header = false) support_points_in_refined_mesh_ref =
+        CSV.read(
+          "@CMAKE_CURRENT_SOURCE_DIR@/support-points-in-dual-space-on-refined-mesh.output",
+          DataFrame;
+          delim = ' ', header = false)
+
+          Cd_err = norm(Matrix(Cd_ref) -
+                        Matrix(Cd)) support_points_in_dual_mesh_err =
+          norm(Matrix(support_points_in_dual_mesh_ref) -
+               Matrix(support_points_in_dual_mesh))
+            support_points_in_refined_mesh_err =
+              norm(Matrix(support_points_in_refined_mesh_ref) -
+                   Matrix(support_points_in_refined_mesh))

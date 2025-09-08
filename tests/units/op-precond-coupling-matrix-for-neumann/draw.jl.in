@@ -1,3 +1,13 @@
+#Copyright(C) 2025 Jihuan Tian < jihuan_tian @hotmail.com>
+#
+#This file is part of the HierBEM library.
+#
+#HierBEM is free software : you can use it, redistribute it and / or modify it
+#under the terms of the GNU Lesser General Public License as published by the
+#Free Software Foundation, either version 3 of the License, or (at your
+#option) any later version.The full text of the license can be found in the
+#file LICENSE at the top level directory of                             HierBEM.
+
 using Colors
 using Meshes, Gmsh, GLMakie
 using CSV, DataFrames
@@ -7,31 +17,31 @@ include("@HBEM_ROOT_DIR@scripts/julia/GmshTools.jl")
 points, connectivity, mesh_viz = read_msh("mesh.msh")
 refined_points, refined_connectivity, refined_mesh_viz = read_msh("refined-mesh.msh")
 
-# Load the data.
+#Load the data.
 Cp = CSV.read("Cp.output", DataFrame; delim=' ', header=false, ignorerepeated=true)
 level0_support_points = CSV.read("level0-support-points.output", DataFrame; delim=' ', header=false)
 level1_support_points = CSV.read("level1-support-points.output", DataFrame; delim=' ', header=false)
 
-# Generate dictionaries for the support points, since if we iterate over the
-# cells to access those DoFs, the DoFs will be visited multiple times.
+#Generate dictionaries for the support points, since if we iterate over the
+#cells to access those DoFs, the DoFs will be visited multiple times.
 level0_support_points_dict = Dict(row[1] => row[2:4] for row in eachrow(level0_support_points))
 level1_support_points_dict = Dict(row[1] => row[2:4] for row in eachrow(level1_support_points))
 
-# Iterate over each DoF on level 0.
+#Iterate over each DoF on level 0.
 for i=1:length(level0_support_points_dict)
-    # Plot the two level mesh.
+#Plot the two level mesh.
     fig = Figure(size = (1920,1080))
     ax = Axis3(fig[1, 1], aspect=:data, azimuth=-π / 2, elevation=π / 2)
     viz!(ax, refined_mesh_viz, showsegments=true, segmentcolor=:red, segmentsize=1, color=:burlywood)
     viz!(ax, mesh_viz, showsegments=true, segmentcolor=:black, segmentsize=3, color=:burlywood, alpha=0)
     display(fig)
-    
-    # Mark the support point in primal mesh.
+
+#Mark the support point in primal mesh.
     scatter!(ax, level0_support_points_dict[i-1][1], level0_support_points_dict[i-1][2], level0_support_points_dict[i-1][3], color=:red, markersize=40)
 
-    # Mark the support points in the refined mesh, whose basis functions
-    # contribute to that of the support point in the primal mesh. A text label
-    # is annotated at the point as "#DoF index, basis function weight".
+#Mark the support points in the refined mesh, whose basis functions
+#contribute to that of the support point in the primal mesh.A text label
+#is annotated at the point as "#DoF index, basis function weight".
     for j=1:size(Cp)[2]
         if (Cp[i,j] > 0)
             scatter!(ax, level1_support_points_dict[j-1][1], level1_support_points_dict[j-1][2], level1_support_points_dict[j-1][3], color=:blue, markersize=20)

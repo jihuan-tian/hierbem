@@ -1,3 +1,13 @@
+#Copyright(C) 2025 Jihuan Tian < jihuan_tian @hotmail.com>
+#
+#This file is part of the HierBEM library.
+#
+#HierBEM is free software : you can use it, redistribute it and / or modify it
+#under the terms of the GNU Lesser General Public License as published by the
+#Free Software Foundation, either version 3 of the License, or (at your
+#option) any later version.The full text of the license can be found in the
+#file LICENSE at the top level directory of                             HierBEM.
+
 using Colors
 using Meshes, Gmsh, GLMakie
 using CSV, DataFrames
@@ -15,17 +25,18 @@ viz!(ax, refined_mesh_viz, showsegments=true, segmentcolor=:red, segmentsize=1, 
 viz!(ax, mesh_viz, showsegments=true, segmentcolor=:black, segmentsize=3, color=:burlywood, alpha=0)
 display(fig)
 
-# Read data file.
+#Read data file.
 df = CSV.read("primal-space-dofs-on-multigrid.output", DataFrame; delim=' ', header=false, comment="#")
 df_rows = size(df)[1]
-# Connect support points in the parent cell in the primal mesh and those in its child cells in the refined mesh.
+#Connect support points in the parent cell in the primal mesh and those in its \
+  child cells in the refined mesh.
 for i = 1:5:df_rows
   lines!(ax, Matrix(df[i:i+4, 2:4]), color=:white, linestyle=:dash, linewidth=2)
 end
-# Plot the support points in the primal mesh.
+#Plot the support points in the primal mesh.
 scatter!(ax, Matrix(df[1:5:df_rows, 2:4]), color=:red, markersize=10)
 text!(ax, Matrix(df[1:5:df_rows, 2:4]), text=string.(df[1:5:df_rows, 1]), align=(:left, :bottom), fontsize=25, color=:cyan)
-# Plot the support points in child cells in the refined mesh.
+#Plot the support points in child cells in the refined mesh.
 scatter!(ax, Matrix(df[2:5:df_rows, 2:4]), color=:green, markersize=10)
 text!(ax, Matrix(df[2:5:df_rows, 2:4]), text="#(" .* string.(df[2:5:df_rows, 1]) .* "," .* string.(df[2:5:df_rows, 5]) .* ")", align=(:left, :bottom), fontsize=20, color=:white)
 scatter!(ax, Matrix(df[3:5:df_rows, 2:4]), color=:yellow, markersize=10)
