@@ -1,12 +1,12 @@
-#Copyright(C) 2025 Jihuan Tian < jihuan_tian @hotmail.com>
+# Copyright (C) 2025 Jihuan Tian <jihuan_tian@hotmail.com>
 #
-#This file is part of the HierBEM library.
+# This file is part of the HierBEM library.
 #
-#HierBEM is free software : you can use it, redistribute it and / or modify it
-#under the terms of the GNU Lesser General Public License as published by the
-#Free Software Foundation, either version 3 of the License, or (at your
-#option) any later version.The full text of the license can be found in the
-#file LICENSE at the top level directory of                             HierBEM.
+# HierBEM is free software: you can use it, redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version. The full text of the license can be found in the file
+# LICENSE at the top level directory of HierBEM.
 
 using Colors
 using Meshes, Gmsh, GLMakie
@@ -14,7 +14,7 @@ using CSV, DataFrames
 
 include("@HBEM_ROOT_DIR@scripts/julia/GmshTools.jl")
 
-#Read the mesh
+# Read the mesh
 points, connectivity, mesh_viz = read_msh("mesh.msh")
 refined_points, refined_connectivity, refined_mesh_viz = read_msh("refined-mesh.msh")
 
@@ -26,7 +26,7 @@ viz!(ax, refined_mesh_viz, showsegments=true, segmentcolor=:red, segmentsize=1, 
 viz!(ax, mesh_viz, showsegments=true, segmentcolor=:black, segmentsize=3, color=:burlywood, alpha=0)
 display(fig)
 
-#Load the data.
+# Load the data.
 Cd = CSV.read("Cd.output", DataFrame; delim=' ', header=false, ignorerepeated=true)
 support_points_in_dual_mesh = CSV.read("support-points-in-dual-space-on-dual-mesh.output", DataFrame; delim=' ', header=false)
 support_points_in_refined_mesh = CSV.read("support-points-in-dual-space-on-refined-mesh.output", DataFrame; delim=' ', header=false)
@@ -37,11 +37,10 @@ text!(ax, Matrix(support_points_in_dual_mesh[:, 2:4]), text=string.(support_poin
 scatter!(ax, Matrix(support_points_in_refined_mesh[:, 2:4]), color=:green, markersize=10)
 text!(ax, Matrix(support_points_in_refined_mesh[:, 2:4]), text=string.(support_points_in_refined_mesh[:,1]), align=(:left, :bottom), fontsize=15, color=:blue)
 
-#Generate a dictionary for the support points in dual mesh.
+# Generate a dictionary for the support points in dual mesh.
 support_points_in_dual_mesh_dict = Dict(row[1] => row[2:4] for row in eachrow(support_points_in_dual_mesh))
 
-#Generate text strings for DoFs in the refined mesh associated with each DoF \
-  in the dual mesh.
+# Generate text strings for DoFs in the refined mesh associated with each DoF in the dual mesh.
 for m = 1:size(Cd)[1]
     associated_dof_index_string = ""
     for n = 1:size(Cd)[2]
