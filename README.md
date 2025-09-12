@@ -1,3 +1,5 @@
+English | [中文](README-zh.md)
+
 # What is HierBEM?
 
 HierBEM is a scientific software library that implements the **3D Galerkin boundary element method (BEM)**, accelerated by **hierarchical matrices ($\mathcal{H}$-matrices)** to achieve **log-linear complexity**. HierBEM is built on top of the powerful finite element library **deal.II**, leveraging its mature infrastructure for mesh handling, finite elements, mappings, linear algebra and data output, etc.

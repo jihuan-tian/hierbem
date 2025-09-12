@@ -1,3 +1,5 @@
+[English]((README.md)) | 中文
+
 # 什么是 HierBEM ？
 
 HierBEM 是一个以三维伽辽金边界元算法为核心的科学计算软件库。 HierBEM 采用层级矩阵 ($\mathcal{H}$-matrices) 加速，实现了对数线性复杂度的边界元算法。 HierBEM 基于强大的有限元库 deal.II 构建，充分利用了 deal.II 提供的有限元基础数据结构与功能函数，包括网格处理、有限元、单元映射、线性代数、数据输出等等。
