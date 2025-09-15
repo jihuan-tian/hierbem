@@ -659,16 +659,6 @@ namespace DoFToolsExt
               }
           }
       }
-
-    std::vector<Point<spacedim>> support_points_double(n_dofs);
-    DoFTools::map_dofs_to_support_points(mapping_info.get_mapping(),
-                                         dof_handler,
-                                         support_points_double);
-
-    for (types::global_dof_index d = 0; d < n_dofs; d++)
-      {
-        support_points[d] = support_points_double[d];
-      }
   }
 
 
