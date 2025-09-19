@@ -1679,7 +1679,7 @@ MATHJAX_FORMAT         = SVG
 # The default value is: https://cdn.jsdelivr.net/npm/mathjax@2.
 # This tag requires that the tag USE_MATHJAX is set to YES.
 
-MATHJAX_RELPATH        = /js/MathJax
+MATHJAX_RELPATH        = https://jihuan-tian.github.io/hierbem-site/js/MathJax
 
 # The MATHJAX_EXTENSIONS tag can be used to specify one or more MathJax
 # extension names that should be enabled during MathJax rendering. For example
