@@ -52,6 +52,11 @@
  */
 
 /**
+ * \defgroup examples Examples
+ * \brief Examples for demonstrating the usage and mechanism of HierBEM.
+ */
+
+/**
  * \defgroup preconditioners Preconditioner
  * \brief Various types of preconditioners, such as operator preconditioning.
  */
