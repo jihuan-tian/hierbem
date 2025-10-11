@@ -250,6 +250,7 @@ link_directories(${CMAKE_BINARY_DIR}/src /usr/lib/x86_64-linux-gnu)
 add_subdirectory(include)
 add_subdirectory(src)
 add_subdirectory(scripts)
+add_subdirectory(examples)
 
 # Enable unit testing for this deal.ii user project.
 enable_testing()
