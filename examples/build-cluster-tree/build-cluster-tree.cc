@@ -31,6 +31,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 #include "cluster_tree/cluster_tree.h"
 
@@ -56,8 +57,7 @@ main()
   std::ofstream mesh_file("sphere.msh");
   grid_out.write_msh(tria, mesh_file);
 
-
-  // Create a Lagrangian finite element and a DoF handler.
+  // Create a continuous Lagrangian finite element and a DoF handler.
   const unsigned int        fe_order = 1;
   FE_Q<dim, spacedim>       fe(fe_order);
   DoFHandler<dim, spacedim> dof_handler(tria);
@@ -75,7 +75,6 @@ main()
   std::vector<types::global_dof_index> dof_indices(dof_handler.n_dofs());
   for (types::global_dof_index d = 0; d < dof_indices.size(); d++)
     dof_indices[d] = d;
-
 
   // Create a cluster tree for all the DoF indices.
   const unsigned int    n_min = 4;

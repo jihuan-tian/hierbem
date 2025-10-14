@@ -8,10 +8,7 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
-include(macro_hbem_std_compile_flags)
-
-# Enable more strict compilation for C++ and CUDA
-hbem_std_compile_flags()
-
-add_subdirectory(build-cluster-tree)
-add_subdirectory(build-block-cluster-tree)
+set(_target build-block-cluster-tree)
+add_executable(${_target} build-block-cluster-tree.cc)
+deal_ii_setup_target(${_target})
+target_link_libraries(${_target})
