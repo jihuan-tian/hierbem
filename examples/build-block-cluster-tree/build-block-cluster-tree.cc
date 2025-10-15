@@ -398,7 +398,7 @@ main()
   bV.build_block_cluster_tree(eta, n_min_block_cluster_tree);
   // Create a bilinear form \f$b_K: H^{1/2}(\Gamma)\times H^{-1/2}(\Gamma)
   // \rightarrow \mathbb{R}\f$ for the double layer potential operator \f$K\f$.
-  BEMBilinearForm<dim, spacedim> bK(H_minus_half, H_half);
+  BEMBilinearForm<dim, spacedim> bK(H_half, H_minus_half);
   bK.build_block_cluster_tree(eta, n_min_block_cluster_tree);
 
   // Print out the cluster trees for the two function spaces.
