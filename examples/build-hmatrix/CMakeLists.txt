@@ -13,9 +13,20 @@ include(macro_hbem_std_compile_flags)
 # Enable more strict compilation for C++ and CUDA
 hbem_std_compile_flags()
 
-# Testing models directory
-set(HBEM_TEST_MODEL_DIR ${CMAKE_SOURCE_DIR}/tests/models/)
+# Add testing config header files to include path
+include_directories(APPEND ${CMAKE_SOURCE_DIR}/tests/include)
 
-add_subdirectory(build-cluster-tree)
-add_subdirectory(build-block-cluster-tree)
-add_subdirectory(build-hmatrix)
+set(_target build-hmatrix)
+add_executable(${_target} build-hmatrix.cu)
+deal_ii_setup_target(${_target})
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/plot-hmat.asy.in
+               ${CMAKE_CURRENT_SOURCE_DIR}/plot-hmat.asy)
+
+target_link_libraries(${_target} hierbem)
+
+add_custom_command(
+  TARGET ${_target}
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/plot-hmat.asy
+          ${CMAKE_CURRENT_BINARY_DIR}/plot-hmat.asy)

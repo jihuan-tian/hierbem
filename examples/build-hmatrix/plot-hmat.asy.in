@@ -1,0 +1,11 @@
+import "@CMAKE_SOURCE_DIR@/scripts/hmat.asy" as hmat;
+
+picture V;
+unitsize(V, 1pt);
+plot_bct_struct (V, "V-leaf-set.dat");
+shipout("V-leaf-set", V);
+
+picture IK;
+unitsize(IK, 1pt);
+plot_bct_struct (IK, "IK-leaf-set.dat");
+shipout("IK-leaf-set", IK);

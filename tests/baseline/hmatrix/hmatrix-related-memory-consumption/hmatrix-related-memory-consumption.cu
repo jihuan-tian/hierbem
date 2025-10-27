@@ -94,6 +94,16 @@ parse_cmdline(int argc, char *argv[])
   return opts;
 }
 
+
+namespace HierBEM
+{
+  namespace CUDAWrappers
+  {
+    extern cudaDeviceProp device_properties;
+  }
+} // namespace HierBEM
+
+
 int
 main(int argc, char *argv[])
 {
@@ -115,8 +125,6 @@ main(int argc, char *argv[])
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  const double inter_distance = 8.0;
-
   /**
    * Surface-to-volume and volume-to-surface relationship.
    */
@@ -128,6 +136,7 @@ main(int argc, char *argv[])
                                        HBEM_TEST_MODEL_DIR "two-spheres.msh");
 
   // Define manifolds
+  const double                                            inter_distance = 8.0;
   std::map<types::manifold_id, Manifold<dim, spacedim> *> manifolds;
   Manifold<dim, spacedim>                                *left_sphere_manifold =
     new SphericalManifold<dim, spacedim>(

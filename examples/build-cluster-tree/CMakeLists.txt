@@ -11,4 +11,3 @@
 set(_target build-cluster-tree)
 add_executable(${_target} build-cluster-tree.cc)
 deal_ii_setup_target(${_target})
-target_link_libraries(${_target})
