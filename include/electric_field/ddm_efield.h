@@ -1140,7 +1140,7 @@ DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::
         }
     }
 
-  DoFToolsExt::extract_material_domain_dofs(
+  DoFToolsExt::extract_material_subdomain_dofs(
     dof_handler_for_dirichlet_space,
     material_ids,
     negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary);
@@ -1203,7 +1203,7 @@ DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::
             static_cast<types::material_id>(surface.get_entity_tag()));
         }
 
-      DoFToolsExt::extract_material_domain_dofs(
+      DoFToolsExt::extract_material_subdomain_dofs(
         dof_handler_for_dirichlet_space,
         material_ids,
         dof_selectors_for_dirichlet_space);
@@ -1234,7 +1234,7 @@ DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::
             static_cast<types::material_id>(surface.get_entity_tag()));
         }
 
-      DoFToolsExt::extract_material_domain_dofs(
+      DoFToolsExt::extract_material_subdomain_dofs(
         dof_handler_for_neumann_space,
         material_ids,
         dof_selectors_for_neumann_space);

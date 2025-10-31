@@ -137,16 +137,14 @@ TEST_CASE(
     (n_vertices - y_repetition - 1) / 2;
   std::vector<types::global_dof_index> dummy_numbering(
     n_dofs_dual_space_dual_mesh);
-  std::set<types::material_id> subdomain_material_ids            = {2};
-  std::set<types::material_id> complement_subdomain_material_ids = {1};
+  std::set<types::material_id> subdomain_material_ids = {2};
   PreconditionerForLaplaceNeumann<2, 3, double, double> precond(
     fe_primal_space,
     fe_dual_space,
     tria,
     dummy_numbering,
     dummy_numbering,
-    subdomain_material_ids,
-    complement_subdomain_material_ids);
+    subdomain_material_ids);
 
   setup_preconditioner(precond);
   precond.build_coupling_matrix();

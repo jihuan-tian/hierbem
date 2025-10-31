@@ -829,8 +829,7 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -849,8 +848,7 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -2330,7 +2328,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             dof_handler_for_dirichlet_space_.n_dofs());
           dof_selectors_for_dirichlet_space_on_neumann_domain_.resize(
             dof_handler_for_dirichlet_space_.n_dofs());
-          DoFToolsExt::extract_boundary_condition_dofs(
+          DoFToolsExt::extract_material_subdomain_dofs(
             dof_handler_for_dirichlet_space_,
             dirichlet_bc_definition_,
             dof_selectors_for_dirichlet_space_on_dirichlet_domain_);
@@ -2366,7 +2364,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             dof_handler_for_neumann_space_.n_dofs());
           dof_selectors_for_neumann_space_on_neumann_domain_.resize(
             dof_handler_for_neumann_space_.n_dofs());
-          DoFToolsExt::extract_boundary_condition_dofs(
+          DoFToolsExt::extract_material_subdomain_dofs(
             dof_handler_for_neumann_space_,
             dirichlet_bc_definition_,
             dof_selectors_for_neumann_space_on_dirichlet_domain_);
@@ -4754,8 +4752,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                       mg_tria_for_preconditioner_,
                       *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain_,
                       *dof_e2i_numbering_for_dirichlet_space_on_neumann_domain_,
-                      neumann_domain_material_ids,
-                      dirichlet_domain_material_ids);
+                      neumann_domain_material_ids);
 
                   operator_preconditioner_dirichlet_->setup_preconditioner(
                     thread_num_,

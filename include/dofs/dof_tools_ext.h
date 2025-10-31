@@ -54,79 +54,39 @@ HBEM_NS_OPEN
 namespace DoFToolsExt
 {
   /**
-   * N.B. This function appears here because the already instantiated deal.ii
-   * versions only assume <code>dim==spacedim</code>. Meanwhile, the general
-   * template version only appears in @p dof_tool.cc, which is not accessible
-   * to the outside.
+   * Generate DoF selectors for those cells with material ids in the given set.
    *
    * @param dof_handler
-   * @param subdomain_id
-   * @param selected_dofs
+   * @param material_ids A set of material ids. It can also be a map with
+   * material id as its key.
+   * @param selected_dofs A vector of flags for all DoFs in the DoF handler.
+   * @param reset_selectors_to_false Whether initialize all elements in
+   * @p selected_dofs to false at the beginning. By default, this argument is
+   * true. When it is false, we can call this function multiple times and
+   * gradually append new selection flags into <tt>selected_dofs</tt>.
+   * @return Number of selected DoFs.
    */
-  template <int dim, int spacedim>
-  void
-  extract_subdomain_dofs(const DoFHandler<dim, spacedim>     &dof_handler,
-                         const std::set<types::subdomain_id> &subdomain_ids,
-                         std::vector<bool>                   &selected_dofs)
-  {
-    Assert(selected_dofs.size() == dof_handler.n_dofs(),
-           ExcDimensionMismatch(selected_dofs.size(), dof_handler.n_dofs()));
-
-    // preset all values by false
-    std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(), false);
-
-    // Global DoF indices for the current cell.
-    std::vector<types::global_dof_index> cell_dof_indices;
-    cell_dof_indices.reserve(
-      dof_handler.get_fe_collection().max_dofs_per_cell());
-
-    // this function is similar to the make_sparsity_pattern function, see
-    // there for more information
-    typename DoFHandler<dim, spacedim>::active_cell_iterator
-      cell = dof_handler.begin_active(),
-      endc = dof_handler.end();
-    for (; cell != endc; ++cell)
-      {
-        // Find the current cell's subdomain id in the given list.
-        auto found_iter = subdomain_ids.find(cell->subdomain_id());
-
-        if (found_iter != subdomain_ids.end())
-          {
-            const unsigned int dofs_per_cell = cell->get_fe().dofs_per_cell;
-            cell_dof_indices.resize(dofs_per_cell);
-            cell->get_dof_indices(cell_dof_indices);
-            for (unsigned int i = 0; i < dofs_per_cell; ++i)
-              selected_dofs[cell_dof_indices[i]] = true;
-          }
-      }
-  }
-
-
-  /**
-   * Mark the DoFs in cells which have a material id belonging to the given
-   * collection.
-   *
-   * @param dof_handler
-   * @param material_ids
-   * @param selected_dofs
-   * @param reset_selectors_to_false If preset all selectors to false at the
-   * beginning of this function.
-   * @return Effective number of DoFs.
-   */
-  template <int dim, int spacedim>
+  template <int dim, int spacedim, typename SearchableMaterialIdContainer>
   types::global_dof_index
-  extract_material_domain_dofs(const DoFHandler<dim, spacedim>    &dof_handler,
-                               const std::set<types::material_id> &material_ids,
-                               std::vector<bool> &selected_dofs,
-                               const bool reset_selectors_to_false = true)
+  extract_material_subdomain_dofs(
+    const DoFHandler<dim, spacedim>     &dof_handler,
+    const SearchableMaterialIdContainer &material_ids,
+    std::vector<bool>                   &selected_dofs,
+    const bool                           reset_selectors_to_false = true)
   {
     AssertDimension(selected_dofs.size(), dof_handler.n_dofs());
     types::global_dof_index effective_n_dofs = 0;
 
     if (reset_selectors_to_false)
       {
-        // preset all values by false
         std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(), false);
+      }
+    else
+      {
+        // Count the number of already selected DoFs.
+        for (auto selection_flag : selected_dofs)
+          if (selection_flag)
+            effective_n_dofs++;
       }
 
     // Global DoF indices for the current cell.
@@ -134,12 +94,7 @@ namespace DoFToolsExt
     cell_dof_indices.reserve(
       dof_handler.get_fe_collection().max_dofs_per_cell());
 
-    // this function is similar to the make_sparsity_pattern function, see
-    // there for more information
-    typename DoFHandler<dim, spacedim>::active_cell_iterator
-      cell = dof_handler.begin_active(),
-      endc = dof_handler.end();
-    for (; cell != endc; ++cell)
+    for (const auto &cell : dof_handler.active_cell_iterators())
       {
         // Find the current cell's material id in the given list.
         auto found_iter = material_ids.find(cell->material_id());
@@ -165,40 +120,59 @@ namespace DoFToolsExt
 
 
   /**
-   * Mark the DoFs in cells by excluding those DoFs in cells in the complement
-   * subdomain. The complement subdomain is specified by a set of material ids.
+   * Generate DoF selectors by excluding those DoFs in cells with material ids
+   * in the given set.
    *
-   * @return Effective number of DoFs.
+   * When the finite element is continuous, there will be DoFs with their
+   * support sets intersecting both the current material subdomain and the
+   * material subdomain to be excluded. Then the DoFs at the interface between
+   * them will not be selected.
+   *
+   * @param dof_handler
+   * @param excluded_material_ids A set of material ids to be excluded. It can
+   * also be a map with material id as its key.
+   * @param selected_dofs A vector of flags for all DoFs in the DoF handler.
+   * @param reset_selectors_to_true Whether initialize all elements in
+   * @p selected_dofs to true at the beginning. By default, this argument is
+   * true. When it is false, we can call this function multiple times and
+   * gradually deselect DoFs from <tt>selected_dofs</tt>.
+   * @return Number of selected DoFs.
    */
-  template <int dim, int spacedim>
+  template <int dim, int spacedim, typename SearchableMaterialIdContainer>
   types::global_dof_index
-  extract_material_domain_dofs_by_excluding_complement_subdomain(
-    const DoFHandler<dim, spacedim>    &dof_handler,
-    const std::set<types::material_id> &complement_subdomain_material_ids,
-    std::vector<bool>                  &selected_dofs,
-    const bool                          reset_selectors_to_true = true)
+  extract_dofs_by_excluding_material_subdomain(
+    const DoFHandler<dim, spacedim>     &dof_handler,
+    const SearchableMaterialIdContainer &excluded_material_ids,
+    std::vector<bool>                   &selected_dofs,
+    const bool                           reset_selectors_to_true = true)
   {
     AssertDimension(selected_dofs.size(), dof_handler.n_dofs());
-    types::global_dof_index effective_n_dofs = dof_handler.n_dofs();
+    types::global_dof_index effective_n_dofs = 0;
 
     if (reset_selectors_to_true)
-      // preset all values by true
-      std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(), true);
+      {
+        std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(), true);
+        effective_n_dofs = dof_handler.n_dofs();
+      }
+    else
+      {
+        // Count the number of already selected DoFs.
+        for (auto selection_flag : selected_dofs)
+          if (selection_flag)
+            effective_n_dofs++;
+      }
 
     // Global DoF indices for the current cell.
     std::vector<types::global_dof_index> cell_dof_indices;
     cell_dof_indices.reserve(
       dof_handler.get_fe_collection().max_dofs_per_cell());
 
-    // this function is similar to the make_sparsity_pattern function, see
-    // there for more information
     for (const auto &cell : dof_handler.active_cell_iterators())
       {
-        // Find the current cell's material id in the given list.
-        auto found_iter =
-          complement_subdomain_material_ids.find(cell->material_id());
+        // Find the current cell's material id in the given exclusion list.
+        auto found_iter = excluded_material_ids.find(cell->material_id());
 
-        if (found_iter != complement_subdomain_material_ids.end())
+        if (found_iter != excluded_material_ids.end())
           {
             const unsigned int dofs_per_cell = cell->get_fe().dofs_per_cell;
             cell_dof_indices.resize(dofs_per_cell);
@@ -219,34 +193,128 @@ namespace DoFToolsExt
 
 
   /**
-   * Mark the DoFs in cells on the specified level which have a material id
-   * belonging to the given collection.
+   * Generate DoF selectors by excluding those DoFs at the boundary of the
+   * material subdomain, which is specified by the given set of material ids.
    *
-   * @return Effective number of DoFs.
+   * When the finite element is continuous, such as <tt>FE_Q</tt>, the support
+   * sets of DoFs at the material subdomain boundary interset both the current
+   * material subdomain and its complement. This function will exclude these
+   * DoFs, since they appear in the complement material subdomain.
+   *
+   * When the finite element is discontinuous, such as <tt>FE_DGQ</tt>, the
+   * support sets of DoFs at the material subdomain boundary are confined within
+   * the current material subdomain. This function will still select these DoFs.
+   *
+   * @param dof_handler
+   * @param material_ids A set of material ids in the current material
+   * subdomain. It can also be a map with material id as its key.
+   * @param selected_dofs A vector of flags for all DoFs in the DoF handler.
+   * @param reset_selectors_to_true Whether initialize all elements in
+   * @p selected_dofs to true at the beginning. By default, this argument is
+   * true. When it is false, we can call this function multiple times and
+   * gradually deselect DoFs from <tt>selected_dofs</tt>.
+   * @return Number of selected DoFs.
    */
-  template <int dim, int spacedim>
+  template <int dim, int spacedim, typename SearchableMaterialIdContainer>
   types::global_dof_index
-  extract_material_domain_mg_dofs(
-    const DoFHandler<dim, spacedim>    &dof_handler,
-    const unsigned int                  level,
-    const std::set<types::material_id> &material_ids,
-    std::vector<bool>                  &selected_dofs,
-    const bool                          reset_selectors_to_false = true)
+  extract_material_subdomain_dofs_without_boundary_dofs(
+    const DoFHandler<dim, spacedim>     &dof_handler,
+    const SearchableMaterialIdContainer &material_ids,
+    std::vector<bool>                   &selected_dofs,
+    const bool                           reset_selectors_to_true = true)
   {
-    AssertDimension(selected_dofs.size(), dof_handler.n_dofs(level));
+    AssertDimension(selected_dofs.size(), dof_handler.n_dofs());
     types::global_dof_index effective_n_dofs = 0;
 
-    if (reset_selectors_to_false)
-      // preset all values by false
-      std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(level), false);
+    if (reset_selectors_to_true)
+      {
+        std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(), true);
+        effective_n_dofs = dof_handler.n_dofs();
+      }
+    else
+      {
+        // Count the number of already selected DoFs.
+        for (auto selection_flag : selected_dofs)
+          if (selection_flag)
+            effective_n_dofs++;
+      }
 
     // Global DoF indices for the current cell.
     std::vector<types::global_dof_index> cell_dof_indices;
     cell_dof_indices.reserve(
       dof_handler.get_fe_collection().max_dofs_per_cell());
 
-    // this function is similar to the make_sparsity_pattern function, see
-    // there for more information
+    for (const auto &cell : dof_handler.active_cell_iterators())
+      {
+        // Find the current cell's material id in the given list.
+        auto found_iter = material_ids.find(cell->material_id());
+
+        // When the current cell is in the complement subdomain, we exclude its
+        // DoFs.
+        if (found_iter == material_ids.end())
+          {
+            const unsigned int dofs_per_cell = cell->get_fe().dofs_per_cell;
+            cell_dof_indices.resize(dofs_per_cell);
+            cell->get_dof_indices(cell_dof_indices);
+            for (unsigned int i = 0; i < dofs_per_cell; ++i)
+              {
+                if (selected_dofs[cell_dof_indices[i]])
+                  {
+                    selected_dofs[cell_dof_indices[i]] = false;
+                    effective_n_dofs--;
+                  }
+              }
+          }
+      }
+
+    return effective_n_dofs;
+  }
+
+
+  /**
+   * Generate DoF selectors for those cells on the specified level with their
+   * material ids in the given set.
+   *
+   * @param dof_handler
+   * @param level
+   * @param material_ids A set of material ids. It can also be a map with
+   * material id as its key.
+   * @param selected_dofs A vector of flags for all DoFs in the DoF handler.
+   * @param reset_selectors_to_false Whether initialize all elements in
+   * @p selected_dofs to false at the beginning. By default, this argument is
+   * true. When it is false, we can call this function multiple times and
+   * gradually append new selection flags into <tt>selected_dofs</tt>.
+   * @return Number of selected DoFs.
+   */
+  template <int dim, int spacedim, typename SearchableMaterialIdContainer>
+  types::global_dof_index
+  extract_material_subdomain_mg_dofs(
+    const DoFHandler<dim, spacedim>     &dof_handler,
+    const unsigned int                   level,
+    const SearchableMaterialIdContainer &material_ids,
+    std::vector<bool>                   &selected_dofs,
+    const bool                           reset_selectors_to_false = true)
+  {
+    AssertDimension(selected_dofs.size(), dof_handler.n_dofs(level));
+    types::global_dof_index effective_n_dofs = 0;
+
+    if (reset_selectors_to_false)
+      {
+        std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(level), false);
+      }
+    else
+      {
+        // Count the number of already selected DoFs.
+        for (auto selection_flag : selected_dofs)
+          if (selection_flag)
+            effective_n_dofs++;
+      }
+
+    // Global DoF indices for the current cell.
+    std::vector<types::global_dof_index> cell_dof_indices;
+    cell_dof_indices.reserve(
+      dof_handler.get_fe_collection().max_dofs_per_cell());
+
     for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
       {
         // Find the current cell's material id in the given list.
@@ -273,42 +341,143 @@ namespace DoFToolsExt
 
 
   /**
-   * Mark the DoFs in cells on the specified level by excluding those DoFs in
-   * cells in the complement subdomain. The complement subdomain is specified by
-   * a set of material ids.
+   * Generate DoF selectors on the specified level by excluding those DoFs in
+   * cells with material ids in the given set.
    *
-   * @return Effective number of DoFs.
+   * When the finite element is continuous, there will be DoFs with their
+   * support sets intersecting both the current material subdomain and the
+   * complement material subdomain to be excluded. Then the DoFs at the
+   * interface between them will not be selected.
+   *
+   * @param dof_handler
+   * @param level
+   * @param excluded_material_ids A set of material ids to be excluded. It can
+   * also be a map with material id as its key.
+   * @param selected_dofs A vector of flags for all DoFs in the DoF handler.
+   * @param reset_selectors_to_true Whether initialize all elements in
+   * @p selected_dofs to true at the beginning. By default, this argument is
+   * true. When it is false, we can call this function multiple times and
+   * gradually deselect DoFs from <tt>selected_dofs</tt>.
+   * @return Number of selected DoFs.
    */
-  template <int dim, int spacedim>
+  template <int dim, int spacedim, typename SearchableMaterialIdContainer>
   types::global_dof_index
-  extract_material_domain_mg_dofs_by_excluding_complement_subdomain(
-    const DoFHandler<dim, spacedim>    &dof_handler,
-    const unsigned int                  level,
-    const std::set<types::material_id> &complement_subdomain_material_ids,
-    std::vector<bool>                  &selected_dofs,
-    const bool                          reset_selectors_to_true = true)
+  extract_mg_dofs_by_excluding_material_subdomain(
+    const DoFHandler<dim, spacedim>     &dof_handler,
+    const unsigned int                   level,
+    const SearchableMaterialIdContainer &excluded_material_ids,
+    std::vector<bool>                   &selected_dofs,
+    const bool                           reset_selectors_to_true = true)
   {
     AssertDimension(selected_dofs.size(), dof_handler.n_dofs(level));
-    types::global_dof_index effective_n_dofs = dof_handler.n_dofs(level);
+    types::global_dof_index effective_n_dofs = 0;
 
     if (reset_selectors_to_true)
-      // preset all values by true
-      std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(level), true);
+      {
+        std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(level), true);
+        effective_n_dofs = dof_handler.n_dofs(level);
+      }
+    else
+      {
+        // Count the number of already selected DoFs.
+        for (auto selection_flag : selected_dofs)
+          if (selection_flag)
+            effective_n_dofs++;
+      }
 
     // Global DoF indices for the current cell.
     std::vector<types::global_dof_index> cell_dof_indices;
     cell_dof_indices.reserve(
       dof_handler.get_fe_collection().max_dofs_per_cell());
 
-    // this function is similar to the make_sparsity_pattern function, see
-    // there for more information
+    for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
+      {
+        // Find the current cell's material id in the given exclusion list.
+        auto found_iter = excluded_material_ids.find(cell->material_id());
+
+        if (found_iter != excluded_material_ids.end())
+          {
+            const unsigned int dofs_per_cell = cell->get_fe().dofs_per_cell;
+            cell_dof_indices.resize(dofs_per_cell);
+            cell->get_mg_dof_indices(cell_dof_indices);
+            for (unsigned int i = 0; i < dofs_per_cell; ++i)
+              {
+                if (selected_dofs[cell_dof_indices[i]])
+                  {
+                    selected_dofs[cell_dof_indices[i]] = false;
+                    effective_n_dofs--;
+                  }
+              }
+          }
+      }
+
+    return effective_n_dofs;
+  }
+
+
+  /**
+   * Generate DoF selectors on the specified level by excluding those DoFs at
+   * the boundary of the material subdomain, which is specified by the given set
+   * of material ids.
+   *
+   * When the finite element is continuous, such as <tt>FE_Q</tt>, the support
+   * sets of DoFs at the material subdomain boundary interset both the current
+   * material subdomain and its complement. This function will exclude these
+   * DoFs, since they appear in the complement material subdomain.
+   *
+   * When the finite element is discontinuous, such as <tt>FE_DGQ</tt>, the
+   * support sets of DoFs at the material subdomain boundary are confined within
+   * the current material subdomain. This function will still select these DoFs.
+   *
+   * @param dof_handler
+   * @param level
+   * @param material_ids A set of material ids in the current material
+   * subdomain. It can also be a map with material id as its key.
+   * @param selected_dofs A vector of flags for all DoFs in the DoF handler.
+   * @param reset_selectors_to_true Whether initialize all elements in
+   * @p selected_dofs to true at the beginning. By default, this argument is
+   * true. When it is false, we can call this function multiple times and
+   * gradually deselect DoFs from <tt>selected_dofs</tt>.
+   * @return Number of selected DoFs.
+   */
+  template <int dim, int spacedim, typename SearchableMaterialIdContainer>
+  types::global_dof_index
+  extract_material_subdomain_mg_dofs_without_boundary_dofs(
+    const DoFHandler<dim, spacedim>     &dof_handler,
+    const unsigned int                   level,
+    const SearchableMaterialIdContainer &material_ids,
+    std::vector<bool>                   &selected_dofs,
+    const bool                           reset_selectors_to_true = true)
+  {
+    AssertDimension(selected_dofs.size(), dof_handler.n_dofs(level));
+    types::global_dof_index effective_n_dofs = 0;
+
+    if (reset_selectors_to_true)
+      {
+        std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(level), true);
+        effective_n_dofs = dof_handler.n_dofs(level);
+      }
+    else
+      {
+        // Count the number of already selected DoFs.
+        for (auto selection_flag : selected_dofs)
+          if (selection_flag)
+            effective_n_dofs++;
+      }
+
+    // Global DoF indices for the current cell.
+    std::vector<types::global_dof_index> cell_dof_indices;
+    cell_dof_indices.reserve(
+      dof_handler.get_fe_collection().max_dofs_per_cell());
+
     for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
       {
         // Find the current cell's material id in the given list.
-        auto found_iter =
-          complement_subdomain_material_ids.find(cell->material_id());
+        auto found_iter = material_ids.find(cell->material_id());
 
-        if (found_iter != complement_subdomain_material_ids.end())
+        // When the current cell is in the complement subdomain, we exclude its
+        // DoFs.
+        if (found_iter == material_ids.end())
           {
             const unsigned int dofs_per_cell = cell->get_fe().dofs_per_cell;
             cell_dof_indices.resize(dofs_per_cell);
@@ -371,121 +540,6 @@ namespace DoFToolsExt
     const std::vector<bool>              &dof_selectors,
     std::vector<types::global_dof_index> &full_to_local_map,
     std::vector<types::global_dof_index> &local_to_full_map);
-
-
-  /**
-   * @brief Generate DoF selectors for those on the boundary condition.
-   *
-   * @tparam dim
-   * @tparam spacedim
-   * @param dof_handler
-   * @param boundary_bc_definition
-   * @param selected_dofs
-   * @param reset_selectors_to_false
-   */
-  template <int dim, int spacedim, typename RangeNumberType>
-  void
-  extract_boundary_condition_dofs(
-    const DoFHandler<dim, spacedim> &dof_handler,
-    std::map<EntityTag, Function<spacedim, RangeNumberType> *>
-                      &boundary_bc_definition,
-    std::vector<bool> &selected_dofs,
-    const bool         reset_selectors_to_false = true)
-  {
-    Assert(selected_dofs.size() == dof_handler.n_dofs(),
-           ExcDimensionMismatch(selected_dofs.size(), dof_handler.n_dofs()));
-
-    if (reset_selectors_to_false)
-      {
-        // preset all values by false
-        std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(), false);
-      }
-
-    // Global DoF indices for the current cell.
-    std::vector<types::global_dof_index> cell_dof_indices;
-    cell_dof_indices.reserve(
-      dof_handler.get_fe_collection().max_dofs_per_cell());
-
-    // this function is similar to the make_sparsity_pattern function, see
-    // there for more information
-    typename DoFHandler<dim, spacedim>::active_cell_iterator
-      cell = dof_handler.begin_active(),
-      endc = dof_handler.end();
-    for (; cell != endc; ++cell)
-      {
-        // Find the current cell's material id in the given list.
-        auto found_iter = boundary_bc_definition.find(cell->material_id());
-
-        if (found_iter != boundary_bc_definition.end())
-          {
-            const unsigned int dofs_per_cell = cell->get_fe().dofs_per_cell;
-            cell_dof_indices.resize(dofs_per_cell);
-            cell->get_dof_indices(cell_dof_indices);
-            for (unsigned int i = 0; i < dofs_per_cell; ++i)
-              {
-                selected_dofs[cell_dof_indices[i]] = true;
-              }
-          }
-      }
-  }
-
-
-  template <int dim, int spacedim>
-  types::global_dof_index
-  extract_material_domain_dofs_excluding_boundary_dofs(
-    const DoFHandler<dim, spacedim>    &dof_handler,
-    const std::set<types::material_id> &boundary_cell_material_ids,
-    std::vector<bool>                  &selected_dofs)
-  {
-    AssertDimension(selected_dofs.size(), dof_handler.n_dofs());
-    types::global_dof_index effective_n_dofs = dof_handler.n_dofs();
-
-    // preset all values by true.
-    std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(), true);
-
-    std::vector<types::global_dof_index> face_dof_indices(
-      dof_handler.get_fe().dofs_per_face);
-
-    typename DoFHandler<dim, spacedim>::active_cell_iterator
-      cell = dof_handler.begin_active(),
-      endc = dof_handler.end();
-    for (; cell != endc; ++cell)
-      {
-        // Find the current cell's material id in the list of ids for the
-        // boundary cells.
-        auto found_iter = boundary_cell_material_ids.find(cell->material_id());
-
-        if (found_iter != boundary_cell_material_ids.end())
-          {
-            // Iterate over each face, which is actually a line in
-            // this case, and check if it completely lies at boundary.
-            for (unsigned int f = 0; f < GeometryInfo<dim>::faces_per_cell; f++)
-              {
-                // Get the face iterator as a @p DoFAccessor, but it
-                // should be converted to a @p CellAccessor to call
-                // @p at_boundary.
-                if (cell->at_boundary(f))
-                  {
-                    // Get the face iterator as a @p DoFCellAccessor.
-                    cell->face(f)->get_dof_indices(face_dof_indices);
-
-                    for (unsigned int d = 0;
-                         d < dof_handler.get_fe().dofs_per_face;
-                         d++)
-                      {
-                        if (selected_dofs[face_dof_indices[d]])
-                          {
-                            selected_dofs[face_dof_indices[d]] = false;
-                            effective_n_dofs--;
-                          }
-                      }
-                  }
-              }
-          }
-      }
-
-    return effective_n_dofs;
-  }
 
 
   /**
@@ -763,8 +817,8 @@ namespace DoFToolsExt
 
 
   /**
-   * Return a list of support points for DoFs in a subdomain on the specified
-   * level in the DoF handler.
+   * Return a list of support points for DoFs in a material subdomain on the
+   * specified level in the DoF handler.
    *
    * The result is a map from local DoF indices to support points, which can be
    * passed to DoFTools::write_gnuplot_dof_support_point_info for visualizing
@@ -776,7 +830,7 @@ namespace DoFToolsExt
     const Mapping<dim, spacedim>               &mapping,
     const DoFHandler<dim, spacedim>            &dof_handler,
     const unsigned int                          level,
-    const std::set<types::material_id>         &subdomain_material_ids,
+    const std::set<types::material_id>         &material_ids,
     const std::vector<bool>                    &dof_selectors,
     const std::vector<types::global_dof_index> &full_to_local_dof_id_map,
     std::map<types::global_dof_index, Point<spacedim, Number>> &support_points)
@@ -793,9 +847,9 @@ namespace DoFToolsExt
     // Iterate over each cell on the specified level.
     for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
       {
-        auto found_iter = subdomain_material_ids.find(cell->material_id());
+        auto found_iter = material_ids.find(cell->material_id());
 
-        if (found_iter != subdomain_material_ids.end())
+        if (found_iter != material_ids.end())
           {
             // Get the DoF indices in the current cell.
             cell->get_mg_dof_indices(dof_indices_in_cell);
@@ -818,8 +872,8 @@ namespace DoFToolsExt
 
 
   /**
-   * @brief Return a list of support points for DoFs in a subdomain on the
-   * specified level in the DoF handler.
+   * @brief Return a list of support points for DoFs in a material subdomain on
+   * the specified level in the DoF handler.
    *
    * The result is a vector of support points and its memory should be
    * preallocated.
@@ -838,7 +892,7 @@ namespace DoFToolsExt
     const Mapping<dim, spacedim>               &mapping,
     const DoFHandler<dim, spacedim>            &dof_handler,
     const unsigned int                          level,
-    const std::set<types::material_id>         &subdomain_material_ids,
+    const std::set<types::material_id>         &material_ids,
     const std::vector<bool>                    &dof_selectors,
     const std::vector<types::global_dof_index> &full_to_local_dof_id_map,
     std::vector<Point<spacedim, Number>>       &support_points)
@@ -853,9 +907,9 @@ namespace DoFToolsExt
     // Iterate over each cell on the specified level.
     for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
       {
-        auto found_iter = subdomain_material_ids.find(cell->material_id());
+        auto found_iter = material_ids.find(cell->material_id());
 
-        if (found_iter != subdomain_material_ids.end())
+        if (found_iter != material_ids.end())
           {
             // Get the DoF indices in the current cell.
             cell->get_mg_dof_indices(dof_indices_in_cell);
@@ -1752,7 +1806,7 @@ namespace DoFToolsExt
 
 
   /**
-   * Make sparsity pattern on subdomain for active cells.
+   * Make sparsity pattern on a material subdomain for active cells.
    *
    * The shape functions are assumed to be truncated within the subdomain, so
    * we iterate over each cell in the subdomain.
@@ -1762,7 +1816,7 @@ namespace DoFToolsExt
   make_sparsity_pattern(
     const DoFHandler<dim, spacedim>    &dof_handler_test_space,
     const DoFHandler<dim, spacedim>    &dof_handler_trial_space,
-    const std::set<types::material_id> &subdomain_material_ids,
+    const std::set<types::material_id> &material_ids,
     const std::vector<bool>            &dof_selectors_test_space,
     const std::vector<types::global_dof_index>
                             &full_to_local_dof_id_map_test_space,
@@ -1777,9 +1831,8 @@ namespace DoFToolsExt
     for (; cell_test_space != dof_handler_test_space.end();
          cell_test_space++, cell_trial_space++)
       {
-        auto found_iter =
-          subdomain_material_ids.find(cell_test_space->material_id());
-        if (found_iter != subdomain_material_ids.end())
+        auto found_iter = material_ids.find(cell_test_space->material_id());
+        if (found_iter != material_ids.end())
           {
             const unsigned int dofs_per_cell_test_space =
               cell_test_space->get_fe().n_dofs_per_cell();

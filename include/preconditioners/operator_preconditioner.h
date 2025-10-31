@@ -42,6 +42,7 @@
 #include <deal.II/lac/vector_operations_internal.h>
 
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <set>
 #include <string>
@@ -103,8 +104,6 @@ public:
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering_,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering_,
     const std::set<types::material_id>         &subdomain_material_ids_ =
-      std::set<types::material_id>(),
-    const std::set<types::material_id> &subdomain_complement_material_ids_ =
       std::set<types::material_id>(),
     const bool is_full_domain_                                       = true,
     const bool is_subdomain_open_                                    = false,
@@ -679,12 +678,6 @@ protected:
    */
   std::set<types::material_id> subdomain_material_ids;
 
-  /**
-   * A set of material ids in the complement of the subdomain. When
-   * @p is_full_domain is true, this set is empty.
-   */
-  std::set<types::material_id> subdomain_complement_material_ids;
-
   // DoF selectors
   std::vector<bool> primal_space_dof_selectors_on_primal_mesh;
   std::vector<bool> primal_space_dof_selectors_on_refined_mesh;
@@ -871,9 +864,8 @@ OperatorPreconditioner<dim,
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering_,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering_,
     const std::set<types::material_id>         &subdomain_material_ids_,
-    const std::set<types::material_id> &subdomain_complement_material_ids_,
-    const bool                          is_full_domain_,
-    const bool                          is_subdomain_open_,
+    const bool                                  is_full_domain_,
+    const bool                                  is_subdomain_open_,
     const bool         truncate_function_space_dof_support_within_subdomain_,
     const unsigned int max_iter,
     const real_type    tol,
@@ -889,7 +881,6 @@ OperatorPreconditioner<dim,
   , truncate_function_space_dof_support_within_subdomain(
       truncate_function_space_dof_support_within_subdomain_)
   , subdomain_material_ids(subdomain_material_ids_)
-  , subdomain_complement_material_ids(subdomain_complement_material_ids_)
   , primal_space_dof_i2e_numbering(primal_space_dof_i2e_numbering_)
   , primal_space_dof_e2i_numbering(primal_space_dof_e2i_numbering_)
   , fe_primal_space(fe_primal_space_)
@@ -1340,29 +1331,28 @@ OperatorPreconditioner<dim,
   if (is_subdomain_open && dof_handler_primal_space.get_fe().conforms(
                              FiniteElementData<dim>::Conformity::H1))
     {
-      // Select DoFs by excluding those in complement subdomain.
-      DoFToolsExt::
-        extract_material_domain_mg_dofs_by_excluding_complement_subdomain(
-          dof_handler_primal_space,
-          primal_mesh_level,
-          subdomain_complement_material_ids,
-          primal_space_dof_selectors_on_primal_mesh);
-      DoFToolsExt::
-        extract_material_domain_mg_dofs_by_excluding_complement_subdomain(
-          dof_handler_primal_space,
-          refined_mesh_level,
-          subdomain_complement_material_ids,
-          primal_space_dof_selectors_on_refined_mesh);
-    }
-  else
-    {
-      // Select DoFs in the subdomain.
-      DoFToolsExt::extract_material_domain_mg_dofs(
+      // When the material subdomain is open and the finite element is @p H1
+      // conforming, deselect DoFs at its boundary.
+      DoFToolsExt::extract_material_subdomain_mg_dofs_without_boundary_dofs(
         dof_handler_primal_space,
         primal_mesh_level,
         subdomain_material_ids,
         primal_space_dof_selectors_on_primal_mesh);
-      DoFToolsExt::extract_material_domain_mg_dofs(
+      DoFToolsExt::extract_material_subdomain_mg_dofs_without_boundary_dofs(
+        dof_handler_primal_space,
+        refined_mesh_level,
+        subdomain_material_ids,
+        primal_space_dof_selectors_on_refined_mesh);
+    }
+  else
+    {
+      // Select all DoFs in the material subdomain.
+      DoFToolsExt::extract_material_subdomain_mg_dofs(
+        dof_handler_primal_space,
+        primal_mesh_level,
+        subdomain_material_ids,
+        primal_space_dof_selectors_on_primal_mesh);
+      DoFToolsExt::extract_material_subdomain_mg_dofs(
         dof_handler_primal_space,
         refined_mesh_level,
         subdomain_material_ids,
@@ -1372,18 +1362,18 @@ OperatorPreconditioner<dim,
   if (is_subdomain_open && dof_handler_dual_space.get_fe().conforms(
                              FiniteElementData<dim>::Conformity::H1))
     {
-      // Select DoFs by excluding those in complement subdomain.
-      DoFToolsExt::
-        extract_material_domain_mg_dofs_by_excluding_complement_subdomain(
-          dof_handler_dual_space,
-          refined_mesh_level,
-          subdomain_complement_material_ids,
-          dual_space_dof_selectors_on_refined_mesh);
+      // When the material subdomain is open and the finite element is @p H1
+      // conforming, deselect DoFs at its boundary.
+      DoFToolsExt::extract_material_subdomain_mg_dofs_without_boundary_dofs(
+        dof_handler_dual_space,
+        refined_mesh_level,
+        subdomain_material_ids,
+        dual_space_dof_selectors_on_refined_mesh);
     }
   else
     {
-      // Select DoFs in the subdomain.
-      DoFToolsExt::extract_material_domain_mg_dofs(
+      // Select all DoFs in the material subdomain.
+      DoFToolsExt::extract_material_subdomain_mg_dofs(
         dof_handler_dual_space,
         refined_mesh_level,
         subdomain_material_ids,

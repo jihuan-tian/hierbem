@@ -56,16 +56,15 @@ unsigned int
 count_number_of_nodes_in_neumann_boundary(
   const FiniteElement<2, 3>          &fe,
   const Triangulation<2, 3>          &tria,
-  const std::set<types::material_id> &complement_subdomain_material_ids)
+  const std::set<types::material_id> &subdomain_material_ids)
 {
   DoFHandler<2, 3> dof_handler(tria);
   dof_handler.distribute_dofs(fe);
   dof_handler.distribute_mg_dofs();
 
   std::vector<bool> dof_selectors(dof_handler.n_dofs(0));
-  return DoFToolsExt::
-    extract_material_domain_mg_dofs_by_excluding_complement_subdomain(
-      dof_handler, 0, complement_subdomain_material_ids, dof_selectors);
+  return DoFToolsExt::extract_material_subdomain_mg_dofs_without_boundary_dofs(
+    dof_handler, 0, subdomain_material_ids, dof_selectors);
 }
 
 void
@@ -189,11 +188,11 @@ run_op_precond_hmatrix_for_neumann()
   // DoF numberings is not needed. Therefore, we pass a dummy numbering to the
   // preconditioner's constructor. Its size is initialized to the number of
   // cells having material id 1.
-  std::set<types::material_id>  subdomain_material_ids            = {2};
-  std::set<types::material_id>  complement_subdomain_material_ids = {1};
+  std::set<types::material_id>  subdomain_material_ids = {2};
   const types::global_dof_index n_selected_dofs =
-    count_number_of_nodes_in_neumann_boundary(
-      fe_primal_space, tria, complement_subdomain_material_ids);
+    count_number_of_nodes_in_neumann_boundary(fe_primal_space,
+                                              tria,
+                                              subdomain_material_ids);
   deallog << "Number of selected DoFs: " << n_selected_dofs << std::endl;
   std::vector<types::global_dof_index> dummy_numbering(n_selected_dofs);
   PreconditionerForLaplaceNeumann<dim, spacedim, double, double> precond(
@@ -202,8 +201,7 @@ run_op_precond_hmatrix_for_neumann()
     tria,
     dummy_numbering,
     dummy_numbering,
-    subdomain_material_ids,
-    complement_subdomain_material_ids);
+    subdomain_material_ids);
 
   setup_preconditioner(precond);
 
