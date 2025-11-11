@@ -68,8 +68,6 @@ template <int spacedim>
 class ClusterTreeBuilder
 {
 public:
-  ClusterTreeBuilder() = delete;
-
   template <int dim>
   ClusterTreeBuilder(const Mapping<dim, spacedim>    &mapping,
                      const DoFHandler<dim, spacedim> &dof_handler,
@@ -166,22 +164,19 @@ template <int dim, int spacedim>
 class BEMFunctionSpace
 {
 public:
-  BEMFunctionSpace() = delete;
-
-  BEMFunctionSpace(
-    const std::shared_ptr<DoFHandler<dim, spacedim>> &_dof_handler,
-    const unsigned int                                n_min);
+  BEMFunctionSpace(const DoFHandler<dim, spacedim> &dof_handler_,
+                   const unsigned int               n_min);
 
   DoFHandler<dim, spacedim> &
   get_dof_handler()
   {
-    return *dof_handler;
+    return dof_handler;
   }
 
   const DoFHandler<dim, spacedim> &
   get_dof_handler() const
   {
-    return *dof_handler;
+    return dof_handler;
   }
 
   ClusterTree<spacedim> &
@@ -272,10 +267,7 @@ private:
   void
   build_dof_to_cell_topology();
 
-  // A DoF handler can be used by different function spaces, since a same finite
-  // element can be defined on different triangulations or on different
-  // subdomain of a triangulation.
-  std::shared_ptr<DoFHandler<dim, spacedim>>    dof_handler;
+  const DoFHandler<dim, spacedim>              &dof_handler;
   std::unique_ptr<ClusterTree<spacedim>>        cluster_tree;
   std::unique_ptr<ClusterTreeBuilder<spacedim>> cluster_tree_builder;
   std::vector<typename DoFHandler<dim, spacedim>::cell_iterator> cell_iterators;
@@ -285,13 +277,13 @@ private:
 
 template <int dim, int spacedim>
 BEMFunctionSpace<dim, spacedim>::BEMFunctionSpace(
-  const std::shared_ptr<DoFHandler<dim, spacedim>> &_dof_handler,
-  const unsigned int                                n_min)
-  : dof_handler(_dof_handler)
+  const DoFHandler<dim, spacedim> &dof_handler_,
+  const unsigned int               n_min)
+  : dof_handler(dof_handler_)
 {
   cluster_tree_builder =
     std::make_unique<ClusterTreeBuilder<spacedim>>(MappingQ<dim, spacedim>(1),
-                                                   *dof_handler,
+                                                   dof_handler,
                                                    n_min);
   cluster_tree = cluster_tree_builder->build();
 
@@ -303,12 +295,12 @@ template <int dim, int spacedim>
 void
 BEMFunctionSpace<dim, spacedim>::build_dof_to_cell_topology()
 {
-  cell_iterators.reserve(dof_handler->get_triangulation().n_active_cells());
-  for (const auto &cell : dof_handler->active_cell_iterators())
+  cell_iterators.reserve(dof_handler.get_triangulation().n_active_cells());
+  for (const auto &cell : dof_handler.active_cell_iterators())
     cell_iterators.push_back(cell);
   DoFToolsExt::build_dof_to_cell_topology(dof_to_cell_topo,
                                           cell_iterators,
-                                          *dof_handler);
+                                          dof_handler);
 }
 
 
@@ -317,13 +309,10 @@ template <int dim, int spacedim>
 class BEMBilinearForm
 {
 public:
-  BEMBilinearForm() = delete;
-
   // As a convention, the trial space is placed before the test space when we
   // define a bilinear form.
-  BEMBilinearForm(
-    const std::shared_ptr<BEMFunctionSpace<dim, spacedim>> &_trial_space,
-    const std::shared_ptr<BEMFunctionSpace<dim, spacedim>> &_test_space);
+  BEMBilinearForm(const BEMFunctionSpace<dim, spacedim> &trial_space_,
+                  const BEMFunctionSpace<dim, spacedim> &test_space_);
 
   // @param eta Admissibility constant. Englaring this parameter will make more
   // leaf nodes of the block cluster tree be far field.
@@ -377,25 +366,25 @@ public:
   ClusterTree<spacedim> &
   get_cluster_tree_trial_space()
   {
-    return trial_space->get_cluster_tree();
+    return trial_space.get_cluster_tree();
   }
 
   const ClusterTree<spacedim> &
   get_cluster_tree_trial_space() const
   {
-    return trial_space->get_cluster_tree();
+    return trial_space.get_cluster_tree();
   }
 
   ClusterTree<spacedim> &
   get_cluster_tree_test_space()
   {
-    return test_space->get_cluster_tree();
+    return test_space.get_cluster_tree();
   }
 
   const ClusterTree<spacedim> &
   get_cluster_tree_test_space() const
   {
-    return test_space->get_cluster_tree();
+    return test_space.get_cluster_tree();
   }
 
   BlockClusterTree<spacedim> &
@@ -411,18 +400,18 @@ public:
   }
 
 private:
-  std::shared_ptr<BEMFunctionSpace<dim, spacedim>> trial_space;
-  std::shared_ptr<BEMFunctionSpace<dim, spacedim>> test_space;
-  std::unique_ptr<BlockClusterTree<spacedim>>      block_cluster_tree;
+  const BEMFunctionSpace<dim, spacedim>      &trial_space;
+  const BEMFunctionSpace<dim, spacedim>      &test_space;
+  std::unique_ptr<BlockClusterTree<spacedim>> block_cluster_tree;
 };
 
 
 template <int dim, int spacedim>
 BEMBilinearForm<dim, spacedim>::BEMBilinearForm(
-  const std::shared_ptr<BEMFunctionSpace<dim, spacedim>> &_trial_space,
-  const std::shared_ptr<BEMFunctionSpace<dim, spacedim>> &_test_space)
-  : trial_space(_trial_space)
-  , test_space(_test_space)
+  const BEMFunctionSpace<dim, spacedim> &trial_space_,
+  const BEMFunctionSpace<dim, spacedim> &test_space_)
+  : trial_space(trial_space_)
+  , test_space(test_space_)
 {}
 
 
@@ -436,17 +425,14 @@ BEMBilinearForm<dim, spacedim>::build_block_cluster_tree(
   // space, since the test space is related to matrix rows, while the trial
   // space is related to matrix columns.
   block_cluster_tree = std::make_unique<BlockClusterTree<spacedim>>(
-    test_space->get_cluster_tree(),
-    trial_space->get_cluster_tree(),
-    eta,
-    n_min);
+    test_space.get_cluster_tree(), trial_space.get_cluster_tree(), eta, n_min);
   block_cluster_tree->partition(
-    test_space->get_internal_to_external_dof_numbering(),
-    trial_space->get_internal_to_external_dof_numbering(),
-    test_space->get_support_points(),
-    trial_space->get_support_points(),
-    test_space->get_dof_average_cell_size(),
-    trial_space->get_dof_average_cell_size());
+    test_space.get_internal_to_external_dof_numbering(),
+    trial_space.get_internal_to_external_dof_numbering(),
+    test_space.get_support_points(),
+    trial_space.get_support_points(),
+    test_space.get_dof_average_cell_size(),
+    trial_space.get_dof_average_cell_size());
 }
 
 
@@ -487,15 +473,15 @@ BEMBilinearForm<dim, spacedim>::build_hmatrix(
     ACAConfig(max_rank, epsilon, block_cluster_tree->get_eta()),
     kernel,
     kernel_factor,
-    test_space->get_dof_to_cell_topo(),
-    trial_space->get_dof_to_cell_topo(),
+    test_space.get_dof_to_cell_topo(),
+    trial_space.get_dof_to_cell_topo(),
     sauter_quad_rule,
-    test_space->get_dof_handler(),
-    trial_space->get_dof_handler(),
+    test_space.get_dof_handler(),
+    trial_space.get_dof_handler(),
     nullptr,
     nullptr,
-    test_space->get_internal_to_external_dof_numbering(),
-    trial_space->get_internal_to_external_dof_numbering(),
+    test_space.get_internal_to_external_dof_numbering(),
+    trial_space.get_internal_to_external_dof_numbering(),
     mappings,
     material_id_to_mapping_index,
     SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
@@ -546,16 +532,16 @@ BEMBilinearForm<dim, spacedim>::build_hmatrix_with_mass_matrix(
     kernel,
     kernel_factor,
     mass_matrix_factor,
-    test_space->get_dof_to_cell_topo(),
-    trial_space->get_dof_to_cell_topo(),
+    test_space.get_dof_to_cell_topo(),
+    trial_space.get_dof_to_cell_topo(),
     sauter_quad_rule,
     mass_matrix_quad_rule,
-    test_space->get_dof_handler(),
-    trial_space->get_dof_handler(),
+    test_space.get_dof_handler(),
+    trial_space.get_dof_handler(),
     nullptr,
     nullptr,
-    test_space->get_internal_to_external_dof_numbering(),
-    trial_space->get_internal_to_external_dof_numbering(),
+    test_space.get_internal_to_external_dof_numbering(),
+    trial_space.get_internal_to_external_dof_numbering(),
     mappings,
     material_id_to_mapping_index,
     SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
@@ -638,22 +624,18 @@ main()
 
   // Create a continuous Lagrangian finite element and a DoF handler for the
   // Sobolev space \f$H^{1/2}(\Gamma)\f$.
-  FE_Q<dim, spacedim> fe_H_half(1);
-  auto dof_handler_H_half = std::make_shared<DoFHandler<dim, spacedim>>(tria);
-  dof_handler_H_half->distribute_dofs(fe_H_half);
-  auto H_half =
-    std::make_shared<BEMFunctionSpace<dim, spacedim>>(dof_handler_H_half,
-                                                      n_min_H_half);
+  FE_Q<dim, spacedim>       fe_H_half(1);
+  DoFHandler<dim, spacedim> dof_handler_H_half(tria);
+  dof_handler_H_half.distribute_dofs(fe_H_half);
+  BEMFunctionSpace<dim, spacedim> H_half(dof_handler_H_half, n_min_H_half);
 
   // Create a discontinuous Lagrangian finite element and a DoF handler for the
   // Sobolev space \f$H^{-1/2}(\Gamma)\f$ space.
-  FE_DGQ<dim, spacedim> fe_H_minus_half(0);
-  auto                  dof_handler_H_minus_half =
-    std::make_shared<DoFHandler<dim, spacedim>>(tria);
-  dof_handler_H_minus_half->distribute_dofs(fe_H_minus_half);
-  auto H_minus_half =
-    std::make_shared<BEMFunctionSpace<dim, spacedim>>(dof_handler_H_minus_half,
-                                                      n_min_H_minus_half);
+  FE_DGQ<dim, spacedim>     fe_H_minus_half(0);
+  DoFHandler<dim, spacedim> dof_handler_H_minus_half(tria);
+  dof_handler_H_minus_half.distribute_dofs(fe_H_minus_half);
+  BEMFunctionSpace<dim, spacedim> H_minus_half(dof_handler_H_minus_half,
+                                               n_min_H_minus_half);
 
   // Create a bilinear form \f$b_V: H^{-1/2}(\Gamma)\times H^{-1/2}(\Gamma)
   // \rightarrow \mathbb{R}\f$ for the single layer potential operator \f$V\f$.

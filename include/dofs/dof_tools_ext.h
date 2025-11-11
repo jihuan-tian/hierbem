@@ -1607,6 +1607,58 @@ namespace DoFToolsExt
 
 
   /**
+   * @brief Build the topology for "DoF support point-to-cell" relation. Only
+   * selected DoFs are considered.
+   *
+   * @tparam dim
+   * @tparam spacedim
+   * @param dof_to_cell_topo The result is returned in this object of type
+   * @p DoFToCellTopology, which also stores the maximum number of cells
+   * associated with a DoF.
+   * @param cell_iterators_in_dof_handler
+   * @param dof_handler
+   * @param dof_selectors
+   * @param fe_index
+   */
+  template <int dim, int spacedim>
+  void
+  build_dof_to_cell_topology(
+    DoFToCellTopology<dim, spacedim> &dof_to_cell_topo,
+    const std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
+                                    &cell_iterators_in_dof_handler,
+    const DoFHandler<dim, spacedim> &dof_handler,
+    const std::vector<bool>         &dof_selectors,
+    const unsigned int               fe_index = 0)
+  {
+    const types::global_dof_index        n_dofs = dof_handler.n_dofs();
+    const FiniteElement<dim, spacedim>  &fe     = dof_handler.get_fe(fe_index);
+    const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
+    std::vector<types::global_dof_index> cell_full_dof_indices(dofs_per_cell);
+
+    dof_to_cell_topo.topology.resize(n_dofs);
+    dof_to_cell_topo.max_cells_per_dof = 0;
+
+    for (const auto &cell : cell_iterators_in_dof_handler)
+      {
+        cell->get_dof_indices(cell_full_dof_indices);
+        for (auto dof_index : cell_full_dof_indices)
+          {
+            if (dof_selectors[dof_index])
+              dof_to_cell_topo.topology[dof_index].push_back(&cell);
+          }
+      }
+
+    for (const auto &dof_to_cells : dof_to_cell_topo.topology)
+      {
+        if (dof_to_cells.size() > dof_to_cell_topo.max_cells_per_dof)
+          {
+            dof_to_cell_topo.max_cells_per_dof = dof_to_cells.size();
+          }
+      }
+  }
+
+
+  /**
    * @brief Build the topology for "DoF support point-to-cell" relation. The
    * DoFs are on a specific level in the multigrid.
    *
