@@ -9,12 +9,13 @@
 // file LICENSE at the top level directory of HierBEM.
 
 /**
- * @file build-hmatrix.cu
- * @brief Example for building an H-matrix.
+ * @file build-hmatrix-on-subdomain.cu
+ * @brief Example for building an H-matrix on a subdomain which is specified by
+ * a set of material ids.
  *
  * @ingroup examples
  * @author Jihuan Tian
- * @date 2025-10-23
+ * @date 2025-11-04
  */
 
 #include <deal.II/base/exceptions.h>
@@ -28,12 +29,15 @@
 
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
-#include <deal.II/fe/mapping.h>
 #include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/grid/manifold.h>
 #include <deal.II/grid/manifold_lib.h>
 #include <deal.II/grid/tria.h>
+
+#include <deal.II/lac/vector.h>
+
+#include <deal.II/numerics/data_out.h>
 
 #include <cuda_runtime.h>
 
@@ -41,6 +45,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <set>
 #include <vector>
 
 #include "cad_mesh/gmsh_manipulation.h"
@@ -58,20 +63,32 @@
 #include "mapping/mapping_info.h"
 #include "platform_shared/laplace_kernels.h"
 #include "quadrature/sauter_quadrature_tools.h"
+#include "utilities/generic_functors.h"
 #include "utilities/number_traits.h"
+#include "utilities/unary_template_arg_containers.h"
 
 using namespace dealii;
 using namespace HierBEM;
 
 // Builder class for cluster tree.
+//
+// Here we only use the first order mapping for extracting coordinates of DoF
+// support points, which is good enough.
 template <int spacedim>
 class ClusterTreeBuilder
 {
 public:
+  // Create a builder for constructing a cluster tree on the whole domain.
   template <int dim>
-  ClusterTreeBuilder(const Mapping<dim, spacedim>    &mapping,
-                     const DoFHandler<dim, spacedim> &dof_handler,
-                     const unsigned int               _n_min);
+  ClusterTreeBuilder(const DoFHandler<dim, spacedim> &dof_handler,
+                     const unsigned int               n_min_);
+
+  // Create a builder for constructing a cluster tree on a material subdomain.
+  template <int dim>
+  ClusterTreeBuilder(
+    const DoFHandler<dim, spacedim>            &dof_handler,
+    const std::vector<types::global_dof_index> &local_to_full_dof_id_map,
+    const unsigned int                          n_min_);
 
   // Build a cluster tree and return it as a unique smart pointer, since it will
   // be associated with a unique function space.
@@ -120,10 +137,9 @@ private:
 template <int spacedim>
 template <int dim>
 ClusterTreeBuilder<spacedim>::ClusterTreeBuilder(
-  const Mapping<dim, spacedim>    &mapping,
   const DoFHandler<dim, spacedim> &dof_handler,
-  const unsigned int               _n_min)
-  : n_min(_n_min)
+  const unsigned int               n_min_)
+  : n_min(n_min_)
 {
   Assert(dof_handler.get_fe().has_support_points(), ExcInternalError());
 
@@ -131,16 +147,48 @@ ClusterTreeBuilder<spacedim>::ClusterTreeBuilder(
 
   // Get the coordinates for all support points.
   support_points.resize(n_dofs);
-  DoFTools::map_dofs_to_support_points(mapping, dof_handler, support_points);
+  DoFTools::map_dofs_to_support_points(MappingQ<dim, spacedim>(1),
+                                       dof_handler,
+                                       support_points);
 
   // Generate a list of DoF indices starting from zero.
   dof_indices.resize(n_dofs);
-  for (types::global_dof_index d = 0; d < n_dofs; d++)
-    dof_indices[d] = d;
+  gen_linear_indices<vector_uta, types::global_dof_index>(dof_indices);
 
   // Calculate the average mesh cell size at each support point.
   dof_average_cell_size.assign(n_dofs, 0);
   DoFToolsExt::map_dofs_to_average_cell_size(dof_handler,
+                                             dof_average_cell_size);
+}
+
+
+template <int spacedim>
+template <int dim>
+ClusterTreeBuilder<spacedim>::ClusterTreeBuilder(
+  const DoFHandler<dim, spacedim>            &dof_handler,
+  const std::vector<types::global_dof_index> &local_to_full_dof_id_map,
+  const unsigned int                          n_min_)
+  : n_min(n_min_)
+{
+  Assert(dof_handler.get_fe().has_support_points(), ExcInternalError());
+
+  const types::global_dof_index n_dofs = local_to_full_dof_id_map.size();
+
+  // Get the coordinates for all support points in the material subdomain.
+  support_points.resize(n_dofs);
+  DoFToolsExt::map_dofs_to_support_points(MappingQ<dim, spacedim>(1),
+                                          dof_handler,
+                                          local_to_full_dof_id_map,
+                                          support_points);
+
+  // Generate a list of DoF indices starting from zero.
+  dof_indices.resize(n_dofs);
+  gen_linear_indices<vector_uta, types::global_dof_index>(dof_indices);
+
+  // Calculate the average mesh cell size at each support point.
+  dof_average_cell_size.assign(n_dofs, 0);
+  DoFToolsExt::map_dofs_to_average_cell_size(dof_handler,
+                                             local_to_full_dof_id_map,
                                              dof_average_cell_size);
 }
 
@@ -164,8 +212,16 @@ template <int dim, int spacedim>
 class BEMFunctionSpace
 {
 public:
+  // Construct a function space on the whole domain.
   BEMFunctionSpace(const DoFHandler<dim, spacedim> &dof_handler_,
                    const unsigned int               n_min);
+
+  // Construct a function space on a material subdomain.
+  BEMFunctionSpace(const DoFHandler<dim, spacedim>    &dof_handler_,
+                   const unsigned int                  n_min,
+                   const std::set<types::material_id> &material_ids_,
+                   const bool include_boundary_dofs_      = true,
+                   const bool limit_support_in_subdomain_ = false);
 
   DoFHandler<dim, spacedim> &
   get_dof_handler()
@@ -177,6 +233,18 @@ public:
   get_dof_handler() const
   {
     return dof_handler;
+  }
+
+  std::vector<bool> &
+  get_dof_selectors()
+  {
+    return dof_selectors;
+  }
+
+  const std::vector<bool> &
+  get_dof_selectors() const
+  {
+    return dof_selectors;
   }
 
   ClusterTree<spacedim> &
@@ -263,15 +331,62 @@ public:
     return dof_to_cell_topo;
   }
 
+  std::vector<types::global_dof_index> &
+  get_local_to_full_dof_id_map()
+  {
+    return local_to_full_dof_id_map;
+  }
+
+  const std::vector<types::global_dof_index> &
+  get_local_to_full_dof_id_map() const
+  {
+    return local_to_full_dof_id_map;
+  }
+
 private:
+  void
+  generate_dof_selectors();
+
+  // Collect cell iterators which are associated with the selected DoFs.
+  void
+  collect_cell_iterators();
+
+  // The full DoF indices are the natural indices (starting from zero) for all
+  // DoFs in the DoF handler. The local DoF indices are for selected DoFs.
+  void
+  generate_maps_between_full_and_local_dof_ids();
+
   void
   build_dof_to_cell_topology();
 
-  const DoFHandler<dim, spacedim>              &dof_handler;
+  const DoFHandler<dim, spacedim> &dof_handler;
+
+  // Whether the function space is constructed on the whole domain.
+  bool is_full_domain;
+  // Whether DoFs at the interface with other material subdomains are selected.
+  bool include_boundary_dofs;
+  // Whether limit the support of DoFs at the interface with other material
+  // subdomains within the current subdomain. This flag influences the
+  // construction of DoF-to-cell topology.
+  bool limit_support_in_subdomain;
+
+  // The set of material ids for the spatial domain on which the function is
+  // constructed. When it is an empty set, the function space is on the whole
+  // triangulation and the flag @p is_full_domain is true.
+  std::set<types::material_id> material_ids;
+  // A vector of flags indicating selected DoFs for the function space. It is
+  // only used when @p is_full_domain is false. The size of this vector is the
+  // total number of DoFs in the DoF handler.
+  std::vector<bool> dof_selectors;
+  // Number of selected DoFs.
+  types::global_dof_index n_dofs;
+  // List of cell iterators which are associated the selected DoFs.
+  std::vector<typename DoFHandler<dim, spacedim>::cell_iterator> cell_iterators;
+  std::vector<types::global_dof_index>          full_to_local_dof_id_map;
+  std::vector<types::global_dof_index>          local_to_full_dof_id_map;
+  DoFToCellTopology<dim, spacedim>              dof_to_cell_topo;
   std::unique_ptr<ClusterTree<spacedim>>        cluster_tree;
   std::unique_ptr<ClusterTreeBuilder<spacedim>> cluster_tree_builder;
-  std::vector<typename DoFHandler<dim, spacedim>::cell_iterator> cell_iterators;
-  DoFToCellTopology<dim, spacedim> dof_to_cell_topo;
 };
 
 
@@ -280,10 +395,38 @@ BEMFunctionSpace<dim, spacedim>::BEMFunctionSpace(
   const DoFHandler<dim, spacedim> &dof_handler_,
   const unsigned int               n_min)
   : dof_handler(dof_handler_)
+  , is_full_domain(true)
+  , include_boundary_dofs(true)
+  , limit_support_in_subdomain(false)
+  , n_dofs(dof_handler.n_dofs())
 {
   cluster_tree_builder =
-    std::make_unique<ClusterTreeBuilder<spacedim>>(MappingQ<dim, spacedim>(1),
-                                                   dof_handler,
+    std::make_unique<ClusterTreeBuilder<spacedim>>(dof_handler, n_min);
+  cluster_tree = cluster_tree_builder->build();
+
+  build_dof_to_cell_topology();
+}
+
+
+template <int dim, int spacedim>
+BEMFunctionSpace<dim, spacedim>::BEMFunctionSpace(
+  const DoFHandler<dim, spacedim>    &dof_handler_,
+  const unsigned int                  n_min,
+  const std::set<types::material_id> &material_ids_,
+  const bool                          include_boundary_dofs_,
+  const bool                          limit_support_in_subdomain_)
+  : dof_handler(dof_handler_)
+  , is_full_domain(false)
+  , include_boundary_dofs(include_boundary_dofs_)
+  , limit_support_in_subdomain(limit_support_in_subdomain_)
+  , material_ids(material_ids_)
+{
+  generate_dof_selectors();
+  generate_maps_between_full_and_local_dof_ids();
+
+  cluster_tree_builder =
+    std::make_unique<ClusterTreeBuilder<spacedim>>(dof_handler,
+                                                   local_to_full_dof_id_map,
                                                    n_min);
   cluster_tree = cluster_tree_builder->build();
 
@@ -293,14 +436,83 @@ BEMFunctionSpace<dim, spacedim>::BEMFunctionSpace(
 
 template <int dim, int spacedim>
 void
-BEMFunctionSpace<dim, spacedim>::build_dof_to_cell_topology()
+BEMFunctionSpace<dim, spacedim>::generate_dof_selectors()
+{
+  dof_selectors.resize(dof_handler.n_dofs());
+
+  if (include_boundary_dofs)
+    n_dofs = DoFToolsExt::extract_material_subdomain_dofs(dof_handler,
+                                                          material_ids,
+                                                          dof_selectors);
+  else
+    n_dofs = DoFToolsExt::extract_material_subdomain_dofs_without_boundary_dofs(
+      dof_handler, material_ids, dof_selectors);
+}
+
+
+template <int dim, int spacedim>
+void
+BEMFunctionSpace<dim, spacedim>::generate_maps_between_full_and_local_dof_ids()
+{
+  // Vector length initialized to the number of all DoFs in the DoF handler.
+  full_to_local_dof_id_map.resize(dof_handler.n_dofs());
+  // Vector length initialized to the selected number of DoFs.
+  local_to_full_dof_id_map.resize(n_dofs);
+
+  types::global_dof_index local_i = 0;
+  for (types::global_dof_index i = 0; i < dof_selectors.size(); i++)
+    {
+      if (dof_selectors[i])
+        {
+          local_to_full_dof_id_map[local_i] = i;
+          full_to_local_dof_id_map[i]       = local_i;
+          local_i++;
+        }
+    }
+}
+
+
+template <int dim, int spacedim>
+void
+BEMFunctionSpace<dim, spacedim>::collect_cell_iterators()
 {
   cell_iterators.reserve(dof_handler.get_triangulation().n_active_cells());
-  for (const auto &cell : dof_handler.active_cell_iterators())
-    cell_iterators.push_back(cell);
-  DoFToolsExt::build_dof_to_cell_topology(dof_to_cell_topo,
-                                          cell_iterators,
-                                          dof_handler);
+
+  if (is_full_domain || !limit_support_in_subdomain)
+    {
+      for (const auto &cell : dof_handler.active_cell_iterators())
+        cell_iterators.push_back(cell);
+    }
+  else if (limit_support_in_subdomain)
+    {
+      // When the support of DoFs are limited within the subdomain, only the
+      // cells with material ids belonging to the subdomain are collected.
+      for (const auto &cell : dof_handler.active_cell_iterators())
+        {
+          auto found_iter = material_ids.find(cell->material_id());
+
+          if (found_iter != material_ids.end())
+            cell_iterators.push_back(cell);
+        }
+    }
+}
+
+
+template <int dim, int spacedim>
+void
+BEMFunctionSpace<dim, spacedim>::build_dof_to_cell_topology()
+{
+  collect_cell_iterators();
+
+  if (is_full_domain)
+    DoFToolsExt::build_dof_to_cell_topology(dof_to_cell_topo,
+                                            cell_iterators,
+                                            dof_handler);
+  else
+    DoFToolsExt::build_dof_to_cell_topology(dof_to_cell_topo,
+                                            cell_iterators,
+                                            dof_handler,
+                                            dof_selectors);
 }
 
 
@@ -492,8 +704,8 @@ BEMBilinearForm<dim, spacedim>::build_hmatrix(
     sauter_quad_rule,
     test_space.get_dof_handler(),
     trial_space.get_dof_handler(),
-    nullptr,
-    nullptr,
+    &test_space.get_local_to_full_dof_id_map(),
+    &trial_space.get_local_to_full_dof_id_map(),
     test_space.get_internal_to_external_dof_numbering(),
     trial_space.get_internal_to_external_dof_numbering(),
     mappings,
@@ -555,8 +767,8 @@ BEMBilinearForm<dim, spacedim>::build_hmatrix_with_mass_matrix(
     mass_matrix_quad_rule,
     test_space.get_dof_handler(),
     trial_space.get_dof_handler(),
-    nullptr,
-    nullptr,
+    &test_space.get_local_to_full_dof_id_map(),
+    &trial_space.get_local_to_full_dof_id_map(),
     test_space.get_internal_to_external_dof_numbering(),
     trial_space.get_internal_to_external_dof_numbering(),
     mappings,
@@ -565,6 +777,36 @@ BEMBilinearForm<dim, spacedim>::build_hmatrix_with_mass_matrix(
     is_hmat_symmetric);
 
   return hmat;
+}
+
+
+template <int dim, int spacedim>
+void
+visualize_dofs_in_function_space(const std::string &file_basename,
+                                 const BEMFunctionSpace<dim, spacedim> &space)
+{
+  const types::global_dof_index n_dofs = space.get_dof_handler().n_dofs();
+  const std::vector<bool>      &dof_selectors = space.get_dof_selectors();
+  Vector<double>                dof_markers(n_dofs);
+  for (types::global_dof_index i = 0; i < n_dofs; i++)
+    if (dof_selectors[i])
+      dof_markers(i) = 1.0;
+    else
+      dof_markers(i) = 0;
+
+  std::ofstream          vtk_output(file_basename + ".vtk");
+  DataOut<dim, spacedim> data_out;
+  data_out.add_data_vector(space.get_dof_handler(), dof_markers, "dof_support");
+  data_out.build_patches();
+  data_out.write_vtk(vtk_output);
+
+  std::ofstream                       point_output(file_basename + ".txt");
+  const std::vector<Point<spacedim>> &support_points =
+    space.get_support_points();
+  for (types::global_dof_index i = 0; i < support_points.size(); i++)
+    point_output << support_points[i] << "\n";
+
+  point_output.close();
 }
 
 
@@ -592,29 +834,22 @@ main()
 
   // Read the triangulation.
   Triangulation<dim, spacedim> tria;
-  std::ifstream mesh_in(HBEM_TEST_MODEL_DIR "two-spheres-fine.msh");
+  std::ifstream                mesh_in(HBEM_TEST_MODEL_DIR "bar.msh");
   read_msh(mesh_in, tria);
   // Generate surface-to-volume and volume-to-surface topology.
   SubdomainTopology<dim, spacedim> subdomain_topology;
-  subdomain_topology.generate_topology(HBEM_TEST_MODEL_DIR "two-spheres.brep",
-                                       HBEM_TEST_MODEL_DIR "two-spheres.msh");
+  subdomain_topology.generate_topology(HBEM_TEST_MODEL_DIR "bar.brep",
+                                       HBEM_TEST_MODEL_DIR "bar.msh");
 
-  // Define manifolds for the two spheres.
-  const double                                            inter_distance = 8.0;
+  // Define manifold for the bar.
   std::map<types::manifold_id, Manifold<dim, spacedim> *> manifolds;
-  Manifold<dim, spacedim>                                *left_sphere_manifold =
-    new SphericalManifold<dim, spacedim>(
-      Point<spacedim>(-inter_distance / 2.0, 0, 0));
-  Manifold<dim, spacedim> *right_sphere_manifold =
-    new SphericalManifold<dim, spacedim>(
-      Point<spacedim>(inter_distance / 2.0, 0, 0));
-  manifolds[0] = left_sphere_manifold;
-  manifolds[1] = right_sphere_manifold;
+  Manifold<dim, spacedim> *flat_manifold = new FlatManifold<dim, spacedim>();
+  manifolds[0]                           = flat_manifold;
 
   // Assign manifold ids to surface entities in the CAD model.
   std::map<EntityTag, types::manifold_id> manifold_description;
-  manifold_description[1] = 0;
-  manifold_description[2] = 1;
+  for (types::material_id i = 1; i <= 6; i++)
+    manifold_description[i] = 0;
 
   // Assign manifolds to the triangulation.
   for (auto &cell : tria.active_cell_iterators())
@@ -623,54 +858,72 @@ main()
   for (const auto &m : manifolds)
     tria.set_manifold(m.first, *m.second);
 
-  // Define mappings up to the second order for describing the curved surface.
-  std::vector<MappingInfo<dim, spacedim> *> mappings(2);
-  for (unsigned int i = 1; i <= 2; i++)
-    mappings[i - 1] = new MappingInfo<dim, spacedim>(i);
+  // Define only 1st order mapping for flat surfaces
+  std::vector<MappingInfo<dim, spacedim> *> mappings(1);
+  mappings[0] = new MappingInfo<dim, spacedim>(1);
 
   // Construct a map from material ids to mapping indices.
   std::map<types::material_id, unsigned int> material_id_to_mapping_index;
-  material_id_to_mapping_index[1] = 1;
-  material_id_to_mapping_index[2] = 1;
+  for (types::material_id i = 1; i <= 6; i++)
+    material_id_to_mapping_index[i] = 0;
 
   // Parameters for cluster trees and block cluster tree.
-  const unsigned int n_min_H_half             = 32;
-  const unsigned int n_min_H_minus_half       = 32;
-  const unsigned int n_min_block_cluster_tree = 32;
-  const double       eta                      = 0.8;
+  const unsigned int n_min_H_half             = 4;
+  const unsigned int n_min_H_minus_half       = 4;
+  const unsigned int n_min_block_cluster_tree = 4;
+  const double       eta                      = 1.2;
 
   // Create a continuous Lagrangian finite element and a DoF handler for the
   // Sobolev space \f$H^{1/2}(\Gamma)\f$.
   FE_Q<dim, spacedim>       fe_H_half(1);
   DoFHandler<dim, spacedim> dof_handler_H_half(tria);
   dof_handler_H_half.distribute_dofs(fe_H_half);
-  BEMFunctionSpace<dim, spacedim> H_half(dof_handler_H_half, n_min_H_half);
+  // Define a function space
+  // \f$\tilde{H}_h^{1/2}(\Gamma_{\mathrm{D}}^{\ast})\f$.
+  BEMFunctionSpace<dim, spacedim> H_half_Gamma_D(
+    dof_handler_H_half, n_min_H_half, {5, 6}, true, false);
+  // Define a function space \f$\tilde{H}_h^{1/2}(\Gamma_{\mathrm{N}})\f$.
+  BEMFunctionSpace<dim, spacedim> H_half_Gamma_N(
+    dof_handler_H_half, n_min_H_half, {1, 2, 3, 4}, false, false);
 
   // Create a discontinuous Lagrangian finite element and a DoF handler for the
   // Sobolev space \f$H^{-1/2}(\Gamma)\f$ space.
   FE_DGQ<dim, spacedim>     fe_H_minus_half(0);
   DoFHandler<dim, spacedim> dof_handler_H_minus_half(tria);
   dof_handler_H_minus_half.distribute_dofs(fe_H_minus_half);
-  BEMFunctionSpace<dim, spacedim> H_minus_half(dof_handler_H_minus_half,
-                                               n_min_H_minus_half);
+  // Define a function space \f$\tilde{H}_h^{-1/2}(\Gamma_{\mathrm{D}})\f$.
+  BEMFunctionSpace<dim, spacedim> H_minus_half_Gamma_D(
+    dof_handler_H_minus_half, n_min_H_minus_half, {5, 6}, true, false);
+  // Define a function space \f$\tilde{H}_h^{-1/2}(\Gamma_{\mathrm{N}})\f$.
+  BEMFunctionSpace<dim, spacedim> H_minus_half_Gamma_N(
+    dof_handler_H_minus_half, n_min_H_minus_half, {1, 2, 3, 4}, true, false);
 
-  // Create a bilinear form \f$b_V: H^{-1/2}(\Gamma)\times H^{-1/2}(\Gamma)
-  // \rightarrow \mathbb{R}\f$ for the single layer potential operator \f$V\f$.
-  BEMBilinearForm<dim, spacedim> bV(H_minus_half, H_minus_half);
-  bV.build_block_cluster_tree(eta, n_min_block_cluster_tree);
-  // Create a bilinear form \f$b_{\frac{1}{2}I+K}: H^{1/2}{\Gamma}\times
-  // H^{-1/2}{\Gamma} \rightarrow \mathbb{R}\f$ for the double layer potential
-  // operator plus a scaled identity operator \f$\frac{1}{2}I+K\f$. This
-  // bilinear form is needed to build the right hand side vector of the Laplace
-  // equation with a Dirichlet boundary condition.
-  BEMBilinearForm<dim, spacedim> bIK(H_half, H_minus_half);
-  bIK.build_block_cluster_tree(eta, n_min_block_cluster_tree);
+  // Create a bilinear form \f$b_V: b_{V_1}:
+  // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \times
+  // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \rightarrow \mathbb{R}\f$
+  BEMBilinearForm<dim, spacedim> bV1(H_minus_half_Gamma_D,
+                                     H_minus_half_Gamma_D);
+  bV1.build_block_cluster_tree(eta, n_min_block_cluster_tree);
+  // Create a bilinear form \f$b_{K_1}:
+  // \tilde{H}^{1/2}(\Gamma_{\mathrm{N}}) \times
+  // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \rightarrow \mathbb{R}\f$.
+  BEMBilinearForm<dim, spacedim> bK1(H_half_Gamma_N, H_minus_half_Gamma_D);
+  bK1.build_block_cluster_tree(eta, n_min_block_cluster_tree);
+  // Create a bilinear form \f$b_{V_2}: H^{-1/2}(\Gamma) \times
+  // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \rightarrow \mathbb{R}\f$.
+  BEMBilinearForm<dim, spacedim> bV2(H_minus_half_Gamma_N,
+                                     H_minus_half_Gamma_D);
+  bV2.build_block_cluster_tree(eta, n_min_block_cluster_tree);
+  // Create a bilinear form \f$b_{sigma I_1+K_2}: H^{1/2}(\Gamma) \times
+  // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \rightarrow \mathbb{R}\f$.
+  BEMBilinearForm<dim, spacedim> bI1K2(H_half_Gamma_D, H_minus_half_Gamma_D);
+  bI1K2.build_block_cluster_tree(eta, n_min_block_cluster_tree);
 
   const unsigned int thread_num = 4;
   const unsigned int max_rank   = 5;
   const double       epsilon    = 0.01;
-  // Build an H-matrix for bV.
-  std::unique_ptr<HMatrix<spacedim, double>> V = bV.build_hmatrix(
+  // Build an H-matrix for bV1.
+  std::unique_ptr<HMatrix<spacedim, double>> V1 = bV1.build_hmatrix(
     thread_num,
     max_rank,
     epsilon,
@@ -680,9 +933,31 @@ main()
     mappings,
     material_id_to_mapping_index,
     subdomain_topology);
-  // Build an H-matrix for bIK.
-  std::unique_ptr<HMatrix<spacedim, double>> IK =
-    bIK.build_hmatrix_with_mass_matrix(
+  // Build an H-matrix for bK1.
+  std::unique_ptr<HMatrix<spacedim, double>> K1 = bK1.build_hmatrix(
+    thread_num,
+    max_rank,
+    epsilon,
+    PlatformShared::LaplaceKernel::DoubleLayerKernel<spacedim, double>(),
+    1.0,
+    SauterQuadratureRule<dim>(5, 4, 4, 3),
+    mappings,
+    material_id_to_mapping_index,
+    subdomain_topology);
+  // Build an H-matrix for bV2.
+  std::unique_ptr<HMatrix<spacedim, double>> V2 = bV2.build_hmatrix(
+    thread_num,
+    max_rank,
+    epsilon,
+    PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim, double>(),
+    1.0,
+    SauterQuadratureRule<dim>(5, 4, 4, 3),
+    mappings,
+    material_id_to_mapping_index,
+    subdomain_topology);
+  // Build an H-matrix for bI1K2.
+  std::unique_ptr<HMatrix<spacedim, double>> I1K2 =
+    bI1K2.build_hmatrix_with_mass_matrix(
       thread_num,
       max_rank,
       epsilon,
@@ -695,15 +970,31 @@ main()
       material_id_to_mapping_index,
       subdomain_topology);
 
+  // Generate visualizations of all function spaces.
+  visualize_dofs_in_function_space("H_half_Gamma_D", H_half_Gamma_D);
+  visualize_dofs_in_function_space("H_half_Gamma_N", H_half_Gamma_N);
+  visualize_dofs_in_function_space("H_minus_half_Gamma_D",
+                                   H_minus_half_Gamma_D);
+  visualize_dofs_in_function_space("H_minus_half_Gamma_N",
+                                   H_minus_half_Gamma_N);
+
   // Print out the leaf set information of H-matrices. For each leaf node,
   // the DoF index ranges in the block cluster, near field/far field flag and
   // matrix rank are printed.
-  std::ofstream leaf_set("V-leaf-set.dat");
-  V->write_leaf_set_by_iteration(leaf_set);
+  std::ofstream leaf_set("V1-leaf-set.dat");
+  V1->write_leaf_set_by_iteration(leaf_set);
   leaf_set.close();
 
-  leaf_set.open("IK-leaf-set.dat");
-  IK->write_leaf_set_by_iteration(leaf_set);
+  leaf_set.open("K1-leaf-set.dat");
+  K1->write_leaf_set_by_iteration(leaf_set);
+  leaf_set.close();
+
+  leaf_set.open("V2-leaf-set.dat");
+  V2->write_leaf_set_by_iteration(leaf_set);
+  leaf_set.close();
+
+  leaf_set.open("I1K2-leaf-set.dat");
+  I1K2->write_leaf_set_by_iteration(leaf_set);
   leaf_set.close();
 
   // Delete manifolds and mappings.

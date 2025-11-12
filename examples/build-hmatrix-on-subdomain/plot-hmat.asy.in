@@ -1,0 +1,23 @@
+import "@CMAKE_SOURCE_DIR@/scripts/hmat.asy" as hmat;
+
+import "/home/jihuan/Projects/hierbem/scripts/hmat.asy" as hmat;
+
+picture V1;
+unitsize(V1, 5pt);
+plot_bct_struct (V1, "V1-leaf-set.dat");
+shipout("V1-leaf-set", V1);
+
+picture K1;
+unitsize(K1, 5pt);
+plot_bct_struct (K1, "K1-leaf-set.dat");
+shipout("K1-leaf-set", K1);
+
+picture V2;
+unitsize(V2, 5pt);
+plot_bct_struct (V2, "V2-leaf-set.dat");
+shipout("V2-leaf-set", V2);
+
+picture I1K2;
+unitsize(I1K2, 5pt);
+plot_bct_struct (I1K2, "I1K2-leaf-set.dat");
+shipout("I1K2-leaf-set", I1K2);

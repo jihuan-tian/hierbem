@@ -209,10 +209,6 @@ namespace DoFToolsExt
    * @param material_ids A set of material ids in the current material
    * subdomain. It can also be a map with material id as its key.
    * @param selected_dofs A vector of flags for all DoFs in the DoF handler.
-   * @param reset_selectors_to_true Whether initialize all elements in
-   * @p selected_dofs to true at the beginning. By default, this argument is
-   * true. When it is false, we can call this function multiple times and
-   * gradually deselect DoFs from <tt>selected_dofs</tt>.
    * @return Number of selected DoFs.
    */
   template <int dim, int spacedim, typename SearchableMaterialIdContainer>
@@ -220,24 +216,12 @@ namespace DoFToolsExt
   extract_material_subdomain_dofs_without_boundary_dofs(
     const DoFHandler<dim, spacedim>     &dof_handler,
     const SearchableMaterialIdContainer &material_ids,
-    std::vector<bool>                   &selected_dofs,
-    const bool                           reset_selectors_to_true = true)
+    std::vector<bool>                   &selected_dofs)
   {
     AssertDimension(selected_dofs.size(), dof_handler.n_dofs());
-    types::global_dof_index effective_n_dofs = 0;
 
-    if (reset_selectors_to_true)
-      {
-        std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(), true);
-        effective_n_dofs = dof_handler.n_dofs();
-      }
-    else
-      {
-        // Count the number of already selected DoFs.
-        for (auto selection_flag : selected_dofs)
-          if (selection_flag)
-            effective_n_dofs++;
-      }
+    types::global_dof_index effective_n_dofs = dof_handler.n_dofs();
+    std::fill_n(selected_dofs.begin(), effective_n_dofs, true);
 
     // Global DoF indices for the current cell.
     std::vector<types::global_dof_index> cell_dof_indices;
@@ -434,10 +418,6 @@ namespace DoFToolsExt
    * @param material_ids A set of material ids in the current material
    * subdomain. It can also be a map with material id as its key.
    * @param selected_dofs A vector of flags for all DoFs in the DoF handler.
-   * @param reset_selectors_to_true Whether initialize all elements in
-   * @p selected_dofs to true at the beginning. By default, this argument is
-   * true. When it is false, we can call this function multiple times and
-   * gradually deselect DoFs from <tt>selected_dofs</tt>.
    * @return Number of selected DoFs.
    */
   template <int dim, int spacedim, typename SearchableMaterialIdContainer>
@@ -446,24 +426,12 @@ namespace DoFToolsExt
     const DoFHandler<dim, spacedim>     &dof_handler,
     const unsigned int                   level,
     const SearchableMaterialIdContainer &material_ids,
-    std::vector<bool>                   &selected_dofs,
-    const bool                           reset_selectors_to_true = true)
+    std::vector<bool>                   &selected_dofs)
   {
     AssertDimension(selected_dofs.size(), dof_handler.n_dofs(level));
-    types::global_dof_index effective_n_dofs = 0;
 
-    if (reset_selectors_to_true)
-      {
-        std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(level), true);
-        effective_n_dofs = dof_handler.n_dofs(level);
-      }
-    else
-      {
-        // Count the number of already selected DoFs.
-        for (auto selection_flag : selected_dofs)
-          if (selection_flag)
-            effective_n_dofs++;
-      }
+    types::global_dof_index effective_n_dofs = dof_handler.n_dofs(level);
+    std::fill_n(selected_dofs.begin(), effective_n_dofs, true);
 
     // Global DoF indices for the current cell.
     std::vector<types::global_dof_index> cell_dof_indices;
