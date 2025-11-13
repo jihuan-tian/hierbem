@@ -69,6 +69,7 @@
 
 using namespace dealii;
 using namespace HierBEM;
+using namespace HierBEM::PlatformShared::LaplaceKernel;
 
 // Builder class for cluster tree.
 //
@@ -517,12 +518,17 @@ BEMFunctionSpace<dim, spacedim>::build_dof_to_cell_topology()
 
 
 // Class for a bilinear form, which involves a trial space and a test space.
-template <int dim, int spacedim>
+//
+// As a convention, the trial space is placed before the test space when we
+// define a bilinear form.
+template <int dim,
+          int spacedim,
+          template <int, typename> typename KernelFunctionType,
+          typename RangeNumberType  = double,
+          typename KernelNumberType = double>
 class BEMBilinearForm
 {
 public:
-  // As a convention, the trial space is placed before the test space when we
-  // define a bilinear form.
   BEMBilinearForm(const BEMFunctionSpace<dim, spacedim> &trial_space_,
                   const BEMFunctionSpace<dim, spacedim> &test_space_);
 
@@ -536,35 +542,24 @@ public:
   build_block_cluster_tree(const double eta, const unsigned int n_min);
 
   // Build an H-matrix for the bilinear form.
-  template <template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType  = double,
-            typename KernelNumberType = double>
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
-  build_hmatrix(
-    const unsigned int thread_num,
-    const unsigned int max_rank,
-    const double       epsilon,
-    const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
-                                                    &kernel,
-    const DeviceNumberType<KernelNumberType>         kernel_factor,
-    const SauterQuadratureRule<dim>                 &sauter_quad_rule,
-    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
-    const std::map<types::material_id, unsigned int>
-                                     &material_id_to_mapping_index,
-    SubdomainTopology<dim, spacedim> &subdomain_topology);
+  build_hmatrix(const unsigned int                       thread_num,
+                const unsigned int                       max_rank,
+                const double                             epsilon,
+                const DeviceNumberType<KernelNumberType> kernel_factor,
+                const SauterQuadratureRule<dim>         &sauter_quad_rule,
+                const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+                const std::map<types::material_id, unsigned int>
+                                                 &material_id_to_mapping_index,
+                SubdomainTopology<dim, spacedim> &subdomain_topology);
 
   // Build an H-matrix for the bilinear form and add a mass matrix directly into
   // it.
-  template <template <int, typename> typename KernelFunctionType,
-            typename RangeNumberType  = double,
-            typename KernelNumberType = double>
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
   build_hmatrix_with_mass_matrix(
-    const unsigned int thread_num,
-    const unsigned int max_rank,
-    const double       epsilon,
-    const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
-                                            &kernel,
+    const unsigned int                       thread_num,
+    const unsigned int                       max_rank,
+    const double                             epsilon,
     const DeviceNumberType<KernelNumberType> kernel_factor,
     const typename numbers::NumberTraits<RangeNumberType>::real_type
                                                      mass_matrix_factor,
@@ -612,8 +607,9 @@ public:
   }
 
 private:
-  const BEMFunctionSpace<dim, spacedim> &trial_space;
-  const BEMFunctionSpace<dim, spacedim> &test_space;
+  KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>> kernel;
+  const BEMFunctionSpace<dim, spacedim>                           &trial_space;
+  const BEMFunctionSpace<dim, spacedim>                           &test_space;
   // Whether the bilinear form is symmetric, i.e. the trial space is the same as
   // the test space.
   bool                                        is_symmetric;
@@ -621,21 +617,37 @@ private:
 };
 
 
-template <int dim, int spacedim>
-BEMBilinearForm<dim, spacedim>::BEMBilinearForm(
-  const BEMFunctionSpace<dim, spacedim> &trial_space_,
-  const BEMFunctionSpace<dim, spacedim> &test_space_)
+template <int dim,
+          int spacedim,
+          template <int, typename> typename KernelFunctionType,
+          typename RangeNumberType,
+          typename KernelNumberType>
+BEMBilinearForm<dim,
+                spacedim,
+                KernelFunctionType,
+                RangeNumberType,
+                KernelNumberType>::
+  BEMBilinearForm(const BEMFunctionSpace<dim, spacedim> &trial_space_,
+                  const BEMFunctionSpace<dim, spacedim> &test_space_)
   : trial_space(trial_space_)
   , test_space(test_space_)
-  , is_symmetric(&trial_space == &test_space)
+  , is_symmetric(kernel.is_symmetric() && (&trial_space == &test_space))
 {}
 
 
-template <int dim, int spacedim>
+template <int dim,
+          int spacedim,
+          template <int, typename> typename KernelFunctionType,
+          typename RangeNumberType,
+          typename KernelNumberType>
 void
-BEMBilinearForm<dim, spacedim>::build_block_cluster_tree(
-  const double       eta,
-  const unsigned int n_min)
+BEMBilinearForm<dim,
+                spacedim,
+                KernelFunctionType,
+                RangeNumberType,
+                KernelNumberType>::build_block_cluster_tree(const double eta,
+                                                            const unsigned int
+                                                              n_min)
 {
   // When building a block cluster tree, the test space appears before the trial
   // space, since the test space is related to matrix rows, while the trial
@@ -643,7 +655,7 @@ BEMBilinearForm<dim, spacedim>::build_block_cluster_tree(
   block_cluster_tree = std::make_unique<BlockClusterTree<spacedim>>(
     test_space.get_cluster_tree(), trial_space.get_cluster_tree(), eta, n_min);
 
-  if (is_symmetric)
+  if (&trial_space == &test_space)
     block_cluster_tree->partition(
       trial_space.get_internal_to_external_dof_numbering(),
       trial_space.get_support_points(),
@@ -659,28 +671,28 @@ BEMBilinearForm<dim, spacedim>::build_block_cluster_tree(
 }
 
 
-template <int dim, int spacedim>
-template <template <int, typename> typename KernelFunctionType,
+template <int dim,
+          int spacedim,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
-BEMBilinearForm<dim, spacedim>::build_hmatrix(
-  const unsigned int thread_num,
-  const unsigned int max_rank,
-  const double       epsilon,
-  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
-                                                  &kernel,
-  const DeviceNumberType<KernelNumberType>         kernel_factor,
-  const SauterQuadratureRule<dim>                 &sauter_quad_rule,
-  const std::vector<MappingInfo<dim, spacedim> *> &mappings,
-  const std::map<types::material_id, unsigned int>
-                                   &material_id_to_mapping_index,
-  SubdomainTopology<dim, spacedim> &subdomain_topology)
+BEMBilinearForm<dim,
+                spacedim,
+                KernelFunctionType,
+                RangeNumberType,
+                KernelNumberType>::
+  build_hmatrix(const unsigned int                       thread_num,
+                const unsigned int                       max_rank,
+                const double                             epsilon,
+                const DeviceNumberType<KernelNumberType> kernel_factor,
+                const SauterQuadratureRule<dim>         &sauter_quad_rule,
+                const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+                const std::map<types::material_id, unsigned int>
+                                                 &material_id_to_mapping_index,
+                SubdomainTopology<dim, spacedim> &subdomain_topology)
 {
-  // Only when the BEM kernel symmetric and the bilinear form is symmetric, the
-  // H-matrix will be symmetric.
-  const bool is_hmat_symmetric       = kernel.is_symmetric() && is_symmetric;
-  HMatrixSupport::Property  property = is_hmat_symmetric ?
+  HMatrixSupport::Property  property = is_symmetric ?
                                          HMatrixSupport::Property::symmetric :
                                          HMatrixSupport::Property::general;
   HMatrixSupport::BlockType block_type =
@@ -711,37 +723,38 @@ BEMBilinearForm<dim, spacedim>::build_hmatrix(
     mappings,
     material_id_to_mapping_index,
     SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
-    is_hmat_symmetric);
+    is_symmetric);
 
   return hmat;
 }
 
 
-template <int dim, int spacedim>
-template <template <int, typename> typename KernelFunctionType,
+template <int dim,
+          int spacedim,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
-BEMBilinearForm<dim, spacedim>::build_hmatrix_with_mass_matrix(
-  const unsigned int thread_num,
-  const unsigned int max_rank,
-  const double       epsilon,
-  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
-                                          &kernel,
-  const DeviceNumberType<KernelNumberType> kernel_factor,
-  const typename numbers::NumberTraits<RangeNumberType>::real_type
-                                                   mass_matrix_factor,
-  const SauterQuadratureRule<dim>                 &sauter_quad_rule,
-  const QGauss<dim>                               &mass_matrix_quad_rule,
-  const std::vector<MappingInfo<dim, spacedim> *> &mappings,
-  const std::map<types::material_id, unsigned int>
-                                   &material_id_to_mapping_index,
-  SubdomainTopology<dim, spacedim> &subdomain_topology)
+BEMBilinearForm<dim,
+                spacedim,
+                KernelFunctionType,
+                RangeNumberType,
+                KernelNumberType>::
+  build_hmatrix_with_mass_matrix(
+    const unsigned int                       thread_num,
+    const unsigned int                       max_rank,
+    const double                             epsilon,
+    const DeviceNumberType<KernelNumberType> kernel_factor,
+    const typename numbers::NumberTraits<RangeNumberType>::real_type
+                                                     mass_matrix_factor,
+    const SauterQuadratureRule<dim>                 &sauter_quad_rule,
+    const QGauss<dim>                               &mass_matrix_quad_rule,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                     &material_id_to_mapping_index,
+    SubdomainTopology<dim, spacedim> &subdomain_topology)
 {
-  // Only when the BEM kernel symmetric and the bilinear form is symmetric, the
-  // H-matrix will be symmetric.
-  const bool is_hmat_symmetric       = kernel.is_symmetric() && is_symmetric;
-  HMatrixSupport::Property  property = is_hmat_symmetric ?
+  HMatrixSupport::Property  property = is_symmetric ?
                                          HMatrixSupport::Property::symmetric :
                                          HMatrixSupport::Property::general;
   HMatrixSupport::BlockType block_type =
@@ -774,7 +787,7 @@ BEMBilinearForm<dim, spacedim>::build_hmatrix_with_mass_matrix(
     mappings,
     material_id_to_mapping_index,
     SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
-    is_hmat_symmetric);
+    is_symmetric);
 
   return hmat;
 }
@@ -901,74 +914,71 @@ main()
   // Create a bilinear form \f$b_V: b_{V_1}:
   // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \times
   // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \rightarrow \mathbb{R}\f$
-  BEMBilinearForm<dim, spacedim> bV1(H_minus_half_Gamma_D,
-                                     H_minus_half_Gamma_D);
+  BEMBilinearForm<dim, spacedim, SingleLayerKernel> bV1(H_minus_half_Gamma_D,
+                                                        H_minus_half_Gamma_D);
   bV1.build_block_cluster_tree(eta, n_min_block_cluster_tree);
   // Create a bilinear form \f$b_{K_1}:
   // \tilde{H}^{1/2}(\Gamma_{\mathrm{N}}) \times
   // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \rightarrow \mathbb{R}\f$.
-  BEMBilinearForm<dim, spacedim> bK1(H_half_Gamma_N, H_minus_half_Gamma_D);
+  BEMBilinearForm<dim, spacedim, DoubleLayerKernel> bK1(H_half_Gamma_N,
+                                                        H_minus_half_Gamma_D);
   bK1.build_block_cluster_tree(eta, n_min_block_cluster_tree);
   // Create a bilinear form \f$b_{V_2}: H^{-1/2}(\Gamma) \times
   // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \rightarrow \mathbb{R}\f$.
-  BEMBilinearForm<dim, spacedim> bV2(H_minus_half_Gamma_N,
-                                     H_minus_half_Gamma_D);
+  BEMBilinearForm<dim, spacedim, SingleLayerKernel> bV2(H_minus_half_Gamma_N,
+                                                        H_minus_half_Gamma_D);
   bV2.build_block_cluster_tree(eta, n_min_block_cluster_tree);
   // Create a bilinear form \f$b_{sigma I_1+K_2}: H^{1/2}(\Gamma) \times
   // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \rightarrow \mathbb{R}\f$.
-  BEMBilinearForm<dim, spacedim> bI1K2(H_half_Gamma_D, H_minus_half_Gamma_D);
+  BEMBilinearForm<dim, spacedim, DoubleLayerKernel> bI1K2(H_half_Gamma_D,
+                                                          H_minus_half_Gamma_D);
   bI1K2.build_block_cluster_tree(eta, n_min_block_cluster_tree);
 
   const unsigned int thread_num = 4;
   const unsigned int max_rank   = 5;
   const double       epsilon    = 0.01;
   // Build an H-matrix for bV1.
-  std::unique_ptr<HMatrix<spacedim, double>> V1 = bV1.build_hmatrix(
-    thread_num,
-    max_rank,
-    epsilon,
-    PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim, double>(),
-    1.0,
-    SauterQuadratureRule<dim>(5, 4, 4, 3),
-    mappings,
-    material_id_to_mapping_index,
-    subdomain_topology);
+  std::unique_ptr<HMatrix<spacedim, double>> V1 =
+    bV1.build_hmatrix(thread_num,
+                      max_rank,
+                      epsilon,
+                      1.0,
+                      SauterQuadratureRule<dim>(5, 4, 4, 3),
+                      mappings,
+                      material_id_to_mapping_index,
+                      subdomain_topology);
   // Build an H-matrix for bK1.
-  std::unique_ptr<HMatrix<spacedim, double>> K1 = bK1.build_hmatrix(
-    thread_num,
-    max_rank,
-    epsilon,
-    PlatformShared::LaplaceKernel::DoubleLayerKernel<spacedim, double>(),
-    1.0,
-    SauterQuadratureRule<dim>(5, 4, 4, 3),
-    mappings,
-    material_id_to_mapping_index,
-    subdomain_topology);
+  std::unique_ptr<HMatrix<spacedim, double>> K1 =
+    bK1.build_hmatrix(thread_num,
+                      max_rank,
+                      epsilon,
+                      1.0,
+                      SauterQuadratureRule<dim>(5, 4, 4, 3),
+                      mappings,
+                      material_id_to_mapping_index,
+                      subdomain_topology);
   // Build an H-matrix for bV2.
-  std::unique_ptr<HMatrix<spacedim, double>> V2 = bV2.build_hmatrix(
-    thread_num,
-    max_rank,
-    epsilon,
-    PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim, double>(),
-    1.0,
-    SauterQuadratureRule<dim>(5, 4, 4, 3),
-    mappings,
-    material_id_to_mapping_index,
-    subdomain_topology);
+  std::unique_ptr<HMatrix<spacedim, double>> V2 =
+    bV2.build_hmatrix(thread_num,
+                      max_rank,
+                      epsilon,
+                      1.0,
+                      SauterQuadratureRule<dim>(5, 4, 4, 3),
+                      mappings,
+                      material_id_to_mapping_index,
+                      subdomain_topology);
   // Build an H-matrix for bI1K2.
   std::unique_ptr<HMatrix<spacedim, double>> I1K2 =
-    bI1K2.build_hmatrix_with_mass_matrix(
-      thread_num,
-      max_rank,
-      epsilon,
-      PlatformShared::LaplaceKernel::DoubleLayerKernel<spacedim, double>(),
-      1.0,
-      0.5,
-      SauterQuadratureRule<dim>(5, 4, 4, 3),
-      QGauss<dim>(2),
-      mappings,
-      material_id_to_mapping_index,
-      subdomain_topology);
+    bI1K2.build_hmatrix_with_mass_matrix(thread_num,
+                                         max_rank,
+                                         epsilon,
+                                         1.0,
+                                         0.5,
+                                         SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                         QGauss<dim>(2),
+                                         mappings,
+                                         material_id_to_mapping_index,
+                                         subdomain_topology);
 
   // Generate visualizations of all function spaces.
   visualize_dofs_in_function_space("H_half_Gamma_D", H_half_Gamma_D);
