@@ -236,6 +236,12 @@ public:
     return dof_handler;
   }
 
+  bool
+  get_is_full_domain() const
+  {
+    return is_full_domain;
+  }
+
   std::vector<bool> &
   get_dof_selectors()
   {
@@ -716,8 +722,12 @@ BEMBilinearForm<dim,
     sauter_quad_rule,
     test_space.get_dof_handler(),
     trial_space.get_dof_handler(),
-    &test_space.get_local_to_full_dof_id_map(),
-    &trial_space.get_local_to_full_dof_id_map(),
+    test_space.get_is_full_domain() ?
+      nullptr :
+      &test_space.get_local_to_full_dof_id_map(),
+    trial_space.get_is_full_domain() ?
+      nullptr :
+      &trial_space.get_local_to_full_dof_id_map(),
     test_space.get_internal_to_external_dof_numbering(),
     trial_space.get_internal_to_external_dof_numbering(),
     mappings,
@@ -780,8 +790,12 @@ BEMBilinearForm<dim,
     mass_matrix_quad_rule,
     test_space.get_dof_handler(),
     trial_space.get_dof_handler(),
-    &test_space.get_local_to_full_dof_id_map(),
-    &trial_space.get_local_to_full_dof_id_map(),
+    test_space.get_is_full_domain() ?
+      nullptr :
+      &test_space.get_local_to_full_dof_id_map(),
+    trial_space.get_is_full_domain() ?
+      nullptr :
+      &trial_space.get_local_to_full_dof_id_map(),
     test_space.get_internal_to_external_dof_numbering(),
     trial_space.get_internal_to_external_dof_numbering(),
     mappings,
