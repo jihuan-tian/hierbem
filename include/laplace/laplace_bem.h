@@ -31,6 +31,7 @@
 
 #include <deal.II/lac/vector.h>
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -355,6 +356,18 @@ public:
 
   DoFHandler<dim, spacedim> &
   get_dof_handler_neumann();
+
+  const std::map<EntityTag, Function<spacedim, RangeNumberType> *> &
+  get_dirichlet_bc_definition() const;
+
+  std::map<EntityTag, Function<spacedim, RangeNumberType> *> &
+  get_dirichlet_bc_definition();
+
+  const std::map<EntityTag, Function<spacedim, RangeNumberType> *> &
+  get_neumann_bc_definition() const;
+
+  std::map<EntityTag, Function<spacedim, RangeNumberType> *> &
+  get_neumann_bc_definition();
 
   const Vector<RangeNumberType> &
   get_dirichlet_data() const;

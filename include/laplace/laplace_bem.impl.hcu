@@ -32,6 +32,7 @@
 #include <deal.II/lac/vector.h>
 
 #include <iostream>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -409,6 +410,50 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
   get_dof_handler_neumann()
 {
   return priv_->dof_handler_for_neumann_space_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+const std::map<EntityTag, Function<spacedim, RangeNumberType> *> &
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_dirichlet_bc_definition() const
+{
+  return priv_->dirichlet_bc_definition_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+std::map<EntityTag, Function<spacedim, RangeNumberType> *> &
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_dirichlet_bc_definition()
+{
+  return priv_->dirichlet_bc_definition_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+const std::map<EntityTag, Function<spacedim, RangeNumberType> *> &
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_neumann_bc_definition() const
+{
+  return priv_->neumann_bc_definition_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+std::map<EntityTag, Function<spacedim, RangeNumberType> *> &
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_neumann_bc_definition()
+{
+  return priv_->neumann_bc_definition_;
 }
 
 template <int dim,
