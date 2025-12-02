@@ -611,7 +611,8 @@ private:
   Vector<RangeNumberType> system_rhs_on_neumann_domain_;
   /**
    * Right hand side vector on both the Dirichlet domain and Neumann domain.
-   * Only used in the mixed boundary value problem.
+   * Only used in the mixed boundary value problem and H-matrix factorization
+   * based preconditioner is used.
    */
   Vector<RangeNumberType> system_rhs_on_combined_domain_;
 
@@ -1841,9 +1842,15 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             n_dofs_for_neumann_space_on_dirichlet_domain);
           system_rhs_on_neumann_domain_.reinit(
             n_dofs_for_dirichlet_space_on_neumann_domain);
-          system_rhs_on_combined_domain_.reinit(
-            n_dofs_for_neumann_space_on_dirichlet_domain +
-            n_dofs_for_dirichlet_space_on_neumann_domain);
+
+          // When H-LU or H-Cholesky factorization is used for preconditioning,
+          // the 2x2 block matrix in mixed boundary condition should be solved
+          // as a whole, so the two RHS vectors should be combined into a
+          // single vector.
+          if (preconditioner_type_ == PreconditionerType::HMatrixFactorization)
+            system_rhs_on_combined_domain_.reinit(
+              n_dofs_for_neumann_space_on_dirichlet_domain +
+              n_dofs_for_dirichlet_space_on_neumann_domain);
 
           // N.B. This is the solution vector on all DoFs in the associated
           // DoF handler.
@@ -2824,25 +2831,32 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                           timer,
                           "assemble RHS vector on Neumann domain");
 
-          // Combine the two part of RHS vectors.
-          copy_vector(system_rhs_on_combined_domain_,
-                      0,
-                      system_rhs_on_dirichlet_domain_,
-                      0,
-                      system_rhs_on_dirichlet_domain_.size());
-          copy_vector(system_rhs_on_combined_domain_,
-                      system_rhs_on_dirichlet_domain_.size(),
-                      system_rhs_on_neumann_domain_,
-                      0,
-                      system_rhs_on_neumann_domain_.size());
+          // Combine the two parts of RHS vectors.
+          if (preconditioner_type_ == PreconditionerType::HMatrixFactorization)
+            {
+              copy_vector(system_rhs_on_combined_domain_,
+                          0,
+                          system_rhs_on_dirichlet_domain_,
+                          0,
+                          system_rhs_on_dirichlet_domain_.size());
+              copy_vector(system_rhs_on_combined_domain_,
+                          system_rhs_on_dirichlet_domain_.size(),
+                          system_rhs_on_neumann_domain_,
+                          0,
+                          system_rhs_on_neumann_domain_.size());
+            }
 
 #if ENABLE_MATRIX_EXPORT == 1
-          print_vector_to_mat(out_mat,
-                              "system_rhs_on_combined_domain",
-                              system_rhs_on_combined_domain_,
-                              false,
-                              15,
-                              25);
+          if (preconditioner_type_ == PreconditionerType::HMatrixFactorization)
+            {
+              print_vector_to_mat(out_mat,
+                                  "system_rhs_on_combined_domain",
+                                  system_rhs_on_combined_domain_,
+                                  false,
+                                  15,
+                                  25);
+            }
+
           print_vector_to_mat(out_mat,
                               "system_rhs_on_dirichlet_domain",
                               system_rhs_on_dirichlet_domain_,

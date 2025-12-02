@@ -19,7 +19,7 @@
 HBEM_NS_OPEN
 
 /**
- * Class for the Schur complement with respet to the skew symmetric block
+ * Class for the Schur complement with respect to the skew symmetric block
  * matrix.
  * TODO: enter the expression here.
  */
