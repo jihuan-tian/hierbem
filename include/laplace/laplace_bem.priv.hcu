@@ -56,10 +56,12 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <fstream>
 #include <iostream>
 #include <iterator>
 #include <memory>
 #include <set>
+#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -214,6 +216,16 @@ public:
 
   void
   output_results() const;
+
+  void
+  output_results_on_target_tria(const std::string                  &vtk_file,
+                                const Triangulation<dim, spacedim> &tria,
+                                const unsigned int mapping_order) const;
+
+  void
+  output_results_on_target_tria(const std::string                &vtk_file,
+                                const Triangulation<3, spacedim> &tria,
+                                const unsigned int mapping_order) const;
 
   void
   run();
@@ -3935,6 +3947,155 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
   vtk_output.close();
   data_file.close();
+}
+
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  output_results_on_target_tria(const std::string                  &vtk_file,
+                                const Triangulation<dim, spacedim> &target_tria,
+                                const unsigned int mapping_order) const
+{
+  // Define volume integral operators, which will be evaluated on CPU.
+  PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim, KernelNumberType>
+    V;
+  PlatformShared::LaplaceKernel::DoubleLayerKernel<spacedim, KernelNumberType>
+    K;
+  PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel<spacedim,
+                                                          KernelNumberType>
+    K_prime;
+  PlatformShared::LaplaceKernel::HyperSingularKernel<spacedim, KernelNumberType>
+    D;
+
+  // Evaluate potentials on the target triangulation.
+  DoFHandler<dim, spacedim> dof_handler_target_potential(target_tria);
+  dof_handler_target_potential.distribute_dofs(fe_for_dirichlet_space_);
+  Vector<RangeNumberType> potentials(dof_handler_target_potential.n_dofs());
+
+  evaluate_representation_formula_for_potential(
+    V,
+    K,
+    dof_handler_for_dirichlet_space_,
+    dof_handler_for_neumann_space_,
+    dirichlet_data_,
+    neumann_data_,
+    dof_handler_target_potential,
+    mapping_order,
+    potentials,
+    is_interior_problem_);
+
+  // Evaluate conormal traces on the target triangulation.
+  DoFHandler<dim, spacedim> dof_handler_target_conormal_trace(target_tria);
+  dof_handler_target_conormal_trace.distribute_dofs(fe_for_neumann_space_);
+  Vector<RangeNumberType> conormal_traces(
+    dof_handler_target_conormal_trace.n_dofs());
+
+  evaluate_representation_formula_for_conormal_trace(
+    K_prime,
+    D,
+    dof_handler_for_dirichlet_space_,
+    dof_handler_for_neumann_space_,
+    dirichlet_data_,
+    neumann_data_,
+    dof_handler_target_conormal_trace,
+    mapping_order,
+    conormal_traces,
+    is_interior_problem_);
+
+  std::ofstream          vtk_out(vtk_file);
+  DataOut<dim, spacedim> data_out;
+
+  if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+    {
+      ComplexOutputDataVector<Vector, real_type> potentials_vector(potentials);
+      add_complex_data_vector(data_out,
+                              dof_handler_target_potential,
+                              potentials_vector,
+                              "potentials");
+      ComplexOutputDataVector<Vector, real_type> conormal_traces_vector(
+        conormal_traces);
+      add_complex_data_vector(data_out,
+                              dof_handler_target_conormal_trace,
+                              conormal_traces_vector,
+                              "conormal_traces");
+      data_out.build_patches();
+    }
+  else
+    {
+      data_out.add_data_vector(dof_handler_target_potential,
+                               potentials,
+                               "potentials");
+      data_out.add_data_vector(dof_handler_target_conormal_trace,
+                               conormal_traces,
+                               "conormal_traces");
+      data_out.build_patches();
+    }
+
+  data_out.write_vtk(vtk_out);
+  vtk_out.close();
+}
+
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  output_results_on_target_tria(const std::string                &vtk_file,
+                                const Triangulation<3, spacedim> &target_tria,
+                                const unsigned int mapping_order) const
+{
+  // Define volume integral operators, which will be evaluated on CPU.
+  PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim, KernelNumberType>
+    V;
+  PlatformShared::LaplaceKernel::DoubleLayerKernel<spacedim, KernelNumberType>
+    K;
+
+  // Evaluate potential on the target triangulation.
+  DoFHandler<3, spacedim> dof_handler_target_potential(target_tria);
+  FE_Q<3, spacedim>       fe_dirichlet_target(fe_order_for_dirichlet_space_);
+  dof_handler_target_potential.distribute_dofs(fe_dirichlet_target);
+  Vector<RangeNumberType> potentials(dof_handler_target_potential.n_dofs());
+
+  evaluate_representation_formula_for_potential(
+    V,
+    K,
+    dof_handler_for_dirichlet_space_,
+    dof_handler_for_neumann_space_,
+    dirichlet_data_,
+    neumann_data_,
+    dof_handler_target_potential,
+    mapping_order,
+    potentials,
+    is_interior_problem_);
+
+  std::ofstream        vtk_out(vtk_file);
+  DataOut<3, spacedim> data_out;
+
+  if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
+    {
+      ComplexOutputDataVector<Vector, real_type> potentials_vector(potentials);
+      add_complex_data_vector(data_out,
+                              dof_handler_target_potential,
+                              potentials_vector,
+                              "potentials");
+      data_out.build_patches();
+    }
+  else
+    {
+      data_out.add_data_vector(dof_handler_target_potential,
+                               potentials,
+                               "potentials");
+      data_out.build_patches();
+    }
+
+  data_out.write_vtk(vtk_out);
+  vtk_out.close();
 }
 
 

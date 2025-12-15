@@ -711,13 +711,26 @@ template <int dim,
           int spacedim,
           typename RangeNumberType,
           typename KernelNumberType>
-template <int TargetDim>
 void
 LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
-  output_results_on_target_tria(const std::string                   vtk_file,
-                                Triangulation<TargetDim, spacedim> &tria) const
+  output_results_on_target_tria(const std::string                  &vtk_file,
+                                const Triangulation<dim, spacedim> &tria,
+                                const unsigned int mapping_order) const
 {
-  priv_->output_results_on_target_tria(vtk_file, tria);
+  priv_->output_results_on_target_tria(vtk_file, tria, mapping_order);
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  output_results_on_target_tria(const std::string                &vtk_file,
+                                const Triangulation<3, spacedim> &tria,
+                                const unsigned int mapping_order) const
+{
+  priv_->output_results_on_target_tria(vtk_file, tria, mapping_order);
 }
 
 #pragma endregion

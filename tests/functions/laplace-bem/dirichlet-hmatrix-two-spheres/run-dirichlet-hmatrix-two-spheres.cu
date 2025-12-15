@@ -75,104 +75,21 @@ namespace HierBEM
  * of potential for a volume.
  */
 void
-output_results_at_targets(LaplaceBEM<2, 3, double, double> &bem)
+output_results_at_targets(const LaplaceBEM<2, 3, double, double> &bem)
 {
-  const auto           &fe_dirichlet = bem.get_dof_handler_dirichlet().get_fe();
-  const auto           &fe_neumann   = bem.get_dof_handler_neumann().get_fe();
-  const Vector<double> &dirichlet_data        = bem.get_dirichlet_data();
-  const Vector<double> &neumann_data          = bem.get_neumann_data();
-  const auto           &dof_handler_dirichlet = bem.get_dof_handler_dirichlet();
-  const auto           &dof_handler_neumann   = bem.get_dof_handler_neumann();
+  Triangulation<2, 3> plane;
+  GridGenerator::subdivided_hyper_rectangle(plane,
+                                            {50, 50},
+                                            Point<2>(-4, -4),
+                                            Point<2>(4, 4));
+  GridTools::rotate(boost::math::constants::pi<double>() / 2, 1, plane);
+  GridOut().write_msh(plane, "plane.msh");
+  bem.output_results_on_target_tria("plane.vtk", plane, 1);
 
-  PlatformShared::LaplaceKernel::SingleLayerKernel<3, double>        V;
-  PlatformShared::LaplaceKernel::DoubleLayerKernel<3, double>        K;
-  PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel<3, double> K_prime;
-  PlatformShared::LaplaceKernel::HyperSingularKernel<3, double>      D;
-
-  {
-    Triangulation<2, 3> plane;
-    GridGenerator::subdivided_hyper_rectangle(plane,
-                                              {50, 50},
-                                              Point<2>(-4, -4),
-                                              Point<2>(4, 4));
-    GridTools::rotate(boost::math::constants::pi<double>() / 2, 1, plane);
-    GridOut().write_msh(plane, "plane.msh");
-
-    DoFHandler<2, 3> dof_handler_potential(plane);
-    DoFHandler<2, 3> dof_handler_conormal_trace(plane);
-    dof_handler_potential.distribute_dofs(fe_dirichlet);
-    dof_handler_conormal_trace.distribute_dofs(fe_neumann);
-
-    Vector<double> potentials(dof_handler_potential.n_dofs());
-    Vector<double> conormal_traces(dof_handler_conormal_trace.n_dofs());
-
-    evaluate_representation_formula_for_potential(V,
-                                                  K,
-                                                  dof_handler_dirichlet,
-                                                  dof_handler_neumann,
-                                                  dirichlet_data,
-                                                  neumann_data,
-                                                  dof_handler_potential,
-                                                  1,
-                                                  potentials,
-                                                  false);
-
-    evaluate_representation_formula_for_conormal_trace(
-      K_prime,
-      D,
-      dof_handler_dirichlet,
-      dof_handler_neumann,
-      dirichlet_data,
-      neumann_data,
-      dof_handler_conormal_trace,
-      1,
-      conormal_traces,
-      false);
-
-    std::ofstream vtk_result("plane.vtk");
-    DataOut<2, 3> data_out;
-    data_out.add_data_vector(dof_handler_potential, potentials, "potential");
-    data_out.add_data_vector(dof_handler_conormal_trace,
-                             conormal_traces,
-                             "conormal_traces");
-    data_out.build_patches();
-    data_out.write_vtk(vtk_result);
-  }
-
-  {
-    Triangulation<3, 3> cube;
-    GridGenerator::subdivided_hyper_cube(cube, 30, 3., 6.);
-    GridOut().write_msh(cube, "cube.msh");
-
-    // On target volume, the original surface finite elements in the bem solver
-    // cannot be used, so we create them here.
-    FE_Q<3, 3>       fe_dirichlet(1);
-    FE_DGQ<3, 3>     fe_neumann(0);
-    DoFHandler<3, 3> dof_handler_potential(cube);
-    DoFHandler<3, 3> dof_handler_conormal_trace(cube);
-    dof_handler_potential.distribute_dofs(fe_dirichlet);
-    dof_handler_conormal_trace.distribute_dofs(fe_neumann);
-
-    Vector<double> potentials(dof_handler_potential.n_dofs());
-    Vector<double> conormal_traces(dof_handler_conormal_trace.n_dofs());
-
-    evaluate_representation_formula_for_potential(V,
-                                                  K,
-                                                  dof_handler_dirichlet,
-                                                  dof_handler_neumann,
-                                                  dirichlet_data,
-                                                  neumann_data,
-                                                  dof_handler_potential,
-                                                  1,
-                                                  potentials,
-                                                  false);
-
-    std::ofstream vtk_result("cube.vtk");
-    DataOut<3, 3> data_out;
-    data_out.add_data_vector(dof_handler_potential, potentials, "potential");
-    data_out.build_patches();
-    data_out.write_vtk(vtk_result);
-  }
+  Triangulation<3, 3> cube;
+  GridGenerator::subdivided_hyper_cube(cube, 30, 3., 6.);
+  GridOut().write_msh(cube, "cube.msh");
+  bem.output_results_on_target_tria("cube.vtk", cube, 1);
 }
 
 void

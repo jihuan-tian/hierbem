@@ -244,10 +244,21 @@ public:
   void
   output_results() const;
 
-  template <int TargetDim>
+  /**
+   * Evaluate potentials and conormal traces on the target 2D triangulation.
+   */
   void
-  output_results_on_target_tria(const std::string                   vtk_file,
-                                Triangulation<TargetDim, spacedim> &tria) const;
+  output_results_on_target_tria(const std::string                  &vtk_file,
+                                const Triangulation<dim, spacedim> &tria,
+                                const unsigned int mapping_order) const;
+
+  /**
+   * Evaluate potentials on the target 3D triangulation.
+   */
+  void
+  output_results_on_target_tria(const std::string                &vtk_file,
+                                const Triangulation<3, spacedim> &tria,
+                                const unsigned int mapping_order) const;
 
   void
   run();

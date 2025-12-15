@@ -636,13 +636,15 @@ namespace DoFToolsExt
     mapping_data->compute_shape_function_values(fe_unit_support_points);
 
     // Collect gradient matrices of mapping shape functions, which are evaluated
-    // at the finite element support points.
-    std::vector<LAPACKFullMatrixExt<Number>> mapping_grad_matrices(
+    // at the finite element support points. N.B. The underlying data type for
+    // the matrix entries is double, which is consistent with the number type
+    // used by @p mapping_support_points below.
+    std::vector<LAPACKFullMatrixExt<double>> mapping_grad_matrices(
       n_dofs_per_cell);
     for (unsigned int d = 0; d < n_dofs_per_cell; d++)
       {
         mapping_grad_matrices[d].reinit(mapping_n_shape_functions, dim);
-        BEMTools::mappingq_shape_grad_matrix<dim, spacedim, Number>(
+        BEMTools::mappingq_shape_grad_matrix<dim, spacedim, double>(
           *mapping_data, d, mapping_grad_matrices[d]);
       }
 
@@ -675,6 +677,9 @@ namespace DoFToolsExt
                   mapping_grad_matrices[d],
                   normal_vector,
                   is_normal_vector_negated);
+                // N.B. The locally computed @p normal_vector has the number
+                // type double, which may be different from the template
+                // argument Number.
                 normal_vectors[dof_index] = normal_vector;
 
                 dof_flags[dof_index] = true;
