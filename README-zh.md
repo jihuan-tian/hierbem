@@ -122,7 +122,7 @@ HierBEM 提供了一组测试用例，展示了如何采用边界元方法设置
    LaplaceBEM<dim, spacedim, double, double> bem(
      1, // fe order for dirichlet space
      0, // fe order for neumann space
-     LaplaceBEM<dim, spacedim, double, double>::ProblemType::DirichletBCProblem,
+     ProblemType::DirichletBCProblem,
      is_interior_problem,         // is interior problem
      4,                           // n_min for cluster tree
      4,                           // n_min for block cluster tree

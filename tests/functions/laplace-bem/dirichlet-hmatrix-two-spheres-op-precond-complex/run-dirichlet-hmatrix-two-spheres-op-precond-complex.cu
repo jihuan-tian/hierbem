@@ -33,6 +33,7 @@
 #include <iostream>
 
 #include "bem/bem_general.hcu"
+#include "bem/types.h"
 #include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
@@ -251,8 +252,7 @@ run_dirichlet_hmatrix_two_spheres_op_precond_complex(
   LaplaceBEM<dim, spacedim, std::complex<double>, double> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
-    LaplaceBEM<dim, spacedim, std::complex<double>, double>::ProblemType::
-      DirichletBCProblem,
+    ProblemType::DirichletBCProblem,
     is_interior_problem,         // is interior problem
     16,                          // n_min for cluster tree
     16,                          // n_min for block cluster tree

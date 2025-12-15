@@ -31,6 +31,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "bem/types.h"
 #include "grid/grid_in_ext.h"
 #include "grid/grid_out_ext.h"
 #include "hbem_test_config.h"
@@ -254,12 +255,11 @@ main(int argc, char *argv[])
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  LaplaceBEM<dim, spacedim> bem(
-    opts.dirichlet_space_fe_order,
-    opts.neumann_space_fe_order,
-    LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
-    true, // Interior problem
-    MultithreadInfo::n_cores());
+  LaplaceBEM<dim, spacedim> bem(opts.dirichlet_space_fe_order,
+                                opts.neumann_space_fe_order,
+                                ProblemType::DirichletBCProblem,
+                                true, // Interior problem
+                                MultithreadInfo::n_cores());
   bem.set_cpu_serial(!opts.run_in_parallel);
 
   timer.stop();

@@ -24,6 +24,7 @@
 #if ENABLE_NVTX == 1
 #  include "utilities/cu_profile.hcu"
 #endif
+#include "bem/types.h"
 #include "grid/grid_in_ext.h"
 #include "grid/grid_out_ext.h"
 #include "hbem_test_config.h"
@@ -152,8 +153,7 @@ run_neumann_hmatrix_op_precond_complex(
   LaplaceBEM<dim, spacedim, std::complex<double>, double> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
-    LaplaceBEM<dim, spacedim, std::complex<double>, double>::ProblemType::
-      NeumannBCProblem,
+    ProblemType::NeumannBCProblem,
     is_interior_problem,         // is interior problem
     4,                           // n_min for cluster tree
     4,                           // n_min for block cluster tree

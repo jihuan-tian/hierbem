@@ -21,6 +21,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "bem/types.h"
 #include "hbem_test_config.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
 #include "laplace/laplace_bem.h"
@@ -111,8 +112,7 @@ run_mixed_l_shape_op_precond_complex(const IterativeSolverVmultType vmult_type)
   LaplaceBEM<dim, spacedim, std::complex<double>, double> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
-    LaplaceBEM<dim, spacedim, std::complex<double>, double>::ProblemType::
-      MixedBCProblem,
+    ProblemType::MixedBCProblem,
     is_interior_problem,         // is interior problem
     4,                           // n_min for cluster tree
     32,                          // n_min for block cluster tree

@@ -16,6 +16,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "bem/types.h"
 #include "hbem_test_config.h"
 #include "laplace/laplace_bem.h"
 #include "preconditioners/preconditioner_type.h"
@@ -84,12 +85,11 @@ run_neumann_full_matrix()
   const unsigned int spacedim = 3;
 
   const bool                                is_interior_problem = false;
-  LaplaceBEM<dim, spacedim, double, double> bem(
-    1,
-    0,
-    LaplaceBEM<dim, spacedim, double, double>::ProblemType::NeumannBCProblem,
-    is_interior_problem,
-    MultithreadInfo::n_threads());
+  LaplaceBEM<dim, spacedim, double, double> bem(1,
+                                                0,
+                                                ProblemType::NeumannBCProblem,
+                                                is_interior_problem,
+                                                MultithreadInfo::n_threads());
   bem.set_project_name("neumann-full-matrix");
   bem.set_preconditioner_type(PreconditionerType::Identity);
 

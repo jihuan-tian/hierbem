@@ -17,6 +17,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "bem/types.h"
 #include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
@@ -48,7 +49,7 @@ main()
   LaplaceBEM<dim, spacedim, double, double> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
-    LaplaceBEM<dim, spacedim, double, double>::ProblemType::MixedBCProblem,
+    ProblemType::MixedBCProblem,
     true,                        // is interior problem
     32,                          // n_min for cluster tree
     32,                          // n_min for block cluster tree

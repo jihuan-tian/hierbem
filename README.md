@@ -121,7 +121,7 @@ For a quick start, here is a minimal example work flow in C++:
    LaplaceBEM<dim, spacedim, double, double> bem(
      1, // fe order for dirichlet space
      0, // fe order for neumann space
-     LaplaceBEM<dim, spacedim, double, double>::ProblemType::DirichletBCProblem,
+     ProblemType::DirichletBCProblem,
      is_interior_problem,         // is interior problem
      4,                           // n_min for cluster tree
      4,                           // n_min for block cluster tree

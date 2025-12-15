@@ -11,10 +11,8 @@
 
 /**
  * @file laplace_bem.h
- * @brief Implementation of BEM involving kernel functions and singular
- * numerical quadratures.
+ * @brief Definition of class for solving the Laplace equation using BEM.
  *
- * @ingroup sauter_quadrature
  * @date 2020-11-02
  * @author Jihuan Tian
  */
@@ -36,6 +34,7 @@
 #include <string>
 #include <vector>
 
+#include "bem/types.h"
 #include "cad_mesh/gmsh_manipulation.h"
 #include "cad_mesh/subdomain_topology.h"
 #include "config.h"
@@ -58,31 +57,14 @@ class LaplaceBEM
 {
 public:
 #pragma region == == Typedefs == ==
-  /**
-   * Enum for various types of Laplace problem
-   */
-  enum ProblemType
-  {
-    NeumannBCProblem,   //!< NeumannBCProblem
-    DirichletBCProblem, //!< DirichletBCProblem
-    MixedBCProblem,     //!< MixedBCProblem
-    UndefinedProblem
-  };
-
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
-
 #pragma endregion
+
 #pragma region == == Constants == ==
   /**
    * Maximum mapping order used for representing curved manifolds.
    */
   inline static const unsigned int max_mapping_order = 3;
-
-  /**
-   * The large integer for shifting the material id in the interfacial domain
-   * \f$\Omega_I\f$.
-   */
-  const static types::material_id material_id_shift_for_interfacial_domain;
 #pragma endregion
 #pragma region == == Ctor and Dtor == ==
 

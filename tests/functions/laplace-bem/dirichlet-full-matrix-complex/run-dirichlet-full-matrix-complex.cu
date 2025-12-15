@@ -18,6 +18,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "bem/types.h"
 #include "hbem_test_config.h"
 #include "laplace/laplace_bem.h"
 
@@ -82,8 +83,7 @@ run_dirichlet_full_matrix_complex()
   LaplaceBEM<dim, spacedim, std::complex<double>, double> bem(
     1,
     0,
-    LaplaceBEM<dim, spacedim, std::complex<double>, double>::ProblemType::
-      DirichletBCProblem,
+    ProblemType::DirichletBCProblem,
     is_interior_problem,
     MultithreadInfo::n_threads());
   bem.set_project_name("dirichlet-full-matrix-complex");

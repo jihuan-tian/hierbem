@@ -1,5 +1,4 @@
-// Copyright (C) 2024-2025 Jihuan Tian <jihuan_tian@hotmail.com>
-// Copyright (C) 2024 Xiaozhe Wang <chaoslawful@gmail.com>
+// Copyright (C) 2025 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -10,20 +9,23 @@
 // file LICENSE at the top level directory of HierBEM.
 
 /**
- * @file laplace_kernels.h
- * @brief Introduction of laplace_kernels.h
+ * @file helmholtz_acoustic_kernels.h
+ * @brief Definition of kernel functions used in the Helmholtz acoustic
+ * equation.
  *
- * @date 2022-03-04
+ * @date 2025-12-13
  * @author Jihuan Tian
  */
-#ifndef HIERBEM_INCLUDE_PLATFORM_SHARED_LAPLACE_KERNELS_H_
-#define HIERBEM_INCLUDE_PLATFORM_SHARED_LAPLACE_KERNELS_H_
+#ifndef HIERBEM_INCLUDE_PLATFORM_SHARED_HELMHOLTZ_ACOUSTIC_KERNELS_H_
+#define HIERBEM_INCLUDE_PLATFORM_SHARED_HELMHOLTZ_ACOUSTIC_KERNELS_H_
 
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
 
 #include <assert.h>
+
+#include <cmath>
 
 #include "bem/types.h"
 #include "config.h"
@@ -36,13 +38,13 @@ using namespace dealii;
 
 namespace PlatformShared
 {
-  namespace LaplaceKernel
+  namespace HelmholtzAcousticKernel
   {
     /**
      * Kernel function of the single layer potential integral operator, either
      * boundary integral operator or volume integral operator.
      */
-    template <int spacedim, typename KernelNumberType = double>
+    template <int spacedim, typename KernelNumberType>
     class SingleLayerKernel
     {
     public:
@@ -50,12 +52,18 @@ namespace PlatformShared
         typename numbers::NumberTraits<KernelNumberType>::real_type;
       static constexpr unsigned int dimension = spacedim;
 
-      const KernelType   kernel_type;
+      const KernelType kernel_type;
+      /**
+       * Wave number. When it is a complex value, the medium is lossy. It is not
+       * a const member, so that it can be negated or modified further.
+       */
+      KernelNumberType   kappa;
       const unsigned int n_components;
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
-      SingleLayerKernel()
+      SingleLayerKernel(const KernelNumberType kappa_)
         : kernel_type(KernelType::SingleLayer)
+        , kappa(kappa_)
         , n_components(1)
       {}
 
@@ -104,16 +112,16 @@ namespace PlatformShared
 
       switch (spacedim)
         {
-          case 2:
+            case 3: {
+              const real_type r = (x - y).norm();
 #ifdef __CUDA_ARCH__
-            return (-0.5 / numbers::PI * ::log(1.0 / (x - y).norm()));
+              return (0.25 / numbers::PI / r *
+                      ::exp(KernelNumberType(0., 1.) * kappa * r));
 #else
-            return (-0.5 / numbers::PI * std::log(1.0 / (x - y).norm()));
+              return (0.25 / numbers::PI / r *
+                      std::exp(KernelNumberType(0., 1.) * kappa * r));
 #endif
-
-          case 3:
-            return (0.25 / numbers::PI / (x - y).norm());
-
+            }
           default:
             assert(false);
             return KernelNumberType();
@@ -125,7 +133,7 @@ namespace PlatformShared
      * Kernel function of the double layer potential integral operator, either
      * boundary integral operator or volume integral operator.
      */
-    template <int spacedim, typename KernelNumberType = double>
+    template <int spacedim, typename KernelNumberType>
     class DoubleLayerKernel
     {
     public:
@@ -134,11 +142,13 @@ namespace PlatformShared
       static constexpr unsigned int dimension = spacedim;
 
       const KernelType   kernel_type;
+      KernelNumberType   kappa;
       const unsigned int n_components;
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
-      DoubleLayerKernel()
+      DoubleLayerKernel(const KernelNumberType kappa_)
         : kernel_type(KernelType::DoubleLayer)
+        , kappa(kappa_)
         , n_components(1)
       {}
 
@@ -176,15 +186,19 @@ namespace PlatformShared
 
       switch (spacedim)
         {
-          case 2:
-            return scalar_product((y - x), ny) / 2.0 / numbers::PI /
-                   (y - x).norm_square();
-
-          case 3:
-            return scalar_product((x - y), ny) / 4.0 / numbers::PI /
-                   HierBEM::PlatformShared::Utilities::fixed_power<3>(
-                     (x - y).norm());
-
+            case 3: {
+              const real_type        r   = (x - y).norm();
+              const KernelNumberType ikr = KernelNumberType(0., 1.) * kappa * r;
+#ifdef __CUDA_ARCH__
+              return 0.25 / numbers::PI /
+                     HierBEM::PlatformShared::Utilities::fixed_power<3>(r) *
+                     ::exp(ikr) * (1 - ikr) * scalar_product(x - y, ny);
+#else
+              return 0.25 / numbers::PI /
+                     HierBEM::PlatformShared::Utilities::fixed_power<3>(r) *
+                     std::exp(ikr) * (1 - ikr) * scalar_product(x - y, ny);
+#endif
+            }
           default:
             assert(false);
             return KernelNumberType();
@@ -196,7 +210,7 @@ namespace PlatformShared
      * Kernel function of the adjoint double layer potential integral operator,
      * either boundary integral operator or volume integral operator.
      */
-    template <int spacedim, typename KernelNumberType = double>
+    template <int spacedim, typename KernelNumberType>
     class AdjointDoubleLayerKernel
     {
     public:
@@ -205,11 +219,13 @@ namespace PlatformShared
       static constexpr unsigned int dimension = spacedim;
 
       const KernelType   kernel_type;
+      KernelNumberType   kappa;
       const unsigned int n_components;
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
-      AdjointDoubleLayerKernel()
+      AdjointDoubleLayerKernel(const KernelNumberType kappa_)
         : kernel_type(KernelType::AdjointDoubleLayer)
+        , kappa(kappa_)
         , n_components(1)
       {}
 
@@ -247,15 +263,19 @@ namespace PlatformShared
 
       switch (spacedim)
         {
-          case 2:
-            return scalar_product((x - y), nx) / 2.0 / numbers::PI /
-                   (x - y).norm_square();
-
-          case 3:
-            return scalar_product((y - x), nx) / 4.0 / numbers::PI /
-                   HierBEM::PlatformShared::Utilities::fixed_power<3>(
-                     (x - y).norm());
-
+            case 3: {
+              const real_type        r   = (x - y).norm();
+              const KernelNumberType ikr = KernelNumberType(0., 1.) * kappa * r;
+#ifdef __CUDA_ARCH__
+              return 0.25 / numbers::PI /
+                     HierBEM::PlatformShared::Utilities::fixed_power<3>(r) *
+                     ::exp(ikr) * (1 - ikr) * scalar_product(y - x, nx);
+#else
+              return 0.25 / numbers::PI /
+                     HierBEM::PlatformShared::Utilities::fixed_power<3>(r) *
+                     std::exp(ikr) * (1 - ikr) * scalar_product(y - x, nx);
+#endif
+            }
           default:
             assert(false);
             return KernelNumberType();
@@ -266,7 +286,7 @@ namespace PlatformShared
     /**
      * Kernel function of the hypersingular volume integral operator.
      */
-    template <int spacedim, typename KernelNumberType = double>
+    template <int spacedim, typename KernelNumberType>
     class HyperSingularKernel
     {
     public:
@@ -275,11 +295,13 @@ namespace PlatformShared
       static constexpr unsigned int dimension = spacedim;
 
       const KernelType   kernel_type;
+      KernelNumberType   kappa;
       const unsigned int n_components;
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
-      HyperSingularKernel()
+      HyperSingularKernel(const KernelNumberType kappa_)
         : kernel_type(KernelType::HyperSingular)
+        , kappa(kappa_)
         , n_components(1)
       {}
 
@@ -314,29 +336,27 @@ namespace PlatformShared
     {
       (void)component;
 
-      const real_type r2 = (x - y).norm_square();
-
       switch (spacedim)
         {
-            case 2: {
-              const real_type r4 = r2 * r2;
-
-              return 0.5 / numbers::PI *
-                     (-scalar_product(nx, ny) / r2 +
-                      2.0 * scalar_product(nx, (x - y)) *
-                        scalar_product(ny, (x - y)) / r4);
-            }
-
             case 3: {
-              const real_type r3 = (x - y).norm() * r2;
-              const real_type r5 = r2 * r3;
+              const real_type        r   = (x - y).norm();
+              const real_type        r2  = r * r;
+              const real_type        r3  = r * r2;
+              const real_type        r5  = r2 * r3;
+              const KernelNumberType ikr = KernelNumberType(0., 1.) * kappa * r;
 
-              return 0.25 / numbers::PI *
-                     (-scalar_product(nx, ny) / r3 +
-                      3.0 * scalar_product(nx, (x - y)) *
-                        scalar_product(ny, (x - y)) / r5);
+#ifdef __CUDA_ARCH__
+              return 0.25 / numbers::PI * ::exp(ikr) *
+                     ((ikr - 1.) * scalar_product(nx, ny) / r3 -
+                      (kappa * kappa / r3 + 3 * (ikr - 1.) / r5) *
+                        scalar_product(x - y, nx) * scalar_product(x - y, ny));
+#else
+              return 0.25 / numbers::PI * std::exp(ikr) *
+                     ((ikr - 1.) * scalar_product(nx, ny) / r3 -
+                      (kappa * kappa / r3 + 3 * (ikr - 1.) / r5) *
+                        scalar_product(x - y, nx) * scalar_product(x - y, ny));
+#endif
             }
-
           default:
             assert(false);
             return KernelNumberType();
@@ -346,11 +366,12 @@ namespace PlatformShared
 
     /**
      * Kernel function of the hypersingular boundary integral operator, which
-     * requires regularization, i.e. surface curl should be be applied to the
-     * trial and test functions.
+     * requires regularization. This class is the first part in this kernel
+     * function, which requires surface curl to be applied to the trial and test
+     * functions.
      */
-    template <int spacedim, typename KernelNumberType = double>
-    class HyperSingularKernelRegular
+    template <int spacedim, typename KernelNumberType>
+    class HyperSingularKernelRegular1
     {
     public:
       using real_type =
@@ -358,25 +379,25 @@ namespace PlatformShared
       static constexpr unsigned int dimension = spacedim;
 
       const KernelType   kernel_type;
+      KernelNumberType   kappa;
       const unsigned int n_components;
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
-      HyperSingularKernelRegular()
+      HyperSingularKernelRegular1(const KernelNumberType kappa_)
         : kernel_type(KernelType::HyperSingularRegular)
+        , kappa(kappa_)
         , n_components(1)
       {}
 
       /**
-       * Calculate the value of fundamental solution of the Laplace operator.
-       * This version runs on the CPU host.
+       * Calculate the value of fundamental solution of the Helmholtz operator,
+       * which is also the kernel function of the single layer potential
+       * integral operator. This version runs on the CPU host.
        *
        * \mynote{Because regularization will be applied to the bilinear form
        * of the hyper-singular kernel, the value calculated here is actually
        * not the hyper-singular function itself, but the fundamental solution
-       * of the Laplace operator. The final computing the regularized bilinear
-       * form will be carried out in the pullback in the unit cell, which is
-       * handled in the
-       * function @p KernelPulledbackToUnitCell::value.}
+       * of the Helmholtz operator.}
        *
        * @param x
        * @param y
@@ -407,7 +428,7 @@ namespace PlatformShared
 
     template <int spacedim, typename KernelNumberType>
     HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
-    HyperSingularKernelRegular<spacedim, KernelNumberType>::value(
+    HyperSingularKernelRegular1<spacedim, KernelNumberType>::value(
       const Point<spacedim, real_type>     &x,
       const Point<spacedim, real_type>     &y,
       const Tensor<1, spacedim, real_type> &nx,
@@ -420,24 +441,101 @@ namespace PlatformShared
 
       switch (spacedim)
         {
-          case 2:
+            case 3: {
+              const real_type r = (x - y).norm();
 #ifdef __CUDA_ARCH__
-            return (-0.5 / numbers::PI * ::log((x - y).norm()));
+              return (0.25 / numbers::PI / r *
+                      ::exp(KernelNumberType(0., 1.) * kappa * r));
 #else
-            return (-0.5 / numbers::PI * std::log((x - y).norm()));
+              return (0.25 / numbers::PI / r *
+                      std::exp(KernelNumberType(0., 1.) * kappa * r));
 #endif
-
-          case 3:
-            return (0.25 / numbers::PI / (x - y).norm());
-
+            }
           default:
             assert(false);
             return KernelNumberType();
         }
     }
-  } // namespace LaplaceKernel
+
+
+    /**
+     * Kernel function of the hypersingular boundary integral operator, which
+     * requires regularization. This class is the second part in this kernel
+     * function, which does not require surface curl to be applied to the trial
+     * and test functions.
+     */
+    template <int spacedim, typename KernelNumberType>
+    class HyperSingularKernelRegular2
+    {
+    public:
+      using real_type =
+        typename numbers::NumberTraits<KernelNumberType>::real_type;
+      static constexpr unsigned int dimension = spacedim;
+
+      const KernelType   kernel_type;
+      KernelNumberType   kappa;
+      const unsigned int n_components;
+
+      HBEM_ATTR_HOST HBEM_ATTR_DEV
+      HyperSingularKernelRegular2(const KernelNumberType kappa_)
+        : kernel_type(KernelType::HyperSingularRegular)
+        , kappa(kappa_)
+        , n_components(1)
+      {}
+
+      HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+      value(const Point<spacedim, real_type>     &x,
+            const Point<spacedim, real_type>     &y,
+            const Tensor<1, spacedim, real_type> &nx,
+            const Tensor<1, spacedim, real_type> &ny,
+            const unsigned int                    component = 0) const;
+
+      /**
+       * Return whether the kernel function is symmetric.
+       *
+       * @return
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      is_symmetric() const
+      {
+        return true;
+      }
+    };
+
+
+    template <int spacedim, typename KernelNumberType>
+    HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+    HyperSingularKernelRegular2<spacedim, KernelNumberType>::value(
+      const Point<spacedim, real_type>     &x,
+      const Point<spacedim, real_type>     &y,
+      const Tensor<1, spacedim, real_type> &nx,
+      const Tensor<1, spacedim, real_type> &ny,
+      const unsigned int                    component) const
+    {
+      (void)component;
+
+      switch (spacedim)
+        {
+            case 3: {
+              const real_type r = (x - y).norm();
+#ifdef __CUDA_ARCH__
+              return (-kappa * kappa * 0.25 / numbers::PI / r *
+                      ::exp(KernelNumberType(0., 1.) * kappa * r) *
+                      scalar_product(nx, ny));
+#else
+              return (-kappa * kappa * 0.25 / numbers::PI / r *
+                      std::exp(KernelNumberType(0., 1.) * kappa * r) *
+                      scalar_product(nx, ny));
+#endif
+            }
+          default:
+            assert(false);
+            return KernelNumberType();
+        }
+    }
+  } // namespace HelmholtzAcousticKernel
 } // namespace PlatformShared
 
 HBEM_NS_CLOSE
 
-#endif // HIERBEM_INCLUDE_PLATFORM_SHARED_LAPLACE_KERNELS_H_
+#endif // HIERBEM_INCLUDE_PLATFORM_SHARED_HELMHOLTZ_ACOUSTIC_KERNELS_H_

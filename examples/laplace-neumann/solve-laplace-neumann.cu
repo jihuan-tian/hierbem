@@ -32,6 +32,7 @@
 #include <map>
 #include <string>
 
+#include "bem/types.h"
 #include "cad_mesh/gmsh_manipulation.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
 #include "laplace/laplace_bem.h"
@@ -147,7 +148,7 @@ main()
   LaplaceBEM<dim, spacedim, double, double> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
-    LaplaceBEM<dim, spacedim, double, double>::ProblemType::NeumannBCProblem,
+    ProblemType::NeumannBCProblem,
     true,                        // is interior problem
     32,                          // n_min for cluster tree
     32,                          // n_min for block cluster tree
