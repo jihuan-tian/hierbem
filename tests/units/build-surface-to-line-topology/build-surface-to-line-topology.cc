@@ -10,10 +10,11 @@
 
 /**
  * @file build-surface-to-line-topology.cc
- * @brief
+ * @brief Verify building a surface-to-line topology based on the CAD
+ * information.
  *
  * @ingroup test_cases
- * @author
+ * @author Jihuan Tian
  * @date 2024-08-05
  */
 
@@ -29,7 +30,7 @@ main(int argc, const char *argv[])
   (void)argv;
 
   {
-    DDMEfield<1, 3> efield;
+    DDMEfield<1, 3, double, double> efield;
     efield.read_subdomain_topology(HBEM_TEST_MODEL_DIR
                                    "circle-immersed-in-two-squares.geo",
                                    HBEM_TEST_MODEL_DIR
@@ -38,7 +39,7 @@ main(int argc, const char *argv[])
   }
 
   {
-    DDMEfield<1, 3> efield;
+    DDMEfield<1, 3, double, double> efield;
     efield.read_subdomain_topology(
       HBEM_TEST_MODEL_DIR
       "circle-immersed-in-two-squares-different-surface-orientations.geo",

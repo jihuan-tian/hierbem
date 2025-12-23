@@ -29,7 +29,7 @@ main(int argc, const char *argv[])
   (void)argc;
   (void)argv;
 
-  DDMEfield<1, 3> efield;
+  DDMEfield<1, 3, double, double> efield;
   read_msh(HBEM_TEST_MODEL_DIR
            "circle-immersed-in-two-squares-different-surface-orientations.msh",
            efield.get_triangulation(),

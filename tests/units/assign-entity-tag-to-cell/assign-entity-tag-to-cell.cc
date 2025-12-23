@@ -10,17 +10,24 @@
 
 /**
  * @file assign-entity-tag-to-cell.cc
- * @brief
+ * @brief Verify @p read_mesh in "grid/grid_in_ext.h", which assigns entity tag
+ * as material id to each cell. By disabling orientation checking, it can read a
+ * skeleton surface mesh, which is not homeomorphic to a sphere.
  *
  * @ingroup test_cases
- * @author
+ * @author Jihuan Tian
  * @date 2024-07-28
  */
 
-#include "electric_field/ddm_efield.h"
+#include <deal.II/grid/tria.h>
+
+#include <iostream>
+
 #include "grid/grid_in_ext.h"
+#include "grid/grid_out_ext.h"
 #include "hbem_test_config.h"
 
+using namespace dealii;
 using namespace HierBEM;
 
 int
@@ -29,10 +36,14 @@ main(int argc, const char *argv[])
   (void)argc;
   (void)argv;
 
-  DDMEfield<2, 3> efield;
-  read_msh(HBEM_TEST_MODEL_DIR "sphere-immersed-in-two-boxes.msh",
-           efield.get_triangulation(),
-           false);
+  Triangulation<2, 3> tria;
+  // Read the skeleton mesh.
+  read_msh(HBEM_TEST_MODEL_DIR "sphere-immersed-in-two-boxes.msh", tria, false);
+  // Write the skeleton mesh as an MSH file, where there are three tags in an
+  // element data record: material id, elementary tag and subdomain id. The
+  // elementary tag is the same as the material id, so that we can visualize
+  // material id directly in Gmsh.
+  write_msh_correct(tria, std::cout);
 
   return 0;
 }

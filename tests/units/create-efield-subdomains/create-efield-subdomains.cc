@@ -10,10 +10,10 @@
 
 /**
  * @file create-efield-subdomains.cu
- * @brief
+ * @brief Create multiple subdomains for electric field problem.
  *
  * @ingroup test_cases
- * @author
+ * @author Jihuan Tian
  * @date 2024-08-06
  */
 
@@ -28,7 +28,7 @@ main(int argc, const char *argv[])
   (void)argc;
   (void)argv;
 
-  DDMEfield<2, 3> efield;
+  DDMEfield<2, 3, double, double> efield;
   efield.read_subdomain_topology(HBEM_TEST_MODEL_DIR
                                  "sphere-immersed-in-two-boxes.brep",
                                  HBEM_TEST_MODEL_DIR

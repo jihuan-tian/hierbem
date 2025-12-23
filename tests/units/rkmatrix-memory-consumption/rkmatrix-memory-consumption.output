@@ -13,6 +13,6 @@ RkMatrix.B=
   -0.33030    0.85102 
   -0.54903    0.17860 
   -0.76777   -0.49383 
-Memory consumption of A.A: 328
-Memory consumption of A.B: 344
-Memory consumption of rank-k matrix A: 688
+Memory consumption of A.A: 368
+Memory consumption of A.B: 384
+Memory consumption of rank-k matrix A: 768

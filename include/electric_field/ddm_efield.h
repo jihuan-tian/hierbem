@@ -84,6 +84,27 @@ enum SubdomainType
   FloatingConductor
 };
 
+/**
+ * Function for printing the name of a subdomain type.
+ */
+inline const char *
+subdomain_type_name(const SubdomainType t)
+{
+  switch (t)
+    {
+      case SubdomainType::SurroundingSpace:
+        return "surrounding space";
+      case SubdomainType::Dielectric:
+        return "dielectric";
+      case SubdomainType::VoltageConductor:
+        return "voltage conductor";
+      case SubdomainType::FloatingConductor:
+        return "floating conductor";
+      default:
+        return "unknown";
+    }
+}
+
 template <int spacedim, typename RangeNumberType>
 class EfieldSubdomain;
 
