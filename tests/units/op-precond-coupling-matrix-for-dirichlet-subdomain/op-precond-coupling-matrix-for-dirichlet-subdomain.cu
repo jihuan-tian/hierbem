@@ -37,7 +37,7 @@
 #include <vector>
 
 #include "grid/grid_out_ext.h"
-#include "preconditioners/preconditioner_for_laplace_dirichlet.h"
+#include "preconditioners/preconditioner_for_laplace_single_layer_bio.h"
 #include "utilities/debug_tools.h"
 
 using namespace Catch::Matchers;
@@ -63,7 +63,7 @@ assign_material_ids(Triangulation<2, 3> &tria, const double width)
 
 void
 setup_preconditioner(
-  PreconditionerForLaplaceDirichlet<2, 3, double, double> &precond)
+  LaplaceSingleLayerPreconditioner<2, 3, double, double> &precond)
 {
   precond.initialize_dof_handlers();
   precond.generate_dof_selectors();
@@ -86,8 +86,8 @@ setup_preconditioner(
  */
 void
 print_support_points_in_primal_and_refined_meshes(
-  ostream                                                       &out,
-  const PreconditionerForLaplaceDirichlet<2, 3, double, double> &precond)
+  ostream                                                      &out,
+  const LaplaceSingleLayerPreconditioner<2, 3, double, double> &precond)
 {
   out << "# DoF index, Support point coordinates x, y, z, Weight for basis"
       << std::endl;
@@ -220,7 +220,7 @@ TEST_CASE(
   // preconditioner's constructor.
   std::vector<types::global_dof_index> dummy_numbering(tria.n_cells(0) / 2);
   std::set<types::material_id>         subdomain_material_ids = {1};
-  PreconditionerForLaplaceDirichlet<2, 3, double, double> precond(
+  LaplaceSingleLayerPreconditioner<2, 3, double, double> precond(
     fe_primal_space,
     fe_dual_space,
     tria,

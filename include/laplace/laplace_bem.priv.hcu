@@ -9,6 +9,14 @@
 // option) any later version. The full text of the license can be found in the
 // file LICENSE at the top level directory of HierBEM.
 
+/**
+ * @file laplace_bem.impl.hcu
+ * @brief Implementation of pimpl member functions to be called by LaplaceBEM.
+ *
+ * @date 2024-12-26
+ * @author Jihuan Tian, Xiaozhe Wang
+ */
+
 #ifndef HIERBEM_INCLUDE_LAPLACE_LAPLACE_BEM_PRIV_H_
 #define HIERBEM_INCLUDE_LAPLACE_LAPLACE_BEM_PRIV_H_
 
@@ -92,8 +100,8 @@
 #include "mapping/mapping_info.h"
 #include "platform_shared/laplace_kernels.h"
 #include "postprocessing/data_out_ext.h"
-#include "preconditioners/preconditioner_for_laplace_dirichlet.h"
-#include "preconditioners/preconditioner_for_laplace_neumann.h"
+#include "preconditioners/preconditioner_for_laplace_hyper_singular_bio.h"
+#include "preconditioners/preconditioner_for_laplace_single_layer_bio.h"
 #include "preconditioners/preconditioner_type.h"
 #include "quadrature/quadrature.templates.h"
 #include "solvers/solve_hblockmatrix_skew_symm.h"
@@ -128,8 +136,7 @@ public:
   using SearchableMaterialIdContainer =
     std::map<EntityTag, Function<spacedim, RangeNumberType> *>;
 
-#pragma region == == Internal class ctor and dtor decls == ==
-  Priv();
+#pragma region ****Internal class ctor and dtor decls ****
   Priv(unsigned int fe_order_for_dirichlet_space,
        unsigned int fe_order_for_neumann_space,
        ProblemType  problem_type,
@@ -152,7 +159,7 @@ public:
 
 #pragma endregion
 
-#pragma region == == Internal class public member function decls == ==
+#pragma region ****Internal class public member function decls ****
   /*
   The actual implementations of LaplaceBEM public member functions are placed
   here instead of in the LaplaceBEM class itself, in order to prevent redudant
@@ -236,7 +243,7 @@ public:
 #pragma endregion
 
 private:
-#pragma region == == Internal class private member function decls == ==
+#pragma region ****Internal class private member function decls ****
 
   /**
    * Compute the stabilization vectors and factor for the full matrix of the
@@ -297,7 +304,7 @@ private:
                              const std::string &comment = std::string(""));
 #pragma endregion
 
-#pragma region == == Internal class private member variable decls == ==
+#pragma region ****Internal class private member variable decls ****
   friend class LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>;
 
   std::string project_name_;
@@ -450,37 +457,6 @@ private:
                                   RangeNumberType,
                                   KernelNumberType>>
     bI2K_prime2_;
-
-  /**
-   * Kernel function for the single layer potential on the host, i.e. the number
-   * type is <tt>KernelNumberType</tt>. It is only used for building full
-   * matrices.
-   */
-  PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim, KernelNumberType>
-    single_layer_kernel_cpu_;
-  /**
-   * Kernel function for the double layer potential on the host, i.e. the number
-   * type is <tt>KernelNumberType</tt>. It is only used for building full
-   * matrices.
-   */
-  PlatformShared::LaplaceKernel::DoubleLayerKernel<spacedim, KernelNumberType>
-    double_layer_kernel_cpu_;
-  /**
-   * Kernel function for the adjoint double layer potential on the host, i.e.
-   * the number type is <tt>KernelNumberType</tt>. It is only used for building
-   * full matrices.
-   */
-  PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel<spacedim,
-                                                          KernelNumberType>
-    adjoint_double_layer_kernel_cpu_;
-  /**
-   * Kernel function for the hyper-singular potential on the host, i.e. the
-   * number type is <tt>KernelNumberType</tt>. It is only used for building full
-   * matrices.
-   */
-  PlatformShared::LaplaceKernel::HyperSingularKernelRegular<spacedim,
-                                                            KernelNumberType>
-    hyper_singular_kernel_cpu_;
 
   /**
    * Full matrices for verification purpose.
@@ -689,21 +665,21 @@ private:
    * Operator preconditioner for Dirichlet problem, either on the whole domain
    * or a subdomain.
    */
-  PreconditionerForLaplaceDirichlet<dim,
-                                    spacedim,
-                                    RangeNumberType,
-                                    KernelNumberType>
-    *operator_preconditioner_dirichlet_;
+  std::unique_ptr<LaplaceSingleLayerPreconditioner<dim,
+                                                   spacedim,
+                                                   RangeNumberType,
+                                                   KernelNumberType>>
+    op_precond_for_slp_;
 
   /**
    * Operator preconditioner for Neumann problem, either on the whole domain or
    * a subdomain.
    */
-  PreconditionerForLaplaceNeumann<dim,
-                                  spacedim,
-                                  RangeNumberType,
-                                  KernelNumberType>
-    *operator_preconditioner_neumann_;
+  std::unique_ptr<LaplaceHyperSingularPreconditioner<dim,
+                                                     spacedim,
+                                                     RangeNumberType,
+                                                     KernelNumberType>>
+    op_precond_for_hyper_singular_;
 
   /**
    * Memory consumption table
@@ -711,7 +687,7 @@ private:
   TableHandler memory_consumption_table_;
 #pragma endregion
 
-#pragma region == == Internal class friend function decls == ==
+#pragma region ****Internal class friend function decls ****
   template <int dim1,
             int spacedim1,
             typename RangeNumberType1,
@@ -782,40 +758,6 @@ template <int dim,
           int spacedim,
           typename RangeNumberType,
           typename KernelNumberType>
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::Priv()
-  : project_name_("default")
-  , fe_order_for_dirichlet_space_(0)
-  , fe_order_for_neumann_space_(0)
-  , problem_type_(UndefinedProblem)
-  , is_interior_problem_(true)
-  , thread_num_(0)
-  , tria_(Triangulation<dim, spacedim>::MeshSmoothing::
-            limit_level_difference_at_vertices)
-  , mg_tria_for_preconditioner_(Triangulation<dim, spacedim>::MeshSmoothing::
-                                  limit_level_difference_at_vertices)
-  , fe_for_dirichlet_space_(0)
-  , fe_for_neumann_space_(0)
-  , use_hmat_(false)
-  , cpu_serial_(false)
-  , n_min_for_ct_(0)
-  , n_min_for_bct_(0) // By default, it is the same as the @p n_min_for_ct
-  , eta_(0)
-  , max_hmat_rank_(0)
-  , aca_relative_error_(0)
-  , eta_for_preconditioner_(0)
-  , max_hmat_rank_for_preconditioner_(0)
-  , aca_relative_error_for_preconditioner_(0)
-  , alpha_for_neumann_(1.0)
-  , vmult_type_(IterativeSolverVmultType::SerialRecursive)
-  , preconditioner_type_(PreconditionerType::HMatrixFactorization)
-  , operator_preconditioner_dirichlet_(nullptr)
-  , operator_preconditioner_neumann_(nullptr)
-{}
-
-template <int dim,
-          int spacedim,
-          typename RangeNumberType,
-          typename KernelNumberType>
 LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::Priv(
   unsigned int fe_order_for_dirichlet_space,
   unsigned int fe_order_for_neumann_space,
@@ -847,8 +789,6 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::Priv(
   , alpha_for_neumann_(1.0)
   , vmult_type_(IterativeSolverVmultType::SerialRecursive)
   , preconditioner_type_(PreconditionerType::HMatrixFactorization)
-  , operator_preconditioner_dirichlet_(nullptr)
-  , operator_preconditioner_neumann_(nullptr)
 {}
 
 template <int dim,
@@ -896,8 +836,6 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::Priv(
   , alpha_for_neumann_(1.0)
   , vmult_type_(IterativeSolverVmultType::SerialRecursive)
   , preconditioner_type_(PreconditionerType::HMatrixFactorization)
-  , operator_preconditioner_dirichlet_(nullptr)
-  , operator_preconditioner_neumann_(nullptr)
 {}
 
 template <int dim,
@@ -906,21 +844,6 @@ template <int dim,
           typename KernelNumberType>
 LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::~Priv()
 {
-  dof_handler_for_dirichlet_space_.clear();
-  dof_handler_for_neumann_space_.clear();
-
-  if (operator_preconditioner_dirichlet_ != nullptr)
-    {
-      delete operator_preconditioner_dirichlet_;
-      operator_preconditioner_dirichlet_ = nullptr;
-    }
-
-  if (operator_preconditioner_neumann_ != nullptr)
-    {
-      delete operator_preconditioner_neumann_;
-      operator_preconditioner_neumann_ = nullptr;
-    }
-
   // Release manifold objects.
   for (auto &m : manifolds_)
     {
@@ -2125,6 +2048,19 @@ void
 LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   assemble_full_matrix_system()
 {
+  // Define kernel functions on the host, i.e. the number type is
+  // <tt>KernelNumberType</tt>.
+  PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim, KernelNumberType>
+    single_layer_kernel;
+  PlatformShared::LaplaceKernel::DoubleLayerKernel<spacedim, KernelNumberType>
+    double_layer_kernel;
+  PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel<spacedim,
+                                                          KernelNumberType>
+    adjoint_double_layer_kernel;
+  PlatformShared::LaplaceKernel::HyperSingularKernelRegular<spacedim,
+                                                            KernelNumberType>
+    hyper_singular_kernel;
+
   LogStream::Prefix prefix_string("assemble_full_matrix");
 
   MultithreadInfo::set_thread_limit(thread_num_);
@@ -2228,7 +2164,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 KernelNumberType,
                 SurfaceNormalDetector<dim, spacedim>,
                 LAPACKFullMatrixExt<RangeNumberType>>(
-                double_layer_kernel_cpu_,
+                double_layer_kernel,
                 1.0,
                 dof_handler_for_neumann_space_,
                 dof_handler_for_dirichlet_space_,
@@ -2247,7 +2183,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 KernelNumberType,
                 SurfaceNormalDetector<dim, spacedim>,
                 LAPACKFullMatrixExt<RangeNumberType>>(
-                double_layer_kernel_cpu_,
+                double_layer_kernel,
                 1.0,
                 dof_handler_for_neumann_space_,
                 dof_handler_for_dirichlet_space_,
@@ -2275,7 +2211,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 KernelNumberType,
                 SurfaceNormalDetector<dim, spacedim>,
                 LAPACKFullMatrixExt<RangeNumberType>>(
-                single_layer_kernel_cpu_,
+                single_layer_kernel,
                 1.0,
                 dof_handler_for_neumann_space_,
                 dof_handler_for_neumann_space_,
@@ -2294,7 +2230,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 KernelNumberType,
                 SurfaceNormalDetector<dim, spacedim>,
                 LAPACKFullMatrixExt<RangeNumberType>>(
-                single_layer_kernel_cpu_,
+                single_layer_kernel,
                 1.0,
                 dof_handler_for_neumann_space_,
                 dof_handler_for_neumann_space_,
@@ -2365,7 +2301,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             KernelNumberType,
             SurfaceNormalDetector<dim, spacedim>,
             LAPACKFullMatrixExt<RangeNumberType>>(
-            adjoint_double_layer_kernel_cpu_,
+            adjoint_double_layer_kernel,
             -1.0,
             dof_handler_for_dirichlet_space_,
             dof_handler_for_neumann_space_,
@@ -2388,7 +2324,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             KernelNumberType,
             SurfaceNormalDetector<dim, spacedim>,
             LAPACKFullMatrixExt<RangeNumberType>>(
-            hyper_singular_kernel_cpu_,
+            hyper_singular_kernel,
             1.0,
             dof_handler_for_dirichlet_space_,
             dof_handler_for_dirichlet_space_,
@@ -3046,32 +2982,26 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   mg_tria_for_preconditioner_.copy_triangulation(tria_);
                   mg_tria_for_preconditioner_.refine_global();
 
-                  if (operator_preconditioner_dirichlet_ != nullptr)
-                    {
-                      delete operator_preconditioner_dirichlet_;
-                      operator_preconditioner_dirichlet_ = nullptr;
-                    }
+                  op_precond_for_slp_ = std::make_unique<
+                    LaplaceSingleLayerPreconditioner<dim,
+                                                     spacedim,
+                                                     RangeNumberType,
+                                                     KernelNumberType>>(
+                    fe_for_neumann_space_,
+                    fe_for_dirichlet_space_,
+                    mg_tria_for_preconditioner_,
+                    neumann_space_on_dirichlet_domain_
+                      ->get_internal_to_external_dof_numbering(),
+                    neumann_space_on_dirichlet_domain_
+                      ->get_external_to_internal_dof_numbering());
 
-                  operator_preconditioner_dirichlet_ =
-                    new PreconditionerForLaplaceDirichlet<dim,
-                                                          spacedim,
-                                                          RangeNumberType,
-                                                          KernelNumberType>(
-                      fe_for_neumann_space_,
-                      fe_for_dirichlet_space_,
-                      mg_tria_for_preconditioner_,
-                      neumann_space_on_dirichlet_domain_
-                        ->get_internal_to_external_dof_numbering(),
-                      neumann_space_on_dirichlet_domain_
-                        ->get_external_to_internal_dof_numbering());
-
-                  operator_preconditioner_dirichlet_->setup_preconditioner(
+                  op_precond_for_slp_->setup_preconditioner(
                     thread_num_,
-                    HMatrixParameters(n_min_for_ct_,
-                                      n_min_for_bct_,
-                                      eta_,
-                                      max_hmat_rank_,
-                                      aca_relative_error_),
+                    HMatrixParameters<real_type>(n_min_for_ct_,
+                                                 n_min_for_bct_,
+                                                 eta_,
+                                                 max_hmat_rank_,
+                                                 aca_relative_error_),
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
@@ -3157,32 +3087,26 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   mg_tria_for_preconditioner_.copy_triangulation(tria_);
                   mg_tria_for_preconditioner_.refine_global();
 
-                  if (operator_preconditioner_neumann_ != nullptr)
-                    {
-                      delete operator_preconditioner_neumann_;
-                      operator_preconditioner_neumann_ = nullptr;
-                    }
+                  op_precond_for_hyper_singular_ = std::make_unique<
+                    LaplaceHyperSingularPreconditioner<dim,
+                                                       spacedim,
+                                                       RangeNumberType,
+                                                       KernelNumberType>>(
+                    fe_for_dirichlet_space_,
+                    fe_for_neumann_space_,
+                    mg_tria_for_preconditioner_,
+                    dirichlet_space_on_neumann_domain_
+                      ->get_internal_to_external_dof_numbering(),
+                    dirichlet_space_on_neumann_domain_
+                      ->get_external_to_internal_dof_numbering());
 
-                  operator_preconditioner_neumann_ =
-                    new PreconditionerForLaplaceNeumann<dim,
-                                                        spacedim,
-                                                        RangeNumberType,
-                                                        KernelNumberType>(
-                      fe_for_dirichlet_space_,
-                      fe_for_neumann_space_,
-                      mg_tria_for_preconditioner_,
-                      dirichlet_space_on_neumann_domain_
-                        ->get_internal_to_external_dof_numbering(),
-                      dirichlet_space_on_neumann_domain_
-                        ->get_external_to_internal_dof_numbering());
-
-                  operator_preconditioner_neumann_->setup_preconditioner(
+                  op_precond_for_hyper_singular_->setup_preconditioner(
                     thread_num_,
-                    HMatrixParameters(n_min_for_ct_,
-                                      n_min_for_bct_,
-                                      eta_,
-                                      max_hmat_rank_,
-                                      aca_relative_error_),
+                    HMatrixParameters<real_type>(n_min_for_ct_,
+                                                 n_min_for_bct_,
+                                                 eta_,
+                                                 max_hmat_rank_,
+                                                 aca_relative_error_),
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
@@ -3302,63 +3226,47 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   // Collect material ids into sets.
                   std::set<types::material_id> dirichlet_domain_material_ids;
                   for (const auto &bc : dirichlet_bc_definition_)
-                    {
-                      dirichlet_domain_material_ids.insert(bc.first);
-                    }
+                    dirichlet_domain_material_ids.insert(bc.first);
 
                   std::set<types::material_id> neumann_domain_material_ids;
                   for (const auto &bc : neumann_bc_definition_)
-                    {
-                      neumann_domain_material_ids.insert(bc.first);
-                    }
+                    neumann_domain_material_ids.insert(bc.first);
 
-                  if (operator_preconditioner_dirichlet_ != nullptr)
-                    {
-                      delete operator_preconditioner_dirichlet_;
-                      operator_preconditioner_dirichlet_ = nullptr;
-                    }
+                  op_precond_for_slp_ = std::make_unique<
+                    LaplaceSingleLayerPreconditioner<dim,
+                                                     spacedim,
+                                                     RangeNumberType,
+                                                     KernelNumberType>>(
+                    fe_for_neumann_space_,
+                    fe_for_dirichlet_space_,
+                    mg_tria_for_preconditioner_,
+                    neumann_space_on_dirichlet_domain_
+                      ->get_internal_to_external_dof_numbering(),
+                    neumann_space_on_dirichlet_domain_
+                      ->get_external_to_internal_dof_numbering(),
+                    dirichlet_domain_material_ids);
 
-                  operator_preconditioner_dirichlet_ =
-                    new PreconditionerForLaplaceDirichlet<dim,
-                                                          spacedim,
-                                                          RangeNumberType,
-                                                          KernelNumberType>(
-                      fe_for_neumann_space_,
-                      fe_for_dirichlet_space_,
-                      mg_tria_for_preconditioner_,
-                      neumann_space_on_dirichlet_domain_
-                        ->get_internal_to_external_dof_numbering(),
-                      neumann_space_on_dirichlet_domain_
-                        ->get_external_to_internal_dof_numbering(),
-                      dirichlet_domain_material_ids);
+                  op_precond_for_hyper_singular_ = std::make_unique<
+                    LaplaceHyperSingularPreconditioner<dim,
+                                                       spacedim,
+                                                       RangeNumberType,
+                                                       KernelNumberType>>(
+                    fe_for_dirichlet_space_,
+                    fe_for_neumann_space_,
+                    mg_tria_for_preconditioner_,
+                    dirichlet_space_on_neumann_domain_
+                      ->get_internal_to_external_dof_numbering(),
+                    dirichlet_space_on_neumann_domain_
+                      ->get_external_to_internal_dof_numbering(),
+                    neumann_domain_material_ids);
 
-                  if (operator_preconditioner_neumann_ != nullptr)
-                    {
-                      delete operator_preconditioner_neumann_;
-                      operator_preconditioner_neumann_ = nullptr;
-                    }
-
-                  operator_preconditioner_neumann_ =
-                    new PreconditionerForLaplaceNeumann<dim,
-                                                        spacedim,
-                                                        RangeNumberType,
-                                                        KernelNumberType>(
-                      fe_for_dirichlet_space_,
-                      fe_for_neumann_space_,
-                      mg_tria_for_preconditioner_,
-                      dirichlet_space_on_neumann_domain_
-                        ->get_internal_to_external_dof_numbering(),
-                      dirichlet_space_on_neumann_domain_
-                        ->get_external_to_internal_dof_numbering(),
-                      neumann_domain_material_ids);
-
-                  operator_preconditioner_dirichlet_->setup_preconditioner(
+                  op_precond_for_slp_->setup_preconditioner(
                     thread_num_,
-                    HMatrixParameters(n_min_for_ct_,
-                                      n_min_for_bct_,
-                                      eta_,
-                                      max_hmat_rank_,
-                                      aca_relative_error_),
+                    HMatrixParameters<real_type>(n_min_for_ct_,
+                                                 n_min_for_bct_,
+                                                 eta_,
+                                                 max_hmat_rank_,
+                                                 aca_relative_error_),
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
@@ -3366,13 +3274,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     SauterQuadratureRule<dim>(5, 4, 4, 3),
                     QGauss<2>(fe_for_dirichlet_space_.degree + 1));
 
-                  operator_preconditioner_neumann_->setup_preconditioner(
+                  op_precond_for_hyper_singular_->setup_preconditioner(
                     thread_num_,
-                    HMatrixParameters(n_min_for_ct_,
-                                      n_min_for_bct_,
-                                      eta_,
-                                      max_hmat_rank_,
-                                      aca_relative_error_),
+                    HMatrixParameters<real_type>(n_min_for_ct_,
+                                                 n_min_for_bct_,
+                                                 eta_,
+                                                 max_hmat_rank_,
+                                                 aca_relative_error_),
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
@@ -3480,8 +3388,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
                     }
                     case PreconditionerType::OperatorPreconditioning: {
                       set_hmatrix_vmult_strategy_for_iterative_solver(
-                        operator_preconditioner_dirichlet_
-                          ->get_preconditioner_hmatrix(),
+                        op_precond_for_slp_->get_preconditioner_hmatrix(),
                         vmult_type_,
                         true,
                         true);
@@ -3489,14 +3396,10 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
                         *V1_hmat_,
                         neumann_data_on_dirichlet_domain_internal_dof_numbering_,
                         system_rhs_on_dirichlet_domain_,
-                        *operator_preconditioner_dirichlet_);
+                        *op_precond_for_slp_);
 
                       mg_tria_for_preconditioner_.clear();
-                      if (operator_preconditioner_dirichlet_ != nullptr)
-                        {
-                          delete operator_preconditioner_dirichlet_;
-                          operator_preconditioner_dirichlet_ = nullptr;
-                        }
+                      op_precond_for_slp_ = nullptr;
 
                       break;
                     }
@@ -3547,7 +3450,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
                     }
                     case PreconditionerType::OperatorPreconditioning: {
                       set_hmatrix_vmult_strategy_for_iterative_solver(
-                        operator_preconditioner_neumann_
+                        op_precond_for_hyper_singular_
                           ->get_preconditioner_hmatrix(),
                         vmult_type_,
                         true,
@@ -3556,14 +3459,10 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
                         *D1_hmat_,
                         dirichlet_data_on_neumann_domain_internal_dof_numbering_,
                         system_rhs_on_neumann_domain_,
-                        *operator_preconditioner_neumann_);
+                        *op_precond_for_hyper_singular_);
 
                       mg_tria_for_preconditioner_.clear();
-                      if (operator_preconditioner_neumann_ != nullptr)
-                        {
-                          delete operator_preconditioner_neumann_;
-                          operator_preconditioner_neumann_ = nullptr;
-                        }
+                      op_precond_for_hyper_singular_ = nullptr;
 
                       break;
                     }
@@ -3647,13 +3546,12 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
                       // solve the system of equations, which is different from
                       // using the H-matrix factorization method.
                       set_hmatrix_vmult_strategy_for_iterative_solver(
-                        operator_preconditioner_dirichlet_
-                          ->get_preconditioner_hmatrix(),
+                        op_precond_for_slp_->get_preconditioner_hmatrix(),
                         vmult_type_,
                         true,
                         true);
                       set_hmatrix_vmult_strategy_for_iterative_solver(
-                        operator_preconditioner_neumann_
+                        op_precond_for_hyper_singular_
                           ->get_preconditioner_hmatrix(),
                         vmult_type_,
                         true,
@@ -3664,24 +3562,16 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
                         dirichlet_data_on_neumann_domain_internal_dof_numbering_,
                         system_rhs_on_dirichlet_domain_,
                         system_rhs_on_neumann_domain_,
-                        *operator_preconditioner_dirichlet_,
-                        *operator_preconditioner_neumann_,
+                        *op_precond_for_slp_,
+                        *op_precond_for_hyper_singular_,
                         1000,
                         real_type(1e-8),
                         true,
                         true);
 
                       mg_tria_for_preconditioner_.clear();
-                      if (operator_preconditioner_dirichlet_ != nullptr)
-                        {
-                          delete operator_preconditioner_dirichlet_;
-                          operator_preconditioner_dirichlet_ = nullptr;
-                        }
-                      if (operator_preconditioner_neumann_ != nullptr)
-                        {
-                          delete operator_preconditioner_neumann_;
-                          operator_preconditioner_neumann_ = nullptr;
-                        }
+                      op_precond_for_slp_            = nullptr;
+                      op_precond_for_hyper_singular_ = nullptr;
 
                       // Combine the two block vectors into one vector.
                       copy_vector(

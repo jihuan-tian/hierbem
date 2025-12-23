@@ -19,19 +19,18 @@ HBEM_NS_OPEN
  * @brief Class holding the set of \hmatrix parameters.
  */
 template <typename Number = double>
-class HMatrixParameters
+struct HMatrixParameters
 {
-public:
-  HMatrixParameters(const unsigned int n_min_for_ct,
-                    const unsigned int n_min_for_bct,
-                    const Number       eta,
-                    const unsigned int max_hmat_rank,
-                    const Number       aca_relative_error)
-    : n_min_for_ct(n_min_for_ct)
-    , n_min_for_bct(n_min_for_bct)
-    , eta(eta)
-    , max_hmat_rank(max_hmat_rank)
-    , aca_relative_error(aca_relative_error)
+  constexpr HMatrixParameters(const unsigned int n_min_for_ct_       = 32,
+                              const unsigned int n_min_for_bct_      = 32,
+                              const Number       eta_                = 1.0,
+                              const unsigned int max_hmat_rank_      = 30,
+                              const Number       aca_relative_error_ = 1e-6)
+    : n_min_for_ct(n_min_for_ct_)
+    , n_min_for_bct(n_min_for_bct_)
+    , eta(eta_)
+    , max_hmat_rank(max_hmat_rank_)
+    , aca_relative_error(aca_relative_error_)
   {}
 
   /**

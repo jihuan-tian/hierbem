@@ -11,7 +11,7 @@
 
 /**
  * @file laplace_bem.h
- * @brief Definition of class for solving the Laplace equation using BEM.
+ * @brief Definition of the class for solving the Laplace equation using BEM.
  *
  * @date 2020-11-02
  * @author Jihuan Tian
@@ -67,12 +67,6 @@ public:
   inline static const unsigned int max_mapping_order = 3;
 #pragma endregion
 #pragma region == == Ctor and Dtor == ==
-
-  /**
-   * Default constructor
-   */
-  LaplaceBEM();
-
   /**
    * @brief Constructor for solving Laplace problem using full matrix, which
    * has only verification purpose.

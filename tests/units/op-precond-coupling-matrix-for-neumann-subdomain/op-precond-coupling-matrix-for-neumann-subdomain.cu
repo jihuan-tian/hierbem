@@ -36,7 +36,7 @@
 #include <vector>
 
 #include "grid/grid_out_ext.h"
-#include "preconditioners/preconditioner_for_laplace_neumann.h"
+#include "preconditioners/preconditioner_for_laplace_hyper_singular_bio.h"
 
 using namespace Catch::Matchers;
 using namespace HierBEM;
@@ -61,7 +61,7 @@ assign_material_ids(Triangulation<2, 3> &tria, const double width)
 
 void
 setup_preconditioner(
-  PreconditionerForLaplaceNeumann<2, 3, double, double> &precond)
+  LaplaceHyperSingularPreconditioner<2, 3, double, double> &precond)
 {
   precond.initialize_dof_handlers();
   precond.generate_dof_selectors();
@@ -122,7 +122,7 @@ TEST_CASE(
   std::vector<types::global_dof_index> dummy_numbering(
     n_dofs_dual_space_dual_mesh);
   std::set<types::material_id> subdomain_material_ids = {2};
-  PreconditionerForLaplaceNeumann<2, 3, double, double> precond(
+  LaplaceHyperSingularPreconditioner<2, 3, double, double> precond(
     fe_primal_space,
     fe_dual_space,
     tria,

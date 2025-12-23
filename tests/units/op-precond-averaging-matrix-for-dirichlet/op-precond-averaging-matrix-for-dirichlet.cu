@@ -32,7 +32,7 @@
 #include <vector>
 
 #include "grid/grid_out_ext.h"
-#include "preconditioners/preconditioner_for_laplace_dirichlet.h"
+#include "preconditioners/preconditioner_for_laplace_single_layer_bio.h"
 #include "utilities/debug_tools.h"
 
 using namespace HierBEM;
@@ -41,7 +41,7 @@ using namespace std;
 
 void
 print_weights_at_support_points_in_refined_mesh(
-  const PreconditionerForLaplaceDirichlet<2, 3, double, double> &precond)
+  const LaplaceSingleLayerPreconditioner<2, 3, double, double> &precond)
 {
   std::cout
     << "# DoF index in dual mesh, DoF index in refined mesh, Support point coordinates x, y, z, Weight for dual basis"
@@ -123,7 +123,7 @@ main(int argc, const char *argv[])
   // preconditioner's constructor. Its size is initialized to the number of
   // cells in the primal mesh.
   std::vector<types::global_dof_index> dummy_numbering(tria.n_cells(0));
-  PreconditionerForLaplaceDirichlet<2, 3, double, double> precond(
+  LaplaceSingleLayerPreconditioner<2, 3, double, double> precond(
     fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
 
   // Build the averaging matrix.

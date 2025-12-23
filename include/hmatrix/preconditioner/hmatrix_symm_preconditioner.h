@@ -192,7 +192,7 @@ public:
    * @param y
    * @param x
    */
-  virtual void
+  void
   vmult(Vector<Number> &y, const Vector<Number> &x) const;
 };
 

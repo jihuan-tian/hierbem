@@ -30,7 +30,7 @@
 #include "grid/grid_in_ext.h"
 #include "grid/grid_out_ext.h"
 #include "hmatrix/hmatrix_parameters.h"
-#include "preconditioners/preconditioner_for_laplace_dirichlet.h"
+#include "preconditioners/preconditioner_for_laplace_single_layer_bio.h"
 #include "utilities/debug_tools.h"
 
 using namespace Catch::Matchers;
@@ -141,32 +141,24 @@ run_op_precond_hmatrix_for_dirichlet()
   // preconditioner's constructor. Its size is initialized to the number of
   // cells in the primal mesh.
   std::vector<types::global_dof_index> dummy_numbering(tria.n_cells(0));
-  PreconditionerForLaplaceDirichlet<dim, spacedim, double, double> precond(
+  LaplaceSingleLayerPreconditioner<dim, spacedim, double, double> precond(
     fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
 
-  // Build the mass matrix on the refined mesh first, because it
-  // is needed by the preconditioner matrix, which involves the stabilization
-  // of the hypersingular bilinear form.
-  precond.initialize_dof_handlers();
-  precond.build_dof_to_cell_topology();
-  precond.build_mass_matrix_on_refined_mesh(QGauss<dim>(2));
-
-  // Build the preconditioner matrix on the refined mesh.
   HMatrixParameters hmat_params(64,  // Minimum cluster node size
                                 64,  // Minimum block cluster node size
                                 1.0, // Admissibility constant eta
                                 2,   // Maximum H-matrix rank
                                 0.1  // Relative error for ACA iteration
   );
-  precond.build_cluster_and_block_cluster_trees(hmat_params, mappings);
-  precond.build_preconditioner_hmat_on_refined_mesh(
-    MultithreadInfo::n_threads(),
-    hmat_params,
-    subdomain_topology,
-    mappings,
-    material_id_to_mapping_index,
-    OutwardSurfaceNormalDetector(),
-    SauterQuadratureRule<dim>(5, 4, 4, 3));
+
+  precond.setup_preconditioner(MultithreadInfo::n_threads(),
+                               hmat_params,
+                               subdomain_topology,
+                               mappings,
+                               material_id_to_mapping_index,
+                               OutwardSurfaceNormalDetector(),
+                               SauterQuadratureRule<dim>(5, 4, 4, 3),
+                               QGauss<dim>(2));
 
   // Print out the preconditioner matrix on the refined mesh as full matrix.
   const HMatrix<spacedim, double> &Br = precond.get_preconditioner_hmatrix();
@@ -175,8 +167,7 @@ run_op_precond_hmatrix_for_dirichlet()
   Br.print_as_formatted_full_matrix(out, "Br", 15, true, 25);
   out.close();
 
-  // We also build the averaging matrix for matrix size compatibility checking.
-  precond.build_averaging_matrix();
+  // Get the averaging matrix for matrix size compatibility checking.
   const SparseMatrix<double> &Cd = precond.get_averaging_matrix();
   REQUIRE(Cd.n() == Br.get_m());
 

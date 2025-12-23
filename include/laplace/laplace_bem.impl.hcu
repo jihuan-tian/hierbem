@@ -11,10 +11,8 @@
 
 /**
  * @file laplace_bem.h
- * @brief Implementation of BEM involving kernel functions and singular
- * numerical quadratures.
+ * @brief Call member functions of pimpl from LaplaceBEM.
  *
- * @ingroup sauter_quadrature
  * @date 2020-11-02
  * @author Jihuan Tian
  */
@@ -51,16 +49,6 @@ HBEM_NS_OPEN
 using namespace dealii;
 
 #pragma region ****LaplaceBEM ctor and dtor impls ****
-
-template <int dim,
-          int spacedim,
-          typename RangeNumberType,
-          typename KernelNumberType>
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::LaplaceBEM()
-  : priv_(std::make_unique<Priv>())
-{
-  priv_->initialize_memory_consumption_table_headers();
-}
 
 template <int dim,
           int spacedim,

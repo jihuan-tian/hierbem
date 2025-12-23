@@ -42,8 +42,8 @@ enum KernelType
  */
 enum ProblemType
 {
-  NeumannBCProblem,   //!< NeumannBCProblem
   DirichletBCProblem, //!< DirichletBCProblem
+  NeumannBCProblem,   //!< NeumannBCProblem
   MixedBCProblem,     //!< MixedBCProblem
   UndefinedProblem
 };

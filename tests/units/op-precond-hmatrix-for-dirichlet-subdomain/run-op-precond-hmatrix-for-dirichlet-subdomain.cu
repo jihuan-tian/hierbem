@@ -30,7 +30,7 @@
 #include "grid/grid_in_ext.h"
 #include "grid/grid_out_ext.h"
 #include "hmatrix/hmatrix_parameters.h"
-#include "preconditioners/preconditioner_for_laplace_dirichlet.h"
+#include "preconditioners/preconditioner_for_laplace_single_layer_bio.h"
 #include "utilities/debug_tools.h"
 
 using namespace Catch::Matchers;
@@ -61,17 +61,6 @@ count_number_of_cells_with_material_id(Triangulation<2, 3>     &tria,
       n++;
 
   return n;
-}
-
-void
-setup_preconditioner(
-  PreconditionerForLaplaceDirichlet<2, 3, double, double> &precond)
-{
-  precond.initialize_dof_handlers();
-  precond.generate_dof_selectors();
-  precond.generate_maps_between_full_and_local_dof_ids();
-  precond.build_dof_to_cell_topology();
-  precond.build_mass_matrix_on_refined_mesh(QGauss<2>(2));
 }
 
 class OutwardSurfaceNormalDetector
@@ -188,7 +177,7 @@ run_op_precond_hmatrix_for_dirichlet()
   std::vector<types::global_dof_index> dummy_numbering(
     count_number_of_cells_with_material_id(tria, 1));
   std::set<types::material_id> subdomain_material_ids = {1};
-  PreconditionerForLaplaceDirichlet<dim, spacedim, double, double> precond(
+  LaplaceSingleLayerPreconditioner<dim, spacedim, double, double> precond(
     fe_primal_space,
     fe_dual_space,
     tria,
@@ -196,24 +185,21 @@ run_op_precond_hmatrix_for_dirichlet()
     dummy_numbering,
     subdomain_material_ids);
 
-  setup_preconditioner(precond);
-
-  // Build the preconditioner matrix on the refined mesh.
   HMatrixParameters hmat_params(64,  // Minimum cluster node size
                                 64,  // Minimum block cluster node size
                                 1.0, // Admissibility constant eta
                                 2,   // Maximum H-matrix rank
                                 0.1  // Relative error for ACA iteration
   );
-  precond.build_cluster_and_block_cluster_trees(hmat_params, mappings);
-  precond.build_preconditioner_hmat_on_refined_mesh(
-    MultithreadInfo::n_threads(),
-    hmat_params,
-    subdomain_topology,
-    mappings,
-    material_id_to_mapping_index,
-    OutwardSurfaceNormalDetector(),
-    SauterQuadratureRule<dim>(5, 4, 4, 3));
+
+  precond.setup_preconditioner(MultithreadInfo::n_threads(),
+                               hmat_params,
+                               subdomain_topology,
+                               mappings,
+                               material_id_to_mapping_index,
+                               OutwardSurfaceNormalDetector(),
+                               SauterQuadratureRule<dim>(5, 4, 4, 3),
+                               QGauss<dim>(2));
 
   // Print out the preconditioner matrix on the refined mesh as full matrix.
   const HMatrix<spacedim, double> &Br = precond.get_preconditioner_hmatrix();

@@ -31,7 +31,7 @@
 #include <iostream>
 
 #include "grid/grid_out_ext.h"
-#include "preconditioners/preconditioner_for_laplace_dirichlet.h"
+#include "preconditioners/preconditioner_for_laplace_single_layer_bio.h"
 
 using namespace HierBEM;
 using namespace dealii;
@@ -66,8 +66,8 @@ main(int argc, const char *argv[])
   // system matrix in this case, the conversion between internal and external
   // DoF numberings is not needed. Therefore, we pass a dummy numbering to the
   // preconditioner's constructor.
-  std::vector<types::global_dof_index>                    dummy_numbering;
-  PreconditionerForLaplaceDirichlet<2, 3, double, double> precond(
+  std::vector<types::global_dof_index>                   dummy_numbering;
+  LaplaceSingleLayerPreconditioner<2, 3, double, double> precond(
     fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
 
   // Build the mass matrix.

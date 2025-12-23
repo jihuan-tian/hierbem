@@ -32,7 +32,8 @@ enum PreconditionerType
   HMatrixFactorization,
   OperatorPreconditioning,
   Identity,
-  Jacobi
+  Jacobi,
+  BlockJacobi
 };
 
 HBEM_NS_CLOSE
