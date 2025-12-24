@@ -714,7 +714,8 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -733,7 +734,8 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -2997,11 +2999,12 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
                   op_precond_for_slp_->setup_preconditioner(
                     thread_num_,
-                    HMatrixParameters<real_type>(n_min_for_ct_,
-                                                 n_min_for_bct_,
-                                                 eta_,
-                                                 max_hmat_rank_,
-                                                 aca_relative_error_),
+                    HMatrixParameters<real_type>(
+                      n_min_for_ct_,
+                      n_min_for_bct_,
+                      eta_for_preconditioner_,
+                      max_hmat_rank_for_preconditioner_,
+                      aca_relative_error_for_preconditioner_),
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
@@ -3102,11 +3105,12 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
                   op_precond_for_hyper_singular_->setup_preconditioner(
                     thread_num_,
-                    HMatrixParameters<real_type>(n_min_for_ct_,
-                                                 n_min_for_bct_,
-                                                 eta_,
-                                                 max_hmat_rank_,
-                                                 aca_relative_error_),
+                    HMatrixParameters<real_type>(
+                      n_min_for_ct_,
+                      n_min_for_bct_,
+                      eta_for_preconditioner_,
+                      max_hmat_rank_for_preconditioner_,
+                      aca_relative_error_for_preconditioner_),
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
@@ -3262,11 +3266,12 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
                   op_precond_for_slp_->setup_preconditioner(
                     thread_num_,
-                    HMatrixParameters<real_type>(n_min_for_ct_,
-                                                 n_min_for_bct_,
-                                                 eta_,
-                                                 max_hmat_rank_,
-                                                 aca_relative_error_),
+                    HMatrixParameters<real_type>(
+                      n_min_for_ct_,
+                      n_min_for_bct_,
+                      eta_for_preconditioner_,
+                      max_hmat_rank_for_preconditioner_,
+                      aca_relative_error_for_preconditioner_),
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
@@ -3276,11 +3281,12 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
                   op_precond_for_hyper_singular_->setup_preconditioner(
                     thread_num_,
-                    HMatrixParameters<real_type>(n_min_for_ct_,
-                                                 n_min_for_bct_,
-                                                 eta_,
-                                                 max_hmat_rank_,
-                                                 aca_relative_error_),
+                    HMatrixParameters<real_type>(
+                      n_min_for_ct_,
+                      n_min_for_bct_,
+                      eta_for_preconditioner_,
+                      max_hmat_rank_for_preconditioner_,
+                      aca_relative_error_for_preconditioner_),
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
