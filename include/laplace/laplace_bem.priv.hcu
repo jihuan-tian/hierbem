@@ -422,6 +422,17 @@ private:
                                   RangeNumberType,
                                   KernelNumberType>>
     bK1_;
+  // N.B. The spatial domains of the two component spaces of the
+  // bilinear form for the operator D1 overlap, hence regularization is always
+  // needed, i.e. the trial and test basis functions in the double integral
+  // should be applied with surface curl.
+  //
+  // When in the pure Neumann problem, D1 is defined on the whole boundary
+  // \f$\Gamma\f$, which is non-elliptic and needs stabilization.
+  //
+  // When in the mixed boundary conditions problem, D1 is defined on a subdomain
+  // of the boundary \f$\Gamma\f$, there is no issue of non-ellipticity, then
+  // the stabilization is not needed.
   std::unique_ptr<BEMBilinearForm<dim,
                                   spacedim,
                                   SearchableMaterialIdContainer,
@@ -443,6 +454,12 @@ private:
                                   RangeNumberType,
                                   KernelNumberType>>
     bV2_;
+  // N.B. The spatial domains of the two component spaces of the
+  // bilinear form for the operator D2 overlap overlap in a single layer of
+  // cells in \f$\Gamma_{\mathrm{N}}\f$ at the interface
+  // \f$\Gamma_{\mathrm{D}}\cap \Gamma_{\mathrm{N}}\f$., hence regularization is
+  // still needed. Meanwhile, because D2 is defined on a subdomain of the
+  // boundary \f$\Gamma\f$, no stabilization is needed.
   std::unique_ptr<BEMBilinearForm<dim,
                                   spacedim,
                                   SearchableMaterialIdContainer,
@@ -714,8 +731,7 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -734,8 +750,7 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename>
-            typename KernelFunctionType,
+            template <int, typename> typename KernelFunctionType,
             typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -2591,7 +2606,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           // hyper-singular operator along with the stabilization term.
           std::cout << "=== Assemble D1 ===" << std::endl;
           timer.start();
-          D1_hmat_ = bD1_->build_hmatrix_with_regularization_terms(
+          D1_hmat_ = bD1_->build_hmatrix_with_regularization(
             thread_num_,
             max_hmat_rank_,
             aca_relative_error_,
@@ -2723,14 +2738,17 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           std::cout << "=== Assemble -D2 ===" << std::endl;
           timer.start();
-          D2_hmat_ = bD2_->build_hmatrix(thread_num_,
-                                         max_hmat_rank_,
-                                         aca_relative_error_,
-                                         CUDAKernelNumberType(-1.0),
-                                         SauterQuadratureRule<dim>(5, 4, 4, 3),
-                                         mappings_,
-                                         material_id_to_mapping_index_,
-                                         subdomain_topology_);
+          D2_hmat_ = bD2_->build_hmatrix_with_regularization(
+            thread_num_,
+            max_hmat_rank_,
+            aca_relative_error_,
+            CUDAKernelNumberType(-1.0),
+            {},
+            KernelNumberType(0.),
+            SauterQuadratureRule<dim>(5, 4, 4, 3),
+            mappings_,
+            material_id_to_mapping_index_,
+            subdomain_topology_);
           timer.stop();
           print_wall_time(deallog, timer, "assemble -D2");
           add_memory_consumption_row("D2", *D2_hmat_, "After assembly");
@@ -2862,14 +2880,17 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           std::cout << "=== Assemble D1 ===" << std::endl;
           timer.start();
-          D1_hmat_ = bD1_->build_hmatrix(thread_num_,
-                                         max_hmat_rank_,
-                                         aca_relative_error_,
-                                         CUDAKernelNumberType(1.0),
-                                         SauterQuadratureRule<dim>(5, 4, 4, 3),
-                                         mappings_,
-                                         material_id_to_mapping_index_,
-                                         subdomain_topology_);
+          D1_hmat_ = bD1_->build_hmatrix_with_regularization(
+            thread_num_,
+            max_hmat_rank_,
+            aca_relative_error_,
+            CUDAKernelNumberType(1.0),
+            {},
+            KernelNumberType(0.),
+            SauterQuadratureRule<dim>(5, 4, 4, 3),
+            mappings_,
+            material_id_to_mapping_index_,
+            subdomain_topology_);
           timer.stop();
           print_wall_time(deallog, timer, "assemble D1");
           add_memory_consumption_row("D1", *D1_hmat_, "After assembly");
@@ -3864,6 +3885,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   PlatformShared::LaplaceKernel::AdjointDoubleLayerKernel<spacedim,
                                                           KernelNumberType>
     K_prime;
+  // N.B. The target point and the source point do not overlap, hence no
+  // regularization is needed. Stabilization is neither needed.
   PlatformShared::LaplaceKernel::HyperSingularKernel<spacedim, KernelNumberType>
     D;
 

@@ -19,6 +19,7 @@
 #ifndef HIERBEM_INCLUDE_BEM_BEM_BILINEAR_FORM_H_
 #define HIERBEM_INCLUDE_BEM_BEM_BILINEAR_FORM_H_
 
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/types.h>
@@ -117,12 +118,20 @@ public:
     SubdomainTopology<dim, spacedim> &subdomain_topology);
 
   /**
-   * Build an H-matrix with regularization terms
+   * @brief Build an H-matrix for a bilinear form which needs regularization,
+   * such as the bilinear form for the hyper singular boundary integral
+   * operator. With regularization, the trial and test functions in the double
+   * integral will be applied surface curl.
    *
-   * At the moment, this is only used for assembling the hypersingular H-matrix.
+   * One or several stabilization vectors should also be directly built into the
+   * H-matrix, when the hyper singular boundary integral operator is not
+   * elliptic, such as in the Laplace equation. When in the Helmholtz acoustic
+   * equation, such stabilization vectors are not needed, since the hyper
+   * singular boundary integral operator is coercive, when the wave number
+   * squared is not an eigenvalue of the internal Dirichlet or Neumann problem.
    */
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
-  build_hmatrix_with_regularization_terms(
+  build_hmatrix_with_regularization(
     const unsigned int                               thread_num,
     const unsigned int                               max_rank,
     const real_type                                  epsilon,
@@ -134,6 +143,18 @@ public:
     const std::map<types::material_id, unsigned int>
                                      &material_id_to_mapping_index,
     SubdomainTopology<dim, spacedim> &subdomain_topology);
+
+  KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>> &
+  get_kernel()
+  {
+    return kernel;
+  }
+
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>> &
+  get_kernel() const
+  {
+    return kernel;
+  }
 
   ClusterTree<spacedim, real_type> &
   get_cluster_tree_trial_space()
@@ -279,6 +300,9 @@ BEMBilinearForm<dim,
                                                  &material_id_to_mapping_index,
                 SubdomainTopology<dim, spacedim> &subdomain_topology)
 {
+  // The kernel does not need regularization.
+  Assert(!kernel.needs_regularization(), ExcInternalError());
+
   HMatrixSupport::Property  property = is_symmetric ?
                                          HMatrixSupport::Property::symmetric :
                                          HMatrixSupport::Property::general;
@@ -347,6 +371,9 @@ BEMBilinearForm<dim,
                                      &material_id_to_mapping_index,
     SubdomainTopology<dim, spacedim> &subdomain_topology)
 {
+  // The kernel does not need regularization.
+  Assert(!kernel.needs_regularization(), ExcInternalError());
+
   HMatrixSupport::Property  property = is_symmetric ?
                                          HMatrixSupport::Property::symmetric :
                                          HMatrixSupport::Property::general;
@@ -404,7 +431,7 @@ BEMBilinearForm<dim,
                 KernelFunctionType,
                 RangeNumberType,
                 KernelNumberType>::
-  build_hmatrix_with_regularization_terms(
+  build_hmatrix_with_regularization(
     const unsigned int                               thread_num,
     const unsigned int                               max_rank,
     const real_type                                  epsilon,
@@ -417,6 +444,15 @@ BEMBilinearForm<dim,
                                      &material_id_to_mapping_index,
     SubdomainTopology<dim, spacedim> &subdomain_topology)
 {
+  // The kernel must be regularized.
+  Assert(kernel.needs_regularization(), ExcInternalError());
+  // When the stabilziation vectors @p mass_vmult_weq is not empty, the kernel
+  // needs stabilization.
+  if (mass_vmult_weq.size() > 0)
+    {
+      Assert(kernel.needs_stabilization_on_full_domain(), ExcInternalError());
+    }
+
   HMatrixSupport::Property  property = is_symmetric ?
                                          HMatrixSupport::Property::symmetric :
                                          HMatrixSupport::Property::general;

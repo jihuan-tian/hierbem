@@ -86,6 +86,26 @@ namespace PlatformShared
       {
         return true;
       }
+
+      /**
+       * Whether regularization is needed when source points and target points
+       * may overlap.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_regularization() const
+      {
+        return false;
+      }
+
+      /**
+       * Whether stabilization is needed when the operator is defined on the
+       * full domain. If needed, it means the operator lacks ellipticity.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_stabilization_on_full_domain() const
+      {
+        return false;
+      }
     };
 
 
@@ -156,6 +176,26 @@ namespace PlatformShared
        */
       HBEM_ATTR_HOST HBEM_ATTR_DEV bool
       is_symmetric() const
+      {
+        return false;
+      }
+
+      /**
+       * Whether regularization is needed when source points and target points
+       * may overlap.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_regularization() const
+      {
+        return false;
+      }
+
+      /**
+       * Whether stabilization is needed when the operator is defined on the
+       * full domain. If needed, it means the operator lacks ellipticity.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_stabilization_on_full_domain() const
       {
         return false;
       }
@@ -230,6 +270,26 @@ namespace PlatformShared
       {
         return false;
       }
+
+      /**
+       * Whether regularization is needed when source points and target points
+       * may overlap.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_regularization() const
+      {
+        return false;
+      }
+
+      /**
+       * Whether stabilization is needed when the operator is defined on the
+       * full domain. If needed, it means the operator lacks ellipticity.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_stabilization_on_full_domain() const
+      {
+        return false;
+      }
     };
 
 
@@ -299,6 +359,26 @@ namespace PlatformShared
       is_symmetric() const
       {
         return true;
+      }
+
+      /**
+       * Whether regularization is needed when source points and target points
+       * may overlap.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_regularization() const
+      {
+        return false;
+      }
+
+      /**
+       * Whether stabilization is needed when the operator is defined on the
+       * full domain. If needed, it means the operator lacks ellipticity.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_stabilization_on_full_domain() const
+      {
+        return false;
       }
     };
 
@@ -399,6 +479,26 @@ namespace PlatformShared
        */
       HBEM_ATTR_HOST HBEM_ATTR_DEV bool
       is_symmetric() const
+      {
+        return true;
+      }
+
+      /**
+       * Whether regularization is needed when source points and target points
+       * may overlap.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_regularization() const
+      {
+        return true;
+      }
+
+      /**
+       * Whether stabilization is needed when the operator is defined on the
+       * full domain. If needed, it means the operator lacks ellipticity.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_stabilization_on_full_domain() const
       {
         return true;
       }

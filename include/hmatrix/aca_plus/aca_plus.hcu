@@ -116,8 +116,7 @@ generate_random_index(const size_type a, const size_type b);
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -233,8 +232,7 @@ assemble_kernel_row(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -332,8 +330,7 @@ assemble_kernel_row(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -441,8 +438,7 @@ assemble_kernel_row(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -548,8 +544,7 @@ assemble_kernel_row(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -660,8 +655,7 @@ assemble_kernel_column(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -756,8 +750,7 @@ assemble_kernel_column(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -861,8 +854,7 @@ assemble_kernel_column(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -972,8 +964,7 @@ assemble_kernel_column(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -1153,8 +1144,7 @@ random_select_ref_row(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -1303,8 +1293,7 @@ random_select_ref_row(
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -1450,8 +1439,7 @@ random_select_ref_row(
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -1724,8 +1712,7 @@ random_select_ref_row(Vector<RangeNumberType>                    &row_vector,
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -1905,8 +1892,7 @@ random_select_ref_column(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -2056,8 +2042,7 @@ random_select_ref_column(
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -2204,8 +2189,7 @@ random_select_ref_column(
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -2474,8 +2458,7 @@ random_select_ref_column(Vector<RangeNumberType>                    &col_vector,
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -3182,8 +3165,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -3881,8 +3863,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -4640,8 +4621,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -5972,8 +5952,7 @@ aca_plus(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -6391,8 +6370,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -6808,8 +6786,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -7142,8 +7119,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -7312,8 +7288,7 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -7498,8 +7473,7 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -7623,8 +7597,7 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -7901,8 +7874,7 @@ stabilize_near_field_hmatrices_for_hypersingular_kernel(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -8084,8 +8056,7 @@ fill_hmatrix_with_aca_plus_serial(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -8258,8 +8229,7 @@ fill_hmatrix_with_aca_plus_serial(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -8446,8 +8416,7 @@ fill_hmatrix_with_aca_plus_serial(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -8862,8 +8831,7 @@ fill_hmatrix_with_aca_plus_smp(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
@@ -9164,31 +9132,32 @@ fill_hmatrix_with_aca_plus_smp(
   ring_buffer_for_common_vertex.release();
   ring_buffer_for_regular.release();
 
-  {
+  if (mass_vmult_weq.size() > 0)
+    {
 #if ENABLE_NVTX == 1
-    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-      "regularize hypersingular kernel");
+      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+        "stabilize hypersingular kernel");
 #endif
 
-    const unsigned int grain_size =
-      std::max(static_cast<unsigned long>(1),
-               near_field_leaf_set.size() / thread_num / 2);
-    tbb::parallel_for(
-      tbb::blocked_range<
-        typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>(
-        near_field_leaf_set.begin(), near_field_leaf_set.end(), grain_size),
-      [&](const tbb::blocked_range<typename std::vector<
-            HMatrix<spacedim, RangeNumberType> *>::iterator> &range) {
-        stabilize_near_field_hmatrices_for_hypersingular_kernel<
-          spacedim,
-          RangeNumberType,
-          KernelNumberType>(range,
-                            mass_vmult_weq,
-                            stabilization_factor,
-                            enable_build_symmetric_hmat);
-      },
-      tbb::auto_partitioner());
-  }
+      const unsigned int grain_size =
+        std::max(static_cast<unsigned long>(1),
+                 near_field_leaf_set.size() / thread_num / 2);
+      tbb::parallel_for(
+        tbb::blocked_range<
+          typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>(
+          near_field_leaf_set.begin(), near_field_leaf_set.end(), grain_size),
+        [&](const tbb::blocked_range<typename std::vector<
+              HMatrix<spacedim, RangeNumberType> *>::iterator> &range) {
+          stabilize_near_field_hmatrices_for_hypersingular_kernel<
+            spacedim,
+            RangeNumberType,
+            KernelNumberType>(range,
+                              mass_vmult_weq,
+                              stabilization_factor,
+                              enable_build_symmetric_hmat);
+        },
+        tbb::auto_partitioner());
+    }
 
   timer.stop();
   print_wall_time(deallog, timer, "build near field H-matrix nodes");
@@ -9309,8 +9278,7 @@ fill_hmatrix_with_aca_plus_smp(
  */
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>

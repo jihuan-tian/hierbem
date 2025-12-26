@@ -61,11 +61,24 @@ namespace PlatformShared
       const unsigned int n_components;
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
+      SingleLayerKernel()
+        : kernel_type(KernelType::SingleLayer)
+        , kappa(0., 0.)
+        , n_components(1)
+      {}
+
+      HBEM_ATTR_HOST HBEM_ATTR_DEV
       SingleLayerKernel(const KernelNumberType kappa_)
         : kernel_type(KernelType::SingleLayer)
         , kappa(kappa_)
         , n_components(1)
       {}
+
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
+      set_kappa(const KernelNumberType kappa_)
+      {
+        kappa = kappa_;
+      }
 
       /**
        * Evaluate the kernel function.
@@ -93,6 +106,26 @@ namespace PlatformShared
       is_symmetric() const
       {
         return true;
+      }
+
+      /**
+       * Whether regularization is needed when source points and target points
+       * may overlap.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_regularization() const
+      {
+        return false;
+      }
+
+      /**
+       * Whether stabilization is needed when the operator is defined on the
+       * full domain. If needed, it means the operator lacks ellipticity.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_stabilization_on_full_domain() const
+      {
+        return false;
       }
     };
 
@@ -146,11 +179,24 @@ namespace PlatformShared
       const unsigned int n_components;
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
+      DoubleLayerKernel()
+        : kernel_type(KernelType::DoubleLayer)
+        , kappa(0., 0.)
+        , n_components(1)
+      {}
+
+      HBEM_ATTR_HOST HBEM_ATTR_DEV
       DoubleLayerKernel(const KernelNumberType kappa_)
         : kernel_type(KernelType::DoubleLayer)
         , kappa(kappa_)
         , n_components(1)
       {}
+
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
+      set_kappa(const KernelNumberType kappa_)
+      {
+        kappa = kappa_;
+      }
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
       value(const Point<spacedim, real_type>     &x,
@@ -166,6 +212,26 @@ namespace PlatformShared
        */
       HBEM_ATTR_HOST HBEM_ATTR_DEV bool
       is_symmetric() const
+      {
+        return false;
+      }
+
+      /**
+       * Whether regularization is needed when source points and target points
+       * may overlap.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_regularization() const
+      {
+        return false;
+      }
+
+      /**
+       * Whether stabilization is needed when the operator is defined on the
+       * full domain. If needed, it means the operator lacks ellipticity.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_stabilization_on_full_domain() const
       {
         return false;
       }
@@ -223,11 +289,24 @@ namespace PlatformShared
       const unsigned int n_components;
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
+      AdjointDoubleLayerKernel()
+        : kernel_type(KernelType::AdjointDoubleLayer)
+        , kappa(0., 0.)
+        , n_components(1)
+      {}
+
+      HBEM_ATTR_HOST HBEM_ATTR_DEV
       AdjointDoubleLayerKernel(const KernelNumberType kappa_)
         : kernel_type(KernelType::AdjointDoubleLayer)
         , kappa(kappa_)
         , n_components(1)
       {}
+
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
+      set_kappa(const KernelNumberType kappa_)
+      {
+        kappa = kappa_;
+      }
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
       value(const Point<spacedim, real_type>     &x,
@@ -243,6 +322,26 @@ namespace PlatformShared
        */
       HBEM_ATTR_HOST HBEM_ATTR_DEV bool
       is_symmetric() const
+      {
+        return false;
+      }
+
+      /**
+       * Whether regularization is needed when source points and target points
+       * may overlap.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_regularization() const
+      {
+        return false;
+      }
+
+      /**
+       * Whether stabilization is needed when the operator is defined on the
+       * full domain. If needed, it means the operator lacks ellipticity.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_stabilization_on_full_domain() const
       {
         return false;
       }
@@ -299,11 +398,24 @@ namespace PlatformShared
       const unsigned int n_components;
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
+      HyperSingularKernel()
+        : kernel_type(KernelType::HyperSingular)
+        , kappa(0., 0.)
+        , n_components(1)
+      {}
+
+      HBEM_ATTR_HOST HBEM_ATTR_DEV
       HyperSingularKernel(const KernelNumberType kappa_)
         : kernel_type(KernelType::HyperSingular)
         , kappa(kappa_)
         , n_components(1)
       {}
+
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
+      set_kappa(const KernelNumberType kappa_)
+      {
+        kappa = kappa_;
+      }
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
       value(const Point<spacedim, real_type>     &x,
@@ -321,6 +433,26 @@ namespace PlatformShared
       is_symmetric() const
       {
         return true;
+      }
+
+      /**
+       * Whether regularization is needed when source points and target points
+       * may overlap.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_regularization() const
+      {
+        return false;
+      }
+
+      /**
+       * Whether stabilization is needed when the operator is defined on the
+       * full domain. If needed, it means the operator lacks ellipticity.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_stabilization_on_full_domain() const
+      {
+        return false;
       }
     };
 
@@ -383,11 +515,24 @@ namespace PlatformShared
       const unsigned int n_components;
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
+      HyperSingularKernelRegular1()
+        : kernel_type(KernelType::HyperSingularRegular)
+        , kappa(0., 0.)
+        , n_components(1)
+      {}
+
+      HBEM_ATTR_HOST HBEM_ATTR_DEV
       HyperSingularKernelRegular1(const KernelNumberType kappa_)
         : kernel_type(KernelType::HyperSingularRegular)
         , kappa(kappa_)
         , n_components(1)
       {}
+
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
+      set_kappa(const KernelNumberType kappa_)
+      {
+        kappa = kappa_;
+      }
 
       /**
        * Calculate the value of fundamental solution of the Helmholtz operator,
@@ -422,6 +567,26 @@ namespace PlatformShared
       is_symmetric() const
       {
         return true;
+      }
+
+      /**
+       * Whether regularization is needed when source points and target points
+       * may overlap.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_regularization() const
+      {
+        return true;
+      }
+
+      /**
+       * Whether stabilization is needed when the operator is defined on the
+       * full domain. If needed, it means the operator lacks ellipticity.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_stabilization_on_full_domain() const
+      {
+        return false;
       }
     };
 
@@ -477,11 +642,24 @@ namespace PlatformShared
       const unsigned int n_components;
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
+      HyperSingularKernelRegular2()
+        : kernel_type(KernelType::HyperSingularRegular)
+        , kappa(0., 0.)
+        , n_components(1)
+      {}
+
+      HBEM_ATTR_HOST HBEM_ATTR_DEV
       HyperSingularKernelRegular2(const KernelNumberType kappa_)
         : kernel_type(KernelType::HyperSingularRegular)
         , kappa(kappa_)
         , n_components(1)
       {}
+
+      HBEM_ATTR_HOST HBEM_ATTR_DEV void
+      set_kappa(const KernelNumberType kappa_)
+      {
+        kappa = kappa_;
+      }
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
       value(const Point<spacedim, real_type>     &x,
@@ -499,6 +677,26 @@ namespace PlatformShared
       is_symmetric() const
       {
         return true;
+      }
+
+      /**
+       * Whether regularization is needed when source points and target points
+       * may overlap.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_regularization() const
+      {
+        return false;
+      }
+
+      /**
+       * Whether stabilization is needed when the operator is defined on the
+       * full domain. If needed, it means the operator lacks ellipticity.
+       */
+      HBEM_ATTR_HOST HBEM_ATTR_DEV bool
+      needs_stabilization_on_full_domain() const
+      {
+        return false;
       }
     };
 

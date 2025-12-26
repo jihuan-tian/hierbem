@@ -1094,12 +1094,14 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
    * stabilization term to the bilinear form. In other cases, stabilization
    * is not needed.
    */
-  if (preconditioner_kernel.kernel_type == KernelType::HyperSingularRegular)
+  if (preconditioner_kernel.kernel_type == KernelType::HyperSingularRegular &&
+      preconditioner_kernel.needs_regularization())
     {
       /**
        * Assemble the preconditioning matrix.
        */
-      if (is_full_domain)
+      if (is_full_domain &&
+          preconditioner_kernel.needs_stabilization_on_full_domain())
         {
           // When the preconditioner is on the full domain, the hyper singular
           // operator is not elliptic and should be stabilized.
@@ -1169,7 +1171,7 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
         }
       else
         // When the preconditioner is on a subdomain, there is no need to
-        // stablize the hyper singular bilinear form.
+        // stabilize the hyper singular bilinear form.
         fill_hmatrix_with_aca_plus_smp<dim,
                                        spacedim,
                                        KernelFunctionType,
@@ -1181,6 +1183,8 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
           aca_config,
           preconditioner_kernel,
           DeviceNumberType<KernelNumberType>(1.0),
+          {},
+          KernelNumberType(0.),
           dof_to_cell_topo_dual_space,
           dof_to_cell_topo_dual_space,
           sauter_quad_rule,
