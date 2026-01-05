@@ -29,6 +29,7 @@
 
 #include <cmath>
 #include <complex>
+#include <iostream>
 #include <map>
 #include <type_traits>
 #include <vector>
@@ -338,11 +339,13 @@ public:
    * Construct a zero-valued rank-k matrix with the specified matrix dimension
    *
    * and rank.
-   * @param m
-   * @param n
+   * @param m_
+   * @param n_
    * @param fixed_rank_k
    */
-  RkMatrix(const size_type m, const size_type n, const size_type fixed_rank_k);
+  RkMatrix(const size_type m_,
+           const size_type n_,
+           const size_type fixed_rank_k);
 
   /**
    * Construct a rank-k matrix by conversion from a full matrix \p M with rank
@@ -653,13 +656,13 @@ public:
   /**
    * Reinitialize a rank-k matrix with specified dimension and rank. By
    * default, all matrix entries are initialized to zero.
-   * @param m
-   * @param n
+   * @param m_
+   * @param n_
    * @param fixed_rank_k
    * @param omit_zeroing_entries
    */
   void
-  reinit(const size_type m, const size_type n, const size_type fixed_rank_k);
+  reinit(const size_type m_, const size_type n_, const size_type fixed_rank_k);
 
   /**
    * Get the number of rows.
@@ -798,10 +801,10 @@ public:
    * Keep the first n columns in both two component matrices by resizing.
    * @pre
    * @post
-   * @param n
+   * @param n_
    */
   void
-  keep_first_n_columns(const size_type n);
+  keep_first_n_columns(const size_type n_);
 
   /**
    * Truncate the RkMatrix to \p new_rank.
@@ -1163,48 +1166,17 @@ RkMatrix<Number>::RkMatrix()
 
 
 template <typename Number>
-RkMatrix<Number>::RkMatrix(const size_type m,
-                           const size_type n,
+RkMatrix<Number>::RkMatrix(const size_type m_,
+                           const size_type n_,
                            const size_type fixed_rank_k)
   : A()
   , B()
-  , rank(0)
-  , formal_rank(0)
-  , m(m)
-  , n(n)
+  , rank(fixed_rank_k)
+  , formal_rank(fixed_rank_k)
+  , m(m_)
+  , n(n_)
 {
-  /**
-   * If the given \p fixed_rank_k is larger than the minimum matrix dimension
-   * \f$\min\{m, n\}\f$, simply set it as this value.
-   */
-  const size_type min_dim        = std::min(m, n);
-  const size_type effective_rank = std::min(min_dim, fixed_rank_k);
-
-  //  // DEBUG: check the consistency between the specified rank and the
-  //  effective
-  //  // rank.
-  //  std::cout << "min_dim=" << min_dim << ", effective_rank=" <<
-  //  effective_rank
-  //            << ", fixed_rank_k=" << fixed_rank_k << std::endl;
-
-  if (effective_rank > 0 && m != 0 && n != 0)
-    {
-      /**
-       * \alert{Only when the effective rank is larger than zero and the
-       * matrix has non-zero row or column dimension, memory for the component
-       * matrices is allocated.}
-       */
-      A.reinit(m, effective_rank);
-      B.reinit(n, effective_rank);
-      /**
-       * \alert{Even though the component matrices are zero-valued at the
-       * moment, because the current rank-k matrix is to be assigned with
-       * effect
-       * data, its rank should be still set to the \p effective_rank.}
-       */
-      rank        = effective_rank;
-      formal_rank = effective_rank;
-    }
+  reinit(m, n, formal_rank);
 }
 
 
@@ -2442,14 +2414,14 @@ RkMatrix<Number>::operator=(const RkMatrix<Number> &matrix)
 
 template <typename Number>
 void
-RkMatrix<Number>::reinit(const size_type m,
-                         const size_type n,
+RkMatrix<Number>::reinit(const size_type m_,
+                         const size_type n_,
                          const size_type fixed_rank_k)
 {
-  if (m != 0 && n != 0 && fixed_rank_k != 0)
+  if (m_ != 0 && n_ != 0 && fixed_rank_k > 0)
     {
-      A.reinit(m, fixed_rank_k);
-      B.reinit(n, fixed_rank_k);
+      A.reinit(m_, fixed_rank_k);
+      B.reinit(n_, fixed_rank_k);
       rank        = fixed_rank_k;
       formal_rank = fixed_rank_k;
     }
@@ -2461,8 +2433,8 @@ RkMatrix<Number>::reinit(const size_type m,
       formal_rank = 0;
     }
 
-  this->m = m;
-  this->n = n;
+  m = m_;
+  n = n_;
 }
 
 
@@ -2673,21 +2645,17 @@ RkMatrix<Number>::print_formatted_to_mat(std::ostream      &out,
 
 template <typename Number>
 void
-RkMatrix<Number>::keep_first_n_columns(const size_type n)
+RkMatrix<Number>::keep_first_n_columns(const size_type n_)
 {
-  AssertIndexRange(n, formal_rank + 1);
+  AssertIndexRange(n_, formal_rank + 1);
 
-  if (n < formal_rank)
+  if (n_ < formal_rank)
     {
-      A.keep_first_n_columns(n, true);
-      B.keep_first_n_columns(n, true);
+      A.keep_first_n_columns(n_, true);
+      B.keep_first_n_columns(n_, true);
 
-      formal_rank = n;
-      rank        = n;
-    }
-  else
-    {
-      // When n == formal_rank, do nothing.
+      formal_rank = n_;
+      rank        = n_;
     }
 }
 
@@ -2696,61 +2664,70 @@ template <typename Number>
 void
 RkMatrix<Number>::truncate_to_rank(size_type new_rank)
 {
+  // Only when the current rank-k matrix and the given new rank have nonzero
+  // rank, it is meaningful to perform the rank truncation.
   if (rank > 0 && new_rank > 0)
     {
-      /**
-       * \alert{Only when the current rank-k matrix and the given new rank
-       * have nonzero rank, it is meaningful to perform the rank truncation.}
-       */
-
-      /**
-       * Work flow introduction: Use QR decomposition to perform the rank
-       * truncation.
-       */
-      LAPACKFullMatrixExt<Number>                                    U, VT;
-      std::vector<typename numbers::NumberTraits<Number>::real_type> Sigma_r;
-
-      rank = LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBH(
-        A, B, U, Sigma_r, VT, new_rank);
-
-      /**
-       * \alert{Since the initial matrix may not have the correct rank, even
-       * though its \p rank is larger than zero, its actual \p rank may be less
-       * or even zero. Therefore, it is possible that the returned \p rank from
-       * the above execution of \p reduced_svd_on_AxBH may be zero. Therefore,
-       * it needs a special treatment here.}
-       */
-      if (rank > 0)
+      // When the new rank is less than the current formal rank of the rank-k
+      // matrix or the formal rank is larger than the row or column dimension of
+      // the low rank matrix, we perform the rank truncation.
+      //
+      // 2026-01-04 The condition <tt>formal_rank > m || formal_rank > n</tt> is
+      // mandatory, because there will be the case that a low rank matrix is
+      // assembled into another one and their formal rank do not match. Hence we
+      // need to ensure the formal rank <= min(m,n).
+      if (new_rank < formal_rank || formal_rank > m || formal_rank > n)
         {
-          if (n < m)
+          /**
+           * Work flow introduction: Use QR decomposition to perform the rank
+           * truncation.
+           */
+          LAPACKFullMatrixExt<Number> U, VT;
+          std::vector<typename numbers::NumberTraits<Number>::real_type>
+            Sigma_r;
+
+          rank = LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBH(
+            A, B, U, Sigma_r, VT, new_rank);
+
+          /**
+           * \alert{Since the initial matrix may not have the correct rank, even
+           * though its \p rank is larger than zero, its actual \p rank may be less
+           * or even zero. Therefore, it is possible that the returned \p rank from
+           * the above execution of \p reduced_svd_on_AxBH may be zero. Therefore,
+           * it needs a special treatment here.}
+           */
+          if (rank > 0)
             {
+              if (n < m)
+                {
+                  /**
+                   * Adopt right associativity when the matrix is long.
+                   */
+                  A = U;
+                  VT.scale_rows(Sigma_r);
+                  VT.transpose(B);
+                }
+              else
+                {
+                  /**
+                   * Adopt left associativity when the matrix is wide.
+                   */
+                  U.scale_columns(A, Sigma_r);
+                  VT.transpose(B);
+                }
+
               /**
-               * Adopt right associativity when the matrix is long.
+               * Update the formal rank.
                */
-              A = U;
-              VT.scale_rows(Sigma_r);
-              VT.transpose(B);
+              formal_rank = A.n();
             }
           else
             {
-              /**
-               * Adopt left associativity when the matrix is wide.
-               */
-              U.scale_columns(A, Sigma_r);
-              VT.transpose(B);
+              A.reinit(0, 0);
+              B.reinit(0, 0);
+              rank        = 0;
+              formal_rank = 0;
             }
-
-          /**
-           * Update the formal rank.
-           */
-          formal_rank = A.n();
-        }
-      else
-        {
-          A.reinit(0, 0);
-          B.reinit(0, 0);
-          rank        = 0;
-          formal_rank = 0;
         }
     }
   else
@@ -2769,61 +2746,70 @@ RkMatrix<Number>::truncate_to_rank(size_type                    new_rank,
                                    LAPACKFullMatrixExt<Number> &C,
                                    LAPACKFullMatrixExt<Number> &D)
 {
+  // Only when the current rank-k matrix and the given new rank have nonzero
+  // rank, it is meaningful to perform the rank truncation.
   if (rank > 0 && new_rank > 0)
     {
-      /**
-       * \alert{Only when the current rank-k matrix and the given new rank
-       * have nonzero rank, it is meaningful to perform the rank truncation.}
-       */
-
-      /**
-       * Work flow introduction: Use QR decomposition to perform the rank
-       * truncation.
-       */
-      LAPACKFullMatrixExt<Number>                                    U, VT;
-      std::vector<typename numbers::NumberTraits<Number>::real_type> Sigma_r;
-
-      rank = LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBH(
-        A, B, U, Sigma_r, VT, C, D, new_rank);
-
-      /**
-       * \alert{Since the initial matrix may not have the correct rank, even
-       * though its \p rank is larger than zero, its actual \p rank may be less
-       * or even zero. Therefore, it is possible that the returned \p rank from
-       * the above execution of \p reduced_svd_on_AxBH may be zero. Therefore,
-       * it needs a special treatment here.}
-       */
-      if (rank > 0)
+      // When the new rank is less than the current formal rank of the rank-k
+      // matrix or the formal rank is larger than the row or column dimension of
+      // the low rank matrix, we perform the rank truncation.
+      //
+      // 2026-01-04 The condition <tt>formal_rank > m || formal_rank > n</tt> is
+      // mandatory, because there will be the case that a low rank matrix is
+      // assembled into another one and their formal rank do not match. Hence we
+      // need to ensure the formal rank <= min(m,n).
+      if (new_rank < formal_rank || formal_rank > m || formal_rank > n)
         {
-          if (n < m)
+          /**
+           * Work flow introduction: Use QR decomposition to perform the rank
+           * truncation.
+           */
+          LAPACKFullMatrixExt<Number> U, VT;
+          std::vector<typename numbers::NumberTraits<Number>::real_type>
+            Sigma_r;
+
+          rank = LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBH(
+            A, B, U, Sigma_r, VT, C, D, new_rank);
+
+          /**
+           * \alert{Since the initial matrix may not have the correct rank, even
+           * though its \p rank is larger than zero, its actual \p rank may be less
+           * or even zero. Therefore, it is possible that the returned \p rank from
+           * the above execution of \p reduced_svd_on_AxBH may be zero. Therefore,
+           * it needs a special treatment here.}
+           */
+          if (rank > 0)
             {
+              if (n < m)
+                {
+                  /**
+                   * Adopt right associativity when the matrix is long.
+                   */
+                  A = U;
+                  VT.scale_rows(Sigma_r);
+                  VT.transpose(B);
+                }
+              else
+                {
+                  /**
+                   * Adopt left associativity when the matrix is wide.
+                   */
+                  U.scale_columns(A, Sigma_r);
+                  VT.transpose(B);
+                }
+
               /**
-               * Adopt right associativity when the matrix is long.
+               * Update the formal rank.
                */
-              A = U;
-              VT.scale_rows(Sigma_r);
-              VT.transpose(B);
+              formal_rank = A.n();
             }
           else
             {
-              /**
-               * Adopt left associativity when the matrix is wide.
-               */
-              U.scale_columns(A, Sigma_r);
-              VT.transpose(B);
+              A.reinit(0, 0);
+              B.reinit(0, 0);
+              rank        = 0;
+              formal_rank = 0;
             }
-
-          /**
-           * Update the formal rank.
-           */
-          formal_rank = A.n();
-        }
-      else
-        {
-          A.reinit(0, 0);
-          B.reinit(0, 0);
-          rank        = 0;
-          formal_rank = 0;
         }
     }
   else

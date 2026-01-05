@@ -10,10 +10,12 @@
 
 /**
  * @file hmatrix_symm_preconditioner.h
- * @brief Symmetric \hmat by inheriting from @p HMatrix, which is used as the preconditioner for SPD \hmatrices.
+ * @brief Symmetric \hmat by inheriting from @p HMatrix, which is used as the
+ * preconditioner for SPD \hmatrices in the real valued case or symmetric
+ * \hmatrices in the complex valued case.
  *
  * At the moment, its purpose is to wrap some member functions of @p HMatrix,
- * such as @p HMatrix::vmult, which will be used as preconditioner in
+ * such as @p HMatrix::vmult, which will be used as a preconditioner in
  * @p SolverCGGeneral.
  *
  * @date 2022-10-27
@@ -35,14 +37,11 @@ class HMatrixSymmPreconditioner : public HMatrix<spacedim, Number>
 public:
   using real_type = typename numbers::NumberTraits<Number>::real_type;
 
-  /**
-   * Default constructor
-   */
-  HMatrixSymmPreconditioner();
+  HMatrixSymmPreconditioner() = default;
 
   /**
    * Construct the hierarchical structure without data from the root node of a
-   * BlockClusterTree.
+   * block cluster tree.
    */
   HMatrixSymmPreconditioner(const BlockClusterTree<spacedim, real_type> &bct,
                             const unsigned int fixed_rank_k = 1);
@@ -120,68 +119,25 @@ public:
                                        bc_node,
     const LAPACKFullMatrixExt<Number> &M);
 
-  /**
-   * Deep copy constructor
-   *
-   * @param H
-   */
   HMatrixSymmPreconditioner(
     const HMatrixSymmPreconditioner<spacedim, Number> &H);
 
-  /**
-   * Shallow copy constructor
-   *
-   * @param H
-   */
   HMatrixSymmPreconditioner(
     HMatrixSymmPreconditioner<spacedim, Number> &&H) noexcept;
 
-  /**
-   * Deep assignment operator
-   *
-   * @param
-   * @return
-   */
   HMatrixSymmPreconditioner<spacedim, Number> &
   operator=(const HMatrixSymmPreconditioner<spacedim, Number> &H);
 
-  /**
-   * Shallow assignment operator
-   * @param
-   * @return
-   */
   HMatrixSymmPreconditioner<spacedim, Number> &
   operator=(HMatrixSymmPreconditioner<spacedim, Number> &&H) noexcept;
 
-  /**
-   * Deep copy constructor, copy from a @p HMatrix.
-   *
-   * @param H
-   */
   HMatrixSymmPreconditioner(const HMatrix<spacedim, Number> &H);
 
-  /**
-   * Shallow copy constructor, copy from a @p HMatrix.
-   *
-   * @param H
-   */
   HMatrixSymmPreconditioner(HMatrix<spacedim, Number> &&H) noexcept;
 
-  /**
-   * Deep assignment operator, assign from a @p HMatrix.
-   *
-   * @param H
-   * @return
-   */
   HMatrixSymmPreconditioner<spacedim, Number> &
   operator=(const HMatrix<spacedim, Number> &H);
 
-  /**
-   * Shallow assignment operator, assign from a @p HMatrix.
-   *
-   * @param H
-   * @return
-   */
   HMatrixSymmPreconditioner<spacedim, Number> &
   operator=(HMatrix<spacedim, Number> &&H) noexcept;
 
@@ -195,13 +151,6 @@ public:
   void
   vmult(Vector<Number> &y, const Vector<Number> &x) const;
 };
-
-
-template <int spacedim, typename Number>
-HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner()
-  : HMatrix<spacedim, Number>()
-{}
-
 
 template <int spacedim, typename Number>
 HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
@@ -314,7 +263,8 @@ HMatrixSymmPreconditioner<spacedim, Number> &
 HMatrixSymmPreconditioner<spacedim, Number>::operator=(
   HMatrixSymmPreconditioner<spacedim, Number> &&H) noexcept
 {
-  HMatrix<spacedim, Number>::operator=(std::move(H));
+  if (this != &H)
+    HMatrix<spacedim, Number>::operator=(std::move(H));
 
   return (*this);
 }
@@ -350,7 +300,8 @@ HMatrixSymmPreconditioner<spacedim, Number> &
 HMatrixSymmPreconditioner<spacedim, Number>::operator=(
   HMatrix<spacedim, Number> &&H) noexcept
 {
-  HMatrix<spacedim, Number>::operator=(std::move(H));
+  if (this != &H)
+    HMatrix<spacedim, Number>::operator=(std::move(H));
 
   return (*this);
 }
@@ -362,7 +313,10 @@ HMatrixSymmPreconditioner<spacedim, Number>::vmult(
   Vector<Number>       &y,
   const Vector<Number> &x) const
 {
-  this->solve_cholesky(y, x);
+  if constexpr (numbers::NumberTraits<Number>::is_complex)
+    this->solve_lu(y, x);
+  else
+    this->solve_cholesky(y, x);
 }
 
 HBEM_NS_CLOSE

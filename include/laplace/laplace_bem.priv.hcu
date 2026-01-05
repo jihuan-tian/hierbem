@@ -11,7 +11,8 @@
 
 /**
  * @file laplace_bem.impl.hcu
- * @brief Implementation of pimpl member functions to be called by LaplaceBEM.
+ * @brief Implementation of pimpl member functions to be called by
+ * <tt>LaplaceBEM</tt>.
  *
  * @date 2024-12-26
  * @author Jihuan Tian, Xiaozhe Wang
@@ -78,6 +79,7 @@
 #include "bem/bem_general.hcu"
 #include "bem/bem_tools.h"
 #include "bem/bem_values.hcu"
+#include "bem/types.h"
 #include "cad_mesh/gmsh_manipulation.h"
 #include "cad_mesh/subdomain_topology.h"
 #include "cluster_tree/block_cluster_tree.h"
@@ -110,7 +112,6 @@
 #include "utilities/cu_profile.hcu"
 #include "utilities/debug_tools.h"
 #include "utilities/read_octave_data.h"
-#include "utilities/unary_template_arg_containers.h"
 
 HBEM_NS_OPEN
 
@@ -230,8 +231,8 @@ public:
                                 const unsigned int mapping_order) const;
 
   void
-  output_results_on_target_tria(const std::string                &vtk_file,
-                                const Triangulation<3, spacedim> &tria,
+  output_results_on_target_tria(const std::string &vtk_file,
+                                const Triangulation<dim + 1, spacedim> &tria,
                                 const unsigned int mapping_order) const;
 
   void
@@ -504,7 +505,7 @@ private:
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>> I1K2_hmat_;
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>> I2K_prime2_hmat_;
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>> D2_hmat_;
-  HBlockMatrixSkewSymm<spacedim, RangeNumberType>     M_hmat_;
+  std::unique_ptr<HBlockMatrixSkewSymm<spacedim, RangeNumberType>> M_hmat_;
 
   /**
    * Preconditioners
@@ -514,7 +515,7 @@ private:
   HMatrix<spacedim, RangeNumberType>                   M11_in_preconditioner_;
   HMatrix<spacedim, RangeNumberType>                   M12_in_preconditioner_;
   HMatrix<spacedim, RangeNumberType>                   M22_in_preconditioner_;
-  HBlockMatrixSkewSymmPreconditioner<spacedim, RangeNumberType>
+  std::unique_ptr<HBlockMatrixSkewSymmPreconditioner<spacedim, RangeNumberType>>
     M_hmat_preconditioner_;
 
   /**
@@ -679,8 +680,8 @@ private:
   PreconditionerType preconditioner_type_;
 
   /**
-   * Operator preconditioner for Dirichlet problem, either on the whole domain
-   * or a subdomain.
+   * Operator preconditioner for the Dirichlet problem, either on the whole
+   * domain or a subdomain.
    */
   std::unique_ptr<LaplaceSingleLayerPreconditioner<dim,
                                                    spacedim,
@@ -689,8 +690,8 @@ private:
     op_precond_for_slp_;
 
   /**
-   * Operator preconditioner for Neumann problem, either on the whole domain or
-   * a subdomain.
+   * Operator preconditioner for the Neumann problem, either on the whole domain
+   * or a subdomain.
    */
   std::unique_ptr<LaplaceHyperSingularPreconditioner<dim,
                                                      spacedim,
@@ -731,7 +732,8 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -750,7 +752,8 @@ private:
 
   template <int dim1,
             int spacedim1,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename KernelNumberType1,
             typename SurfaceNormalDetector,
             typename MatrixType>
@@ -2897,12 +2900,11 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           std::cout << "=== Leaf set information of D1 ===" << std::endl;
           D1_hmat_->print_leaf_set_info(std::cout);
 
-          // Assemble the block matrix.
+          // Assemble the skew symmetric block matrix.
           std::cout << "=== Assemble system block matrix ===" << std::endl;
           M_hmat_ =
-            HBlockMatrixSkewSymm<spacedim, RangeNumberType>(V1_hmat_.get(),
-                                                            K1_hmat_.get(),
-                                                            D1_hmat_.get());
+            std::make_unique<HBlockMatrixSkewSymm<spacedim, RangeNumberType>>(
+              *V1_hmat_, *K1_hmat_, *D1_hmat_);
 
 #if ENABLE_MATRIX_EXPORT == 1
           V1_hmat_->print_as_formatted_full_matrix(out_mat, "V1", 15, true, 25);
@@ -3225,18 +3227,18 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                              M22_in_preconditioner_,
                                              "After assembly");
 
-                  M_hmat_preconditioner_ =
+                  M_hmat_preconditioner_ = std::make_unique<
                     HBlockMatrixSkewSymmPreconditioner<spacedim,
-                                                       RangeNumberType>(
-                      &M11_in_preconditioner_,
-                      &M12_in_preconditioner_,
-                      &M22_in_preconditioner_);
+                                                       RangeNumberType>>(
+                    M11_in_preconditioner_,
+                    M12_in_preconditioner_,
+                    M22_in_preconditioner_);
 
                   // Perform \hmat-LU factorization to the block preconditioner.
                   std::cout << "=== LU factorization of system block matrix ==="
                             << std::endl;
                   timer.start();
-                  M_hmat_preconditioner_.compute_lu_factorization(
+                  M_hmat_preconditioner_->compute_lu_factorization(
                     max_hmat_rank_for_preconditioner_);
                   timer.stop();
                   print_wall_time(deallog, timer, "LU factorization of M");
@@ -3522,18 +3524,12 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
             case MixedBCProblem: {
               // Solve the system of equations and obtain the solution in two
               // block vectors in the internal DoF numbering.
-              set_hmatrix_vmult_strategy_for_iterative_solver(M_hmat_.get_M11(),
-                                                              vmult_type_,
-                                                              true,
-                                                              true);
-              set_hmatrix_vmult_strategy_for_iterative_solver(M_hmat_.get_M12(),
-                                                              vmult_type_,
-                                                              true,
-                                                              true);
-              set_hmatrix_vmult_strategy_for_iterative_solver(M_hmat_.get_M22(),
-                                                              vmult_type_,
-                                                              true,
-                                                              true);
+              set_hmatrix_vmult_strategy_for_iterative_solver(
+                M_hmat_->get_M11(), vmult_type_, true, true);
+              set_hmatrix_vmult_strategy_for_iterative_solver(
+                M_hmat_->get_M12(), vmult_type_, true, true);
+              set_hmatrix_vmult_strategy_for_iterative_solver(
+                M_hmat_->get_M22(), vmult_type_, true, true);
               switch (preconditioner_type_)
                 {
                     case PreconditionerType::HMatrixFactorization: {
@@ -3544,10 +3540,10 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
                       // In this case, H-LU for skew symmetric block H-matrix is
                       // adopted to solve the system of equations.
                       solver.solve(
-                        M_hmat_,
+                        *M_hmat_,
                         solution_on_combined_domain_internal_dof_numbering_,
                         system_rhs_on_combined_domain_,
-                        M_hmat_preconditioner_);
+                        *M_hmat_preconditioner_);
 
                       // Split the solution vector into two parts.
                       copy_vector(
@@ -3584,7 +3580,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
                         true,
                         true);
                       solve_hblockmatrix_skew_symm_using_schur_complement(
-                        M_hmat_,
+                        *M_hmat_,
                         neumann_data_on_dirichlet_domain_internal_dof_numbering_,
                         dirichlet_data_on_neumann_domain_internal_dof_numbering_,
                         system_rhs_on_dirichlet_domain_,
@@ -3623,7 +3619,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
                       // In this case, Schur complement method is adopted to
                       // solve the system of equations.
                       solve_hblockmatrix_skew_symm_using_schur_complement(
-                        M_hmat_,
+                        *M_hmat_,
                         neumann_data_on_dirichlet_domain_internal_dof_numbering_,
                         dirichlet_data_on_neumann_domain_internal_dof_numbering_,
                         system_rhs_on_dirichlet_domain_,
@@ -3965,9 +3961,10 @@ template <int dim,
           typename KernelNumberType>
 void
 LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
-  output_results_on_target_tria(const std::string                &vtk_file,
-                                const Triangulation<3, spacedim> &target_tria,
-                                const unsigned int mapping_order) const
+  output_results_on_target_tria(
+    const std::string                      &vtk_file,
+    const Triangulation<dim + 1, spacedim> &target_tria,
+    const unsigned int                      mapping_order) const
 {
   // Define volume integral operators, which will be evaluated on CPU.
   PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim, KernelNumberType>

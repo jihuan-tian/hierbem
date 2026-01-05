@@ -63,7 +63,7 @@ namespace PlatformShared
       HBEM_ATTR_HOST HBEM_ATTR_DEV
       SingleLayerKernel()
         : kernel_type(KernelType::SingleLayer)
-        , kappa(0., 0.)
+        , kappa(0.)
         , n_components(1)
       {}
 
@@ -181,7 +181,7 @@ namespace PlatformShared
       HBEM_ATTR_HOST HBEM_ATTR_DEV
       DoubleLayerKernel()
         : kernel_type(KernelType::DoubleLayer)
-        , kappa(0., 0.)
+        , kappa(0.)
         , n_components(1)
       {}
 
@@ -291,7 +291,7 @@ namespace PlatformShared
       HBEM_ATTR_HOST HBEM_ATTR_DEV
       AdjointDoubleLayerKernel()
         : kernel_type(KernelType::AdjointDoubleLayer)
-        , kappa(0., 0.)
+        , kappa(0.)
         , n_components(1)
       {}
 
@@ -400,7 +400,7 @@ namespace PlatformShared
       HBEM_ATTR_HOST HBEM_ATTR_DEV
       HyperSingularKernel()
         : kernel_type(KernelType::HyperSingular)
-        , kappa(0., 0.)
+        , kappa(0.)
         , n_components(1)
       {}
 
@@ -517,7 +517,7 @@ namespace PlatformShared
       HBEM_ATTR_HOST HBEM_ATTR_DEV
       HyperSingularKernelRegular1()
         : kernel_type(KernelType::HyperSingularRegular)
-        , kappa(0., 0.)
+        , kappa(0.)
         , n_components(1)
       {}
 
@@ -644,7 +644,7 @@ namespace PlatformShared
       HBEM_ATTR_HOST HBEM_ATTR_DEV
       HyperSingularKernelRegular2()
         : kernel_type(KernelType::HyperSingularRegular)
-        , kappa(0., 0.)
+        , kappa(0.)
         , n_components(1)
       {}
 

@@ -56,6 +56,7 @@ using namespace dealii;
  * @brief Class for the dual mesh operator preconditioner, which preconditions
  * the single layer potential boundary integral operator in the Laplace
  * equation.
+ *
  * @tparam dim Manifold dimension of the surface
  * @tparam spacedim Space dimension
  * @tparam RangeNumberType Number type of matrix and vector entries

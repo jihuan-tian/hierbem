@@ -2392,7 +2392,7 @@ public:
   /**
    * Add the HMatrix \p B into the current HMatrix \p A, i.e.
    * whole matrix addition instead of addition limited to a specific block,
-   * where \p C will be truncated to a fixed rank \p fixed_rank.
+   * where the result matrix will be truncated to a fixed rank \p fixed_rank.
    *
    * This algorithm is intrinsically recursive, i.e. the addition of parent
    * HMatrices will perform the addition of each pair of child HMatrices
@@ -29529,42 +29529,20 @@ void
 HMatrix<spacedim, Number>::add(const HMatrix<spacedim, Number> &B,
                                const size_type fixed_rank_k) const
 {
-  /**
-   * <strong>Work flow</strong>
-   */
-
   switch (type)
     {
-        case HierarchicalMatrixType: {
-          /**
-           * Recursively add each pair of submatrices.
-           */
-          for (size_type i = 0; i < submatrices.size(); i++)
-            {
-              submatrices[i]->add(*(B.submatrices[i]), fixed_rank_k);
-            }
-
-          break;
-        }
-        case FullMatrixType: {
-          /**
-           * Perform addition of full matrices.
-           */
-          this->fullmatrix->add(*(B.fullmatrix));
-
-          break;
-        }
-        case RkMatrixType: {
-          /**
-           * Perform addition of rank-k matrices.
-           */
-          this->rkmatrix->add(*(B.rkmatrix), fixed_rank_k);
-
-          break;
-        }
+      case HierarchicalMatrixType:
+        for (size_type i = 0; i < submatrices.size(); i++)
+          submatrices[i]->add(*(B.submatrices[i]), fixed_rank_k);
+        break;
+      case FullMatrixType:
+        this->fullmatrix->add(*(B.fullmatrix));
+        break;
+      case RkMatrixType:
+        this->rkmatrix->add(*(B.rkmatrix), fixed_rank_k);
+        break;
       case UndefinedMatrixType:
         Assert(false, ExcInvalidHMatrixType(type));
-        break;
     }
 }
 
@@ -29575,42 +29553,20 @@ HMatrix<spacedim, Number>::add(const Number                     b,
                                const HMatrix<spacedim, Number> &B,
                                const size_type fixed_rank_k) const
 {
-  /**
-   * <strong>Work flow</strong>
-   */
-
   switch (type)
     {
-        case HierarchicalMatrixType: {
-          /**
-           * Recursively add each pair of submatrices.
-           */
-          for (size_type i = 0; i < submatrices.size(); i++)
-            {
-              submatrices[i]->add(b, *(B.submatrices[i]), fixed_rank_k);
-            }
-
-          break;
-        }
-        case FullMatrixType: {
-          /**
-           * Perform addition of full matrices.
-           */
-          this->fullmatrix->add(b, *(B.fullmatrix));
-
-          break;
-        }
-        case RkMatrixType: {
-          /**
-           * Perform addition of rank-k matrices.
-           */
-          this->rkmatrix->add(b, *(B.rkmatrix), fixed_rank_k);
-
-          break;
-        }
+      case HierarchicalMatrixType:
+        for (size_type i = 0; i < submatrices.size(); i++)
+          submatrices[i]->add(b, *(B.submatrices[i]), fixed_rank_k);
+        break;
+      case FullMatrixType:
+        this->fullmatrix->add(b, *(B.fullmatrix));
+        break;
+      case RkMatrixType:
+        this->rkmatrix->add(b, *(B.rkmatrix), fixed_rank_k);
+        break;
       case UndefinedMatrixType:
         Assert(false, ExcInvalidHMatrixType(type));
-        break;
     }
 }
 

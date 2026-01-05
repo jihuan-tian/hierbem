@@ -57,41 +57,34 @@ public:
   using size_type = typename Vector<Number>::size_type;
 
   /**
-   * Default constructor
-   */
-  HBlockMatrixSkewSymmPreconditioner()
-    : M11(nullptr)
-    , M12(nullptr)
-    , M22(nullptr)
-  {}
-
-  /**
-   * Constructor for wrapping \hmat pointers.
+   * Constructor for wrapping \hmat references.
    *
-   * @param M11
-   * @param M12
-   * @param M22
+   * @param M11_
+   * @param M12_
+   * @param M22_
    */
-  HBlockMatrixSkewSymmPreconditioner(HMatrix<spacedim, Number> *M11,
-                                     HMatrix<spacedim, Number> *M12,
-                                     HMatrix<spacedim, Number> *M22)
-    : M11(M11)
-    , M12(M12)
-    , M22(M22)
+  HBlockMatrixSkewSymmPreconditioner(HMatrix<spacedim, Number> &M11_,
+                                     HMatrix<spacedim, Number> &M12_,
+                                     HMatrix<spacedim, Number> &M22_)
+    : M11(M11_)
+    , M12(M12_)
+    , M22(M22_)
   {}
 
-  /**
-   * Copy constructor
-   */
   HBlockMatrixSkewSymmPreconditioner(
-    const HBlockMatrixSkewSymmPreconditioner<spacedim, Number> &block_mat);
+    const HBlockMatrixSkewSymmPreconditioner<spacedim, Number> &block_mat) =
+    delete;
 
-  /**
-   * Assignment operator
-   */
   HBlockMatrixSkewSymmPreconditioner<spacedim, Number> &
-  operator=(
-    const HBlockMatrixSkewSymmPreconditioner<spacedim, Number> &block_mat);
+  operator=(const HBlockMatrixSkewSymmPreconditioner<spacedim, Number>
+              &block_mat) = delete;
+
+  HBlockMatrixSkewSymmPreconditioner(
+    HBlockMatrixSkewSymmPreconditioner<spacedim, Number> &&block_mat) = delete;
+
+  HBlockMatrixSkewSymmPreconditioner<spacedim, Number> &
+  operator=(HBlockMatrixSkewSymmPreconditioner<spacedim, Number> &&block_mat) =
+    delete;
 
   void
   compute_lu_factorization(const unsigned int fixed_rank);
@@ -106,61 +99,38 @@ public:
   vmult(Vector<Number> &y, const Vector<Number> &x) const;
 
 private:
-  HMatrix<spacedim, Number> *M11;
-  HMatrix<spacedim, Number> *M12;
-  HMatrix<spacedim, Number> *M22;
+  HMatrix<spacedim, Number> &M11;
+  HMatrix<spacedim, Number> &M12;
+  HMatrix<spacedim, Number> &M22;
 };
-
-
-template <int spacedim, typename Number>
-HBlockMatrixSkewSymmPreconditioner<spacedim, Number>::
-  HBlockMatrixSkewSymmPreconditioner(
-    const HBlockMatrixSkewSymmPreconditioner<spacedim, Number> &block_mat)
-  : M11(block_mat.M11)
-  , M12(block_mat.M12)
-  , M22(block_mat.M22)
-{}
-
-
-template <int spacedim, typename Number>
-HBlockMatrixSkewSymmPreconditioner<spacedim, Number> &
-HBlockMatrixSkewSymmPreconditioner<spacedim, Number>::operator=(
-  const HBlockMatrixSkewSymmPreconditioner<spacedim, Number> &block_mat)
-{
-  M11 = block_mat.M11;
-  M12 = block_mat.M12;
-  M22 = block_mat.M22;
-
-  return (*this);
-}
 
 template <int spacedim, typename Number>
 void
 HBlockMatrixSkewSymmPreconditioner<spacedim, Number>::compute_lu_factorization(
   const unsigned int fixed_rank)
 {
-  // Compute Cholesky factorization for \f$M_{11}\f$ in situ, which produces
-  // \f$L_{11}\f$.
-  if (M11->get_type() == HMatrixType::HierarchicalMatrixType)
+  // Compute Cholesky factorization in the real valued case in situ, which
+  // produces \f$L_{11}\f$.
+  if (M11.get_type() == HMatrixType::HierarchicalMatrixType)
     {
-      M11->compute_cholesky_factorization_task_parallel(fixed_rank);
+      M11.compute_cholesky_factorization_task_parallel(fixed_rank);
     }
   else
     {
-      M11->compute_cholesky_factorization(fixed_rank);
+      M11.compute_cholesky_factorization(fixed_rank);
     }
-  M11->solve_cholesky_by_forward_substitution_matrix_valued(*M12, fixed_rank);
+  M11.solve_cholesky_by_forward_substitution_matrix_valued(M12, fixed_rank);
   // Calculate \f$M_{22} = M_{22} + U_{12}^T U_{12}\f$
-  M12->Tmmult_level_conserving(*M22, *M12, fixed_rank, true);
+  M12.Tmmult_level_conserving(M22, M12, fixed_rank, true);
   // Apply Cholesky factorization to the new @p M22. After this operation,
   // @p M22 stores @p L22.
-  if (M22->get_type() == HMatrixType::HierarchicalMatrixType)
+  if (M22.get_type() == HMatrixType::HierarchicalMatrixType)
     {
-      M22->compute_cholesky_factorization_task_parallel(fixed_rank);
+      M22.compute_cholesky_factorization_task_parallel(fixed_rank);
     }
   else
     {
-      M22->compute_cholesky_factorization(fixed_rank);
+      M22.compute_cholesky_factorization(fixed_rank);
     }
 }
 
@@ -172,19 +142,19 @@ HBlockMatrixSkewSymmPreconditioner<spacedim, Number>::vmult(
   const Vector<Number> &b) const
 {
   // Verify the dimensions of matrices and vectors should match.
-  AssertDimension(x.size(), M11->get_n() + M12->get_n());
-  AssertDimension(b.size(), M11->get_m() + M22->get_m());
+  AssertDimension(x.size(), M11.get_n() + M12.get_n());
+  AssertDimension(b.size(), M11.get_m() + M22.get_m());
 
   // Verify the dimensions of matrix blocks should match.
-  AssertDimension(M11->get_m(), M12->get_m());
-  AssertDimension(M12->get_n(), M22->get_n());
+  AssertDimension(M11.get_m(), M12.get_m());
+  AssertDimension(M12.get_n(), M22.get_n());
 
   // Verify the whole block matrix should be square.
   AssertDimension(x.size(), b.size());
 
   // Split the vectors.
-  const size_type n1 = M11->get_n();
-  const size_type n2 = M12->get_n();
+  const size_type n1 = M11.get_n();
+  const size_type n2 = M12.get_n();
   Vector<Number>  b1(n1);
   Vector<Number>  b2(n2);
 
@@ -195,17 +165,18 @@ HBlockMatrixSkewSymmPreconditioner<spacedim, Number>::vmult(
   Vector<Number> y1(n1);
   Vector<Number> y2(n2);
 
-  M11->solve_cholesky_by_forward_substitution(y1, b1);
-  M12->Tvmult_add(b2, y1);
-  M22->solve_cholesky_by_forward_substitution(y2, b2);
+  M11.solve_cholesky_by_forward_substitution(y1, b1);
+  M12.Tvmult_add(b2, y1);
+  M22.solve_cholesky_by_forward_substitution(y2, b2);
 
   // Solve \f$Ux=y\f$.
   Vector<Number> x1(n1);
   Vector<Number> x2(n2);
-  M22->solve_cholesky_by_backward_substitution(x2, y2);
-  M12->vmult_add(
-    y1, typename dealii::numbers::NumberTraits<Number>::real_type(-1.0), x2);
-  M11->solve_cholesky_by_backward_substitution(x1, y1);
+  M22.solve_cholesky_by_backward_substitution(x2, y2);
+  M12.vmult_add(y1,
+                typename dealii::numbers::NumberTraits<Number>::real_type(-1.0),
+                x2);
+  M11.solve_cholesky_by_backward_substitution(x1, y1);
 
   // Merge the result vector.
   copy_vector(x, 0, x1, 0, n1);

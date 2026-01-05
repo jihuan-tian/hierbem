@@ -15,11 +15,16 @@
  * \author Jihuan Tian
  * \date 2021-07-03
  */
+#include <deal.II/base/types.h>
 
 #include <cmath>
 #include <iostream>
+#include <vector>
 
+#include "cluster_tree/block_cluster_tree.h"
+#include "cluster_tree/cluster_tree.h"
 #include "hmatrix/hmatrix.h"
+#include "linear_algebra/lapack_full_matrix_ext.h"
 
 int
 main()

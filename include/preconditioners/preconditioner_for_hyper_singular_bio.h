@@ -48,6 +48,7 @@ using namespace dealii;
 /**
  * @brief Abstract class for the dual mesh operator preconditioner, which
  * preconditions the hyper singular boundary integral operator.
+ *
  * @tparam dim Manifold dimension of the surface
  * @tparam spacedim Space dimension
  * @tparam RangeNumberType Number type of matrix and vector entries

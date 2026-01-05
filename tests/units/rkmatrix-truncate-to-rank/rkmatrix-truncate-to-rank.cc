@@ -81,6 +81,20 @@ TEST_CASE("Verify truncation of an RkMatrix to a given rank", "[linalg]")
       RkMatrix<std::complex<double>> A_complex_rk(A_complex_copy);
       A_complex_rk.truncate_to_rank(r);
       A_complex_rk.print_formatted(ofs, 8, false, 25, "0");
+
+      // When truncation rank >= actual rank, we compare the rkmatrix
+      // and the full matrix.
+      if (r >= 2)
+        {
+          LAPACKFullMatrixExt<double>               A_rk_full;
+          LAPACKFullMatrixExt<std::complex<double>> A_complex_rk_full;
+
+          A_rk.convertToFullMatrix(A_rk_full);
+          A_complex_rk.convertToFullMatrix(A_complex_rk_full);
+
+          compare_lapack_matrices(A, A_rk_full, 1e-12, 1e-12);
+          compare_lapack_matrices(A_complex, A_complex_rk_full, 1e-12, 1e-12);
+        }
     }
 
   ofs.close();

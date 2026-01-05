@@ -60,6 +60,15 @@ class HelmholtzAcousticBEM
 public:
 #pragma region ****Typedefs ****
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+
+  // Here we define number types to be used on the device. When the original
+  // number types are real values, they are the same on the device. When the
+  // number types are complex values, we use our own complex type instead of
+  // @p std::complex .
+  using CUDAKernelNumberType =
+    std::conditional_t<std::is_floating_point_v<KernelNumberType>,
+                       KernelNumberType,
+                       complex<real_type>>;
 #pragma endregion
 
 #pragma region ****Constants ****
@@ -79,11 +88,12 @@ public:
    * @param is_interior_problem
    * @param thread_num
    */
-  HelmholtzAcousticBEM(unsigned int fe_order_for_dirichlet_space,
-                       unsigned int fe_order_for_neumann_space,
-                       ProblemType  problem_type,
-                       bool         is_interior_problem,
-                       unsigned int thread_num);
+  HelmholtzAcousticBEM(const CUDAKernelNumberType kappa,
+                       unsigned int               fe_order_for_dirichlet_space,
+                       unsigned int               fe_order_for_neumann_space,
+                       ProblemType                problem_type,
+                       bool                       is_interior_problem,
+                       unsigned int               thread_num);
 
   /**
    * @brief Constructor for solving Helmholtz acoustic problem using \hmatrix.
@@ -96,13 +106,15 @@ public:
    * @param hmat_preconditioner_params
    * @param thread_num
    */
-  HelmholtzAcousticBEM(const unsigned int       fe_order_for_dirichlet_space,
-                       const unsigned int       fe_order_for_neumann_space,
-                       const ProblemType        problem_type,
-                       const bool               is_interior_problem,
-                       const HMatrixParameters &hmat_params,
-                       const HMatrixParameters &hmat_preconditioner_params,
-                       const unsigned int       thread_num);
+  HelmholtzAcousticBEM(
+    const CUDAKernelNumberType          kappa,
+    const unsigned int                  fe_order_for_dirichlet_space,
+    const unsigned int                  fe_order_for_neumann_space,
+    const ProblemType                   problem_type,
+    const bool                          is_interior_problem,
+    const HMatrixParameters<real_type> &hmat_params,
+    const HMatrixParameters<real_type> &hmat_preconditioner_params,
+    const unsigned int                  thread_num);
 
   /**
    * Destructor, where DoF handlers are cleared.
@@ -238,8 +250,8 @@ public:
    * Evaluate potentials on the target 3D triangulation.
    */
   void
-  output_results_on_target_tria(const std::string                &vtk_file,
-                                const Triangulation<3, spacedim> &tria,
+  output_results_on_target_tria(const std::string &vtk_file,
+                                const Triangulation<dim + 1, spacedim> &tria,
                                 const unsigned int mapping_order) const;
 
   void
