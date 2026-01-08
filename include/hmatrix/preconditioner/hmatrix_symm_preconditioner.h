@@ -37,7 +37,7 @@ class HMatrixSymmPreconditioner : public HMatrix<spacedim, Number>
 public:
   using real_type = typename numbers::NumberTraits<Number>::real_type;
 
-  HMatrixSymmPreconditioner() = default;
+  HMatrixSymmPreconditioner();
 
   /**
    * Construct the hierarchical structure without data from the root node of a
@@ -150,7 +150,37 @@ public:
    */
   void
   vmult(Vector<Number> &y, const Vector<Number> &x) const;
+
+  /**
+   * Set the flag <tt>is_spd</tt>.
+   */
+  void
+  set_spd(const bool is_spd_)
+  {
+    is_spd = is_spd_;
+  }
+
+private:
+  /**
+   * Whether the original H-matrix for this preconditioner is symmetric positive
+   * definite. In the complex valued case, this condition is Hermite symmetric
+   * positive definite.
+   *
+   * When it is true, the H-matrix uses Cholesky factorization and
+   * @p solve_cholesky is called in @p vmult.
+   *
+   * When it is false, the H-matrix uses LU factorization and @p solve_lu is
+   * called in @p vmult.
+   */
+  bool is_spd;
 };
+
+
+template <int spacedim, typename Number>
+HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner()
+  : is_spd(true)
+{}
+
 
 template <int spacedim, typename Number>
 HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
@@ -160,6 +190,7 @@ HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
                               fixed_rank_k,
                               HMatrixSupport::Property::symmetric,
                               HMatrixSupport::BlockType::diagonal_block)
+  , is_spd(true)
 {}
 
 
@@ -172,6 +203,7 @@ HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
                               fixed_rank_k,
                               HMatrixSupport::Property::symmetric,
                               HMatrixSupport::BlockType::diagonal_block)
+  , is_spd(true)
 {}
 
 
@@ -184,6 +216,7 @@ HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
                               M,
                               fixed_rank_k,
                               HMatrixSupport::BlockType::diagonal_block)
+  , is_spd(true)
 {
   Assert(M.get_property() == LAPACKSupport::Property::symmetric,
          ExcInternalError());
@@ -195,6 +228,7 @@ HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
   const BlockClusterTree<spacedim, real_type> &bct,
   const LAPACKFullMatrixExt<Number>           &M)
   : HMatrix<spacedim, Number>(bct, M, HMatrixSupport::BlockType::diagonal_block)
+  , is_spd(true)
 {
   Assert(M.get_property() == LAPACKSupport::Property::symmetric,
          ExcInternalError());
@@ -212,6 +246,7 @@ HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
                               fixed_rank_k,
                               HMatrixSupport::Property::symmetric,
                               HMatrixSupport::BlockType::diagonal_block)
+  , is_spd(true)
 {
   Assert(M.get_property() == LAPACKSupport::Property::symmetric,
          ExcInternalError());
@@ -227,6 +262,7 @@ HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
                               M,
                               HMatrixSupport::Property::symmetric,
                               HMatrixSupport::BlockType::diagonal_block)
+  , is_spd(true)
 {
   Assert(M.get_property() == LAPACKSupport::Property::symmetric,
          ExcInternalError());
@@ -237,6 +273,7 @@ template <int spacedim, typename Number>
 HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
   const HMatrixSymmPreconditioner<spacedim, Number> &H)
   : HMatrix<spacedim, Number>(H)
+  , is_spd(H.is_spd)
 {}
 
 
@@ -244,6 +281,7 @@ template <int spacedim, typename Number>
 HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
   HMatrixSymmPreconditioner<spacedim, Number> &&H) noexcept
   : HMatrix<spacedim, Number>(std::move(H))
+  , is_spd(H.is_spd)
 {}
 
 
@@ -252,6 +290,7 @@ HMatrixSymmPreconditioner<spacedim, Number> &
 HMatrixSymmPreconditioner<spacedim, Number>::operator=(
   const HMatrixSymmPreconditioner<spacedim, Number> &H)
 {
+  is_spd                             = H.is_spd;
   HMatrix<spacedim, Number>::operator=(H);
 
   return (*this);
@@ -264,7 +303,10 @@ HMatrixSymmPreconditioner<spacedim, Number>::operator=(
   HMatrixSymmPreconditioner<spacedim, Number> &&H) noexcept
 {
   if (this != &H)
-    HMatrix<spacedim, Number>::operator=(std::move(H));
+    {
+      is_spd                             = H.is_spd;
+      HMatrix<spacedim, Number>::operator=(std::move(H));
+    }
 
   return (*this);
 }
@@ -274,6 +316,7 @@ template <int spacedim, typename Number>
 HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
   const HMatrix<spacedim, Number> &H)
   : HMatrix<spacedim, Number>(H)
+  , is_spd(true)
 {}
 
 
@@ -281,6 +324,7 @@ template <int spacedim, typename Number>
 HMatrixSymmPreconditioner<spacedim, Number>::HMatrixSymmPreconditioner(
   HMatrix<spacedim, Number> &&H) noexcept
   : HMatrix<spacedim, Number>(std::move(H))
+  , is_spd(true)
 {}
 
 
@@ -289,6 +333,7 @@ HMatrixSymmPreconditioner<spacedim, Number> &
 HMatrixSymmPreconditioner<spacedim, Number>::operator=(
   const HMatrix<spacedim, Number> &H)
 {
+  is_spd                             = true;
   HMatrix<spacedim, Number>::operator=(H);
 
   return (*this);
@@ -301,7 +346,10 @@ HMatrixSymmPreconditioner<spacedim, Number>::operator=(
   HMatrix<spacedim, Number> &&H) noexcept
 {
   if (this != &H)
-    HMatrix<spacedim, Number>::operator=(std::move(H));
+    {
+      is_spd                             = true;
+      HMatrix<spacedim, Number>::operator=(std::move(H));
+    }
 
   return (*this);
 }
@@ -313,10 +361,10 @@ HMatrixSymmPreconditioner<spacedim, Number>::vmult(
   Vector<Number>       &y,
   const Vector<Number> &x) const
 {
-  if constexpr (numbers::NumberTraits<Number>::is_complex)
-    this->solve_lu(y, x);
-  else
+  if (is_spd)
     this->solve_cholesky(y, x);
+  else
+    this->solve_lu(y, x);
 }
 
 HBEM_NS_CLOSE

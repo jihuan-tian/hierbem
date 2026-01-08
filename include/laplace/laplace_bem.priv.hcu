@@ -508,7 +508,7 @@ private:
   std::unique_ptr<HBlockMatrixSkewSymm<spacedim, RangeNumberType>> M_hmat_;
 
   /**
-   * Preconditioners
+   * H-matrix factorization based preconditioners.
    */
   HMatrixSymmPreconditioner<spacedim, RangeNumberType> V1_hmat_preconditioner_;
   HMatrixSymmPreconditioner<spacedim, RangeNumberType> D1_hmat_preconditioner_;
@@ -2119,7 +2119,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     dof_handler_for_neumann_space_,
                     dof_handler_for_dirichlet_space_,
                     0.5,
-                    QGauss<2>(fe_for_dirichlet_space_.degree + 1),
+                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
                     I1K2_mat_);
                 }
               else
@@ -2132,7 +2132,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     dof_handler_for_neumann_space_,
                     dof_handler_for_dirichlet_space_,
                     0.5,
-                    QGauss<2>(fe_for_dirichlet_space_.degree + 1),
+                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
                     I1K2_mat_);
                 }
             }
@@ -2148,7 +2148,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     dof_handler_for_neumann_space_,
                     dof_handler_for_dirichlet_space_,
                     -0.5,
-                    QGauss<2>(fe_for_dirichlet_space_.degree + 1),
+                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
                     I1K2_mat_);
                 }
               else
@@ -2161,7 +2161,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     dof_handler_for_neumann_space_,
                     dof_handler_for_dirichlet_space_,
                     -0.5,
-                    QGauss<2>(fe_for_dirichlet_space_.degree + 1),
+                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
                     I1K2_mat_);
                 }
             }
@@ -2291,7 +2291,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_dirichlet_space_,
                 dof_handler_for_neumann_space_,
                 0.5,
-                QGauss<2>(fe_for_dirichlet_space_.degree + 1),
+                QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
                 I2K_prime2_mat_);
             }
           else
@@ -2304,7 +2304,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_dirichlet_space_,
                 dof_handler_for_neumann_space_,
                 -0.5,
-                QGauss<2>(fe_for_dirichlet_space_.degree + 1),
+                QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
                 I2K_prime2_mat_);
             }
 
@@ -3033,7 +3033,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     material_id_to_mapping_index_,
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                     SauterQuadratureRule<dim>(5, 4, 4, 3),
-                    QGauss<2>(fe_for_dirichlet_space_.degree + 1));
+                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1));
 
                   break;
                 }
@@ -3139,7 +3139,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     material_id_to_mapping_index_,
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                     SauterQuadratureRule<dim>(5, 4, 4, 3),
-                    QGauss<2>(fe_for_dirichlet_space_.degree + 1));
+                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1));
 
                   break;
                 }
@@ -3300,7 +3300,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     material_id_to_mapping_index_,
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                     SauterQuadratureRule<dim>(5, 4, 4, 3),
-                    QGauss<2>(fe_for_dirichlet_space_.degree + 1));
+                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1));
 
                   op_precond_for_hyper_singular_->setup_preconditioner(
                     thread_num_,
@@ -3315,7 +3315,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     material_id_to_mapping_index_,
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                     SauterQuadratureRule<dim>(5, 4, 4, 3),
-                    QGauss<2>(fe_for_dirichlet_space_.degree + 1));
+                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1));
 
                   break;
                 }
