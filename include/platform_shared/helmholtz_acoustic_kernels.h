@@ -855,21 +855,21 @@ namespace PlatformShared
 
       HBEM_ATTR_HOST
       HyperSingularKernelRegular2() requires HostComplex<KernelNumberType>
-        : kernel_type(KernelType::HyperSingularRegular),
+        : kernel_type(KernelType::HyperSingularRegular2),
           kappa(0., 0.),
           n_components(1)
       {}
 
       HBEM_ATTR_DEV
       HyperSingularKernelRegular2() requires DeviceComplex<KernelNumberType>
-        : kernel_type(KernelType::HyperSingularRegular),
+        : kernel_type(KernelType::HyperSingularRegular2),
           kappa(0., 0.),
           n_components(1)
       {}
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
       HyperSingularKernelRegular2(const KernelNumberType kappa_)
-        : kernel_type(KernelType::HyperSingularRegular)
+        : kernel_type(KernelType::HyperSingularRegular2)
         , kappa(kappa_)
         , n_components(1)
       {}

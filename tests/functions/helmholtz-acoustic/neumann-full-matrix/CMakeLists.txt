@@ -1,0 +1,54 @@
+# Copyright (C) 2026 Jihuan Tian <jihuan_tian@hotmail.com>
+#
+# This file is part of the HierBEM library.
+#
+# HierBEM is free software: you can use it, redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your
+# option) any later version. The full text of the license can be found in the
+# file LICENSE at the top level directory of HierBEM.
+
+find_package(Octave REQUIRED)
+
+# Target should contains 'test' substring in any cases in order to be found by
+# Visual Studio Code's TestMate extension
+set(_target test-helmholtz-neumann-full-matrix)
+
+add_executable(${_target} helmholtz-neumann-full-matrix.cc
+                          run-helmholtz-neumann-full-matrix.cc)
+
+# Allow target to include deal.ii header files
+deal_ii_setup_target(${_target})
+
+# Define SOURCE_DIR macro to be used in the source files
+target_compile_definitions(${_target}
+                           PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/process.m.in
+               ${CMAKE_CURRENT_SOURCE_DIR}/process.m)
+
+target_link_libraries(
+  ${_target}
+  hbem_octave_wrapper
+  hierbem
+  boost_program_options
+  dl # Lazy way: always link with libdl no matter if CUDA is used or not
+  ${OCTAVE_LIBRARIES}
+  Catch2::Catch2WithMain)
+
+# Discover Catch2 testcases
+include(CTest)
+include(Catch)
+catch_discover_tests(${_target})
+
+add_custom_command(
+  TARGET ${_target}
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/process.m
+          ${CMAKE_CURRENT_BINARY_DIR}/process.m)
+
+add_custom_command(
+  TARGET ${_target}
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/draw.m
+          ${CMAKE_CURRENT_BINARY_DIR}/draw.m)

@@ -34,6 +34,9 @@ enum KernelType
   AdjointDoubleLayer,
   HyperSingular,
   HyperSingularRegular,
+  HyperSingularRegular2, // Kernel type for the second part of the regularized
+                         // hyper singular boundary integral operator in the
+                         // Helmholtz acoustic equation.
   NoneType
 };
 

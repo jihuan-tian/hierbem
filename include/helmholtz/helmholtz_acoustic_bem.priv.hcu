@@ -1882,103 +1882,232 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           break;
         }
         case NeumannBCProblem: {
+#if ENABLE_MATRIX_EXPORT == 1
+          // Output stream for matrices and vectors.
+          std::ofstream out_mat;
+#endif
+
           std::cout << "=== Assemble scaled mass matrix ===" << std::endl;
 
-          /**
-           * For the interior problem, \f$\frac{1}{2}I\f$ is assembled, while
-           * for the exterior problem, \f$-\frac{1}{2}I\f$ is assembled.
-           */
+          // For the interior problem, \f$\frac{1}{2}I\f$ is assembled, while
+          // for the exterior problem, \f$-\frac{1}{2}I\f$ is assembled.
+          Timer timer;
           if (is_interior_problem_)
             {
-              assemble_fem_scaled_mass_matrix<
+              if (cpu_serial_)
+                {
+                  assemble_fem_scaled_mass_matrix_serial<
+                    dim,
+                    spacedim,
+                    real_type,
+                    LAPACKFullMatrixExt<RangeNumberType>>(
+                    dof_handler_for_dirichlet_space_,
+                    dof_handler_for_neumann_space_,
+                    0.5,
+                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
+                    I2K_prime2_mat_);
+                }
+              else
+                {
+                  assemble_fem_scaled_mass_matrix<
+                    dim,
+                    spacedim,
+                    real_type,
+                    LAPACKFullMatrixExt<RangeNumberType>>(
+                    dof_handler_for_dirichlet_space_,
+                    dof_handler_for_neumann_space_,
+                    0.5,
+                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
+                    I2K_prime2_mat_);
+                }
+            }
+          else
+            {
+              if (cpu_serial_)
+                {
+                  assemble_fem_scaled_mass_matrix_serial<
+                    dim,
+                    spacedim,
+                    real_type,
+                    LAPACKFullMatrixExt<RangeNumberType>>(
+                    dof_handler_for_dirichlet_space_,
+                    dof_handler_for_neumann_space_,
+                    -0.5,
+                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
+                    I2K_prime2_mat_);
+                }
+              else
+                {
+                  assemble_fem_scaled_mass_matrix<
+                    dim,
+                    spacedim,
+                    real_type,
+                    LAPACKFullMatrixExt<RangeNumberType>>(
+                    dof_handler_for_dirichlet_space_,
+                    dof_handler_for_neumann_space_,
+                    -0.5,
+                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
+                    I2K_prime2_mat_);
+                }
+            }
+          timer.stop();
+          print_wall_time(deallog, timer, "assemble mass matrix I");
+
+
+          // Assemble the ADLP matrix, which is added with the previous scaled
+          // FEM mass matrix.
+          std::cout << "=== Assemble ADLP matrix ===" << std::endl;
+
+          timer.start();
+          if (cpu_serial_)
+            {
+              assemble_bem_full_matrix_serial<
                 dim,
                 spacedim,
-                real_type,
+                AdjointDoubleLayerKernel,
+                KernelNumberType,
+                SurfaceNormalDetector<dim, spacedim>,
                 LAPACKFullMatrixExt<RangeNumberType>>(
+                adjoint_double_layer_kernel,
+                -1.0,
                 dof_handler_for_dirichlet_space_,
                 dof_handler_for_neumann_space_,
-                0.5,
-                QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
+                mappings_,
+                material_id_to_mapping_index_,
+                SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+                SauterQuadratureRule<dim>(5, 4, 4, 3),
                 I2K_prime2_mat_);
             }
           else
             {
-              assemble_fem_scaled_mass_matrix<
-                dim,
-                spacedim,
-                real_type,
-                LAPACKFullMatrixExt<RangeNumberType>>(
+              assemble_bem_full_matrix<dim,
+                                       spacedim,
+                                       AdjointDoubleLayerKernel,
+                                       KernelNumberType,
+                                       SurfaceNormalDetector<dim, spacedim>,
+                                       LAPACKFullMatrixExt<RangeNumberType>>(
+                adjoint_double_layer_kernel,
+                -1.0,
                 dof_handler_for_dirichlet_space_,
                 dof_handler_for_neumann_space_,
-                -0.5,
-                QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
+                mappings_,
+                material_id_to_mapping_index_,
+                SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+                SauterQuadratureRule<dim>(5, 4, 4, 3),
                 I2K_prime2_mat_);
             }
+          timer.stop();
+          print_wall_time(deallog, timer, "assemble K'");
 
-          /**
-           * Assemble the ADLP matrix, which is added with the
-           * previous
-           * scaled FEM mass matrix.
-           */
-          std::cout << "=== Assemble ADLP matrix ===" << std::endl;
-          assemble_bem_full_matrix<dim,
-                                   spacedim,
-                                   AdjointDoubleLayerKernel,
-                                   KernelNumberType,
-                                   SurfaceNormalDetector<dim, spacedim>,
-                                   LAPACKFullMatrixExt<RangeNumberType>>(
-            adjoint_double_layer_kernel,
-            -1.0,
-            dof_handler_for_dirichlet_space_,
-            dof_handler_for_neumann_space_,
-            mappings_,
-            material_id_to_mapping_index_,
-            SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-            SauterQuadratureRule<dim>(5, 4, 4, 3),
-            I2K_prime2_mat_);
-
-          /**
-           * Assemble the matrix for the hyper singular operator, where the
-           * stabilization method is adopted.
-           */
-          std::cout << "=== Assemble D matrix ===" << std::endl;
-
-          assemble_bem_full_matrix<dim,
-                                   spacedim,
-                                   HyperSingularKernelRegular1,
-                                   KernelNumberType,
-                                   SurfaceNormalDetector<dim, spacedim>,
-                                   LAPACKFullMatrixExt<RangeNumberType>>(
-            hyper_singular_kernel1,
-            1.0,
-            dof_handler_for_dirichlet_space_,
-            dof_handler_for_dirichlet_space_,
-            mappings_,
-            material_id_to_mapping_index_,
-            SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-            SauterQuadratureRule<dim>(5, 4, 4, 3),
-            D1_mat_);
-
-          assemble_bem_full_matrix<dim,
-                                   spacedim,
-                                   HyperSingularKernelRegular2,
-                                   KernelNumberType,
-                                   SurfaceNormalDetector<dim, spacedim>,
-                                   LAPACKFullMatrixExt<RangeNumberType>>(
-            hyper_singular_kernel2,
-            1.0,
-            dof_handler_for_dirichlet_space_,
-            dof_handler_for_dirichlet_space_,
-            mappings_,
-            material_id_to_mapping_index_,
-            SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-            SauterQuadratureRule<dim>(5, 4, 4, 3),
-            D1_part2_mat_);
-
-          D1_mat_.add(D1_part2_mat_);
+#if ENABLE_MATRIX_EXPORT == 1
+          out_mat.open("matrices.dat");
+          I2K_prime2_mat_.print_formatted_to_mat(
+            out_mat, "I2K'2", 15, true, 25);
+#endif
 
           // Calculate the RHS vector.
+          timer.start();
           I2K_prime2_mat_.vmult(system_rhs_on_neumann_domain_, neumann_bc_);
+          timer.stop();
+          print_wall_time(deallog, timer, "assemble RHS vector");
+
+#if ENABLE_MATRIX_EXPORT == 1
+          print_vector_to_mat(out_mat,
+                              "system_rhs",
+                              system_rhs_on_neumann_domain_,
+                              false,
+                              15,
+                              25);
+#endif
+
+          // Release the RHS matrix.
+          std::cout << "=== Release the RHS matrix ===" << std::endl;
+          I2K_prime2_mat_.clear();
+
+          // Assemble the matrix for the hyper singular operator, where the
+          // stabilization method is adopted.
+          std::cout << "=== Assemble D matrix ===" << std::endl;
+
+          timer.start();
+          if (cpu_serial_)
+            {
+              assemble_bem_full_matrix_serial<
+                dim,
+                spacedim,
+                HyperSingularKernelRegular1,
+                KernelNumberType,
+                SurfaceNormalDetector<dim, spacedim>,
+                LAPACKFullMatrixExt<RangeNumberType>>(
+                hyper_singular_kernel1,
+                1.0,
+                dof_handler_for_dirichlet_space_,
+                dof_handler_for_dirichlet_space_,
+                mappings_,
+                material_id_to_mapping_index_,
+                SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                D1_mat_);
+
+              assemble_bem_full_matrix_serial<
+                dim,
+                spacedim,
+                HyperSingularKernelRegular2,
+                KernelNumberType,
+                SurfaceNormalDetector<dim, spacedim>,
+                LAPACKFullMatrixExt<RangeNumberType>>(
+                hyper_singular_kernel2,
+                1.0,
+                dof_handler_for_dirichlet_space_,
+                dof_handler_for_dirichlet_space_,
+                mappings_,
+                material_id_to_mapping_index_,
+                SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                D1_part2_mat_);
+            }
+          else
+            {
+              assemble_bem_full_matrix<dim,
+                                       spacedim,
+                                       HyperSingularKernelRegular1,
+                                       KernelNumberType,
+                                       SurfaceNormalDetector<dim, spacedim>,
+                                       LAPACKFullMatrixExt<RangeNumberType>>(
+                hyper_singular_kernel1,
+                1.0,
+                dof_handler_for_dirichlet_space_,
+                dof_handler_for_dirichlet_space_,
+                mappings_,
+                material_id_to_mapping_index_,
+                SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                D1_mat_);
+
+              assemble_bem_full_matrix<dim,
+                                       spacedim,
+                                       HyperSingularKernelRegular2,
+                                       KernelNumberType,
+                                       SurfaceNormalDetector<dim, spacedim>,
+                                       LAPACKFullMatrixExt<RangeNumberType>>(
+                hyper_singular_kernel2,
+                1.0,
+                dof_handler_for_dirichlet_space_,
+                dof_handler_for_dirichlet_space_,
+                mappings_,
+                material_id_to_mapping_index_,
+                SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                D1_part2_mat_);
+            }
+
+          D1_mat_.add(D1_part2_mat_);
+          timer.stop();
+          print_wall_time(deallog, timer, "assemble D");
+
+#if ENABLE_MATRIX_EXPORT == 1
+          D1_mat_.print_formatted_to_mat(out_mat, "D1", 15, true, 25);
+          out_mat.close();
+#endif
 
           break;
         }
