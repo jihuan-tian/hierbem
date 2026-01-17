@@ -14,7 +14,7 @@ find_package(Octave REQUIRED)
 # Visual Studio Code's TestMate extension
 set(_target test-dirichlet-full-matrix)
 
-add_executable(${_target} dirichlet-full-matrix.cc run-dirichlet-full-matrix.cu)
+add_executable(${_target} dirichlet-full-matrix.cc run-dirichlet-full-matrix.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})

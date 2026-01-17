@@ -19,9 +19,16 @@
 #ifndef HIERBEM_INCLUDE_PLATFORM_SHARED_UTILITIES_H_
 #define HIERBEM_INCLUDE_PLATFORM_SHARED_UTILITIES_H_
 
+#include <deal.II/base/numbers.h>
+
+#include <cmath>
+
 #include "config.h"
+#include "utilities/number_traits.h"
 
 HBEM_NS_OPEN
+
+using namespace dealii;
 
 namespace PlatformShared
 {
@@ -39,6 +46,30 @@ namespace PlatformShared
         // Use exponentiation by squaring:
         return ((N % 2 == 1) ? x * fixed_power<N / 2>(x * x) :
                                fixed_power<N / 2>(x * x));
+    }
+
+    /**
+     * Exponential function for real and complex values on the device.
+     */
+    template <typename Number>
+    HBEM_ATTR_DEV inline Number
+    exp(const Number x)
+    {
+      using real_type = typename numbers::NumberTraits<Number>::real_type;
+
+      if constexpr (numbers::NumberTraits<Number>::is_complex)
+        {
+          // When the number is complex valued, we use the Euler's identity to
+          // compute the exponential of the input number.
+          const real_type e = ::exp(x.real());
+          return Number(e * ::cos(x.imag()), e * ::sin(x.imag()));
+        }
+      else
+        {
+          // When the number is real valued, directly call the exponential
+          // function.
+          return ::exp(x);
+        }
     }
   } // namespace Utilities
 } // namespace PlatformShared

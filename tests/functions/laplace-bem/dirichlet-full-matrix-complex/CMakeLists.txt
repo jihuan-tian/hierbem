@@ -15,7 +15,7 @@ find_package(Octave REQUIRED)
 set(_target test-dirichlet-full-matrix-complex)
 
 add_executable(${_target} dirichlet-full-matrix-complex.cc
-                          run-dirichlet-full-matrix-complex.cu)
+                          run-dirichlet-full-matrix-complex.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})

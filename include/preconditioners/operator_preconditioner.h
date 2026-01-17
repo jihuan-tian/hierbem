@@ -37,6 +37,7 @@
 #include <deal.II/lac/precondition.h>
 #include <deal.II/lac/solver_control.h>
 #include <deal.II/lac/sparse_matrix.h>
+#include <deal.II/lac/sparse_matrix.templates.h>
 #include <deal.II/lac/sparsity_pattern.h>
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/vector_operations_internal.h>
@@ -1100,74 +1101,103 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
       /**
        * Assemble the preconditioning matrix.
        */
-      if (is_full_domain &&
-          preconditioner_kernel.needs_stabilization_on_full_domain())
+      if (is_full_domain)
         {
-          // When the preconditioner is on the full domain, the hyper singular
-          // operator is not elliptic and should be stabilized.
-          const unsigned int n_boundary_components =
-            subdomain_topology.get_subdomain_to_surface().size();
-          std::vector<Vector<real_type>> boundary_indicators(
-            n_boundary_components);
-          for (auto &vec : boundary_indicators)
-            vec.reinit(dof_handler_primal_space.n_dofs(refined_mesh_level));
-
-          interpolate_indicator_vectors_for_subdomains(
-            dof_handler_primal_space,
-            subdomain_topology,
-            mappings,
-            material_id_to_mapping_index,
-            boundary_indicators);
-
-          // Initialize the stabilization vectors.
-          std::vector<Vector<KernelNumberType>> mass_vmult_weq(
-            n_boundary_components);
-          for (auto &vec : mass_vmult_weq)
-            vec.reinit(dof_handler_dual_space.n_dofs(refined_mesh_level));
-
-          Vector<KernelNumberType> mass_vmult_weq_external_numbering(
-            dof_handler_dual_space.n_dofs(refined_mesh_level));
-
-          // Compute the stabilization vectors.
-          for (unsigned int i = 0; i < n_boundary_components; i++)
+          if (preconditioner_kernel.needs_stabilization_on_full_domain())
             {
-              mass_matrix.vmult(mass_vmult_weq_external_numbering,
-                                boundary_indicators[i]);
-              permute_vector(mass_vmult_weq_external_numbering,
-                             dof_i2e_numbering,
-                             mass_vmult_weq[i]);
-            }
-          // The stabilization factor \f$\alpha\f$ is set to 1.
-          // TODO: Use the average eigenvalue of the matrix D as the
-          // stabilization factor.
-          const KernelNumberType alpha_for_neumann(1.0);
+              // When the preconditioner is on the full domain, the hyper
+              // singular operator is not elliptic and should be stabilized.
+              const unsigned int n_boundary_components =
+                subdomain_topology.get_subdomain_to_surface().size();
+              std::vector<Vector<real_type>> boundary_indicators(
+                n_boundary_components);
+              for (auto &vec : boundary_indicators)
+                vec.reinit(dof_handler_primal_space.n_dofs(refined_mesh_level));
 
-          fill_hmatrix_with_aca_plus_smp<dim,
-                                         spacedim,
-                                         KernelFunctionType,
-                                         RangeNumberType,
-                                         KernelNumberType,
-                                         SurfaceNormalDetector>(
-            thread_num,
-            hmat,
-            aca_config,
-            preconditioner_kernel,
-            DeviceNumberType<KernelNumberType>(1.0),
-            mass_vmult_weq,
-            alpha_for_neumann,
-            dof_to_cell_topo_dual_space,
-            dof_to_cell_topo_dual_space,
-            sauter_quad_rule,
-            dof_handler_dual_space,
-            dof_handler_dual_space,
-            nullptr,
-            nullptr,
-            dof_i2e_numbering,
-            dof_i2e_numbering,
-            mappings,
-            material_id_to_mapping_index,
-            normal_detector,
-            true);
+              interpolate_indicator_vectors_for_subdomains(
+                dof_handler_primal_space,
+                subdomain_topology,
+                mappings,
+                material_id_to_mapping_index,
+                boundary_indicators);
+
+              // Initialize the stabilization vectors.
+              std::vector<Vector<KernelNumberType>> mass_vmult_weq(
+                n_boundary_components);
+              for (auto &vec : mass_vmult_weq)
+                vec.reinit(dof_handler_dual_space.n_dofs(refined_mesh_level));
+
+              Vector<KernelNumberType> mass_vmult_weq_external_numbering(
+                dof_handler_dual_space.n_dofs(refined_mesh_level));
+
+              // Compute the stabilization vectors.
+              for (unsigned int i = 0; i < n_boundary_components; i++)
+                {
+                  mass_matrix.vmult(mass_vmult_weq_external_numbering,
+                                    boundary_indicators[i]);
+                  permute_vector(mass_vmult_weq_external_numbering,
+                                 dof_i2e_numbering,
+                                 mass_vmult_weq[i]);
+                }
+              // The stabilization factor \f$\alpha\f$ is set to 1.
+              // TODO: Use the average eigenvalue of the matrix D as the
+              // stabilization factor.
+              const KernelNumberType alpha_for_neumann(1.0);
+
+              fill_hmatrix_with_aca_plus_smp<dim,
+                                             spacedim,
+                                             KernelFunctionType,
+                                             RangeNumberType,
+                                             KernelNumberType,
+                                             SurfaceNormalDetector>(
+                thread_num,
+                hmat,
+                aca_config,
+                preconditioner_kernel,
+                DeviceNumberType<KernelNumberType>(1.0),
+                mass_vmult_weq,
+                alpha_for_neumann,
+                dof_to_cell_topo_dual_space,
+                dof_to_cell_topo_dual_space,
+                sauter_quad_rule,
+                dof_handler_dual_space,
+                dof_handler_dual_space,
+                nullptr,
+                nullptr,
+                dof_i2e_numbering,
+                dof_i2e_numbering,
+                mappings,
+                material_id_to_mapping_index,
+                normal_detector,
+                true);
+            }
+          else
+            fill_hmatrix_with_aca_plus_smp<dim,
+                                           spacedim,
+                                           KernelFunctionType,
+                                           RangeNumberType,
+                                           KernelNumberType,
+                                           SurfaceNormalDetector>(
+              thread_num,
+              hmat,
+              aca_config,
+              preconditioner_kernel,
+              DeviceNumberType<KernelNumberType>(1.0),
+              {},
+              KernelNumberType(0.),
+              dof_to_cell_topo_dual_space,
+              dof_to_cell_topo_dual_space,
+              sauter_quad_rule,
+              dof_handler_dual_space,
+              dof_handler_dual_space,
+              nullptr,
+              nullptr,
+              dof_i2e_numbering,
+              dof_i2e_numbering,
+              mappings,
+              material_id_to_mapping_index,
+              normal_detector,
+              true);
         }
       else
         // When the preconditioner is on a subdomain, there is no need to

@@ -3173,15 +3173,16 @@ void
 aca_plus_parallel_sauter_quad_for_vector_entry(
   RkMatrix<RangeNumberType> &rkmat,
   const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                                       &aca_config,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
-  const KernelNumberType                                stabilization_factor,
-  const std::array<types::global_dof_index, 2>         &row_dof_index_range,
-  const std::array<types::global_dof_index, 2>         &col_dof_index_range,
-  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
+    &aca_config,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                               &kernel,
+  const DeviceNumberType<KernelNumberType>      kernel_factor,
+  const std::vector<Vector<KernelNumberType>>  &mass_vmult_weq,
+  const KernelNumberType                        stabilization_factor,
+  const std::array<types::global_dof_index, 2> &row_dof_index_range,
+  const std::array<types::global_dof_index, 2> &col_dof_index_range,
+  const DoFToCellTopology<dim, spacedim>       &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>       &ky_dof_to_cell_topo,
   const HierBEM::CUDAWrappers::CUDABEMValues<
     dim,
     spacedim,
@@ -3197,9 +3198,10 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                               &material_id_to_mapping_index,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
-  HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
-                                                           &scratch_data_gpu,
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
 {
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
@@ -4629,15 +4631,16 @@ void
 aca_plus_parallel_sauter_quad_for_whole_vector(
   RkMatrix<RangeNumberType> &rkmat,
   const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                                       &aca_config,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
-  const KernelNumberType                                stabilization_factor,
-  const std::array<types::global_dof_index, 2>         &row_dof_index_range,
-  const std::array<types::global_dof_index, 2>         &col_dof_index_range,
-  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
+    &aca_config,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                               &kernel,
+  const DeviceNumberType<KernelNumberType>      kernel_factor,
+  const std::vector<Vector<KernelNumberType>>  &mass_vmult_weq,
+  const KernelNumberType                        stabilization_factor,
+  const std::array<types::global_dof_index, 2> &row_dof_index_range,
+  const std::array<types::global_dof_index, 2> &col_dof_index_range,
+  const DoFToCellTopology<dim, spacedim>       &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>       &ky_dof_to_cell_topo,
   const BEMValues<dim,
                   spacedim,
                   typename numbers::NumberTraits<RangeNumberType>::real_type>
@@ -7882,14 +7885,15 @@ void
 fill_hmatrix_with_aca_plus_serial(
   HMatrix<spacedim, RangeNumberType> &hmat,
   const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                                       &aca_config,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
-  const SauterQuadratureRule<dim>                      &sauter_quad_rule,
-  const DoFHandler<dim, spacedim>                      &kx_dof_handler,
-  const DoFHandler<dim, spacedim>                      &ky_dof_handler,
+    &aca_config,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                          &kernel,
+  const DeviceNumberType<KernelNumberType> kernel_factor,
+  const DoFToCellTopology<dim, spacedim>  &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>  &ky_dof_to_cell_topo,
+  const SauterQuadratureRule<dim>         &sauter_quad_rule,
+  const DoFHandler<dim, spacedim>         &kx_dof_handler,
+  const DoFHandler<dim, spacedim>         &ky_dof_handler,
   const std::vector<types::global_dof_index>
     *kx_map_from_local_to_full_dof_indices,
   const std::vector<types::global_dof_index>
@@ -7956,9 +7960,11 @@ fill_hmatrix_with_aca_plus_serial(
   /**
    * Create pair cell wise scratch data and task data on GPU device.
    */
-  HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
-      scratch_data_gpu;
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>
+    scratch_data_gpu;
   scratch_data_gpu.allocate(scratch_data);
 
   for (HMatrix<spacedim, RangeNumberType> *leaf_mat : hmat.get_leaf_set())
@@ -8064,16 +8070,17 @@ void
 fill_hmatrix_with_aca_plus_serial(
   HMatrix<spacedim, RangeNumberType> &hmat,
   const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                                       &aca_config,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
-  const std::vector<Vector<KernelNumberType>>          &mass_vmult_weq,
-  const KernelNumberType                                stabilization_factor,
-  const DoFToCellTopology<dim, spacedim>               &kx_dof_to_cell_topo,
-  const DoFToCellTopology<dim, spacedim>               &ky_dof_to_cell_topo,
-  const SauterQuadratureRule<dim>                      &sauter_quad_rule,
-  const DoFHandler<dim, spacedim>                      &kx_dof_handler,
-  const DoFHandler<dim, spacedim>                      &ky_dof_handler,
+    &aca_config,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                              &kernel,
+  const DeviceNumberType<KernelNumberType>     kernel_factor,
+  const std::vector<Vector<KernelNumberType>> &mass_vmult_weq,
+  const KernelNumberType                       stabilization_factor,
+  const DoFToCellTopology<dim, spacedim>      &kx_dof_to_cell_topo,
+  const DoFToCellTopology<dim, spacedim>      &ky_dof_to_cell_topo,
+  const SauterQuadratureRule<dim>             &sauter_quad_rule,
+  const DoFHandler<dim, spacedim>             &kx_dof_handler,
+  const DoFHandler<dim, spacedim>             &ky_dof_handler,
   const std::vector<types::global_dof_index>
     *kx_map_from_local_to_full_dof_indices,
   const std::vector<types::global_dof_index>
@@ -8140,9 +8147,11 @@ fill_hmatrix_with_aca_plus_serial(
   /**
    * Create pair cell wise scratch data and task data on GPU device.
    */
-  HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
-      scratch_data_gpu;
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>
+    scratch_data_gpu;
   scratch_data_gpu.allocate(scratch_data);
 
   for (HMatrix<spacedim, RangeNumberType> *leaf_mat : hmat.get_leaf_set())
@@ -8237,9 +8246,10 @@ void
 fill_hmatrix_with_aca_plus_serial(
   HMatrix<spacedim, RangeNumberType> &hmat,
   const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                                       &aca_config,
-  const KernelFunctionType<spacedim, KernelNumberType> &kernel,
-  const KernelNumberType                                kernel_factor,
+    &aca_config,
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                          &kernel,
+  const DeviceNumberType<KernelNumberType> kernel_factor,
   const typename numbers::NumberTraits<RangeNumberType>::real_type
                                           mass_matrix_factor,
   const DoFToCellTopology<dim, spacedim> &kx_dof_to_cell_topo,
@@ -8324,9 +8334,11 @@ fill_hmatrix_with_aca_plus_serial(
   /**
    * Create pair cell wise scratch data and task data on GPU device.
    */
-  HierBEM::CUDAWrappers::
-    CUDAPairCellWiseScratchData<dim, spacedim, KernelNumberType>
-      scratch_data_gpu;
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>
+    scratch_data_gpu;
   scratch_data_gpu.allocate(scratch_data);
 
   for (HMatrix<spacedim, RangeNumberType> *leaf_mat : hmat.get_leaf_set())

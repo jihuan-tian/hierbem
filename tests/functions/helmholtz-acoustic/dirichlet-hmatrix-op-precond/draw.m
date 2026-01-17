@@ -1,4 +1,4 @@
-## Copyright (C) 2024-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+## Copyright (C) 2026 Jihuan Tian <jihuan_tian@hotmail.com>
 ##
 ## This file is part of the HierBEM library.
 ##

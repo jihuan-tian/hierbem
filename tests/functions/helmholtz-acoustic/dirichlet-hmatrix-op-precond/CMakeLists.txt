@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+# Copyright (C) 2026 Jihuan Tian <jihuan_tian@hotmail.com>
 #
 # This file is part of the HierBEM library.
 #
@@ -12,9 +12,10 @@ find_package(Octave REQUIRED)
 
 # Target should contains 'test' substring in any cases in order to be found by
 # Visual Studio Code's TestMate extension
-set(_target test-neumann-full-matrix)
+set(_target test-helmholtz-dirichlet-hmatrix-op-precond)
 
-add_executable(${_target} neumann-full-matrix.cc run-neumann-full-matrix.cc)
+add_executable(${_target} helmholtz-dirichlet-hmatrix-op-precond.cc
+                          run-helmholtz-dirichlet-hmatrix-op-precond.cu)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})
@@ -31,33 +32,14 @@ target_link_libraries(
   hbem_octave_wrapper
   hierbem
   boost_program_options
-  dl
+  dl # Lazy way: always link with libdl no matter if CUDA is used or not
   ${OCTAVE_LIBRARIES}
   Catch2::Catch2WithMain)
 
+# Discover Catch2 testcases
 include(CTest)
 include(Catch)
 catch_discover_tests(${_target})
-
-# Copy the reference result file depending on the solution space adopted for the
-# Neumann problem.
-if(HBEM_NEUMANN_SOLUTION_SPACE EQUAL 1)
-  add_custom_command(
-    TARGET ${_target}
-    POST_BUILD
-    COMMAND
-      ${CMAKE_COMMAND} -E copy
-      ${CMAKE_CURRENT_SOURCE_DIR}/reference-solution-space1.output
-      ${CMAKE_CURRENT_SOURCE_DIR}/reference.output)
-elseif(HBEM_NEUMANN_SOLUTION_SPACE EQUAL 2)
-  add_custom_command(
-    TARGET ${_target}
-    POST_BUILD
-    COMMAND
-      ${CMAKE_COMMAND} -E copy
-      ${CMAKE_CURRENT_SOURCE_DIR}/reference-solution-space2.output
-      ${CMAKE_CURRENT_SOURCE_DIR}/reference.output)
-endif()
 
 add_custom_command(
   TARGET ${_target}

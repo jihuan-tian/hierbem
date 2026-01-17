@@ -1432,7 +1432,8 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
   ApplyQuadratureUsingBEMValuesSamePanel(
@@ -1650,7 +1651,8 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
   ApplyQuadratureUsingBEMValuesCommonEdge(
@@ -1870,7 +1872,8 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
   ApplyQuadratureUsingBEMValuesCommonVertex(
@@ -2086,7 +2089,8 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
   ApplyQuadratureUsingBEMValuesRegular(
@@ -2887,7 +2891,8 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
   process_sauter_task_on_one_pair_of_dofs_same_panel(
@@ -3156,10 +3161,11 @@ namespace CUDAWrappers
               }
 
             quad_value +=
-              kernel_value * quad_points(quad_no, 0) *
-              (1 - quad_points(quad_no, 0)) *
-              (1 - quad_points(quad_no, 0) * quad_points(quad_no, 1)) *
-              bem_values.quad_rule_for_same_panel.get_weights()[quad_no];
+              kernel_value *
+              static_cast<real_type>(
+                quad_points(quad_no, 0) * (1.0 - quad_points(quad_no, 0)) *
+                (1.0 - quad_points(quad_no, 0) * quad_points(quad_no, 1)) *
+                bem_values.quad_rule_for_same_panel.get_weights()[quad_no]);
           }
 
         /**
@@ -3173,7 +3179,8 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
   process_sauter_task_on_one_pair_of_dofs_common_edge(
@@ -3455,7 +3462,8 @@ namespace CUDAWrappers
 
             quad_value +=
               kernel_value *
-              bem_values.quad_rule_for_common_edge.get_weights()[quad_no];
+              static_cast<real_type>(
+                bem_values.quad_rule_for_common_edge.get_weights()[quad_no]);
           }
 
         /**
@@ -3469,7 +3477,8 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
   process_sauter_task_on_one_pair_of_dofs_common_vertex(
@@ -3741,9 +3750,10 @@ namespace CUDAWrappers
 
             quad_value +=
               kernel_value *
-              HierBEM::PlatformShared::Utilities::fixed_power<3>(
-                quad_points(quad_no, 0)) *
-              bem_values.quad_rule_for_common_vertex.get_weights()[quad_no];
+              static_cast<real_type>(
+                HierBEM::PlatformShared::Utilities::fixed_power<3>(
+                  quad_points(quad_no, 0)) *
+                bem_values.quad_rule_for_common_vertex.get_weights()[quad_no]);
           }
 
         /**
@@ -3757,7 +3767,8 @@ namespace CUDAWrappers
 
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
   process_sauter_task_on_one_pair_of_dofs_regular(
@@ -3970,7 +3981,8 @@ namespace CUDAWrappers
                   kx_jacobian * ky_jacobian *
                   HierBEM::PlatformShared::scalar_product(
                     kx_shape_surface_curl, ky_shape_surface_curl) *
-                  bem_values.quad_rule_for_regular.get_weights()[quad_no];
+                  static_cast<real_type>(
+                    bem_values.quad_rule_for_regular.get_weights()[quad_no]);
               }
             else
               {
@@ -3988,7 +4000,8 @@ namespace CUDAWrappers
                     scalar_data_ring_buffer_gpu[task_index].j_local_index,
                     0,
                     quad_no) *
-                  bem_values.quad_rule_for_regular.get_weights()[quad_no];
+                  static_cast<real_type>(
+                    bem_values.quad_rule_for_regular.get_weights()[quad_no]);
               }
           }
 
@@ -4007,7 +4020,8 @@ namespace CUDAWrappers
    */
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename RangeNumberType = double>
   __global__ void
   process_sauter_tasks_in_buffer_for_far_field_hmat_vector(
@@ -4188,7 +4202,8 @@ namespace CUDAWrappers
               kx_jacobian * ky_jacobian *
               HierBEM::PlatformShared::scalar_product(kx_shape_surface_curl,
                                                       ky_shape_surface_curl) *
-              bem_values.quad_rule_for_regular.get_weights()[quad_no];
+              static_cast<real_type>(
+                bem_values.quad_rule_for_regular.get_weights()[quad_no]);
           }
         else
           {
@@ -4199,7 +4214,8 @@ namespace CUDAWrappers
                 scalar_data_buffer_gpu[task_index].i_local_index, 0, quad_no) *
               bem_values.ky_shape_value_table_for_regular(
                 scalar_data_buffer_gpu[task_index].j_local_index, 0, quad_no) *
-              bem_values.quad_rule_for_regular.get_weights()[quad_no];
+              static_cast<real_type>(
+                bem_values.quad_rule_for_regular.get_weights()[quad_no]);
           }
 
         /**
@@ -6354,7 +6370,8 @@ namespace CUDAWrappers
   template <int capacity,
             int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename RangeNumberType,
             typename KernelNumberType>
   void
@@ -7923,7 +7940,8 @@ calc_covariant_transformations(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename KernelNumberType>
 HBEM_ATTR_HOST KernelNumberType
 ApplyQuadratureUsingBEMValues(
@@ -7941,6 +7959,8 @@ ApplyQuadratureUsingBEMValues(
   const PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   unsigned int                                                    component = 0)
 {
+  using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
+
   KernelNumberType result = KernelNumberType();
 
   const std::vector<double> &quad_weights = quad_rule.get_weights();
@@ -7949,8 +7969,8 @@ ApplyQuadratureUsingBEMValues(
     {
       // Evaluate the integrand with precalculated shape values and shape
       // gradient matrices.
-      result +=
-        f.value(q, bem_values, scratch_data, component) * quad_weights[q];
+      result += f.value(q, bem_values, scratch_data, component) *
+                static_cast<real_type>(quad_weights[q]);
     }
 
   return result * factor;
@@ -8037,7 +8057,8 @@ select_sauter_quad_rule_from_bem_values(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 void
@@ -8208,7 +8229,8 @@ sauter_quadrature_on_one_pair_of_cells(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 void
@@ -8250,7 +8272,8 @@ sauter_quadrature_on_one_pair_of_cells_parallel_over_ky(
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 KernelNumberType
@@ -8440,7 +8463,8 @@ sauter_quadrature_on_one_pair_of_shape_functions(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 KernelNumberType
@@ -9021,7 +9045,8 @@ sauter_quadrature_on_one_pair_of_dofs(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 KernelNumberType
@@ -9672,7 +9697,8 @@ sauter_quadrature_on_one_pair_of_dofs(
  */
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 KernelNumberType

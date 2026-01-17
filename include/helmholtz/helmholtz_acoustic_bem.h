@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2020-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -88,12 +88,12 @@ public:
    * @param is_interior_problem
    * @param thread_num
    */
-  HelmholtzAcousticBEM(const CUDAKernelNumberType kappa,
-                       unsigned int               fe_order_for_dirichlet_space,
-                       unsigned int               fe_order_for_neumann_space,
-                       ProblemType                problem_type,
-                       bool                       is_interior_problem,
-                       unsigned int               thread_num);
+  HelmholtzAcousticBEM(const KernelNumberType kappa,
+                       unsigned int           fe_order_for_dirichlet_space,
+                       unsigned int           fe_order_for_neumann_space,
+                       ProblemType            problem_type,
+                       bool                   is_interior_problem,
+                       unsigned int           thread_num);
 
   /**
    * @brief Constructor for solving Helmholtz acoustic problem using \hmatrix.
@@ -107,7 +107,7 @@ public:
    * @param thread_num
    */
   HelmholtzAcousticBEM(
-    const CUDAKernelNumberType          kappa,
+    const KernelNumberType              kappa,
     const unsigned int                  fe_order_for_dirichlet_space,
     const unsigned int                  fe_order_for_neumann_space,
     const ProblemType                   problem_type,

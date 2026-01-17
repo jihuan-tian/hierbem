@@ -1,5 +1,4 @@
-// Copyright (C) 2020-2026 Jihuan Tian <jihuan_tian@hotmail.com>
-// Copyright (C) 2024 Xiaozhe Wang <chaoslawful@gmail.com>
+// Copyright (C) 2025-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -10,16 +9,16 @@
 // file LICENSE at the top level directory of HierBEM.
 
 /**
- * @file laplace_bem.impl.hcu
+ * @file helmholtz_acoustic_bem.impl.hcu
  * @brief Implementation of pimpl member functions to be called by
- * <tt>LaplaceBEM</tt>.
+ * <tt>HelmholtzAcousticBEM</tt>.
  *
- * @date 2024-12-26
- * @author Jihuan Tian, Xiaozhe Wang
+ * @date 2025-12-16
+ * @author Jihuan Tian
  */
 
-#ifndef HIERBEM_INCLUDE_LAPLACE_LAPLACE_BEM_PRIV_H_
-#define HIERBEM_INCLUDE_LAPLACE_LAPLACE_BEM_PRIV_H_
+#ifndef HIERBEM_INCLUDE_HELMHOLTZ_HELMHOLTZ_ACOUSTIC_BEM_PRIV_H_
+#define HIERBEM_INCLUDE_HELMHOLTZ_HELMHOLTZ_ACOUSTIC_BEM_PRIV_H_
 
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
@@ -53,8 +52,6 @@
 #include <deal.II/lac/full_matrix.templates.h>
 #include <deal.II/lac/precondition.h>
 #include <deal.II/lac/solver_control.h>
-#include <deal.II/lac/sparse_matrix.h>
-#include <deal.II/lac/sparse_matrix.templates.h>
 #include <deal.II/lac/sparsity_pattern.h>
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/vector_operations_internal.h>
@@ -89,6 +86,7 @@
 #include "cuda_complex.hcu"
 #include "grid/grid_out_ext.h"
 #include "grid/triangulation_tools.h"
+#include "helmholtz_acoustic_bem.h"
 #include "hmatrix/aca_plus/aca_config.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "hmatrix/hblockmatrix_skew_symm.h"
@@ -97,19 +95,18 @@
 #include "hmatrix/hmatrix_vmult_strategy.h"
 #include "hmatrix/preconditioner/hblockmatrix_skew_symm_preconditioner.h"
 #include "hmatrix/preconditioner/hmatrix_symm_preconditioner.h"
-#include "laplace_bem.h"
 #include "linear_algebra/lapack_full_matrix_ext.h"
 #include "linear_algebra/linalg.h"
 #include "mapping/mapping_info.h"
-#include "platform_shared/laplace_kernels.h"
+#include "platform_shared/helmholtz_acoustic_kernels.h"
 #include "postprocessing/data_out_ext.h"
-#include "preconditioners/preconditioner_for_laplace_hyper_singular_bio.h"
-#include "preconditioners/preconditioner_for_laplace_single_layer_bio.h"
+#include "preconditioners/preconditioner_for_helmholtz_acoustic_hyper_singular_bio.h"
+#include "preconditioners/preconditioner_for_helmholtz_acoustic_single_layer_bio.h"
 #include "preconditioners/preconditioner_type.h"
 #include "quadrature/quadrature.templates.h"
 #include "solvers/solve_hblockmatrix_skew_symm.h"
 #include "solvers/solver_bicgstab_general.h"
-#include "solvers/solver_cg_general.h"
+#include "solvers/solver_gmres_general.h"
 #include "utilities/cu_profile.hcu"
 #include "utilities/debug_tools.h"
 #include "utilities/read_octave_data.h"
@@ -117,13 +114,14 @@
 HBEM_NS_OPEN
 
 using namespace dealii;
-using namespace HierBEM::PlatformShared::LaplaceKernel;
+using namespace HierBEM::PlatformShared::HelmholtzAcousticKernel;
 
 template <int dim,
           int spacedim,
           typename RangeNumberType,
           typename KernelNumberType>
-class LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv
+class HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  Priv
 {
 public:
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
@@ -139,36 +137,33 @@ public:
     std::map<EntityTag, Function<spacedim, RangeNumberType> *>;
 
 #pragma region ****Internal class ctor and dtor decls ****
-  Priv(unsigned int fe_order_for_dirichlet_space,
-       unsigned int fe_order_for_neumann_space,
-       ProblemType  problem_type,
-       bool         is_interior_problem,
-       unsigned int thread_num);
-  Priv(unsigned int fe_order_for_dirichlet_space,
-       unsigned int fe_order_for_neumann_space,
-       ProblemType  problem_type,
-       bool         is_interior_problem,
-       unsigned int n_min_for_ct,
-       unsigned int n_min_for_bct,
-       real_type    eta,
-       unsigned int max_hmat_rank,
-       real_type    aca_relative_error,
-       real_type    eta_for_preconditioner,
-       unsigned int max_hmat_rank_for_preconditioner,
-       real_type    aca_relative_error_for_preconditioner,
-       unsigned int thread_num);
+  Priv(const KernelNumberType kappa,
+       const unsigned int     fe_order_for_dirichlet_space,
+       const unsigned int     fe_order_for_neumann_space,
+       const ProblemType      problem_type,
+       const bool             is_interior_problem,
+       const unsigned int     thread_num);
+  Priv(const KernelNumberType              kappa,
+       const unsigned int                  fe_order_for_dirichlet_space,
+       const unsigned int                  fe_order_for_neumann_space,
+       const ProblemType                   problem_type,
+       const bool                          is_interior_problem,
+       const HMatrixParameters<real_type> &hmat_params,
+       const HMatrixParameters<real_type> &hmat_preconditioner_params,
+       const unsigned int                  thread_num);
   ~Priv();
 
 #pragma endregion
 
 #pragma region ****Internal class public member function decls ****
   /*
-  The actual implementations of LaplaceBEM public member functions are placed
-  here instead of in the LaplaceBEM class itself, in order to prevent redudant
-  indirect reference of private members through the private pointer.
+  The actual implementations of HelmholtzAcousticBEM public member functions are
+  placed here instead of in the HelmholtzAcousticBEM class itself, in order to
+  prevent redudant indirect reference of private members through the private
+  pointer.
 
-  The corresponding public member functions in the LaplaceBEM class are just
-  wrappers to call the actual implementations in this class.
+  The corresponding public member functions in the HelmholtzAcousticBEM class
+  are just wrappers to call the actual implementations in this class.
   */
 
   void
@@ -248,44 +243,6 @@ private:
 #pragma region ****Internal class private member function decls ****
 
   /**
-   * Compute the stabilization vectors and factor for the full matrix of the
-   * hypersingular operator D.
-   *
-   * Procedures
-   * 1. Build the mass matrix which maps from the Neumann to Dirichlet
-   * space.
-   * 2. Solve the natural density. In the complex valued case, the
-   * natural density will be conjugated.
-   * 3. Compute the stabilization factor.
-   * 4. Compute the stabilization vectors in the internal DoF numbering. Each
-   * stabilization vector is the product of the mass matrix and a natural
-   * density vector. The formal outer (without complex conjugation) product of
-   * each stabilization vector with itself will be appended into the Galerkin
-   * matrix for the hypersingular operator.
-   */
-  void
-  compute_stabilization_terms_for_D1_fullmat();
-
-  /**
-   * Compute the stabilization vectors and factor for the H-matrix of the
-   * hypersingular operator D.
-   *
-   * Procedures
-   * 1. Build the mass matrix which maps from the Neumann to Dirichlet
-   * space.
-   * 2. Solve the natural density. In the complex valued case, the
-   * natural density will be conjugated.
-   * 3. Compute the stabilization factor.
-   * 4. Compute the stabilization vectors in the internal DoF numbering. Each
-   * stabilization vector is the product of the mass matrix and a natural
-   * density vector. The formal outer (without complex conjugation) product of
-   * each stabilization vector with itself will be appended into the Galerkin
-   * matrix for the hypersingular operator.
-   */
-  void
-  compute_stabilization_terms_for_D1_hmat();
-
-  /**
    * Initialize the header string for each column.
    */
   void
@@ -307,9 +264,17 @@ private:
 #pragma endregion
 
 #pragma region ****Internal class private member variable decls ****
-  friend class LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>;
+  friend class HelmholtzAcousticBEM<dim,
+                                    spacedim,
+                                    RangeNumberType,
+                                    KernelNumberType>;
 
   std::string project_name_;
+
+  /**
+   * Wave number
+   */
+  KernelNumberType kappa_;
 
   /**
    * Finite element order for the Dirichlet space.
@@ -322,7 +287,7 @@ private:
   unsigned int fe_order_for_neumann_space_;
 
   /**
-   * Laplace problem type to be solved.
+   * Problem type to be solved.
    */
   ProblemType problem_type_;
 
@@ -424,24 +389,20 @@ private:
                                   RangeNumberType,
                                   KernelNumberType>>
     bK1_;
-  // N.B. The spatial domains of the two component spaces of the
-  // bilinear form for the operator D1 overlap, hence regularization is always
-  // needed, i.e. the trial and test basis functions in the double integral
-  // should be applied with surface curl.
-  //
-  // When in the pure Neumann problem, D1 is defined on the whole boundary
-  // \f$\Gamma\f$, which is non-elliptic and needs stabilization.
-  //
-  // When in the mixed boundary conditions problem, D1 is defined on a subdomain
-  // of the boundary \f$\Gamma\f$, there is no issue of non-ellipticity, then
-  // the stabilization is not needed.
   std::unique_ptr<BEMBilinearForm<dim,
                                   spacedim,
                                   SearchableMaterialIdContainer,
-                                  HyperSingularKernelRegular,
+                                  HyperSingularKernelRegular1,
                                   RangeNumberType,
                                   KernelNumberType>>
-    bD1_;
+    bD1_part1_;
+  std::unique_ptr<BEMBilinearForm<dim,
+                                  spacedim,
+                                  SearchableMaterialIdContainer,
+                                  HyperSingularKernelRegular2,
+                                  RangeNumberType,
+                                  KernelNumberType>>
+    bD1_part2_;
   std::unique_ptr<BEMBilinearForm<dim,
                                   spacedim,
                                   SearchableMaterialIdContainer,
@@ -456,19 +417,20 @@ private:
                                   RangeNumberType,
                                   KernelNumberType>>
     bV2_;
-  // N.B. The spatial domains of the two component spaces of the
-  // bilinear form for the operator D2 overlap overlap in a single layer of
-  // cells in \f$\Gamma_{\mathrm{N}}\f$ at the interface
-  // \f$\Gamma_{\mathrm{D}}\cap \Gamma_{\mathrm{N}}\f$., hence regularization is
-  // still needed. Meanwhile, because D2 is defined on a subdomain of the
-  // boundary \f$\Gamma\f$, no stabilization is needed.
   std::unique_ptr<BEMBilinearForm<dim,
                                   spacedim,
                                   SearchableMaterialIdContainer,
-                                  HyperSingularKernelRegular,
+                                  HyperSingularKernelRegular1,
                                   RangeNumberType,
                                   KernelNumberType>>
-    bD2_;
+    bD2_part1_;
+  std::unique_ptr<BEMBilinearForm<dim,
+                                  spacedim,
+                                  SearchableMaterialIdContainer,
+                                  HyperSingularKernelRegular2,
+                                  RangeNumberType,
+                                  KernelNumberType>>
+    bD2_part2_;
   std::unique_ptr<BEMBilinearForm<dim,
                                   spacedim,
                                   SearchableMaterialIdContainer,
@@ -482,6 +444,7 @@ private:
    */
   LAPACKFullMatrixExt<RangeNumberType> V1_mat_;
   LAPACKFullMatrixExt<RangeNumberType> D1_mat_;
+  LAPACKFullMatrixExt<RangeNumberType> D1_part2_mat_;
   LAPACKFullMatrixExt<RangeNumberType> I1K2_mat_;
   LAPACKFullMatrixExt<RangeNumberType> I2K_prime2_mat_;
 
@@ -502,10 +465,12 @@ private:
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>> V1_hmat_;
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>> K1_hmat_;
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>> D1_hmat_;
+  std::unique_ptr<HMatrix<spacedim, RangeNumberType>> D1_part2_hmat_;
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>> V2_hmat_;
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>> I1K2_hmat_;
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>> I2K_prime2_hmat_;
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>> D2_hmat_;
+  std::unique_ptr<HMatrix<spacedim, RangeNumberType>> D2_part2_hmat_;
   std::unique_ptr<HBlockMatrixSkewSymm<spacedim, RangeNumberType>> M_hmat_;
 
   /**
@@ -513,49 +478,21 @@ private:
    */
   HMatrixSymmPreconditioner<spacedim, RangeNumberType> V1_hmat_preconditioner_;
   HMatrixSymmPreconditioner<spacedim, RangeNumberType> D1_hmat_preconditioner_;
-  HMatrix<spacedim, RangeNumberType>                   M11_in_preconditioner_;
+  HMatrixSymmPreconditioner<spacedim, RangeNumberType> M11_in_preconditioner_;
   HMatrix<spacedim, RangeNumberType>                   M12_in_preconditioner_;
-  HMatrix<spacedim, RangeNumberType>                   M22_in_preconditioner_;
+  HMatrixSymmPreconditioner<spacedim, RangeNumberType> M22_in_preconditioner_;
   std::unique_ptr<HBlockMatrixSkewSymmPreconditioner<spacedim, RangeNumberType>>
     M_hmat_preconditioner_;
 
   /**
-   * Minimum cluster size. At present, assume all \bcts share this same
-   * parameter.
+   * Parameters for assembling H-matrices.
    */
-  unsigned int n_min_for_ct_;
+  HMatrixParameters<real_type> hmat_params_;
+
   /**
-   * Minimum block cluster size. At present, assume all \bcts share this
-   * same parameter.
+   * Parameters for assembling H-matrix based preconditioners.
    */
-  unsigned int n_min_for_bct_;
-  /**
-   * Admissibility constant. At present, assume all \bcts share this same
-   * parameter.
-   */
-  real_type eta_;
-  /**
-   * Maximum rank of the \hmatrices to be built. At present, assume all
-   * \hmatrices share this same parameter.
-   */
-  unsigned int max_hmat_rank_;
-  /**
-   * Relative approximation error used in ACA+. At present, assume all
-   * \hmatrices share this same parameter.
-   */
-  real_type aca_relative_error_;
-  /**
-   * Admissibility constant for the preconditioner.
-   */
-  real_type eta_for_preconditioner_;
-  /**
-   * Maximum rank of the \hmatrices to be built for the preconditioner.
-   */
-  unsigned int max_hmat_rank_for_preconditioner_;
-  /**
-   * Relative approximation error used in ACA+ for the preconditioner.
-   */
-  real_type aca_relative_error_for_preconditioner_;
+  HMatrixParameters<real_type> hmat_preconditioner_params_;
 
   /**
    * Map surface entity tag to Neumann boundary condition.
@@ -575,12 +512,6 @@ private:
    * in the internal DoF numbering. Only used in the \hmat version.
    */
   Vector<RangeNumberType> neumann_bc_internal_dof_numbering_;
-
-  /**
-   * The free parameter \f$\alpha\f$ in the variational formulation of the
-   * Laplace problem with Neumann boundary condition.
-   */
-  KernelNumberType alpha_for_neumann_;
 
   /**
    * Map surface entity tag to Dirichlet boundary condition.
@@ -622,17 +553,6 @@ private:
    * based preconditioner is used.
    */
   Vector<RangeNumberType> system_rhs_on_combined_domain_;
-
-  /**
-   * A list of stabilization vectors for the hypersingular operator, which is
-   * the multiplication of the mass matrix and the natural density \f$w_{\rm
-   * eq}\f$.
-   *
-   * \alert{Because the outer product of this vector with itself will be added
-   * to the hyper singular matrix \f$\mathcal{D}\f$, when \f$\mathcal{D}\f$ is
-   * an \hmat, it adopts the internal DoF numbering.}
-   */
-  std::vector<Vector<KernelNumberType>> mass_vmult_weq_;
 
   /**
    * Numerical solution on the Dirichlet domain for full matrix version or in
@@ -684,20 +604,21 @@ private:
    * Operator preconditioner for the Dirichlet problem, either on the whole
    * domain or a subdomain.
    */
-  std::unique_ptr<LaplaceSingleLayerPreconditioner<dim,
-                                                   spacedim,
-                                                   RangeNumberType,
-                                                   KernelNumberType>>
+  std::unique_ptr<HelmholtzAcousticSingleLayerPreconditioner<dim,
+                                                             spacedim,
+                                                             RangeNumberType,
+                                                             KernelNumberType>>
     op_precond_for_slp_;
 
   /**
    * Operator preconditioner for the Neumann problem, either on the whole domain
    * or a subdomain.
    */
-  std::unique_ptr<LaplaceHyperSingularPreconditioner<dim,
-                                                     spacedim,
-                                                     RangeNumberType,
-                                                     KernelNumberType>>
+  std::unique_ptr<
+    HelmholtzAcousticHyperSingularPreconditioner<dim,
+                                                 spacedim,
+                                                 RangeNumberType,
+                                                 KernelNumberType>>
     op_precond_for_hyper_singular_;
 
   /**
@@ -779,58 +700,41 @@ template <int dim,
           int spacedim,
           typename RangeNumberType,
           typename KernelNumberType>
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::Priv(
-  unsigned int fe_order_for_dirichlet_space,
-  unsigned int fe_order_for_neumann_space,
-  ProblemType  problem_type,
-  bool         is_interior_problem,
-  unsigned int thread_num)
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  Priv(const KernelNumberType kappa,
+       const unsigned int     fe_order_for_dirichlet_space,
+       const unsigned int     fe_order_for_neumann_space,
+       const ProblemType      problem_type,
+       const bool             is_interior_problem,
+       const unsigned int     thread_num)
   : project_name_("default")
+  , kappa_(kappa)
   , fe_order_for_dirichlet_space_(fe_order_for_dirichlet_space)
   , fe_order_for_neumann_space_(fe_order_for_neumann_space)
   , problem_type_(problem_type)
   , is_interior_problem_(is_interior_problem)
   , thread_num_(thread_num)
-  , tria_(Triangulation<dim, spacedim>::MeshSmoothing::
-            limit_level_difference_at_vertices)
-  , mg_tria_for_preconditioner_(Triangulation<dim, spacedim>::MeshSmoothing::
-                                  limit_level_difference_at_vertices)
   , fe_for_dirichlet_space_(fe_order_for_dirichlet_space)
   , fe_for_neumann_space_(fe_order_for_neumann_space)
   , use_hmat_(false)
   , cpu_serial_(false)
-  , n_min_for_ct_(0)
-  , n_min_for_bct_(0) // By default, it is the same as the @p n_min_for_ct
-  , eta_(0)
-  , max_hmat_rank_(0)
-  , aca_relative_error_(0)
-  , eta_for_preconditioner_(0)
-  , max_hmat_rank_for_preconditioner_(0)
-  , aca_relative_error_for_preconditioner_(0)
-  , alpha_for_neumann_(1.0)
-  , vmult_type_(IterativeSolverVmultType::SerialRecursive)
-  , preconditioner_type_(PreconditionerType::HMatrixFactorization)
 {}
 
 template <int dim,
           int spacedim,
           typename RangeNumberType,
           typename KernelNumberType>
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::Priv(
-  unsigned int fe_order_for_dirichlet_space,
-  unsigned int fe_order_for_neumann_space,
-  ProblemType  problem_type,
-  bool         is_interior_problem,
-  unsigned int n_min_for_ct,
-  unsigned int n_min_for_bct,
-  real_type    eta,
-  unsigned int max_hmat_rank,
-  real_type    aca_relative_error,
-  real_type    eta_for_preconditioner,
-  unsigned int max_hmat_rank_for_preconditioner,
-  real_type    aca_relative_error_for_preconditioner,
-  unsigned int thread_num)
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  Priv(const KernelNumberType              kappa,
+       const unsigned int                  fe_order_for_dirichlet_space,
+       const unsigned int                  fe_order_for_neumann_space,
+       const ProblemType                   problem_type,
+       const bool                          is_interior_problem,
+       const HMatrixParameters<real_type> &hmat_params,
+       const HMatrixParameters<real_type> &hmat_preconditioner_params,
+       const unsigned int                  thread_num)
   : project_name_("default")
+  , kappa_(kappa)
   , fe_order_for_dirichlet_space_(fe_order_for_dirichlet_space)
   , fe_order_for_neumann_space_(fe_order_for_neumann_space)
   , problem_type_(problem_type)
@@ -843,27 +747,18 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::Priv(
   , fe_for_dirichlet_space_(fe_order_for_dirichlet_space)
   , fe_for_neumann_space_(fe_order_for_neumann_space)
   , use_hmat_(true)
-  , cpu_serial_(false)
-  , n_min_for_ct_(n_min_for_ct)
-  , n_min_for_bct_(
-      n_min_for_bct) // By default, it is the same as the @p n_min_for_ct
-  , eta_(eta)
-  , max_hmat_rank_(max_hmat_rank)
-  , aca_relative_error_(aca_relative_error)
-  , eta_for_preconditioner_(eta_for_preconditioner)
-  , max_hmat_rank_for_preconditioner_(max_hmat_rank_for_preconditioner)
-  , aca_relative_error_for_preconditioner_(
-      aca_relative_error_for_preconditioner)
-  , alpha_for_neumann_(1.0)
+  , hmat_params_(hmat_params)
+  , hmat_preconditioner_params_(hmat_preconditioner_params)
   , vmult_type_(IterativeSolverVmultType::SerialRecursive)
-  , preconditioner_type_(PreconditionerType::HMatrixFactorization)
+  , preconditioner_type_(PreconditionerType::OperatorPreconditioning)
 {}
 
 template <int dim,
           int spacedim,
           typename RangeNumberType,
           typename KernelNumberType>
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::~Priv()
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  ~Priv()
 {
   // Release manifold objects.
   for (auto &m : manifolds_)
@@ -886,394 +781,7 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
-  compute_stabilization_terms_for_D1_fullmat()
-{
-  const types::global_dof_index n_dofs_for_dirichlet_space =
-    dof_handler_for_dirichlet_space_.n_dofs();
-  const types::global_dof_index n_dofs_for_neumann_space =
-    dof_handler_for_neumann_space_.n_dofs();
-
-  // Create the mass matrix mapping from the Neumann space to the Dirichlet
-  // space.
-  SparsityPattern         M_sp;
-  SparseMatrix<real_type> M;
-  DynamicSparsityPattern  M_dsp(n_dofs_for_dirichlet_space,
-                               n_dofs_for_neumann_space);
-  DoFTools::make_sparsity_pattern(dof_handler_for_dirichlet_space_,
-                                  dof_handler_for_neumann_space_,
-                                  M_dsp);
-  M_sp.copy_from(M_dsp);
-  M.reinit(M_sp);
-  assemble_fem_scaled_mass_matrix(dof_handler_for_dirichlet_space_,
-                                  dof_handler_for_neumann_space_,
-                                  real_type(1.0),
-                                  QGauss<dim>(fe_for_dirichlet_space_.degree +
-                                              1),
-                                  M);
-
-  const unsigned int n_boundary_components =
-    subdomain_topology_.get_subdomain_to_surface().size();
-
-  // Initialize stabilization vectors.
-  mass_vmult_weq_.resize(n_boundary_components);
-  for (auto &vec : mass_vmult_weq_)
-    vec.reinit(n_dofs_for_dirichlet_space);
-
-#if HBEM_NEUMANN_SOLUTION_SPACE == 1
-  std::cout << "=== Assemble V for solving natural density ===" << std::endl;
-
-  LAPACKFullMatrixExt<KernelNumberType> V(n_dofs_for_neumann_space,
-                                          n_dofs_for_neumann_space);
-  assemble_bem_full_matrix<dim,
-                           spacedim,
-                           SingleLayerKernel,
-                           KernelNumberType,
-                           SurfaceNormalDetector<dim, spacedim>,
-                           LAPACKFullMatrixExt<KernelNumberType>>(
-    SingleLayerKernel<spacedim, KernelNumberType>(),
-    KernelNumberType(1.0),
-    dof_handler_for_neumann_space_,
-    dof_handler_for_neumann_space_,
-    mappings_,
-    material_id_to_mapping_index_,
-    SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-    SauterQuadratureRule<dim>(5, 4, 4, 3),
-    V);
-
-  // Natural density vector in the Neumann space \f$H^{-1/2}{\Gamma}\f$.
-  Vector<KernelNumberType> natural_density(n_dofs_for_neumann_space);
-
-  // Boundary indicator vectors \f$\{\chi_k\}_{k=1}^r\f$ as RHS vectors in the
-  // operator equation \f$Vw_{\mathrm{eq},k}=\chi_k\f$. They are in the
-  // Dirichlet space (primal space) and have the strong form.
-  std::vector<Vector<real_type>> boundary_indicators(n_boundary_components);
-  for (auto &vec : boundary_indicators)
-    vec.reinit(n_dofs_for_dirichlet_space);
-
-  // Interpolate the boundary indicator vectors in the Dirichlet space.
-  interpolate_indicator_vectors_for_subdomains(dof_handler_for_dirichlet_space_,
-                                               subdomain_topology_,
-                                               mappings_,
-                                               material_id_to_mapping_index_,
-                                               boundary_indicators);
-
-  // RHS vector in the variational equation \f$\langle Vw_{\mathrm{eq},k},v
-  // \rangle_{\Gamma}=\langle \chi_k,v \rangle\f$. It is in the Neumann space
-  // (dual space) and has the weak form.
-  Vector<KernelNumberType> rhs(n_dofs_for_neumann_space);
-
-  // Initialize the stabilization factor, which will be the average of the
-  // optimal values for all boundary components.
-  alpha_for_neumann_ = KernelNumberType(0.);
-  for (unsigned int i = 0; i < n_boundary_components; i++)
-    {
-      // Assemble the rhs vector for solving the current natural density on the
-      // i-th boundary component.
-      M.Tvmult(rhs, boundary_indicators[i]);
-
-      // Solve the natural density \f$w_{\rm eq}\f$.
-      SolverControl solver_control(1000, 1e-6, true, true);
-      SolverCGGeneral<Vector<KernelNumberType>> solver(solver_control);
-
-      // At the moment, we can only use identity preconditioner.
-      Assert(preconditioner_type_ == PreconditionerType::Identity,
-             ExcInternalError());
-
-      natural_density.reinit(n_dofs_for_neumann_space);
-      solver.solve(V, natural_density, rhs, PreconditionIdentity());
-
-      // Apply complex conjugation to the natural density in the complex valued
-      // case.
-      if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
-        LinAlg::conjugate_vector(natural_density);
-
-      // Compute the stabilization vector.
-      M.vmult(mass_vmult_weq_[i], natural_density);
-
-      // Calculate the optimal stabilization factor for the current natural
-      // density.
-      alpha_for_neumann_ +=
-        1.0 / 4.0 / LinAlg::linear_combination_tbb(rhs, natural_density);
-    }
-  // The stabilization factors for different natural densities are averaged.
-  alpha_for_neumann_ /= n_boundary_components;
-
-#elif HBEM_NEUMANN_SOLUTION_SPACE == 2
-  // Boundary indicator vectors \f$\{\chi_k\}_{k=1}^r\f$ in the stabilization
-  // term \f$\langle u,\chi_k \rangle_{\Gamma}\f$. They are in the Neumann space
-  // (dual space) and have the weak form.
-  std::vector<Vector<real_type>> boundary_indicators(n_boundary_components);
-  for (auto &vec : boundary_indicators)
-    vec.reinit(n_dofs_for_neumann_space);
-
-  // Interpolate the boundary indicator vectors in the Neumann space.
-  interpolate_indicator_vectors_for_subdomains(dof_handler_for_neumann_space_,
-                                               subdomain_topology_,
-                                               mappings_,
-                                               material_id_to_mapping_index_,
-                                               boundary_indicators);
-  // Compute the stabilization vectors.
-  for (unsigned int i = 0; i < n_boundary_components; i++)
-    M.vmult(mass_vmult_weq_[i], boundary_indicators[i]);
-
-  // The stabilization factor \f$\alpha\f$ is set to 1.
-  // TODO: Use the average eigenvalue of the matrix D as the stabilization
-  // factor.
-  alpha_for_neumann_ = KernelNumberType(1.0);
-#endif
-
-  std::cout << "Neumann stabilization factor: " << alpha_for_neumann_
-            << std::endl;
-}
-
-
-template <int dim,
-          int spacedim,
-          typename RangeNumberType,
-          typename KernelNumberType>
-void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
-  compute_stabilization_terms_for_D1_hmat()
-{
-  const types::global_dof_index n_dofs_for_dirichlet_space =
-    dof_handler_for_dirichlet_space_.n_dofs();
-  const types::global_dof_index n_dofs_for_neumann_space =
-    dof_handler_for_neumann_space_.n_dofs();
-
-  // Create the mass matrix mapping from the Neumann space to the Dirichlet
-  // space.
-  SparsityPattern         M_sp;
-  SparseMatrix<real_type> M;
-  DynamicSparsityPattern  M_dsp(n_dofs_for_dirichlet_space,
-                               n_dofs_for_neumann_space);
-  DoFTools::make_sparsity_pattern(dof_handler_for_dirichlet_space_,
-                                  dof_handler_for_neumann_space_,
-                                  M_dsp);
-  M_sp.copy_from(M_dsp);
-  M.reinit(M_sp);
-  assemble_fem_scaled_mass_matrix(dof_handler_for_dirichlet_space_,
-                                  dof_handler_for_neumann_space_,
-                                  real_type(1.0),
-                                  QGauss<dim>(fe_for_dirichlet_space_.degree +
-                                              1),
-                                  M);
-
-  const unsigned int n_boundary_components =
-    subdomain_topology_.get_subdomain_to_surface().size();
-
-  // Initialize stabilization vectors.
-  mass_vmult_weq_.resize(n_boundary_components);
-  for (auto &vec : mass_vmult_weq_)
-    vec.reinit(n_dofs_for_dirichlet_space);
-
-  Vector<KernelNumberType> mass_vmult_weq_external_numbering(
-    n_dofs_for_dirichlet_space);
-
-#if HBEM_NEUMANN_SOLUTION_SPACE == 1
-  std::cout << "=== Assemble V for solving natural density ===" << std::endl;
-  BEMBilinearForm<dim,
-                  spacedim,
-                  SearchableMaterialIdContainer,
-                  SingleLayerKernel,
-                  RangeNumberType,
-                  KernelNumberType>
-    bV(neumann_space_on_neumann_domain_, neumann_space_on_neumann_domain_);
-  bV.build_block_cluster_tree(eta_, n_min_for_bct_);
-  add_memory_consumption_row("Block cluster tree for V in Vw_eq=1",
-                             bV.get_block_cluster_tree());
-
-  std::unique_ptr<HMatrix<spacedim, KernelNumberType>> V =
-    bV.build_hmatrix(thread_num_,
-                     max_hmat_rank_,
-                     aca_relative_error_,
-                     CUDAKernelNumberType(1.0),
-                     SauterQuadratureRule<dim>(5, 4, 4, 3),
-                     mappings_,
-                     material_id_to_mapping_index_,
-                     subdomain_topology_);
-  add_memory_consumption_row("V for weq", *V, "After assembly");
-
-  HMatrixSymmPreconditioner<spacedim, KernelNumberType> V_precond;
-  if (preconditioner_type_ == PreconditionerType::HMatrixFactorization)
-    {
-      // Build the H-Cholesky preconditioner for @p V when H-matrix is used.
-      // TODO: At the moment, we only allow KernelNumberType is real value for
-      // this case, because complex valued H-matrix factorization has not
-      // been implemented yet.
-      static_assert(std::is_same<KernelNumberType, double>::value ||
-                    std::is_same<KernelNumberType, float>::value);
-
-      std::cout
-        << "=== Assemble V preconditioner for solving natural density ==="
-        << std::endl;
-      V_precond = *V;
-      V_precond.truncate_to_rank_preserve_positive_definite(
-        max_hmat_rank_for_preconditioner_);
-      add_memory_consumption_row("V preconditioner for weq",
-                                 V_precond,
-                                 "After assembly");
-
-      // Perform Cholesky factorisation of the preconditioner. Only when the
-      // preconditioner @p V_precond has a hierarchical structure, i.e. it does
-      //  not contain a root node only, the task parallel Cholesky factorization
-      //  will be used.
-      std::cout
-        << "=== Cholesky factorization of V preconditioner for solving natural density ==="
-        << std::endl;
-      if (V_precond.get_type() == HMatrixType::HierarchicalMatrixType)
-        V_precond.compute_cholesky_factorization_task_parallel(
-          max_hmat_rank_for_preconditioner_);
-      else
-        V_precond.compute_cholesky_factorization(
-          max_hmat_rank_for_preconditioner_);
-    }
-
-  // Natural density vector in the Neumann space \f$H^{-1/2}{\Gamma}\f$.
-  Vector<KernelNumberType> natural_density_external_numbering(
-    n_dofs_for_neumann_space);
-  Vector<KernelNumberType> natural_density_internal_numbering(
-    n_dofs_for_neumann_space);
-
-  // Boundary indicator vectors \f$\{\chi_k\}_{k=1}^r\f$ in the external DoF
-  // numbering as RHS vectors in the operator equation
-  // \f$Vw_{\mathrm{eq},k}=\chi_k\f$. They are in the Dirichlet space (primal
-  // space) and have the strong form.
-  std::vector<Vector<real_type>> boundary_indicators(n_boundary_components);
-  for (auto &vec : boundary_indicators)
-    vec.reinit(n_dofs_for_dirichlet_space);
-
-  // Interpolate the boundary indicator vectors in the Dirichlet space.
-  interpolate_indicator_vectors_for_subdomains(dof_handler_for_dirichlet_space_,
-                                               subdomain_topology_,
-                                               mappings_,
-                                               material_id_to_mapping_index_,
-                                               boundary_indicators);
-
-  // RHS vector in the internal DoF numbering in the variational equation
-  // \f$\langle Vw_{\mathrm{eq},k},v
-  // \rangle_{\Gamma}=\langle \chi_k,v \rangle\f$. It is in the Neumann space
-  // (dual space) and has the weak form.
-  Vector<KernelNumberType> rhs_internal_numbering(n_dofs_for_neumann_space);
-  // RHS vector in the external DoF numbering.
-  Vector<KernelNumberType> rhs_external_numbering(n_dofs_for_neumann_space);
-
-  // Initialize the stabilization factor, which will be the average of the
-  // optimal values for all boundary components.
-  alpha_for_neumann_ = KernelNumberType(0.);
-  for (unsigned int i = 0; i < n_boundary_components; i++)
-    {
-      // Assemble the rhs vector for solving the current natural density on the
-      // i-th boundary component.
-      M.Tvmult(rhs_external_numbering, boundary_indicators[i]);
-      neumann_space_on_neumann_domain_->convert_vector_e2i(
-        rhs_external_numbering, rhs_internal_numbering);
-
-      // Solve the natural density \f$w_{\rm eq}\f$ in the internal DoF
-      // numbering.
-      SolverControl solver_control(1000, 1e-6, true, true);
-      SolverCGGeneral<Vector<KernelNumberType>> solver(solver_control);
-
-      natural_density_internal_numbering.reinit(n_dofs_for_neumann_space);
-      set_hmatrix_vmult_strategy_for_iterative_solver(*V,
-                                                      vmult_type_,
-                                                      true,
-                                                      true);
-      switch (preconditioner_type_)
-        {
-            case PreconditionerType::HMatrixFactorization: {
-              solver.solve(*V,
-                           natural_density_internal_numbering,
-                           rhs_internal_numbering,
-                           V_precond);
-              break;
-            }
-            case PreconditionerType::Identity: {
-              solver.solve(*V,
-                           natural_density_internal_numbering,
-                           rhs_internal_numbering,
-                           PreconditionIdentity());
-              break;
-            }
-            case PreconditionerType::OperatorPreconditioning: {
-              Assert(false, ExcNotImplemented());
-              break;
-            }
-            case PreconditionerType::Jacobi: {
-              Assert(false, ExcNotImplemented());
-              break;
-            }
-            default: {
-              Assert(false, ExcInternalError());
-              break;
-            }
-        }
-      // Convert the natural density from the internal DoF numbering to the
-      // external numbering, since it is to be multiplied by the mass matrix
-      // mapping the Neumann space to the Dirichlet space, which also adopts the
-      // external numbering.
-      neumann_space_on_neumann_domain_->convert_vector_i2e(
-        natural_density_internal_numbering, natural_density_external_numbering);
-
-      // Apply complex conjugation to the natural density in the complex valued
-      // case.
-      if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
-        LinAlg::conjugate_vector(natural_density_external_numbering);
-
-      // Compute the stabilization vector.
-      M.vmult(mass_vmult_weq_external_numbering,
-              natural_density_external_numbering);
-      dirichlet_space_on_neumann_domain_->convert_vector_e2i(
-        mass_vmult_weq_external_numbering, mass_vmult_weq_[i]);
-
-      // Calculate the optimal stabilization factor for the current natural
-      // density.
-      alpha_for_neumann_ +=
-        1.0 / 4.0 /
-        LinAlg::linear_combination_tbb(rhs_external_numbering,
-                                       natural_density_external_numbering);
-    }
-  // The stabilization factors for different natural densities are averaged.
-  alpha_for_neumann_ /= n_boundary_components;
-
-#elif HBEM_NEUMANN_SOLUTION_SPACE == 2
-  // Boundary indicator vectors \f$\{\chi_k\}_{k=1}^r\f$ in the stabilization
-  // term \f$\langle u,\chi_k \rangle_{\Gamma}\f$ They are in the Neumann space
-  // (dual space) and have the weak form.
-  std::vector<Vector<real_type>> boundary_indicators(n_boundary_components);
-  for (auto &vec : boundary_indicators)
-    vec.reinit(n_dofs_for_neumann_space);
-
-  // Interpolate the boundary indicator vectors in the Neumann space.
-  interpolate_indicator_vectors_for_subdomains(dof_handler_for_neumann_space_,
-                                               subdomain_topology_,
-                                               mappings_,
-                                               material_id_to_mapping_index_,
-                                               boundary_indicators);
-  // Compute the stabilization vector.
-  for (unsigned int i = 0; i < n_boundary_components; i++)
-    {
-      M.vmult(mass_vmult_weq_external_numbering, boundary_indicators[i]);
-      dirichlet_space_on_neumann_domain_->convert_vector_e2i(
-        mass_vmult_weq_external_numbering, mass_vmult_weq_[i]);
-    }
-
-  // The stabilization factor \f$\alpha\f$ is set to 1.
-  // TODO: Use the average eigenvalue of the matrix D as the stabilization
-  // factor.
-  alpha_for_neumann_ = KernelNumberType(1.0);
-#endif
-
-  std::cout << "Neumann stabilization factor: " << alpha_for_neumann_
-            << std::endl;
-}
-
-template <int dim,
-          int spacedim,
-          typename RangeNumberType,
-          typename KernelNumberType>
-void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   initialize_memory_consumption_table_headers()
 {
   memory_consumption_table_.declare_column("Object");
@@ -1287,7 +795,7 @@ template <int dim,
           typename KernelNumberType>
 template <typename T>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   add_memory_consumption_row(const std::string &name,
                              const T           &obj,
                              const std::string &comment)
@@ -1309,7 +817,7 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   extract_surface_triangulation(
     const Triangulation<dim + 1, spacedim> &volume_triangulation,
     Triangulation<dim, spacedim>          &&surf_tria,
@@ -1334,7 +842,7 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   setup_system()
 {
   LogStream::Prefix prefix_string("setup_system");
@@ -1388,13 +896,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                                   spacedim,
                                                   SearchableMaterialIdContainer,
                                                   real_type>>(
-                  dof_handler_for_dirichlet_space_, n_min_for_ct_);
+                  dof_handler_for_dirichlet_space_, hmat_params_.n_min_for_ct);
               neumann_space_on_dirichlet_domain_ =
                 std::make_unique<BEMFunctionSpace<dim,
                                                   spacedim,
                                                   SearchableMaterialIdContainer,
                                                   real_type>>(
-                  dof_handler_for_neumann_space_, n_min_for_ct_);
+                  dof_handler_for_neumann_space_, hmat_params_.n_min_for_ct);
               timer.stop();
               print_wall_time(deallog, timer, "create function spaces");
 
@@ -1405,7 +913,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 "Cluster tree for Neumann space on Dirichlet domain",
                 neumann_space_on_dirichlet_domain_->get_cluster_tree());
 
-              // Create bilinear forms and build block cluster trees.
+              // Create bilinear forms, set kernel function wave number and
+              // build block cluster trees.
               bV1_ =
                 std::make_unique<BEMBilinearForm<dim,
                                                  spacedim,
@@ -1415,6 +924,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                                  KernelNumberType>>(
                   *neumann_space_on_dirichlet_domain_,
                   *neumann_space_on_dirichlet_domain_);
+              bV1_->get_kernel().set_kappa(
+                CUDAKernelNumberType(kappa_.real(), kappa_.imag()));
               bI1K2_ =
                 std::make_unique<BEMBilinearForm<dim,
                                                  spacedim,
@@ -1424,10 +935,14 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                                  KernelNumberType>>(
                   *dirichlet_space_on_dirichlet_domain_,
                   *neumann_space_on_dirichlet_domain_);
+              bI1K2_->get_kernel().set_kappa(
+                CUDAKernelNumberType(kappa_.real(), kappa_.imag()));
 
               timer.start();
-              bV1_->build_block_cluster_tree(eta_, n_min_for_bct_);
-              bI1K2_->build_block_cluster_tree(eta_, n_min_for_bct_);
+              bV1_->build_block_cluster_tree(hmat_params_.eta,
+                                             hmat_params_.n_min_for_bct);
+              bI1K2_->build_block_cluster_tree(hmat_params_.eta,
+                                               hmat_params_.n_min_for_bct);
               timer.stop();
               print_wall_time(deallog, timer, "build block cluster trees");
 
@@ -1492,10 +1007,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                */
               D1_mat_.reinit(n_dofs_for_dirichlet_space,
                              n_dofs_for_dirichlet_space);
+              D1_part2_mat_.reinit(n_dofs_for_dirichlet_space,
+                                   n_dofs_for_dirichlet_space);
               I2K_prime2_mat_.reinit(n_dofs_for_dirichlet_space,
                                      n_dofs_for_neumann_space);
 
               add_memory_consumption_row("D1 full matrix", D1_mat_);
+              add_memory_consumption_row("D1 part2 full matrix", D1_part2_mat_);
               add_memory_consumption_row("I2K'2", I2K_prime2_mat_);
             }
           else
@@ -1507,13 +1025,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                                   spacedim,
                                                   SearchableMaterialIdContainer,
                                                   real_type>>(
-                  dof_handler_for_dirichlet_space_, n_min_for_ct_);
+                  dof_handler_for_dirichlet_space_, hmat_params_.n_min_for_ct);
               neumann_space_on_neumann_domain_ =
                 std::make_unique<BEMFunctionSpace<dim,
                                                   spacedim,
                                                   SearchableMaterialIdContainer,
                                                   real_type>>(
-                  dof_handler_for_neumann_space_, n_min_for_ct_);
+                  dof_handler_for_neumann_space_, hmat_params_.n_min_for_ct);
               timer.stop();
               print_wall_time(deallog, timer, "create function spaces");
 
@@ -1524,16 +1042,30 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 "Cluster tree for Neumann space on Neumann domain",
                 neumann_space_on_neumann_domain_->get_cluster_tree());
 
-              // Create bilinear forms and build block cluster trees.
-              bD1_ =
+              // Create bilinear forms, set kernel function wave number and
+              // build block cluster trees.
+              bD1_part1_ =
                 std::make_unique<BEMBilinearForm<dim,
                                                  spacedim,
                                                  SearchableMaterialIdContainer,
-                                                 HyperSingularKernelRegular,
+                                                 HyperSingularKernelRegular1,
                                                  RangeNumberType,
                                                  KernelNumberType>>(
                   *dirichlet_space_on_neumann_domain_,
                   *dirichlet_space_on_neumann_domain_);
+              bD1_part1_->get_kernel().set_kappa(
+                CUDAKernelNumberType(kappa_.real(), kappa_.imag()));
+              bD1_part2_ =
+                std::make_unique<BEMBilinearForm<dim,
+                                                 spacedim,
+                                                 SearchableMaterialIdContainer,
+                                                 HyperSingularKernelRegular2,
+                                                 RangeNumberType,
+                                                 KernelNumberType>>(
+                  *dirichlet_space_on_neumann_domain_,
+                  *dirichlet_space_on_neumann_domain_);
+              bD1_part2_->get_kernel().set_kappa(
+                CUDAKernelNumberType(kappa_.real(), kappa_.imag()));
               bI2K_prime2_ =
                 std::make_unique<BEMBilinearForm<dim,
                                                  spacedim,
@@ -1543,15 +1075,23 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                                  KernelNumberType>>(
                   *neumann_space_on_neumann_domain_,
                   *dirichlet_space_on_neumann_domain_);
+              bI2K_prime2_->get_kernel().set_kappa(
+                CUDAKernelNumberType(kappa_.real(), kappa_.imag()));
 
               timer.start();
-              bD1_->build_block_cluster_tree(eta_, n_min_for_bct_);
-              bI2K_prime2_->build_block_cluster_tree(eta_, n_min_for_bct_);
+              bD1_part1_->build_block_cluster_tree(hmat_params_.eta,
+                                                   hmat_params_.n_min_for_bct);
+              bD1_part2_->build_block_cluster_tree(hmat_params_.eta,
+                                                   hmat_params_.n_min_for_bct);
+              bI2K_prime2_->build_block_cluster_tree(
+                hmat_params_.eta, hmat_params_.n_min_for_bct);
               timer.stop();
               print_wall_time(deallog, timer, "build block cluster trees");
 
-              add_memory_consumption_row("Block cluster tree for D1",
-                                         bD1_->get_block_cluster_tree());
+              add_memory_consumption_row("Block cluster tree for D1 part1",
+                                         bD1_part1_->get_block_cluster_tree());
+              add_memory_consumption_row("Block cluster tree for D1 part2",
+                                         bD1_part2_->get_block_cluster_tree());
               add_memory_consumption_row(
                 "Block cluster tree for I2K'2",
                 bI2K_prime2_->get_block_cluster_tree());
@@ -1606,7 +1146,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                               SearchableMaterialIdContainer,
                                               real_type>>(
               dof_handler_for_dirichlet_space_,
-              n_min_for_ct_,
+              hmat_params_.n_min_for_ct,
               dirichlet_bc_definition_,
               true,
               false);
@@ -1616,7 +1156,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                               SearchableMaterialIdContainer,
                                               real_type>>(
               dof_handler_for_dirichlet_space_,
-              n_min_for_ct_,
+              hmat_params_.n_min_for_ct,
               neumann_bc_definition_,
               false,
               false);
@@ -1626,7 +1166,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                               SearchableMaterialIdContainer,
                                               real_type>>(
               dof_handler_for_neumann_space_,
-              n_min_for_ct_,
+              hmat_params_.n_min_for_ct,
               dirichlet_bc_definition_,
               true,
               false);
@@ -1636,7 +1176,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                               SearchableMaterialIdContainer,
                                               real_type>>(
               dof_handler_for_neumann_space_,
-              n_min_for_ct_,
+              hmat_params_.n_min_for_ct,
               neumann_bc_definition_,
               true,
               false);
@@ -1686,6 +1226,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                                   KernelNumberType>>(
             *neumann_space_on_dirichlet_domain_,
             *neumann_space_on_dirichlet_domain_);
+          bV1_->get_kernel().set_kappa(
+            CUDAKernelNumberType(kappa_.real(), kappa_.imag()));
           bK1_ = std::make_unique<BEMBilinearForm<dim,
                                                   spacedim,
                                                   SearchableMaterialIdContainer,
@@ -1694,14 +1236,30 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                                   KernelNumberType>>(
             *dirichlet_space_on_neumann_domain_,
             *neumann_space_on_dirichlet_domain_);
-          bD1_ = std::make_unique<BEMBilinearForm<dim,
-                                                  spacedim,
-                                                  SearchableMaterialIdContainer,
-                                                  HyperSingularKernelRegular,
-                                                  RangeNumberType,
-                                                  KernelNumberType>>(
-            *dirichlet_space_on_neumann_domain_,
-            *dirichlet_space_on_neumann_domain_);
+          bK1_->get_kernel().set_kappa(
+            CUDAKernelNumberType(kappa_.real(), kappa_.imag()));
+          bD1_part1_ =
+            std::make_unique<BEMBilinearForm<dim,
+                                             spacedim,
+                                             SearchableMaterialIdContainer,
+                                             HyperSingularKernelRegular1,
+                                             RangeNumberType,
+                                             KernelNumberType>>(
+              *dirichlet_space_on_neumann_domain_,
+              *dirichlet_space_on_neumann_domain_);
+          bD1_part1_->get_kernel().set_kappa(
+            CUDAKernelNumberType(kappa_.real(), kappa_.imag()));
+          bD1_part2_ =
+            std::make_unique<BEMBilinearForm<dim,
+                                             spacedim,
+                                             SearchableMaterialIdContainer,
+                                             HyperSingularKernelRegular2,
+                                             RangeNumberType,
+                                             KernelNumberType>>(
+              *dirichlet_space_on_neumann_domain_,
+              *dirichlet_space_on_neumann_domain_);
+          bD1_part2_->get_kernel().set_kappa(
+            CUDAKernelNumberType(kappa_.real(), kappa_.imag()));
           bI1K2_ =
             std::make_unique<BEMBilinearForm<dim,
                                              spacedim,
@@ -1711,6 +1269,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                              KernelNumberType>>(
               *dirichlet_space_on_dirichlet_domain_,
               *neumann_space_on_dirichlet_domain_);
+          bI1K2_->get_kernel().set_kappa(
+            CUDAKernelNumberType(kappa_.real(), kappa_.imag()));
           bV2_ = std::make_unique<BEMBilinearForm<dim,
                                                   spacedim,
                                                   SearchableMaterialIdContainer,
@@ -1719,14 +1279,30 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                                   KernelNumberType>>(
             *neumann_space_on_neumann_domain_,
             *neumann_space_on_dirichlet_domain_);
-          bD2_ = std::make_unique<BEMBilinearForm<dim,
-                                                  spacedim,
-                                                  SearchableMaterialIdContainer,
-                                                  HyperSingularKernelRegular,
-                                                  RangeNumberType,
-                                                  KernelNumberType>>(
-            *dirichlet_space_on_dirichlet_domain_,
-            *dirichlet_space_on_neumann_domain_);
+          bV2_->get_kernel().set_kappa(
+            CUDAKernelNumberType(kappa_.real(), kappa_.imag()));
+          bD2_part1_ =
+            std::make_unique<BEMBilinearForm<dim,
+                                             spacedim,
+                                             SearchableMaterialIdContainer,
+                                             HyperSingularKernelRegular1,
+                                             RangeNumberType,
+                                             KernelNumberType>>(
+              *dirichlet_space_on_dirichlet_domain_,
+              *dirichlet_space_on_neumann_domain_);
+          bD2_part1_->get_kernel().set_kappa(
+            CUDAKernelNumberType(kappa_.real(), kappa_.imag()));
+          bD2_part2_ =
+            std::make_unique<BEMBilinearForm<dim,
+                                             spacedim,
+                                             SearchableMaterialIdContainer,
+                                             HyperSingularKernelRegular2,
+                                             RangeNumberType,
+                                             KernelNumberType>>(
+              *dirichlet_space_on_dirichlet_domain_,
+              *dirichlet_space_on_neumann_domain_);
+          bD2_part2_->get_kernel().set_kappa(
+            CUDAKernelNumberType(kappa_.real(), kappa_.imag()));
           bI2K_prime2_ =
             std::make_unique<BEMBilinearForm<dim,
                                              spacedim,
@@ -1736,16 +1312,29 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                              KernelNumberType>>(
               *neumann_space_on_neumann_domain_,
               *dirichlet_space_on_neumann_domain_);
+          bI2K_prime2_->get_kernel().set_kappa(
+            CUDAKernelNumberType(kappa_.real(), kappa_.imag()));
 
           // Create the block cluster trees.
           timer.start();
-          bV1_->build_block_cluster_tree(eta_, n_min_for_bct_);
-          bK1_->build_block_cluster_tree(eta_, n_min_for_bct_);
-          bD1_->build_block_cluster_tree(eta_, n_min_for_bct_);
-          bI1K2_->build_block_cluster_tree(eta_, n_min_for_bct_);
-          bV2_->build_block_cluster_tree(eta_, n_min_for_bct_);
-          bD2_->build_block_cluster_tree(eta_, n_min_for_bct_);
-          bI2K_prime2_->build_block_cluster_tree(eta_, n_min_for_bct_);
+          bV1_->build_block_cluster_tree(hmat_params_.eta,
+                                         hmat_params_.n_min_for_bct);
+          bK1_->build_block_cluster_tree(hmat_params_.eta,
+                                         hmat_params_.n_min_for_bct);
+          bD1_part1_->build_block_cluster_tree(hmat_params_.eta,
+                                               hmat_params_.n_min_for_bct);
+          bD1_part2_->build_block_cluster_tree(hmat_params_.eta,
+                                               hmat_params_.n_min_for_bct);
+          bI1K2_->build_block_cluster_tree(hmat_params_.eta,
+                                           hmat_params_.n_min_for_bct);
+          bV2_->build_block_cluster_tree(hmat_params_.eta,
+                                         hmat_params_.n_min_for_bct);
+          bD2_part1_->build_block_cluster_tree(hmat_params_.eta,
+                                               hmat_params_.n_min_for_bct);
+          bD2_part2_->build_block_cluster_tree(hmat_params_.eta,
+                                               hmat_params_.n_min_for_bct);
+          bI2K_prime2_->build_block_cluster_tree(hmat_params_.eta,
+                                                 hmat_params_.n_min_for_bct);
           timer.stop();
           print_wall_time(deallog, timer, "build block cluster trees");
 
@@ -1753,14 +1342,18 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                      bV1_->get_block_cluster_tree());
           add_memory_consumption_row("Block cluster tree for K1",
                                      bK1_->get_block_cluster_tree());
-          add_memory_consumption_row("Block cluster tree for D1",
-                                     bD1_->get_block_cluster_tree());
+          add_memory_consumption_row("Block cluster tree for D1 part1",
+                                     bD1_part1_->get_block_cluster_tree());
+          add_memory_consumption_row("Block cluster tree for D1 part2",
+                                     bD1_part2_->get_block_cluster_tree());
           add_memory_consumption_row("Block cluster tree for I1K2",
                                      bI1K2_->get_block_cluster_tree());
           add_memory_consumption_row("Block cluster tree for V2",
                                      bV2_->get_block_cluster_tree());
-          add_memory_consumption_row("Block cluster tree for D2",
-                                     bD2_->get_block_cluster_tree());
+          add_memory_consumption_row("Block cluster tree for D2 part1",
+                                     bD2_part1_->get_block_cluster_tree());
+          add_memory_consumption_row("Block cluster tree for D2 part2",
+                                     bD2_part2_->get_block_cluster_tree());
           add_memory_consumption_row("Block cluster tree for I2K'2",
                                      bI2K_prime2_->get_block_cluster_tree());
 
@@ -1799,10 +1392,9 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           system_rhs_on_neumann_domain_.reinit(
             n_dofs_for_dirichlet_space_on_neumann_domain);
 
-          // When H-LU or H-Cholesky factorization is used for preconditioning,
-          // the 2x2 block matrix in mixed boundary condition should be solved
-          // as a whole, so the two RHS vectors should be combined into a
-          // single vector.
+          // When H-LU factorization is used for preconditioning, the 2x2 block
+          // matrix in mixed boundary condition should be solved as a whole, so
+          // the two RHS vectors should be combined into a single vector.
           if (preconditioner_type_ == PreconditionerType::HMatrixFactorization)
             system_rhs_on_combined_domain_.reinit(
               n_dofs_for_neumann_space_on_dirichlet_domain +
@@ -1845,7 +1437,7 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   assign_dirichlet_bc(Function<spacedim, RangeNumberType> &f,
                       const EntityTag                      surface_tag)
 {
@@ -1862,7 +1454,7 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   assign_dirichlet_bc(Function<spacedim, RangeNumberType> &f,
                       const std::vector<EntityTag>        &surface_tags)
 {
@@ -1876,7 +1468,7 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   assign_neumann_bc(Function<spacedim, RangeNumberType> &f,
                     const EntityTag                      surface_tag)
 {
@@ -1893,7 +1485,7 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   assign_neumann_bc(Function<spacedim, RangeNumberType> &f,
                     const std::vector<EntityTag>        &surface_tags)
 {
@@ -1907,7 +1499,7 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 bool
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   validate_subdomain_topology() const
 {
   auto &subdomain_to_surface = subdomain_topology_.get_subdomain_to_surface();
@@ -1955,7 +1547,7 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   initialize_manifolds_from_manifold_description()
 {
   // Assign manifold ids to all cells in the triangulation.
@@ -1977,7 +1569,7 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   initialize_mappings()
 {
   // Create different orders of mapping.
@@ -2001,7 +1593,7 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   interpolate_dirichlet_bc()
 {
   dirichlet_bc_.reinit(dof_handler_for_dirichlet_space_.n_dofs());
@@ -2039,7 +1631,7 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   interpolate_neumann_bc()
 {
   neumann_bc_.reinit(dof_handler_for_neumann_space_.n_dofs());
@@ -2066,16 +1658,19 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   assemble_full_matrix_system()
 {
   // Define kernel functions on the host, i.e. the number type is
   // <tt>KernelNumberType</tt>.
-  SingleLayerKernel<spacedim, KernelNumberType> single_layer_kernel;
-  DoubleLayerKernel<spacedim, KernelNumberType> double_layer_kernel;
+  SingleLayerKernel<spacedim, KernelNumberType> single_layer_kernel(kappa_);
+  DoubleLayerKernel<spacedim, KernelNumberType> double_layer_kernel(kappa_);
   AdjointDoubleLayerKernel<spacedim, KernelNumberType>
-    adjoint_double_layer_kernel;
-  HyperSingularKernelRegular<spacedim, KernelNumberType> hyper_singular_kernel;
+    adjoint_double_layer_kernel(kappa_);
+  HyperSingularKernelRegular1<spacedim, KernelNumberType>
+    hyper_singular_kernel1(kappa_);
+  HyperSingularKernelRegular2<spacedim, KernelNumberType>
+    hyper_singular_kernel2(kappa_);
 
   LogStream::Prefix prefix_string("assemble_full_matrix");
 
@@ -2084,24 +1679,25 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   switch (problem_type_)
     {
         case DirichletBCProblem: {
-          /**
-           * Assemble the FEM scaled mass matrix, which is stored into the
-           * full matrix for \f$K_2\f$.
-           *
-           * \mynote{The polynomial order specified for the Gauss-Legendre
-           * quadrature rule for FEM integration is accurate for the
-           * integration of \f$2N-1\f$-th polynomial, where \f$N\f is the
-           * number of quadrature points in 1D.}
-           */
+#if ENABLE_MATRIX_EXPORT == 1
+          // Output stream for matrices and vectors.
+          std::ofstream out_mat;
+#endif
+
+          // Assemble the FEM scaled mass matrix, which is stored into the full
+          // matrix for \f$K_2\f$.
+          //
+          // \mynote{The polynomial order specified for the Gauss-Legendre
+          // quadrature rule for FEM integration is accurate for the integration
+          // of \f$2N-1\f$-th polynomial, where \f$N\f is the number of
+          // quadrature points in 1D.}
           std::cout << "=== Assemble scaled mass matrix ===" << std::endl;
 
-          /**
-           * For the interior Laplace problem, \f$\frac{1}{2}I\f$ is
-           * assembled, while for the exterior Laplace problem,
-           * \f$-\frac{1}{2}I\f$ is assembled. It is also assumed that the
-           * potential reference \f$u_0\f$ is zero when \f$\abs{x} \rightarrow
-           * \infty\f$.
-           */
+
+          // For the interior problem, \f$\frac{1}{2}I\f$ is assembled, while
+          // for the exterior problem, \f$-\frac{1}{2}I\f$ is assembled. It is
+          // also assumed that the potential reference \f$u_0\f$ is zero when
+          // \f$\abs{x} \rightarrow \infty\f$.
           Timer timer;
           if (is_interior_problem_)
             {
@@ -2164,10 +1760,9 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           timer.stop();
           print_wall_time(deallog, timer, "assemble mass matrix I");
 
-          /**
-           * Assemble the DLP matrix, which is added with the previous
-           * scaled FEM mass matrix.
-           */
+
+          // Assemble the DLP matrix, which is added with the previous scaled
+          // FEM mass matrix.
           std::cout << "=== Assemble DLP matrix ===" << std::endl;
 
           timer.start();
@@ -2211,9 +1806,31 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           timer.stop();
           print_wall_time(deallog, timer, "assemble K");
 
-          /**
-           * Assemble the SLP matrix.
-           */
+#if ENABLE_MATRIX_EXPORT == 1
+          out_mat.open("matrices.dat");
+          I1K2_mat_.print_formatted_to_mat(out_mat, "I1K2", 15, true, 25);
+#endif
+
+          // Calculate the RHS vector.
+          timer.start();
+          I1K2_mat_.vmult(system_rhs_on_dirichlet_domain_, dirichlet_bc_);
+          timer.stop();
+          print_wall_time(deallog, timer, "assemble RHS vector");
+
+#if ENABLE_MATRIX_EXPORT == 1
+          print_vector_to_mat(out_mat,
+                              "system_rhs",
+                              system_rhs_on_dirichlet_domain_,
+                              false,
+                              15,
+                              25);
+#endif
+
+          // Release the RHS matrix.
+          std::cout << "=== Release the RHS matrix ===" << std::endl;
+          I1K2_mat_.clear();
+
+          // Assemble the SLP matrix.
           std::cout << "=== Assemble SLP matrix ===" << std::endl;
 
           timer.start();
@@ -2257,13 +1874,10 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           timer.stop();
           print_wall_time(deallog, timer, "assemble V");
 
-          /**
-           * Calculate the RHS vector.
-           */
-          timer.start();
-          I1K2_mat_.vmult(system_rhs_on_dirichlet_domain_, dirichlet_bc_);
-          timer.stop();
-          print_wall_time(deallog, timer, "assemble RHS vector");
+#if ENABLE_MATRIX_EXPORT == 1
+          V1_mat_.print_formatted_to_mat(out_mat, "V1", 15, true, 25);
+          out_mat.close();
+#endif
 
           break;
         }
@@ -2271,9 +1885,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           std::cout << "=== Assemble scaled mass matrix ===" << std::endl;
 
           /**
-           * For the interior Laplace problem, \f$\frac{1}{2}I\f$ is
-           * assembled, while for the exterior Laplace problem,
-           * \f$-\frac{1}{2}I\f$ is assembled.
+           * For the interior problem, \f$\frac{1}{2}I\f$ is assembled, while
+           * for the exterior problem, \f$-\frac{1}{2}I\f$ is assembled.
            */
           if (is_interior_problem_)
             {
@@ -2332,11 +1945,11 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           assemble_bem_full_matrix<dim,
                                    spacedim,
-                                   HyperSingularKernelRegular,
+                                   HyperSingularKernelRegular1,
                                    KernelNumberType,
                                    SurfaceNormalDetector<dim, spacedim>,
                                    LAPACKFullMatrixExt<RangeNumberType>>(
-            hyper_singular_kernel,
+            hyper_singular_kernel1,
             1.0,
             dof_handler_for_dirichlet_space_,
             dof_handler_for_dirichlet_space_,
@@ -2346,24 +1959,26 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             SauterQuadratureRule<dim>(5, 4, 4, 3),
             D1_mat_);
 
-          /**
-           * Calculate the RHS vector.
-           */
+          assemble_bem_full_matrix<dim,
+                                   spacedim,
+                                   HyperSingularKernelRegular2,
+                                   KernelNumberType,
+                                   SurfaceNormalDetector<dim, spacedim>,
+                                   LAPACKFullMatrixExt<RangeNumberType>>(
+            hyper_singular_kernel2,
+            1.0,
+            dof_handler_for_dirichlet_space_,
+            dof_handler_for_dirichlet_space_,
+            mappings_,
+            material_id_to_mapping_index_,
+            SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
+            SauterQuadratureRule<dim>(5, 4, 4, 3),
+            D1_part2_mat_);
+
+          D1_mat_.add(D1_part2_mat_);
+
+          // Calculate the RHS vector.
           I2K_prime2_mat_.vmult(system_rhs_on_neumann_domain_, neumann_bc_);
-
-          compute_stabilization_terms_for_D1_fullmat();
-
-          /**
-           * Add the matrix \f$\alpha a a^T\f$ into \f$D\f$. N.B. The outer
-           * product here is only formal and there is no complex conjugation
-           * on the second operand in the complex valued case.
-           */
-          LAPACKFullMatrixExt<KernelNumberType> aaT(D1_mat_.m(), D1_mat_.n());
-          for (const auto &vec : mass_vmult_weq_)
-            {
-              aaT.outer_product_formal(vec, vec);
-              D1_mat_.add(alpha_for_neumann_, aaT);
-            }
 
           break;
         }
@@ -2384,7 +1999,7 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   assemble_hmatrix_system()
 {
   LogStream::Prefix prefix_string("assemble_hmatrix_system");
@@ -2394,7 +2009,9 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
   Timer timer;
   MultithreadInfo::set_thread_limit(thread_num_);
-  ACAConfig<real_type> aca_config(max_hmat_rank_, aca_relative_error_, eta_);
+  ACAConfig<real_type> aca_config(hmat_params_.max_hmat_rank,
+                                  hmat_params_.aca_relative_error,
+                                  hmat_params_.eta);
   switch (problem_type_)
     {
         case DirichletBCProblem: {
@@ -2415,8 +2032,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               std::cout << "=== Assemble sigma*I1+K2 ===" << std::endl;
               I1K2_hmat_ = bI1K2_->build_hmatrix_with_mass_matrix(
                 thread_num_,
-                max_hmat_rank_,
-                aca_relative_error_,
+                hmat_params_.max_hmat_rank,
+                hmat_params_.aca_relative_error,
                 CUDAKernelNumberType(1.0),
                 real_type(0.5),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -2437,8 +2054,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               std::cout << "=== Assemble (sigma-1)*I1+K2 ===" << std::endl;
               I1K2_hmat_ = bI1K2_->build_hmatrix_with_mass_matrix(
                 thread_num_,
-                max_hmat_rank_,
-                aca_relative_error_,
+                hmat_params_.max_hmat_rank,
+                hmat_params_.aca_relative_error,
                 CUDAKernelNumberType(1.0),
                 real_type(-0.5),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -2500,8 +2117,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             timer.start();
             V1_hmat_ =
               bV1_->build_hmatrix(thread_num_,
-                                  max_hmat_rank_,
-                                  aca_relative_error_,
+                                  hmat_params_.max_hmat_rank,
+                                  hmat_params_.aca_relative_error,
                                   CUDAKernelNumberType(1.0),
                                   SauterQuadratureRule<dim>(5, 4, 4, 3),
                                   mappings_,
@@ -2546,8 +2163,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               std::cout << "=== Assemble (1-sigma)*I2-K'2 ===" << std::endl;
               I2K_prime2_hmat_ = bI2K_prime2_->build_hmatrix_with_mass_matrix(
                 thread_num_,
-                max_hmat_rank_,
-                aca_relative_error_,
+                hmat_params_.max_hmat_rank,
+                hmat_params_.aca_relative_error,
                 CUDAKernelNumberType(-1.0),
                 real_type(0.5),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -2563,8 +2180,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               std::cout << "=== Assemble -sigma*I2-K'2 ===" << std::endl;
               I2K_prime2_hmat_ = bI2K_prime2_->build_hmatrix_with_mass_matrix(
                 thread_num_,
-                max_hmat_rank_,
-                aca_relative_error_,
+                hmat_params_.max_hmat_rank,
+                hmat_params_.aca_relative_error,
                 CUDAKernelNumberType(-1.0),
                 real_type(-0.5),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -2618,27 +2235,32 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           std::cout << "=== Release I2K'2 ===" << std::endl;
           I2K_prime2_hmat_->release();
 
-          std::cout << "=== Compute stabilization terms ===" << std::endl;
-          timer.start();
-          compute_stabilization_terms_for_D1_hmat();
-          timer.stop();
-          print_wall_time(deallog, timer, "compute stabilization terms");
-
           // Assemble H-matrix for the regularized bilinear form for the
           // hyper-singular operator along with the stabilization term.
           std::cout << "=== Assemble D1 ===" << std::endl;
           timer.start();
-          D1_hmat_ = bD1_->build_hmatrix_with_regularization(
+          D1_hmat_ = bD1_part1_->build_hmatrix_with_regularization(
             thread_num_,
-            max_hmat_rank_,
-            aca_relative_error_,
+            hmat_params_.max_hmat_rank,
+            hmat_params_.aca_relative_error,
             CUDAKernelNumberType(1.0),
-            mass_vmult_weq_,
-            alpha_for_neumann_,
+            {},
+            KernelNumberType(0.),
             SauterQuadratureRule<dim>(5, 4, 4, 3),
             mappings_,
             material_id_to_mapping_index_,
             subdomain_topology_);
+          D1_part2_hmat_ =
+            bD1_part2_->build_hmatrix(thread_num_,
+                                      hmat_params_.max_hmat_rank,
+                                      hmat_params_.aca_relative_error,
+                                      CUDAKernelNumberType(1.0),
+                                      SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                      mappings_,
+                                      material_id_to_mapping_index_,
+                                      subdomain_topology_);
+          D1_hmat_->add(*D1_part2_hmat_, hmat_params_.max_hmat_rank * 2);
+          D1_part2_hmat_->release();
           timer.stop();
           print_wall_time(deallog, timer, "assemble D1");
           add_memory_consumption_row("D1", *D1_hmat_, "After assembly");
@@ -2647,14 +2269,14 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
 #if ENABLE_MATRIX_EXPORT == 1
           D1_hmat_->print_as_formatted_full_matrix(out_mat, "D1", 15, true, 25);
-          print_vector_to_mat(
-            out_mat,
-            "D1_row_i2e",
-            bD1_->get_test_space().get_internal_to_external_dof_numbering());
-          print_vector_to_mat(
-            out_mat,
-            "D1_col_i2e",
-            bD1_->get_trial_space().get_internal_to_external_dof_numbering());
+          print_vector_to_mat(out_mat,
+                              "D1_row_i2e",
+                              bD1_part1_->get_test_space()
+                                .get_internal_to_external_dof_numbering());
+          print_vector_to_mat(out_mat,
+                              "D1_col_i2e",
+                              bD1_part1_->get_trial_space()
+                                .get_internal_to_external_dof_numbering());
 
           out_bct.open("D1_bct.dat");
           D1_hmat_->write_leaf_set_by_iteration(out_bct, 1e-12);
@@ -2681,8 +2303,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               std::cout << "=== Assemble sigma*I1+K2 ===" << std::endl;
               I1K2_hmat_ = bI1K2_->build_hmatrix_with_mass_matrix(
                 thread_num_,
-                max_hmat_rank_,
-                aca_relative_error_,
+                hmat_params_.max_hmat_rank,
+                hmat_params_.aca_relative_error,
                 CUDAKernelNumberType(1.0),
                 real_type(0.5),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -2697,8 +2319,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               timer.start();
               I2K_prime2_hmat_ = bI2K_prime2_->build_hmatrix_with_mass_matrix(
                 thread_num_,
-                max_hmat_rank_,
-                aca_relative_error_,
+                hmat_params_.max_hmat_rank,
+                hmat_params_.aca_relative_error,
                 CUDAKernelNumberType(-1.0),
                 real_type(0.5),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -2714,8 +2336,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               std::cout << "=== Assemble (sigma-1)*I1+K2 ===" << std::endl;
               I1K2_hmat_ = bI1K2_->build_hmatrix_with_mass_matrix(
                 thread_num_,
-                max_hmat_rank_,
-                aca_relative_error_,
+                hmat_params_.max_hmat_rank,
+                hmat_params_.aca_relative_error,
                 CUDAKernelNumberType(1.0),
                 real_type(-0.5),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -2730,8 +2352,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               timer.start();
               I2K_prime2_hmat_ = bI2K_prime2_->build_hmatrix_with_mass_matrix(
                 thread_num_,
-                max_hmat_rank_,
-                aca_relative_error_,
+                hmat_params_.max_hmat_rank,
+                hmat_params_.aca_relative_error,
                 CUDAKernelNumberType(-1.0),
                 real_type(-0.5),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
@@ -2754,8 +2376,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           std::cout << "=== Assemble -V2 ===" << std::endl;
           timer.start();
           V2_hmat_ = bV2_->build_hmatrix(thread_num_,
-                                         max_hmat_rank_,
-                                         aca_relative_error_,
+                                         hmat_params_.max_hmat_rank,
+                                         hmat_params_.aca_relative_error,
                                          CUDAKernelNumberType(-1.0),
                                          SauterQuadratureRule<dim>(5, 4, 4, 3),
                                          mappings_,
@@ -2769,10 +2391,10 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           std::cout << "=== Assemble -D2 ===" << std::endl;
           timer.start();
-          D2_hmat_ = bD2_->build_hmatrix_with_regularization(
+          D2_hmat_ = bD2_part1_->build_hmatrix_with_regularization(
             thread_num_,
-            max_hmat_rank_,
-            aca_relative_error_,
+            hmat_params_.max_hmat_rank,
+            hmat_params_.aca_relative_error,
             CUDAKernelNumberType(-1.0),
             {},
             KernelNumberType(0.),
@@ -2780,6 +2402,17 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             mappings_,
             material_id_to_mapping_index_,
             subdomain_topology_);
+          D2_part2_hmat_ =
+            bD2_part2_->build_hmatrix(thread_num_,
+                                      hmat_params_.max_hmat_rank,
+                                      hmat_params_.aca_relative_error,
+                                      CUDAKernelNumberType(-1.0),
+                                      SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                      mappings_,
+                                      material_id_to_mapping_index_,
+                                      subdomain_topology_);
+          D2_hmat_->add(*D2_part2_hmat_, hmat_params_.max_hmat_rank * 2);
+          D2_part2_hmat_->release();
           timer.stop();
           print_wall_time(deallog, timer, "assemble -D2");
           add_memory_consumption_row("D2", *D2_hmat_, "After assembly");
@@ -2821,14 +2454,14 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             bV2_->get_trial_space().get_internal_to_external_dof_numbering());
 
           D2_hmat_->print_as_formatted_full_matrix(out_mat, "D2", 15, true, 25);
-          print_vector_to_mat(
-            out_mat,
-            "D2_row_i2e",
-            bD2_->get_test_space().get_internal_to_external_dof_numbering());
-          print_vector_to_mat(
-            out_mat,
-            "D2_col_i2e",
-            bD2_->get_trial_space().get_internal_to_external_dof_numbering());
+          print_vector_to_mat(out_mat,
+                              "D2_row_i2e",
+                              bD2_part1_->get_test_space()
+                                .get_internal_to_external_dof_numbering());
+          print_vector_to_mat(out_mat,
+                              "D2_col_i2e",
+                              bD2_part1_->get_trial_space()
+                                .get_internal_to_external_dof_numbering());
 
           out_bct.open("I1K2_bct.dat");
           I1K2_hmat_->write_leaf_set_by_iteration(out_bct, 1e-12);
@@ -2916,8 +2549,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           std::cout << "=== Assemble V1 ===" << std::endl;
           timer.start();
           V1_hmat_ = bV1_->build_hmatrix(thread_num_,
-                                         max_hmat_rank_,
-                                         aca_relative_error_,
+                                         hmat_params_.max_hmat_rank,
+                                         hmat_params_.aca_relative_error,
                                          CUDAKernelNumberType(1.0),
                                          SauterQuadratureRule<dim>(5, 4, 4, 3),
                                          mappings_,
@@ -2932,8 +2565,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           std::cout << "=== Assemble -K1 ===" << std::endl;
           timer.start();
           K1_hmat_ = bK1_->build_hmatrix(thread_num_,
-                                         max_hmat_rank_,
-                                         aca_relative_error_,
+                                         hmat_params_.max_hmat_rank,
+                                         hmat_params_.aca_relative_error,
                                          CUDAKernelNumberType(-1.0),
                                          SauterQuadratureRule<dim>(5, 4, 4, 3),
                                          mappings_,
@@ -2947,10 +2580,10 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           std::cout << "=== Assemble D1 ===" << std::endl;
           timer.start();
-          D1_hmat_ = bD1_->build_hmatrix_with_regularization(
+          D1_hmat_ = bD1_part1_->build_hmatrix_with_regularization(
             thread_num_,
-            max_hmat_rank_,
-            aca_relative_error_,
+            hmat_params_.max_hmat_rank,
+            hmat_params_.aca_relative_error,
             CUDAKernelNumberType(1.0),
             {},
             KernelNumberType(0.),
@@ -2958,13 +2591,23 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             mappings_,
             material_id_to_mapping_index_,
             subdomain_topology_);
+          D1_part2_hmat_ =
+            bD1_part2_->build_hmatrix(thread_num_,
+                                      hmat_params_.max_hmat_rank,
+                                      hmat_params_.aca_relative_error,
+                                      CUDAKernelNumberType(1.0),
+                                      SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                      mappings_,
+                                      material_id_to_mapping_index_,
+                                      subdomain_topology_);
+          D1_hmat_->add(*D1_part2_hmat_, hmat_params_.max_hmat_rank * 2);
           timer.stop();
           print_wall_time(deallog, timer, "assemble D1");
           add_memory_consumption_row("D1", *D1_hmat_, "After assembly");
           std::cout << "=== Leaf set information of D1 ===" << std::endl;
           D1_hmat_->print_leaf_set_info(std::cout);
 
-          // Assemble the skew symmetric block matrix.
+          // Assemble the block matrix.
           std::cout << "=== Assemble system block matrix ===" << std::endl;
           M_hmat_ =
             std::make_unique<HBlockMatrixSkewSymm<spacedim, RangeNumberType>>(
@@ -2992,14 +2635,14 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             bK1_->get_trial_space().get_internal_to_external_dof_numbering());
 
           D1_hmat_->print_as_formatted_full_matrix(out_mat, "D1", 15, true, 25);
-          print_vector_to_mat(
-            out_mat,
-            "D1_row_i2e",
-            bD1_->get_test_space().get_internal_to_external_dof_numbering());
-          print_vector_to_mat(
-            out_mat,
-            "D1_col_i2e",
-            bD1_->get_trial_space().get_internal_to_external_dof_numbering());
+          print_vector_to_mat(out_mat,
+                              "D1_row_i2e",
+                              bD1_part1_->get_test_space()
+                                .get_internal_to_external_dof_numbering());
+          print_vector_to_mat(out_mat,
+                              "D1_col_i2e",
+                              bD1_part1_->get_trial_space()
+                                .get_internal_to_external_dof_numbering());
 
           out_bct.open("V1_bct.dat");
           V1_hmat_->write_leaf_set_by_iteration(out_bct, 1e-12);
@@ -3028,7 +2671,7 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   assemble_hmatrix_preconditioner()
 {
   LogStream::Prefix prefix_string("assemble_hmatrix_preconditioner");
@@ -3045,6 +2688,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   // Directly make a copy of the existing \hmat and then
                   // truncate its rank.
                   V1_hmat_preconditioner_ = *V1_hmat_;
+                  V1_hmat_preconditioner_.set_spd(false);
 
                   // Only when the \hmat actually has a hierarchical
                   // structure, the SPD preserving rank truncation will be
@@ -3056,7 +2700,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     {
                       V1_hmat_preconditioner_
                         .truncate_to_rank_preserve_positive_definite(
-                          max_hmat_rank_for_preconditioner_);
+                          hmat_preconditioner_params_.max_hmat_rank);
                     }
                   timer.stop();
                   print_wall_time(deallog, timer, "truncate V");
@@ -3064,9 +2708,9 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                              V1_hmat_preconditioner_,
                                              "After assembly");
 
-                  // Perform Cholesky factorization of the preconditioner.
+                  // Perform LU factorization of the preconditioner.
                   std::cout
-                    << "=== Cholesky factorization of the preconditioner for V ==="
+                    << "=== LU factorization of the preconditioner for V ==="
                     << std::endl;
                   timer.start();
                   // Only when the \hmat actually has a hierarchical
@@ -3078,13 +2722,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                       HMatrixType::HierarchicalMatrixType)
                     {
                       V1_hmat_preconditioner_
-                        .compute_cholesky_factorization_task_parallel(
-                          max_hmat_rank_for_preconditioner_);
+                        .compute_lu_factorization_task_parallel(
+                          hmat_preconditioner_params_.max_hmat_rank);
                     }
                   else
                     {
-                      V1_hmat_preconditioner_.compute_cholesky_factorization(
-                        max_hmat_rank_for_preconditioner_);
+                      V1_hmat_preconditioner_.compute_lu_factorization(
+                        hmat_preconditioner_params_.max_hmat_rank);
                     }
                   timer.stop();
                   print_wall_time(deallog,
@@ -3098,27 +2742,23 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   mg_tria_for_preconditioner_.copy_triangulation(tria_);
                   mg_tria_for_preconditioner_.refine_global();
 
-                  op_precond_for_slp_ = std::make_unique<
-                    LaplaceSingleLayerPreconditioner<dim,
-                                                     spacedim,
-                                                     RangeNumberType,
-                                                     KernelNumberType>>(
-                    fe_for_neumann_space_,
-                    fe_for_dirichlet_space_,
-                    mg_tria_for_preconditioner_,
-                    neumann_space_on_dirichlet_domain_
-                      ->get_internal_to_external_dof_numbering(),
-                    neumann_space_on_dirichlet_domain_
-                      ->get_external_to_internal_dof_numbering());
+                  op_precond_for_slp_ =
+                    std::make_unique<HelmholtzAcousticSingleLayerPreconditioner<
+                      dim,
+                      spacedim,
+                      RangeNumberType,
+                      KernelNumberType>>(
+                      fe_for_neumann_space_,
+                      fe_for_dirichlet_space_,
+                      mg_tria_for_preconditioner_,
+                      neumann_space_on_dirichlet_domain_
+                        ->get_internal_to_external_dof_numbering(),
+                      neumann_space_on_dirichlet_domain_
+                        ->get_external_to_internal_dof_numbering());
 
                   op_precond_for_slp_->setup_preconditioner(
                     thread_num_,
-                    HMatrixParameters<real_type>(
-                      n_min_for_ct_,
-                      n_min_for_bct_,
-                      eta_for_preconditioner_,
-                      max_hmat_rank_for_preconditioner_,
-                      aca_relative_error_for_preconditioner_),
+                    hmat_preconditioner_params_,
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
@@ -3152,6 +2792,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   // Directly make a copy of the existing \hmat and then
                   // truncate its rank.
                   D1_hmat_preconditioner_ = *D1_hmat_;
+                  D1_hmat_preconditioner_.set_spd(false);
 
                   // Only when the \hmat actually has a hierarchical structure,
                   // the SPD preserving rank truncation will be performed. This
@@ -3163,7 +2804,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     {
                       D1_hmat_preconditioner_
                         .truncate_to_rank_preserve_positive_definite(
-                          max_hmat_rank_for_preconditioner_);
+                          hmat_preconditioner_params_.max_hmat_rank);
                     }
                   timer.stop();
                   print_wall_time(deallog, timer, "truncate D");
@@ -3171,9 +2812,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                              D1_hmat_preconditioner_,
                                              "After assembly");
 
-                  // Perform Cholesky factorization of the preconditioner.
-                  std::cout << "=== Cholesky factorization of D ==="
-                            << std::endl;
+                  // Perform LU factorization of the preconditioner.
+                  std::cout << "=== LU factorization of D ===" << std::endl;
                   timer.start();
                   // Only when the \hmat actually has a hierarchical structure,
                   // the task parallel Cholesky factorization will be performed.
@@ -3184,13 +2824,13 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                       HMatrixType::HierarchicalMatrixType)
                     {
                       D1_hmat_preconditioner_
-                        .compute_cholesky_factorization_task_parallel(
-                          max_hmat_rank_for_preconditioner_);
+                        .compute_lu_factorization_task_parallel(
+                          hmat_preconditioner_params_.max_hmat_rank);
                     }
                   else
                     {
-                      D1_hmat_preconditioner_.compute_cholesky_factorization(
-                        max_hmat_rank_for_preconditioner_);
+                      D1_hmat_preconditioner_.compute_lu_factorization(
+                        hmat_preconditioner_params_.max_hmat_rank);
                     }
                   timer.stop();
                   print_wall_time(deallog,
@@ -3205,10 +2845,11 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   mg_tria_for_preconditioner_.refine_global();
 
                   op_precond_for_hyper_singular_ = std::make_unique<
-                    LaplaceHyperSingularPreconditioner<dim,
-                                                       spacedim,
-                                                       RangeNumberType,
-                                                       KernelNumberType>>(
+                    HelmholtzAcousticHyperSingularPreconditioner<
+                      dim,
+                      spacedim,
+                      RangeNumberType,
+                      KernelNumberType>>(
                     fe_for_dirichlet_space_,
                     fe_for_neumann_space_,
                     mg_tria_for_preconditioner_,
@@ -3219,12 +2860,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
                   op_precond_for_hyper_singular_->setup_preconditioner(
                     thread_num_,
-                    HMatrixParameters<real_type>(
-                      n_min_for_ct_,
-                      n_min_for_bct_,
-                      eta_for_preconditioner_,
-                      max_hmat_rank_for_preconditioner_,
-                      aca_relative_error_for_preconditioner_),
+                    hmat_preconditioner_params_,
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
@@ -3261,8 +2897,10 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   // Directly make copies of existing \hmatrices and then
                   // truncate their ranks.
                   M11_in_preconditioner_ = *V1_hmat_;
+                  M11_in_preconditioner_.set_spd(false);
                   M12_in_preconditioner_ = *K1_hmat_;
                   M22_in_preconditioner_ = *D1_hmat_;
+                  M22_in_preconditioner_.set_spd(false);
 
                   // Only when the \hmat actually has a hierarchical structure,
                   // the SPD preserving rank truncation will be performed. This
@@ -3274,7 +2912,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     {
                       M11_in_preconditioner_
                         .truncate_to_rank_preserve_positive_definite(
-                          max_hmat_rank_for_preconditioner_);
+                          hmat_preconditioner_params_.max_hmat_rank);
                     }
                   timer.stop();
                   print_wall_time(deallog, timer, "truncate M11(==V1)");
@@ -3291,7 +2929,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                       HMatrixType::HierarchicalMatrixType)
                     {
                       M12_in_preconditioner_.truncate_to_rank(
-                        max_hmat_rank_for_preconditioner_);
+                        hmat_preconditioner_params_.max_hmat_rank);
                     }
                   timer.stop();
                   print_wall_time(deallog, timer, "truncate M12(==K1)");
@@ -3310,7 +2948,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     {
                       M22_in_preconditioner_
                         .truncate_to_rank_preserve_positive_definite(
-                          max_hmat_rank_for_preconditioner_);
+                          hmat_preconditioner_params_.max_hmat_rank);
                     }
                   timer.stop();
                   print_wall_time(deallog, timer, "truncate M22(==D1)");
@@ -3330,7 +2968,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                             << std::endl;
                   timer.start();
                   M_hmat_preconditioner_->compute_lu_factorization(
-                    max_hmat_rank_for_preconditioner_);
+                    hmat_preconditioner_params_.max_hmat_rank);
                   timer.stop();
                   print_wall_time(deallog, timer, "LU factorization of M");
 
@@ -3350,25 +2988,27 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   for (const auto &bc : neumann_bc_definition_)
                     neumann_domain_material_ids.insert(bc.first);
 
-                  op_precond_for_slp_ = std::make_unique<
-                    LaplaceSingleLayerPreconditioner<dim,
-                                                     spacedim,
-                                                     RangeNumberType,
-                                                     KernelNumberType>>(
-                    fe_for_neumann_space_,
-                    fe_for_dirichlet_space_,
-                    mg_tria_for_preconditioner_,
-                    neumann_space_on_dirichlet_domain_
-                      ->get_internal_to_external_dof_numbering(),
-                    neumann_space_on_dirichlet_domain_
-                      ->get_external_to_internal_dof_numbering(),
-                    dirichlet_domain_material_ids);
+                  op_precond_for_slp_ =
+                    std::make_unique<HelmholtzAcousticSingleLayerPreconditioner<
+                      dim,
+                      spacedim,
+                      RangeNumberType,
+                      KernelNumberType>>(
+                      fe_for_neumann_space_,
+                      fe_for_dirichlet_space_,
+                      mg_tria_for_preconditioner_,
+                      neumann_space_on_dirichlet_domain_
+                        ->get_internal_to_external_dof_numbering(),
+                      neumann_space_on_dirichlet_domain_
+                        ->get_external_to_internal_dof_numbering(),
+                      dirichlet_domain_material_ids);
 
                   op_precond_for_hyper_singular_ = std::make_unique<
-                    LaplaceHyperSingularPreconditioner<dim,
-                                                       spacedim,
-                                                       RangeNumberType,
-                                                       KernelNumberType>>(
+                    HelmholtzAcousticHyperSingularPreconditioner<
+                      dim,
+                      spacedim,
+                      RangeNumberType,
+                      KernelNumberType>>(
                     fe_for_dirichlet_space_,
                     fe_for_neumann_space_,
                     mg_tria_for_preconditioner_,
@@ -3380,12 +3020,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
                   op_precond_for_slp_->setup_preconditioner(
                     thread_num_,
-                    HMatrixParameters<real_type>(
-                      n_min_for_ct_,
-                      n_min_for_bct_,
-                      eta_for_preconditioner_,
-                      max_hmat_rank_for_preconditioner_,
-                      aca_relative_error_for_preconditioner_),
+                    hmat_preconditioner_params_,
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
@@ -3395,12 +3030,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
                   op_precond_for_hyper_singular_->setup_preconditioner(
                     thread_num_,
-                    HMatrixParameters<real_type>(
-                      n_min_for_ct_,
-                      n_min_for_bct_,
-                      eta_for_preconditioner_,
-                      max_hmat_rank_for_preconditioner_,
-                      aca_relative_error_for_preconditioner_),
+                    hmat_preconditioner_params_,
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
@@ -3439,7 +3069,8 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  solve()
 {
 #if ENABLE_NVTX == 1
   HierBEM::CUDAWrappers::NVTXRange nvtx_range("solve");
@@ -3453,7 +3084,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
         {
             case DirichletBCProblem: {
               SolverControl solver_control(1000, 1e-8, true, true);
-              SolverCGGeneral<Vector<RangeNumberType>> solver(solver_control);
+              SolverDQGMRES<Vector<RangeNumberType>> solver(solver_control);
 
               solver.solve(V1_mat_,
                            neumann_data_,
@@ -3464,7 +3095,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
             }
             case NeumannBCProblem: {
               SolverControl solver_control(1000, 1e-8, true, true);
-              SolverCGGeneral<Vector<RangeNumberType>> solver(solver_control);
+              SolverDQGMRES<Vector<RangeNumberType>> solver(solver_control);
 
               solver.solve(D1_mat_,
                            dirichlet_data_,
@@ -3489,7 +3120,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
         {
             case DirichletBCProblem: {
               SolverControl solver_control(1000, 1e-8, true, true);
-              SolverCGGeneral<Vector<RangeNumberType>> solver(solver_control);
+              SolverDQGMRES<Vector<RangeNumberType>> solver(solver_control);
 
               set_hmatrix_vmult_strategy_for_iterative_solver(*V1_hmat_,
                                                               vmult_type_,
@@ -3551,7 +3182,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::solve()
             }
             case NeumannBCProblem: {
               SolverControl solver_control(1000, 1e-8, true, true);
-              SolverCGGeneral<Vector<RangeNumberType>> solver(solver_control);
+              SolverDQGMRES<Vector<RangeNumberType>> solver(solver_control);
 
               set_hmatrix_vmult_strategy_for_iterative_solver(*D1_hmat_,
                                                               vmult_type_,
@@ -3796,7 +3427,7 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   output_results() const
 {
   std::cout << "=== Output results ===" << std::endl;
@@ -3959,18 +3590,17 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   output_results_on_target_tria(const std::string                  &vtk_file,
                                 const Triangulation<dim, spacedim> &target_tria,
                                 const unsigned int mapping_order) const
 {
   // Define volume integral operators, which will be evaluated on CPU.
-  SingleLayerKernel<spacedim, KernelNumberType>        V;
-  DoubleLayerKernel<spacedim, KernelNumberType>        K;
+  SingleLayerKernel<spacedim, KernelNumberType> V;
+  DoubleLayerKernel<spacedim, KernelNumberType> K;
+
   AdjointDoubleLayerKernel<spacedim, KernelNumberType> K_prime;
-  // N.B. The target point and the source point do not overlap, hence no
-  // regularization is needed. Stabilization is neither needed.
-  HyperSingularKernel<spacedim, KernelNumberType> D;
+  HyperSingularKernel<spacedim, KernelNumberType>      D;
 
   // Evaluate potentials on the target triangulation.
   DoFHandler<dim, spacedim> dof_handler_target_potential(target_tria);
@@ -4046,7 +3676,7 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   output_results_on_target_tria(
     const std::string                      &vtk_file,
     const Triangulation<dim + 1, spacedim> &target_tria,
@@ -4104,7 +3734,8 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::run()
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  run()
 {
   LogStream::Prefix prefix_string("run");
 #if ENABLE_NVTX == 1
@@ -4153,7 +3784,7 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   print_memory_consumption_table(std::ostream &out) const
 {
   memory_consumption_table_.write_text(
@@ -4164,4 +3795,4 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
 HBEM_NS_CLOSE
 
-#endif // HIERBEM_INCLUDE_LAPLACE_LAPLACE_BEM_PRIV_H_
+#endif // HIERBEM_INCLUDE_HELMHOLTZ_HELMHOLTZ_ACOUSTIC_BEM_PRIV_H_

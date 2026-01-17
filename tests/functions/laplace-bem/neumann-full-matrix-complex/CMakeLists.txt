@@ -15,7 +15,7 @@ find_package(Octave REQUIRED)
 set(_target test-neumann-full-matrix-complex)
 
 add_executable(${_target} neumann-full-matrix-complex.cc
-                          run-neumann-full-matrix-complex.cu)
+                          run-neumann-full-matrix-complex.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})

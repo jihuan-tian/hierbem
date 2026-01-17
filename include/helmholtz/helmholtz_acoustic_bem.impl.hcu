@@ -1,0 +1,703 @@
+// Copyright (C) 2025 Jihuan Tian <jihuan_tian@hotmail.com>
+//
+// This file is part of the HierBEM library.
+//
+// HierBEM is free software: you can use it, redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License as published by the
+// Free Software Foundation, either version 3 of the License, or (at your
+// option) any later version. The full text of the license can be found in the
+// file LICENSE at the top level directory of HierBEM.
+
+/**
+ * @file helmholtz_acoustic_bem.impl.hcu
+ * @brief Call member functions of pimpl from <tt>HelmholtzAcousticBEM</tt>.
+ *
+ * @date 2025-12-16
+ * @author Jihuan Tian
+ */
+
+#ifndef HIERBEM_INCLUDE_HELMHOLTZ_HELMHOLTZ_ACOUSTIC_BEM_IMPL_HCU_
+#define HIERBEM_INCLUDE_HELMHOLTZ_HELMHOLTZ_ACOUSTIC_BEM_IMPL_HCU_
+
+#include <deal.II/base/function.h>
+#include <deal.II/base/numbers.h>
+
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/grid/tria.h>
+
+#include <deal.II/lac/vector.h>
+
+#include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "cad_mesh/gmsh_manipulation.h"
+#include "cad_mesh/subdomain_topology.h"
+#include "config.h"
+#include "dofs/dof_tools_ext.h"
+#include "helmholtz_acoustic_bem.h"
+#include "helmholtz_acoustic_bem.priv.hcu"
+#include "mapping/mapping_info.h"
+#include "quadrature/sauter_quadrature_tools.h"
+
+HBEM_NS_OPEN
+
+using namespace dealii;
+
+#pragma region ****HelmholtzAcousticBEM ctor and dtor impls ****
+
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  HelmholtzAcousticBEM(const KernelNumberType kappa,
+                       unsigned int           fe_order_for_dirichlet_space,
+                       unsigned int           fe_order_for_neumann_space,
+                       ProblemType            problem_type,
+                       bool                   is_interior_problem,
+                       unsigned int           thread_num)
+  : priv_(std::make_unique<Priv>(kappa,
+                                 fe_order_for_dirichlet_space,
+                                 fe_order_for_neumann_space,
+                                 problem_type,
+                                 is_interior_problem,
+                                 thread_num))
+{
+  priv_->initialize_memory_consumption_table_headers();
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  HelmholtzAcousticBEM(
+    const KernelNumberType              kappa,
+    const unsigned int                  fe_order_for_dirichlet_space,
+    const unsigned int                  fe_order_for_neumann_space,
+    const ProblemType                   problem_type,
+    const bool                          is_interior_problem,
+    const HMatrixParameters<real_type> &hmat_params,
+    const HMatrixParameters<real_type> &hmat_preconditioner_params,
+    const unsigned int                  thread_num)
+  : priv_(std::make_unique<Priv>(kappa,
+                                 fe_order_for_dirichlet_space,
+                                 fe_order_for_neumann_space,
+                                 problem_type,
+                                 is_interior_problem,
+                                 hmat_params,
+                                 hmat_preconditioner_params,
+                                 thread_num))
+{
+  priv_->initialize_memory_consumption_table_headers();
+}
+
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  ~HelmholtzAcousticBEM()
+{}
+
+#pragma endregion
+#pragma region ****HelmholtzAcousticBEM accessors ****
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+inline bool
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  is_cpu_serial() const
+{
+  return priv_->cpu_serial_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+inline void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  set_cpu_serial(bool cpuSerial)
+{
+  priv_->cpu_serial_ = cpuSerial;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+inline bool
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  is_use_hmat() const
+{
+  return priv_->use_hmat_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+inline void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  set_use_hmat(bool useHmat)
+{
+  priv_->use_hmat_ = useHmat;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+inline void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  set_iterative_solver_vmult_type(const IterativeSolverVmultType type)
+{
+  priv_->vmult_type_ = type;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+inline void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  set_preconditioner_type(const PreconditionerType type)
+{
+  priv_->preconditioner_type_ = type;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+inline const std::string &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_project_name() const
+{
+  return priv_->project_name_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+inline void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  set_project_name(const std::string &projectName)
+{
+  priv_->project_name_ = projectName;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+const SubdomainTopology<dim, spacedim> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_subdomain_topology() const
+{
+  return priv_->subdomain_topology_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+SubdomainTopology<dim, spacedim> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_subdomain_topology()
+{
+  return priv_->subdomain_topology_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+const std::map<EntityTag, types::manifold_id> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_manifold_description() const
+{
+  return priv_->manifold_description_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+std::map<EntityTag, types::manifold_id> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_manifold_description()
+{
+  return priv_->manifold_description_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+const std::map<types::manifold_id, unsigned int> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_manifold_id_to_mapping_order() const
+{
+  return priv_->manifold_id_to_mapping_order_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+std::map<types::manifold_id, unsigned int> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_manifold_id_to_mapping_order()
+{
+  return priv_->manifold_id_to_mapping_order_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+const std::map<types::manifold_id, Manifold<dim, spacedim> *> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_manifolds() const
+{
+  return priv_->manifolds_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+std::map<types::manifold_id, Manifold<dim, spacedim> *> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_manifolds()
+{
+  return priv_->manifolds_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+const Triangulation<dim, spacedim> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_triangulation() const
+{
+  return priv_->tria_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+Triangulation<dim, spacedim> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_triangulation()
+{
+  return priv_->tria_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+const std::vector<MappingInfo<dim, spacedim> *> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_mappings() const
+{
+  return priv_->mappings_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+std::vector<MappingInfo<dim, spacedim> *> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_mappings()
+{
+  return priv_->mappings_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+const DoFHandler<dim, spacedim> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_dof_handler_dirichlet() const
+{
+  return priv_->dof_handler_for_dirichlet_space_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+DoFHandler<dim, spacedim> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_dof_handler_dirichlet()
+{
+  return priv_->dof_handler_for_dirichlet_space_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+const DoFHandler<dim, spacedim> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_dof_handler_neumann() const
+{
+  return priv_->dof_handler_for_neumann_space_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+DoFHandler<dim, spacedim> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_dof_handler_neumann()
+{
+  return priv_->dof_handler_for_neumann_space_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+const std::map<EntityTag, Function<spacedim, RangeNumberType> *> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_dirichlet_bc_definition() const
+{
+  return priv_->dirichlet_bc_definition_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+std::map<EntityTag, Function<spacedim, RangeNumberType> *> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_dirichlet_bc_definition()
+{
+  return priv_->dirichlet_bc_definition_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+const std::map<EntityTag, Function<spacedim, RangeNumberType> *> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_neumann_bc_definition() const
+{
+  return priv_->neumann_bc_definition_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+std::map<EntityTag, Function<spacedim, RangeNumberType> *> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_neumann_bc_definition()
+{
+  return priv_->neumann_bc_definition_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+const Vector<RangeNumberType> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_dirichlet_data() const
+{
+  return priv_->dirichlet_data_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+Vector<RangeNumberType> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_dirichlet_data()
+{
+  return priv_->dirichlet_data_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+const Vector<RangeNumberType> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_neumann_data() const
+{
+  return priv_->neumann_data_;
+}
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+Vector<RangeNumberType> &
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_neumann_data()
+{
+  return priv_->neumann_data_;
+}
+
+#pragma endregion
+#pragma region ****HelmholtzAcousticBEM public member function impls( \
+  wrapper to internals) *                                             \
+  ***
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::run()
+{
+  priv_->run();
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  print_memory_consumption_table(std::ostream &out) const
+{
+  priv_->print_memory_consumption_table(out);
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  extract_surface_triangulation(
+    const Triangulation<dim + 1, spacedim> &volume_triangulation,
+    Triangulation<dim, spacedim>          &&surf_tria,
+    const bool                              debug)
+{
+  priv_->extract_surface_triangulation(volume_triangulation,
+                                       std::move(surf_tria),
+                                       debug);
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  setup_system()
+{
+  priv_->setup_system();
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  assign_dirichlet_bc(Function<spacedim, RangeNumberType> &f,
+                      const EntityTag                      surface_tag)
+{
+  priv_->assign_dirichlet_bc(f, surface_tag);
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  assign_dirichlet_bc(Function<spacedim, RangeNumberType> &f,
+                      const std::vector<EntityTag>        &surface_tags)
+{
+  priv_->assign_dirichlet_bc(f, surface_tags);
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  assign_neumann_bc(Function<spacedim, RangeNumberType> &f,
+                    const EntityTag                      surface_tag)
+{
+  priv_->assign_neumann_bc(f, surface_tag);
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  assign_neumann_bc(Function<spacedim, RangeNumberType> &f,
+                    const std::vector<EntityTag>        &surface_tags)
+{
+  priv_->assign_neumann_bc(f, surface_tags);
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+bool
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  validate_subdomain_topology() const
+{
+  return priv_->validate_subdomain_topology();
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  initialize_manifolds_from_manifold_description()
+{
+  priv_->initialize_manifolds_from_manifold_description();
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  initialize_mappings()
+{
+  priv_->initialize_mappings();
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  interpolate_dirichlet_bc()
+{
+  priv_->interpolate_dirichlet_bc();
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  interpolate_neumann_bc()
+{
+  priv_->interpolate_neumann_bc();
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  assemble_full_matrix_system()
+{
+  priv_->assemble_full_matrix_system();
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  assemble_hmatrix_system()
+{
+  priv_->assemble_hmatrix_system();
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  assemble_hmatrix_preconditioner()
+{
+  priv_->assemble_hmatrix_preconditioner();
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::solve()
+{
+  priv_->solve();
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  output_results() const
+{
+  priv_->output_results();
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  output_results_on_target_tria(const std::string                  &vtk_file,
+                                const Triangulation<dim, spacedim> &tria,
+                                const unsigned int mapping_order) const
+{
+  priv_->output_results_on_target_tria(vtk_file, tria, mapping_order);
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  output_results_on_target_tria(const std::string &vtk_file,
+                                const Triangulation<dim + 1, spacedim> &tria,
+                                const unsigned int mapping_order) const
+{
+  priv_->output_results_on_target_tria(vtk_file, tria, mapping_order);
+}
+
+#pragma endregion
+
+HBEM_NS_CLOSE
+
+#endif // HIERBEM_INCLUDE_HELMHOLTZ_HELMHOLTZ_ACOUSTIC_BEM_IMPL_HCU_

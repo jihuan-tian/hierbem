@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2025-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -26,11 +26,14 @@
 #include <assert.h>
 
 #include <cmath>
+#include <complex>
 
 #include "bem/types.h"
 #include "config.h"
 #include "platform_shared/tensor.h"
 #include "platform_shared/utilities.h"
+#include "utilities/concepts.h"
+#include "utilities/number_traits.h"
 
 HBEM_NS_OPEN
 
@@ -41,8 +44,8 @@ namespace PlatformShared
   namespace HelmholtzAcousticKernel
   {
     /**
-     * Kernel function of the single layer potential integral operator, either
-     * boundary integral operator or volume integral operator.
+     * Kernel function of the single layer potential integral operator,
+     * either boundary integral operator or volume integral operator.
      */
     template <int spacedim, typename KernelNumberType>
     class SingleLayerKernel
@@ -60,11 +63,14 @@ namespace PlatformShared
       KernelNumberType   kappa;
       const unsigned int n_components;
 
-      HBEM_ATTR_HOST HBEM_ATTR_DEV
-      SingleLayerKernel()
-        : kernel_type(KernelType::SingleLayer)
-        , kappa(0.)
-        , n_components(1)
+      HBEM_ATTR_HOST
+      SingleLayerKernel() requires HostComplex<KernelNumberType>
+        : kernel_type(KernelType::SingleLayer), kappa(0., 0.), n_components(1)
+      {}
+
+      HBEM_ATTR_DEV
+      SingleLayerKernel() requires DeviceComplex<KernelNumberType>
+        : kernel_type(KernelType::SingleLayer), kappa(0., 0.), n_components(1)
       {}
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
@@ -90,12 +96,21 @@ namespace PlatformShared
        * @param component
        * @return
        */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+      HBEM_ATTR_HOST KernelNumberType
       value(const Point<spacedim, real_type>     &x,
             const Point<spacedim, real_type>     &y,
             const Tensor<1, spacedim, real_type> &nx,
             const Tensor<1, spacedim, real_type> &ny,
-            const unsigned int                    component = 0) const;
+            const unsigned int                    component = 0) const requires
+        HostComplex<KernelNumberType>;
+
+      HBEM_ATTR_DEV KernelNumberType
+      value(const Point<spacedim, real_type>     &x,
+            const Point<spacedim, real_type>     &y,
+            const Tensor<1, spacedim, real_type> &nx,
+            const Tensor<1, spacedim, real_type> &ny,
+            const unsigned int                    component = 0) const requires
+        DeviceComplex<KernelNumberType>;
 
       /**
        * Return whether the kernel function is symmetric.
@@ -131,13 +146,13 @@ namespace PlatformShared
 
 
     template <int spacedim, typename KernelNumberType>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+    HBEM_ATTR_HOST KernelNumberType
     SingleLayerKernel<spacedim, KernelNumberType>::value(
       const Point<spacedim, real_type>     &x,
       const Point<spacedim, real_type>     &y,
       const Tensor<1, spacedim, real_type> &nx,
       const Tensor<1, spacedim, real_type> &ny,
-      const unsigned int                    component) const
+      const unsigned int component) const requires HostComplex<KernelNumberType>
     {
       (void)nx;
       (void)ny;
@@ -147,13 +162,39 @@ namespace PlatformShared
         {
             case 3: {
               const real_type r = (x - y).norm();
-#ifdef __CUDA_ARCH__
-              return (0.25 / numbers::PI / r *
-                      ::exp(KernelNumberType(0., 1.) * kappa * r));
-#else
-              return (0.25 / numbers::PI / r *
-                      std::exp(KernelNumberType(0., 1.) * kappa * r));
-#endif
+
+              return (real_type(0.25 / numbers::PI) / r *
+                      std::exp(KernelNumberType(0., 1.0) * kappa * r));
+            }
+          default:
+            assert(false);
+            return KernelNumberType();
+        }
+    }
+
+
+    template <int spacedim, typename KernelNumberType>
+    HBEM_ATTR_DEV KernelNumberType
+    SingleLayerKernel<spacedim, KernelNumberType>::value(
+      const Point<spacedim, real_type>     &x,
+      const Point<spacedim, real_type>     &y,
+      const Tensor<1, spacedim, real_type> &nx,
+      const Tensor<1, spacedim, real_type> &ny,
+      const unsigned int                    component) const requires
+      DeviceComplex<KernelNumberType>
+    {
+      (void)nx;
+      (void)ny;
+      (void)component;
+
+      switch (spacedim)
+        {
+            case 3: {
+              const real_type r = (x - y).norm();
+
+              return (real_type(0.25 / numbers::PI) / r *
+                      PlatformShared::Utilities::exp(KernelNumberType(0., 1.0) *
+                                                     kappa * r));
             }
           default:
             assert(false);
@@ -178,11 +219,14 @@ namespace PlatformShared
       KernelNumberType   kappa;
       const unsigned int n_components;
 
-      HBEM_ATTR_HOST HBEM_ATTR_DEV
-      DoubleLayerKernel()
-        : kernel_type(KernelType::DoubleLayer)
-        , kappa(0.)
-        , n_components(1)
+      HBEM_ATTR_HOST
+      DoubleLayerKernel() requires HostComplex<KernelNumberType>
+        : kernel_type(KernelType::DoubleLayer), kappa(0., 0.), n_components(1)
+      {}
+
+      HBEM_ATTR_DEV
+      DoubleLayerKernel() requires DeviceComplex<KernelNumberType>
+        : kernel_type(KernelType::DoubleLayer), kappa(0., 0.), n_components(1)
       {}
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
@@ -198,12 +242,21 @@ namespace PlatformShared
         kappa = kappa_;
       }
 
-      HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+      HBEM_ATTR_HOST KernelNumberType
       value(const Point<spacedim, real_type>     &x,
             const Point<spacedim, real_type>     &y,
             const Tensor<1, spacedim, real_type> &nx,
             const Tensor<1, spacedim, real_type> &ny,
-            const unsigned int                    component = 0) const;
+            const unsigned int                    component = 0) const requires
+        HostComplex<KernelNumberType>;
+
+      HBEM_ATTR_DEV KernelNumberType
+      value(const Point<spacedim, real_type>     &x,
+            const Point<spacedim, real_type>     &y,
+            const Tensor<1, spacedim, real_type> &nx,
+            const Tensor<1, spacedim, real_type> &ny,
+            const unsigned int                    component = 0) const requires
+        DeviceComplex<KernelNumberType>;
 
       /**
        * Return whether the kernel function is symmetric.
@@ -239,13 +292,13 @@ namespace PlatformShared
 
 
     template <int spacedim, typename KernelNumberType>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+    HBEM_ATTR_HOST KernelNumberType
     DoubleLayerKernel<spacedim, KernelNumberType>::value(
       const Point<spacedim, real_type>     &x,
       const Point<spacedim, real_type>     &y,
       const Tensor<1, spacedim, real_type> &nx,
       const Tensor<1, spacedim, real_type> &ny,
-      const unsigned int                    component) const
+      const unsigned int component) const requires HostComplex<KernelNumberType>
     {
       (void)nx;
       (void)component;
@@ -253,17 +306,46 @@ namespace PlatformShared
       switch (spacedim)
         {
             case 3: {
-              const real_type        r   = (x - y).norm();
-              const KernelNumberType ikr = KernelNumberType(0., 1.) * kappa * r;
-#ifdef __CUDA_ARCH__
-              return 0.25 / numbers::PI /
-                     HierBEM::PlatformShared::Utilities::fixed_power<3>(r) *
-                     ::exp(ikr) * (1 - ikr) * scalar_product(x - y, ny);
-#else
-              return 0.25 / numbers::PI /
-                     HierBEM::PlatformShared::Utilities::fixed_power<3>(r) *
-                     std::exp(ikr) * (1 - ikr) * scalar_product(x - y, ny);
-#endif
+              const real_type        r = (x - y).norm();
+              const KernelNumberType ikr =
+                KernelNumberType(0., 1.0) * kappa * r;
+
+              return real_type(0.25 / numbers::PI) /
+                     PlatformShared::Utilities::fixed_power<3>(r) *
+                     std::exp(ikr) * (real_type(1.0) - ikr) *
+                     scalar_product(x - y, ny);
+            }
+          default:
+            assert(false);
+            return KernelNumberType();
+        }
+    }
+
+
+    template <int spacedim, typename KernelNumberType>
+    HBEM_ATTR_DEV KernelNumberType
+    DoubleLayerKernel<spacedim, KernelNumberType>::value(
+      const Point<spacedim, real_type>     &x,
+      const Point<spacedim, real_type>     &y,
+      const Tensor<1, spacedim, real_type> &nx,
+      const Tensor<1, spacedim, real_type> &ny,
+      const unsigned int                    component) const requires
+      DeviceComplex<KernelNumberType>
+    {
+      (void)nx;
+      (void)component;
+
+      switch (spacedim)
+        {
+            case 3: {
+              const real_type        r = (x - y).norm();
+              const KernelNumberType ikr =
+                KernelNumberType(0., 1.0) * kappa * r;
+
+              return real_type(0.25 / numbers::PI) /
+                     PlatformShared::Utilities::fixed_power<3>(r) *
+                     PlatformShared::Utilities::exp(ikr) *
+                     (real_type(1.0) - ikr) * scalar_product(x - y, ny);
             }
           default:
             assert(false);
@@ -288,11 +370,18 @@ namespace PlatformShared
       KernelNumberType   kappa;
       const unsigned int n_components;
 
-      HBEM_ATTR_HOST HBEM_ATTR_DEV
-      AdjointDoubleLayerKernel()
-        : kernel_type(KernelType::AdjointDoubleLayer)
-        , kappa(0.)
-        , n_components(1)
+      HBEM_ATTR_HOST
+      AdjointDoubleLayerKernel() requires HostComplex<KernelNumberType>
+        : kernel_type(KernelType::AdjointDoubleLayer),
+          kappa(0., 0.),
+          n_components(1)
+      {}
+
+      HBEM_ATTR_DEV
+      AdjointDoubleLayerKernel() requires DeviceComplex<KernelNumberType>
+        : kernel_type(KernelType::AdjointDoubleLayer),
+          kappa(0., 0.),
+          n_components(1)
       {}
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
@@ -308,12 +397,21 @@ namespace PlatformShared
         kappa = kappa_;
       }
 
-      HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+      HBEM_ATTR_HOST KernelNumberType
       value(const Point<spacedim, real_type>     &x,
             const Point<spacedim, real_type>     &y,
             const Tensor<1, spacedim, real_type> &nx,
             const Tensor<1, spacedim, real_type> &ny,
-            const unsigned int                    component = 0) const;
+            const unsigned int                    component = 0) const requires
+        HostComplex<KernelNumberType>;
+
+      HBEM_ATTR_DEV KernelNumberType
+      value(const Point<spacedim, real_type>     &x,
+            const Point<spacedim, real_type>     &y,
+            const Tensor<1, spacedim, real_type> &nx,
+            const Tensor<1, spacedim, real_type> &ny,
+            const unsigned int                    component = 0) const requires
+        DeviceComplex<KernelNumberType>;
 
       /**
        * Return whether the kernel function is symmetric.
@@ -349,13 +447,13 @@ namespace PlatformShared
 
 
     template <int spacedim, typename KernelNumberType>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+    HBEM_ATTR_HOST KernelNumberType
     AdjointDoubleLayerKernel<spacedim, KernelNumberType>::value(
       const Point<spacedim, real_type>     &x,
       const Point<spacedim, real_type>     &y,
       const Tensor<1, spacedim, real_type> &nx,
       const Tensor<1, spacedim, real_type> &ny,
-      const unsigned int                    component) const
+      const unsigned int component) const requires HostComplex<KernelNumberType>
     {
       (void)ny;
       (void)component;
@@ -363,17 +461,46 @@ namespace PlatformShared
       switch (spacedim)
         {
             case 3: {
-              const real_type        r   = (x - y).norm();
-              const KernelNumberType ikr = KernelNumberType(0., 1.) * kappa * r;
-#ifdef __CUDA_ARCH__
-              return 0.25 / numbers::PI /
-                     HierBEM::PlatformShared::Utilities::fixed_power<3>(r) *
-                     ::exp(ikr) * (1 - ikr) * scalar_product(y - x, nx);
-#else
-              return 0.25 / numbers::PI /
-                     HierBEM::PlatformShared::Utilities::fixed_power<3>(r) *
-                     std::exp(ikr) * (1 - ikr) * scalar_product(y - x, nx);
-#endif
+              const real_type        r = (x - y).norm();
+              const KernelNumberType ikr =
+                KernelNumberType(0., 1.0) * kappa * r;
+
+              return real_type(0.25 / numbers::PI) /
+                     PlatformShared::Utilities::fixed_power<3>(r) *
+                     std::exp(ikr) * (real_type(1.0) - ikr) *
+                     scalar_product(y - x, nx);
+            }
+          default:
+            assert(false);
+            return KernelNumberType();
+        }
+    }
+
+
+    template <int spacedim, typename KernelNumberType>
+    HBEM_ATTR_DEV KernelNumberType
+    AdjointDoubleLayerKernel<spacedim, KernelNumberType>::value(
+      const Point<spacedim, real_type>     &x,
+      const Point<spacedim, real_type>     &y,
+      const Tensor<1, spacedim, real_type> &nx,
+      const Tensor<1, spacedim, real_type> &ny,
+      const unsigned int                    component) const requires
+      DeviceComplex<KernelNumberType>
+    {
+      (void)ny;
+      (void)component;
+
+      switch (spacedim)
+        {
+            case 3: {
+              const real_type        r = (x - y).norm();
+              const KernelNumberType ikr =
+                KernelNumberType(0., 1.0) * kappa * r;
+
+              return real_type(0.25 / numbers::PI) /
+                     PlatformShared::Utilities::fixed_power<3>(r) *
+                     PlatformShared::Utilities::exp(ikr) *
+                     (real_type(1.0) - ikr) * scalar_product(y - x, nx);
             }
           default:
             assert(false);
@@ -397,11 +524,14 @@ namespace PlatformShared
       KernelNumberType   kappa;
       const unsigned int n_components;
 
-      HBEM_ATTR_HOST HBEM_ATTR_DEV
-      HyperSingularKernel()
-        : kernel_type(KernelType::HyperSingular)
-        , kappa(0.)
-        , n_components(1)
+      HBEM_ATTR_HOST
+      HyperSingularKernel() requires HostComplex<KernelNumberType>
+        : kernel_type(KernelType::HyperSingular), kappa(0., 0.), n_components(1)
+      {}
+
+      HBEM_ATTR_DEV
+      HyperSingularKernel() requires DeviceComplex<KernelNumberType>
+        : kernel_type(KernelType::HyperSingular), kappa(0., 0.), n_components(1)
       {}
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
@@ -417,12 +547,21 @@ namespace PlatformShared
         kappa = kappa_;
       }
 
-      HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+      HBEM_ATTR_HOST KernelNumberType
       value(const Point<spacedim, real_type>     &x,
             const Point<spacedim, real_type>     &y,
             const Tensor<1, spacedim, real_type> &nx,
             const Tensor<1, spacedim, real_type> &ny,
-            const unsigned int                    component = 0) const;
+            const unsigned int                    component = 0) const requires
+        HostComplex<KernelNumberType>;
+
+      HBEM_ATTR_DEV KernelNumberType
+      value(const Point<spacedim, real_type>     &x,
+            const Point<spacedim, real_type>     &y,
+            const Tensor<1, spacedim, real_type> &nx,
+            const Tensor<1, spacedim, real_type> &ny,
+            const unsigned int                    component = 0) const requires
+        DeviceComplex<KernelNumberType>;
 
       /**
        * Return whether the kernel function is symmetric.
@@ -458,36 +597,67 @@ namespace PlatformShared
 
 
     template <int spacedim, typename KernelNumberType>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+    HBEM_ATTR_HOST KernelNumberType
     HyperSingularKernel<spacedim, KernelNumberType>::value(
       const Point<spacedim, real_type>     &x,
       const Point<spacedim, real_type>     &y,
       const Tensor<1, spacedim, real_type> &nx,
       const Tensor<1, spacedim, real_type> &ny,
-      const unsigned int                    component) const
+      const unsigned int component) const requires HostComplex<KernelNumberType>
     {
       (void)component;
 
       switch (spacedim)
         {
             case 3: {
-              const real_type        r   = (x - y).norm();
-              const real_type        r2  = r * r;
-              const real_type        r3  = r * r2;
-              const real_type        r5  = r2 * r3;
-              const KernelNumberType ikr = KernelNumberType(0., 1.) * kappa * r;
+              const real_type        r  = (x - y).norm();
+              const real_type        r2 = r * r;
+              const real_type        r3 = r * r2;
+              const real_type        r5 = r2 * r3;
+              const KernelNumberType ikr =
+                KernelNumberType(0., 1.0) * kappa * r;
 
-#ifdef __CUDA_ARCH__
-              return 0.25 / numbers::PI * ::exp(ikr) *
-                     ((ikr - 1.) * scalar_product(nx, ny) / r3 -
-                      (kappa * kappa / r3 + 3 * (ikr - 1.) / r5) *
+              return real_type(0.25 / numbers::PI) * std::exp(ikr) *
+                     ((ikr - real_type(1.0)) * scalar_product(nx, ny) / r3 -
+                      (kappa * kappa / r3 +
+                       real_type(3.0) * (ikr - real_type(1.0)) / r5) *
                         scalar_product(x - y, nx) * scalar_product(x - y, ny));
-#else
-              return 0.25 / numbers::PI * std::exp(ikr) *
-                     ((ikr - 1.) * scalar_product(nx, ny) / r3 -
-                      (kappa * kappa / r3 + 3 * (ikr - 1.) / r5) *
+            }
+          default:
+            assert(false);
+            return KernelNumberType();
+        }
+    }
+
+
+    template <int spacedim, typename KernelNumberType>
+    HBEM_ATTR_DEV KernelNumberType
+    HyperSingularKernel<spacedim, KernelNumberType>::value(
+      const Point<spacedim, real_type>     &x,
+      const Point<spacedim, real_type>     &y,
+      const Tensor<1, spacedim, real_type> &nx,
+      const Tensor<1, spacedim, real_type> &ny,
+      const unsigned int                    component) const requires
+      DeviceComplex<KernelNumberType>
+    {
+      (void)component;
+
+      switch (spacedim)
+        {
+            case 3: {
+              const real_type        r  = (x - y).norm();
+              const real_type        r2 = r * r;
+              const real_type        r3 = r * r2;
+              const real_type        r5 = r2 * r3;
+              const KernelNumberType ikr =
+                KernelNumberType(0., 1.0) * kappa * r;
+
+              return real_type(0.25 / numbers::PI) *
+                     PlatformShared::Utilities::exp(ikr) *
+                     ((ikr - real_type(1.0)) * scalar_product(nx, ny) / r3 -
+                      (kappa * kappa / r3 +
+                       real_type(3.0) * (ikr - real_type(1.0)) / r5) *
                         scalar_product(x - y, nx) * scalar_product(x - y, ny));
-#endif
             }
           default:
             assert(false);
@@ -514,11 +684,18 @@ namespace PlatformShared
       KernelNumberType   kappa;
       const unsigned int n_components;
 
-      HBEM_ATTR_HOST HBEM_ATTR_DEV
-      HyperSingularKernelRegular1()
-        : kernel_type(KernelType::HyperSingularRegular)
-        , kappa(0.)
-        , n_components(1)
+      HBEM_ATTR_HOST
+      HyperSingularKernelRegular1() requires HostComplex<KernelNumberType>
+        : kernel_type(KernelType::HyperSingularRegular),
+          kappa(0., 0.),
+          n_components(1)
+      {}
+
+      HBEM_ATTR_DEV
+      HyperSingularKernelRegular1() requires DeviceComplex<KernelNumberType>
+        : kernel_type(KernelType::HyperSingularRegular),
+          kappa(0., 0.),
+          n_components(1)
       {}
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
@@ -551,12 +728,21 @@ namespace PlatformShared
        * @param component
        * @return
        */
-      HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+      HBEM_ATTR_HOST KernelNumberType
       value(const Point<spacedim, real_type>     &x,
             const Point<spacedim, real_type>     &y,
             const Tensor<1, spacedim, real_type> &nx,
             const Tensor<1, spacedim, real_type> &ny,
-            const unsigned int                    component = 0) const;
+            const unsigned int                    component = 0) const requires
+        HostComplex<KernelNumberType>;
+
+      HBEM_ATTR_DEV KernelNumberType
+      value(const Point<spacedim, real_type>     &x,
+            const Point<spacedim, real_type>     &y,
+            const Tensor<1, spacedim, real_type> &nx,
+            const Tensor<1, spacedim, real_type> &ny,
+            const unsigned int                    component = 0) const requires
+        DeviceComplex<KernelNumberType>;
 
       /**
        * Return whether the kernel function is symmetric.
@@ -592,13 +778,13 @@ namespace PlatformShared
 
 
     template <int spacedim, typename KernelNumberType>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+    HBEM_ATTR_HOST KernelNumberType
     HyperSingularKernelRegular1<spacedim, KernelNumberType>::value(
       const Point<spacedim, real_type>     &x,
       const Point<spacedim, real_type>     &y,
       const Tensor<1, spacedim, real_type> &nx,
       const Tensor<1, spacedim, real_type> &ny,
-      const unsigned int                    component) const
+      const unsigned int component) const requires HostComplex<KernelNumberType>
     {
       (void)nx;
       (void)ny;
@@ -608,13 +794,39 @@ namespace PlatformShared
         {
             case 3: {
               const real_type r = (x - y).norm();
-#ifdef __CUDA_ARCH__
-              return (0.25 / numbers::PI / r *
-                      ::exp(KernelNumberType(0., 1.) * kappa * r));
-#else
-              return (0.25 / numbers::PI / r *
-                      std::exp(KernelNumberType(0., 1.) * kappa * r));
-#endif
+
+              return (real_type(0.25 / numbers::PI) / r *
+                      std::exp(KernelNumberType(0., 1.0) * kappa * r));
+            }
+          default:
+            assert(false);
+            return KernelNumberType();
+        }
+    }
+
+
+    template <int spacedim, typename KernelNumberType>
+    HBEM_ATTR_DEV KernelNumberType
+    HyperSingularKernelRegular1<spacedim, KernelNumberType>::value(
+      const Point<spacedim, real_type>     &x,
+      const Point<spacedim, real_type>     &y,
+      const Tensor<1, spacedim, real_type> &nx,
+      const Tensor<1, spacedim, real_type> &ny,
+      const unsigned int                    component) const requires
+      DeviceComplex<KernelNumberType>
+    {
+      (void)nx;
+      (void)ny;
+      (void)component;
+
+      switch (spacedim)
+        {
+            case 3: {
+              const real_type r = (x - y).norm();
+
+              return (real_type(0.25 / numbers::PI) / r *
+                      PlatformShared::Utilities::exp(KernelNumberType(0., 1.0) *
+                                                     kappa * r));
             }
           default:
             assert(false);
@@ -641,11 +853,18 @@ namespace PlatformShared
       KernelNumberType   kappa;
       const unsigned int n_components;
 
-      HBEM_ATTR_HOST HBEM_ATTR_DEV
-      HyperSingularKernelRegular2()
-        : kernel_type(KernelType::HyperSingularRegular)
-        , kappa(0.)
-        , n_components(1)
+      HBEM_ATTR_HOST
+      HyperSingularKernelRegular2() requires HostComplex<KernelNumberType>
+        : kernel_type(KernelType::HyperSingularRegular),
+          kappa(0., 0.),
+          n_components(1)
+      {}
+
+      HBEM_ATTR_DEV
+      HyperSingularKernelRegular2() requires DeviceComplex<KernelNumberType>
+        : kernel_type(KernelType::HyperSingularRegular),
+          kappa(0., 0.),
+          n_components(1)
       {}
 
       HBEM_ATTR_HOST HBEM_ATTR_DEV
@@ -661,12 +880,21 @@ namespace PlatformShared
         kappa = kappa_;
       }
 
-      HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+      HBEM_ATTR_HOST KernelNumberType
       value(const Point<spacedim, real_type>     &x,
             const Point<spacedim, real_type>     &y,
             const Tensor<1, spacedim, real_type> &nx,
             const Tensor<1, spacedim, real_type> &ny,
-            const unsigned int                    component = 0) const;
+            const unsigned int                    component = 0) const requires
+        HostComplex<KernelNumberType>;
+
+      HBEM_ATTR_DEV KernelNumberType
+      value(const Point<spacedim, real_type>     &x,
+            const Point<spacedim, real_type>     &y,
+            const Tensor<1, spacedim, real_type> &nx,
+            const Tensor<1, spacedim, real_type> &ny,
+            const unsigned int                    component = 0) const requires
+        DeviceComplex<KernelNumberType>;
 
       /**
        * Return whether the kernel function is symmetric.
@@ -702,13 +930,13 @@ namespace PlatformShared
 
 
     template <int spacedim, typename KernelNumberType>
-    HBEM_ATTR_HOST HBEM_ATTR_DEV KernelNumberType
+    HBEM_ATTR_HOST KernelNumberType
     HyperSingularKernelRegular2<spacedim, KernelNumberType>::value(
       const Point<spacedim, real_type>     &x,
       const Point<spacedim, real_type>     &y,
       const Tensor<1, spacedim, real_type> &nx,
       const Tensor<1, spacedim, real_type> &ny,
-      const unsigned int                    component) const
+      const unsigned int component) const requires HostComplex<KernelNumberType>
     {
       (void)component;
 
@@ -716,15 +944,39 @@ namespace PlatformShared
         {
             case 3: {
               const real_type r = (x - y).norm();
-#ifdef __CUDA_ARCH__
-              return (-kappa * kappa * 0.25 / numbers::PI / r *
-                      ::exp(KernelNumberType(0., 1.) * kappa * r) *
+
+              return (-kappa * kappa * real_type(0.25 / numbers::PI) / r *
+                      std::exp(KernelNumberType(0., 1.0) * kappa * r) *
                       scalar_product(nx, ny));
-#else
-              return (-kappa * kappa * 0.25 / numbers::PI / r *
-                      std::exp(KernelNumberType(0., 1.) * kappa * r) *
+            }
+          default:
+            assert(false);
+            return KernelNumberType();
+        }
+    }
+
+
+    template <int spacedim, typename KernelNumberType>
+    HBEM_ATTR_DEV KernelNumberType
+    HyperSingularKernelRegular2<spacedim, KernelNumberType>::value(
+      const Point<spacedim, real_type>     &x,
+      const Point<spacedim, real_type>     &y,
+      const Tensor<1, spacedim, real_type> &nx,
+      const Tensor<1, spacedim, real_type> &ny,
+      const unsigned int                    component) const requires
+      DeviceComplex<KernelNumberType>
+    {
+      (void)component;
+
+      switch (spacedim)
+        {
+            case 3: {
+              const real_type r = (x - y).norm();
+
+              return (-kappa * kappa * real_type(0.25 / numbers::PI) / r *
+                      PlatformShared::Utilities::exp(KernelNumberType(0., 1.0) *
+                                                     kappa * r) *
                       scalar_product(nx, ny));
-#endif
             }
           default:
             assert(false);

@@ -28,7 +28,8 @@ add_library(
   hmatrix/hmatrix_support.cc
   quadrature/sauter_quadrature.cu
   utilities/regex_tools.cc
-  laplace/laplace_bem.cu)
+  laplace/laplace_bem.cu
+  helmholtz/helmholtz_acoustic_bem.cu)
 # Because hierbem has included deal.ii header files, dependent include paths and
 # library paths need to be imported by calling this macro DEAL_II_SETUP_TARGET.
 deal_ii_setup_target(${_target})

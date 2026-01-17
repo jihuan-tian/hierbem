@@ -192,6 +192,24 @@ public:
     return *block_cluster_tree;
   }
 
+  const BEMFunctionSpace<dim,
+                         spacedim,
+                         SearchableMaterialIdContainer,
+                         real_type> &
+  get_trial_space() const
+  {
+    return trial_space;
+  }
+
+  const BEMFunctionSpace<dim,
+                         spacedim,
+                         SearchableMaterialIdContainer,
+                         real_type> &
+  get_test_space() const
+  {
+    return test_space;
+  }
+
 private:
   KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>> kernel;
   const BEMFunctionSpace<dim,
