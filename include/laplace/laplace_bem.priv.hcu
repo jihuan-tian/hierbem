@@ -2465,7 +2465,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           for (const auto &vec : mass_vmult_weq_)
             {
               aaT.outer_product_formal(vec, vec);
-              D1_mat_.add(alpha_for_neumann_, aaT);
+              D1_mat_.add(alpha_for_neumann_, aaT, true);
             }
 
           timer.stop();

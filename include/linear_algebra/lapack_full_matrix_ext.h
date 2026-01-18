@@ -5054,11 +5054,26 @@ LAPACKFullMatrixExt<Number>::outer_product_formal(const Vector<Number> &v,
          ExcMessage("Vectors v, w must be the same size."));
   this->reinit(v.size(), v.size());
 
-  for (size_type i = 0; i < this->n(); ++i)
+  if (&v == &w)
     {
-      for (size_type j = 0; j < this->n(); ++j)
+      this->set_property(LAPACKSupport::Property::symmetric);
+      for (size_type i = 0; i < this->n(); ++i)
         {
-          (*this)(i, j) = v(i) * w(j);
+          for (size_type j = 0; j <= i; ++j)
+            {
+              (*this)(i, j) = v(i) * w(j);
+            }
+        }
+    }
+  else
+    {
+      this->set_property(LAPACKSupport::Property::general);
+      for (size_type i = 0; i < this->n(); ++i)
+        {
+          for (size_type j = 0; j < this->n(); ++j)
+            {
+              (*this)(i, j) = v(i) * w(j);
+            }
         }
     }
 }

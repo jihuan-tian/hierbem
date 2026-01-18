@@ -8054,6 +8054,7 @@ select_sauter_quad_rule_from_bem_values(
  * @param scratch_data
  * @param copy_data
  * @param is_kx_mapping_internaldata_computed
+ * @param is_symmetric
  */
 template <int dim,
           int spacedim,
@@ -8076,7 +8077,8 @@ sauter_quadrature_on_one_pair_of_cells(
   const SurfaceNormalDetector                              &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
-  const bool is_kx_mapping_internaldata_computed = true)
+  const bool is_kx_mapping_internaldata_computed = true,
+  const bool is_symmetric                        = false)
 {
   /**
    * Detect the cell neighboring type based on cell vertex indices.
@@ -8195,29 +8197,35 @@ sauter_quadrature_on_one_pair_of_cells(
       // Iterate over DoFs for trial function space in \f$K_y\f$.
       for (unsigned int j = 0; j < ky_n_dofs; j++)
         {
-          // Pullback the kernel function to unit cell.
-          HierBEM::CUDAWrappers::KernelPulledbackToUnitCell<dim,
-                                                            spacedim,
-                                                            KernelFunctionType,
-                                                            KernelNumberType>
-            kernel_pullback_on_unit(kernel, cell_neighboring_type, i, j);
+          if (!is_symmetric ||
+              (is_symmetric && copy_data.kx_local_dof_indices_permuted[i] >=
+                                 copy_data.ky_local_dof_indices_permuted[j]))
+            {
+              // Pullback the kernel function to unit cell.
+              HierBEM::CUDAWrappers::KernelPulledbackToUnitCell<
+                dim,
+                spacedim,
+                KernelFunctionType,
+                KernelNumberType>
+                kernel_pullback_on_unit(kernel, cell_neighboring_type, i, j);
 
-          // Pullback the kernel function to Sauter parameter space.
-          HierBEM::CUDAWrappers::KernelPulledbackToSauterSpace<
-            dim,
-            spacedim,
-            KernelFunctionType,
-            KernelNumberType>
-            kernel_pullback_on_sauter(kernel_pullback_on_unit,
-                                      cell_neighboring_type);
+              // Pullback the kernel function to Sauter parameter space.
+              HierBEM::CUDAWrappers::KernelPulledbackToSauterSpace<
+                dim,
+                spacedim,
+                KernelFunctionType,
+                KernelNumberType>
+                kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                          cell_neighboring_type);
 
-          // Apply Sauter numerical quadrature.
-          copy_data.local_pair_cell_matrix(i, j) =
-            ApplyQuadratureUsingBEMValues(active_quad_rule,
-                                          kernel_pullback_on_sauter,
-                                          kernel_factor,
-                                          bem_values,
-                                          scratch_data);
+              // Apply Sauter numerical quadrature.
+              copy_data.local_pair_cell_matrix(i, j) =
+                ApplyQuadratureUsingBEMValues(active_quad_rule,
+                                              kernel_pullback_on_sauter,
+                                              kernel_factor,
+                                              bem_values,
+                                              scratch_data);
+            }
         }
     }
 }
@@ -8250,7 +8258,8 @@ sauter_quadrature_on_one_pair_of_cells_parallel_over_ky(
   const SurfaceNormalDetector                              &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
-  const bool is_kx_mapping_internaldata_computed = true)
+  const bool is_kx_mapping_internaldata_computed = true,
+  const bool is_symmetric                        = false)
 {
   const unsigned int ky_mapping_index =
     material_id_to_mapping_index.at(ky_cell_iter->material_id());
@@ -8266,7 +8275,8 @@ sauter_quadrature_on_one_pair_of_cells_parallel_over_ky(
                                          normal_detector,
                                          scratch_data,
                                          copy_data,
-                                         is_kx_mapping_internaldata_computed);
+                                         is_kx_mapping_internaldata_computed,
+                                         is_symmetric);
 }
 
 

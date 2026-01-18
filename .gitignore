@@ -154,3 +154,5 @@ examples/build-hmatrix/plot-hmat.asy
 examples/build-hmatrix-on-subdomain/plot-hmat.asy
 tests/functions/helmholtz-acoustic/dirichlet-full-matrix/process.m
 tests/functions/helmholtz-acoustic/dirichlet-hmatrix-op-precond/process.m
+tests/functions/helmholtz-acoustic/neumann-full-matrix/process.m
+tests/functions/helmholtz-acoustic/neumann-hmatrix-op-precond/process.m
