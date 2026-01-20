@@ -19,6 +19,7 @@
 #include <iostream>
 #include <string>
 
+#include "config.h"
 #if ENABLE_NVTX == 1
 #  include "utilities/cu_profile.hcu"
 #endif

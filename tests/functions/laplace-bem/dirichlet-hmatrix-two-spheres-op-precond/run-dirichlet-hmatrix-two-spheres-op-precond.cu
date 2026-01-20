@@ -17,13 +17,16 @@
 #include <fstream>
 #include <iostream>
 
+#include "config.h"
+#if ENABLE_NVTX == 1
+#  include "utilities/cu_profile.hcu"
+#endif
 #include "bem/types.h"
 #include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
 #include "laplace/laplace_bem.h"
 #include "preconditioners/preconditioner_type.h"
-#include "utilities/cu_profile.hcu"
 #include "utilities/debug_tools.h"
 
 using namespace dealii;

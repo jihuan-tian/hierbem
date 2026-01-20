@@ -2451,11 +2451,6 @@ namespace CUDAWrappers
 
     /**
      * Fetch and process quadrature tasks from the ring buffer in batch.
-     *
-     * @param result_lock This should be a mutex for a same set of ring
-     * buffers for the four types of cell neighboring types. Since for a same
-     * pair of global DoFs, it may be from pairs of cells having different
-     * neighboring types.
      */
     template <template <int, typename> typename KernelFunctionType>
     HBEM_ATTR_HOST bool
@@ -2464,7 +2459,6 @@ namespace CUDAWrappers
       const CUDAKernelNumberType                                kernel_factor,
       const unsigned int                                        block_size,
       const CUDABEMValues<dim, spacedim, real_type>            &bem_values,
-      std::mutex                                               &result_lock,
       const cudaStream_t cuda_stream_handle);
 
     /**
@@ -4744,7 +4738,6 @@ namespace CUDAWrappers
       const CUDAKernelNumberType                                kernel_factor,
       const unsigned int                                        block_size,
       const CUDABEMValues<dim, spacedim, real_type>            &bem_values,
-      std::mutex                                               &result_lock,
       const cudaStream_t cuda_stream_handle)
   {
 #if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
@@ -5123,30 +5116,59 @@ namespace CUDAWrappers
              */
             AssertCuda(cudaStreamSynchronize(cuda_stream_handle));
 
-
             /**
-             * Assemble the result to full matrix in \hmatrix node in serial.
+             * Assemble the result to full matrix in \hmatrix node.
              */
-            {
-              std::lock_guard<std::mutex> lg(result_lock);
+            for (unsigned int i = task_start_index_to_fetch;
+                 i < task_start_index_to_fetch + task_num_to_fetch;
+                 i++)
+              {
+                RangeNumberType &entry = (*fullmat_ring_buffer_cpu[i])(
+                  fullmat_row_index_ring_buffer_cpu[i],
+                  fullmat_col_index_ring_buffer_cpu[i]);
 
-              for (unsigned int i = task_start_index_to_fetch;
-                   i < task_start_index_to_fetch + task_num_to_fetch;
-                   i++)
-                {
-                  (*fullmat_ring_buffer_cpu[i])(
-                    fullmat_row_index_ring_buffer_cpu[i],
-                    fullmat_col_index_ring_buffer_cpu[i]) +=
-                    quadrature_value_ring_buffer_cpu[i] +
-                    mass_matrix_entries_ring_buffer_cpu[i];
+                if constexpr (numbers::NumberTraits<
+                                RangeNumberType>::is_complex)
+                  {
+                    real_type *raw_ptr = reinterpret_cast<real_type *>(&entry);
+                    std::atomic_ref<real_type> real_part(raw_ptr[0]);
 
-                  /**
-                   * @internal Reset the task status to @p before_creation.
-                   */
-                  task_status_ring_buffer[i].store(
-                    SauterQuadratureTaskStatus::before_creation);
-                }
-            } // Release result lock
+                    if constexpr (numbers::NumberTraits<
+                                    KernelNumberType>::is_complex)
+                      {
+                        KernelNumberType update_value =
+                          quadrature_value_ring_buffer_cpu[i] +
+                          mass_matrix_entries_ring_buffer_cpu[i];
+                        std::atomic_ref<real_type> imag_part(raw_ptr[1]);
+                        real_part.fetch_add(update_value.real(),
+                                            std::memory_order_relaxed);
+                        imag_part.fetch_add(update_value.imag(),
+                                            std::memory_order_relaxed);
+                      }
+                    else
+                      {
+                        real_type update_value =
+                          quadrature_value_ring_buffer_cpu[i] +
+                          mass_matrix_entries_ring_buffer_cpu[i];
+                        real_part.fetch_add(update_value,
+                                            std::memory_order_relaxed);
+                      }
+                  }
+                else
+                  {
+                    std::atomic_ref<RangeNumberType> atomic_entry(entry);
+                    RangeNumberType                  update_value =
+                      quadrature_value_ring_buffer_cpu[i] +
+                      mass_matrix_entries_ring_buffer_cpu[i];
+                    atomic_entry.fetch_add(update_value);
+                  }
+
+                /**
+                 * @internal Reset the task status to @p before_creation.
+                 */
+                task_status_ring_buffer[i].store(
+                  SauterQuadratureTaskStatus::before_creation);
+              }
           }
         else
           {
@@ -5181,21 +5203,53 @@ namespace CUDAWrappers
              */
             AssertCuda(cudaStreamSynchronize(cuda_stream_handle));
 
-
             /**
-             * Assemble the result to full matrix in \hmatrix node in serial.
+             * Assemble the result to full matrix in \hmatrix node.
              */
             {
-              std::lock_guard<std::mutex> lg(result_lock);
-
               for (unsigned int i = task_start_index_to_fetch; i < capacity;
                    i++)
                 {
-                  (*fullmat_ring_buffer_cpu[i])(
+                  RangeNumberType &entry = (*fullmat_ring_buffer_cpu[i])(
                     fullmat_row_index_ring_buffer_cpu[i],
-                    fullmat_col_index_ring_buffer_cpu[i]) +=
-                    quadrature_value_ring_buffer_cpu[i] +
-                    mass_matrix_entries_ring_buffer_cpu[i];
+                    fullmat_col_index_ring_buffer_cpu[i]);
+
+                  if constexpr (numbers::NumberTraits<
+                                  RangeNumberType>::is_complex)
+                    {
+                      real_type *raw_ptr =
+                        reinterpret_cast<real_type *>(&entry);
+                      std::atomic_ref<real_type> real_part(raw_ptr[0]);
+
+                      if constexpr (numbers::NumberTraits<
+                                      KernelNumberType>::is_complex)
+                        {
+                          KernelNumberType update_value =
+                            quadrature_value_ring_buffer_cpu[i] +
+                            mass_matrix_entries_ring_buffer_cpu[i];
+                          std::atomic_ref<real_type> imag_part(raw_ptr[1]);
+                          real_part.fetch_add(update_value.real(),
+                                              std::memory_order_relaxed);
+                          imag_part.fetch_add(update_value.imag(),
+                                              std::memory_order_relaxed);
+                        }
+                      else
+                        {
+                          real_type update_value =
+                            quadrature_value_ring_buffer_cpu[i] +
+                            mass_matrix_entries_ring_buffer_cpu[i];
+                          real_part.fetch_add(update_value,
+                                              std::memory_order_relaxed);
+                        }
+                    }
+                  else
+                    {
+                      std::atomic_ref<RangeNumberType> atomic_entry(entry);
+                      RangeNumberType                  update_value =
+                        quadrature_value_ring_buffer_cpu[i] +
+                        mass_matrix_entries_ring_buffer_cpu[i];
+                      atomic_entry.fetch_add(update_value);
+                    }
 
                   /**
                    * @internal Reset the task status to @p before_creation.
@@ -5207,11 +5261,46 @@ namespace CUDAWrappers
               for (unsigned int i = 0; i < number_of_data_from_buffer_start;
                    i++)
                 {
-                  (*fullmat_ring_buffer_cpu[i])(
+                  RangeNumberType &entry = (*fullmat_ring_buffer_cpu[i])(
                     fullmat_row_index_ring_buffer_cpu[i],
-                    fullmat_col_index_ring_buffer_cpu[i]) +=
-                    quadrature_value_ring_buffer_cpu[i] +
-                    mass_matrix_entries_ring_buffer_cpu[i];
+                    fullmat_col_index_ring_buffer_cpu[i]);
+
+                  if constexpr (numbers::NumberTraits<
+                                  RangeNumberType>::is_complex)
+                    {
+                      real_type *raw_ptr =
+                        reinterpret_cast<real_type *>(&entry);
+                      std::atomic_ref<real_type> real_part(raw_ptr[0]);
+
+                      if constexpr (numbers::NumberTraits<
+                                      KernelNumberType>::is_complex)
+                        {
+                          KernelNumberType update_value =
+                            quadrature_value_ring_buffer_cpu[i] +
+                            mass_matrix_entries_ring_buffer_cpu[i];
+                          std::atomic_ref<real_type> imag_part(raw_ptr[1]);
+                          real_part.fetch_add(update_value.real(),
+                                              std::memory_order_relaxed);
+                          imag_part.fetch_add(update_value.imag(),
+                                              std::memory_order_relaxed);
+                        }
+                      else
+                        {
+                          real_type update_value =
+                            quadrature_value_ring_buffer_cpu[i] +
+                            mass_matrix_entries_ring_buffer_cpu[i];
+                          real_part.fetch_add(update_value,
+                                              std::memory_order_relaxed);
+                        }
+                    }
+                  else
+                    {
+                      std::atomic_ref<RangeNumberType> atomic_entry(entry);
+                      RangeNumberType                  update_value =
+                        quadrature_value_ring_buffer_cpu[i] +
+                        mass_matrix_entries_ring_buffer_cpu[i];
+                      atomic_entry.fetch_add(update_value);
+                    }
 
                   /**
                    * @internal Reset the task status to @p before_creation.
@@ -5219,7 +5308,7 @@ namespace CUDAWrappers
                   task_status_ring_buffer[i].store(
                     SauterQuadratureTaskStatus::before_creation);
                 }
-            } // Release result lock
+            }
           }
 
         {
@@ -6389,7 +6478,6 @@ namespace CUDAWrappers
       spacedim,
       typename numbers::NumberTraits<RangeNumberType>::real_type>
                       &bem_values_gpu,
-    std::mutex        &result_lock,
     const unsigned int block_size)
   {
     using real_type =
@@ -6422,12 +6510,8 @@ namespace CUDAWrappers
      * Continuously process the Sauter quadrature tasks in the ring buffer
      * for same panel case.
      */
-    while (!ring_buffer.fetch_and_process_task_batch(kernel,
-                                                     kernel_factor,
-                                                     block_size,
-                                                     bem_values_gpu,
-                                                     result_lock,
-                                                     cuda_stream_handle))
+    while (!ring_buffer.fetch_and_process_task_batch(
+      kernel, kernel_factor, block_size, bem_values_gpu, cuda_stream_handle))
       {
         std::this_thread::sleep_for(
           std::chrono::microseconds(consumer_wait_time_us));

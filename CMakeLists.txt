@@ -137,7 +137,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif()
 
 # ##############################################################################
-# Configuration for performance profiling in nsight-sys
+# Configuration for performance profiling
 # ##############################################################################
 if(NOT DEFINED HBEM_ENABLE_NSIGHT_PROFILE)
   set(HBEM_ENABLE_NSIGHT_PROFILE 0)
@@ -153,6 +153,18 @@ if(HBEM_ENABLE_NSIGHT_PROFILE AND ${CMAKE_BUILD_TYPE} STREQUAL "Release")
   # Add CUDA compiler flag for generating line number information for
   # performance profiling.
   add_flags(DEAL_II_CUDA_FLAGS_RELEASE "-lineinfo")
+endif()
+
+if(NOT DEFINED HBEM_ENABLE_PERF_PROFILE)
+  set(HBEM_ENABLE_PERF_PROFILE 0)
+endif()
+
+if(HBEM_ENABLE_PERF_PROFILE AND ${CMAKE_BUILD_TYPE} STREQUAL "Release")
+  message("*** Enable perf profile in Release mode")
+
+  add_flags(DEAL_II_CXX_FLAGS_RELEASE
+            "-ggdb -fno-omit-frame-pointer -march=native")
+  replace_flag(DEAL_II_CXX_FLAGS_RELEASE "-O2" "-O3")
 endif()
 
 message("=== Compiler and linker flags after customization ===")

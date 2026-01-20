@@ -2519,8 +2519,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           if (is_interior_problem_)
             {
 #if ENABLE_NVTX == 1
-              HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                "assemble sigma*I1+K2");
+              HierBEM::CUDAWrappers::NVTXRange nvtx_range("assemble_i1k2");
 #endif
 
               std::cout << "=== Assemble sigma*I1+K2 ===" << std::endl;
@@ -2541,8 +2540,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           else
             {
 #if ENABLE_NVTX == 1
-              HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                "assemble (sigma-1)*I1+K2");
+              HierBEM::CUDAWrappers::NVTXRange nvtx_range("assemble_i1k2");
 #endif
 
               std::cout << "=== Assemble (sigma-1)*I1+K2 ===" << std::endl;
