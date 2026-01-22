@@ -5587,6 +5587,11 @@ namespace CUDAWrappers
       const unsigned int block_size_for_quad_result_accumulation,
       const cudaStream_t cuda_stream_handle)
   {
+#if ENABLE_NVTX == 1
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+      std::string("process_tasks_far_field_vector"));
+#endif
+
     /**
      * @internal Copy task data from host to device.
      */
@@ -5808,7 +5813,7 @@ namespace CUDAWrappers
       {
 #if ENABLE_NVTX == 1
         HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-          std::string("create_tasks_for_hmat_node_") + std::to_string(l));
+          std::string("create_tasks_for_hmat_node"));
 #endif
 
         HMatrix<spacedim, RangeNumberType>   *leaf_mat = near_field_leaf_set[l];
@@ -6188,7 +6193,7 @@ namespace CUDAWrappers
       {
 #if ENABLE_NVTX == 1
         HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-          std::string("create_tasks_for_hmat_node_mass_") + std::to_string(l));
+          std::string("create_tasks_for_hmat_node_mass"));
 #endif
 
         HMatrix<spacedim, RangeNumberType>   *leaf_mat = near_field_leaf_set[l];
@@ -6594,9 +6599,7 @@ namespace CUDAWrappers
 #endif
 #if ENABLE_NVTX == 1
     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-      std::string("create_tasks_for_dof_pair_") +
-      std::to_string(i_global_dof_index) + std::string("_") +
-      std::to_string(j_global_dof_index));
+      std::string("create_tasks_for_dof_pair"));
 #endif
 
     /**
@@ -6950,9 +6953,7 @@ namespace CUDAWrappers
 #endif
 #if ENABLE_NVTX == 1
     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-      std::string("create_tasks_for_dof_pair_mass_") +
-      std::to_string(i_global_dof_index) + std::string("_") +
-      std::to_string(j_global_dof_index));
+      std::string("create_tasks_for_dof_pair_mass"));
 #endif
 
     /**
@@ -7389,6 +7390,11 @@ namespace CUDAWrappers
       std::is_same<
         typename numbers::NumberTraits<CUDARangeNumberType>::real_type,
         typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
+#if ENABLE_NVTX == 1
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+      std::string("create_tasks_for_dof_pair_far_field"));
+#endif
 
     unsigned int number_of_tasks_for_dof_pair = 0;
 
