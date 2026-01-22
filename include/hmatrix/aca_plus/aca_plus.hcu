@@ -31,6 +31,7 @@
 #include <deal.II/lac/vector.h>
 
 #include <cuda_runtime.h>
+#include <nvtx3/nvToolsExt.h>
 #include <tbb/tbb.h>
 
 #include <algorithm>
@@ -6022,8 +6023,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
 #if ENABLE_NVTX == 1
-  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-    "fill_hmatrix_leaf_node_with_aca_plus");
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_hmat_node");
 #endif
 
   /**
@@ -6443,8 +6443,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
 #if ENABLE_NVTX == 1
-  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-    "fill_hmatrix_leaf_node_with_aca_plus for hypersingular");
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_hmat_node_stab");
 #endif
 
   const std::array<types::global_dof_index, 2> *row_index_range =
@@ -6861,8 +6860,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
 #if ENABLE_NVTX == 1
-  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-    "fill_hmatrix_leaf_node_with_aca_plus with mass matrix");
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_hmat_node_mass");
 #endif
 
   const std::array<types::global_dof_index, 2> *row_index_range =
@@ -7190,8 +7188,7 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
 #if ENABLE_NVTX == 1
-  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-    "fill_far_field_hmatrix_leaf_node_with_aca_plus");
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_far_field_hmat_node");
 #endif
 
   /**
@@ -7362,8 +7359,7 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
 #if ENABLE_NVTX == 1
-  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-    "fill_far_field_hmatrix_leaf_node_with_aca_plus for hypersingular");
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_far_field_hmat_node_stab");
 #endif
 
   const std::array<types::global_dof_index, 2> *row_index_range =
@@ -8498,7 +8494,7 @@ fill_hmatrix_with_aca_plus_smp(
 
   LogStream::Prefix prefix_string("build_hmatrix_aca");
 #if ENABLE_NVTX == 1
-  HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_hmatrix_aca");
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_hmat");
 #endif
 
   Timer timer;
@@ -8630,6 +8626,9 @@ fill_hmatrix_with_aca_plus_smp(
   /**
    * @internal Start the producer threads.
    */
+#if ENABLE_NVTX == 1
+  nvtxRangePush("build_near_field_nodes");
+#endif
   for (const auto &partition : near_field_partitions)
     {
       producers.emplace_back([&]() {
@@ -8743,6 +8742,10 @@ fill_hmatrix_with_aca_plus_smp(
   for (auto &consumer : consumers)
     consumer.join();
 
+#if ENABLE_NVTX == 1
+  nvtxRangePop(); // NVTX range: build_near_field_nodes
+#endif
+
   /**
    * @internal Release all ring buffers.
    */
@@ -8766,8 +8769,7 @@ fill_hmatrix_with_aca_plus_smp(
   if (far_field_leaf_set.size() > 0)
     {
 #if ENABLE_NVTX == 1
-      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-        "build far field hmatrix nodes");
+      HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_far_field_nodes");
 #endif
 
       const unsigned int grain_size =
@@ -8910,8 +8912,7 @@ fill_hmatrix_with_aca_plus_smp(
 
   LogStream::Prefix prefix_string("build_hmatrix_aca with stabilization");
 #if ENABLE_NVTX == 1
-  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-    "build_hmatrix_aca with stabilization");
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_hmat_stab");
 #endif
 
   Timer timer;
@@ -9043,6 +9044,9 @@ fill_hmatrix_with_aca_plus_smp(
   /**
    * @internal Start the producer threads.
    */
+#if ENABLE_NVTX == 1
+  nvtxRangePush("build_near_field_nodes");
+#endif
   for (const auto &partition : near_field_partitions)
     {
       producers.emplace_back([&]() {
@@ -9167,8 +9171,7 @@ fill_hmatrix_with_aca_plus_smp(
   if (mass_vmult_weq.size() > 0)
     {
 #if ENABLE_NVTX == 1
-      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-        "stabilize hypersingular kernel");
+      HierBEM::CUDAWrappers::NVTXRange nvtx_range("stab_near_field_nodes");
 #endif
 
       const unsigned int grain_size =
@@ -9191,6 +9194,10 @@ fill_hmatrix_with_aca_plus_smp(
         tbb::auto_partitioner());
     }
 
+#if ENABLE_NVTX == 1
+  nvtxRangePop(); // NVTX range: build_near_field_nodes
+#endif
+
   timer.stop();
   print_wall_time(deallog, timer, "build near field H-matrix nodes");
 
@@ -9206,8 +9213,7 @@ fill_hmatrix_with_aca_plus_smp(
   if (far_field_leaf_set.size() > 0)
     {
 #if ENABLE_NVTX == 1
-      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-        "build far field hmatrix nodes");
+      HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_far_field_nodes");
 #endif
 
       const unsigned int grain_size =
@@ -9353,8 +9359,7 @@ fill_hmatrix_with_aca_plus_smp(
 
   LogStream::Prefix prefix_string("build_hmatrix_aca with mass matrix");
 #if ENABLE_NVTX == 1
-  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-    "build_hmatrix_aca with mass matrix");
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_hmat_mass");
 #endif
 
   Timer timer;
@@ -9486,6 +9491,9 @@ fill_hmatrix_with_aca_plus_smp(
   /**
    * @internal Start the producer threads.
    */
+#if ENABLE_NVTX == 1
+  nvtxRangePush("build_near_field_nodes");
+#endif
   for (const auto &partition : near_field_partitions)
     {
       producers.emplace_back([&]() {
@@ -9601,6 +9609,10 @@ fill_hmatrix_with_aca_plus_smp(
   for (auto &consumer : consumers)
     consumer.join();
 
+#if ENABLE_NVTX == 1
+  nvtxRangePop(); // NVTX range: build_near_field_nodes
+#endif
+
   /**
    * @internal Release all ring buffers.
    */
@@ -9624,8 +9636,7 @@ fill_hmatrix_with_aca_plus_smp(
   if (far_field_leaf_set.size() > 0)
     {
 #if ENABLE_NVTX == 1
-      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-        "build far field hmatrix nodes");
+      HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_far_field_nodes");
 #endif
 
       const unsigned int grain_size =

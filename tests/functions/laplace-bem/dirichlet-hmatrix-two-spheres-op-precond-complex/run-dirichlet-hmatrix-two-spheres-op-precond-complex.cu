@@ -41,7 +41,6 @@
 #include "platform_shared/laplace_kernels.h"
 #include "postprocessing/data_out_ext.h"
 #include "preconditioners/preconditioner_type.h"
-#include "utilities/cu_profile.hcu"
 #include "utilities/debug_tools.h"
 
 using namespace dealii;
@@ -116,9 +115,6 @@ run_dirichlet_hmatrix_two_spheres_op_precond_complex(
   deallog.attach(ofs);
 
   LogStream::Prefix prefix_string("HierBEM");
-#if ENABLE_NVTX == 1
-  HierBEM::CUDAWrappers::NVTXRange nvtx_range("HierBEM");
-#endif
 
   /**
    * @internal Create and start the timer.

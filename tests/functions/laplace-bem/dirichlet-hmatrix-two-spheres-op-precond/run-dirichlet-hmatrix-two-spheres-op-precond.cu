@@ -17,10 +17,6 @@
 #include <fstream>
 #include <iostream>
 
-#include "config.h"
-#if ENABLE_NVTX == 1
-#  include "utilities/cu_profile.hcu"
-#endif
 #include "bem/types.h"
 #include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
@@ -77,9 +73,6 @@ run_dirichlet_hmatrix_two_spheres_op_precond(
   deallog.attach(ofs);
 
   LogStream::Prefix prefix_string("HierBEM");
-#if ENABLE_NVTX == 1
-  HierBEM::CUDAWrappers::NVTXRange nvtx_range("HierBEM");
-#endif
 
   /**
    * @internal Create and start the timer.

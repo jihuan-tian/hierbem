@@ -22,7 +22,6 @@
 #include "hbem_test_config.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
 #include "laplace/laplace_bem.h"
-#include "utilities/cu_profile.hcu"
 #include "utilities/debug_tools.h"
 
 using namespace dealii;
@@ -100,9 +99,6 @@ run_neumann_hmatrix(const IterativeSolverVmultType vmult_type)
   deallog.attach(ofs);
 
   LogStream::Prefix prefix_string("HierBEM");
-#if ENABLE_NVTX == 1
-  HierBEM::CUDAWrappers::NVTXRange nvtx_range("HierBEM");
-#endif
 
   /**
    * @internal Create and start the timer.

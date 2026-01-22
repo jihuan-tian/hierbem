@@ -2516,12 +2516,11 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           std::ofstream out_bct;
 #endif
 
+#if ENABLE_NVTX == 1
+          nvtxRangePush("assemble_I1K2");
+#endif
           if (is_interior_problem_)
             {
-#if ENABLE_NVTX == 1
-              HierBEM::CUDAWrappers::NVTXRange nvtx_range("assemble_i1k2");
-#endif
-
               std::cout << "=== Assemble sigma*I1+K2 ===" << std::endl;
               I1K2_hmat_ = bI1K2_->build_hmatrix_with_mass_matrix(
                 thread_num_,
@@ -2539,10 +2538,6 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             }
           else
             {
-#if ENABLE_NVTX == 1
-              HierBEM::CUDAWrappers::NVTXRange nvtx_range("assemble_i1k2");
-#endif
-
               std::cout << "=== Assemble (sigma-1)*I1+K2 ===" << std::endl;
               I1K2_hmat_ = bI1K2_->build_hmatrix_with_mass_matrix(
                 thread_num_,
@@ -2558,6 +2553,9 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               timer.stop();
               print_wall_time(deallog, timer, "assemble (sigma-1)*I1+K2");
             }
+#if ENABLE_NVTX == 1
+          nvtxRangePop(); // NVTX range: assemble_I1K2
+#endif
           add_memory_consumption_row("I1K2", *I1K2_hmat_, "After assembly");
           std::cout << "=== Leaf set information of I1K2 ===" << std::endl;
           I1K2_hmat_->print_leaf_set_info(std::cout);
@@ -2602,7 +2600,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           {
 #if ENABLE_NVTX == 1
-            HierBEM::CUDAWrappers::NVTXRange nvtx_range("assemble V1");
+            HierBEM::CUDAWrappers::NVTXRange nvtx_range("assemble_V1");
 #endif
 
             std::cout << "=== Assemble V1 ===" << std::endl;
@@ -2650,6 +2648,9 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           std::ofstream out_bct;
 #endif
 
+#if ENABLE_NVTX == 1
+          nvtxRangePush("assemble_I2Kprime2");
+#endif
           if (is_interior_problem_)
             {
               std::cout << "=== Assemble (1-sigma)*I2-K'2 ===" << std::endl;
@@ -2684,6 +2685,9 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               timer.stop();
               print_wall_time(deallog, timer, "assemble -sigma*I2-K'2");
             }
+#if ENABLE_NVTX == 1
+          nvtxRangePop(); // NVTX range: assemble_I2Kprime2
+#endif
           add_memory_consumption_row("I2K'2",
                                      *I2K_prime2_hmat_,
                                      "After assembly");
@@ -2737,6 +2741,9 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           // hyper-singular operator along with the stabilization term.
           std::cout << "=== Assemble D1 ===" << std::endl;
           timer.start();
+#if ENABLE_NVTX == 1
+          nvtxRangePush("assemble_D1");
+#endif
           D1_hmat_ = bD1_->build_hmatrix_with_regularization(
             thread_num_,
             max_hmat_rank_,
@@ -2750,6 +2757,9 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             subdomain_topology_);
           timer.stop();
           print_wall_time(deallog, timer, "assemble D1");
+#if ENABLE_NVTX == 1
+          nvtxRangePop(); // NVTX range: assemble_D1
+#endif
           add_memory_consumption_row("D1", *D1_hmat_, "After assembly");
           std::cout << "=== Leaf set information of D1 ===" << std::endl;
           D1_hmat_->print_leaf_set_info(std::cout);

@@ -4568,7 +4568,7 @@ namespace CUDAWrappers
 #endif
 #if ENABLE_NVTX == 1
     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-      std::string("add_task for ") +
+      std::string("add_task_") +
       std::string(cell_neighboring_type_name(cell_neighboring_type)));
 #endif
 
@@ -4579,7 +4579,7 @@ namespace CUDAWrappers
 
     {
 #if ENABLE_NVTX == 1
-      HierBEM::CUDAWrappers::NVTXRange nvtx_range("wait for buffer_not_full");
+      HierBEM::CUDAWrappers::NVTXRange nvtx_range("wait_buffer_not_full");
 #endif
 
       std::unique_lock<std::mutex> ul(buffer_lock);
@@ -4602,7 +4602,7 @@ namespace CUDAWrappers
 
     {
 #if ENABLE_NVTX == 1
-      HierBEM::CUDAWrappers::NVTXRange nvtx_range("creating task");
+      HierBEM::CUDAWrappers::NVTXRange nvtx_range("create_task");
 #endif
 
       /**
@@ -4667,7 +4667,7 @@ namespace CUDAWrappers
 
     {
 #if ENABLE_NVTX == 1
-      HierBEM::CUDAWrappers::NVTXRange nvtx_range("move tail_committed");
+      HierBEM::CUDAWrappers::NVTXRange nvtx_range("move_tail_committed");
 #endif
 
       std::lock_guard<std::mutex> lg(buffer_lock);
@@ -4747,7 +4747,7 @@ namespace CUDAWrappers
 #endif
 #if ENABLE_NVTX == 1
     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-      std::string("process_task for ") +
+      std::string("fetch_and_process_task_batch_") +
       std::string(cell_neighboring_type_name(cell_neighboring_type)));
 #endif
 
@@ -4757,7 +4757,7 @@ namespace CUDAWrappers
 
     {
 #if ENABLE_NVTX == 1
-      HierBEM::CUDAWrappers::NVTXRange nvtx_range("wait for batch_task_ready");
+      HierBEM::CUDAWrappers::NVTXRange nvtx_range("wait_task_batch_ready");
 #endif
 
       std::unique_lock<std::mutex> ul(buffer_lock);
@@ -4821,7 +4821,7 @@ namespace CUDAWrappers
     else
       {
 #if ENABLE_NVTX == 1
-        HierBEM::CUDAWrappers::NVTXRange nvtx_range("processing task");
+        HierBEM::CUDAWrappers::NVTXRange nvtx_range("process_task_batch");
 #endif
 
         /**
@@ -4984,11 +4984,6 @@ namespace CUDAWrappers
         switch (cell_neighboring_type)
           {
               case CellNeighboringType::SamePanel: {
-#if ENABLE_NVTX == 1
-                HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                  "process sauter task: same panel");
-#endif
-
                 process_sauter_task_on_one_pair_of_dofs_same_panel<<<
                   block_num,
                   block_size,
@@ -5008,11 +5003,6 @@ namespace CUDAWrappers
                 break;
               }
               case CellNeighboringType::CommonEdge: {
-#if ENABLE_NVTX == 1
-                HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                  "process sauter task: common edge");
-#endif
-
                 process_sauter_task_on_one_pair_of_dofs_common_edge<<<
                   block_num,
                   block_size,
@@ -5032,11 +5022,6 @@ namespace CUDAWrappers
                 break;
               }
               case CellNeighboringType::CommonVertex: {
-#if ENABLE_NVTX == 1
-                HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                  "process sauter task: common vertex");
-#endif
-
                 process_sauter_task_on_one_pair_of_dofs_common_vertex<<<
                   block_num,
                   block_size,
@@ -5056,11 +5041,6 @@ namespace CUDAWrappers
                 break;
               }
               case CellNeighboringType::Regular: {
-#if ENABLE_NVTX == 1
-                HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                  "process sauter task: regular");
-#endif
-
                 process_sauter_task_on_one_pair_of_dofs_regular<<<
                   block_num,
                   block_size,
@@ -5086,16 +5066,12 @@ namespace CUDAWrappers
               }
           }
 
-        /**
-         * Copy the quadrature result data from the device to the host.
-         */
+            // Copy the quadrature result data from the device to the host.
+#if ENABLE_NVTX == 1
+        nvtxRangePush("assemble_quad");
+#endif
         if (is_task_batch_before_buffer_end)
           {
-#if ENABLE_NVTX == 1
-            HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-              "assemble quadrature result");
-#endif
-
             /**
              * @internal When the data in the ring buffer are in a
              * contiguous block, perform one time of memory copy.
@@ -5172,11 +5148,6 @@ namespace CUDAWrappers
           }
         else
           {
-#if ENABLE_NVTX == 1
-            HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-              "assemble quadrature result");
-#endif
-
             AssertCuda(
               cudaMemcpyAsync((void *)(quadrature_value_ring_buffer_cpu +
                                        task_start_index_to_fetch),
@@ -5310,12 +5281,11 @@ namespace CUDAWrappers
                 }
             }
           }
-
-        {
 #if ENABLE_NVTX == 1
-          HierBEM::CUDAWrappers::NVTXRange nvtx_range("move head_committed");
+        nvtxRangePop(); // NVTX range: assemble_quad
 #endif
 
+        {
           std::lock_guard<std::mutex> lg(buffer_lock);
 
           if (task_start_index_to_fetch == head_committed)
@@ -5810,7 +5780,7 @@ namespace CUDAWrappers
     const std::thread::id current_thread_id = std::this_thread::get_id();
     deallog << "Producer thread " << current_thread_id << " starts...\n";
 #if ENABLE_NVTX == 1
-    nvtxNameOsThread(getpid(), "producer thread");
+    nvtxNameOsThread(gettid(), "producer");
 #endif
 
     /**
@@ -5838,8 +5808,7 @@ namespace CUDAWrappers
       {
 #if ENABLE_NVTX == 1
         HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-          std::string("create sauter tasks for near field hmatrix ") +
-          std::to_string(l));
+          std::string("create_tasks_for_hmat_node_") + std::to_string(l));
 #endif
 
         HMatrix<spacedim, RangeNumberType>   *leaf_mat = near_field_leaf_set[l];
@@ -6182,7 +6151,7 @@ namespace CUDAWrappers
     const std::thread::id current_thread_id = std::this_thread::get_id();
     deallog << "Producer thread " << current_thread_id << " starts...\n";
 #if ENABLE_NVTX == 1
-    nvtxNameOsThread(getpid(), "producer thread");
+    nvtxNameOsThread(gettid(), "producer");
 #endif
 
     /**
@@ -6219,8 +6188,7 @@ namespace CUDAWrappers
       {
 #if ENABLE_NVTX == 1
         HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-          std::string("create sauter tasks for near field hmatrix ") +
-          std::to_string(l));
+          std::string("create_tasks_for_hmat_node_mass_") + std::to_string(l));
 #endif
 
         HMatrix<spacedim, RangeNumberType>   *leaf_mat = near_field_leaf_set[l];
@@ -6494,10 +6462,10 @@ namespace CUDAWrappers
             << cell_neighboring_type_name(ring_buffer.cell_neighboring_type)
             << " starts..." << std::endl;
 #if ENABLE_NVTX == 1
-    std::string nvtx_thread_name(std::string("consumer thread for ") +
+    std::string nvtx_thread_name(std::string("consumer_") +
                                  std::string(cell_neighboring_type_name(
                                    ring_buffer.cell_neighboring_type)));
-    nvtxNameOsThread(getpid(), nvtx_thread_name.c_str());
+    nvtxNameOsThread(gettid(), nvtx_thread_name.c_str());
 #endif
 
     const unsigned int consumer_wait_time_us = 1;
@@ -6626,9 +6594,9 @@ namespace CUDAWrappers
 #endif
 #if ENABLE_NVTX == 1
     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-      std::string("create sauter tasks for dof pair (") +
-      std::to_string(i_global_dof_index) + std::string(",") +
-      std::to_string(j_global_dof_index) + std::string(")"));
+      std::string("create_tasks_for_dof_pair_") +
+      std::to_string(i_global_dof_index) + std::string("_") +
+      std::to_string(j_global_dof_index));
 #endif
 
     /**
@@ -6770,7 +6738,7 @@ namespace CUDAWrappers
                   case CellNeighboringType::SamePanel: {
 #if ENABLE_NVTX == 1
                     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                      "add sauter task: same panel");
+                      "add_task_same_panel");
 #endif
 
                     ring_buffer_for_same_panel.add_task(
@@ -6794,7 +6762,7 @@ namespace CUDAWrappers
                   case CellNeighboringType::CommonEdge: {
 #if ENABLE_NVTX == 1
                     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                      "add sauter task: common edge");
+                      "add_task_common_edge");
 #endif
 
                     ring_buffer_for_common_edge.add_task(
@@ -6818,7 +6786,7 @@ namespace CUDAWrappers
                   case CellNeighboringType::CommonVertex: {
 #if ENABLE_NVTX == 1
                     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                      "add sauter task: common vertex");
+                      "add_task_common_vertex");
 #endif
 
                     ring_buffer_for_common_vertex.add_task(
@@ -6842,7 +6810,7 @@ namespace CUDAWrappers
                   case CellNeighboringType::Regular: {
 #if ENABLE_NVTX == 1
                     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                      "add sauter task: regular");
+                      "add_task_regular");
 #endif
 
                     ring_buffer_for_regular.add_task(
@@ -6982,9 +6950,9 @@ namespace CUDAWrappers
 #endif
 #if ENABLE_NVTX == 1
     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-      std::string("create sauter tasks for dof pair (") +
-      std::to_string(i_global_dof_index) + std::string(",") +
-      std::to_string(j_global_dof_index) + std::string(")"));
+      std::string("create_tasks_for_dof_pair_mass_") +
+      std::to_string(i_global_dof_index) + std::string("_") +
+      std::to_string(j_global_dof_index));
 #endif
 
     /**
@@ -7097,8 +7065,7 @@ namespace CUDAWrappers
             if ((kx_cell_index == ky_cell_index) && (mass_matrix_factor != 0))
               {
 #if ENABLE_NVTX == 1
-                HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                  "compute mass matrix entry");
+                HierBEM::CUDAWrappers::NVTXRange nvtx_range("calc_mass_entry");
 #endif
 
                 Assert(cell_neighboring_type == CellNeighboringType::SamePanel,
@@ -7262,7 +7229,7 @@ namespace CUDAWrappers
                   case CellNeighboringType::SamePanel: {
 #if ENABLE_NVTX == 1
                     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                      "add sauter task: same panel");
+                      "add_task_same_panel");
 #endif
 
                     ring_buffer_for_same_panel.add_task(
@@ -7286,7 +7253,7 @@ namespace CUDAWrappers
                   case CellNeighboringType::CommonEdge: {
 #if ENABLE_NVTX == 1
                     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                      "add sauter task: common edge");
+                      "add_task_common_edge");
 #endif
 
                     ring_buffer_for_common_edge.add_task(
@@ -7310,7 +7277,7 @@ namespace CUDAWrappers
                   case CellNeighboringType::CommonVertex: {
 #if ENABLE_NVTX == 1
                     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                      "add sauter task: common vertex");
+                      "add_task_common_vertex");
 #endif
 
                     ring_buffer_for_common_vertex.add_task(
@@ -7334,7 +7301,7 @@ namespace CUDAWrappers
                   case CellNeighboringType::Regular: {
 #if ENABLE_NVTX == 1
                     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                      "add sauter task: regular");
+                      "add_task_regular");
 #endif
 
                     ring_buffer_for_regular.add_task(
@@ -8593,8 +8560,7 @@ sauter_quadrature_on_one_pair_of_dofs(
   using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
 
 #if ENABLE_NVTX == 1
-  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-    "sauter_quadrature_on_one_pair_of_dofs");
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range("sauter_quad_pair_dofs");
 #endif
 
   /**
@@ -8726,7 +8692,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                 case CellNeighboringType::SamePanel: {
 #if ENABLE_NVTX == 1
                   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                    "calc jacobian: same panel");
+                    "calc_jacobian_same_panel");
 #endif
 
                   HierBEM::CUDAWrappers::
@@ -8749,7 +8715,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                 case CellNeighboringType::CommonEdge: {
 #if ENABLE_NVTX == 1
                   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                    "calc jacobian: common edge");
+                    "calc_jacobian_common_edge");
 #endif
 
                   HierBEM::CUDAWrappers::
@@ -8772,7 +8738,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                 case CellNeighboringType::CommonVertex: {
 #if ENABLE_NVTX == 1
                   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                    "calc jacobian: common vertex");
+                    "calc_jacobian_common_vertex");
 #endif
 
                   HierBEM::CUDAWrappers::
@@ -8795,7 +8761,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                 case CellNeighboringType::Regular: {
 #if ENABLE_NVTX == 1
                   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                    "calc jacobian: regular");
+                    "calc_jacobian_regular");
 #endif
 
                   HierBEM::CUDAWrappers::
@@ -8843,7 +8809,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                     case CellNeighboringType::SamePanel: {
 #if ENABLE_NVTX == 1
                       HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                        "calc covariant: same panel");
+                        "calc_covariant_same_panel");
 #endif
 
                       HierBEM::CUDAWrappers::
@@ -8864,7 +8830,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                     case CellNeighboringType::CommonEdge: {
 #if ENABLE_NVTX == 1
                       HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                        "calc covariant: common edge");
+                        "calc_covariant_common_edge");
 #endif
 
                       HierBEM::CUDAWrappers::
@@ -8885,7 +8851,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                     case CellNeighboringType::CommonVertex: {
 #if ENABLE_NVTX == 1
                       HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                        "calc covariant: common vertex");
+                        "calc_covariant_common_vertex");
 #endif
 
                       HierBEM::CUDAWrappers::
@@ -8906,7 +8872,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                     case CellNeighboringType::Regular: {
 #if ENABLE_NVTX == 1
                       HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                        "calc covariant: regular");
+                        "calc_covariant_regular");
 #endif
 
                       HierBEM::CUDAWrappers::
@@ -8974,7 +8940,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                 case BEMTools::CellNeighboringType::SamePanel: {
 #if ENABLE_NVTX == 1
                   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                    "apply quadrature: same panel");
+                    "apply_quad_same_panel");
 #endif
 
                   HierBEM::CUDAWrappers::
@@ -8994,7 +8960,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                 case BEMTools::CellNeighboringType::CommonEdge: {
 #if ENABLE_NVTX == 1
                   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                    "apply quadrature: common edge");
+                    "apply_quad_common_edge");
 #endif
 
                   HierBEM::CUDAWrappers::
@@ -9014,7 +8980,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                 case BEMTools::CellNeighboringType::CommonVertex: {
 #if ENABLE_NVTX == 1
                   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                    "apply quadrature: common vertex");
+                    "apply_quad_common_vertex");
 #endif
 
                   HierBEM::CUDAWrappers::
@@ -9034,7 +9000,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                 case BEMTools::CellNeighboringType::Regular: {
 #if ENABLE_NVTX == 1
                   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                    "apply quadrature: regular");
+                    "apply_quad_regular");
 #endif
 
                   HierBEM::CUDAWrappers::ApplyQuadratureUsingBEMValuesRegular<<<
@@ -9178,8 +9144,7 @@ sauter_quadrature_on_one_pair_of_dofs(
   using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
 
 #if ENABLE_NVTX == 1
-  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-    "sauter_quadrature_on_one_pair_of_dofs with mass matrix");
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range("sauter_quad_pair_dofs_mass");
 #endif
 
   /**
@@ -9318,7 +9283,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                 case CellNeighboringType::SamePanel: {
 #if ENABLE_NVTX == 1
                   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                    "calc jacobian: same panel");
+                    "calc_jacobian_same_panel");
 #endif
 
                   HierBEM::CUDAWrappers::
@@ -9341,7 +9306,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                 case CellNeighboringType::CommonEdge: {
 #if ENABLE_NVTX == 1
                   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                    "calc jacobian: common edge");
+                    "calc_jacobian_common_edge");
 #endif
 
                   HierBEM::CUDAWrappers::
@@ -9364,7 +9329,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                 case CellNeighboringType::CommonVertex: {
 #if ENABLE_NVTX == 1
                   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                    "calc jacobian: common vertex");
+                    "calc_jacobian_common_vertex");
 #endif
 
                   HierBEM::CUDAWrappers::
@@ -9387,7 +9352,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                 case CellNeighboringType::Regular: {
 #if ENABLE_NVTX == 1
                   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                    "calc jacobian: regular");
+                    "calc_jacobian_regular");
 #endif
 
                   HierBEM::CUDAWrappers::
@@ -9435,7 +9400,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                     case CellNeighboringType::SamePanel: {
 #if ENABLE_NVTX == 1
                       HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                        "calc covariant: same panel");
+                        "calc_covariant_same_panel");
 #endif
 
                       HierBEM::CUDAWrappers::
@@ -9456,7 +9421,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                     case CellNeighboringType::CommonEdge: {
 #if ENABLE_NVTX == 1
                       HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                        "calc covariant: common edge");
+                        "calc_covariant_common_edge");
 #endif
 
                       HierBEM::CUDAWrappers::
@@ -9477,7 +9442,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                     case CellNeighboringType::CommonVertex: {
 #if ENABLE_NVTX == 1
                       HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                        "calc covariant: common vertex");
+                        "calc_covariant_common_vertex");
 #endif
 
                       HierBEM::CUDAWrappers::
@@ -9498,7 +9463,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                     case CellNeighboringType::Regular: {
 #if ENABLE_NVTX == 1
                       HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                        "calc covariant: regular");
+                        "calc_covariant_regular");
 #endif
 
                       HierBEM::CUDAWrappers::
@@ -9566,7 +9531,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                 case BEMTools::CellNeighboringType::SamePanel: {
 #if ENABLE_NVTX == 1
                   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                    "apply quadrature: same panel");
+                    "apply_quad_same_panel");
 #endif
 
                   HierBEM::CUDAWrappers::
@@ -9586,7 +9551,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                 case BEMTools::CellNeighboringType::CommonEdge: {
 #if ENABLE_NVTX == 1
                   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                    "apply quadrature: common edge");
+                    "apply_quad_common_edge");
 #endif
 
                   HierBEM::CUDAWrappers::
@@ -9606,7 +9571,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                 case BEMTools::CellNeighboringType::CommonVertex: {
 #if ENABLE_NVTX == 1
                   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                    "apply quadrature: common vertex");
+                    "apply_quad_common_vertex");
 #endif
 
                   HierBEM::CUDAWrappers::
@@ -9626,7 +9591,7 @@ sauter_quadrature_on_one_pair_of_dofs(
                 case BEMTools::CellNeighboringType::Regular: {
 #if ENABLE_NVTX == 1
                   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                    "apply quadrature: regular");
+                    "apply_quad_regular");
 #endif
 
                   HierBEM::CUDAWrappers::ApplyQuadratureUsingBEMValuesRegular<<<
@@ -9685,8 +9650,7 @@ sauter_quadrature_on_one_pair_of_dofs(
           if ((kx_cell_index == ky_cell_index) && (mass_matrix_factor != 0))
             {
 #if ENABLE_NVTX == 1
-              HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                "compute mass matrix");
+              HierBEM::CUDAWrappers::NVTXRange nvtx_range("calc_mass_entry");
 #endif
 
               Assert(cell_neighboring_type == CellNeighboringType::SamePanel,
@@ -9828,7 +9792,7 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
 
 #if ENABLE_NVTX == 1
   HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-    "sauter_quadrature_on_one_pair_of_far_field_dofs");
+    "sauter_quad_pair_dofs_far_field");
 #endif
 
   /**
@@ -9952,7 +9916,7 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
           {
 #if ENABLE_NVTX == 1
             HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-              "calc jacobian: regular");
+              "calc_jacobian_regular");
 #endif
 
             HierBEM::CUDAWrappers::
@@ -9988,7 +9952,7 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
 #endif
 #if ENABLE_NVTX == 1
               HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-                "calc covariant: regular");
+                "calc_covariant_regular");
 #endif
 
               HierBEM::CUDAWrappers::calc_covariant_transformations_regular<<<
@@ -10044,8 +10008,7 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
 #endif
           {
 #if ENABLE_NVTX == 1
-            HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-              "apply quadrature: regular");
+            HierBEM::CUDAWrappers::NVTXRange nvtx_range("apply_quad_regular");
 #endif
 
             HierBEM::CUDAWrappers::ApplyQuadratureUsingBEMValuesRegular<<<
