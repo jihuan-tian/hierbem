@@ -49,6 +49,9 @@
 #include <string>
 #include <vector>
 
+#if ENABLE_NVTX == 1
+#  include "utilities/cu_profile.hcu"
+#endif
 #include "bem/bem_general.hcu"
 #include "cad_mesh/subdomain_topology.h"
 #include "cluster_tree/block_cluster_tree.h"
@@ -1073,6 +1076,9 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
     const SurfaceNormalDetector     &normal_detector,
     const SauterQuadratureRule<dim> &sauter_quad_rule)
 {
+#if ENABLE_NVTX == 1
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_hmat_op_precond");
+#endif
   /**
    * Get the internal-to-external DoF numberings.
    */
