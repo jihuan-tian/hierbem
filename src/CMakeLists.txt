@@ -30,8 +30,9 @@ add_library(
   utilities/regex_tools.cc
   laplace/laplace_bem.cu
   helmholtz/helmholtz_acoustic_bem.cu)
-# Because hierbem has included deal.ii header files, dependent include paths and
-# library paths need to be imported by calling this macro DEAL_II_SETUP_TARGET.
+# Because my library hierbem has included deal.ii header files, dependent
+# include paths and library paths need to be imported by calling this macro
+# DEAL_II_SETUP_TARGET.
 deal_ii_setup_target(${_target})
 
 # HMatrix class depends on openblas.
@@ -39,3 +40,5 @@ target_link_libraries(
   ${_target} openblas dl # Lazy way: always link with libdl no matter if CUDA is
                          # used or not
 )
+
+add_subdirectory(hbem_laplace)

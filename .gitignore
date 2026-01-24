@@ -78,7 +78,6 @@ html/
 doc/theory-and-implementation/hierbem.pdf
 
 # Ignore mesh files
-*.msh
 *.geo
 *.opt
 
@@ -92,6 +91,7 @@ scripts/init-test*.sh
 # Ignore Visual Studio Code settings
 .vscode
 hierbem.code-workspace
+.cursor
 
 # Ignore vcpkg files
 vcpkg_installed

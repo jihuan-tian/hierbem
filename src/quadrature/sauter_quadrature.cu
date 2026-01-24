@@ -9,8 +9,9 @@
 // file LICENSE at the top level directory of HierBEM.
 
 /**
- * @file sauter_quadrature.cpp
- * @brief Introduction of sauter_quadrature.cpp
+ * @file sauter_quadrature.cu
+ * @brief Implementation of functions in
+ * <tt>include/quadrature/sauter_quadrature.hcu</tt>.
  *
  * @date 2022-03-03
  * @author Jihuan Tian

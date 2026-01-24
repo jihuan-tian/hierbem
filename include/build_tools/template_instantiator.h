@@ -9,13 +9,13 @@
 // option) any later version. The full text of the license can be found in the
 // file LICENSE at the top level directory of HierBEM.
 
-#ifndef INCLUDE_BUILD_TOOLS_TEMPLATE_INSTANTIATOR_H_
-#define INCLUDE_BUILD_TOOLS_TEMPLATE_INSTANTIATOR_H_
+#ifndef HIERBEM_INCLUDE_BUILD_TOOLS_TEMPLATE_INSTANTIATOR_H_
+#define HIERBEM_INCLUDE_BUILD_TOOLS_TEMPLATE_INSTANTIATOR_H_
 
 /**
  * Helper macros to ease instantiate template classes for different
  * combinations of template arguments.
- * */
+ */
 
 #include <boost/preprocessor.hpp>
 
@@ -72,4 +72,4 @@
 #define TI_GENERATE_ALL_HELMHOLTZ_TYPES_(scalar_seq) \
   BOOST_PP_SEQ_FOR_EACH(TI_GENERATE_HELMHOLTZ_TYPES_, _, scalar_seq)
 
-#endif // INCLUDE_BUILD_TOOLS_TEMPLATE_INSTANTIATOR_H_
+#endif // HIERBEM_INCLUDE_BUILD_TOOLS_TEMPLATE_INSTANTIATOR_H_
