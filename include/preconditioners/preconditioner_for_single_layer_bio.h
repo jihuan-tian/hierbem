@@ -21,7 +21,6 @@
 #define HIERBEM_INCLUDE_PRECONDITIONERS_PRECONDITIONER_FOR_SINGLE_LAYER_BIO_H_
 
 #include <deal.II/base/exceptions.h>
-#include <deal.II/base/numbers.h>
 #include <deal.II/base/types.h>
 
 #include <deal.II/fe/fe.h>
@@ -35,6 +34,7 @@
 #include <vector>
 
 #include "config.h"
+#include "config_file/config_structs.h"
 #include "preconditioners/operator_preconditioner.h"
 
 HBEM_NS_OPEN
@@ -54,8 +54,6 @@ class SingleLayerPreconditioner
   : public OperatorPreconditioner<dim, spacedim, RangeNumberType>
 {
 public:
-  using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
-
   /**
    * Constructor for preconditioner on full domain.
    */
@@ -65,11 +63,7 @@ public:
     const Triangulation<dim, spacedim>         &tria,
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
-    const unsigned int                          max_iter    = 1000,
-    const real_type                             tol         = 1e-8,
-    const real_type                             omega       = 1.0,
-    const bool                                  log_history = true,
-    const bool                                  log_result  = true);
+    const ConfOperatorPreconditioner           &op_precond_params);
 
   /**
    * Constructor for preconditioner on subdomain.
@@ -81,11 +75,7 @@ public:
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
     const std::set<types::material_id>         &subdomain_material_ids,
-    const unsigned int                          max_iter    = 1000,
-    const real_type                             tol         = 1e-8,
-    const real_type                             omega       = 1.0,
-    const bool                                  log_history = true,
-    const bool                                  log_result  = true);
+    const ConfOperatorPreconditioner           &op_precond_params);
 
   void
   build_coupling_matrix() override;
@@ -103,11 +93,7 @@ SingleLayerPreconditioner<dim, spacedim, RangeNumberType>::
     const Triangulation<dim, spacedim>         &tria,
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
-    const unsigned int                          max_iter,
-    const real_type                             tol,
-    const real_type                             omega,
-    const bool                                  log_history,
-    const bool                                  log_result)
+    const ConfOperatorPreconditioner           &op_precond_params)
   : OperatorPreconditioner<dim, spacedim, RangeNumberType>(
       fe_primal_space,
       fe_dual_space,
@@ -118,11 +104,7 @@ SingleLayerPreconditioner<dim, spacedim, RangeNumberType>::
       true,
       false,
       false,
-      max_iter,
-      tol,
-      omega,
-      log_history,
-      log_result)
+      op_precond_params)
 {
   // At the moment, in a Dirichlet problem, the primal space can only be
   // @p FE_DGQ(0) and the dual space can only be @p FE_Q(1). Therefore, we make
@@ -146,11 +128,7 @@ SingleLayerPreconditioner<dim, spacedim, RangeNumberType>::
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
     const std::set<types::material_id>         &subdomain_material_ids,
-    const unsigned int                          max_iter,
-    const real_type                             tol,
-    const real_type                             omega,
-    const bool                                  log_history,
-    const bool                                  log_result)
+    const ConfOperatorPreconditioner           &op_precond_params)
   : OperatorPreconditioner<dim, spacedim, RangeNumberType>(
       fe_primal_space,
       fe_dual_space,
@@ -161,11 +139,7 @@ SingleLayerPreconditioner<dim, spacedim, RangeNumberType>::
       false,
       false,
       false,
-      max_iter,
-      tol,
-      omega,
-      log_history,
-      log_result)
+      op_precond_params)
 {
   // At the moment, in a Dirichlet problem, the primal space can only be
   // @p FE_DGQ(0) and the dual space can only be @p FE_Q(1). Therefore, we make

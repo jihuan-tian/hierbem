@@ -14,7 +14,8 @@ find_package(Octave REQUIRED)
 # Visual Studio Code's TestMate extension
 set(_target test-dirichlet-hmatrix-op-precond)
 
-add_executable(${_target} dirichlet-hmatrix-op-precond.cc run-dirichlet-hmatrix-op-precond.cu)
+add_executable(${_target} dirichlet-hmatrix-op-precond.cc
+                          run-dirichlet-hmatrix-op-precond.cu)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})
@@ -33,7 +34,9 @@ target_link_libraries(
   boost_program_options
   dl
   ${OCTAVE_LIBRARIES}
-  Catch2::Catch2WithMain)
+  reflectcpp::reflectcpp
+  Catch2::Catch2WithMain
+  PkgConfig::tomlplusplus)
 
 include(CTest)
 include(Catch)

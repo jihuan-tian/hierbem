@@ -18,6 +18,8 @@
  * @date 2024-03-14
  */
 
+#include <deal.II/base/multithread_info.h>
+
 #include <deal.II/fe/fe.h>
 #include <deal.II/fe/fe_dgq.h>
 
@@ -29,6 +31,7 @@
 #include <iostream>
 
 #include "cad_mesh/subdomain_topology.h"
+#include "config_file/config_structs.h"
 #include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
@@ -49,7 +52,7 @@ main()
    * threads, even though the random engine is initialized with a definite
    * state.
    */
-  dealii::MultithreadInfo::set_thread_limit(1);
+  MultithreadInfo::set_thread_limit(1);
 
   /**
    * Initialize the CUDA device parameters.
@@ -123,10 +126,11 @@ main()
   HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim>
     single_layer_kernel;
 
-  const unsigned int n_min    = 32;
-  const double       eta      = 0.8;
-  const double       max_rank = 5;
-  const double       epsilon  = 0.01;
+  // Parameters for building H-matrices.
+  ConfHMatrix             hmat_params{32, 32, 0.8, 5, 0.01};
+  ConfSauterQuadNearField sauter_quad_near_field_params;
+  ConfSauterQuadFarField  sauter_quad_far_field_params;
+  ConfParallelization     parallel_params;
 
   dof_handler.distribute_dofs(fe);
 
@@ -166,24 +170,28 @@ main()
   ClusterTree<spacedim> ct(dof_indices,
                            support_points,
                            cell_size_at_support_points,
-                           n_min);
+                           static_cast<unsigned int>(hmat_params.n_min_for_ct));
   ct.partition(support_points, cell_size_at_support_points);
 
   // Create and partition the block cluster tree.
-  BlockClusterTree<spacedim> bct(ct, ct, eta, n_min);
+  BlockClusterTree<spacedim> bct(ct,
+                                 ct,
+                                 hmat_params.eta,
+                                 static_cast<unsigned int>(
+                                   hmat_params.n_min_for_bct));
   bct.partition(ct.get_internal_to_external_dof_numbering(),
                 support_points,
                 cell_size_at_support_points);
 
   // Create a general \hmatrix with respect to the block cluster tree.
   HMatrix<spacedim> V(bct,
-                      max_rank,
+                      static_cast<unsigned int>(hmat_params.max_rank),
                       HMatrixSupport::Property::general,
                       HMatrixSupport::BlockType::diagonal_block);
 
   // Create a symmetric \hmatrix with respect to the block cluster tree.
   HMatrix<spacedim> V_symm(bct,
-                           max_rank,
+                           static_cast<unsigned int>(hmat_params.max_rank),
                            HMatrixSupport::Property::symmetric,
                            HMatrixSupport::BlockType::diagonal_block);
 
@@ -226,9 +234,11 @@ main()
     double,
     double,
     SurfaceNormalDetector<dim, spacedim>>(
-    MultithreadInfo::n_threads(),
     V,
-    ACAConfig(max_rank, epsilon, eta),
+    hmat_params,
+    sauter_quad_near_field_params,
+    sauter_quad_far_field_params,
+    parallel_params,
     single_layer_kernel,
     1.0,
     dof_to_cell_topo,
@@ -253,9 +263,11 @@ main()
     double,
     double,
     SurfaceNormalDetector<dim, spacedim>>(
-    MultithreadInfo::n_threads(),
     V_symm,
-    ACAConfig(max_rank, epsilon, eta),
+    hmat_params,
+    sauter_quad_near_field_params,
+    sauter_quad_far_field_params,
+    parallel_params,
     single_layer_kernel,
     1.0,
     dof_to_cell_topo,

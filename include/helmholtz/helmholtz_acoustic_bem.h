@@ -39,8 +39,8 @@
 #include "cad_mesh/gmsh_manipulation.h"
 #include "cad_mesh/subdomain_topology.h"
 #include "config.h"
+#include "config_file/config_structs.h"
 #include "dofs/dof_tools_ext.h"
-#include "hmatrix/hmatrix_parameters.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
 #include "mapping/mapping_info.h"
 #include "preconditioners/preconditioner_type.h"
@@ -82,39 +82,30 @@ public:
    * @brief Constructor for solving Helmholtz acoustic problem using full
    * matrix, which has only verification purpose.
    *
-   * @param fe_order_for_dirichlet_space
-   * @param fe_order_for_neumann_space
-   * @param problem_type
-   * @param is_interior_problem
-   * @param thread_num
+   * @param bem_params
    */
-  HelmholtzAcousticBEM(const KernelNumberType kappa,
-                       unsigned int           fe_order_for_dirichlet_space,
-                       unsigned int           fe_order_for_neumann_space,
-                       ProblemType            problem_type,
-                       bool                   is_interior_problem,
-                       unsigned int           thread_num);
+  HelmholtzAcousticBEM(const ConfHelmholtzAcousticBEM &bem_params);
 
   /**
    * @brief Constructor for solving Helmholtz acoustic problem using \hmatrix.
    *
-   * @param fe_order_for_dirichlet_space
-   * @param fe_order_for_neumann_space
-   * @param problem_type
-   * @param is_interior_problem
+   * @param bem_params
    * @param hmat_params
    * @param hmat_preconditioner_params
-   * @param thread_num
+   * @param sauter_quad_params
+   * @param sauter_quad_precond_params
+   * @param linear_solver_params
+   * @param op_precond_params
+   * @param parallel_params
    */
-  HelmholtzAcousticBEM(
-    const KernelNumberType              kappa,
-    const unsigned int                  fe_order_for_dirichlet_space,
-    const unsigned int                  fe_order_for_neumann_space,
-    const ProblemType                   problem_type,
-    const bool                          is_interior_problem,
-    const HMatrixParameters<real_type> &hmat_params,
-    const HMatrixParameters<real_type> &hmat_preconditioner_params,
-    const unsigned int                  thread_num);
+  HelmholtzAcousticBEM(const ConfHelmholtzAcousticBEM &bem_params,
+                       const ConfHMatrix              &hmat_params,
+                       const ConfHMatrix      &hmat_preconditioner_params,
+                       const ConfSauterQuad   &sauter_quad_params,
+                       const ConfSauterQuad   &sauter_quad_precond_params,
+                       const ConfLinearSolver &linear_solver_params,
+                       const ConfOperatorPreconditioner &op_precond_params,
+                       const ConfParallelization        &parallel_params);
 
   /**
    * Destructor, where DoF handlers are cleared.

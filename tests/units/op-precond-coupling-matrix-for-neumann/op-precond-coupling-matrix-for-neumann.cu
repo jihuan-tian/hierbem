@@ -32,6 +32,7 @@
 #include <fstream>
 #include <vector>
 
+#include "config_file/config_structs.h"
 #include "grid/grid_out_ext.h"
 #include "preconditioners/preconditioner_for_laplace_hyper_singular_bio.h"
 
@@ -78,7 +79,12 @@ TEST_CASE(
   // preconditioner's constructor.
   std::vector<types::global_dof_index>                     dummy_numbering;
   LaplaceHyperSingularPreconditioner<2, 3, double, double> precond(
-    fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
+    fe_primal_space,
+    fe_dual_space,
+    tria,
+    dummy_numbering,
+    dummy_numbering,
+    ConfOperatorPreconditioner());
 
   // Build the averaging matrix.
   precond.initialize_dof_handlers();

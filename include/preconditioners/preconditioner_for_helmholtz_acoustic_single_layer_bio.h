@@ -21,7 +21,6 @@
 #define HIERBEM_INCLUDE_PRECONDITIONERS_PRECONDITIONER_FOR_HELMHOLTZ_ACOUSTIC_DIRICHLET_H_
 
 #include <deal.II/base/exceptions.h>
-#include <deal.II/base/numbers.h>
 #include <deal.II/base/quadrature.h>
 #include <deal.II/base/types.h>
 
@@ -40,7 +39,7 @@
 
 #include "cad_mesh/subdomain_topology.h"
 #include "config.h"
-#include "hmatrix/hmatrix_parameters.h"
+#include "config_file/config_structs.h"
 #include "mapping/mapping_info.h"
 #include "platform_shared/helmholtz_acoustic_kernels.h"
 #include "preconditioners/operator_preconditioner.h"
@@ -70,8 +69,6 @@ class HelmholtzAcousticSingleLayerPreconditioner
   : public SingleLayerPreconditioner<dim, spacedim, RangeNumberType>
 {
 public:
-  using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
-
   /**
    * Constructor for the preconditioner on the full domain.
    */
@@ -81,11 +78,7 @@ public:
     const Triangulation<dim, spacedim>         &tria,
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
-    const unsigned int                          max_iter    = 1000,
-    const real_type                             tol         = 1e-8,
-    const real_type                             omega       = 1.0,
-    const bool                                  log_history = true,
-    const bool                                  log_result  = true);
+    const ConfOperatorPreconditioner           &op_precond_params);
 
   /**
    * Constructor for the preconditioner on a subdomain.
@@ -97,27 +90,32 @@ public:
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
     const std::set<types::material_id>         &subdomain_material_ids,
-    const unsigned int                          max_iter    = 1000,
-    const real_type                             tol         = 1e-8,
-    const real_type                             omega       = 1.0,
-    const bool                                  log_history = true,
-    const bool                                  log_result  = true);
+    const ConfOperatorPreconditioner           &op_precond_params);
 
   /**
    * Setup the preconditioner by calling the parent class's version as well as
    * building the H-matrix on the refined mesh.
+   *
+   * @param sauter_quad_rule1 Sauter quadrature rule for the first part of the
+   * matrix, which involves surface curl.
+   * @param sauter_quad_rule2 Sauter quadrature rule for the second part of the
+   * matrix, the kernel of which is equivalent to the single layer potential
+   * kernel.
    */
   template <typename SurfaceNormalDetector>
   void
   setup_preconditioner(
-    const unsigned int                               thread_num,
-    const HMatrixParameters<real_type>              &hmat_params,
-    const SubdomainTopology<dim, spacedim>          &subdomain_topology,
+    const ConfHMatrix                      &hmat_params,
+    const ConfSauterQuadNearField          &sauter_quad_near_field_params,
+    const ConfSauterQuadFarField           &sauter_quad_far_field_params,
+    const ConfParallelization              &parallel_params,
+    const SubdomainTopology<dim, spacedim> &subdomain_topology,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                     &material_id_to_mapping_index,
     const SurfaceNormalDetector     &normal_detector,
-    const SauterQuadratureRule<dim> &sauter_quad_rule,
+    const SauterQuadratureRule<dim> &sauter_quad_rule1,
+    const SauterQuadratureRule<dim> &sauter_quad_rule2,
     const Quadrature<dim>           &quad_rule_for_mass);
 
   /**
@@ -185,22 +183,14 @@ HelmholtzAcousticSingleLayerPreconditioner<dim,
     const Triangulation<dim, spacedim>         &tria,
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
-    const unsigned int                          max_iter,
-    const real_type                             tol,
-    const real_type                             omega,
-    const bool                                  log_history,
-    const bool                                  log_result)
+    const ConfOperatorPreconditioner           &op_precond_params)
   : SingleLayerPreconditioner<dim, spacedim, RangeNumberType>(
       fe_primal_space,
       fe_dual_space,
       tria,
       primal_space_dof_i2e_numbering,
       primal_space_dof_e2i_numbering,
-      max_iter,
-      tol,
-      omega,
-      log_history,
-      log_result)
+      op_precond_params)
 {
   // At the moment, in a Dirichlet problem, the primal space can only be
   // @p FE_DGQ(0) and the dual space can only be @p FE_Q(1). Therefore, we make
@@ -230,11 +220,7 @@ HelmholtzAcousticSingleLayerPreconditioner<dim,
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
     const std::set<types::material_id>         &subdomain_material_ids,
-    const unsigned int                          max_iter,
-    const real_type                             tol,
-    const real_type                             omega,
-    const bool                                  log_history,
-    const bool                                  log_result)
+    const ConfOperatorPreconditioner           &op_precond_params)
   : SingleLayerPreconditioner<dim, spacedim, RangeNumberType>(
       fe_primal_space,
       fe_dual_space,
@@ -242,11 +228,7 @@ HelmholtzAcousticSingleLayerPreconditioner<dim,
       primal_space_dof_i2e_numbering,
       primal_space_dof_e2i_numbering,
       subdomain_material_ids,
-      max_iter,
-      tol,
-      omega,
-      log_history,
-      log_result)
+      op_precond_params)
 {
   // At the moment, in a Dirichlet problem, the primal space can only be
   // @p FE_DGQ(0) and the dual space can only be @p FE_Q(1). Therefore, we make
@@ -272,14 +254,17 @@ HelmholtzAcousticSingleLayerPreconditioner<dim,
                                            RangeNumberType,
                                            KernelNumberType>::
   setup_preconditioner(
-    const unsigned int                               thread_num,
-    const HMatrixParameters<real_type>              &hmat_params,
-    const SubdomainTopology<dim, spacedim>          &subdomain_topology,
+    const ConfHMatrix                      &hmat_params,
+    const ConfSauterQuadNearField          &sauter_quad_near_field_params,
+    const ConfSauterQuadFarField           &sauter_quad_far_field_params,
+    const ConfParallelization              &parallel_params,
+    const SubdomainTopology<dim, spacedim> &subdomain_topology,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                     &material_id_to_mapping_index,
     const SurfaceNormalDetector     &normal_detector,
-    const SauterQuadratureRule<dim> &sauter_quad_rule,
+    const SauterQuadratureRule<dim> &sauter_quad_rule1,
+    const SauterQuadratureRule<dim> &sauter_quad_rule2,
     const Quadrature<dim>           &quad_rule_for_mass)
 {
   // Call the parent class's function to setup the preconditioner, but without
@@ -293,13 +278,15 @@ HelmholtzAcousticSingleLayerPreconditioner<dim,
     PlatformShared::HelmholtzAcousticKernel::HyperSingularKernelRegular1,
     KernelNumberType>(this->preconditioner_hmat,
                       hmat_params,
+                      sauter_quad_near_field_params,
+                      sauter_quad_far_field_params,
+                      parallel_params,
                       hyper_singular_kernel1,
-                      thread_num,
                       subdomain_topology,
                       mappings,
                       material_id_to_mapping_index,
                       normal_detector,
-                      sauter_quad_rule);
+                      sauter_quad_rule1);
 
   // Build the H-matrix for the second part of the regularized bilinear form for
   // the hyper singular boundary integral operator.
@@ -307,19 +294,21 @@ HelmholtzAcousticSingleLayerPreconditioner<dim,
     PlatformShared::HelmholtzAcousticKernel::HyperSingularKernelRegular2,
     KernelNumberType>(preconditioner_hmat2,
                       hmat_params,
+                      sauter_quad_near_field_params,
+                      sauter_quad_far_field_params,
+                      parallel_params,
                       hyper_singular_kernel2,
-                      thread_num,
                       subdomain_topology,
                       mappings,
                       material_id_to_mapping_index,
                       normal_detector,
-                      sauter_quad_rule);
+                      sauter_quad_rule2);
 
   // Add the second part H-matrix into the first part. N.B. The truncation rank
-  // for the formatted addition is set to 2*max_hmat_rank, so the formatted
+  // for the formatted addition is set to 2*max_rank, so the formatted
   // addition is accurate.
-  this->preconditioner_hmat.add(preconditioner_hmat2,
-                                hmat_params.max_hmat_rank * 2);
+  this->preconditioner_hmat.add(
+    preconditioner_hmat2, static_cast<unsigned int>(hmat_params.max_rank) * 2);
   preconditioner_hmat2.release();
 }
 

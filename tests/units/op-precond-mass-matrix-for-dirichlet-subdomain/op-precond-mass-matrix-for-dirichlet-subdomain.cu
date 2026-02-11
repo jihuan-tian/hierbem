@@ -35,6 +35,7 @@
 #include <string>
 #include <vector>
 
+#include "config_file/config_structs.h"
 #include "grid/grid_out_ext.h"
 #include "preconditioners/preconditioner_for_laplace_single_layer_bio.h"
 
@@ -135,7 +136,8 @@ TEST_CASE(
     tria,
     dummy_numbering,
     dummy_numbering,
-    subdomain_material_ids);
+    subdomain_material_ids,
+    ConfOperatorPreconditioner());
 
   // Setup the preconditioner and build matrices.
   setup_preconditioner(precond);

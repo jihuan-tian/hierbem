@@ -9,7 +9,7 @@
 // file LICENSE at the top level directory of HierBEM.
 
 /**
- * @file test-dirichlet-full-matrix-single-thread.cu
+ * @file test-dirichlet-full-matrix-single-thread.cc
  * @brief Baseline test for solving Laplace problem with Dirichlet boundary
  * condition based on full matrix BEM, which runs in a single thread.
  *
@@ -17,6 +17,8 @@
  * @author Jihuan Tian
  * @date 2023-10-24
  */
+
+#include <deal.II/base/multithread_info.h>
 #include <deal.II/base/timer.h>
 
 #include <deal.II/fe/mapping_manifold.h>
@@ -32,6 +34,7 @@
 #include <iostream>
 
 #include "bem/types.h"
+#include "config_file/config_structs.h"
 #include "grid/grid_in_ext.h"
 #include "grid/grid_out_ext.h"
 #include "hbem_test_config.h"
@@ -255,12 +258,22 @@ main(int argc, char *argv[])
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  LaplaceBEM<dim, spacedim> bem(opts.dirichlet_space_fe_order,
-                                opts.neumann_space_fe_order,
-                                ProblemType::DirichletBCProblem,
-                                true, // Interior problem
-                                MultithreadInfo::n_cores());
+  ConfLaplaceBEM      bem_params{opts.dirichlet_space_fe_order,
+                            opts.neumann_space_fe_order,
+                            ProblemType::DirichletBCProblem,
+                            true};
+  ConfParallelization parallel_params;
+
+  LaplaceBEM<dim, spacedim> bem(bem_params);
   bem.set_cpu_serial(!opts.run_in_parallel);
+  if (opts.run_in_parallel)
+    {
+      // Set TBB thread num.
+      if (parallel_params.tbb_thread_num == -1)
+        MultithreadInfo::set_thread_limit(MultithreadInfo::n_threads());
+      else
+        MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
+    }
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");

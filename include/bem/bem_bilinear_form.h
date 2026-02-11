@@ -34,7 +34,7 @@
 #include "cad_mesh/subdomain_topology.h"
 #include "cluster_tree/block_cluster_tree.h"
 #include "config.h"
-#include "hmatrix/aca_plus/aca_config.h"
+#include "config_file/config_structs.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "hmatrix/hmatrix.h"
 #include "hmatrix/hmatrix_support.h"
@@ -83,15 +83,16 @@ public:
    * node.
    */
   void
-  build_block_cluster_tree(const double eta, const unsigned int n_min);
+  build_block_cluster_tree(const real_type eta, const unsigned int n_min);
 
   /**
    * Build an H-matrix for the bilinear form.
    */
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
-  build_hmatrix(const unsigned int                       thread_num,
-                const unsigned int                       max_rank,
-                const real_type                          epsilon,
+  build_hmatrix(const ConfHMatrix             &hmat_params,
+                const ConfSauterQuadNearField &sauter_quad_near_field_params,
+                const ConfSauterQuadFarField  &sauter_quad_far_field_params,
+                const ConfParallelization     &parallel_params,
                 const DeviceNumberType<KernelNumberType> kernel_factor,
                 const SauterQuadratureRule<dim>         &sauter_quad_rule,
                 const std::vector<MappingInfo<dim, spacedim> *> &mappings,
@@ -105,13 +106,14 @@ public:
    */
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
   build_hmatrix_with_mass_matrix(
-    const unsigned int                               thread_num,
-    const unsigned int                               max_rank,
-    const real_type                                  epsilon,
-    const DeviceNumberType<KernelNumberType>         kernel_factor,
-    const real_type                                  mass_matrix_factor,
-    const SauterQuadratureRule<dim>                 &sauter_quad_rule,
-    const QGauss<dim>                               &mass_matrix_quad_rule,
+    const ConfHMatrix                       &hmat_params,
+    const ConfSauterQuadNearField           &sauter_quad_near_field_params,
+    const ConfSauterQuadFarField            &sauter_quad_far_field_params,
+    const ConfParallelization               &parallel_params,
+    const DeviceNumberType<KernelNumberType> kernel_factor,
+    const real_type                          mass_matrix_factor,
+    const SauterQuadratureRule<dim>         &sauter_quad_rule,
+    const QGauss<dim>                       &mass_matrix_quad_rule,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                      &material_id_to_mapping_index,
@@ -132,13 +134,14 @@ public:
    */
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
   build_hmatrix_with_regularization(
-    const unsigned int                               thread_num,
-    const unsigned int                               max_rank,
-    const real_type                                  epsilon,
-    const DeviceNumberType<KernelNumberType>         kernel_factor,
-    const std::vector<Vector<KernelNumberType>>     &mass_vmult_weq,
-    const KernelNumberType                           stabilization_factor,
-    const SauterQuadratureRule<dim>                 &sauter_quad_rule,
+    const ConfHMatrix                           &hmat_params,
+    const ConfSauterQuadNearField               &sauter_quad_near_field_params,
+    const ConfSauterQuadFarField                &sauter_quad_far_field_params,
+    const ConfParallelization                   &parallel_params,
+    const DeviceNumberType<KernelNumberType>     kernel_factor,
+    const std::vector<Vector<KernelNumberType>> &mass_vmult_weq,
+    const KernelNumberType                       stabilization_factor,
+    const SauterQuadratureRule<dim>             &sauter_quad_rule,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                      &material_id_to_mapping_index,
@@ -268,7 +271,7 @@ BEMBilinearForm<dim,
                 SearchableMaterialIdContainer,
                 KernelFunctionType,
                 RangeNumberType,
-                KernelNumberType>::build_block_cluster_tree(const double eta,
+                KernelNumberType>::build_block_cluster_tree(const real_type eta,
                                                             const unsigned int
                                                               n_min)
 {
@@ -308,9 +311,10 @@ BEMBilinearForm<dim,
                 KernelFunctionType,
                 RangeNumberType,
                 KernelNumberType>::
-  build_hmatrix(const unsigned int                       thread_num,
-                const unsigned int                       max_rank,
-                const real_type                          epsilon,
+  build_hmatrix(const ConfHMatrix             &hmat_params,
+                const ConfSauterQuadNearField &sauter_quad_near_field_params,
+                const ConfSauterQuadFarField  &sauter_quad_far_field_params,
+                const ConfParallelization     &parallel_params,
                 const DeviceNumberType<KernelNumberType> kernel_factor,
                 const SauterQuadratureRule<dim>         &sauter_quad_rule,
                 const std::vector<MappingInfo<dim, spacedim> *> &mappings,
@@ -327,7 +331,10 @@ BEMBilinearForm<dim,
   HMatrixSupport::BlockType block_type =
     HMatrixSupport::BlockType::diagonal_block;
   auto hmat = std::make_unique<HMatrix<spacedim, RangeNumberType>>(
-    *block_cluster_tree, max_rank, property, block_type);
+    *block_cluster_tree,
+    static_cast<unsigned int>(hmat_params.max_rank),
+    property,
+    block_type);
 
   fill_hmatrix_with_aca_plus_smp<dim,
                                  spacedim,
@@ -335,9 +342,11 @@ BEMBilinearForm<dim,
                                  RangeNumberType,
                                  KernelNumberType,
                                  SurfaceNormalDetector<dim, spacedim>>(
-    thread_num,
     *hmat,
-    ACAConfig<real_type>(max_rank, epsilon, block_cluster_tree->get_eta()),
+    hmat_params,
+    sauter_quad_near_field_params,
+    sauter_quad_far_field_params,
+    parallel_params,
     kernel,
     kernel_factor,
     test_space.get_dof_to_cell_topo(),
@@ -377,13 +386,14 @@ BEMBilinearForm<dim,
                 RangeNumberType,
                 KernelNumberType>::
   build_hmatrix_with_mass_matrix(
-    const unsigned int                               thread_num,
-    const unsigned int                               max_rank,
-    const real_type                                  epsilon,
-    const DeviceNumberType<KernelNumberType>         kernel_factor,
-    const real_type                                  mass_matrix_factor,
-    const SauterQuadratureRule<dim>                 &sauter_quad_rule,
-    const QGauss<dim>                               &mass_matrix_quad_rule,
+    const ConfHMatrix                       &hmat_params,
+    const ConfSauterQuadNearField           &sauter_quad_near_field_params,
+    const ConfSauterQuadFarField            &sauter_quad_far_field_params,
+    const ConfParallelization               &parallel_params,
+    const DeviceNumberType<KernelNumberType> kernel_factor,
+    const real_type                          mass_matrix_factor,
+    const SauterQuadratureRule<dim>         &sauter_quad_rule,
+    const QGauss<dim>                       &mass_matrix_quad_rule,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                      &material_id_to_mapping_index,
@@ -398,7 +408,10 @@ BEMBilinearForm<dim,
   HMatrixSupport::BlockType block_type =
     HMatrixSupport::BlockType::diagonal_block;
   auto hmat = std::make_unique<HMatrix<spacedim, RangeNumberType>>(
-    *block_cluster_tree, max_rank, property, block_type);
+    *block_cluster_tree,
+    static_cast<unsigned int>(hmat_params.max_rank),
+    property,
+    block_type);
 
   fill_hmatrix_with_aca_plus_smp<dim,
                                  spacedim,
@@ -406,9 +419,11 @@ BEMBilinearForm<dim,
                                  RangeNumberType,
                                  KernelNumberType,
                                  SurfaceNormalDetector<dim, spacedim>>(
-    thread_num,
     *hmat,
-    ACAConfig<real_type>(max_rank, epsilon, block_cluster_tree->get_eta()),
+    hmat_params,
+    sauter_quad_near_field_params,
+    sauter_quad_far_field_params,
+    parallel_params,
     kernel,
     kernel_factor,
     mass_matrix_factor,
@@ -450,13 +465,14 @@ BEMBilinearForm<dim,
                 RangeNumberType,
                 KernelNumberType>::
   build_hmatrix_with_regularization(
-    const unsigned int                               thread_num,
-    const unsigned int                               max_rank,
-    const real_type                                  epsilon,
-    const DeviceNumberType<KernelNumberType>         kernel_factor,
-    const std::vector<Vector<KernelNumberType>>     &mass_vmult_weq,
-    const KernelNumberType                           stabilization_factor,
-    const SauterQuadratureRule<dim>                 &sauter_quad_rule,
+    const ConfHMatrix                           &hmat_params,
+    const ConfSauterQuadNearField               &sauter_quad_near_field_params,
+    const ConfSauterQuadFarField                &sauter_quad_far_field_params,
+    const ConfParallelization                   &parallel_params,
+    const DeviceNumberType<KernelNumberType>     kernel_factor,
+    const std::vector<Vector<KernelNumberType>> &mass_vmult_weq,
+    const KernelNumberType                       stabilization_factor,
+    const SauterQuadratureRule<dim>             &sauter_quad_rule,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                      &material_id_to_mapping_index,
@@ -477,7 +493,10 @@ BEMBilinearForm<dim,
   HMatrixSupport::BlockType block_type =
     HMatrixSupport::BlockType::diagonal_block;
   auto hmat = std::make_unique<HMatrix<spacedim, RangeNumberType>>(
-    *block_cluster_tree, max_rank, property, block_type);
+    *block_cluster_tree,
+    static_cast<unsigned int>(hmat_params.max_rank),
+    property,
+    block_type);
 
   fill_hmatrix_with_aca_plus_smp<dim,
                                  spacedim,
@@ -485,9 +504,11 @@ BEMBilinearForm<dim,
                                  RangeNumberType,
                                  KernelNumberType,
                                  SurfaceNormalDetector<dim, spacedim>>(
-    thread_num,
     *hmat,
-    ACAConfig<real_type>(max_rank, epsilon, block_cluster_tree->get_eta()),
+    hmat_params,
+    sauter_quad_near_field_params,
+    sauter_quad_far_field_params,
+    parallel_params,
     kernel,
     kernel_factor,
     mass_vmult_weq,

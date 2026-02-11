@@ -39,6 +39,6 @@ deal_ii_setup_target(${_target})
 target_link_libraries(
   ${_target} openblas dl # Lazy way: always link with libdl no matter if CUDA is
                          # used or not
-)
+  fmt::fmt reflectcpp::reflectcpp PkgConfig::tomlplusplus)
 
 add_subdirectory(hbem_laplace)

@@ -83,15 +83,14 @@
 #include "cluster_tree/block_cluster_tree.h"
 #include "cluster_tree/cluster_tree.h"
 #include "config.h"
+#include "config_file/config_structs.h"
 #include "cuda_complex.hcu"
 #include "grid/grid_out_ext.h"
 #include "grid/triangulation_tools.h"
 #include "helmholtz_acoustic_bem.h"
-#include "hmatrix/aca_plus/aca_config.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "hmatrix/hblockmatrix_skew_symm.h"
 #include "hmatrix/hmatrix.h"
-#include "hmatrix/hmatrix_parameters.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
 #include "hmatrix/preconditioner/hblockmatrix_skew_symm_preconditioner.h"
 #include "hmatrix/preconditioner/hmatrix_symm_preconditioner.h"
@@ -137,20 +136,15 @@ public:
     std::map<EntityTag, Function<spacedim, RangeNumberType> *>;
 
 #pragma region ****Internal class ctor and dtor decls ****
-  Priv(const KernelNumberType kappa,
-       const unsigned int     fe_order_for_dirichlet_space,
-       const unsigned int     fe_order_for_neumann_space,
-       const ProblemType      problem_type,
-       const bool             is_interior_problem,
-       const unsigned int     thread_num);
-  Priv(const KernelNumberType              kappa,
-       const unsigned int                  fe_order_for_dirichlet_space,
-       const unsigned int                  fe_order_for_neumann_space,
-       const ProblemType                   problem_type,
-       const bool                          is_interior_problem,
-       const HMatrixParameters<real_type> &hmat_params,
-       const HMatrixParameters<real_type> &hmat_preconditioner_params,
-       const unsigned int                  thread_num);
+  Priv(const ConfHelmholtzAcousticBEM &bem_params);
+  Priv(const ConfHelmholtzAcousticBEM   &bem_params,
+       const ConfHMatrix                &hmat_params,
+       const ConfHMatrix                &hmat_preconditioner_params,
+       const ConfSauterQuad             &sauter_quad_params,
+       const ConfSauterQuad             &sauter_quad_precond_params,
+       const ConfLinearSolver           &linear_solver_params,
+       const ConfOperatorPreconditioner &op_precond_params,
+       const ConfParallelization        &parallel_params);
   ~Priv();
 
 #pragma endregion
@@ -295,11 +289,6 @@ private:
    * Whether the problem is interior or exterior.
    */
   bool is_interior_problem_;
-
-  /**
-   * Number of threads
-   */
-  unsigned int thread_num_;
 
   /**
    * Triangulation for the surface mesh.
@@ -484,15 +473,13 @@ private:
   std::unique_ptr<HBlockMatrixSkewSymmPreconditioner<spacedim, RangeNumberType>>
     M_hmat_preconditioner_;
 
-  /**
-   * Parameters for assembling H-matrices.
-   */
-  HMatrixParameters<real_type> hmat_params_;
-
-  /**
-   * Parameters for assembling H-matrix based preconditioners.
-   */
-  HMatrixParameters<real_type> hmat_preconditioner_params_;
+  ConfHMatrix                hmat_params_;
+  ConfHMatrix                hmat_preconditioner_params_;
+  ConfSauterQuad             sauter_quad_params_;
+  ConfSauterQuad             sauter_quad_precond_params_;
+  ConfLinearSolver           linear_solver_params_;
+  ConfOperatorPreconditioner op_precond_params_;
+  ConfParallelization        parallel_params_;
 
   /**
    * Map surface entity tag to Neumann boundary condition.
@@ -601,8 +588,8 @@ private:
   PreconditionerType preconditioner_type_;
 
   /**
-   * Operator preconditioner for the Dirichlet problem, either on the whole
-   * domain or a subdomain.
+   * Operator preconditioner for the single layer potential boundary integral
+   * operator, either on the whole domain or a subdomain.
    */
   std::unique_ptr<HelmholtzAcousticSingleLayerPreconditioner<dim,
                                                              spacedim,
@@ -611,8 +598,8 @@ private:
     op_precond_for_slp_;
 
   /**
-   * Operator preconditioner for the Neumann problem, either on the whole domain
-   * or a subdomain.
+   * Operator preconditioner for the hyper singular boundary integral operator,
+   * either on the whole domain or a subdomain.
    */
   std::unique_ptr<
     HelmholtzAcousticHyperSingularPreconditioner<dim,
@@ -701,21 +688,15 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
-  Priv(const KernelNumberType kappa,
-       const unsigned int     fe_order_for_dirichlet_space,
-       const unsigned int     fe_order_for_neumann_space,
-       const ProblemType      problem_type,
-       const bool             is_interior_problem,
-       const unsigned int     thread_num)
+  Priv(const ConfHelmholtzAcousticBEM &bem_params)
   : project_name_("default")
-  , kappa_(kappa)
-  , fe_order_for_dirichlet_space_(fe_order_for_dirichlet_space)
-  , fe_order_for_neumann_space_(fe_order_for_neumann_space)
-  , problem_type_(problem_type)
-  , is_interior_problem_(is_interior_problem)
-  , thread_num_(thread_num)
-  , fe_for_dirichlet_space_(fe_order_for_dirichlet_space)
-  , fe_for_neumann_space_(fe_order_for_neumann_space)
+  , kappa_(bem_params.kappa)
+  , fe_order_for_dirichlet_space_(bem_params.fe_order_for_dirichlet_space)
+  , fe_order_for_neumann_space_(bem_params.fe_order_for_neumann_space)
+  , problem_type_(bem_params.problem_type)
+  , is_interior_problem_(bem_params.is_interior_problem)
+  , fe_for_dirichlet_space_(bem_params.fe_order_for_dirichlet_space)
+  , fe_for_neumann_space_(bem_params.fe_order_for_neumann_space)
   , use_hmat_(false)
   , cpu_serial_(false)
 {}
@@ -725,30 +706,37 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
-  Priv(const KernelNumberType              kappa,
-       const unsigned int                  fe_order_for_dirichlet_space,
-       const unsigned int                  fe_order_for_neumann_space,
-       const ProblemType                   problem_type,
-       const bool                          is_interior_problem,
-       const HMatrixParameters<real_type> &hmat_params,
-       const HMatrixParameters<real_type> &hmat_preconditioner_params,
-       const unsigned int                  thread_num)
+  Priv(const ConfHelmholtzAcousticBEM   &bem_params,
+       const ConfHMatrix                &hmat_params,
+       const ConfHMatrix                &hmat_preconditioner_params,
+       const ConfSauterQuad             &sauter_quad_params,
+       const ConfSauterQuad             &sauter_quad_precond_params,
+       const ConfLinearSolver           &linear_solver_params,
+       const ConfOperatorPreconditioner &op_precond_params,
+       const ConfParallelization        &parallel_params)
   : project_name_("default")
-  , kappa_(kappa)
-  , fe_order_for_dirichlet_space_(fe_order_for_dirichlet_space)
-  , fe_order_for_neumann_space_(fe_order_for_neumann_space)
-  , problem_type_(problem_type)
-  , is_interior_problem_(is_interior_problem)
-  , thread_num_(thread_num)
+  , kappa_(bem_params.kappa)
+  , fe_order_for_dirichlet_space_(bem_params.fe_order_for_dirichlet_space)
+  , fe_order_for_neumann_space_(bem_params.fe_order_for_neumann_space)
+  , problem_type_(bem_params.problem_type)
+  , is_interior_problem_(bem_params.is_interior_problem)
   , tria_(Triangulation<dim, spacedim>::MeshSmoothing::
-            limit_level_difference_at_vertices)
+            limit_level_difference_at_vertices) // This option is mandatory for
+                                                // the operator preconditioner
+                                                // built on the refined mesh.
   , mg_tria_for_preconditioner_(Triangulation<dim, spacedim>::MeshSmoothing::
                                   limit_level_difference_at_vertices)
-  , fe_for_dirichlet_space_(fe_order_for_dirichlet_space)
-  , fe_for_neumann_space_(fe_order_for_neumann_space)
+  , fe_for_dirichlet_space_(bem_params.fe_order_for_dirichlet_space)
+  , fe_for_neumann_space_(bem_params.fe_order_for_neumann_space)
   , use_hmat_(true)
+  , cpu_serial_(false)
   , hmat_params_(hmat_params)
   , hmat_preconditioner_params_(hmat_preconditioner_params)
+  , sauter_quad_params_(sauter_quad_params)
+  , sauter_quad_precond_params_(sauter_quad_precond_params)
+  , linear_solver_params_(linear_solver_params)
+  , op_precond_params_(op_precond_params)
+  , parallel_params_(parallel_params)
   , vmult_type_(IterativeSolverVmultType::SerialRecursive)
   , preconditioner_type_(PreconditionerType::OperatorPreconditioning)
 {}
@@ -896,13 +884,15 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                                   spacedim,
                                                   SearchableMaterialIdContainer,
                                                   real_type>>(
-                  dof_handler_for_dirichlet_space_, hmat_params_.n_min_for_ct);
+                  dof_handler_for_dirichlet_space_,
+                  static_cast<unsigned int>(hmat_params_.n_min_for_ct));
               neumann_space_on_dirichlet_domain_ =
                 std::make_unique<BEMFunctionSpace<dim,
                                                   spacedim,
                                                   SearchableMaterialIdContainer,
                                                   real_type>>(
-                  dof_handler_for_neumann_space_, hmat_params_.n_min_for_ct);
+                  dof_handler_for_neumann_space_,
+                  static_cast<unsigned int>(hmat_params_.n_min_for_ct));
               timer.stop();
               print_wall_time(deallog, timer, "create function spaces");
 
@@ -939,10 +929,12 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 CUDAKernelNumberType(kappa_.real(), kappa_.imag()));
 
               timer.start();
-              bV1_->build_block_cluster_tree(hmat_params_.eta,
-                                             hmat_params_.n_min_for_bct);
-              bI1K2_->build_block_cluster_tree(hmat_params_.eta,
-                                               hmat_params_.n_min_for_bct);
+              bV1_->build_block_cluster_tree(
+                static_cast<real_type>(hmat_params_.eta),
+                static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+              bI1K2_->build_block_cluster_tree(
+                static_cast<real_type>(hmat_params_.eta),
+                static_cast<unsigned int>(hmat_params_.n_min_for_bct));
               timer.stop();
               print_wall_time(deallog, timer, "build block cluster trees");
 
@@ -1025,13 +1017,15 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                                   spacedim,
                                                   SearchableMaterialIdContainer,
                                                   real_type>>(
-                  dof_handler_for_dirichlet_space_, hmat_params_.n_min_for_ct);
+                  dof_handler_for_dirichlet_space_,
+                  static_cast<unsigned int>(hmat_params_.n_min_for_ct));
               neumann_space_on_neumann_domain_ =
                 std::make_unique<BEMFunctionSpace<dim,
                                                   spacedim,
                                                   SearchableMaterialIdContainer,
                                                   real_type>>(
-                  dof_handler_for_neumann_space_, hmat_params_.n_min_for_ct);
+                  dof_handler_for_neumann_space_,
+                  static_cast<unsigned int>(hmat_params_.n_min_for_ct));
               timer.stop();
               print_wall_time(deallog, timer, "create function spaces");
 
@@ -1079,12 +1073,15 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 CUDAKernelNumberType(kappa_.real(), kappa_.imag()));
 
               timer.start();
-              bD1_part1_->build_block_cluster_tree(hmat_params_.eta,
-                                                   hmat_params_.n_min_for_bct);
-              bD1_part2_->build_block_cluster_tree(hmat_params_.eta,
-                                                   hmat_params_.n_min_for_bct);
+              bD1_part1_->build_block_cluster_tree(
+                static_cast<real_type>(hmat_params_.eta),
+                static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+              bD1_part2_->build_block_cluster_tree(
+                static_cast<real_type>(hmat_params_.eta),
+                static_cast<unsigned int>(hmat_params_.n_min_for_bct));
               bI2K_prime2_->build_block_cluster_tree(
-                hmat_params_.eta, hmat_params_.n_min_for_bct);
+                static_cast<real_type>(hmat_params_.eta),
+                static_cast<unsigned int>(hmat_params_.n_min_for_bct));
               timer.stop();
               print_wall_time(deallog, timer, "build block cluster trees");
 
@@ -1146,7 +1143,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                               SearchableMaterialIdContainer,
                                               real_type>>(
               dof_handler_for_dirichlet_space_,
-              hmat_params_.n_min_for_ct,
+              static_cast<unsigned int>(hmat_params_.n_min_for_ct),
               dirichlet_bc_definition_,
               true,
               false);
@@ -1156,7 +1153,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                               SearchableMaterialIdContainer,
                                               real_type>>(
               dof_handler_for_dirichlet_space_,
-              hmat_params_.n_min_for_ct,
+              static_cast<unsigned int>(hmat_params_.n_min_for_ct),
               neumann_bc_definition_,
               false,
               false);
@@ -1166,7 +1163,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                               SearchableMaterialIdContainer,
                                               real_type>>(
               dof_handler_for_neumann_space_,
-              hmat_params_.n_min_for_ct,
+              static_cast<unsigned int>(hmat_params_.n_min_for_ct),
               dirichlet_bc_definition_,
               true,
               false);
@@ -1176,7 +1173,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                               SearchableMaterialIdContainer,
                                               real_type>>(
               dof_handler_for_neumann_space_,
-              hmat_params_.n_min_for_ct,
+              static_cast<unsigned int>(hmat_params_.n_min_for_ct),
               neumann_bc_definition_,
               true,
               false);
@@ -1317,24 +1314,33 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           // Create the block cluster trees.
           timer.start();
-          bV1_->build_block_cluster_tree(hmat_params_.eta,
-                                         hmat_params_.n_min_for_bct);
-          bK1_->build_block_cluster_tree(hmat_params_.eta,
-                                         hmat_params_.n_min_for_bct);
-          bD1_part1_->build_block_cluster_tree(hmat_params_.eta,
-                                               hmat_params_.n_min_for_bct);
-          bD1_part2_->build_block_cluster_tree(hmat_params_.eta,
-                                               hmat_params_.n_min_for_bct);
-          bI1K2_->build_block_cluster_tree(hmat_params_.eta,
-                                           hmat_params_.n_min_for_bct);
-          bV2_->build_block_cluster_tree(hmat_params_.eta,
-                                         hmat_params_.n_min_for_bct);
-          bD2_part1_->build_block_cluster_tree(hmat_params_.eta,
-                                               hmat_params_.n_min_for_bct);
-          bD2_part2_->build_block_cluster_tree(hmat_params_.eta,
-                                               hmat_params_.n_min_for_bct);
-          bI2K_prime2_->build_block_cluster_tree(hmat_params_.eta,
-                                                 hmat_params_.n_min_for_bct);
+          bV1_->build_block_cluster_tree(
+            static_cast<real_type>(hmat_params_.eta),
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+          bK1_->build_block_cluster_tree(
+            static_cast<real_type>(hmat_params_.eta),
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+          bD1_part1_->build_block_cluster_tree(
+            static_cast<real_type>(hmat_params_.eta),
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+          bD1_part2_->build_block_cluster_tree(
+            static_cast<real_type>(hmat_params_.eta),
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+          bI1K2_->build_block_cluster_tree(
+            static_cast<real_type>(hmat_params_.eta),
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+          bV2_->build_block_cluster_tree(
+            static_cast<real_type>(hmat_params_.eta),
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+          bD2_part1_->build_block_cluster_tree(
+            static_cast<real_type>(hmat_params_.eta),
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+          bD2_part2_->build_block_cluster_tree(
+            static_cast<real_type>(hmat_params_.eta),
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+          bI2K_prime2_->build_block_cluster_tree(
+            static_cast<real_type>(hmat_params_.eta),
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
           timer.stop();
           print_wall_time(deallog, timer, "build block cluster trees");
 
@@ -1673,8 +1679,6 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
     hyper_singular_kernel2(kappa_);
 
   LogStream::Prefix prefix_string("assemble_full_matrix");
-
-  MultithreadInfo::set_thread_limit(thread_num_);
 
   switch (problem_type_)
     {
@@ -2137,10 +2141,6 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 #endif
 
   Timer timer;
-  MultithreadInfo::set_thread_limit(thread_num_);
-  ACAConfig<real_type> aca_config(hmat_params_.max_hmat_rank,
-                                  hmat_params_.aca_relative_error,
-                                  hmat_params_.eta);
   switch (problem_type_)
     {
         case DirichletBCProblem: {
@@ -2158,12 +2158,13 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             {
               std::cout << "=== Assemble sigma*I1+K2 ===" << std::endl;
               I1K2_hmat_ = bI1K2_->build_hmatrix_with_mass_matrix(
-                thread_num_,
-                hmat_params_.max_hmat_rank,
-                hmat_params_.aca_relative_error,
+                hmat_params_,
+                sauter_quad_params_.near_field,
+                sauter_quad_params_.far_field,
+                parallel_params_,
                 CUDAKernelNumberType(1.0),
                 real_type(0.5),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(sauter_quad_params_.dlp_order),
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
@@ -2175,12 +2176,13 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             {
               std::cout << "=== Assemble (sigma-1)*I1+K2 ===" << std::endl;
               I1K2_hmat_ = bI1K2_->build_hmatrix_with_mass_matrix(
-                thread_num_,
-                hmat_params_.max_hmat_rank,
-                hmat_params_.aca_relative_error,
+                hmat_params_,
+                sauter_quad_params_.near_field,
+                sauter_quad_params_.far_field,
+                parallel_params_,
                 CUDAKernelNumberType(1.0),
                 real_type(-0.5),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(sauter_quad_params_.dlp_order),
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
@@ -2240,15 +2242,16 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
             std::cout << "=== Assemble V1 ===" << std::endl;
             timer.start();
-            V1_hmat_ =
-              bV1_->build_hmatrix(thread_num_,
-                                  hmat_params_.max_hmat_rank,
-                                  hmat_params_.aca_relative_error,
-                                  CUDAKernelNumberType(1.0),
-                                  SauterQuadratureRule<dim>(5, 4, 4, 3),
-                                  mappings_,
-                                  material_id_to_mapping_index_,
-                                  subdomain_topology_);
+            V1_hmat_ = bV1_->build_hmatrix(hmat_params_,
+                                           sauter_quad_params_.near_field,
+                                           sauter_quad_params_.far_field,
+                                           parallel_params_,
+                                           CUDAKernelNumberType(1.0),
+                                           SauterQuadratureRule<dim>(
+                                             sauter_quad_params_.slp_order),
+                                           mappings_,
+                                           material_id_to_mapping_index_,
+                                           subdomain_topology_);
             timer.stop();
             print_wall_time(deallog, timer, "assemble V1");
           }
@@ -2290,12 +2293,13 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             {
               std::cout << "=== Assemble (1-sigma)*I2-K'2 ===" << std::endl;
               I2K_prime2_hmat_ = bI2K_prime2_->build_hmatrix_with_mass_matrix(
-                thread_num_,
-                hmat_params_.max_hmat_rank,
-                hmat_params_.aca_relative_error,
+                hmat_params_,
+                sauter_quad_params_.near_field,
+                sauter_quad_params_.far_field,
+                parallel_params_,
                 CUDAKernelNumberType(-1.0),
                 real_type(0.5),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(sauter_quad_params_.adlp_order),
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
@@ -2307,12 +2311,13 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             {
               std::cout << "=== Assemble -sigma*I2-K'2 ===" << std::endl;
               I2K_prime2_hmat_ = bI2K_prime2_->build_hmatrix_with_mass_matrix(
-                thread_num_,
-                hmat_params_.max_hmat_rank,
-                hmat_params_.aca_relative_error,
+                hmat_params_,
+                sauter_quad_params_.near_field,
+                sauter_quad_params_.far_field,
+                parallel_params_,
                 CUDAKernelNumberType(-1.0),
                 real_type(-0.5),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(sauter_quad_params_.adlp_order),
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
@@ -2374,26 +2379,30 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           nvtxRangePush("assemble_D1");
 #endif
           D1_hmat_ = bD1_part1_->build_hmatrix_with_regularization(
-            thread_num_,
-            hmat_params_.max_hmat_rank,
-            hmat_params_.aca_relative_error,
+            hmat_params_,
+            sauter_quad_params_.near_field,
+            sauter_quad_params_.far_field,
+            parallel_params_,
             CUDAKernelNumberType(1.0),
             {},
             KernelNumberType(0.),
-            SauterQuadratureRule<dim>(5, 4, 4, 3),
+            SauterQuadratureRule<dim>(sauter_quad_params_.hyper_singular_order),
             mappings_,
             material_id_to_mapping_index_,
             subdomain_topology_);
           D1_part2_hmat_ =
-            bD1_part2_->build_hmatrix(thread_num_,
-                                      hmat_params_.max_hmat_rank,
-                                      hmat_params_.aca_relative_error,
+            bD1_part2_->build_hmatrix(hmat_params_,
+                                      sauter_quad_params_.near_field,
+                                      sauter_quad_params_.far_field,
+                                      parallel_params_,
                                       CUDAKernelNumberType(1.0),
-                                      SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                      SauterQuadratureRule<dim>(
+                                        sauter_quad_params_.slp_order),
                                       mappings_,
                                       material_id_to_mapping_index_,
                                       subdomain_topology_);
-          D1_hmat_->add(*D1_part2_hmat_, hmat_params_.max_hmat_rank * 2);
+          D1_hmat_->add(*D1_part2_hmat_,
+                        static_cast<unsigned int>(hmat_params_.max_rank) * 2);
           D1_part2_hmat_->release();
           timer.stop();
           print_wall_time(deallog, timer, "assemble D1");
@@ -2439,12 +2448,13 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             {
               std::cout << "=== Assemble sigma*I1+K2 ===" << std::endl;
               I1K2_hmat_ = bI1K2_->build_hmatrix_with_mass_matrix(
-                thread_num_,
-                hmat_params_.max_hmat_rank,
-                hmat_params_.aca_relative_error,
+                hmat_params_,
+                sauter_quad_params_.near_field,
+                sauter_quad_params_.far_field,
+                parallel_params_,
                 CUDAKernelNumberType(1.0),
                 real_type(0.5),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(sauter_quad_params_.dlp_order),
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
@@ -2455,12 +2465,13 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               std::cout << "=== Assemble (1-sigma)*I2-K'2 ===" << std::endl;
               timer.start();
               I2K_prime2_hmat_ = bI2K_prime2_->build_hmatrix_with_mass_matrix(
-                thread_num_,
-                hmat_params_.max_hmat_rank,
-                hmat_params_.aca_relative_error,
+                hmat_params_,
+                sauter_quad_params_.near_field,
+                sauter_quad_params_.far_field,
+                parallel_params_,
                 CUDAKernelNumberType(-1.0),
                 real_type(0.5),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(sauter_quad_params_.adlp_order),
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
@@ -2472,12 +2483,13 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             {
               std::cout << "=== Assemble (sigma-1)*I1+K2 ===" << std::endl;
               I1K2_hmat_ = bI1K2_->build_hmatrix_with_mass_matrix(
-                thread_num_,
-                hmat_params_.max_hmat_rank,
-                hmat_params_.aca_relative_error,
+                hmat_params_,
+                sauter_quad_params_.near_field,
+                sauter_quad_params_.far_field,
+                parallel_params_,
                 CUDAKernelNumberType(1.0),
                 real_type(-0.5),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(sauter_quad_params_.dlp_order),
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
@@ -2488,12 +2500,13 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               std::cout << "=== Assemble -sigma*I2-K'2 ===" << std::endl;
               timer.start();
               I2K_prime2_hmat_ = bI2K_prime2_->build_hmatrix_with_mass_matrix(
-                thread_num_,
-                hmat_params_.max_hmat_rank,
-                hmat_params_.aca_relative_error,
+                hmat_params_,
+                sauter_quad_params_.near_field,
+                sauter_quad_params_.far_field,
+                parallel_params_,
                 CUDAKernelNumberType(-1.0),
                 real_type(-0.5),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(sauter_quad_params_.adlp_order),
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
@@ -2512,11 +2525,13 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           std::cout << "=== Assemble -V2 ===" << std::endl;
           timer.start();
-          V2_hmat_ = bV2_->build_hmatrix(thread_num_,
-                                         hmat_params_.max_hmat_rank,
-                                         hmat_params_.aca_relative_error,
+          V2_hmat_ = bV2_->build_hmatrix(hmat_params_,
+                                         sauter_quad_params_.near_field,
+                                         sauter_quad_params_.far_field,
+                                         parallel_params_,
                                          CUDAKernelNumberType(-1.0),
-                                         SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                         SauterQuadratureRule<dim>(
+                                           sauter_quad_params_.slp_order),
                                          mappings_,
                                          material_id_to_mapping_index_,
                                          subdomain_topology_);
@@ -2529,26 +2544,30 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           std::cout << "=== Assemble -D2 ===" << std::endl;
           timer.start();
           D2_hmat_ = bD2_part1_->build_hmatrix_with_regularization(
-            thread_num_,
-            hmat_params_.max_hmat_rank,
-            hmat_params_.aca_relative_error,
+            hmat_params_,
+            sauter_quad_params_.near_field,
+            sauter_quad_params_.far_field,
+            parallel_params_,
             CUDAKernelNumberType(-1.0),
             {},
             KernelNumberType(0.),
-            SauterQuadratureRule<dim>(5, 4, 4, 3),
+            SauterQuadratureRule<dim>(sauter_quad_params_.hyper_singular_order),
             mappings_,
             material_id_to_mapping_index_,
             subdomain_topology_);
           D2_part2_hmat_ =
-            bD2_part2_->build_hmatrix(thread_num_,
-                                      hmat_params_.max_hmat_rank,
-                                      hmat_params_.aca_relative_error,
+            bD2_part2_->build_hmatrix(hmat_params_,
+                                      sauter_quad_params_.near_field,
+                                      sauter_quad_params_.far_field,
+                                      parallel_params_,
                                       CUDAKernelNumberType(-1.0),
-                                      SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                      SauterQuadratureRule<dim>(
+                                        sauter_quad_params_.slp_order),
                                       mappings_,
                                       material_id_to_mapping_index_,
                                       subdomain_topology_);
-          D2_hmat_->add(*D2_part2_hmat_, hmat_params_.max_hmat_rank * 2);
+          D2_hmat_->add(*D2_part2_hmat_,
+                        static_cast<unsigned int>(hmat_params_.max_rank) * 2);
           D2_part2_hmat_->release();
           timer.stop();
           print_wall_time(deallog, timer, "assemble -D2");
@@ -2685,11 +2704,13 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           std::cout << "=== Assemble V1 ===" << std::endl;
           timer.start();
-          V1_hmat_ = bV1_->build_hmatrix(thread_num_,
-                                         hmat_params_.max_hmat_rank,
-                                         hmat_params_.aca_relative_error,
+          V1_hmat_ = bV1_->build_hmatrix(hmat_params_,
+                                         sauter_quad_params_.near_field,
+                                         sauter_quad_params_.far_field,
+                                         parallel_params_,
                                          CUDAKernelNumberType(1.0),
-                                         SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                         SauterQuadratureRule<dim>(
+                                           sauter_quad_params_.slp_order),
                                          mappings_,
                                          material_id_to_mapping_index_,
                                          subdomain_topology_);
@@ -2701,11 +2722,13 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
           std::cout << "=== Assemble -K1 ===" << std::endl;
           timer.start();
-          K1_hmat_ = bK1_->build_hmatrix(thread_num_,
-                                         hmat_params_.max_hmat_rank,
-                                         hmat_params_.aca_relative_error,
+          K1_hmat_ = bK1_->build_hmatrix(hmat_params_,
+                                         sauter_quad_params_.near_field,
+                                         sauter_quad_params_.far_field,
+                                         parallel_params_,
                                          CUDAKernelNumberType(-1.0),
-                                         SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                         SauterQuadratureRule<dim>(
+                                           sauter_quad_params_.dlp_order),
                                          mappings_,
                                          material_id_to_mapping_index_,
                                          subdomain_topology_);
@@ -2718,26 +2741,30 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           std::cout << "=== Assemble D1 ===" << std::endl;
           timer.start();
           D1_hmat_ = bD1_part1_->build_hmatrix_with_regularization(
-            thread_num_,
-            hmat_params_.max_hmat_rank,
-            hmat_params_.aca_relative_error,
+            hmat_params_,
+            sauter_quad_params_.near_field,
+            sauter_quad_params_.far_field,
+            parallel_params_,
             CUDAKernelNumberType(1.0),
             {},
             KernelNumberType(0.),
-            SauterQuadratureRule<dim>(5, 4, 4, 3),
+            SauterQuadratureRule<dim>(sauter_quad_params_.hyper_singular_order),
             mappings_,
             material_id_to_mapping_index_,
             subdomain_topology_);
           D1_part2_hmat_ =
-            bD1_part2_->build_hmatrix(thread_num_,
-                                      hmat_params_.max_hmat_rank,
-                                      hmat_params_.aca_relative_error,
+            bD1_part2_->build_hmatrix(hmat_params_,
+                                      sauter_quad_params_.near_field,
+                                      sauter_quad_params_.far_field,
+                                      parallel_params_,
                                       CUDAKernelNumberType(1.0),
-                                      SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                      SauterQuadratureRule<dim>(
+                                        sauter_quad_params_.slp_order),
                                       mappings_,
                                       material_id_to_mapping_index_,
                                       subdomain_topology_);
-          D1_hmat_->add(*D1_part2_hmat_, hmat_params_.max_hmat_rank * 2);
+          D1_hmat_->add(*D1_part2_hmat_,
+                        static_cast<unsigned int>(hmat_params_.max_rank) * 2);
           timer.stop();
           print_wall_time(deallog, timer, "assemble D1");
           add_memory_consumption_row("D1", *D1_hmat_, "After assembly");
@@ -2813,7 +2840,6 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 {
   LogStream::Prefix prefix_string("assemble_hmatrix_preconditioner");
   Timer             timer;
-  MultithreadInfo::set_thread_limit(thread_num_);
   switch (problem_type_)
     {
         case DirichletBCProblem: {
@@ -2837,7 +2863,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     {
                       V1_hmat_preconditioner_
                         .truncate_to_rank_preserve_positive_definite(
-                          hmat_preconditioner_params_.max_hmat_rank);
+                          hmat_preconditioner_params_.max_rank);
                     }
                   timer.stop();
                   print_wall_time(deallog, timer, "truncate V");
@@ -2860,12 +2886,12 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     {
                       V1_hmat_preconditioner_
                         .compute_lu_factorization_task_parallel(
-                          hmat_preconditioner_params_.max_hmat_rank);
+                          hmat_preconditioner_params_.max_rank);
                     }
                   else
                     {
                       V1_hmat_preconditioner_.compute_lu_factorization(
-                        hmat_preconditioner_params_.max_hmat_rank);
+                        hmat_preconditioner_params_.max_rank);
                     }
                   timer.stop();
                   print_wall_time(deallog,
@@ -2891,16 +2917,22 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                       neumann_space_on_dirichlet_domain_
                         ->get_internal_to_external_dof_numbering(),
                       neumann_space_on_dirichlet_domain_
-                        ->get_external_to_internal_dof_numbering());
+                        ->get_external_to_internal_dof_numbering(),
+                      op_precond_params_);
 
                   op_precond_for_slp_->setup_preconditioner(
-                    thread_num_,
                     hmat_preconditioner_params_,
+                    sauter_quad_precond_params_.near_field,
+                    sauter_quad_precond_params_.far_field,
+                    parallel_params_,
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-                    SauterQuadratureRule<dim>(5, 4, 4, 3),
+                    SauterQuadratureRule<dim>(
+                      sauter_quad_precond_params_.hyper_singular_order),
+                    SauterQuadratureRule<dim>(
+                      sauter_quad_precond_params_.slp_order),
                     QGauss<dim>(fe_for_dirichlet_space_.degree + 1));
 
                   break;
@@ -2941,7 +2973,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     {
                       D1_hmat_preconditioner_
                         .truncate_to_rank_preserve_positive_definite(
-                          hmat_preconditioner_params_.max_hmat_rank);
+                          hmat_preconditioner_params_.max_rank);
                     }
                   timer.stop();
                   print_wall_time(deallog, timer, "truncate D");
@@ -2962,12 +2994,12 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     {
                       D1_hmat_preconditioner_
                         .compute_lu_factorization_task_parallel(
-                          hmat_preconditioner_params_.max_hmat_rank);
+                          hmat_preconditioner_params_.max_rank);
                     }
                   else
                     {
                       D1_hmat_preconditioner_.compute_lu_factorization(
-                        hmat_preconditioner_params_.max_hmat_rank);
+                        hmat_preconditioner_params_.max_rank);
                     }
                   timer.stop();
                   print_wall_time(deallog,
@@ -2993,16 +3025,20 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     dirichlet_space_on_neumann_domain_
                       ->get_internal_to_external_dof_numbering(),
                     dirichlet_space_on_neumann_domain_
-                      ->get_external_to_internal_dof_numbering());
+                      ->get_external_to_internal_dof_numbering(),
+                    op_precond_params_);
 
                   op_precond_for_hyper_singular_->setup_preconditioner(
-                    thread_num_,
                     hmat_preconditioner_params_,
+                    sauter_quad_precond_params_.near_field,
+                    sauter_quad_precond_params_.far_field,
+                    parallel_params_,
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-                    SauterQuadratureRule<dim>(5, 4, 4, 3),
+                    SauterQuadratureRule<dim>(
+                      sauter_quad_precond_params_.slp_order),
                     QGauss<dim>(fe_for_dirichlet_space_.degree + 1));
 
                   break;
@@ -3049,7 +3085,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     {
                       M11_in_preconditioner_
                         .truncate_to_rank_preserve_positive_definite(
-                          hmat_preconditioner_params_.max_hmat_rank);
+                          hmat_preconditioner_params_.max_rank);
                     }
                   timer.stop();
                   print_wall_time(deallog, timer, "truncate M11(==V1)");
@@ -3066,7 +3102,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                       HMatrixType::HierarchicalMatrixType)
                     {
                       M12_in_preconditioner_.truncate_to_rank(
-                        hmat_preconditioner_params_.max_hmat_rank);
+                        hmat_preconditioner_params_.max_rank);
                     }
                   timer.stop();
                   print_wall_time(deallog, timer, "truncate M12(==K1)");
@@ -3085,7 +3121,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     {
                       M22_in_preconditioner_
                         .truncate_to_rank_preserve_positive_definite(
-                          hmat_preconditioner_params_.max_hmat_rank);
+                          hmat_preconditioner_params_.max_rank);
                     }
                   timer.stop();
                   print_wall_time(deallog, timer, "truncate M22(==D1)");
@@ -3105,7 +3141,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                             << std::endl;
                   timer.start();
                   M_hmat_preconditioner_->compute_lu_factorization(
-                    hmat_preconditioner_params_.max_hmat_rank);
+                    hmat_preconditioner_params_.max_rank);
                   timer.stop();
                   print_wall_time(deallog, timer, "LU factorization of M");
 
@@ -3138,7 +3174,8 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                         ->get_internal_to_external_dof_numbering(),
                       neumann_space_on_dirichlet_domain_
                         ->get_external_to_internal_dof_numbering(),
-                      dirichlet_domain_material_ids);
+                      dirichlet_domain_material_ids,
+                      op_precond_params_);
 
                   op_precond_for_hyper_singular_ = std::make_unique<
                     HelmholtzAcousticHyperSingularPreconditioner<
@@ -3153,26 +3190,35 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                       ->get_internal_to_external_dof_numbering(),
                     dirichlet_space_on_neumann_domain_
                       ->get_external_to_internal_dof_numbering(),
-                    neumann_domain_material_ids);
+                    neumann_domain_material_ids,
+                    op_precond_params_);
 
                   op_precond_for_slp_->setup_preconditioner(
-                    thread_num_,
                     hmat_preconditioner_params_,
+                    sauter_quad_precond_params_.near_field,
+                    sauter_quad_precond_params_.far_field,
+                    parallel_params_,
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-                    SauterQuadratureRule<dim>(5, 4, 4, 3),
+                    SauterQuadratureRule<dim>(
+                      sauter_quad_precond_params_.hyper_singular_order),
+                    SauterQuadratureRule<dim>(
+                      sauter_quad_precond_params_.slp_order),
                     QGauss<dim>(fe_for_dirichlet_space_.degree + 1));
 
                   op_precond_for_hyper_singular_->setup_preconditioner(
-                    thread_num_,
                     hmat_preconditioner_params_,
+                    sauter_quad_precond_params_.near_field,
+                    sauter_quad_precond_params_.far_field,
+                    parallel_params_,
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-                    SauterQuadratureRule<dim>(5, 4, 4, 3),
+                    SauterQuadratureRule<dim>(
+                      sauter_quad_precond_params_.slp_order),
                     QGauss<dim>(fe_for_dirichlet_space_.degree + 1));
 
                   break;
@@ -3220,7 +3266,10 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
       switch (problem_type_)
         {
             case DirichletBCProblem: {
-              SolverControl solver_control(1000, 1e-8, true, true);
+              SolverControl solver_control(linear_solver_params_.max_iter,
+                                           linear_solver_params_.abs_tol,
+                                           linear_solver_params_.log_history,
+                                           linear_solver_params_.log_result);
               SolverDQGMRES<Vector<RangeNumberType>> solver(solver_control);
 
               solver.solve(V1_mat_,
@@ -3231,7 +3280,10 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               break;
             }
             case NeumannBCProblem: {
-              SolverControl solver_control(1000, 1e-8, true, true);
+              SolverControl solver_control(linear_solver_params_.max_iter,
+                                           linear_solver_params_.abs_tol,
+                                           linear_solver_params_.log_history,
+                                           linear_solver_params_.log_result);
               SolverDQGMRES<Vector<RangeNumberType>> solver(solver_control);
 
               solver.solve(D1_mat_,
@@ -3256,7 +3308,10 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
       switch (problem_type_)
         {
             case DirichletBCProblem: {
-              SolverControl solver_control(1000, 1e-8, true, true);
+              SolverControl solver_control(linear_solver_params_.max_iter,
+                                           linear_solver_params_.abs_tol,
+                                           linear_solver_params_.log_history,
+                                           linear_solver_params_.log_result);
               SolverDQGMRES<Vector<RangeNumberType>> solver(solver_control);
 
               set_hmatrix_vmult_strategy_for_iterative_solver(*V1_hmat_,
@@ -3318,7 +3373,10 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               break;
             }
             case NeumannBCProblem: {
-              SolverControl solver_control(1000, 1e-8, true, true);
+              SolverControl solver_control(linear_solver_params_.max_iter,
+                                           linear_solver_params_.abs_tol,
+                                           linear_solver_params_.log_history,
+                                           linear_solver_params_.log_result);
               SolverDQGMRES<Vector<RangeNumberType>> solver(solver_control);
 
               set_hmatrix_vmult_strategy_for_iterative_solver(*D1_hmat_,
@@ -3392,7 +3450,11 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               switch (preconditioner_type_)
                 {
                     case PreconditionerType::HMatrixFactorization: {
-                      SolverControl solver_control(1000, 1e-8, true, true);
+                      SolverControl solver_control(
+                        linear_solver_params_.max_iter,
+                        linear_solver_params_.abs_tol,
+                        linear_solver_params_.log_history,
+                        linear_solver_params_.log_result);
                       SolverBicgstabGeneral<Vector<RangeNumberType>> solver(
                         solver_control);
 
@@ -3446,10 +3508,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                         system_rhs_on_neumann_domain_,
                         *op_precond_for_slp_,
                         *op_precond_for_hyper_singular_,
-                        1000,
-                        real_type(1e-8),
-                        true,
-                        true);
+                        linear_solver_params_);
 
                       mg_tria_for_preconditioner_.clear();
                       op_precond_for_slp_            = nullptr;
@@ -3485,10 +3544,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                         system_rhs_on_neumann_domain_,
                         PreconditionIdentity(),
                         PreconditionIdentity(),
-                        1000,
-                        real_type(1e-8),
-                        true,
-                        true);
+                        linear_solver_params_);
 
                       // Combine the two block vectors in the internal DoF
                       // numbering into one vector.

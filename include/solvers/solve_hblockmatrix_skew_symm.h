@@ -11,10 +11,9 @@
 #ifndef HIERBEM_INCLUDE_SOLVERS_SOLVE_HBLOCKMATRIX_SKEW_SYMM_H_
 #define HIERBEM_INCLUDE_SOLVERS_SOLVE_HBLOCKMATRIX_SKEW_SYMM_H_
 
-#include <deal.II/base/numbers.h>
-
 #include <deal.II/lac/solver_control.h>
 
+#include "config_file/config_structs.h"
 #include "solvers/schur_complement.h"
 #include "solvers/solver_cg_general.h"
 
@@ -44,8 +43,7 @@ using namespace dealii;
 template <typename SkewSymmetricBlockMatrixType,
           typename VectorType,
           typename PrecondM11Type,
-          typename PrecondM22Type,
-          typename Number>
+          typename PrecondM22Type>
 void
 solve_hblockmatrix_skew_symm_using_schur_complement(
   const SkewSymmetricBlockMatrixType &block_mat,
@@ -55,13 +53,14 @@ solve_hblockmatrix_skew_symm_using_schur_complement(
   const VectorType                   &b2,
   const PrecondM11Type               &precond11,
   const PrecondM22Type               &precond22,
-  const unsigned int                  max_iter,
-  const Number                        tolerance,
-  const bool                          log_history,
-  const bool                          log_result)
+  const ConfLinearSolver             &solver_params)
 {
   // Compute \f$M_{11}^{-1} b_1\f$ and @p b4 stores the result.
-  SolverControl solver_control1(max_iter, tolerance, log_history, log_result);
+  SolverControl               solver_control1(static_cast<unsigned int>(
+                                  solver_params.max_iter),
+                                solver_params.abs_tol,
+                                solver_params.log_history,
+                                solver_params.log_result);
   SolverCGGeneral<VectorType> solver1(solver_control1);
   VectorType                  b4(block_mat.get_M11().get_n());
 
@@ -76,23 +75,26 @@ solve_hblockmatrix_skew_symm_using_schur_complement(
   b3 += b2;
 
   // Construct the Schur complement matrix and solve it for @p x2.
-  SchurComplement<SkewSymmetricBlockMatrixType,
-                  VectorType,
-                  PrecondM11Type,
-                  Number>
-    schur_complement(
-      block_mat, precond11, max_iter, tolerance, log_history, log_result);
-  SolverControl solver_control2(max_iter, tolerance, log_history, log_result);
+  SchurComplement<SkewSymmetricBlockMatrixType, VectorType, PrecondM11Type>
+                schur_complement(block_mat, precond11, solver_params);
+  SolverControl solver_control2(static_cast<unsigned int>(
+                                  solver_params.max_iter),
+                                solver_params.abs_tol,
+                                solver_params.log_history,
+                                solver_params.log_result);
   SolverCGGeneral<VectorType> solver2(solver_control2);
   solver2.solve(schur_complement, x2, b3, precond22);
 
   // Compute \f$-M_{12}x_2\f$ and store it into @p b4.
-  block_mat.get_M12().vmult(
-    b4, typename numbers::NumberTraits<Number>::real_type(-1.0), x2);
+  block_mat.get_M12().vmult(b4, typename VectorType::real_type(-1.0), x2);
   b4 += b1;
 
   // Solve @p x1.
-  SolverControl solver_control3(max_iter, tolerance, log_history, log_result);
+  SolverControl               solver_control3(static_cast<unsigned int>(
+                                  solver_params.max_iter),
+                                solver_params.abs_tol,
+                                solver_params.log_history,
+                                solver_params.log_result);
   SolverCGGeneral<VectorType> solver3(solver_control3);
   solver3.solve(block_mat.get_M11(), x1, b4, precond11);
 }

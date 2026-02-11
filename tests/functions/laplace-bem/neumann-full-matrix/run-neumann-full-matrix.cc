@@ -9,6 +9,7 @@
 // file LICENSE at the top level directory of HierBEM.
 
 #include <deal.II/base/logstream.h>
+#include <deal.II/base/multithread_info.h>
 
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/manifold_lib.h>
@@ -17,6 +18,7 @@
 #include <iostream>
 
 #include "bem/types.h"
+#include "config_file/config_structs.h"
 #include "hbem_test_config.h"
 #include "laplace/laplace_bem.h"
 #include "preconditioners/preconditioner_type.h"
@@ -84,14 +86,18 @@ run_neumann_full_matrix()
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  const bool                                is_interior_problem = false;
-  LaplaceBEM<dim, spacedim, double, double> bem(1,
-                                                0,
-                                                ProblemType::NeumannBCProblem,
-                                                is_interior_problem,
-                                                MultithreadInfo::n_threads());
+  ConfLaplaceBEM bem_params;
+  bem_params.problem_type        = ProblemType::NeumannBCProblem;
+  bem_params.is_interior_problem = false;
+  ConfParallelization parallel_params;
+
+  LaplaceBEM<dim, spacedim, double, double> bem(bem_params);
   bem.set_project_name("neumann-full-matrix");
-  bem.set_preconditioner_type(PreconditionerType::Identity);
+  // Set TBB thread num.
+  if (parallel_params.tbb_thread_num == -1)
+    MultithreadInfo::set_thread_limit(MultithreadInfo::n_threads());
+  else
+    MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
 
   /**
    * @internal Set the Dirac source location according to interior or exterior
@@ -99,7 +105,7 @@ run_neumann_full_matrix()
    */
   Point<spacedim> source_loc;
 
-  if (is_interior_problem)
+  if (bem_params.is_interior_problem)
     {
       source_loc = Point<spacedim>(1, 1, 1);
     }

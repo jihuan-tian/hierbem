@@ -38,6 +38,7 @@
 #include "cad_mesh/gmsh_manipulation.h"
 #include "cad_mesh/subdomain_topology.h"
 #include "config.h"
+#include "config_file/config_structs.h"
 #include "dofs/dof_tools_ext.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
 #include "mapping/mapping_info.h"
@@ -71,48 +72,30 @@ public:
    * @brief Constructor for solving Laplace problem using full matrix, which
    * has only verification purpose.
    *
-   * @param fe_order_for_dirichlet_space
-   * @param fe_order_for_neumann_space
-   * @param problem_type
-   * @param is_interior_problem
-   * @param thread_num
+   * @param bem_params
    */
-  LaplaceBEM(unsigned int fe_order_for_dirichlet_space,
-             unsigned int fe_order_for_neumann_space,
-             ProblemType  problem_type,
-             bool         is_interior_problem,
-             unsigned int thread_num);
+  LaplaceBEM(const ConfLaplaceBEM &bem_params);
 
   /**
    * @brief Constructor for solving Laplace problem using \hmatrix.
    *
-   * @param fe_order_for_dirichlet_space
-   * @param fe_order_for_neumann_space
-   * @param problem_type
-   * @param is_interior_problem
-   * @param n_min_for_ct
-   * @param n_min_for_bct
-   * @param eta
-   * @param max_hmat_rank
-   * @param aca_relative_error
-   * @param eta_for_preconditioner
-   * @param max_hmat_rank_for_preconditioner
-   * @param aca_relative_error_for_preconditioner
-   * @param thread_num
+   * @param bem_params
+   * @param hmat_params
+   * @param hmat_preconditioner_params
+   * @param sauter_quad_params
+   * @param sauter_quad_precond_params
+   * @param linear_solver_params
+   * @param op_precond_params
+   * @param parallel_params
    */
-  LaplaceBEM(unsigned int fe_order_for_dirichlet_space,
-             unsigned int fe_order_for_neumann_space,
-             ProblemType  problem_type,
-             bool         is_interior_problem,
-             unsigned int n_min_for_ct,
-             unsigned int n_min_for_bct,
-             real_type    eta,
-             unsigned int max_hmat_rank,
-             real_type    aca_relative_error,
-             real_type    eta_for_preconditioner,
-             unsigned int max_hmat_rank_for_preconditioner,
-             real_type    aca_relative_error_for_preconditioner,
-             unsigned int thread_num);
+  LaplaceBEM(const ConfLaplaceBEM             &bem_params,
+             const ConfHMatrix                &hmat_params,
+             const ConfHMatrix                &hmat_preconditioner_params,
+             const ConfSauterQuad             &sauter_quad_params,
+             const ConfSauterQuad             &sauter_quad_precond_params,
+             const ConfLinearSolver           &linear_solver_params,
+             const ConfOperatorPreconditioner &op_precond_params,
+             const ConfParallelization        &parallel_params);
 
   /**
    * Destructor, where DoF handlers are cleared.

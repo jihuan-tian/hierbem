@@ -20,12 +20,25 @@
 
 #include <deal.II/base/point.h>
 
+#include <cstdint>
+
 #include "config.h"
 #include "quadrature.templates.h"
 
 HBEM_NS_OPEN
 
 using namespace dealii;
+
+/**
+ * Sauter quadrature order for the four cell neighboring types
+ */
+struct SauterQuadOrder
+{
+  std::uint32_t same_panel    = 5;
+  std::uint32_t common_edge   = 4;
+  std::uint32_t common_vertex = 4;
+  std::uint32_t regular       = 3;
+};
 
 /**
  * Class for Sauter's quadrature rule, which is a collection of four
@@ -41,12 +54,9 @@ struct SauterQuadratureRule
                        const unsigned int common_vertex_order,
                        const unsigned int regular_order);
 
-  SauterQuadratureRule(const SauterQuadratureRule &sauter_quad_rule);
+  explicit SauterQuadratureRule(const SauterQuadOrder &quad_order_);
 
-  unsigned int quad_order_for_same_panel;
-  unsigned int quad_order_for_common_edge;
-  unsigned int quad_order_for_common_vertex;
-  unsigned int quad_order_for_regular;
+  SauterQuadOrder quad_order;
 
   QGauss<dim * 2> quad_rule_for_same_panel;
   QGauss<dim * 2> quad_rule_for_common_edge;
@@ -56,14 +66,11 @@ struct SauterQuadratureRule
 
 template <int dim>
 SauterQuadratureRule<dim>::SauterQuadratureRule()
-  : quad_order_for_same_panel(5)
-  , quad_order_for_common_edge(4)
-  , quad_order_for_common_vertex(4)
-  , quad_order_for_regular(3)
-  , quad_rule_for_same_panel(quad_order_for_same_panel)
-  , quad_rule_for_common_edge(quad_order_for_common_edge)
-  , quad_rule_for_common_vertex(quad_order_for_common_vertex)
-  , quad_rule_for_regular(quad_order_for_regular)
+  : quad_order()
+  , quad_rule_for_same_panel(quad_order.same_panel)
+  , quad_rule_for_common_edge(quad_order.common_edge)
+  , quad_rule_for_common_vertex(quad_order.common_vertex)
+  , quad_rule_for_regular(quad_order.regular)
 {}
 
 template <int dim>
@@ -72,27 +79,24 @@ SauterQuadratureRule<dim>::SauterQuadratureRule(
   const unsigned int common_edge_order,
   const unsigned int common_vertex_order,
   const unsigned int regular_order)
-  : quad_order_for_same_panel(same_panel_order)
-  , quad_order_for_common_edge(common_edge_order)
-  , quad_order_for_common_vertex(common_vertex_order)
-  , quad_order_for_regular(regular_order)
-  , quad_rule_for_same_panel(quad_order_for_same_panel)
-  , quad_rule_for_common_edge(quad_order_for_common_edge)
-  , quad_rule_for_common_vertex(quad_order_for_common_vertex)
-  , quad_rule_for_regular(quad_order_for_regular)
+  : quad_order{same_panel_order,
+               common_edge_order,
+               common_vertex_order,
+               regular_order}
+  , quad_rule_for_same_panel(quad_order.same_panel)
+  , quad_rule_for_common_edge(quad_order.common_edge)
+  , quad_rule_for_common_vertex(quad_order.common_vertex)
+  , quad_rule_for_regular(quad_order.regular)
 {}
 
 template <int dim>
 SauterQuadratureRule<dim>::SauterQuadratureRule(
-  const SauterQuadratureRule<dim> &sauter_quad_rule)
-  : quad_order_for_same_panel(sauter_quad_rule.quad_order_for_same_panel)
-  , quad_order_for_common_edge(sauter_quad_rule.quad_order_for_common_edge)
-  , quad_order_for_common_vertex(sauter_quad_rule.quad_order_for_common_vertex)
-  , quad_order_for_regular(sauter_quad_rule.quad_order_for_regular)
-  , quad_rule_for_same_panel(sauter_quad_rule.quad_rule_for_same_panel)
-  , quad_rule_for_common_edge(sauter_quad_rule.quad_rule_for_common_edge)
-  , quad_rule_for_common_vertex(sauter_quad_rule.quad_rule_for_common_vertex)
-  , quad_rule_for_regular(sauter_quad_rule.quad_rule_for_regular)
+  const SauterQuadOrder &quad_order_)
+  : quad_order(quad_order_)
+  , quad_rule_for_same_panel(quad_order.same_panel)
+  , quad_rule_for_common_edge(quad_order.common_edge)
+  , quad_rule_for_common_vertex(quad_order.common_vertex)
+  , quad_rule_for_regular(quad_order.regular)
 {}
 
 /**

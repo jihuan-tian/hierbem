@@ -48,18 +48,16 @@ TEST_CASE("Create subdomain H-hmatrices", "[ddm_efield]")
   AssertCuda(
     cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
 
-  DDMEfield<2, 3, double, double> efield(
-    1,                           // fe order for dirichlet space
-    0,                           // fe order for neumann space
-    32,                          // n_min for cluster tree
-    32,                          // n_min for block cluster tree
-    0.8,                         // eta for H-matrix
-    5,                           // max rank for H-matrix
-    0.01,                        // aca epsilon for H-matrix
-    1.0,                         // eta for preconditioner
-    2,                           // max rank for preconditioner
-    0.1,                         // aca epsilon for preconditioner
-    MultithreadInfo::n_threads() // Number of threads used for ACA
+  DDMEfield<2, 3, double, double> efield(1,    // fe order for dirichlet space
+                                         0,    // fe order for neumann space
+                                         32,   // n_min for cluster tree
+                                         32,   // n_min for block cluster tree
+                                         0.8,  // eta for H-matrix
+                                         5,    // max rank for H-matrix
+                                         0.01, // aca epsilon for H-matrix
+                                         1.0,  // eta for preconditioner
+                                         2,    // max rank for preconditioner
+                                         0.1   // aca epsilon for preconditioner
   );
   efield.read_subdomain_topology(HBEM_TEST_MODEL_DIR
                                  "sphere-immersed-in-two-boxes.brep",

@@ -21,6 +21,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "config_file/config_structs.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "utilities/read_octave_data.h"
 
@@ -119,14 +120,14 @@ main(int argc, char *argv[])
   A.read_from_mat(in, matrix_var_name);
   in.close();
 
-  ACAConfig aca_conf(max_iter, epsilon, eta);
+  ConfHMatrix hmat_params{4, 4, eta, max_iter, epsilon};
 
   const unsigned int m = A.m();
   const unsigned int n = A.n();
 
   RkMatrix<double> rkmat(m, n, max_iter);
 
-  aca_plus(rkmat, aca_conf, A);
+  aca_plus(rkmat, hmat_params, A);
 
   rkmat.print_formatted_to_mat(std::cout, "R", 15, false, 25, "0");
 

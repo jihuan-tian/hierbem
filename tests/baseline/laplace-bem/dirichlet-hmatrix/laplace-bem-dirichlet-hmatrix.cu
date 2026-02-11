@@ -19,6 +19,7 @@
  */
 
 #include <deal.II/base/logstream.h>
+#include <deal.II/base/multithread_info.h>
 
 #include <deal.II/fe/mapping_manifold.h>
 
@@ -33,6 +34,7 @@
 #include <iostream>
 
 #include "bem/types.h"
+#include "config_file/config_structs.h"
 #include "hbem_test_config.h"
 #include "hmatrix/hmatrix.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
@@ -196,52 +198,49 @@ main(int argc, char *argv[])
    */
   Timer timer;
 
-  /**
-   * @internal Initialize the CUDA device parameters.
-   */
-  //  AssertCuda(cudaSetDevice(0));
-  //  AssertCuda(cudaSetDeviceFlags(cudaDeviceMapHost | cudaDeviceScheduleBlockingSync));
-
-  const size_t stack_size = 1024 * 10;
-  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));
-  deallog << "CUDA stack size has been set to " << stack_size << std::endl;
-
-  /**
-   * @internal Get GPU device properties.
-   */
-  AssertCuda(
-    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
-
-  /**
-   * @internal Use 8-byte bank size in shared memory, since double value type
-   * is used.
-   */
-  // AssertCuda(cudaDeviceSetSharedMemConfig(cudaSharedMemBankSizeEightByte));
-
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  const bool                is_interior_problem = true;
-  LaplaceBEM<dim, spacedim> bem(
-    opts.dirichlet_space_fe_order, // fe order for dirichlet space
-    opts.neumann_space_fe_order,   // fe order for neumann space
-    ProblemType::DirichletBCProblem,
-    is_interior_problem,         // is interior problem
-    64,                          // n_min for cluster tree
-    64,                          // n_min for block cluster tree
-    0.8,                         // eta for H-matrix
-    5,                           // max rank for H-matrix
-    0.01,                        // aca epsilon for H-matrix
-    1.0,                         // eta for preconditioner
-    2,                           // max rank for preconditioner
-    0.1,                         // aca epsilon for preconditioner
-    MultithreadInfo::n_threads() // Number of threads used for ACA
-  );
+  ConfLaplaceBEM             bem_params{opts.dirichlet_space_fe_order,
+                            opts.neumann_space_fe_order,
+                            ProblemType::DirichletBCProblem,
+                            true};
+  ConfHMatrix                hmat_params{64, 64, 0.8, 5, 0.01};
+  ConfHMatrix                hmat_preconditioner_params{64, 64, 1.0, 2, 0.1};
+  ConfSauterQuad             sauter_quad_params;
+  ConfSauterQuad             sauter_quad_precond_params;
+  ConfLinearSolver           linear_solver_params;
+  ConfOperatorPreconditioner op_precond_params;
+  ConfParallelization        parallel_params;
+
+  // Set TBB thread num.
+  if (parallel_params.tbb_thread_num == -1)
+    MultithreadInfo::set_thread_limit(MultithreadInfo::n_threads());
+  else
+    MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
+
+  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize,
+                                static_cast<unsigned int>(
+                                  parallel_params.cuda_stack_size_kb)));
+  AssertCuda(
+    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
+
+  LaplaceBEM<dim, spacedim> bem(bem_params,
+                                hmat_params,
+                                hmat_preconditioner_params,
+                                sauter_quad_params,
+                                sauter_quad_precond_params,
+                                linear_solver_params,
+                                op_precond_params,
+                                parallel_params);
   bem.set_project_name("laplace-bem-dirichlet-hmatrix");
   bem.set_preconditioner_type(opts.precond_type);
   bem.set_iterative_solver_vmult_type(opts.vmult_type);
-  HMatrix<spacedim, double>::set_leaf_set_traversal_method(
-    HMatrix<spacedim, double>::SpaceFillingCurveType::Hilbert);
+  if (opts.vmult_type == IterativeSolverVmultType::TaskParallel)
+    {
+      HMatrix<spacedim, double>::set_leaf_set_traversal_method(
+        HMatrix<spacedim, double>::SpaceFillingCurveType::Hilbert);
+    }
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");
@@ -254,7 +253,7 @@ main(int argc, char *argv[])
    */
   Point<spacedim> source_loc;
 
-  if (is_interior_problem)
+  if (bem_params.is_interior_problem)
     {
       source_loc = Point<spacedim>(1, 1, 1);
     }

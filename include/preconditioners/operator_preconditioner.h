@@ -56,11 +56,11 @@
 #include "cad_mesh/subdomain_topology.h"
 #include "cluster_tree/block_cluster_tree.h"
 #include "config.h"
+#include "config_file/config_structs.h"
 #include "dofs/dof_to_cell_topology.h"
 #include "dofs/dof_tools_ext.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "hmatrix/hmatrix.h"
-#include "hmatrix/hmatrix_parameters.h"
 #include "mapping/mapping_info.h"
 #include "quadrature/sauter_quadrature_tools.h"
 #include "solvers/solver_gmres_general.h"
@@ -99,16 +99,11 @@ public:
     const Triangulation<dim, spacedim>         &tria_,
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering_,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering_,
-    const std::set<types::material_id>         &subdomain_material_ids_ =
-      std::set<types::material_id>(),
-    const bool is_full_domain_                                       = true,
-    const bool is_subdomain_open_                                    = false,
-    const bool truncate_function_space_dof_support_within_subdomain_ = false,
-    const unsigned int max_iter                                      = 1000,
-    const real_type    tol                                           = 1e-8,
-    const real_type    omega                                         = 1.0,
-    const bool         log_history                                   = true,
-    const bool         log_result                                    = true);
+    const std::set<types::material_id>         &subdomain_material_ids_,
+    const bool                                  is_full_domain_,
+    const bool                                  is_subdomain_open_,
+    const bool truncate_function_space_dof_support_within_subdomain_,
+    const ConfOperatorPreconditioner &op_precond_params_);
 
   /**
    * Default destructor, which should be virtual.
@@ -162,11 +157,13 @@ public:
    * matrices.
    *
    * Because the H-matrix on the refined mesh depends on a specific kernel
-   * function, the building of such an H-matrix is handled by child classes.
+   * function, the building of such an H-matrix is handled by child classes. In
+   * this function, only the block cluster trees are built, therefore we still
+   * need the configuration parameters for H-matrices.
    */
   void
   setup_preconditioner(
-    const HMatrixParameters<real_type>              &hmat_params,
+    const ConfHMatrix                               &hmat_params,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const Quadrature<dim>                           &quad_rule_for_mass);
 
@@ -213,7 +210,7 @@ public:
    */
   void
   build_cluster_and_block_cluster_trees(
-    const HMatrixParameters<real_type>              &hmat_params,
+    const ConfHMatrix                               &hmat_params,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings);
 
   /**
@@ -231,7 +228,7 @@ public:
    * @tparam KernelNumberType Kernel function's value type on the host. In the
    * third argument of this function, this type will be converted to the version
    * on the device.
-   * @param thread_num Number of CPU threads
+   * @param hmat
    * @param hmat_params \hmat parameters
    * @param mappings A list of pointers for MappingInfo objects of different
    * orders.
@@ -247,10 +244,12 @@ public:
   void
   build_preconditioner_hmat_on_refined_mesh(
     HMatrix<spacedim, RangeNumberType> &hmat,
-    const HMatrixParameters<real_type> &hmat_params,
+    const ConfHMatrix                  &hmat_params,
+    const ConfSauterQuadNearField      &sauter_quad_near_field_params,
+    const ConfSauterQuadFarField       &sauter_quad_far_field_params,
+    const ConfParallelization          &parallel_params,
     const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                                     &preconditioner_kernel,
-    const unsigned int                               thread_num,
     const SubdomainTopology<dim, spacedim>          &subdomain_topology,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
@@ -842,13 +841,9 @@ protected:
   // Diagonal entries in @p mass_matrix_triple.
   Vector<real_type> mass_matrix_triple_diag_reciprocal;
 
-  MassMatrixTriple          mass_matrix_triple;
-  MassMatrixTransposeTriple mass_matrix_transpose_triple;
-  unsigned int              solve_mass_matrix_max_iter;
-  real_type                 solve_mass_matrix_tol;
-  real_type                 solve_mass_matrix_relaxation;
-  bool                      solve_mass_matrix_log_history;
-  bool                      solve_mass_matrix_log_result;
+  MassMatrixTriple           mass_matrix_triple;
+  MassMatrixTransposeTriple  mass_matrix_transpose_triple;
+  ConfOperatorPreconditioner op_precond_params;
 };
 
 
@@ -862,12 +857,8 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::OperatorPreconditioner(
   const std::set<types::material_id>         &subdomain_material_ids_,
   const bool                                  is_full_domain_,
   const bool                                  is_subdomain_open_,
-  const bool         truncate_function_space_dof_support_within_subdomain_,
-  const unsigned int max_iter,
-  const real_type    tol,
-  const real_type    omega,
-  const bool         log_history,
-  const bool         log_result)
+  const bool truncate_function_space_dof_support_within_subdomain_,
+  const ConfOperatorPreconditioner &op_precond_params_)
   : tria(tria_)
   , primal_mesh_level(tria.n_levels() - 2)
   , refined_mesh_level(primal_mesh_level + 1)
@@ -888,11 +879,7 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::OperatorPreconditioner(
                                  averaging_matrix,
                                  mass_matrix,
                                  mass_matrix_triple_diag_reciprocal)
-  , solve_mass_matrix_max_iter(max_iter)
-  , solve_mass_matrix_tol(tol)
-  , solve_mass_matrix_relaxation(omega)
-  , solve_mass_matrix_log_history(log_history)
-  , solve_mass_matrix_log_result(log_result)
+  , op_precond_params(op_precond_params_)
 {
   x_external_dof_numbering  = std::make_unique<Vector<RangeNumberType>>();
   v1                        = std::make_unique<Vector<RangeNumberType>>();
@@ -975,7 +962,7 @@ template <int dim, int spacedim, typename RangeNumberType>
 void
 OperatorPreconditioner<dim, spacedim, RangeNumberType>::
   build_cluster_and_block_cluster_trees(
-    const HMatrixParameters<real_type>              &hmat_params,
+    const ConfHMatrix                               &hmat_params,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings)
 {
   /**
@@ -1027,7 +1014,8 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
   ct = ClusterTree<spacedim, real_type>(dof_indices_in_dual_space,
                                         support_points_in_dual_space,
                                         dof_average_cell_size_list,
-                                        hmat_params.n_min_for_ct);
+                                        static_cast<unsigned int>(
+                                          hmat_params.n_min_for_ct));
 
   /**
    * Partition the cluster tree.
@@ -1043,10 +1031,11 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
   /**
    * Create the block cluster tree.
    */
-  bct = BlockClusterTree<spacedim, real_type>(ct,
-                                              ct,
-                                              hmat_params.eta,
-                                              hmat_params.n_min_for_bct);
+  bct = BlockClusterTree<spacedim, real_type>(
+    ct,
+    ct,
+    static_cast<real_type>(hmat_params.eta),
+    static_cast<unsigned int>(hmat_params.n_min_for_bct));
 
   /**
    * Partition the block cluster tree.
@@ -1065,10 +1054,12 @@ void
 OperatorPreconditioner<dim, spacedim, RangeNumberType>::
   build_preconditioner_hmat_on_refined_mesh(
     HMatrix<spacedim, RangeNumberType> &hmat,
-    const HMatrixParameters<real_type> &hmat_params,
+    const ConfHMatrix                  &hmat_params,
+    const ConfSauterQuadNearField      &sauter_quad_near_field_params,
+    const ConfSauterQuadFarField       &sauter_quad_far_field_params,
+    const ConfParallelization          &parallel_params,
     const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                                     &preconditioner_kernel,
-    const unsigned int                               thread_num,
     const SubdomainTopology<dim, spacedim>          &subdomain_topology,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
@@ -1087,13 +1078,9 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
 
   hmat = HMatrix<spacedim, RangeNumberType>(
     bct,
-    hmat_params.max_hmat_rank,
+    static_cast<unsigned int>(hmat_params.max_rank),
     HMatrixSupport::Property::symmetric,
     HMatrixSupport::BlockType::diagonal_block);
-
-  ACAConfig<real_type> aca_config(hmat_params.max_hmat_rank,
-                                  hmat_params.aca_relative_error,
-                                  hmat_params.eta);
 
   /**
    * When the kernel function is the hyper-singular function, which has a
@@ -1156,9 +1143,11 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                                              RangeNumberType,
                                              KernelNumberType,
                                              SurfaceNormalDetector>(
-                thread_num,
                 hmat,
-                aca_config,
+                hmat_params,
+                sauter_quad_near_field_params,
+                sauter_quad_far_field_params,
+                parallel_params,
                 preconditioner_kernel,
                 DeviceNumberType<KernelNumberType>(1.0),
                 mass_vmult_weq,
@@ -1184,9 +1173,11 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                                            RangeNumberType,
                                            KernelNumberType,
                                            SurfaceNormalDetector>(
-              thread_num,
               hmat,
-              aca_config,
+              hmat_params,
+              sauter_quad_near_field_params,
+              sauter_quad_far_field_params,
+              parallel_params,
               preconditioner_kernel,
               DeviceNumberType<KernelNumberType>(1.0),
               {},
@@ -1214,9 +1205,11 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                                        RangeNumberType,
                                        KernelNumberType,
                                        SurfaceNormalDetector>(
-          thread_num,
           hmat,
-          aca_config,
+          hmat_params,
+          sauter_quad_near_field_params,
+          sauter_quad_far_field_params,
+          parallel_params,
           preconditioner_kernel,
           DeviceNumberType<KernelNumberType>(1.0),
           {},
@@ -1244,9 +1237,11 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                                        RangeNumberType,
                                        KernelNumberType,
                                        SurfaceNormalDetector>(
-          thread_num,
           hmat,
-          aca_config,
+          hmat_params,
+          sauter_quad_near_field_params,
+          sauter_quad_far_field_params,
+          parallel_params,
           preconditioner_kernel,
           DeviceNumberType<KernelNumberType>(1.0),
           dof_to_cell_topo_dual_space,
@@ -1269,9 +1264,11 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                                        RangeNumberType,
                                        KernelNumberType,
                                        SurfaceNormalDetector>(
-          thread_num,
           hmat,
-          aca_config,
+          hmat_params,
+          sauter_quad_near_field_params,
+          sauter_quad_far_field_params,
+          parallel_params,
           preconditioner_kernel,
           DeviceNumberType<KernelNumberType>(1.0),
           dof_to_cell_topo_dual_space,
@@ -1494,7 +1491,7 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
 template <int dim, int spacedim, typename RangeNumberType>
 void
 OperatorPreconditioner<dim, spacedim, RangeNumberType>::setup_preconditioner(
-  const HMatrixParameters<real_type>              &hmat_params,
+  const ConfHMatrix                               &hmat_params,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const Quadrature<dim>                           &quad_rule_for_mass)
 {
@@ -1528,17 +1525,17 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
   solve_mass_matrix_triple(Vector<RangeNumberType>       &y,
                            const Vector<RangeNumberType> &x) const
 {
-  SolverControl solver_control(solve_mass_matrix_max_iter,
-                               solve_mass_matrix_tol,
-                               solve_mass_matrix_log_history,
-                               solve_mass_matrix_log_result);
+  SolverControl solver_control(op_precond_params.max_iter,
+                               op_precond_params.abs_tol,
+                               op_precond_params.log_history,
+                               op_precond_params.log_result);
   SolverDQGMRES<Vector<RangeNumberType>> solver(solver_control);
 
   PreconditionJacobi<MassMatrixTriple> precond;
   precond.initialize(
     mass_matrix_triple,
     typename PreconditionJacobi<MassMatrixTriple>::AdditionalData(
-      solve_mass_matrix_relaxation));
+      op_precond_params.omega));
 
   solver.solve(mass_matrix_triple, y, x, precond);
 }
@@ -1550,17 +1547,17 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
   solve_mass_matrix_transpose_triple(Vector<RangeNumberType>       &y,
                                      const Vector<RangeNumberType> &x) const
 {
-  SolverControl solver_control(solve_mass_matrix_max_iter,
-                               solve_mass_matrix_tol,
-                               solve_mass_matrix_log_history,
-                               solve_mass_matrix_log_result);
+  SolverControl solver_control(op_precond_params.max_iter,
+                               op_precond_params.abs_tol,
+                               op_precond_params.log_history,
+                               op_precond_params.log_result);
   SolverDQGMRES<Vector<RangeNumberType>> solver(solver_control);
 
   PreconditionJacobi<MassMatrixTransposeTriple> precond;
   precond.initialize(
     mass_matrix_transpose_triple,
     typename PreconditionJacobi<MassMatrixTransposeTriple>::AdditionalData(
-      solve_mass_matrix_relaxation));
+      op_precond_params.omega));
 
   solver.solve(mass_matrix_transpose_triple, y, x, precond);
 }

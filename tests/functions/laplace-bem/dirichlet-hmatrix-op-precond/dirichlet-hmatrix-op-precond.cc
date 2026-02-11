@@ -19,6 +19,12 @@
  */
 
 #include <catch2/catch_all.hpp>
+#include <rfl.hpp>
+#include <rfl/json.hpp>
+#include <rfl/toml.hpp>
+
+#include <iostream>
+#include <string>
 
 #include "hbem_octave_wrapper.h"
 #include "hbem_test_config.h"

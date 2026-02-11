@@ -42,6 +42,7 @@
 #include <atomic>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <mutex>
 #include <type_traits>
 #include <vector>
@@ -51,6 +52,7 @@
 #include "bem/bem_values.hcu"
 #include "bem/cu_bem_values.hcu"
 #include "config.h"
+#include "config_file/config_structs.h"
 #include "cu_qgauss.hcu"
 #include "cuda_complex.hcu"
 #include "dofs/dof_to_cell_topology.h"
@@ -282,9 +284,9 @@ get_start_vertex_local_index_in_cell_from_vertex_numbers(
 
 
 /**
- * Permute DoFs support points in real cells and their associated global
- * DoF indices for Sauter quadrature, the behavior of which depends on the
- * detected cell neighboring types.
+ * Permute mapping support points in real cells and DoF indices (using the
+ * external full DoF numbering) for Sauter quadrature, the behavior of which
+ * depends on the detected cell neighboring types.
  *
  * \mynote{This version involves @p PairCellWiseScratchData and
  * @p PairCellWisePerTaskData.
@@ -2290,40 +2292,40 @@ namespace CUDAWrappers
   {
   public:
     SauterQuadratureTaskScalarData(
-      const unsigned int i_local_index,
-      const unsigned int j_local_index,
-      const unsigned int kx_mapping_index,
-      const unsigned int ky_mapping_index,
-      const unsigned int kx_mapping_n_shape_functions,
-      const unsigned int ky_mapping_n_shape_functions,
-      const bool         is_kx_normal_inward,
-      const bool         is_ky_normal_inward)
-      : i_local_index(i_local_index)
-      , j_local_index(j_local_index)
-      , kx_mapping_index(kx_mapping_index)
-      , ky_mapping_index(ky_mapping_index)
-      , kx_mapping_n_shape_functions(kx_mapping_n_shape_functions)
-      , ky_mapping_n_shape_functions(ky_mapping_n_shape_functions)
-      , is_kx_normal_inward(is_kx_normal_inward)
-      , is_ky_normal_inward(is_ky_normal_inward)
+      const unsigned int i_local_index_,
+      const unsigned int j_local_index_,
+      const unsigned int kx_mapping_index_,
+      const unsigned int ky_mapping_index_,
+      const unsigned int kx_mapping_n_shape_functions_,
+      const unsigned int ky_mapping_n_shape_functions_,
+      const bool         is_kx_normal_inward_,
+      const bool         is_ky_normal_inward_)
+      : i_local_index(i_local_index_)
+      , j_local_index(j_local_index_)
+      , kx_mapping_index(kx_mapping_index_)
+      , ky_mapping_index(ky_mapping_index_)
+      , kx_mapping_n_shape_functions(kx_mapping_n_shape_functions_)
+      , ky_mapping_n_shape_functions(ky_mapping_n_shape_functions_)
+      , is_kx_normal_inward(is_kx_normal_inward_)
+      , is_ky_normal_inward(is_ky_normal_inward_)
     {}
 
     /**
-     * Local DoF indices in \f$K_x\f$ corresponding to the global DoF
-     * index \f$i\f$.
+     * Given a full DoF index, find its index in the permuted list of DoF
+     * indices in the cell \f$K_x\f$.
      */
     unsigned int i_local_index;
     /**
-     * Local DoF indices in \f$K_y\f$ corresponding to the global DoF
-     * index \f$j\f$.
+     * Given a full DoF index, find its index in the permuted list of DoF
+     * indices in the cell \f$K_y\f$.
      */
     unsigned int j_local_index;
     /**
-     * Mapping index in \f$K_x\f$.
+     * Index of the @p MappingInfo object for the cell \f$K_x\f$.
      */
     unsigned int kx_mapping_index;
     /**
-     * Mapping index in \f$K_y\f$.
+     * Index of the @p MappingInfo object for the cell \f$K_y\f$.
      */
     unsigned int ky_mapping_index;
     /**
@@ -2351,14 +2353,12 @@ namespace CUDAWrappers
    * Ring buffer for holding Sauter quadrature tasks, which is used in the
    * producer-consumer model for building near field \hmatrices.
    *
-   * @tparam capacity
    * @tparam dim
    * @tparam spacedim
    * @tparam RangeNumberType
    * @tparam KernelNumberType
    */
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType>
@@ -2374,15 +2374,17 @@ namespace CUDAWrappers
      *
      * @param cell_neighboring_type Cell neighboring type to be handled in
      * this queue
-     * @param num_to_fetch The number of quadrature tasks, which are treated
+     * @param batch_size_ The number of quadrature tasks, which are treated
      * as a batch for being processed by a consumer thread.
+     * @param batch_num Number of batches in the ring buffer.
      * @param bem_values @p BEMValues on the host, which is used to pass
      * necessary data sizes, such as the number of shape functions used by the
      * mapping objects, the number of quadrature points, etc.
      */
     HBEM_ATTR_HOST void
     allocate(const CellNeighboringType                  neighboring_type,
-             const unsigned int                         num_to_fetch,
+             const unsigned int                         batch_size_,
+             const unsigned int                         batch_num,
              const BEMValues<dim, spacedim, real_type> &bem_values);
 
     /**
@@ -2434,8 +2436,8 @@ namespace CUDAWrappers
      * @param fullmat Full matrix within a near field \hmatrix node
      * @param fullmat_row_index Row index of the entry in the full matrix
      * @param fullmat_col_index Column index of the entry in the full matrix
-     * @param i_local_index
-     * @param j_local_index
+     * @param scalar_data A collection of scalar values to be transferred to the
+     * device.
      * @param mass_matrix_entry Value of the mass matrix entry, if there is
      * any.
      * @param scratch_data
@@ -2471,6 +2473,12 @@ namespace CUDAWrappers
     print_pointers(LogStream &log_stream) const;
 
     /**
+     * @brief Capacity of the ring buffer, which is <tt>batch_size * batch_num +
+     * 1</tt>.
+     */
+    unsigned int capacity;
+
+    /**
      * The cell neighboring type for the quadrature tasks in the current ring
      * buffer.
      *
@@ -2503,16 +2511,22 @@ namespace CUDAWrappers
 
     /**
      * Array of atomic variables storing the task status in the ring buffer.
+     * Because
+     * @p std::atomic is not moveable, it cannot be saved in <tt>std::vector</tt>.
      */
-    std::atomic<SauterQuadratureTaskStatus> task_status_ring_buffer[capacity];
+    std::unique_ptr<std::atomic<SauterQuadratureTaskStatus>[]>
+      task_status_ring_buffer;
 
     /**
      * List of permuted mapping support points in \f$K_x\f$, which are stored
      * on the host.
      *
      * 1. First dimension: task index in the ring buffer.
-     * 2. Second dimension: point index in the permuted mapping support points
+     * 2. Second dimension: coordinates of the permuted mapping support points
      * in \f$K_x\f$.
+     *
+     * The size of the second dimension of this table is allocated with respect
+     * to the highest order mapping adopted.
      */
     Table<2, Point<spacedim, real_type>>
       kx_mapping_support_points_permuted_ring_buffer_cpu;
@@ -2522,8 +2536,11 @@ namespace CUDAWrappers
      * on the host.
      *
      * 1. First dimension: task index in the ring buffer.
-     * 2. Second dimension: point index in the permuted mapping support points
+     * 2. Second dimension: coordinate of the permuted mapping support points
      * in \f$K_y\f$.
+     *
+     * The size of the second dimension of this table is allocated with respect
+     * to the highest order mapping adopted.
      */
     Table<2, Point<spacedim, real_type>>
       ky_mapping_support_points_permuted_ring_buffer_cpu;
@@ -2533,8 +2550,11 @@ namespace CUDAWrappers
      * on the device.
      *
      * 1. First dimension: task index in the ring buffer.
-     * 2. Second dimension: point index in the permuted mapping support points
+     * 2. Second dimension: coordinates of the permuted mapping support points
      * in \f$K_x\f$.
+     *
+     * The size of the second dimension of this table is allocated with respect
+     * to the highest order mapping adopted.
      */
     CUDATable<2, Point<spacedim, real_type>>
       kx_mapping_support_points_permuted_ring_buffer_gpu;
@@ -2544,8 +2564,11 @@ namespace CUDAWrappers
      * on the device.
      *
      * 1. First dimension: task index in the ring buffer.
-     * 2. Second dimension: point index in the permuted mapping support points
+     * 2. Second dimension: coordinates of the permuted mapping support points
      * in \f$K_y\f$.
+     *
+     * The size of the second dimension of this table is allocated with respect
+     * to the highest order mapping adopted.
      */
     CUDATable<2, Point<spacedim, real_type>>
       ky_mapping_support_points_permuted_ring_buffer_gpu;
@@ -2557,7 +2580,7 @@ namespace CUDAWrappers
      * \mynote{This array is located on the host, since it is only related to
      * quadrature result assembly.}
      */
-    LAPACKFullMatrixExt<RangeNumberType> *fullmat_ring_buffer_cpu[capacity];
+    std::vector<LAPACKFullMatrixExt<RangeNumberType> *> fullmat_ring_buffer_cpu;
 
     /**
      * Array of row indices for the entries in the corresponding full matrix.
@@ -2565,7 +2588,7 @@ namespace CUDAWrappers
      * \mynote{This array is located on the host, since it is only related to
      * quadrature result assembly.}
      */
-    unsigned int fullmat_row_index_ring_buffer_cpu[capacity];
+    std::vector<unsigned int> fullmat_row_index_ring_buffer_cpu;
 
     /**
      * Array of column indices for the entries in the corresponding full
@@ -2574,7 +2597,7 @@ namespace CUDAWrappers
      * \mynote{This array is located on the host, since it is only related to
      * quadrature result assembly.}
      */
-    unsigned int fullmat_col_index_ring_buffer_cpu[capacity];
+    std::vector<unsigned int> fullmat_col_index_ring_buffer_cpu;
 
     /**
      * Array of scalar data collections on the host.
@@ -2589,7 +2612,7 @@ namespace CUDAWrappers
     /**
      * Mass matrix entries
      */
-    real_type mass_matrix_entries_ring_buffer_cpu[capacity];
+    std::vector<real_type> mass_matrix_entries_ring_buffer_cpu;
 
     /**
      * Array of quadrature values on the host.
@@ -2723,9 +2746,8 @@ namespace CUDAWrappers
       const KernelFunctionType<spacedim, CUDAKernelNumberType> &kernel,
       const CUDAKernelNumberType                                kernel_factor,
       const CUDABEMValues<dim, spacedim, real_type>            &bem_values,
-      const unsigned int task_num_per_block,
-      const unsigned int block_size_for_quad_result_accumulation,
-      const cudaStream_t cuda_stream_handle);
+      const ConfSauterQuadFarField &sauter_quad_far_field_params,
+      const cudaStream_t            cuda_stream_handle);
 
 
     /**
@@ -2773,8 +2795,8 @@ namespace CUDAWrappers
      * accumulate the quadrature results from all tasks associated with this
      * vector element. Therefore, we need this array to consecutively store
      * the starting task index for each pair of DoFs. The length of this array
-     * is @p vector_size+1, with the last element being the ending task index
-     * for the last pair of DoFs.}
+     * is @p vector_size+1, with the last element being the pass-the-end index
+     * after the last task for the last vector entry.}
      *
      * The data are on the host.
      */
@@ -2794,6 +2816,9 @@ namespace CUDAWrappers
      * 1. First dimension: task index in the buffer.
      * 2. Second dimension: point index in the permuted mapping support points
      * in \f$K_x\f$.
+     *
+     * The size of the second dimension of this table is allocated with respect
+     * to the highest order mapping adopted.
      */
     Table<2, Point<spacedim, real_type>>
       kx_mapping_support_points_permuted_buffer_cpu;
@@ -2805,6 +2830,9 @@ namespace CUDAWrappers
      * 1. First dimension: task index in the buffer.
      * 2. Second dimension: point index in the permuted mapping support points
      * in \f$K_y\f$.
+     *
+     * The size of the second dimension of this table is allocated with respect
+     * to the highest order mapping adopted.
      */
     Table<2, Point<spacedim, real_type>>
       ky_mapping_support_points_permuted_buffer_cpu;
@@ -2817,13 +2845,8 @@ namespace CUDAWrappers
      * 2. Second dimension: point index in the permuted mapping support points
      * in \f$K_x\f$.
      *
-     * \mynote{Because @p CUDATable class is adopted for storing the list of
-     * permuted mapping support points, the size of its second dimension is
-     * constant, which prescribes that all cells in the mesh adopt a same
-     * mapping object.
-     *
-     * TODO When different mapping objects are adopted for different
-     * subdomains, this should be modified accordingly.}
+     * The size of the second dimension of this table is allocated with respect
+     * to the highest order mapping adopted.
      */
     CUDATable<2, Point<spacedim, real_type>>
       kx_mapping_support_points_permuted_buffer_gpu;
@@ -2836,13 +2859,8 @@ namespace CUDAWrappers
      * 2. Second dimension: point index in the permuted mapping support points
      * in \f$K_y\f$.
      *
-     * \mynote{Because @p CUDATable class is adopted for storing the list of
-     * permuted mapping support points, the size of its second dimension is
-     * constant, which prescribes that all cells in the mesh adopt a same
-     * mapping object.
-     *
-     * TODO When different mapping objects are adopted for different
-     * subdomains, this should be modified accordingly.}
+     * The size of the second dimension of this table is allocated with respect
+     * to the highest order mapping adopted.
      */
     CUDATable<2, Point<spacedim, real_type>>
       ky_mapping_support_points_permuted_buffer_gpu;
@@ -4282,19 +4300,18 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType>
   HBEM_ATTR_HOST void
-  SauterQuadratureTaskRingBuffer<capacity,
-                                 dim,
+  SauterQuadratureTaskRingBuffer<dim,
                                  spacedim,
                                  RangeNumberType,
                                  KernelNumberType>::
     allocate(const CellNeighboringType                  neighboring_type,
-             const unsigned int                         num_to_fetch,
+             const unsigned int                         batch_size_,
+             const unsigned int                         batch_num,
              const BEMValues<dim, spacedim, real_type> &bem_values)
   {
     static_assert(
@@ -4310,7 +4327,15 @@ namespace CUDAWrappers
     head_committed                       = 0;
     tail_pending                         = 0;
     tail_committed                       = 0;
-    batch_size                           = num_to_fetch;
+    batch_size                           = batch_size_;
+    capacity                             = batch_size * batch_num + 1;
+
+    task_status_ring_buffer =
+      std::make_unique<std::atomic<SauterQuadratureTaskStatus>[]>(capacity);
+    fullmat_ring_buffer_cpu.resize(capacity);
+    fullmat_row_index_ring_buffer_cpu.resize(capacity);
+    fullmat_col_index_ring_buffer_cpu.resize(capacity);
+    mass_matrix_entries_ring_buffer_cpu.resize(capacity);
 
     /**
      * @internal For each data table in @p PairCellWiseScratchData, its
@@ -4363,24 +4388,28 @@ namespace CUDAWrappers
      */
     for (unsigned int i = 0; i < capacity; i++)
       {
-        std::atomic_init(task_status_ring_buffer + i,
+        std::atomic_init(&task_status_ring_buffer[i],
                          SauterQuadratureTaskStatus::before_creation);
       }
   }
 
 
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType>
   HBEM_ATTR_HOST void
-  SauterQuadratureTaskRingBuffer<capacity,
-                                 dim,
+  SauterQuadratureTaskRingBuffer<dim,
                                  spacedim,
                                  RangeNumberType,
                                  KernelNumberType>::release()
   {
+    task_status_ring_buffer.reset(nullptr);
+    fullmat_ring_buffer_cpu.clear();
+    fullmat_row_index_ring_buffer_cpu.clear();
+    fullmat_col_index_ring_buffer_cpu.clear();
+    mass_matrix_entries_ring_buffer_cpu.clear();
+
     AssertCuda(cudaHostUnregister(
       (void *)&(kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0))));
 
@@ -4412,14 +4441,12 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType>
   HBEM_ATTR_HOST inline unsigned int
-  SauterQuadratureTaskRingBuffer<capacity,
-                                 dim,
+  SauterQuadratureTaskRingBuffer<dim,
                                  spacedim,
                                  RangeNumberType,
                                  KernelNumberType>::task_num_during_creation()
@@ -4434,14 +4461,12 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType>
   HBEM_ATTR_HOST inline unsigned int
   SauterQuadratureTaskRingBuffer<
-    capacity,
     dim,
     spacedim,
     RangeNumberType,
@@ -4453,14 +4478,12 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType>
   HBEM_ATTR_HOST inline unsigned int
-  SauterQuadratureTaskRingBuffer<capacity,
-                                 dim,
+  SauterQuadratureTaskRingBuffer<dim,
                                  spacedim,
                                  RangeNumberType,
                                  KernelNumberType>::task_num_during_processing()
@@ -4472,14 +4495,12 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType>
   HBEM_ATTR_HOST inline unsigned int
-  SauterQuadratureTaskRingBuffer<capacity,
-                                 dim,
+  SauterQuadratureTaskRingBuffer<dim,
                                  spacedim,
                                  RangeNumberType,
                                  KernelNumberType>::task_num_total() const
@@ -4490,14 +4511,12 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType>
   HBEM_ATTR_HOST inline bool
-  SauterQuadratureTaskRingBuffer<capacity,
-                                 dim,
+  SauterQuadratureTaskRingBuffer<dim,
                                  spacedim,
                                  RangeNumberType,
                                  KernelNumberType>::is_full() const
@@ -4508,14 +4527,12 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType>
   HBEM_ATTR_HOST inline bool
-  SauterQuadratureTaskRingBuffer<capacity,
-                                 dim,
+  SauterQuadratureTaskRingBuffer<dim,
                                  spacedim,
                                  RangeNumberType,
                                  KernelNumberType>::is_not_full() const
@@ -4526,14 +4543,12 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType>
   HBEM_ATTR_HOST inline bool
-  SauterQuadratureTaskRingBuffer<capacity,
-                                 dim,
+  SauterQuadratureTaskRingBuffer<dim,
                                  spacedim,
                                  RangeNumberType,
                                  KernelNumberType>::is_empty() const
@@ -4542,14 +4557,12 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType>
   HBEM_ATTR_HOST void
-  SauterQuadratureTaskRingBuffer<capacity,
-                                 dim,
+  SauterQuadratureTaskRingBuffer<dim,
                                  spacedim,
                                  RangeNumberType,
                                  KernelNumberType>::
@@ -4716,20 +4729,18 @@ namespace CUDAWrappers
 
     if (if_notify_consumers)
       {
-        batch_task_ready.notify_one();
+        batch_task_ready.notify_all();
       }
   }
 
 
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType>
   template <template <int, typename> typename KernelFunctionType>
   HBEM_ATTR_HOST bool
-  SauterQuadratureTaskRingBuffer<capacity,
-                                 dim,
+  SauterQuadratureTaskRingBuffer<dim,
                                  spacedim,
                                  RangeNumberType,
                                  KernelNumberType>::
@@ -5330,14 +5341,12 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType>
   void
   SauterQuadratureTaskRingBuffer<
-    capacity,
     dim,
     spacedim,
     RangeNumberType,
@@ -5583,9 +5592,8 @@ namespace CUDAWrappers
       const KernelFunctionType<spacedim, CUDAKernelNumberType> &kernel,
       const CUDAKernelNumberType                                kernel_factor,
       const CUDABEMValues<dim, spacedim, real_type>            &bem_values,
-      const unsigned int task_num_per_block,
-      const unsigned int block_size_for_quad_result_accumulation,
-      const cudaStream_t cuda_stream_handle)
+      const ConfSauterQuadFarField &sauter_quad_far_field_params,
+      const cudaStream_t            cuda_stream_handle)
   {
 #if ENABLE_NVTX == 1
     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
@@ -5623,13 +5631,22 @@ namespace CUDAWrappers
      * @internal Process all Sauter quadrature tasks in the
      * buffer for assembling the row or column vector.
      */
-    const unsigned int quad_point_num_per_block =
-      device_properties.maxThreadsPerBlock / 2 / task_num_per_block;
-
-    dim3 threads_rect(task_num_per_block, quad_point_num_per_block);
-    dim3 blocks_rect((task_num + task_num_per_block - 1) / task_num_per_block,
-                     (quad_point_num + quad_point_num_per_block - 1) /
-                       quad_point_num_per_block);
+    dim3 threads_rect(static_cast<unsigned int>(
+                        sauter_quad_far_field_params.task_num_per_block),
+                      static_cast<unsigned int>(
+                        sauter_quad_far_field_params.quad_point_num_per_block));
+    dim3 blocks_rect((task_num +
+                      static_cast<unsigned int>(
+                        sauter_quad_far_field_params.task_num_per_block) -
+                      1) /
+                       static_cast<unsigned int>(
+                         sauter_quad_far_field_params.task_num_per_block),
+                     (quad_point_num +
+                      static_cast<unsigned int>(
+                        sauter_quad_far_field_params.quad_point_num_per_block) -
+                      1) /
+                       static_cast<unsigned int>(sauter_quad_far_field_params
+                                                   .quad_point_num_per_block));
 
     /**
      * @internal Evaluation at all quadrature points for all tasks.
@@ -5652,11 +5669,16 @@ namespace CUDAWrappers
      * Accumulate quadrature results for each vector element.
      */
     const unsigned int block_num_for_quad_result_accumulation =
-      (vector_size + block_size_for_quad_result_accumulation - 1) /
-      block_size_for_quad_result_accumulation;
+      (vector_size +
+       static_cast<unsigned int>(
+         sauter_quad_far_field_params.vector_entry_num_per_block) -
+       1) /
+      static_cast<unsigned int>(
+        sauter_quad_far_field_params.vector_entry_num_per_block);
     accumulate_quadrature_values_into_vector<<<
       block_num_for_quad_result_accumulation,
-      block_size_for_quad_result_accumulation,
+      static_cast<unsigned int>(
+        sauter_quad_far_field_params.vector_entry_num_per_block),
       0,
       cuda_stream_handle>>>(vector_size,
                             quad_point_num,
@@ -5673,7 +5695,6 @@ namespace CUDAWrappers
                                cudaMemcpyDeviceToHost,
                                cuda_stream_handle));
 
-
     AssertCuda(cudaStreamSynchronize(cuda_stream_handle));
   }
 
@@ -5685,7 +5706,6 @@ namespace CUDAWrappers
    *
    * This is the work function associated with a producer thread.
    *
-   * @tparam capacity
    * @tparam dim
    * @tparam spacedim
    * @tparam RangeNumberType
@@ -5713,8 +5733,7 @@ namespace CUDAWrappers
    * @param is_kernel_symmetric
    * @param enable_build_symmetric_hmat
    */
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType,
@@ -5725,26 +5744,22 @@ namespace CUDAWrappers
                       &near_field_leaf_set,
     const unsigned int start_leaf_set_index,
     const unsigned int end_leaf_set_index,
-    SauterQuadratureTaskRingBuffer<capacity,
-                                   dim,
+    SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
                                    KernelNumberType>
       &ring_buffer_for_same_panel,
-    SauterQuadratureTaskRingBuffer<capacity,
-                                   dim,
+    SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
                                    KernelNumberType>
       &ring_buffer_for_common_edge,
-    SauterQuadratureTaskRingBuffer<capacity,
-                                   dim,
+    SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
                                    KernelNumberType>
       &ring_buffer_for_common_vertex,
-    SauterQuadratureTaskRingBuffer<capacity,
-                                   dim,
+    SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
                                    KernelNumberType> &ring_buffer_for_regular,
@@ -6051,7 +6066,6 @@ namespace CUDAWrappers
    * This is the work function associated with a producer thread. This
    * overloaded version add a mass matrix to the \hmat.
    *
-   * @tparam capacity
    * @tparam dim
    * @tparam spacedim
    * @tparam RangeNumberType
@@ -6081,8 +6095,7 @@ namespace CUDAWrappers
    * @param is_kernel_symmetric
    * @param enable_build_symmetric_hmat
    */
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType,
@@ -6093,26 +6106,22 @@ namespace CUDAWrappers
                       &near_field_leaf_set,
     const unsigned int start_leaf_set_index,
     const unsigned int end_leaf_set_index,
-    SauterQuadratureTaskRingBuffer<capacity,
-                                   dim,
+    SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
                                    KernelNumberType>
       &ring_buffer_for_same_panel,
-    SauterQuadratureTaskRingBuffer<capacity,
-                                   dim,
+    SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
                                    KernelNumberType>
       &ring_buffer_for_common_edge,
-    SauterQuadratureTaskRingBuffer<capacity,
-                                   dim,
+    SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
                                    KernelNumberType>
       &ring_buffer_for_common_vertex,
-    SauterQuadratureTaskRingBuffer<capacity,
-                                   dim,
+    SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
                                    KernelNumberType> &ring_buffer_for_regular,
@@ -6429,8 +6438,7 @@ namespace CUDAWrappers
   }
 
 
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
@@ -6441,8 +6449,7 @@ namespace CUDAWrappers
     const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                                      &kernel,
     const DeviceNumberType<KernelNumberType>          kernel_factor,
-    SauterQuadratureTaskRingBuffer<capacity,
-                                   dim,
+    SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
                                    KernelNumberType> &ring_buffer,
@@ -6451,7 +6458,8 @@ namespace CUDAWrappers
       spacedim,
       typename numbers::NumberTraits<RangeNumberType>::real_type>
                       &bem_values_gpu,
-    const unsigned int block_size)
+    const unsigned int block_size,
+    const unsigned int consumer_wait_time_us)
   {
     using real_type =
       typename numbers::NumberTraits<RangeNumberType>::real_type;
@@ -6473,11 +6481,8 @@ namespace CUDAWrappers
     nvtxNameOsThread(gettid(), nvtx_thread_name.c_str());
 #endif
 
-    const unsigned int consumer_wait_time_us = 1;
-
     cudaStream_t cuda_stream_handle;
     AssertCuda(cudaStreamCreate(&cuda_stream_handle));
-
 
     /**
      * Continuously process the Sauter quadrature tasks in the ring buffer
@@ -6507,7 +6512,6 @@ namespace CUDAWrappers
    * The created tasks are added to the ring buffer with the corresponding
    * cell neighboring type.
    *
-   * @tparam capacity
    * @tparam dim
    * @tparam spacedim
    * @tparam RangeNumberType
@@ -6536,34 +6540,29 @@ namespace CUDAWrappers
    * @param scratch_data
    * @param copy_data
    */
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType,
             typename SurfaceNormalDetector>
   void
   create_sauter_quadrature_tasks_on_one_pair_of_dofs(
-    SauterQuadratureTaskRingBuffer<capacity,
-                                   dim,
+    SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
                                    KernelNumberType>
       &ring_buffer_for_same_panel,
-    SauterQuadratureTaskRingBuffer<capacity,
-                                   dim,
+    SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
                                    KernelNumberType>
       &ring_buffer_for_common_edge,
-    SauterQuadratureTaskRingBuffer<capacity,
-                                   dim,
+    SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
                                    KernelNumberType>
       &ring_buffer_for_common_vertex,
-    SauterQuadratureTaskRingBuffer<capacity,
-                                   dim,
+    SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
                                    KernelNumberType> &ring_buffer_for_regular,
@@ -6624,7 +6623,7 @@ namespace CUDAWrappers
          * @internal Calculate the real support points in the cell \f$K_x\f$
          * via the mapping object. Because the calculated mapping support
          * points are stored in a member variable in the mapping object
-         * @p kx_mapping and the current function will called by several
+         * @p kx_mapping and the current function will be called by several
          * producer threads, computation of the mapping support points should
          * be performed in a local copy of @p kx_mapping.
          */
@@ -6856,7 +6855,6 @@ namespace CUDAWrappers
    * mass matrix entry if needed. The final result will be the addition of
    * this value and the Sauter quadrature result.}
    *
-   * @tparam capacity
    * @tparam dim
    * @tparam spacedim
    * @tparam RangeNumberType
@@ -6887,34 +6885,29 @@ namespace CUDAWrappers
    * @param scratch_data
    * @param copy_data
    */
-  template <int capacity,
-            int dim,
+  template <int dim,
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType,
             typename SurfaceNormalDetector>
   void
   create_sauter_quadrature_tasks_on_one_pair_of_dofs(
-    SauterQuadratureTaskRingBuffer<capacity,
-                                   dim,
+    SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
                                    KernelNumberType>
       &ring_buffer_for_same_panel,
-    SauterQuadratureTaskRingBuffer<capacity,
-                                   dim,
+    SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
                                    KernelNumberType>
       &ring_buffer_for_common_edge,
-    SauterQuadratureTaskRingBuffer<capacity,
-                                   dim,
+    SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
                                    KernelNumberType>
       &ring_buffer_for_common_vertex,
-    SauterQuadratureTaskRingBuffer<capacity,
-                                   dim,
+    SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
                                    KernelNumberType> &ring_buffer_for_regular,
@@ -7355,7 +7348,7 @@ namespace CUDAWrappers
    * @param normal_detector
    * @param scratch_data
    * @param copy_data
-   * @return
+   * @return The total number of quadrature tasks for the pair of DoFs.
    */
   template <int dim,
             int spacedim,
@@ -8535,7 +8528,7 @@ template <int dim,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 KernelNumberType
-sauter_quadrature_on_one_pair_of_dofs(
+sauter_quadrature_on_one_pair_of_near_field_dofs(
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                           &kernel,
   const DeviceNumberType<KernelNumberType> kernel_factor,
@@ -9116,7 +9109,7 @@ template <int dim,
           typename KernelNumberType,
           typename SurfaceNormalDetector>
 KernelNumberType
-sauter_quadrature_on_one_pair_of_dofs(
+sauter_quadrature_on_one_pair_of_near_field_dofs(
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                           &kernel,
   const DeviceNumberType<KernelNumberType> kernel_factor,

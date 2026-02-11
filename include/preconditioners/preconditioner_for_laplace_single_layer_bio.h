@@ -21,7 +21,6 @@
 #define HIERBEM_INCLUDE_PRECONDITIONERS_PRECONDITIONER_FOR_LAPLACE_SINGLE_LAYER_BIO_H_
 
 #include <deal.II/base/exceptions.h>
-#include <deal.II/base/numbers.h>
 #include <deal.II/base/quadrature.h>
 #include <deal.II/base/types.h>
 
@@ -40,7 +39,7 @@
 
 #include "cad_mesh/subdomain_topology.h"
 #include "config.h"
-#include "hmatrix/hmatrix_parameters.h"
+#include "config_file/config_structs.h"
 #include "mapping/mapping_info.h"
 #include "platform_shared/laplace_kernels.h"
 #include "preconditioners/operator_preconditioner.h"
@@ -70,8 +69,6 @@ class LaplaceSingleLayerPreconditioner
   : public SingleLayerPreconditioner<dim, spacedim, RangeNumberType>
 {
 public:
-  using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
-
   /**
    * Constructor for the preconditioner on the full domain.
    */
@@ -81,11 +78,7 @@ public:
     const Triangulation<dim, spacedim>         &tria,
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
-    const unsigned int                          max_iter    = 1000,
-    const real_type                             tol         = 1e-8,
-    const real_type                             omega       = 1.0,
-    const bool                                  log_history = true,
-    const bool                                  log_result  = true);
+    const ConfOperatorPreconditioner           &op_precond_params);
 
   /**
    * Constructor for the preconditioner on a subdomain.
@@ -97,11 +90,7 @@ public:
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
     const std::set<types::material_id>         &subdomain_material_ids,
-    const unsigned int                          max_iter    = 1000,
-    const real_type                             tol         = 1e-8,
-    const real_type                             omega       = 1.0,
-    const bool                                  log_history = true,
-    const bool                                  log_result  = true);
+    const ConfOperatorPreconditioner           &op_precond_params);
 
   /**
    * Setup the preconditioner by calling the parent class's version as well as
@@ -110,9 +99,11 @@ public:
   template <typename SurfaceNormalDetector>
   void
   setup_preconditioner(
-    const unsigned int                               thread_num,
-    const HMatrixParameters<real_type>              &hmat_params,
-    const SubdomainTopology<dim, spacedim>          &subdomain_topology,
+    const ConfHMatrix                      &hmat_params,
+    const ConfSauterQuadNearField          &sauter_quad_near_field_params,
+    const ConfSauterQuadFarField           &sauter_quad_far_field_params,
+    const ConfParallelization              &parallel_params,
+    const SubdomainTopology<dim, spacedim> &subdomain_topology,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                     &material_id_to_mapping_index,
@@ -149,22 +140,14 @@ LaplaceSingleLayerPreconditioner<dim,
     const Triangulation<dim, spacedim>         &tria,
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
-    const unsigned int                          max_iter,
-    const real_type                             tol,
-    const real_type                             omega,
-    const bool                                  log_history,
-    const bool                                  log_result)
+    const ConfOperatorPreconditioner           &op_precond_params)
   : SingleLayerPreconditioner<dim, spacedim, RangeNumberType>(
       fe_primal_space,
       fe_dual_space,
       tria,
       primal_space_dof_i2e_numbering,
       primal_space_dof_e2i_numbering,
-      max_iter,
-      tol,
-      omega,
-      log_history,
-      log_result)
+      op_precond_params)
 {
   // At the moment, in a Dirichlet problem, the primal space can only be
   // @p FE_DGQ(0) and the dual space can only be @p FE_Q(1). Therefore, we make
@@ -194,11 +177,7 @@ LaplaceSingleLayerPreconditioner<dim,
     const std::vector<types::global_dof_index> &primal_space_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &primal_space_dof_e2i_numbering,
     const std::set<types::material_id>         &subdomain_material_ids,
-    const unsigned int                          max_iter,
-    const real_type                             tol,
-    const real_type                             omega,
-    const bool                                  log_history,
-    const bool                                  log_result)
+    const ConfOperatorPreconditioner           &op_precond_params)
   : SingleLayerPreconditioner<dim, spacedim, RangeNumberType>(
       fe_primal_space,
       fe_dual_space,
@@ -206,11 +185,7 @@ LaplaceSingleLayerPreconditioner<dim,
       primal_space_dof_i2e_numbering,
       primal_space_dof_e2i_numbering,
       subdomain_material_ids,
-      max_iter,
-      tol,
-      omega,
-      log_history,
-      log_result)
+      op_precond_params)
 {
   // At the moment, in a Dirichlet problem, the primal space can only be
   // @p FE_DGQ(0) and the dual space can only be @p FE_Q(1). Therefore, we make
@@ -236,9 +211,11 @@ LaplaceSingleLayerPreconditioner<dim,
                                  RangeNumberType,
                                  KernelNumberType>::
   setup_preconditioner(
-    const unsigned int                               thread_num,
-    const HMatrixParameters<real_type>              &hmat_params,
-    const SubdomainTopology<dim, spacedim>          &subdomain_topology,
+    const ConfHMatrix                      &hmat_params,
+    const ConfSauterQuadNearField          &sauter_quad_near_field_params,
+    const ConfSauterQuadFarField           &sauter_quad_far_field_params,
+    const ConfParallelization              &parallel_params,
+    const SubdomainTopology<dim, spacedim> &subdomain_topology,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                     &material_id_to_mapping_index,
@@ -255,8 +232,10 @@ LaplaceSingleLayerPreconditioner<dim,
     PlatformShared::LaplaceKernel::HyperSingularKernelRegular,
     KernelNumberType>(this->preconditioner_hmat,
                       hmat_params,
+                      sauter_quad_near_field_params,
+                      sauter_quad_far_field_params,
+                      parallel_params,
                       hyper_singular_kernel,
-                      thread_num,
                       subdomain_topology,
                       mappings,
                       material_id_to_mapping_index,

@@ -31,6 +31,7 @@
 #include <iostream>
 #include <vector>
 
+#include "config_file/config_structs.h"
 #include "grid/grid_out_ext.h"
 #include "preconditioners/preconditioner_for_laplace_single_layer_bio.h"
 #include "utilities/debug_tools.h"
@@ -124,7 +125,12 @@ main(int argc, const char *argv[])
   // cells in the primal mesh.
   std::vector<types::global_dof_index> dummy_numbering(tria.n_cells(0));
   LaplaceSingleLayerPreconditioner<2, 3, double, double> precond(
-    fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
+    fe_primal_space,
+    fe_dual_space,
+    tria,
+    dummy_numbering,
+    dummy_numbering,
+    ConfOperatorPreconditioner());
 
   // Build the averaging matrix.
   precond.initialize_dof_handlers();

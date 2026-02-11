@@ -1,3 +1,13 @@
+// Copyright (C) 2025 Xiaozhe Wang <chaoslawful@gmail.com>
+//
+// This file is part of the HierBEM library.
+//
+// HierBEM is free software: you can use it, redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License as published by the
+// Free Software Foundation, either version 3 of the License, or (at your
+// option) any later version. The full text of the license can be found in the
+// file LICENSE at the top level directory of HierBEM.
+
 #ifndef HIERBEM_INCLUDE_CONFIG_FILE_CONFIG_FILE_H_
 #define HIERBEM_INCLUDE_CONFIG_FILE_CONFIG_FILE_H_
 
@@ -8,6 +18,7 @@
 #include <string>
 
 #include "config.h"
+#include "config_file/config_structs.h"
 
 HBEM_NS_OPEN
 
@@ -41,6 +52,11 @@ struct ConfManifold
   // TBD
 };
 
+struct ConfBoundaryCondition
+{
+  // TBD
+};
+
 /**
  * Configuration for BEM algorithm
  */
@@ -57,56 +73,19 @@ struct ConfBEM
 };
 
 /**
- * Configuration for 1-D/2-D cluster tree
- */
-struct ConfClusterTree
-{
-  std::uint32_t n_min_for_ct  = 4;  // n_min for ClusterTree
-  std::uint32_t n_min_for_bct = 32; // n_min for BlockClusterTree
-};
-
-/**
- * Configuration for H-matrix construction
- */
-struct ConfHmatrix
-{
-  double        eta      = 0.8; // eta for H-matrix
-  std::uint32_t max_rank = 5;   // max_rank for H-matrix
-  double        aca_relative_err =
-    0.01; // for ACA: max relative error while assembling H-matrix
-};
-
-/**
- * Configuration for preconditioner H-matrix construction
- */
-struct ConfPrecond
-{
-  double        eta              = 1.0; // eta for preconditioner H-matrix
-  std::uint32_t max_rank         = 2;   // max_rank for preconditioner H-matrix
-  double        aca_relative_err = 0.1; // for ACA: max relative error while
-                                        // assembling preconditioner H-matrix
-};
-
-/**
- * Miscellaneous configurations
- */
-struct ConfMisc
-{
-  std::int32_t aca_thread_num = -1; // number of threads for ACA algorithm,
-                                    // -1 means using all available threads
-};
-
-/**
  * Top-level configuration
  */
 struct ConfHierBEM
 {
-  ConfProj        project;
-  ConfBEM         bem;
-  ConfClusterTree cluster_tree;
-  ConfHmatrix     hmatrix;
-  ConfPrecond     precond;
-  ConfMisc        misc;
+  ConfProj                   project;
+  ConfBEM                    bem;
+  ConfHMatrix                hmatrix;
+  ConfHMatrix                hmatrix_precond;
+  ConfSauterQuad             sauter_quad;
+  ConfSauterQuad             sauter_quad_precond;
+  ConfLinearSolver           linear_solver;
+  ConfOperatorPreconditioner op_precond;
+  ConfParallelization        parallel;
 };
 
 /**

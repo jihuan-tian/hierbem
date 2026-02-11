@@ -9,6 +9,7 @@
 // file LICENSE at the top level directory of HierBEM.
 
 #include <deal.II/base/function.h>
+#include <deal.II/base/multithread_info.h>
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
@@ -34,6 +35,7 @@
 
 #include "bem/types.h"
 #include "cad_mesh/gmsh_manipulation.h"
+#include "config_file/config_structs.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
 #include "laplace/laplace_bem.h"
 #include "preconditioners/preconditioner_type.h"
@@ -141,29 +143,40 @@ namespace HierBEM
 int
 main()
 {
-  const size_t stack_size = 1024 * 10;
-  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));
-  AssertCuda(
-    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
-
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  LaplaceBEM<dim, spacedim, double, double> bem(
-    1, // fe order for dirichlet space
-    0, // fe order for neumann space
-    ProblemType::DirichletBCProblem,
-    true,                        // is interior problem
-    32,                          // n_min for cluster tree
-    32,                          // n_min for block cluster tree
-    0.8,                         // eta for H-matrix
-    10,                          // max rank for H-matrix
-    0.01,                        // aca epsilon for H-matrix
-    1.0,                         // eta for preconditioner
-    5,                           // max rank for preconditioner
-    0.1,                         // aca epsilon for preconditioner
-    MultithreadInfo::n_threads() // Number of threads used for ACA
-  );
+  ConfLaplaceBEM bem_params;
+  bem_params.problem_type        = ProblemType::DirichletBCProblem;
+  bem_params.is_interior_problem = true;
+  ConfHMatrix                hmat_params{32, 32, 0.8, 10, 0.01};
+  ConfHMatrix                hmat_preconditioner_params{32, 32, 1.0, 5, 0.1};
+  ConfSauterQuad             sauter_quad_params;
+  ConfSauterQuad             sauter_quad_precond_params;
+  ConfLinearSolver           linear_solver_params;
+  ConfOperatorPreconditioner op_precond_params;
+  ConfParallelization        parallel_params;
+
+  // Set TBB thread num.
+  if (parallel_params.tbb_thread_num == -1)
+    MultithreadInfo::set_thread_limit(MultithreadInfo::n_threads());
+  else
+    MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
+
+  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize,
+                                static_cast<unsigned int>(
+                                  parallel_params.cuda_stack_size_kb)));
+  AssertCuda(
+    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
+
+  LaplaceBEM<dim, spacedim, double, double> bem(bem_params,
+                                                hmat_params,
+                                                hmat_preconditioner_params,
+                                                sauter_quad_params,
+                                                sauter_quad_precond_params,
+                                                linear_solver_params,
+                                                op_precond_params,
+                                                parallel_params);
   bem.set_project_name("solve-laplace-dirichlet");
   bem.set_preconditioner_type(PreconditionerType::OperatorPreconditioning);
   bem.set_iterative_solver_vmult_type(

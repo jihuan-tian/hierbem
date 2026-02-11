@@ -206,7 +206,8 @@ TEST_CASE(
     tria,
     dummy_numbering,
     dummy_numbering,
-    subdomain_material_ids);
+    subdomain_material_ids,
+    ConfOperatorPreconditioner());
 
   setup_preconditioner(precond);
   precond.build_averaging_matrix();

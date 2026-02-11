@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2025-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -37,6 +37,7 @@
 #include "cad_mesh/gmsh_manipulation.h"
 #include "cad_mesh/subdomain_topology.h"
 #include "config.h"
+#include "config_file/config_structs.h"
 #include "dofs/dof_tools_ext.h"
 #include "helmholtz_acoustic_bem.h"
 #include "helmholtz_acoustic_bem.priv.hcu"
@@ -55,18 +56,8 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
-  HelmholtzAcousticBEM(const KernelNumberType kappa,
-                       unsigned int           fe_order_for_dirichlet_space,
-                       unsigned int           fe_order_for_neumann_space,
-                       ProblemType            problem_type,
-                       bool                   is_interior_problem,
-                       unsigned int           thread_num)
-  : priv_(std::make_unique<Priv>(kappa,
-                                 fe_order_for_dirichlet_space,
-                                 fe_order_for_neumann_space,
-                                 problem_type,
-                                 is_interior_problem,
-                                 thread_num))
+  HelmholtzAcousticBEM(const ConfHelmholtzAcousticBEM &bem_params)
+  : priv_(std::make_unique<Priv>(bem_params))
 {
   priv_->initialize_memory_consumption_table_headers();
 }
@@ -76,23 +67,22 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
-  HelmholtzAcousticBEM(
-    const KernelNumberType              kappa,
-    const unsigned int                  fe_order_for_dirichlet_space,
-    const unsigned int                  fe_order_for_neumann_space,
-    const ProblemType                   problem_type,
-    const bool                          is_interior_problem,
-    const HMatrixParameters<real_type> &hmat_params,
-    const HMatrixParameters<real_type> &hmat_preconditioner_params,
-    const unsigned int                  thread_num)
-  : priv_(std::make_unique<Priv>(kappa,
-                                 fe_order_for_dirichlet_space,
-                                 fe_order_for_neumann_space,
-                                 problem_type,
-                                 is_interior_problem,
+  HelmholtzAcousticBEM(const ConfHelmholtzAcousticBEM &bem_params,
+                       const ConfHMatrix              &hmat_params,
+                       const ConfHMatrix      &hmat_preconditioner_params,
+                       const ConfSauterQuad   &sauter_quad_params,
+                       const ConfSauterQuad   &sauter_quad_precond_params,
+                       const ConfLinearSolver &linear_solver_params,
+                       const ConfOperatorPreconditioner &op_precond_params,
+                       const ConfParallelization        &parallel_params)
+  : priv_(std::make_unique<Priv>(bem_params,
                                  hmat_params,
                                  hmat_preconditioner_params,
-                                 thread_num))
+                                 sauter_quad_params,
+                                 sauter_quad_precond_params,
+                                 linear_solver_params,
+                                 op_precond_params,
+                                 parallel_params))
 {
   priv_->initialize_memory_consumption_table_headers();
 }

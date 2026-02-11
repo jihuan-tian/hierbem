@@ -19,6 +19,7 @@
  */
 
 #include <deal.II/base/memory_consumption.h>
+#include <deal.II/base/multithread_info.h>
 #include <deal.II/base/table_handler.h>
 
 #include <deal.II/fe/fe.h>
@@ -34,6 +35,7 @@
 #include <iostream>
 
 #include "cad_mesh/subdomain_topology.h"
+#include "config_file/config_structs.h"
 #include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
@@ -109,16 +111,22 @@ main(int argc, char *argv[])
 {
   CmdOpts opts = parse_cmdline(argc, argv);
 
-  /**
-   * Initialize the CUDA device parameters.
-   */
-  const size_t stack_size = 1024 * 10;
-  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));
-  std::cout << "CUDA stack size has been set to " << stack_size << std::endl;
+  // Parameters for building H-matrices.
+  ConfHMatrix hmat_params{
+    opts.n_min, opts.n_min, opts.eta, opts.max_rank, opts.epsilon};
+  ConfSauterQuadNearField sauter_quad_near_field_params;
+  ConfSauterQuadFarField  sauter_quad_far_field_params;
+  ConfParallelization     parallel_params;
 
-  /**
-   * Get GPU device properties.
-   */
+  // Set TBB thread num.
+  if (parallel_params.tbb_thread_num == -1)
+    MultithreadInfo::set_thread_limit(MultithreadInfo::n_threads());
+  else
+    MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
+
+  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize,
+                                static_cast<unsigned int>(
+                                  parallel_params.cuda_stack_size_kb)));
   AssertCuda(
     cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
 
@@ -225,7 +233,8 @@ main(int argc, char *argv[])
       ClusterTree<spacedim> ct(dof_indices,
                                support_points,
                                cell_size_at_support_points,
-                               opts.n_min);
+                               static_cast<unsigned int>(
+                                 hmat_params.n_min_for_ct));
       ct.partition(support_points, cell_size_at_support_points);
 
       table.start_new_row();
@@ -234,7 +243,11 @@ main(int argc, char *argv[])
       table.add_value("Memory", ct.memory_consumption());
 
       // Create and partition the block cluster tree.
-      BlockClusterTree<spacedim> bct(ct, ct, opts.eta, opts.n_min);
+      BlockClusterTree<spacedim> bct(ct,
+                                     ct,
+                                     hmat_params.eta,
+                                     static_cast<unsigned int>(
+                                       hmat_params.n_min_for_bct));
       bct.partition(ct.get_internal_to_external_dof_numbering(),
                     support_points,
                     cell_size_at_support_points);
@@ -246,7 +259,8 @@ main(int argc, char *argv[])
 
       // Create a symmetric H-matrix with respect to the block cluster tree.
       HMatrix<spacedim, double> V(bct,
-                                  opts.max_rank,
+                                  static_cast<unsigned int>(
+                                    hmat_params.max_rank),
                                   HMatrixSupport::Property::symmetric,
                                   HMatrixSupport::BlockType::diagonal_block);
 
@@ -258,9 +272,11 @@ main(int argc, char *argv[])
         double,
         double,
         SurfaceNormalDetector<dim, spacedim>>(
-        MultithreadInfo::n_threads(),
         V,
-        ACAConfig(opts.max_rank, opts.epsilon, opts.eta),
+        hmat_params,
+        sauter_quad_near_field_params,
+        sauter_quad_far_field_params,
+        parallel_params,
         single_layer_kernel,
         static_cast<double>(1.0),
         dof_to_cell_topo,

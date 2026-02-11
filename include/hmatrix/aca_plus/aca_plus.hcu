@@ -55,7 +55,7 @@
 #include "bem/bem_tools.h"
 #include "bem/cu_bem_values.hcu"
 #include "config.h"
-#include "hmatrix/aca_plus/aca_config.h"
+#include "config_file/config_structs.h"
 #include "hmatrix/hmatrix.h"
 #include "linear_algebra/cu_table.hcu"
 #include "linear_algebra/lapack_full_matrix_ext.h"
@@ -346,6 +346,7 @@ assemble_kernel_row(
     DeviceNumberType<RangeNumberType>,
     DeviceNumberType<KernelNumberType>> &task_buffer,
   Vector<RangeNumberType>               &row_vector,
+  const ConfSauterQuadFarField          &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                              &kernel,
   const DeviceNumberType<KernelNumberType>    kernel_factor,
@@ -429,8 +430,7 @@ assemble_kernel_row(
                             kernel,
                             kernel_factor,
                             bem_values_gpu,
-                            128,
-                            128,
+                            sauter_quad_far_field_params,
                             scratch_data.cuda_stream_handle);
 }
 
@@ -455,6 +455,7 @@ assemble_kernel_row(
     DeviceNumberType<RangeNumberType>,
     DeviceNumberType<KernelNumberType>> &task_buffer,
   Vector<RangeNumberType>               &row_vector,
+  const ConfSauterQuadFarField          &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
   const DeviceNumberType<KernelNumberType>     kernel_factor,
@@ -493,6 +494,7 @@ assemble_kernel_row(
 
   assemble_kernel_row(task_buffer,
                       row_vector,
+                      sauter_quad_far_field_params,
                       kernel,
                       kernel_factor,
                       row_dof_index,
@@ -770,6 +772,7 @@ assemble_kernel_column(
     DeviceNumberType<RangeNumberType>,
     DeviceNumberType<KernelNumberType>> &task_buffer,
   Vector<RangeNumberType>               &col_vector,
+  const ConfSauterQuadFarField          &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                              &kernel,
   const DeviceNumberType<KernelNumberType>    kernel_factor,
@@ -849,8 +852,7 @@ assemble_kernel_column(
                             kernel,
                             kernel_factor,
                             bem_values_gpu,
-                            128,
-                            128,
+                            sauter_quad_far_field_params,
                             scratch_data.cuda_stream_handle);
 }
 
@@ -875,6 +877,7 @@ assemble_kernel_column(
     DeviceNumberType<RangeNumberType>,
     DeviceNumberType<KernelNumberType>> &task_buffer,
   Vector<RangeNumberType>               &col_vector,
+  const ConfSauterQuadFarField          &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
   const DeviceNumberType<KernelNumberType>     kernel_factor,
@@ -913,6 +916,7 @@ assemble_kernel_column(
 
   assemble_kernel_column(task_buffer,
                          col_vector,
+                         sauter_quad_far_field_params,
                          kernel,
                          kernel_factor,
                          row_dof_indices,
@@ -1317,6 +1321,7 @@ random_select_ref_row(
     DeviceNumberType<RangeNumberType>,
     DeviceNumberType<KernelNumberType>> &task_buffer,
   Vector<RangeNumberType>               &row_vector,
+  const ConfSauterQuadFarField          &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                              &kernel,
   const DeviceNumberType<KernelNumberType>    kernel_factor,
@@ -1386,6 +1391,7 @@ random_select_ref_row(
            */
           assemble_kernel_row(task_buffer,
                               row_vector,
+                              sauter_quad_far_field_params,
                               kernel,
                               kernel_factor,
                               next_ref_row_dof_index,
@@ -1464,6 +1470,7 @@ random_select_ref_row(
     DeviceNumberType<RangeNumberType>,
     DeviceNumberType<KernelNumberType>> &task_buffer,
   Vector<RangeNumberType>               &row_vector,
+  const ConfSauterQuadFarField          &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
   const DeviceNumberType<KernelNumberType>     kernel_factor,
@@ -1535,6 +1542,7 @@ random_select_ref_row(
            */
           assemble_kernel_row(task_buffer,
                               row_vector,
+                              sauter_quad_far_field_params,
                               kernel,
                               kernel_factor,
                               mass_vmult_weq,
@@ -2070,6 +2078,7 @@ random_select_ref_column(
     DeviceNumberType<RangeNumberType>,
     DeviceNumberType<KernelNumberType>> &task_buffer,
   Vector<RangeNumberType>               &col_vector,
+  const ConfSauterQuadFarField          &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                              &kernel,
   const DeviceNumberType<KernelNumberType>    factor,
@@ -2139,6 +2148,7 @@ random_select_ref_column(
            */
           assemble_kernel_column(task_buffer,
                                  col_vector,
+                                 sauter_quad_far_field_params,
                                  kernel,
                                  factor,
                                  row_dof_indices,
@@ -2218,6 +2228,7 @@ random_select_ref_column(
     DeviceNumberType<RangeNumberType>,
     DeviceNumberType<KernelNumberType>> &task_buffer,
   Vector<RangeNumberType>               &col_vector,
+  const ConfSauterQuadFarField          &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
   const DeviceNumberType<KernelNumberType>     kernel_factor,
@@ -2289,6 +2300,7 @@ random_select_ref_column(
            */
           assemble_kernel_column(task_buffer,
                                  col_vector,
+                                 sauter_quad_far_field_params,
                                  kernel,
                                  kernel_factor,
                                  mass_vmult_weq,
@@ -2457,8 +2469,8 @@ random_select_ref_column(Vector<RangeNumberType>                    &col_vector,
  *
  * @param rkmat The rank-k matrix to be constructed for the current block,
  * the memory of which should be preallocated and the formal rank of which
- * should be the same as the maximum iteration number in @p aca_config.
- * @param aca_config
+ * should be the same as the maximum rank in <tt>hmat_params</tt>.
+ * @param hmat_params
  * @param kernel
  * @param factor
  * @param row_dof_indices
@@ -2483,8 +2495,7 @@ template <int dim,
 void
 aca_plus_parallel_sauter_quad_for_vector_entry(
   RkMatrix<RangeNumberType> &rkmat,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-    &aca_config,
+  const ConfHMatrix         &hmat_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                                &kernel,
   const DeviceNumberType<KernelNumberType>      kernel_factor,
@@ -2534,8 +2545,9 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
    * dimension.
    */
   const unsigned int effective_max_iter =
-    (aca_config.max_iter > std::min(m, n)) ? std::min(m, n) :
-                                             aca_config.max_iter;
+    (static_cast<unsigned int>(hmat_params.max_rank) > std::min(m, n)) ?
+      std::min(m, n) :
+      static_cast<unsigned int>(hmat_params.max_rank);
 
   /**
    * Generate lists of internal DoF indices (internal DoF numbering) from
@@ -2911,7 +2923,9 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
           /**
            * Calculate the error threshold only in the first step.
            */
-          error_threshold = aca_config.epsilon * rkmat.frobenius_norm(1);
+          error_threshold =
+            static_cast<real_type>(hmat_params.aca_relative_err) *
+            rkmat.frobenius_norm(1);
         }
 
       remaining_row_indices.remove(ik);
@@ -2949,7 +2963,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
             {
               // When there is no reference row can be selected, the ACA+
               // iteration should stop here.
-              if (k < aca_config.max_iter)
+              if (k < static_cast<unsigned int>(hmat_params.max_rank))
                 {
                   /**
                    * If the number of ACA+ iterations is less than the
@@ -3032,7 +3046,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
             {
               // When there is no reference column can be selected, the ACA+
               // iteration should stop here.
-              if (k < aca_config.max_iter)
+              if (k < static_cast<unsigned int>(hmat_params.max_rank))
                 {
                   /**
                    * If the number of ACA+ iterations is less than the
@@ -3088,7 +3102,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
        */
       if ((k > 1) && (uk.l2_norm() * vk.l2_norm() <= error_threshold))
         {
-          if (k < aca_config.max_iter)
+          if (k < static_cast<unsigned int>(hmat_params.max_rank))
             {
               /**
                * If the number of ACA+ iterations is less than the allowed
@@ -3112,7 +3126,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
         {
           if (size(remaining_row_indices) == 0)
             {
-              if (k < aca_config.max_iter)
+              if (k < static_cast<unsigned int>(hmat_params.max_rank))
                 {
                   /**
                    * If the number of ACA+ iterations is less than the
@@ -3162,7 +3176,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
  * hyper-singular matrix with the stabilization term.}
  *
  * @param rkmat
- * @param aca_config
+ * @param hmat_params
  * @param kernel
  * @param factor
  * @param mass_vmult_weq
@@ -3191,8 +3205,7 @@ template <int dim,
 void
 aca_plus_parallel_sauter_quad_for_vector_entry(
   RkMatrix<RangeNumberType> &rkmat,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-    &aca_config,
+  const ConfHMatrix         &hmat_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                                &kernel,
   const DeviceNumberType<KernelNumberType>      kernel_factor,
@@ -3244,8 +3257,9 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
    * dimension.
    */
   const unsigned int effective_max_iter =
-    (aca_config.max_iter > std::min(m, n)) ? std::min(m, n) :
-                                             aca_config.max_iter;
+    (static_cast<unsigned int>(hmat_params.max_rank) > std::min(m, n)) ?
+      std::min(m, n) :
+      static_cast<unsigned int>(hmat_params.max_rank);
 
   /**
    * Generate lists of internal DoF indices (internal DoF numbering) from
@@ -3633,7 +3647,9 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
           /**
            * Calculate the error threshold only in the first step.
            */
-          error_threshold = aca_config.epsilon * rkmat.frobenius_norm(1);
+          error_threshold =
+            static_cast<real_type>(hmat_params.aca_relative_err) *
+            rkmat.frobenius_norm(1);
         }
 
       remaining_row_indices.remove(ik);
@@ -3673,7 +3689,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
             {
               // When there is no reference row can be selected, the ACA+
               // iteration should stop here.
-              if (k < aca_config.max_iter)
+              if (k < static_cast<unsigned int>(hmat_params.max_rank))
                 {
                   /**
                    * If the number of ACA+ iterations is less than the
@@ -3758,7 +3774,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
             {
               // When there is no reference column can be selected, the ACA+
               // iteration should stop here.
-              if (k < aca_config.max_iter)
+              if (k < static_cast<unsigned int>(hmat_params.max_rank))
                 {
                   /**
                    * If the number of ACA+ iterations is less than the
@@ -3814,7 +3830,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
        */
       if ((k > 1) && (uk.l2_norm() * vk.l2_norm() <= error_threshold))
         {
-          if (k < aca_config.max_iter)
+          if (k < static_cast<unsigned int>(hmat_params.max_rank))
             {
               /**
                * If the number of ACA+ iterations is less than the allowed
@@ -3838,7 +3854,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
         {
           if (size(remaining_row_indices) == 0)
             {
-              if (k < aca_config.max_iter)
+              if (k < static_cast<unsigned int>(hmat_params.max_rank))
                 {
                   /**
                    * If the number of ACA+ iterations is less than the
@@ -3891,9 +3907,9 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 aca_plus_parallel_sauter_quad_for_whole_vector(
-  RkMatrix<RangeNumberType> &rkmat,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-    &aca_config,
+  RkMatrix<RangeNumberType>    &rkmat,
+  const ConfHMatrix            &hmat_params,
+  const ConfSauterQuadFarField &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                                &kernel,
   const DeviceNumberType<KernelNumberType>      kernel_factor,
@@ -3967,11 +3983,13 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
 
   /**
    * Adjust the maximum ACA+ iteration if is larger than the matrix
-   * dimension.
+   * dimension. This ensures the number of assembled rows or colummns <= matrix
+   * size.
    */
   const unsigned int effective_max_iter =
-    (aca_config.max_iter > std::min(m, n)) ? std::min(m, n) :
-                                             aca_config.max_iter;
+    (static_cast<unsigned int>(hmat_params.max_rank) > std::min(m, n)) ?
+      std::min(m, n) :
+      static_cast<unsigned int>(hmat_params.max_rank);
 
   /**
    * Generate lists of local DoF indices with internal DoF numbering from
@@ -4020,6 +4038,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
 
   size_type r = random_select_ref_row(sauter_task_buffer_for_row_vector,
                                       vr,
+                                      sauter_quad_far_field_params,
                                       kernel,
                                       kernel_factor,
                                       remaining_row_indices,
@@ -4054,6 +4073,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
 
   size_type c = random_select_ref_column(sauter_task_buffer_for_col_vector,
                                          uc,
+                                         sauter_quad_far_field_params,
                                          kernel,
                                          kernel_factor,
                                          remaining_col_indices,
@@ -4180,6 +4200,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            */
           assemble_kernel_row(sauter_task_buffer_for_row_vector,
                               vk,
+                              sauter_quad_far_field_params,
                               kernel,
                               kernel_factor,
                               row_dof_indices[ik],
@@ -4240,6 +4261,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            */
           assemble_kernel_column(sauter_task_buffer_for_col_vector,
                                  uk,
+                                 sauter_quad_far_field_params,
                                  kernel,
                                  kernel_factor,
                                  row_dof_indices,
@@ -4280,6 +4302,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            */
           assemble_kernel_column(sauter_task_buffer_for_col_vector,
                                  uk,
+                                 sauter_quad_far_field_params,
                                  kernel,
                                  kernel_factor,
                                  row_dof_indices,
@@ -4326,6 +4349,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            */
           assemble_kernel_row(sauter_task_buffer_for_row_vector,
                               vk,
+                              sauter_quad_far_field_params,
                               kernel,
                               kernel_factor,
                               row_dof_indices[ik],
@@ -4373,7 +4397,9 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           /**
            * Calculate the error threshold only in the first step.
            */
-          error_threshold = aca_config.epsilon * rkmat.frobenius_norm(1);
+          error_threshold =
+            static_cast<real_type>(hmat_params.aca_relative_err) *
+            rkmat.frobenius_norm(1);
         }
 
       remaining_row_indices.remove(ik);
@@ -4387,6 +4413,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            */
           r = random_select_ref_row(sauter_task_buffer_for_row_vector,
                                     vr,
+                                    sauter_quad_far_field_params,
                                     kernel,
                                     kernel_factor,
                                     remaining_row_indices,
@@ -4411,7 +4438,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
             {
               // When there is no reference row can be selected, the ACA+
               // iteration should stop here.
-              if (k < aca_config.max_iter)
+              if (k < static_cast<unsigned int>(hmat_params.max_rank))
                 {
                   /**
                    * If the number of ACA+ iterations is less than the
@@ -4477,6 +4504,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            */
           c = random_select_ref_column(sauter_task_buffer_for_col_vector,
                                        uc,
+                                       sauter_quad_far_field_params,
                                        kernel,
                                        kernel_factor,
                                        remaining_col_indices,
@@ -4501,7 +4529,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
             {
               // When there is no reference column can be selected, the ACA+
               // iteration should stop here.
-              if (k < aca_config.max_iter)
+              if (k < static_cast<unsigned int>(hmat_params.max_rank))
                 {
                   /**
                    * If the number of ACA+ iterations is less than the
@@ -4564,7 +4592,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
        */
       if ((k > 1) && (uk.l2_norm() * vk.l2_norm() <= error_threshold))
         {
-          if (k < aca_config.max_iter)
+          if (k < static_cast<unsigned int>(hmat_params.max_rank))
             {
               /**
                * If the number of ACA+ iterations is less than the allowed
@@ -4593,7 +4621,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
         {
           if (size(remaining_row_indices) == 0)
             {
-              if (k < aca_config.max_iter)
+              if (k < static_cast<unsigned int>(hmat_params.max_rank))
                 {
                   /**
                    * If the number of ACA+ iterations is less than the
@@ -4650,9 +4678,9 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 aca_plus_parallel_sauter_quad_for_whole_vector(
-  RkMatrix<RangeNumberType> &rkmat,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-    &aca_config,
+  RkMatrix<RangeNumberType>    &rkmat,
+  const ConfHMatrix            &hmat_params,
+  const ConfSauterQuadFarField &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                                &kernel,
   const DeviceNumberType<KernelNumberType>      kernel_factor,
@@ -4731,8 +4759,9 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
    * dimension.
    */
   const unsigned int effective_max_iter =
-    (aca_config.max_iter > std::min(m, n)) ? std::min(m, n) :
-                                             aca_config.max_iter;
+    (static_cast<unsigned int>(hmat_params.max_rank) > std::min(m, n)) ?
+      std::min(m, n) :
+      static_cast<unsigned int>(hmat_params.max_rank);
 
   /**
    * Generate lists of internal DoF indices (internal DoF numbering) from
@@ -4781,6 +4810,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
 
   size_type r = random_select_ref_row(sauter_task_buffer_for_row_vector,
                                       vr,
+                                      sauter_quad_far_field_params,
                                       kernel,
                                       kernel_factor,
                                       mass_vmult_weq,
@@ -4817,6 +4847,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
 
   size_type c = random_select_ref_column(sauter_task_buffer_for_col_vector,
                                          uc,
+                                         sauter_quad_far_field_params,
                                          kernel,
                                          kernel_factor,
                                          mass_vmult_weq,
@@ -4945,6 +4976,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            */
           assemble_kernel_row(sauter_task_buffer_for_row_vector,
                               vk,
+                              sauter_quad_far_field_params,
                               kernel,
                               kernel_factor,
                               mass_vmult_weq,
@@ -5007,6 +5039,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            */
           assemble_kernel_column(sauter_task_buffer_for_col_vector,
                                  uk,
+                                 sauter_quad_far_field_params,
                                  kernel,
                                  kernel_factor,
                                  mass_vmult_weq,
@@ -5049,6 +5082,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            */
           assemble_kernel_column(sauter_task_buffer_for_col_vector,
                                  uk,
+                                 sauter_quad_far_field_params,
                                  kernel,
                                  kernel_factor,
                                  mass_vmult_weq,
@@ -5097,6 +5131,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            */
           assemble_kernel_row(sauter_task_buffer_for_row_vector,
                               vk,
+                              sauter_quad_far_field_params,
                               kernel,
                               kernel_factor,
                               mass_vmult_weq,
@@ -5146,7 +5181,9 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           /**
            * Calculate the error threshold only in the first step.
            */
-          error_threshold = aca_config.epsilon * rkmat.frobenius_norm(1);
+          error_threshold =
+            static_cast<real_type>(hmat_params.aca_relative_err) *
+            rkmat.frobenius_norm(1);
         }
 
       remaining_row_indices.remove(ik);
@@ -5160,6 +5197,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            */
           r = random_select_ref_row(sauter_task_buffer_for_row_vector,
                                     vr,
+                                    sauter_quad_far_field_params,
                                     kernel,
                                     kernel_factor,
                                     mass_vmult_weq,
@@ -5186,7 +5224,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
             {
               // When there is no reference row can be selected, the ACA+
               // iteration should stop here.
-              if (k < aca_config.max_iter)
+              if (k < static_cast<unsigned int>(hmat_params.max_rank))
                 {
                   /**
                    * If the number of ACA+ iterations is less than the
@@ -5252,6 +5290,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            */
           c = random_select_ref_column(sauter_task_buffer_for_col_vector,
                                        uc,
+                                       sauter_quad_far_field_params,
                                        kernel,
                                        kernel_factor,
                                        mass_vmult_weq,
@@ -5278,7 +5317,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
             {
               // When there is no reference column can be selected, the ACA+
               // iteration should stop here.
-              if (k < aca_config.max_iter)
+              if (k < static_cast<unsigned int>(hmat_params.max_rank))
                 {
                   /**
                    * If the number of ACA+ iterations is less than the
@@ -5341,7 +5380,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
        */
       if ((k > 1) && (uk.l2_norm() * vk.l2_norm() <= error_threshold))
         {
-          if (k < aca_config.max_iter)
+          if (k < static_cast<unsigned int>(hmat_params.max_rank))
             {
               /**
                * If the number of ACA+ iterations is less than the allowed
@@ -5370,7 +5409,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
         {
           if (size(remaining_row_indices) == 0)
             {
-              if (k < aca_config.max_iter)
+              if (k < static_cast<unsigned int>(hmat_params.max_rank))
                 {
                   /**
                    * If the number of ACA+ iterations is less than the
@@ -5427,17 +5466,15 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
  *
  * @param rkmat The rank-k matrix to be constructed for the current block,
  * the memory of which should be preallocated and the formal rank of which
- * should be the same as the maximum iteration number in @p aca_config.
- * @param aca_config
+ * should be the same as the maximum rank in <tt>hmat_params</tt>.
+ * @param hmat_params
  * @param A The full matrix to be approximated
  */
 template <typename RangeNumberType = double>
 void
-aca_plus(
-  RkMatrix<RangeNumberType> &rkmat,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-                                             &aca_config,
-  const LAPACKFullMatrixExt<RangeNumberType> &A)
+aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
+         const ConfHMatrix                          &hmat_params,
+         const LAPACKFullMatrixExt<RangeNumberType> &A)
 {
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
 
@@ -5454,9 +5491,10 @@ aca_plus(
    * Create matrix references associated with the component matrices in the
    * rank-k matrix to be returned, which hold the row and column vectors in
    * the selected crosses during the ACA iteration. The number of columns
-   * should be the same as the maximum iteration number in @p aca_config.
+   * should be the same as the maximum rank in <tt>hmat_params</tt>.
    */
-  AssertDimension(rkmat.get_formal_rank(), aca_config.max_iter);
+  AssertDimension(rkmat.get_formal_rank(),
+                  static_cast<unsigned int>(hmat_params.max_rank));
   LAPACKFullMatrixExt<RangeNumberType> &u_mat = rkmat.get_A();
   LAPACKFullMatrixExt<RangeNumberType> &v_mat = rkmat.get_B();
   u_mat                                       = RangeNumberType();
@@ -5553,7 +5591,8 @@ aca_plus(
   /**
    * Start the ACA+ iteration from \f$k=1\f$.
    */
-  for (unsigned int k = 1; k <= aca_config.max_iter; k++)
+  for (unsigned int k = 1; k <= static_cast<unsigned int>(hmat_params.max_rank);
+       k++)
     {
       /**
        * Select the row index from the maximizer of the reference column.
@@ -5718,7 +5757,7 @@ aca_plus(
             {
               // When there is no reference row can be selected, the ACA+
               // iteration should stop here.
-              if (k < aca_config.max_iter)
+              if (k < static_cast<unsigned int>(hmat_params.max_rank))
                 {
                   /**
                    * If the number of ACA+ iterations is less than the
@@ -5783,7 +5822,7 @@ aca_plus(
             {
               // When there is no reference column can be selected, the ACA+
               // iteration should stop here.
-              if (k < aca_config.max_iter)
+              if (k < static_cast<unsigned int>(hmat_params.max_rank))
                 {
                   /**
                    * If the number of ACA+ iterations is less than the
@@ -5843,15 +5882,19 @@ aca_plus(
       // DEBUG
       if (k > 1)
         {
-          if (aca_config.eta >= 1.0)
+          if (static_cast<real_type>(hmat_params.eta) >= 1.0)
             {
-              error_threshold = aca_config.epsilon * rkmat.frobenius_norm(1);
+              error_threshold =
+                static_cast<real_type>(hmat_params.aca_relative_err) *
+                rkmat.frobenius_norm(1);
             }
           else
             {
-              error_threshold = aca_config.epsilon * (1.0 - aca_config.eta) /
-                                (1.0 + aca_config.epsilon) *
-                                rkmat.frobenius_norm(k - 1);
+              error_threshold =
+                static_cast<real_type>(hmat_params.aca_relative_err) *
+                (1.0 - static_cast<real_type>(hmat_params.eta)) /
+                (1.0 + static_cast<real_type>(hmat_params.aca_relative_err)) *
+                rkmat.frobenius_norm(k - 1);
             }
 
           deallog << "uk.l2_norm() * vk.l2_norm(): "
@@ -5866,7 +5909,7 @@ aca_plus(
 
       if ((k > 1) && (uk.l2_norm() * vk.l2_norm() <= error_threshold))
         {
-          if (k < aca_config.max_iter)
+          if (k < static_cast<unsigned int>(hmat_params.max_rank))
             {
               /**
                * If the number of ACA+ iterations is less than the allowed
@@ -5892,7 +5935,7 @@ aca_plus(
         {
           if (size(remaining_row_indices) == 0)
             {
-              if (k < aca_config.max_iter)
+              if (k < static_cast<unsigned int>(hmat_params.max_rank))
                 {
                   /**
                    * If the number of ACA+ iterations is less than the
@@ -5954,7 +5997,7 @@ aca_plus(
  * @tparam KernelNumberType
  * @tparam SurfaceNormalDetector
  * @param leaf_mat
- * @param aca_config
+ * @param hmat_params
  * @param kernel
  * @param kernel_factor
  * @param kx_dof_to_cell_topo
@@ -5984,8 +6027,7 @@ template <int dim,
 void
 fill_hmatrix_leaf_node_with_aca_plus(
   HMatrix<spacedim, RangeNumberType> *leaf_mat,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-    &aca_config,
+  const ConfHMatrix                  &hmat_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                           &kernel,
   const DeviceNumberType<KernelNumberType> kernel_factor,
@@ -6095,7 +6137,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                                                          j]);
 
                               (*fullmat)(i, j) =
-                                sauter_quadrature_on_one_pair_of_dofs(
+                                sauter_quadrature_on_one_pair_of_near_field_dofs(
                                   kernel,
                                   kernel_factor,
                                   i_global_dof_index,
@@ -6149,7 +6191,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                                                          j]);
 
                               (*fullmat)(i, j) =
-                                sauter_quadrature_on_one_pair_of_dofs(
+                                sauter_quadrature_on_one_pair_of_near_field_dofs(
                                   kernel,
                                   kernel_factor,
                                   i_global_dof_index,
@@ -6198,20 +6240,21 @@ fill_hmatrix_leaf_node_with_aca_plus(
                           ky_map_from_local_to_full_dof_indices->at(
                             ky_dof_i2e_numbering[(*col_index_range)[0] + j]);
 
-                      (*fullmat)(i, j) = sauter_quadrature_on_one_pair_of_dofs(
-                        kernel,
-                        kernel_factor,
-                        i_global_dof_index,
-                        j_global_dof_index,
-                        kx_dof_to_cell_topo.topology,
-                        ky_dof_to_cell_topo.topology,
-                        bem_values_gpu,
-                        mappings,
-                        material_id_to_mapping_index,
-                        normal_detector,
-                        scratch_data,
-                        scratch_data_gpu,
-                        copy_data);
+                      (*fullmat)(i, j) =
+                        sauter_quadrature_on_one_pair_of_near_field_dofs(
+                          kernel,
+                          kernel_factor,
+                          i_global_dof_index,
+                          j_global_dof_index,
+                          kx_dof_to_cell_topo.topology,
+                          ky_dof_to_cell_topo.topology,
+                          bem_values_gpu,
+                          mappings,
+                          material_id_to_mapping_index,
+                          normal_detector,
+                          scratch_data,
+                          scratch_data_gpu,
+                          copy_data);
                     }
                 }
             }
@@ -6240,7 +6283,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                        */
                       aca_plus_parallel_sauter_quad_for_vector_entry(
                         (*rkmat),
-                        aca_config,
+                        hmat_params,
                         kernel,
                         kernel_factor,
                         *row_index_range,
@@ -6292,7 +6335,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
             {
               aca_plus_parallel_sauter_quad_for_vector_entry(
                 (*rkmat),
-                aca_config,
+                hmat_params,
                 kernel,
                 kernel_factor,
                 (*row_index_range),
@@ -6363,7 +6406,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
  * @tparam KernelNumberType
  * @tparam SurfaceNormalDetector
  * @param leaf_mat
- * @param aca_config
+ * @param hmat_params
  * @param kernel
  * @param kernel_factor
  * @param mass_vmult_weq This is the multiplication of the mass matrix and
@@ -6402,8 +6445,7 @@ template <int dim,
 void
 fill_hmatrix_leaf_node_with_aca_plus(
   HMatrix<spacedim, RangeNumberType> *leaf_mat,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-    &aca_config,
+  const ConfHMatrix                  &hmat_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
   const DeviceNumberType<KernelNumberType>     kernel_factor,
@@ -6508,7 +6550,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                                                          j]);
 
                               (*fullmat)(i, j) =
-                                sauter_quadrature_on_one_pair_of_dofs(
+                                sauter_quadrature_on_one_pair_of_near_field_dofs(
                                   kernel,
                                   kernel_factor,
                                   i_global_dof_index,
@@ -6571,7 +6613,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                                                          j]);
 
                               (*fullmat)(i, j) =
-                                sauter_quadrature_on_one_pair_of_dofs(
+                                sauter_quadrature_on_one_pair_of_near_field_dofs(
                                   kernel,
                                   kernel_factor,
                                   i_global_dof_index,
@@ -6629,20 +6671,21 @@ fill_hmatrix_leaf_node_with_aca_plus(
                           ky_map_from_local_to_full_dof_indices->at(
                             ky_dof_i2e_numbering[(*col_index_range)[0] + j]);
 
-                      (*fullmat)(i, j) = sauter_quadrature_on_one_pair_of_dofs(
-                        kernel,
-                        kernel_factor,
-                        i_global_dof_index,
-                        j_global_dof_index,
-                        kx_dof_to_cell_topo.topology,
-                        ky_dof_to_cell_topo.topology,
-                        bem_values_gpu,
-                        mappings,
-                        material_id_to_mapping_index,
-                        normal_detector,
-                        scratch_data,
-                        scratch_data_gpu,
-                        copy_data);
+                      (*fullmat)(i, j) =
+                        sauter_quadrature_on_one_pair_of_near_field_dofs(
+                          kernel,
+                          kernel_factor,
+                          i_global_dof_index,
+                          j_global_dof_index,
+                          kx_dof_to_cell_topo.topology,
+                          ky_dof_to_cell_topo.topology,
+                          bem_values_gpu,
+                          mappings,
+                          material_id_to_mapping_index,
+                          normal_detector,
+                          scratch_data,
+                          scratch_data_gpu,
+                          copy_data);
 
                       // N.B. The internal and local DoF indices are
                       // used directly to access the result vector of
@@ -6679,7 +6722,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                        */
                       aca_plus_parallel_sauter_quad_for_vector_entry(
                         (*rkmat),
-                        aca_config,
+                        hmat_params,
                         kernel,
                         kernel_factor,
                         mass_vmult_weq,
@@ -6727,7 +6770,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
             {
               aca_plus_parallel_sauter_quad_for_vector_entry(
                 (*rkmat),
-                aca_config,
+                hmat_params,
                 kernel,
                 kernel_factor,
                 mass_vmult_weq,
@@ -6786,7 +6829,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
  * @tparam KernelNumberType
  * @tparam SurfaceNormalDetector
  * @param leaf_mat
- * @param aca_config
+ * @param hmat_params
  * @param kernel
  * @param kernel_factor
  * @param mass_matrix_factor
@@ -6818,8 +6861,7 @@ template <int dim,
 void
 fill_hmatrix_leaf_node_with_aca_plus(
   HMatrix<spacedim, RangeNumberType> *leaf_mat,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-    &aca_config,
+  const ConfHMatrix                  &hmat_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                           &kernel,
   const DeviceNumberType<KernelNumberType> kernel_factor,
@@ -6925,7 +6967,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                                                          j]);
 
                               (*fullmat)(i, j) =
-                                sauter_quadrature_on_one_pair_of_dofs(
+                                sauter_quadrature_on_one_pair_of_near_field_dofs(
                                   kernel,
                                   kernel_factor,
                                   mass_matrix_factor,
@@ -6981,7 +7023,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                                                          j]);
 
                               (*fullmat)(i, j) =
-                                sauter_quadrature_on_one_pair_of_dofs(
+                                sauter_quadrature_on_one_pair_of_near_field_dofs(
                                   kernel,
                                   kernel_factor,
                                   mass_matrix_factor,
@@ -7029,22 +7071,23 @@ fill_hmatrix_leaf_node_with_aca_plus(
                           ky_map_from_local_to_full_dof_indices->at(
                             ky_dof_i2e_numbering[(*col_index_range)[0] + j]);
 
-                      (*fullmat)(i, j) = sauter_quadrature_on_one_pair_of_dofs(
-                        kernel,
-                        kernel_factor,
-                        mass_matrix_factor,
-                        i_global_dof_index,
-                        j_global_dof_index,
-                        kx_dof_to_cell_topo.topology,
-                        ky_dof_to_cell_topo.topology,
-                        bem_values_gpu,
-                        mappings,
-                        material_id_to_mapping_index,
-                        normal_detector,
-                        mass_matrix_scratch_data,
-                        scratch_data,
-                        scratch_data_gpu,
-                        copy_data);
+                      (*fullmat)(i, j) =
+                        sauter_quadrature_on_one_pair_of_near_field_dofs(
+                          kernel,
+                          kernel_factor,
+                          mass_matrix_factor,
+                          i_global_dof_index,
+                          j_global_dof_index,
+                          kx_dof_to_cell_topo.topology,
+                          ky_dof_to_cell_topo.topology,
+                          bem_values_gpu,
+                          mappings,
+                          material_id_to_mapping_index,
+                          normal_detector,
+                          mass_matrix_scratch_data,
+                          scratch_data,
+                          scratch_data_gpu,
+                          copy_data);
                     }
                 }
             }
@@ -7065,7 +7108,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                        */
                       aca_plus_parallel_sauter_quad_for_vector_entry(
                         (*rkmat),
-                        aca_config,
+                        hmat_params,
                         kernel,
                         kernel_factor,
                         *row_index_range,
@@ -7111,7 +7154,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
             {
               aca_plus_parallel_sauter_quad_for_vector_entry(
                 (*rkmat),
-                aca_config,
+                hmat_params,
                 kernel,
                 kernel_factor,
                 *row_index_range,
@@ -7151,8 +7194,8 @@ template <int dim,
 void
 fill_far_field_hmatrix_leaf_node_with_aca_plus(
   HMatrix<spacedim, RangeNumberType> *leaf_mat,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-    &aca_config,
+  const ConfHMatrix                  &hmat_params,
+  const ConfSauterQuadFarField       &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                           &kernel,
   const DeviceNumberType<KernelNumberType> kernel_factor,
@@ -7228,7 +7271,8 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
                        */
                       aca_plus_parallel_sauter_quad_for_whole_vector(
                         (*rkmat),
-                        aca_config,
+                        hmat_params,
+                        sauter_quad_far_field_params,
                         kernel,
                         kernel_factor,
                         *row_index_range,
@@ -7280,7 +7324,8 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
             {
               aca_plus_parallel_sauter_quad_for_whole_vector(
                 (*rkmat),
-                aca_config,
+                hmat_params,
+                sauter_quad_far_field_params,
                 kernel,
                 kernel_factor,
                 (*row_index_range),
@@ -7320,8 +7365,8 @@ template <int dim,
 void
 fill_far_field_hmatrix_leaf_node_with_aca_plus(
   HMatrix<spacedim, RangeNumberType> *leaf_mat,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-    &aca_config,
+  const ConfHMatrix                  &hmat_params,
+  const ConfSauterQuadFarField       &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
   const DeviceNumberType<KernelNumberType>     kernel_factor,
@@ -7396,7 +7441,8 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
                        */
                       aca_plus_parallel_sauter_quad_for_whole_vector(
                         (*rkmat),
-                        aca_config,
+                        hmat_params,
+                        sauter_quad_far_field_params,
                         kernel,
                         kernel_factor,
                         mass_vmult_weq,
@@ -7444,7 +7490,8 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
             {
               aca_plus_parallel_sauter_quad_for_whole_vector(
                 (*rkmat),
-                aca_config,
+                hmat_params,
+                sauter_quad_far_field_params,
                 kernel,
                 kernel_factor,
                 mass_vmult_weq,
@@ -7482,7 +7529,8 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
  * \mynote{This function is to be used for TBB parallelization.}
  *
  * @param range
- * @param aca_config
+ * @param hmat_params
+ * @param sauter_quad_far_field_params
  * @param kernel
  * @param kernel_factor
  * @param kx_dof_to_cell_topo
@@ -7506,9 +7554,9 @@ void
 fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
   const tbb::blocked_range<
     typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
-    &range,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-    &aca_config,
+                               &range,
+  const ConfHMatrix            &hmat_params,
+  const ConfSauterQuadFarField &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                           &kernel,
   const DeviceNumberType<KernelNumberType> kernel_factor,
@@ -7567,7 +7615,8 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
     {
       fill_far_field_hmatrix_leaf_node_with_aca_plus(
         (*iter),
-        aca_config,
+        hmat_params,
+        sauter_quad_far_field_params,
         kernel,
         kernel_factor,
         kx_dof_to_cell_topo,
@@ -7604,7 +7653,8 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
  * hyper-singular matrix with the stabilization term.}
  *
  * @param range
- * @param aca_config
+ * @param hmat_params
+ * @param sauter_quad_far_field_params
  * @param kernel
  * @param kernel_factor
  * @param mass_vmult_weq
@@ -7631,9 +7681,9 @@ void
 fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
   const tbb::blocked_range<
     typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
-    &range,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-    &aca_config,
+                               &range,
+  const ConfHMatrix            &hmat_params,
+  const ConfSauterQuadFarField &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
   const DeviceNumberType<KernelNumberType>     kernel_factor,
@@ -7694,7 +7744,8 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
     {
       fill_far_field_hmatrix_leaf_node_with_aca_plus(
         (*iter),
-        aca_config,
+        hmat_params,
+        sauter_quad_far_field_params,
         kernel,
         kernel_factor,
         mass_vmult_weq,
@@ -7881,7 +7932,7 @@ stabilize_near_field_hmatrices_for_hypersingular_kernel(
  * @tparam KernelNumberType
  * @tparam SurfaceNormalDetector
  * @param hmat
- * @param aca_config
+ * @param hmat_params
  * @param kernel
  * @param kernel_factor
  * @param kx_dof_to_cell_topo
@@ -7908,8 +7959,7 @@ template <int dim,
 void
 fill_hmatrix_with_aca_plus_serial(
   HMatrix<spacedim, RangeNumberType> &hmat,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-    &aca_config,
+  const ConfHMatrix                  &hmat_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                           &kernel,
   const DeviceNumberType<KernelNumberType> kernel_factor,
@@ -7995,7 +8045,7 @@ fill_hmatrix_with_aca_plus_serial(
     {
       fill_hmatrix_leaf_node_with_aca_plus(
         leaf_mat,
-        aca_config,
+        hmat_params,
         kernel,
         kernel_factor,
         kx_dof_to_cell_topo,
@@ -8065,7 +8115,7 @@ fill_hmatrix_with_aca_plus_serial(
  * @tparam KernelNumberType
  * @tparam SurfaceNormalDetector
  * @param hmat
- * @param aca_config
+ * @param hmat_params
  * @param kernel
  * @param kernel_factor
  * @param mass_vmult_weq
@@ -8094,8 +8144,7 @@ template <int dim,
 void
 fill_hmatrix_with_aca_plus_serial(
   HMatrix<spacedim, RangeNumberType> &hmat,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-    &aca_config,
+  const ConfHMatrix                  &hmat_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
   const DeviceNumberType<KernelNumberType>     kernel_factor,
@@ -8183,7 +8232,7 @@ fill_hmatrix_with_aca_plus_serial(
     {
       fill_hmatrix_leaf_node_with_aca_plus(
         leaf_mat,
-        aca_config,
+        hmat_params,
         kernel,
         kernel_factor,
         mass_vmult_weq,
@@ -8242,7 +8291,7 @@ fill_hmatrix_with_aca_plus_serial(
  * @tparam KernelNumberType
  * @tparam SurfaceNormalDetector
  * @param hmat
- * @param aca_config
+ * @param hmat_params
  * @param kernel
  * @param kernel_factor
  * @param mass_matrix_factor
@@ -8271,8 +8320,7 @@ template <int dim,
 void
 fill_hmatrix_with_aca_plus_serial(
   HMatrix<spacedim, RangeNumberType> &hmat,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-    &aca_config,
+  const ConfHMatrix                  &hmat_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                           &kernel,
   const DeviceNumberType<KernelNumberType> kernel_factor,
@@ -8371,7 +8419,7 @@ fill_hmatrix_with_aca_plus_serial(
     {
       fill_hmatrix_leaf_node_with_aca_plus(
         leaf_mat,
-        aca_config,
+        hmat_params,
         kernel,
         kernel_factor,
         mass_matrix_factor,
@@ -8433,9 +8481,11 @@ fill_hmatrix_with_aca_plus_serial(
  * @tparam RangeNumberType
  * @tparam KernelNumberType
  * @tparam SurfaceNormalDetector
- * @param thread_num
  * @param hmat
- * @param aca_config
+ * @param hmat_params
+ * @param sauter_quad_near_field_params
+ * @param sauter_quad_far_field_params
+ * @param parallel_params
  * @param kernel
  * @param kernel_factor
  * @param kx_dof_to_cell_topo
@@ -8461,10 +8511,11 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 fill_hmatrix_with_aca_plus_smp(
-  const unsigned int                  thread_num,
   HMatrix<spacedim, RangeNumberType> &hmat,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-    &aca_config,
+  const ConfHMatrix                  &hmat_params,
+  const ConfSauterQuadNearField      &sauter_quad_near_field_params,
+  const ConfSauterQuadFarField       &sauter_quad_far_field_params,
+  const ConfParallelization          &parallel_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                           &kernel,
   const DeviceNumberType<KernelNumberType> kernel_factor,
@@ -8541,50 +8592,60 @@ fill_hmatrix_with_aca_plus_smp(
    */
   timer.start();
 
-  const unsigned int block_size = 256;
-  const unsigned int block_num  = 8;
-  const unsigned int batch_size = block_size * block_num;
-  const unsigned int capacity   = batch_size * 8 + 1;
-  unsigned int       producer_thread_num =
-    std::max(static_cast<unsigned int>(4), thread_num / 2);
+  const unsigned int batch_size = static_cast<unsigned int>(
+    sauter_quad_near_field_params.task_num_per_block *
+    sauter_quad_near_field_params.block_num_per_batch);
+  unsigned int producer_num =
+    static_cast<unsigned int>(sauter_quad_near_field_params.producer_num);
 
   // Create ring buffers for various cell neighboring types.
-  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
-                                                        dim,
+  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
     ring_buffer_for_same_panel;
-  ring_buffer_for_same_panel.allocate(CellNeighboringType::SamePanel,
-                                      batch_size,
-                                      bem_values);
-  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
-                                                        dim,
+  ring_buffer_for_same_panel.allocate(
+    CellNeighboringType::SamePanel,
+    batch_size,
+    static_cast<unsigned int>(
+      sauter_quad_near_field_params.batch_num_in_buffer),
+    bem_values);
+
+  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
     ring_buffer_for_common_edge;
-  ring_buffer_for_common_edge.allocate(CellNeighboringType::CommonEdge,
-                                       batch_size,
-                                       bem_values);
-  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
-                                                        dim,
+  ring_buffer_for_common_edge.allocate(
+    CellNeighboringType::CommonEdge,
+    batch_size,
+    static_cast<unsigned int>(
+      sauter_quad_near_field_params.batch_num_in_buffer),
+    bem_values);
+
+  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
     ring_buffer_for_common_vertex;
-  ring_buffer_for_common_vertex.allocate(CellNeighboringType::CommonVertex,
-                                         batch_size,
-                                         bem_values);
-  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
-                                                        dim,
+  ring_buffer_for_common_vertex.allocate(
+    CellNeighboringType::CommonVertex,
+    batch_size,
+    static_cast<unsigned int>(
+      sauter_quad_near_field_params.batch_num_in_buffer),
+    bem_values);
+
+  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
     ring_buffer_for_regular;
-  ring_buffer_for_regular.allocate(CellNeighboringType::Regular,
-                                   batch_size,
-                                   bem_values);
+  ring_buffer_for_regular.allocate(
+    CellNeighboringType::Regular,
+    batch_size,
+    static_cast<unsigned int>(
+      sauter_quad_near_field_params.batch_num_in_buffer),
+    bem_values);
 
   std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
     hmat.get_near_field_leaf_set();
@@ -8592,11 +8653,11 @@ fill_hmatrix_with_aca_plus_smp(
 
   Assert(near_field_set_size > 0, ExcLowerRange(near_field_set_size, 1));
 
-  if (near_field_set_size < producer_thread_num)
-    producer_thread_num = near_field_set_size;
+  if (near_field_set_size < producer_num)
+    producer_num = near_field_set_size;
 
   std::vector<std::thread> producers;
-  producers.reserve(producer_thread_num);
+  producers.reserve(producer_num);
 
   // Use sequence partition to generate closed ranges of near field H-matrix
   // nodes.
@@ -8617,7 +8678,7 @@ fill_hmatrix_with_aca_plus_smp(
 
   SequencePartitioner<decltype(near_field_storage_cost_func)>
     near_field_storage_sp(near_field_set_size,
-                          producer_thread_num,
+                          producer_num,
                           near_field_storage_cost_func);
   near_field_storage_sp.partition();
   std::vector<std::pair<int64_t, int64_t>> near_field_partitions;
@@ -8662,51 +8723,77 @@ fill_hmatrix_with_aca_plus_smp(
    * @internal Start the consumer threads.
    */
   std::vector<std::thread> consumers;
-  const unsigned int       consumer_multiplicity =
-    std::max(static_cast<unsigned int>(1), thread_num / 2 / 4);
-  consumers.reserve(4 * consumer_multiplicity);
+  const unsigned int       consumer_num_same_panel = static_cast<unsigned int>(
+    sauter_quad_near_field_params.consumer_num_same_panel);
+  const unsigned int consumer_num_common_edge = static_cast<unsigned int>(
+    sauter_quad_near_field_params.consumer_num_common_edge);
+  const unsigned int consumer_num_common_vertex = static_cast<unsigned int>(
+    sauter_quad_near_field_params.consumer_num_common_vertex);
+  const unsigned int consumer_num_regular = static_cast<unsigned int>(
+    sauter_quad_near_field_params.consumer_num_regular);
+  const unsigned int consumer_set_num =
+    static_cast<unsigned int>(sauter_quad_near_field_params.consumer_set_num);
+  consumers.reserve((consumer_num_same_panel + consumer_num_common_edge +
+                     consumer_num_common_vertex + consumer_num_regular) *
+                    consumer_set_num);
 
-  for (unsigned int m = 0; m < consumer_multiplicity; m++)
+  for (unsigned int m = 0; m < consumer_set_num; m++)
     {
-      consumers.emplace_back([&]() {
-        HierBEM::CUDAWrappers::
-          sauter_quadrature_for_near_field_matrix_entries_consumer(
-            kernel,
-            kernel_factor,
-            ring_buffer_for_same_panel,
-            bem_values_gpu,
-            block_size);
-      });
+      for (unsigned int i = 0; i < consumer_num_same_panel; i++)
+        consumers.emplace_back([&]() {
+          HierBEM::CUDAWrappers::
+            sauter_quadrature_for_near_field_matrix_entries_consumer(
+              kernel,
+              kernel_factor,
+              ring_buffer_for_same_panel,
+              bem_values_gpu,
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.task_num_per_block),
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.consumer_wait_time_us));
+        });
 
-      consumers.emplace_back([&]() {
-        HierBEM::CUDAWrappers::
-          sauter_quadrature_for_near_field_matrix_entries_consumer(
-            kernel,
-            kernel_factor,
-            ring_buffer_for_common_edge,
-            bem_values_gpu,
-            block_size);
-      });
+      for (unsigned int i = 0; i < consumer_num_common_edge; i++)
+        consumers.emplace_back([&]() {
+          HierBEM::CUDAWrappers::
+            sauter_quadrature_for_near_field_matrix_entries_consumer(
+              kernel,
+              kernel_factor,
+              ring_buffer_for_common_edge,
+              bem_values_gpu,
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.task_num_per_block),
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.consumer_wait_time_us));
+        });
 
-      consumers.emplace_back([&]() {
-        HierBEM::CUDAWrappers::
-          sauter_quadrature_for_near_field_matrix_entries_consumer(
-            kernel,
-            kernel_factor,
-            ring_buffer_for_common_vertex,
-            bem_values_gpu,
-            block_size);
-      });
+      for (unsigned int i = 0; i < consumer_num_common_vertex; i++)
+        consumers.emplace_back([&]() {
+          HierBEM::CUDAWrappers::
+            sauter_quadrature_for_near_field_matrix_entries_consumer(
+              kernel,
+              kernel_factor,
+              ring_buffer_for_common_vertex,
+              bem_values_gpu,
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.task_num_per_block),
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.consumer_wait_time_us));
+        });
 
-      consumers.emplace_back([&]() {
-        HierBEM::CUDAWrappers::
-          sauter_quadrature_for_near_field_matrix_entries_consumer(
-            kernel,
-            kernel_factor,
-            ring_buffer_for_regular,
-            bem_values_gpu,
-            block_size);
-      });
+      for (unsigned int i = 0; i < consumer_num_regular; i++)
+        consumers.emplace_back([&]() {
+          HierBEM::CUDAWrappers::
+            sauter_quadrature_for_near_field_matrix_entries_consumer(
+              kernel,
+              kernel_factor,
+              ring_buffer_for_regular,
+              bem_values_gpu,
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.task_num_per_block),
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.consumer_wait_time_us));
+        });
     }
 
   /**
@@ -8772,13 +8859,12 @@ fill_hmatrix_with_aca_plus_smp(
       HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_far_field_nodes");
 #endif
 
-      const unsigned int grain_size =
-        std::max(static_cast<unsigned long>(1),
-                 far_field_leaf_set.size() / thread_num / 2);
       tbb::parallel_for(
         tbb::blocked_range<
           typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>(
-          far_field_leaf_set.begin(), far_field_leaf_set.end(), grain_size),
+          far_field_leaf_set.begin(),
+          far_field_leaf_set.end(),
+          static_cast<size_t>(parallel_params.hmat_far_field_grain_size)),
         [&](const tbb::blocked_range<typename std::vector<
               HMatrix<spacedim, RangeNumberType> *>::iterator> &range) {
           fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus<
@@ -8788,7 +8874,8 @@ fill_hmatrix_with_aca_plus_smp(
             RangeNumberType,
             KernelNumberType,
             SurfaceNormalDetector>(range,
-                                   aca_config,
+                                   hmat_params,
+                                   sauter_quad_far_field_params,
                                    kernel,
                                    kernel_factor,
                                    kx_dof_to_cell_topo,
@@ -8847,9 +8934,11 @@ fill_hmatrix_with_aca_plus_smp(
  * @tparam RangeNumberType
  * @tparam KernelNumberType
  * @tparam SurfaceNormalDetector
- * @param thread_num
  * @param hmat
- * @param aca_config
+ * @param hmat_params
+ * @param sauter_quad_near_field_params
+ * @param sauter_quad_far_field_params
+ * @param parallel_params
  * @param kernel
  * @param kernel_factor
  * @param mass_vmult_weq
@@ -8877,10 +8966,11 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 fill_hmatrix_with_aca_plus_smp(
-  const unsigned int                  thread_num,
   HMatrix<spacedim, RangeNumberType> &hmat,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-    &aca_config,
+  const ConfHMatrix                  &hmat_params,
+  const ConfSauterQuadNearField      &sauter_quad_near_field_params,
+  const ConfSauterQuadFarField       &sauter_quad_far_field_params,
+  const ConfParallelization          &parallel_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
   const DeviceNumberType<KernelNumberType>     kernel_factor,
@@ -8960,49 +9050,59 @@ fill_hmatrix_with_aca_plus_smp(
    */
   timer.start();
 
-  const unsigned int block_size = 256;
-  const unsigned int block_num  = 8;
-  const unsigned int batch_size = block_size * block_num;
-  const unsigned int capacity   = batch_size * 8 + 1;
-  unsigned int       producer_thread_num =
-    std::max(static_cast<unsigned int>(4), thread_num / 2);
+  const unsigned int batch_size = static_cast<unsigned int>(
+    sauter_quad_near_field_params.task_num_per_block *
+    sauter_quad_near_field_params.block_num_per_batch);
+  unsigned int producer_num =
+    static_cast<unsigned int>(sauter_quad_near_field_params.producer_num);
 
-  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
-                                                        dim,
+  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
     ring_buffer_for_same_panel;
-  ring_buffer_for_same_panel.allocate(CellNeighboringType::SamePanel,
-                                      batch_size,
-                                      bem_values);
-  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
-                                                        dim,
+  ring_buffer_for_same_panel.allocate(
+    CellNeighboringType::SamePanel,
+    batch_size,
+    static_cast<unsigned int>(
+      sauter_quad_near_field_params.batch_num_in_buffer),
+    bem_values);
+
+  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
     ring_buffer_for_common_edge;
-  ring_buffer_for_common_edge.allocate(CellNeighboringType::CommonEdge,
-                                       batch_size,
-                                       bem_values);
-  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
-                                                        dim,
+  ring_buffer_for_common_edge.allocate(
+    CellNeighboringType::CommonEdge,
+    batch_size,
+    static_cast<unsigned int>(
+      sauter_quad_near_field_params.batch_num_in_buffer),
+    bem_values);
+
+  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
     ring_buffer_for_common_vertex;
-  ring_buffer_for_common_vertex.allocate(CellNeighboringType::CommonVertex,
-                                         batch_size,
-                                         bem_values);
-  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
-                                                        dim,
+  ring_buffer_for_common_vertex.allocate(
+    CellNeighboringType::CommonVertex,
+    batch_size,
+    static_cast<unsigned int>(
+      sauter_quad_near_field_params.batch_num_in_buffer),
+    bem_values);
+
+  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
     ring_buffer_for_regular;
-  ring_buffer_for_regular.allocate(CellNeighboringType::Regular,
-                                   batch_size,
-                                   bem_values);
+  ring_buffer_for_regular.allocate(
+    CellNeighboringType::Regular,
+    batch_size,
+    static_cast<unsigned int>(
+      sauter_quad_near_field_params.batch_num_in_buffer),
+    bem_values);
 
   std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
     hmat.get_near_field_leaf_set();
@@ -9010,11 +9110,11 @@ fill_hmatrix_with_aca_plus_smp(
 
   Assert(near_field_set_size > 0, ExcLowerRange(near_field_set_size, 1));
 
-  if (near_field_set_size < producer_thread_num)
-    producer_thread_num = near_field_set_size;
+  if (near_field_set_size < producer_num)
+    producer_num = near_field_set_size;
 
   std::vector<std::thread> producers;
-  producers.reserve(producer_thread_num);
+  producers.reserve(producer_num);
 
   // Use sequence partition to generate closed ranges of near field H-matrix
   // nodes.
@@ -9035,7 +9135,7 @@ fill_hmatrix_with_aca_plus_smp(
 
   SequencePartitioner<decltype(near_field_storage_cost_func)>
     near_field_storage_sp(near_field_set_size,
-                          producer_thread_num,
+                          producer_num,
                           near_field_storage_cost_func);
   near_field_storage_sp.partition();
   std::vector<std::pair<int64_t, int64_t>> near_field_partitions;
@@ -9080,51 +9180,77 @@ fill_hmatrix_with_aca_plus_smp(
    * @internal Start the consumer threads.
    */
   std::vector<std::thread> consumers;
-  const unsigned int       consumer_multiplicity =
-    std::max(static_cast<unsigned int>(1), thread_num / 2 / 4);
-  consumers.reserve(4 * consumer_multiplicity);
+  const unsigned int       consumer_num_same_panel = static_cast<unsigned int>(
+    sauter_quad_near_field_params.consumer_num_same_panel);
+  const unsigned int consumer_num_common_edge = static_cast<unsigned int>(
+    sauter_quad_near_field_params.consumer_num_common_edge);
+  const unsigned int consumer_num_common_vertex = static_cast<unsigned int>(
+    sauter_quad_near_field_params.consumer_num_common_vertex);
+  const unsigned int consumer_num_regular = static_cast<unsigned int>(
+    sauter_quad_near_field_params.consumer_num_regular);
+  const unsigned int consumer_set_num =
+    static_cast<unsigned int>(sauter_quad_near_field_params.consumer_set_num);
+  consumers.reserve((consumer_num_same_panel + consumer_num_common_edge +
+                     consumer_num_common_vertex + consumer_num_regular) *
+                    consumer_set_num);
 
-  for (unsigned int m = 0; m < consumer_multiplicity; m++)
+  for (unsigned int m = 0; m < consumer_set_num; m++)
     {
-      consumers.emplace_back([&]() {
-        HierBEM::CUDAWrappers::
-          sauter_quadrature_for_near_field_matrix_entries_consumer(
-            kernel,
-            kernel_factor,
-            ring_buffer_for_same_panel,
-            bem_values_gpu,
-            block_size);
-      });
+      for (unsigned int i = 0; i < consumer_num_same_panel; i++)
+        consumers.emplace_back([&]() {
+          HierBEM::CUDAWrappers::
+            sauter_quadrature_for_near_field_matrix_entries_consumer(
+              kernel,
+              kernel_factor,
+              ring_buffer_for_same_panel,
+              bem_values_gpu,
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.task_num_per_block),
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.consumer_wait_time_us));
+        });
 
-      consumers.emplace_back([&]() {
-        HierBEM::CUDAWrappers::
-          sauter_quadrature_for_near_field_matrix_entries_consumer(
-            kernel,
-            kernel_factor,
-            ring_buffer_for_common_edge,
-            bem_values_gpu,
-            block_size);
-      });
+      for (unsigned int i = 0; i < consumer_num_common_edge; i++)
+        consumers.emplace_back([&]() {
+          HierBEM::CUDAWrappers::
+            sauter_quadrature_for_near_field_matrix_entries_consumer(
+              kernel,
+              kernel_factor,
+              ring_buffer_for_common_edge,
+              bem_values_gpu,
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.task_num_per_block),
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.consumer_wait_time_us));
+        });
 
-      consumers.emplace_back([&]() {
-        HierBEM::CUDAWrappers::
-          sauter_quadrature_for_near_field_matrix_entries_consumer(
-            kernel,
-            kernel_factor,
-            ring_buffer_for_common_vertex,
-            bem_values_gpu,
-            block_size);
-      });
+      for (unsigned int i = 0; i < consumer_num_common_vertex; i++)
+        consumers.emplace_back([&]() {
+          HierBEM::CUDAWrappers::
+            sauter_quadrature_for_near_field_matrix_entries_consumer(
+              kernel,
+              kernel_factor,
+              ring_buffer_for_common_vertex,
+              bem_values_gpu,
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.task_num_per_block),
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.consumer_wait_time_us));
+        });
 
-      consumers.emplace_back([&]() {
-        HierBEM::CUDAWrappers::
-          sauter_quadrature_for_near_field_matrix_entries_consumer(
-            kernel,
-            kernel_factor,
-            ring_buffer_for_regular,
-            bem_values_gpu,
-            block_size);
-      });
+      for (unsigned int i = 0; i < consumer_num_regular; i++)
+        consumers.emplace_back([&]() {
+          HierBEM::CUDAWrappers::
+            sauter_quadrature_for_near_field_matrix_entries_consumer(
+              kernel,
+              kernel_factor,
+              ring_buffer_for_regular,
+              bem_values_gpu,
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.task_num_per_block),
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.consumer_wait_time_us));
+        });
     }
 
   /**
@@ -9174,13 +9300,13 @@ fill_hmatrix_with_aca_plus_smp(
       HierBEM::CUDAWrappers::NVTXRange nvtx_range("stab_near_field_nodes");
 #endif
 
-      const unsigned int grain_size =
-        std::max(static_cast<unsigned long>(1),
-                 near_field_leaf_set.size() / thread_num / 2);
       tbb::parallel_for(
         tbb::blocked_range<
           typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>(
-          near_field_leaf_set.begin(), near_field_leaf_set.end(), grain_size),
+          near_field_leaf_set.begin(),
+          near_field_leaf_set.end(),
+          static_cast<size_t>(
+            parallel_params.hmat_near_field_stabilization_grain_size)),
         [&](const tbb::blocked_range<typename std::vector<
               HMatrix<spacedim, RangeNumberType> *>::iterator> &range) {
           stabilize_near_field_hmatrices_for_hypersingular_kernel<
@@ -9216,13 +9342,12 @@ fill_hmatrix_with_aca_plus_smp(
       HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_far_field_nodes");
 #endif
 
-      const unsigned int grain_size =
-        std::max(static_cast<unsigned long>(1),
-                 far_field_leaf_set.size() / thread_num / 2);
       tbb::parallel_for(
         tbb::blocked_range<
           typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>(
-          far_field_leaf_set.begin(), far_field_leaf_set.end(), grain_size),
+          far_field_leaf_set.begin(),
+          far_field_leaf_set.end(),
+          static_cast<size_t>(parallel_params.hmat_far_field_grain_size)),
         [&](const tbb::blocked_range<typename std::vector<
               HMatrix<spacedim, RangeNumberType> *>::iterator> &range) {
           fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus<
@@ -9232,7 +9357,8 @@ fill_hmatrix_with_aca_plus_smp(
             RangeNumberType,
             KernelNumberType,
             SurfaceNormalDetector>(range,
-                                   aca_config,
+                                   hmat_params,
+                                   sauter_quad_far_field_params,
                                    kernel,
                                    kernel_factor,
                                    mass_vmult_weq,
@@ -9293,9 +9419,11 @@ fill_hmatrix_with_aca_plus_smp(
  * @tparam RangeNumberType
  * @tparam KernelNumberType
  * @tparam SurfaceNormalDetector
- * @param thread_num
  * @param hmat
- * @param aca_config
+ * @param hmat_params
+ * @param sauter_quad_near_field_params
+ * @param sauter_quad_far_field_params
+ * @param parallel_params
  * @param kernel
  * @param kernel_factor
  * @param mass_matrix_factor
@@ -9323,10 +9451,11 @@ template <int dim,
           typename SurfaceNormalDetector>
 void
 fill_hmatrix_with_aca_plus_smp(
-  const unsigned int                  thread_num,
   HMatrix<spacedim, RangeNumberType> &hmat,
-  const ACAConfig<typename numbers::NumberTraits<RangeNumberType>::real_type>
-    &aca_config,
+  const ConfHMatrix                  &hmat_params,
+  const ConfSauterQuadNearField      &sauter_quad_near_field_params,
+  const ConfSauterQuadFarField       &sauter_quad_far_field_params,
+  const ConfParallelization          &parallel_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                           &kernel,
   const DeviceNumberType<KernelNumberType> kernel_factor,
@@ -9407,49 +9536,59 @@ fill_hmatrix_with_aca_plus_smp(
    */
   timer.start();
 
-  const unsigned int block_size = 256;
-  const unsigned int block_num  = 8;
-  const unsigned int batch_size = block_size * block_num;
-  const unsigned int capacity   = batch_size * 8 + 1;
-  unsigned int       producer_thread_num =
-    std::max(static_cast<unsigned int>(4), thread_num / 2);
+  const unsigned int batch_size = static_cast<unsigned int>(
+    sauter_quad_near_field_params.task_num_per_block *
+    sauter_quad_near_field_params.block_num_per_batch);
+  unsigned int producer_num =
+    static_cast<unsigned int>(sauter_quad_near_field_params.producer_num);
 
-  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
-                                                        dim,
+  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
     ring_buffer_for_same_panel;
-  ring_buffer_for_same_panel.allocate(CellNeighboringType::SamePanel,
-                                      batch_size,
-                                      bem_values);
-  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
-                                                        dim,
+  ring_buffer_for_same_panel.allocate(
+    CellNeighboringType::SamePanel,
+    batch_size,
+    static_cast<unsigned int>(
+      sauter_quad_near_field_params.batch_num_in_buffer),
+    bem_values);
+
+  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
     ring_buffer_for_common_edge;
-  ring_buffer_for_common_edge.allocate(CellNeighboringType::CommonEdge,
-                                       batch_size,
-                                       bem_values);
-  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
-                                                        dim,
+  ring_buffer_for_common_edge.allocate(
+    CellNeighboringType::CommonEdge,
+    batch_size,
+    static_cast<unsigned int>(
+      sauter_quad_near_field_params.batch_num_in_buffer),
+    bem_values);
+
+  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
     ring_buffer_for_common_vertex;
-  ring_buffer_for_common_vertex.allocate(CellNeighboringType::CommonVertex,
-                                         batch_size,
-                                         bem_values);
-  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
-                                                        dim,
+  ring_buffer_for_common_vertex.allocate(
+    CellNeighboringType::CommonVertex,
+    batch_size,
+    static_cast<unsigned int>(
+      sauter_quad_near_field_params.batch_num_in_buffer),
+    bem_values);
+
+  HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
     ring_buffer_for_regular;
-  ring_buffer_for_regular.allocate(CellNeighboringType::Regular,
-                                   batch_size,
-                                   bem_values);
+  ring_buffer_for_regular.allocate(
+    CellNeighboringType::Regular,
+    batch_size,
+    static_cast<unsigned int>(
+      sauter_quad_near_field_params.batch_num_in_buffer),
+    bem_values);
 
   std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
     hmat.get_near_field_leaf_set();
@@ -9457,11 +9596,11 @@ fill_hmatrix_with_aca_plus_smp(
 
   Assert(near_field_set_size > 0, ExcLowerRange(near_field_set_size, 1));
 
-  if (near_field_set_size < producer_thread_num)
-    producer_thread_num = near_field_set_size;
+  if (near_field_set_size < producer_num)
+    producer_num = near_field_set_size;
 
   std::vector<std::thread> producers;
-  producers.reserve(producer_thread_num);
+  producers.reserve(producer_num);
 
   // Use sequence partition to generate closed ranges of near field H-matrix
   // nodes.
@@ -9482,7 +9621,7 @@ fill_hmatrix_with_aca_plus_smp(
 
   SequencePartitioner<decltype(near_field_storage_cost_func)>
     near_field_storage_sp(near_field_set_size,
-                          producer_thread_num,
+                          producer_num,
                           near_field_storage_cost_func);
   near_field_storage_sp.partition();
   std::vector<std::pair<int64_t, int64_t>> near_field_partitions;
@@ -9529,51 +9668,77 @@ fill_hmatrix_with_aca_plus_smp(
    * @internal Start the consumer threads.
    */
   std::vector<std::thread> consumers;
-  const unsigned int       consumer_multiplicity =
-    std::max(static_cast<unsigned int>(1), thread_num / 2 / 4);
-  consumers.reserve(4 * consumer_multiplicity);
+  const unsigned int       consumer_num_same_panel = static_cast<unsigned int>(
+    sauter_quad_near_field_params.consumer_num_same_panel);
+  const unsigned int consumer_num_common_edge = static_cast<unsigned int>(
+    sauter_quad_near_field_params.consumer_num_common_edge);
+  const unsigned int consumer_num_common_vertex = static_cast<unsigned int>(
+    sauter_quad_near_field_params.consumer_num_common_vertex);
+  const unsigned int consumer_num_regular = static_cast<unsigned int>(
+    sauter_quad_near_field_params.consumer_num_regular);
+  const unsigned int consumer_set_num =
+    static_cast<unsigned int>(sauter_quad_near_field_params.consumer_set_num);
+  consumers.reserve((consumer_num_same_panel + consumer_num_common_edge +
+                     consumer_num_common_vertex + consumer_num_regular) *
+                    consumer_set_num);
 
-  for (unsigned int m = 0; m < consumer_multiplicity; m++)
+  for (unsigned int m = 0; m < consumer_set_num; m++)
     {
-      consumers.emplace_back([&]() {
-        HierBEM::CUDAWrappers::
-          sauter_quadrature_for_near_field_matrix_entries_consumer(
-            kernel,
-            kernel_factor,
-            ring_buffer_for_same_panel,
-            bem_values_gpu,
-            block_size);
-      });
+      for (unsigned int i = 0; i < consumer_num_same_panel; i++)
+        consumers.emplace_back([&]() {
+          HierBEM::CUDAWrappers::
+            sauter_quadrature_for_near_field_matrix_entries_consumer(
+              kernel,
+              kernel_factor,
+              ring_buffer_for_same_panel,
+              bem_values_gpu,
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.task_num_per_block),
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.consumer_wait_time_us));
+        });
 
-      consumers.emplace_back([&]() {
-        HierBEM::CUDAWrappers::
-          sauter_quadrature_for_near_field_matrix_entries_consumer(
-            kernel,
-            kernel_factor,
-            ring_buffer_for_common_edge,
-            bem_values_gpu,
-            block_size);
-      });
+      for (unsigned int i = 0; i < consumer_num_common_edge; i++)
+        consumers.emplace_back([&]() {
+          HierBEM::CUDAWrappers::
+            sauter_quadrature_for_near_field_matrix_entries_consumer(
+              kernel,
+              kernel_factor,
+              ring_buffer_for_common_edge,
+              bem_values_gpu,
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.task_num_per_block),
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.consumer_wait_time_us));
+        });
 
-      consumers.emplace_back([&]() {
-        HierBEM::CUDAWrappers::
-          sauter_quadrature_for_near_field_matrix_entries_consumer(
-            kernel,
-            kernel_factor,
-            ring_buffer_for_common_vertex,
-            bem_values_gpu,
-            block_size);
-      });
+      for (unsigned int i = 0; i < consumer_num_common_vertex; i++)
+        consumers.emplace_back([&]() {
+          HierBEM::CUDAWrappers::
+            sauter_quadrature_for_near_field_matrix_entries_consumer(
+              kernel,
+              kernel_factor,
+              ring_buffer_for_common_vertex,
+              bem_values_gpu,
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.task_num_per_block),
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.consumer_wait_time_us));
+        });
 
-      consumers.emplace_back([&]() {
-        HierBEM::CUDAWrappers::
-          sauter_quadrature_for_near_field_matrix_entries_consumer(
-            kernel,
-            kernel_factor,
-            ring_buffer_for_regular,
-            bem_values_gpu,
-            block_size);
-      });
+      for (unsigned int i = 0; i < consumer_num_regular; i++)
+        consumers.emplace_back([&]() {
+          HierBEM::CUDAWrappers::
+            sauter_quadrature_for_near_field_matrix_entries_consumer(
+              kernel,
+              kernel_factor,
+              ring_buffer_for_regular,
+              bem_values_gpu,
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.task_num_per_block),
+              static_cast<unsigned int>(
+                sauter_quad_near_field_params.consumer_wait_time_us));
+        });
     }
 
   /**
@@ -9639,13 +9804,12 @@ fill_hmatrix_with_aca_plus_smp(
       HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_far_field_nodes");
 #endif
 
-      const unsigned int grain_size =
-        std::max(static_cast<unsigned long>(1),
-                 far_field_leaf_set.size() / thread_num / 2);
       tbb::parallel_for(
         tbb::blocked_range<
           typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>(
-          far_field_leaf_set.begin(), far_field_leaf_set.end(), grain_size),
+          far_field_leaf_set.begin(),
+          far_field_leaf_set.end(),
+          static_cast<size_t>(parallel_params.hmat_far_field_grain_size)),
         [&](const tbb::blocked_range<typename std::vector<
               HMatrix<spacedim, RangeNumberType> *>::iterator> &range) {
           fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus<
@@ -9655,7 +9819,8 @@ fill_hmatrix_with_aca_plus_smp(
             RangeNumberType,
             KernelNumberType,
             SurfaceNormalDetector>(range,
-                                   aca_config,
+                                   hmat_params,
+                                   sauter_quad_far_field_params,
                                    kernel,
                                    kernel_factor,
                                    kx_dof_to_cell_topo,

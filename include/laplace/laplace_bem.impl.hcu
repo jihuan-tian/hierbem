@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2020-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 // Copyright (C) 2024 Xiaozhe Wang <chaoslawful@gmail.com>
 //
 // This file is part of the HierBEM library.
@@ -38,6 +38,7 @@
 #include "cad_mesh/gmsh_manipulation.h"
 #include "cad_mesh/subdomain_topology.h"
 #include "config.h"
+#include "config_file/config_structs.h"
 #include "dofs/dof_tools_ext.h"
 #include "laplace_bem.h"
 #include "laplace_bem.priv.hcu"
@@ -55,16 +56,8 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::LaplaceBEM(
-  unsigned int fe_order_for_dirichlet_space,
-  unsigned int fe_order_for_neumann_space,
-  ProblemType  problem_type,
-  bool         is_interior_problem,
-  unsigned int thread_num)
-  : priv_(std::make_unique<Priv>(fe_order_for_dirichlet_space,
-                                 fe_order_for_neumann_space,
-                                 problem_type,
-                                 is_interior_problem,
-                                 thread_num))
+  const ConfLaplaceBEM &bem_params)
+  : priv_(std::make_unique<Priv>(bem_params))
 {
   priv_->initialize_memory_consumption_table_headers();
 }
@@ -75,32 +68,22 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::LaplaceBEM(
-  unsigned int fe_order_for_dirichlet_space,
-  unsigned int fe_order_for_neumann_space,
-  ProblemType  problem_type,
-  bool         is_interior_problem,
-  unsigned int n_min_for_ct,
-  unsigned int n_min_for_bct,
-  real_type    eta,
-  unsigned int max_hmat_rank,
-  real_type    aca_relative_error,
-  real_type    eta_for_preconditioner,
-  unsigned int max_hmat_rank_for_preconditioner,
-  real_type    aca_relative_error_for_preconditioner,
-  unsigned int thread_num)
-  : priv_(std::make_unique<Priv>(fe_order_for_dirichlet_space,
-                                 fe_order_for_neumann_space,
-                                 problem_type,
-                                 is_interior_problem,
-                                 n_min_for_ct,
-                                 n_min_for_bct,
-                                 eta,
-                                 max_hmat_rank,
-                                 aca_relative_error,
-                                 eta_for_preconditioner,
-                                 max_hmat_rank_for_preconditioner,
-                                 aca_relative_error_for_preconditioner,
-                                 thread_num))
+  const ConfLaplaceBEM             &bem_params,
+  const ConfHMatrix                &hmat_params,
+  const ConfHMatrix                &hmat_preconditioner_params,
+  const ConfSauterQuad             &sauter_quad_params,
+  const ConfSauterQuad             &sauter_quad_precond_params,
+  const ConfLinearSolver           &linear_solver_params,
+  const ConfOperatorPreconditioner &op_precond_params,
+  const ConfParallelization        &parallel_params)
+  : priv_(std::make_unique<Priv>(bem_params,
+                                 hmat_params,
+                                 hmat_preconditioner_params,
+                                 sauter_quad_params,
+                                 sauter_quad_precond_params,
+                                 linear_solver_params,
+                                 op_precond_params,
+                                 parallel_params))
 {
   priv_->initialize_memory_consumption_table_headers();
 }

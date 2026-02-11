@@ -16,6 +16,7 @@
  * @date 2022-09-23
  */
 
+#include <deal.II/base/multithread_info.h>
 #include <deal.II/base/table_handler.h>
 
 #include <deal.II/fe/fe.h>
@@ -31,6 +32,7 @@
 #include <iostream>
 
 #include "cad_mesh/subdomain_topology.h"
+#include "config_file/config_structs.h"
 #include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
@@ -82,19 +84,6 @@ int
 main(int argc, char *argv[])
 {
   CmdOpts opts = parse_cmdline(argc, argv);
-
-  /**
-   * Initialize the CUDA device parameters.
-   */
-  const size_t stack_size = 1024 * 10;
-  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));
-  std::cout << "CUDA stack size has been set to " << stack_size << std::endl;
-
-  /**
-   * Get GPU device properties.
-   */
-  AssertCuda(
-    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
 
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
@@ -153,10 +142,23 @@ main(int argc, char *argv[])
   HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim>
     single_layer_kernel;
 
-  const unsigned int n_min    = 32;
-  const double       eta      = 0.8;
-  const double       max_rank = 5;
-  const double       epsilon  = 0.01;
+  // Parameters for building H-matrices.
+  ConfHMatrix             hmat_params{32, 32, 0.8, 5, 0.01};
+  ConfSauterQuadNearField sauter_quad_near_field_params;
+  ConfSauterQuadFarField  sauter_quad_far_field_params;
+  ConfParallelization     parallel_params;
+
+  // Set TBB thread num.
+  if (parallel_params.tbb_thread_num == -1)
+    MultithreadInfo::set_thread_limit(MultithreadInfo::n_threads());
+  else
+    MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
+
+  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize,
+                                static_cast<unsigned int>(
+                                  parallel_params.cuda_stack_size_kb)));
+  AssertCuda(
+    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
 
   TableHandler table;
   for (unsigned int i = 0; i <= opts.refinement; i++)
@@ -202,18 +204,23 @@ main(int argc, char *argv[])
       ClusterTree<spacedim> ct(dof_indices,
                                support_points,
                                cell_size_at_support_points,
-                               n_min);
+                               static_cast<unsigned int>(
+                                 hmat_params.n_min_for_ct));
       ct.partition(support_points, cell_size_at_support_points);
 
       // Create and partition the block cluster tree.
-      BlockClusterTree<spacedim> bct(ct, ct, eta, n_min);
+      BlockClusterTree<spacedim> bct(ct,
+                                     ct,
+                                     hmat_params.eta,
+                                     static_cast<unsigned int>(
+                                       hmat_params.n_min_for_bct));
       bct.partition(ct.get_internal_to_external_dof_numbering(),
                     support_points,
                     cell_size_at_support_points);
 
       // Create an H-matrix with respect to the block cluster tree.
       HMatrix<spacedim> V(bct,
-                          max_rank,
+                          static_cast<unsigned int>(hmat_params.max_rank),
                           HMatrixSupport::Property::general,
                           HMatrixSupport::BlockType::diagonal_block);
 
@@ -226,9 +233,11 @@ main(int argc, char *argv[])
         double,
         double,
         SurfaceNormalDetector<dim, spacedim>>(
-        MultithreadInfo::n_threads(),
         V,
-        ACAConfig(max_rank, epsilon, eta),
+        hmat_params,
+        sauter_quad_near_field_params,
+        sauter_quad_far_field_params,
+        parallel_params,
         single_layer_kernel,
         1.0,
         dof_to_cell_topo,
@@ -254,7 +263,8 @@ main(int argc, char *argv[])
 
       // Perform LU factorization.
       timer.start();
-      V.compute_lu_factorization(max_rank);
+      V.compute_lu_factorization(
+        static_cast<unsigned int>(hmat_params.max_rank));
       timer.stop();
       print_wall_time(std::cout, timer, "lu factorization");
 

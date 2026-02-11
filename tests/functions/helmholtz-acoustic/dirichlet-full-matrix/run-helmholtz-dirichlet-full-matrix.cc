@@ -9,6 +9,7 @@
 // file LICENSE at the top level directory of HierBEM.
 
 #include <deal.II/base/logstream.h>
+#include <deal.II/base/multithread_info.h>
 #include <deal.II/base/numbers.h>
 
 #include <deal.II/grid/grid_generator.h>
@@ -21,6 +22,7 @@
 #include <string>
 
 #include "bem/types.h"
+#include "config_file/config_structs.h"
 #include "grid/grid_out_ext.h"
 #include "helmholtz/helmholtz_acoustic_bem.h"
 #include "utilities/debug_tools.h"
@@ -89,15 +91,19 @@ run_helmholtz_dirichlet_full_matrix(const unsigned int refinement)
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  HelmholtzAcousticBEM<dim, spacedim> bem(
-    std::complex<double>(2.0, 0.), // kappa
-    1,                             // fe order for dirichlet space
-    0,                             // fe order for neumann space
-    ProblemType::DirichletBCProblem,
-    true,                        // is interior problem
-    MultithreadInfo::n_threads() // Number of threads used for ACA
-  );
+  ConfHelmholtzAcousticBEM bem_params;
+  bem_params.kappa               = std::complex<double>(2.0, 0.);
+  bem_params.problem_type        = ProblemType::DirichletBCProblem;
+  bem_params.is_interior_problem = true;
+  ConfParallelization parallel_params;
+
+  HelmholtzAcousticBEM<dim, spacedim> bem(bem_params);
   bem.set_project_name("helmholtz-dirichlet-full-matrix");
+  // Set TBB thread num.
+  if (parallel_params.tbb_thread_num == -1)
+    MultithreadInfo::set_thread_limit(MultithreadInfo::n_threads());
+  else
+    MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");

@@ -13,6 +13,7 @@
 
 #include <deal.II/lac/solver_control.h>
 
+#include "config_file/config_structs.h"
 #include "linear_algebra/blas_helpers.h"
 #include "solvers/solver_cg_general.h"
 
@@ -25,23 +26,16 @@ HBEM_NS_OPEN
  */
 template <typename SkewSymmetricBlockMatrixType,
           typename VectorType,
-          typename PrecondM11Type,
-          typename Number>
+          typename PrecondM11Type>
 class SchurComplement
 {
 public:
   SchurComplement(const SkewSymmetricBlockMatrixType &block_matrix_,
                   const PrecondM11Type               &precond11_,
-                  const unsigned int                  max_iter_,
-                  const Number                        tolerance_,
-                  const bool                          log_history_,
-                  const bool                          log_result_)
+                  const ConfLinearSolver             &solver_params_)
     : block_matrix(block_matrix_)
     , precond11(precond11_)
-    , max_iter(max_iter_)
-    , tolerance(tolerance_)
-    , log_history(log_history_)
-    , log_result(log_result_)
+    , solver_params(solver_params_)
   {
     y1 = new VectorType();
     y2 = new VectorType();
@@ -63,17 +57,14 @@ public:
   void
   vmult(VectorType &y, const VectorType &x) const;
 
-  template <typename Number2>
+  template <typename Number>
   void
-  vmult_add(VectorType &y, const Number2 alpha, const VectorType &x) const;
+  vmult_add(VectorType &y, const Number alpha, const VectorType &x) const;
 
 private:
   const SkewSymmetricBlockMatrixType &block_matrix;
   const PrecondM11Type               &precond11;
-  unsigned int                        max_iter;
-  Number                              tolerance;
-  bool                                log_history;
-  bool                                log_result;
+  ConfLinearSolver                    solver_params;
 
   /**
    * Result vector of \f$M_{12}x_2\f$.
@@ -92,13 +83,10 @@ private:
 
 template <typename SkewSymmetricBlockMatrixType,
           typename VectorType,
-          typename PrecondM11Type,
-          typename Number>
+          typename PrecondM11Type>
 void
-SchurComplement<SkewSymmetricBlockMatrixType,
-                VectorType,
-                PrecondM11Type,
-                Number>::reinit()
+SchurComplement<SkewSymmetricBlockMatrixType, VectorType, PrecondM11Type>::
+  reinit()
 {
   y1->reinit(block_matrix.get_M12().get_m());
   y2->reinit(block_matrix.get_M11().get_n());
@@ -108,19 +96,20 @@ SchurComplement<SkewSymmetricBlockMatrixType,
 
 template <typename SkewSymmetricBlockMatrixType,
           typename VectorType,
-          typename PrecondM11Type,
-          typename Number>
+          typename PrecondM11Type>
 void
-SchurComplement<SkewSymmetricBlockMatrixType,
-                VectorType,
-                PrecondM11Type,
-                Number>::vmult(VectorType &y, const VectorType &x) const
+SchurComplement<SkewSymmetricBlockMatrixType, VectorType, PrecondM11Type>::
+  vmult(VectorType &y, const VectorType &x) const
 {
   // It is possible that M12 is a non-symmetric H-matrix, whose vmult function
   // is accumulative. Therefore, we set the result vector as zero first to clear
   // previous values.
   block_matrix.get_M12().vmult(*y1, x);
-  SolverControl solver_control(max_iter, tolerance, log_history, log_result);
+  SolverControl               solver_control(static_cast<unsigned int>(
+                                 solver_params.max_iter),
+                               solver_params.abs_tol,
+                               solver_params.log_history,
+                               solver_params.log_result);
   SolverCGGeneral<VectorType> solver(solver_control);
   solver.solve(block_matrix.get_M11(), *y2, *y1, precond11);
   block_matrix.get_M12().Tvmult(*y3, *y2);
@@ -131,16 +120,11 @@ SchurComplement<SkewSymmetricBlockMatrixType,
 
 template <typename SkewSymmetricBlockMatrixType,
           typename VectorType,
-          typename PrecondM11Type,
-          typename Number>
-template <typename Number2>
+          typename PrecondM11Type>
+template <typename Number>
 void
-SchurComplement<SkewSymmetricBlockMatrixType,
-                VectorType,
-                PrecondM11Type,
-                Number>::vmult_add(VectorType       &y,
-                                   const Number2     alpha,
-                                   const VectorType &x) const
+SchurComplement<SkewSymmetricBlockMatrixType, VectorType, PrecondM11Type>::
+  vmult_add(VectorType &y, const Number alpha, const VectorType &x) const
 {
   VectorType y_tmp(y.size());
   vmult(y_tmp, x);

@@ -19,6 +19,7 @@
  */
 
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/multithread_info.h>
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature_lib.h>
@@ -52,11 +53,11 @@
 #include "cad_mesh/subdomain_topology.h"
 #include "cluster_tree/block_cluster_tree.h"
 #include "cluster_tree/cluster_tree.h"
+#include "config_file/config_structs.h"
 #include "dofs/dof_to_cell_topology.h"
 #include "dofs/dof_tools_ext.h"
 #include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
-#include "hmatrix/aca_plus/aca_config.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "hmatrix/hmatrix.h"
 #include "hmatrix/hmatrix_support.h"
@@ -529,7 +530,8 @@ BEMFunctionSpace<dim, spacedim>::build_dof_to_cell_topology()
 // define a bilinear form.
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType  = double,
           typename KernelNumberType = double>
 class BEMBilinearForm
@@ -549,9 +551,10 @@ public:
 
   // Build an H-matrix for the bilinear form.
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
-  build_hmatrix(const unsigned int                       thread_num,
-                const unsigned int                       max_rank,
-                const double                             epsilon,
+  build_hmatrix(const ConfHMatrix             &hmat_params,
+                const ConfSauterQuadNearField &sauter_quad_near_field_params,
+                const ConfSauterQuadFarField  &sauter_quad_far_field_params,
+                const ConfParallelization     &parallel_params,
                 const DeviceNumberType<KernelNumberType> kernel_factor,
                 const SauterQuadratureRule<dim>         &sauter_quad_rule,
                 const std::vector<MappingInfo<dim, spacedim> *> &mappings,
@@ -563,9 +566,10 @@ public:
   // it.
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
   build_hmatrix_with_mass_matrix(
-    const unsigned int                       thread_num,
-    const unsigned int                       max_rank,
-    const double                             epsilon,
+    const ConfHMatrix                       &hmat_params,
+    const ConfSauterQuadNearField           &sauter_quad_near_field_params,
+    const ConfSauterQuadFarField            &sauter_quad_far_field_params,
+    const ConfParallelization               &parallel_params,
     const DeviceNumberType<KernelNumberType> kernel_factor,
     const typename numbers::NumberTraits<RangeNumberType>::real_type
                                                      mass_matrix_factor,
@@ -625,7 +629,8 @@ private:
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 BEMBilinearForm<dim,
@@ -643,7 +648,8 @@ BEMBilinearForm<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -679,7 +685,8 @@ BEMBilinearForm<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
@@ -688,9 +695,10 @@ BEMBilinearForm<dim,
                 KernelFunctionType,
                 RangeNumberType,
                 KernelNumberType>::
-  build_hmatrix(const unsigned int                       thread_num,
-                const unsigned int                       max_rank,
-                const double                             epsilon,
+  build_hmatrix(const ConfHMatrix             &hmat_params,
+                const ConfSauterQuadNearField &sauter_quad_near_field_params,
+                const ConfSauterQuadFarField  &sauter_quad_far_field_params,
+                const ConfParallelization     &parallel_params,
                 const DeviceNumberType<KernelNumberType> kernel_factor,
                 const SauterQuadratureRule<dim>         &sauter_quad_rule,
                 const std::vector<MappingInfo<dim, spacedim> *> &mappings,
@@ -704,7 +712,10 @@ BEMBilinearForm<dim,
   HMatrixSupport::BlockType block_type =
     HMatrixSupport::BlockType::diagonal_block;
   auto hmat = std::make_unique<HMatrix<spacedim, RangeNumberType>>(
-    *block_cluster_tree, max_rank, property, block_type);
+    *block_cluster_tree,
+    static_cast<unsigned int>(hmat_params.max_rank),
+    property,
+    block_type);
 
   fill_hmatrix_with_aca_plus_smp<dim,
                                  spacedim,
@@ -712,9 +723,11 @@ BEMBilinearForm<dim,
                                  RangeNumberType,
                                  KernelNumberType,
                                  SurfaceNormalDetector<dim, spacedim>>(
-    thread_num,
     *hmat,
-    ACAConfig(max_rank, epsilon, block_cluster_tree->get_eta()),
+    hmat_params,
+    sauter_quad_near_field_params,
+    sauter_quad_far_field_params,
+    parallel_params,
     kernel,
     kernel_factor,
     test_space.get_dof_to_cell_topo(),
@@ -741,7 +754,8 @@ BEMBilinearForm<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
@@ -751,9 +765,10 @@ BEMBilinearForm<dim,
                 RangeNumberType,
                 KernelNumberType>::
   build_hmatrix_with_mass_matrix(
-    const unsigned int                       thread_num,
-    const unsigned int                       max_rank,
-    const double                             epsilon,
+    const ConfHMatrix                       &hmat_params,
+    const ConfSauterQuadNearField           &sauter_quad_near_field_params,
+    const ConfSauterQuadFarField            &sauter_quad_far_field_params,
+    const ConfParallelization               &parallel_params,
     const DeviceNumberType<KernelNumberType> kernel_factor,
     const typename numbers::NumberTraits<RangeNumberType>::real_type
                                                      mass_matrix_factor,
@@ -770,7 +785,10 @@ BEMBilinearForm<dim,
   HMatrixSupport::BlockType block_type =
     HMatrixSupport::BlockType::diagonal_block;
   auto hmat = std::make_unique<HMatrix<spacedim, RangeNumberType>>(
-    *block_cluster_tree, max_rank, property, block_type);
+    *block_cluster_tree,
+    static_cast<unsigned int>(hmat_params.max_rank),
+    property,
+    block_type);
 
   fill_hmatrix_with_aca_plus_smp<dim,
                                  spacedim,
@@ -778,9 +796,11 @@ BEMBilinearForm<dim,
                                  RangeNumberType,
                                  KernelNumberType,
                                  SurfaceNormalDetector<dim, spacedim>>(
-    thread_num,
     *hmat,
-    ACAConfig(max_rank, epsilon, block_cluster_tree->get_eta()),
+    hmat_params,
+    sauter_quad_near_field_params,
+    sauter_quad_far_field_params,
+    parallel_params,
     kernel,
     kernel_factor,
     mass_matrix_factor,
@@ -894,11 +914,17 @@ main()
   for (types::material_id i = 1; i <= 6; i++)
     material_id_to_mapping_index[i] = 0;
 
-  // Parameters for cluster trees and block cluster tree.
-  const unsigned int n_min_H_half             = 4;
-  const unsigned int n_min_H_minus_half       = 4;
-  const unsigned int n_min_block_cluster_tree = 4;
-  const double       eta                      = 1.2;
+  // Parameters for building H-matrices.
+  ConfHMatrix             hmat_params{4, 4, 1.2, 5, 0.01};
+  ConfSauterQuadNearField sauter_quad_near_field_params;
+  ConfSauterQuadFarField  sauter_quad_far_field_params;
+  ConfParallelization     parallel_params;
+
+  // Set TBB thread num.
+  if (parallel_params.tbb_thread_num == -1)
+    MultithreadInfo::set_thread_limit(MultithreadInfo::n_threads());
+  else
+    MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
 
   // Create a continuous Lagrangian finite element and a DoF handler for the
   // Sobolev space \f$H^{1/2}(\Gamma)\f$.
@@ -907,11 +933,19 @@ main()
   dof_handler_H_half.distribute_dofs(fe_H_half);
   // Define a function space
   // \f$\tilde{H}_h^{1/2}(\Gamma_{\mathrm{D}}^{\ast})\f$.
-  BEMFunctionSpace<dim, spacedim> H_half_Gamma_D(
-    dof_handler_H_half, n_min_H_half, {5, 6}, true, false);
+  BEMFunctionSpace<dim, spacedim> H_half_Gamma_D(dof_handler_H_half,
+                                                 static_cast<unsigned int>(
+                                                   hmat_params.n_min_for_ct),
+                                                 {5, 6},
+                                                 true,
+                                                 false);
   // Define a function space \f$\tilde{H}_h^{1/2}(\Gamma_{\mathrm{N}})\f$.
-  BEMFunctionSpace<dim, spacedim> H_half_Gamma_N(
-    dof_handler_H_half, n_min_H_half, {1, 2, 3, 4}, false, false);
+  BEMFunctionSpace<dim, spacedim> H_half_Gamma_N(dof_handler_H_half,
+                                                 static_cast<unsigned int>(
+                                                   hmat_params.n_min_for_ct),
+                                                 {1, 2, 3, 4},
+                                                 false,
+                                                 false);
 
   // Create a discontinuous Lagrangian finite element and a DoF handler for the
   // Sobolev space \f$H^{-1/2}(\Gamma)\f$ space.
@@ -920,42 +954,52 @@ main()
   dof_handler_H_minus_half.distribute_dofs(fe_H_minus_half);
   // Define a function space \f$\tilde{H}_h^{-1/2}(\Gamma_{\mathrm{D}})\f$.
   BEMFunctionSpace<dim, spacedim> H_minus_half_Gamma_D(
-    dof_handler_H_minus_half, n_min_H_minus_half, {5, 6}, true, false);
+    dof_handler_H_minus_half,
+    static_cast<unsigned int>(hmat_params.n_min_for_ct),
+    {5, 6},
+    true,
+    false);
   // Define a function space \f$\tilde{H}_h^{-1/2}(\Gamma_{\mathrm{N}})\f$.
   BEMFunctionSpace<dim, spacedim> H_minus_half_Gamma_N(
-    dof_handler_H_minus_half, n_min_H_minus_half, {1, 2, 3, 4}, true, false);
+    dof_handler_H_minus_half,
+    static_cast<unsigned int>(hmat_params.n_min_for_ct),
+    {1, 2, 3, 4},
+    true,
+    false);
 
   // Create a bilinear form \f$b_V: b_{V_1}:
   // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \times
   // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \rightarrow \mathbb{R}\f$
   BEMBilinearForm<dim, spacedim, SingleLayerKernel> bV1(H_minus_half_Gamma_D,
                                                         H_minus_half_Gamma_D);
-  bV1.build_block_cluster_tree(eta, n_min_block_cluster_tree);
+  bV1.build_block_cluster_tree(
+    hmat_params.eta, static_cast<unsigned int>(hmat_params.n_min_for_bct));
   // Create a bilinear form \f$b_{K_1}:
   // \tilde{H}^{1/2}(\Gamma_{\mathrm{N}}) \times
   // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \rightarrow \mathbb{R}\f$.
   BEMBilinearForm<dim, spacedim, DoubleLayerKernel> bK1(H_half_Gamma_N,
                                                         H_minus_half_Gamma_D);
-  bK1.build_block_cluster_tree(eta, n_min_block_cluster_tree);
+  bK1.build_block_cluster_tree(
+    hmat_params.eta, static_cast<unsigned int>(hmat_params.n_min_for_bct));
   // Create a bilinear form \f$b_{V_2}: H^{-1/2}(\Gamma) \times
   // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \rightarrow \mathbb{R}\f$.
   BEMBilinearForm<dim, spacedim, SingleLayerKernel> bV2(H_minus_half_Gamma_N,
                                                         H_minus_half_Gamma_D);
-  bV2.build_block_cluster_tree(eta, n_min_block_cluster_tree);
+  bV2.build_block_cluster_tree(
+    hmat_params.eta, static_cast<unsigned int>(hmat_params.n_min_for_bct));
   // Create a bilinear form \f$b_{sigma I_1+K_2}: H^{1/2}(\Gamma) \times
   // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \rightarrow \mathbb{R}\f$.
   BEMBilinearForm<dim, spacedim, DoubleLayerKernel> bI1K2(H_half_Gamma_D,
                                                           H_minus_half_Gamma_D);
-  bI1K2.build_block_cluster_tree(eta, n_min_block_cluster_tree);
+  bI1K2.build_block_cluster_tree(
+    hmat_params.eta, static_cast<unsigned int>(hmat_params.n_min_for_bct));
 
-  const unsigned int thread_num = 4;
-  const unsigned int max_rank   = 5;
-  const double       epsilon    = 0.01;
   // Build an H-matrix for bV1.
   std::unique_ptr<HMatrix<spacedim, double>> V1 =
-    bV1.build_hmatrix(thread_num,
-                      max_rank,
-                      epsilon,
+    bV1.build_hmatrix(hmat_params,
+                      sauter_quad_near_field_params,
+                      sauter_quad_far_field_params,
+                      parallel_params,
                       1.0,
                       SauterQuadratureRule<dim>(5, 4, 4, 3),
                       mappings,
@@ -963,9 +1007,10 @@ main()
                       subdomain_topology);
   // Build an H-matrix for bK1.
   std::unique_ptr<HMatrix<spacedim, double>> K1 =
-    bK1.build_hmatrix(thread_num,
-                      max_rank,
-                      epsilon,
+    bK1.build_hmatrix(hmat_params,
+                      sauter_quad_near_field_params,
+                      sauter_quad_far_field_params,
+                      parallel_params,
                       1.0,
                       SauterQuadratureRule<dim>(5, 4, 4, 3),
                       mappings,
@@ -973,9 +1018,10 @@ main()
                       subdomain_topology);
   // Build an H-matrix for bV2.
   std::unique_ptr<HMatrix<spacedim, double>> V2 =
-    bV2.build_hmatrix(thread_num,
-                      max_rank,
-                      epsilon,
+    bV2.build_hmatrix(hmat_params,
+                      sauter_quad_near_field_params,
+                      sauter_quad_far_field_params,
+                      parallel_params,
                       1.0,
                       SauterQuadratureRule<dim>(5, 4, 4, 3),
                       mappings,
@@ -983,9 +1029,10 @@ main()
                       subdomain_topology);
   // Build an H-matrix for bI1K2.
   std::unique_ptr<HMatrix<spacedim, double>> I1K2 =
-    bI1K2.build_hmatrix_with_mass_matrix(thread_num,
-                                         max_rank,
-                                         epsilon,
+    bI1K2.build_hmatrix_with_mass_matrix(hmat_params,
+                                         sauter_quad_near_field_params,
+                                         sauter_quad_far_field_params,
+                                         parallel_params,
                                          1.0,
                                          0.5,
                                          SauterQuadratureRule<dim>(5, 4, 4, 3),

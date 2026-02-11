@@ -33,6 +33,7 @@
 #include <string>
 #include <vector>
 
+#include "config_file/config_structs.h"
 #include "grid/grid_out_ext.h"
 #include "preconditioners/preconditioner_for_laplace_hyper_singular_bio.h"
 
@@ -100,7 +101,12 @@ TEST_CASE("Verify mass matrix for operator preconditioning in Laplace Neumann",
   // preconditioner's constructor.
   std::vector<types::global_dof_index>                     dummy_numbering;
   LaplaceHyperSingularPreconditioner<2, 3, double, double> precond(
-    fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
+    fe_primal_space,
+    fe_dual_space,
+    tria,
+    dummy_numbering,
+    dummy_numbering,
+    ConfOperatorPreconditioner());
 
   // Setup the preconditioner and build matrices.
   setup_preconditioner(precond);

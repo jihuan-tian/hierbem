@@ -64,7 +64,6 @@
 #include "dofs/dof_to_cell_topology.h"
 #include "dofs/dof_tools_ext.h"
 #include "grid/grid_out_ext.h"
-#include "hmatrix/aca_plus/aca_config.h"
 #include "hmatrix/hmatrix.h"
 #include "mapping/mapping_info.h"
 #include "platform_shared/laplace_kernels.h"
@@ -415,12 +414,11 @@ public:
             const unsigned int n_min_for_ct,
             const unsigned int n_min_for_bct,
             const real_type    eta,
-            const unsigned int max_hmat_rank,
+            const unsigned int max_rank,
             const real_type    aca_relative_error,
             const real_type    eta_for_preconditioner,
-            const unsigned int max_hmat_rank_for_preconditioner,
-            const real_type    aca_relative_error_for_preconditioner,
-            const unsigned int thread_num);
+            const unsigned int max_rank_for_preconditioner,
+            const real_type    aca_relative_error_for_preconditioner);
 
   ~DDMEfield();
 
@@ -600,7 +598,7 @@ private:
    * Maximum rank of the \hmatrices to be built. At present, assume all
    * \hmatrices share this same parameter.
    */
-  unsigned int max_hmat_rank;
+  unsigned int max_rank;
   /**
    * Relative approximation error used in ACA+. At present, assume all
    * \hmatrices share this same parameter.
@@ -613,13 +611,11 @@ private:
   /**
    * Maximum rank of the \hmatrices to be built for the preconditioner.
    */
-  unsigned int max_hmat_rank_for_preconditioner;
+  unsigned int max_rank_for_preconditioner;
   /**
    * Relative approximation error used in ACA+ for the preconditioner.
    */
   real_type aca_relative_error_for_preconditioner;
-
-  unsigned int thread_num;
 
   DDMEfieldMatrix<spacedim, RangeNumberType> system_matrix;
   DDMEfieldGlobalPreconditioner<spacedim, RangeNumberType>
@@ -679,12 +675,11 @@ DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::DDMEfield()
   , n_min_for_ct(0)
   , n_min_for_bct(0)
   , eta(0)
-  , max_hmat_rank(0)
+  , max_rank(0)
   , aca_relative_error(0)
   , eta_for_preconditioner(0)
-  , max_hmat_rank_for_preconditioner(0)
+  , max_rank_for_preconditioner(0)
   , aca_relative_error_for_preconditioner(0)
-  , thread_num(0)
 {}
 
 
@@ -698,12 +693,11 @@ DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::DDMEfield(
   const unsigned int n_min_for_ct,
   const unsigned int n_min_for_bct,
   const real_type    eta,
-  const unsigned int max_hmat_rank,
+  const unsigned int max_rank,
   const real_type    aca_relative_error,
   const real_type    eta_for_preconditioner,
-  const unsigned int max_hmat_rank_for_preconditioner,
-  const real_type    aca_relative_error_for_preconditioner,
-  const unsigned int thread_num)
+  const unsigned int max_rank_for_preconditioner,
+  const real_type    aca_relative_error_for_preconditioner)
   : project_name("default")
   , fe_order_for_dirichlet_space(fe_order_for_dirichlet_space)
   , fe_order_for_neumann_space(fe_order_for_neumann_space)
@@ -712,12 +706,11 @@ DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::DDMEfield(
   , n_min_for_ct(n_min_for_ct)
   , n_min_for_bct(n_min_for_bct)
   , eta(eta)
-  , max_hmat_rank(max_hmat_rank)
+  , max_rank(max_rank)
   , aca_relative_error(aca_relative_error)
   , eta_for_preconditioner(eta_for_preconditioner)
-  , max_hmat_rank_for_preconditioner(max_hmat_rank_for_preconditioner)
+  , max_rank_for_preconditioner(max_rank_for_preconditioner)
   , aca_relative_error_for_preconditioner(aca_relative_error_for_preconditioner)
-  , thread_num(thread_num)
 {}
 
 
@@ -1420,18 +1413,18 @@ DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::
       // Initialize subdomain local \hmatrices.
       steklov_poincare_hmat.get_D() = HMatrix<spacedim, RangeNumberType>(
         steklov_poincare_hmat.get_bct_for_bilinear_form_D(),
-        max_hmat_rank,
+        max_rank,
         HMatrixSupport::Property::symmetric,
         HMatrixSupport::BlockType::diagonal_block);
       steklov_poincare_hmat.get_K_with_mass_matrix() =
         HMatrix<spacedim, RangeNumberType>(
           steklov_poincare_hmat.get_bct_for_bilinear_form_K(),
-          max_hmat_rank,
+          max_rank,
           HMatrixSupport::Property::general,
           HMatrixSupport::BlockType::diagonal_block);
       steklov_poincare_hmat.get_V() = HMatrix<spacedim, RangeNumberType>(
         steklov_poincare_hmat.get_bct_for_bilinear_form_V(),
-        max_hmat_rank,
+        max_rank,
         HMatrixSupport::Property::symmetric,
         HMatrixSupport::BlockType::diagonal_block);
 
@@ -1522,12 +1515,6 @@ DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::assemble_system()
 {
   LogStream::Prefix prefix_string("assemble_system");
   Timer             timer;
-  MultithreadInfo::set_thread_limit(thread_num);
-
-  /**
-   * Define the @p ACAConfig object.
-   */
-  ACAConfig<real_type> aca_config(max_hmat_rank, aca_relative_error, eta);
 
   for (auto &steklov_poincare_hmat : system_matrix.get_subdomain_hmatrices())
     {}

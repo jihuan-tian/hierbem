@@ -27,10 +27,10 @@
 #include <vector>
 
 #include "cad_mesh/subdomain_topology.h"
+#include "config_file/config_structs.h"
 #include "dofs/dof_tools_ext.h"
 #include "grid/grid_in_ext.h"
 #include "grid/grid_out_ext.h"
-#include "hmatrix/hmatrix_parameters.h"
 #include "preconditioners/preconditioner_for_laplace_hyper_singular_bio.h"
 #include "utilities/debug_tools.h"
 
@@ -191,22 +191,23 @@ run_op_precond_hmatrix_for_neumann()
     tria,
     dummy_numbering,
     dummy_numbering,
-    subdomain_material_ids);
+    subdomain_material_ids,
+    ConfOperatorPreconditioner());
 
-  HMatrixParameters hmat_params(64,  // Minimum cluster node size
-                                64,  // Minimum block cluster node size
-                                1.0, // Admissibility constant eta
-                                2,   // Maximum H-matrix rank
-                                0.1  // Relative error for ACA iteration
-  );
+  ConfHMatrix         hmat_params{64, 64, 1.0, 2, 0.1};
+  ConfSauterQuad      sauter_quad_params;
+  ConfParallelization parallel_params;
 
-  precond.setup_preconditioner(MultithreadInfo::n_threads(),
-                               hmat_params,
+  precond.setup_preconditioner(hmat_params,
+                               sauter_quad_params.near_field,
+                               sauter_quad_params.far_field,
+                               parallel_params,
                                subdomain_topology,
                                mappings,
                                material_id_to_mapping_index,
                                OutwardSurfaceNormalDetector(),
-                               SauterQuadratureRule<dim>(5, 4, 4, 3),
+                               SauterQuadratureRule<dim>(
+                                 sauter_quad_params.slp_order),
                                QGauss<dim>(2));
 
   // Print out the preconditioner matrix on the refined mesh as full matrix.

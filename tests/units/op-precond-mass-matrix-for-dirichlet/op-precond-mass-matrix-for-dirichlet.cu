@@ -30,6 +30,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "config_file/config_structs.h"
 #include "grid/grid_out_ext.h"
 #include "preconditioners/preconditioner_for_laplace_single_layer_bio.h"
 
@@ -68,7 +69,12 @@ main(int argc, const char *argv[])
   // preconditioner's constructor.
   std::vector<types::global_dof_index>                   dummy_numbering;
   LaplaceSingleLayerPreconditioner<2, 3, double, double> precond(
-    fe_primal_space, fe_dual_space, tria, dummy_numbering, dummy_numbering);
+    fe_primal_space,
+    fe_dual_space,
+    tria,
+    dummy_numbering,
+    dummy_numbering,
+    ConfOperatorPreconditioner());
 
   // Build the mass matrix.
   precond.initialize_dof_handlers();
