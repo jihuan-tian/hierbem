@@ -81,7 +81,7 @@ output_results_at_targets(const LaplaceBEM<2, 3, double, double> &bem)
 {
   Triangulation<2, 3> plane;
   GridGenerator::subdivided_hyper_rectangle(plane,
-                                            {50, 50},
+                                            {5, 5},
                                             Point<2>(-4, -4),
                                             Point<2>(4, 4));
   GridTools::rotate(boost::math::constants::pi<double>() / 2, 1, plane);
@@ -89,7 +89,7 @@ output_results_at_targets(const LaplaceBEM<2, 3, double, double> &bem)
   bem.output_results_on_target_tria("plane.vtk", plane, 1);
 
   Triangulation<3, 3> cube;
-  GridGenerator::subdivided_hyper_cube(cube, 30, 3., 6.);
+  GridGenerator::subdivided_hyper_cube(cube, 5, 3., 6.);
   GridOut().write_msh(cube, "cube.msh");
   bem.output_results_on_target_tria("cube.vtk", cube, 1);
 }
