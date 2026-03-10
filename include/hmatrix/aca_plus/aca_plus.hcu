@@ -20,6 +20,7 @@
 #ifndef HIERBEM_INCLUDE_HMATRIX_ACA_PLUS_ACA_PLUS_H_
 #define HIERBEM_INCLUDE_HMATRIX_ACA_PLUS_ACA_PLUS_H_
 
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/parallel.h>
@@ -8802,6 +8803,8 @@ fill_hmatrix_with_aca_plus_smp(
   for (auto &producer : producers)
     producer.join();
 
+  // After all producer threads exit, we set the flag in each ring buffer which
+  // indicates tasks for all matrix entries have been added.
   {
     std::lock_guard<std::mutex> lg(ring_buffer_for_same_panel.buffer_lock);
     ring_buffer_for_same_panel.if_all_near_field_hmat_entries_added = true;
@@ -9259,6 +9262,8 @@ fill_hmatrix_with_aca_plus_smp(
   for (auto &producer : producers)
     producer.join();
 
+  // After all producer threads exit, we set the flag in each ring buffer which
+  // indicates tasks for all matrix entries have been added.
   {
     std::lock_guard<std::mutex> lg(ring_buffer_for_same_panel.buffer_lock);
     ring_buffer_for_same_panel.if_all_near_field_hmat_entries_added = true;
@@ -9747,6 +9752,8 @@ fill_hmatrix_with_aca_plus_smp(
   for (auto &producer : producers)
     producer.join();
 
+  // After all producer threads exit, we set the flag in each ring buffer which
+  // indicates tasks for all matrix entries have been added.
   {
     std::lock_guard<std::mutex> lg(ring_buffer_for_same_panel.buffer_lock);
     ring_buffer_for_same_panel.if_all_near_field_hmat_entries_added = true;

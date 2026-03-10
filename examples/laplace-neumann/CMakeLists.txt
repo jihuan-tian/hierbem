@@ -12,7 +12,7 @@
 # Visual Studio Code's TestMate extension
 set(_target solve-laplace-neumann)
 
-add_executable(${_target} solve-laplace-neumann.cu)
+add_executable(${_target} solve-laplace-neumann.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})

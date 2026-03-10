@@ -26,6 +26,12 @@ HBEM_NS_OPEN
 using ProjectName = rfl::Pattern<R"(([a-zA-Z][a-zA-Z0-9_]*)?)", "ProjectName">;
 // BEM problem type
 using ProblemTypeLiteral = rfl::Literal<"neumann", "dirichlet", "mixed">;
+// Preconditioner type
+using PreconditionerTypeLiteral = rfl::
+  Literal<"factorization", "operator", "identity", "jacobi", "block_jacobi">;
+// Type of H-matrix/vector multiplication, called by iterative solver
+using VmultTypeLiteral =
+  rfl::Literal<"serial_recursive", "serial_iterative", "task_parallel">;
 // BEM space dimension (currently only 3 is supported)
 using SpaceDim =
   rfl::Validator<std::uint32_t, rfl::AllOf<rfl::Minimum<3>, rfl::Maximum<3>>>;
@@ -70,6 +76,9 @@ struct ConfBEM
   ProblemTypeLiteral problem_type =
     ProblemTypeLiteral::make<"dirichlet">(); // The type of BEM problem
   bool is_interior_problem = false;          // Whether the problem is interior
+  PreconditionerTypeLiteral precond_type =
+    PreconditionerTypeLiteral::make<"operator">();
+  VmultTypeLiteral vmult_type = VmultTypeLiteral::make<"serial_iterative">();
 };
 
 /**

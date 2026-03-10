@@ -18,6 +18,7 @@
 #ifndef HIERBEM_INCLUDE_QUADRATURE_SAUTER_QUADRATURE_H_
 #define HIERBEM_INCLUDE_QUADRATURE_SAUTER_QUADRATURE_H_
 
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/utilities.h>
@@ -2504,8 +2505,8 @@ namespace CUDAWrappers
      * Condition variable indicating the ring buffer not being empty and
      * having enough number of tasks to be fetched and processed as a batch by
      * a consumer thread. Then a consumer thread can start to wait for
-     * processing a batch of contiguous tasks
-     * (starting from the task pointed by @p head_pending) having been created.
+     * processing a batch of contiguous tasks (starting from the task pointed by
+     * @p head_pending) having been created.
      */
     std::condition_variable batch_task_ready;
 
@@ -4692,19 +4693,14 @@ namespace CUDAWrappers
            * not having been created is met or there are no added tasks either
            * during creation or created. Otherwise, do nothing.
            */
-          while (true)
+          do
             {
               tail_committed = (tail_committed + 1) >= capacity ?
                                  (tail_committed + 1 - capacity) :
                                  (tail_committed + 1);
-
-              if ((task_status_ring_buffer[tail_committed].load() !=
-                   SauterQuadratureTaskStatus::created) ||
-                  (tail_committed == tail_pending))
-                {
-                  break;
-                }
-            }
+          } while (tail_committed != tail_pending &&
+                   task_status_ring_buffer[tail_committed].load() ==
+                     SauterQuadratureTaskStatus::created);
         }
 
       /**
@@ -4712,7 +4708,9 @@ namespace CUDAWrappers
        * notify consumer threads until the number of tasks reaches the
        * batch size.
        */
-      if (task_num_ready_for_processing() >= batch_size)
+      const unsigned int task_num_to_fetch = task_num_ready_for_processing();
+      if (task_num_to_fetch >= batch_size ||
+          (this->is_full() && task_num_to_fetch > 0))
         {
           if_notify_consumers = true;
         }
@@ -4773,9 +4771,11 @@ namespace CUDAWrappers
 
       std::unique_lock<std::mutex> ul(buffer_lock);
 
-      batch_task_ready.wait(ul, [this]() {
+      batch_task_ready.wait(ul, [&task_num_to_fetch, this]() {
+        task_num_to_fetch = task_num_ready_for_processing();
         if (if_all_near_field_hmat_entries_added ||
-            (task_num_ready_for_processing() >= batch_size))
+            (task_num_to_fetch >= batch_size) ||
+            (this->is_full() && task_num_to_fetch > 0))
           {
             /**
              * @internal When all quadrature tasks have been added, the
@@ -4795,7 +4795,6 @@ namespace CUDAWrappers
           }
       });
 
-      task_num_to_fetch = task_num_ready_for_processing();
       if (task_num_to_fetch > batch_size)
         {
           task_num_to_fetch = batch_size;
@@ -5299,24 +5298,53 @@ namespace CUDAWrappers
         {
           std::lock_guard<std::mutex> lg(buffer_lock);
 
-          if (task_start_index_to_fetch == head_committed)
+          // We use the following predicate to ensure that the pointer
+          // @p head_committed is within the batch handled by the current
+          // consumer.
+          bool if_moving_head_committed;
+          if (is_task_batch_before_buffer_end)
             {
-              /**
-               * @internal Increment the pointer @p head_committed until a task
-               * not having been created is met. Otherwise, do nothing.
-               */
-              while (true)
+              if (head_committed >= task_start_index_to_fetch &&
+                  head_committed <
+                    task_start_index_to_fetch + task_num_to_fetch)
+                if_moving_head_committed = true;
+              else
+                if_moving_head_committed = false;
+            }
+          else
+            {
+              if (head_committed >= task_start_index_to_fetch ||
+                  head_committed <
+                    task_start_index_to_fetch + task_num_to_fetch - capacity)
+                if_moving_head_committed = true;
+              else
+                if_moving_head_committed = false;
+            }
+
+
+          if (if_moving_head_committed)
+            {
+              // When @p head_committed is in the range of the current batch and
+              // all @p task_num_to_fetch tasks in this batch have been
+              // processed by the current consumer, we can set the pointer
+              // @p head_committed directly to one index pass the final task in
+              // this batch.
+              head_committed =
+                (task_start_index_to_fetch + task_num_to_fetch) >= capacity ?
+                  (task_start_index_to_fetch + task_num_to_fetch - capacity) :
+                  (task_start_index_to_fetch + task_num_to_fetch);
+
+              // Then we increment the pointer @p head_committed one step at a
+              // time to check the task status, since we're now entering the
+              // batch which is during processing or has been fully or partially
+              // processed by another consumer.
+              while (head_committed != head_pending &&
+                     task_status_ring_buffer[head_committed].load() ==
+                       SauterQuadratureTaskStatus::before_creation)
                 {
                   head_committed = (head_committed + 1) >= capacity ?
                                      (head_committed + 1 - capacity) :
                                      (head_committed + 1);
-
-                  if ((task_status_ring_buffer[head_committed].load() !=
-                       SauterQuadratureTaskStatus::before_creation) ||
-                      (head_committed == head_pending))
-                    {
-                      break;
-                    }
                 }
             }
 

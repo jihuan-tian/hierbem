@@ -31,7 +31,7 @@ target_link_libraries(
   ${_target}
   hbem_octave_wrapper
   hierbem
-  boost_program_options
+  Boost::program_options
   dl # Lazy way: always link with libdl no matter if CUDA is used or not
   ${OCTAVE_LIBRARIES}
   Catch2::Catch2WithMain)

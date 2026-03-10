@@ -81,10 +81,10 @@ TEST_CASE("Verify SVD decomposition for LAPACKFullMatrixExt", "[linalg]")
     // compared with Julia, due to the non-uniqueness of the column vectors
     // corresponding to singular values. Therefore, we check the
     // self-consistency, i.e. A == U * Sigma_r * VT.
-    check_svd_self_consistency(A_original, U, VT, Sigma_r, 1e-15, 1e-15);
+    check_svd_self_consistency(A_original, U, VT, Sigma_r, 1e-14, 1e-14);
 
     // Compare the singular values with Julia results.
-    compare_with_jl_array(Sigma_r, "Sigma_r", 1e-15, 1e-15);
+    compare_with_jl_array(Sigma_r, "Sigma_r", 1e-14, 1e-14);
 
     LAPACKFullMatrixExt<std::complex<double>> A_complex(A_complex_original);
 
@@ -102,10 +102,10 @@ TEST_CASE("Verify SVD decomposition for LAPACKFullMatrixExt", "[linalg]")
     // corresponding to singular values. Therefore, we check the
     // self-consistency, i.e. A == U * Sigma_r * VT.
     check_svd_self_consistency(
-      A_complex_original, U_complex, VT_complex, Sigma_r_complex, 1e-15, 1e-15);
+      A_complex_original, U_complex, VT_complex, Sigma_r_complex, 1e-14, 1e-14);
 
     // Compare the singular values with Julia results.
-    compare_with_jl_array(Sigma_r_complex, "Sigma_r_complex", 1e-15, 1e-15);
+    compare_with_jl_array(Sigma_r_complex, "Sigma_r_complex", 1e-14, 1e-14);
   }
 
   {

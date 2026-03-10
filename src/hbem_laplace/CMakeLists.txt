@@ -12,7 +12,7 @@ include(macro_hbem_std_compile_flags)
 hbem_std_compile_flags()
 
 set(_target hbem_laplace)
-add_executable(${_target} hbem_laplace.cc cu_related.cu)
+add_executable(${_target} hbem_laplace.cc)
 target_link_libraries(${_target} hierbem fmt::fmt reflectcpp::reflectcpp
                       PkgConfig::tomlplusplus cpptrace::cpptrace)
 deal_ii_setup_target(${_target})

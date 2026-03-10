@@ -20,7 +20,7 @@ DEAL_II_SETUP_TARGET(${_target})
 TARGET_LINK_LIBRARIES(
     ${_target}
     hierbem
-    boost_program_options
+    Boost::program_options
     Catch2::Catch2WithMain
 )
 

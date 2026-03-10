@@ -1,4 +1,4 @@
-// Copyright (C) 2023-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2023-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -23,20 +23,19 @@
 
 #include <deal.II/grid/manifold_lib.h>
 
-#include <cuda_runtime.h>
-
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 
 #include "cad_mesh/subdomain_topology.h"
 #include "config_file/config_structs.h"
+#include "config_file/cu_related.h"
 #include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "laplace/laplace_bem.h"
 #include "mapping/mapping_info.h"
-#include "quadrature/sauter_quadrature.hcu"
+#include "quadrature/sauter_quadrature_tools.h"
 #include "utilities/unary_template_arg_containers.h"
 
 using namespace dealii;
@@ -50,19 +49,6 @@ main(int argc, char *argv[])
 
   // Repetitions to run H-Cholesky.
   const unsigned int REPEATS = atoi(argv[1]);
-
-  /**
-   * Initialize the CUDA device parameters.
-   */
-  const size_t stack_size = 1024 * 10;
-  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));
-  std::cout << "CUDA stack size has been set to " << stack_size << std::endl;
-
-  /**
-   * Get GPU device properties.
-   */
-  AssertCuda(
-    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
 
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
@@ -126,6 +112,9 @@ main(int argc, char *argv[])
   ConfSauterQuadNearField sauter_quad_near_field_params;
   ConfSauterQuadFarField  sauter_quad_far_field_params;
   ConfParallelization     parallel_params;
+
+  // Initialize CUDA stack size and device properties.
+  initCudaRuntime(parallel_params);
 
   // Refine the volume mesh.
   tria.refine_global(1);

@@ -25,19 +25,18 @@
 
 #include <deal.II/grid/manifold_lib.h>
 
-#include <cuda_runtime.h>
-
 #include <fstream>
 #include <iostream>
 
 #include "cad_mesh/subdomain_topology.h"
 #include "config_file/config_structs.h"
+#include "config_file/cu_related.h"
 #include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "laplace/laplace_bem.h"
 #include "mapping/mapping_info.h"
-#include "quadrature/sauter_quadrature.hcu"
+#include "quadrature/sauter_quadrature_tools.h"
 #include "sequence_partition/sequence_partition.h"
 #include "utilities/unary_template_arg_containers.h"
 
@@ -47,26 +46,6 @@ using namespace HierBEM;
 int
 main()
 {
-  /**
-   * Set TBB thread number as 1 to remove ACA randomness caused by multiple
-   * threads, even though the random engine is initialized with a definite
-   * state.
-   */
-  MultithreadInfo::set_thread_limit(1);
-
-  /**
-   * Initialize the CUDA device parameters.
-   */
-  const size_t stack_size = 1024 * 10;
-  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));
-  std::cout << "CUDA stack size has been set to " << stack_size << std::endl;
-
-  /**
-   * Get GPU device properties.
-   */
-  AssertCuda(
-    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
-
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
@@ -131,6 +110,17 @@ main()
   ConfSauterQuadNearField sauter_quad_near_field_params;
   ConfSauterQuadFarField  sauter_quad_far_field_params;
   ConfParallelization     parallel_params;
+  // Set TBB thread num to 1 to remove randomness in ACA.
+  parallel_params.tbb_thread_num = 1;
+
+  // Set TBB thread num.
+  if (parallel_params.tbb_thread_num == -1)
+    MultithreadInfo::set_thread_limit(MultithreadInfo::n_threads());
+  else
+    MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
+
+  // Initialize CUDA stack size and device properties.
+  initCudaRuntime(parallel_params);
 
   dof_handler.distribute_dofs(fe);
 

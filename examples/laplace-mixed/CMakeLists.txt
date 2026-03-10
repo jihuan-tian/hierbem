@@ -15,7 +15,7 @@ set(_target solve-laplace-mixed)
 # Add testing config header files to include path
 include_directories(APPEND ${CMAKE_SOURCE_DIR}/tests/include)
 
-add_executable(${_target} solve-laplace-mixed.cu)
+add_executable(${_target} solve-laplace-mixed.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})

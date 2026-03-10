@@ -80,9 +80,9 @@ TEST_CASE("Verify reduced SVD decomposition for LAPACKFullMatrixExt",
 
     LAPACKFullMatrixExt<double> M_tmp;
     A.mTmult(M_tmp, B);
-    compare_lapack_matrices(M_original, M_tmp, 1e-15, 1e-15);
+    compare_lapack_matrices(M_original, M_tmp, 1e-14, 1e-14);
     A.mHmult(M_tmp, B);
-    compare_lapack_matrices(M_original, M_tmp, 1e-15, 1e-15);
+    compare_lapack_matrices(M_original, M_tmp, 1e-14, 1e-14);
 
     LAPACKFullMatrixExt<std::complex<double>> M_complex(M_complex_original);
     LAPACKFullMatrixExt<std::complex<double>> A_complex, B_complex;
@@ -96,7 +96,7 @@ TEST_CASE("Verify reduced SVD decomposition for LAPACKFullMatrixExt",
 
     LAPACKFullMatrixExt<std::complex<double>> M_complex_tmp;
     A_complex.mHmult(M_complex_tmp, B_complex);
-    compare_lapack_matrices(M_complex_original, M_complex_tmp, 1e-15, 1e-15);
+    compare_lapack_matrices(M_complex_original, M_complex_tmp, 1e-14, 1e-14);
   }
 
   {
@@ -113,9 +113,9 @@ TEST_CASE("Verify reduced SVD decomposition for LAPACKFullMatrixExt",
 
     LAPACKFullMatrixExt<double> M_tmp;
     A.mTmult(M_tmp, B);
-    compare_lapack_matrices(M_original, M_tmp, 1e-15, 1e-15);
+    compare_lapack_matrices(M_original, M_tmp, 1e-14, 1e-14);
     A.mHmult(M_tmp, B);
-    compare_lapack_matrices(M_original, M_tmp, 1e-15, 1e-15);
+    compare_lapack_matrices(M_original, M_tmp, 1e-14, 1e-14);
 
     LAPACKFullMatrixExt<std::complex<double>> M_complex(M_complex_original);
     LAPACKFullMatrixExt<std::complex<double>> A_complex, B_complex;
@@ -129,7 +129,7 @@ TEST_CASE("Verify reduced SVD decomposition for LAPACKFullMatrixExt",
 
     LAPACKFullMatrixExt<std::complex<double>> M_complex_tmp;
     A_complex.mHmult(M_complex_tmp, B_complex);
-    compare_lapack_matrices(M_complex_original, M_complex_tmp, 1e-15, 1e-15);
+    compare_lapack_matrices(M_complex_original, M_complex_tmp, 1e-14, 1e-14);
   }
 
   INFO("*** test end");

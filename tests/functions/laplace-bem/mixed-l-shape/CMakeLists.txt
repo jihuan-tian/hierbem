@@ -14,7 +14,7 @@ find_package(Octave REQUIRED)
 # Visual Studio Code's TestMate extension
 set(_target test-mixed-l-shape)
 
-add_executable(${_target} mixed-l-shape.cc run-mixed-l-shape.cu)
+add_executable(${_target} mixed-l-shape.cc run-mixed-l-shape.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})
@@ -30,7 +30,7 @@ target_link_libraries(
   ${_target}
   hbem_octave_wrapper
   hierbem
-  boost_program_options
+  Boost::program_options
   dl
   ${OCTAVE_LIBRARIES}
   Catch2::Catch2WithMain)

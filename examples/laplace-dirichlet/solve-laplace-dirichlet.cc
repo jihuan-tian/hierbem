@@ -25,8 +25,6 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <cuda_runtime.h>
-
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -36,6 +34,7 @@
 #include "bem/types.h"
 #include "cad_mesh/gmsh_manipulation.h"
 #include "config_file/config_structs.h"
+#include "config_file/cu_related.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
 #include "laplace/laplace_bem.h"
 #include "preconditioners/preconditioner_type.h"
@@ -132,14 +131,6 @@ output_analytical_solution(
   out.close();
 }
 
-namespace HierBEM
-{
-  namespace CUDAWrappers
-  {
-    extern cudaDeviceProp device_properties;
-  }
-} // namespace HierBEM
-
 int
 main()
 {
@@ -163,11 +154,8 @@ main()
   else
     MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
 
-  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize,
-                                static_cast<unsigned int>(
-                                  parallel_params.cuda_stack_size_kb)));
-  AssertCuda(
-    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
+  // Initialize CUDA stack size and device properties.
+  initCudaRuntime(parallel_params);
 
   LaplaceBEM<dim, spacedim, double, double> bem(bem_params,
                                                 hmat_params,

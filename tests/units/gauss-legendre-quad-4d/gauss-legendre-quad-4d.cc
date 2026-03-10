@@ -10,6 +10,7 @@
 
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/quadrature_lib.h>
 
 #include <algorithm>
 #include <vector>

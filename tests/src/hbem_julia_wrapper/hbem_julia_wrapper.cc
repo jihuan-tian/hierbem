@@ -29,18 +29,13 @@ HBEMJuliaValue::HBEMJuliaValue()
 
 HBEMJuliaValue::HBEMJuliaValue(jl_value_t *val)
   : value(val)
-{}
-
-HBEMJuliaValue::HBEMJuliaValue(const HBEMJuliaValue &other)
 {
-  value = other.value;
+  JL_GC_PUSH1(&value);
 }
 
-HBEMJuliaValue &
-HBEMJuliaValue::operator=(const HBEMJuliaValue &other)
+HBEMJuliaValue::~HBEMJuliaValue()
 {
-  value = other.value;
-  return *this;
+  JL_GC_POP();
 }
 
 unsigned int
@@ -70,37 +65,39 @@ HBEMJuliaValue::double_value() const
 unsigned int *
 HBEMJuliaValue::uint_array() const
 {
-  return (unsigned int *)jl_array_data((jl_array_t *)value);
+  return (unsigned int *)jl_array_data((jl_array_t *)value, unsigned int);
 }
 
 int *
 HBEMJuliaValue::int_array() const
 {
-  return (int *)jl_array_data((jl_array_t *)value);
+  return (int *)jl_array_data((jl_array_t *)value, int);
 }
 
 float *
 HBEMJuliaValue::float_array() const
 {
-  return (float *)jl_array_data((jl_array_t *)value);
+  return (float *)jl_array_data((jl_array_t *)value, float);
 }
 
 double *
 HBEMJuliaValue::double_array() const
 {
-  return (double *)jl_array_data((jl_array_t *)value);
+  return (double *)jl_array_data((jl_array_t *)value, double);
 }
 
 std::complex<float> *
 HBEMJuliaValue::complex_float_array() const
 {
-  return (std::complex<float> *)jl_array_data((jl_array_t *)value);
+  return (std::complex<float> *)jl_array_data((jl_array_t *)value,
+                                              std::complex<float>);
 }
 
 std::complex<double> *
 HBEMJuliaValue::complex_double_array() const
 {
-  return (std::complex<double> *)jl_array_data((jl_array_t *)value);
+  return (std::complex<double> *)jl_array_data((jl_array_t *)value,
+                                               std::complex<double>);
 }
 
 size_t
@@ -146,11 +143,11 @@ HBEMJuliaWrapper::~HBEMJuliaWrapper()
   jl_atexit_hook(0);
 }
 
-HBEMJuliaValue
+jl_value_t *
 HBEMJuliaWrapper::eval_string(const std::string &eval_str) const
 {
   std::lock_guard<std::mutex> lock(julia_mutex);
-  return HBEMJuliaValue(jl_eval_string(eval_str.c_str()));
+  return jl_eval_string(eval_str.c_str());
 }
 
 unsigned int
@@ -206,49 +203,6 @@ HBEMJuliaWrapper::get_complex_double_var(const std::string &var_name) const
 
   return std::complex<double>(real_part.double_value(),
                               imag_part.double_value());
-}
-
-unsigned int *
-HBEMJuliaWrapper::get_uint_array_var(const std::string &var_name) const
-{
-  HBEMJuliaValue val = eval_string(var_name);
-  return val.uint_array();
-}
-
-int *
-HBEMJuliaWrapper::get_int_array_var(const std::string &var_name) const
-{
-  HBEMJuliaValue val = eval_string(var_name);
-  return val.int_array();
-}
-
-float *
-HBEMJuliaWrapper::get_float_array_var(const std::string &var_name) const
-{
-  HBEMJuliaValue val = eval_string(var_name);
-  return val.float_array();
-}
-
-double *
-HBEMJuliaWrapper::get_double_array_var(const std::string &var_name) const
-{
-  HBEMJuliaValue val = eval_string(var_name);
-  return val.double_array();
-}
-
-std::complex<float> *
-HBEMJuliaWrapper::get_complex_float_array_var(const std::string &var_name) const
-{
-  HBEMJuliaValue val = eval_string(var_name);
-  return val.complex_float_array();
-}
-
-std::complex<double> *
-HBEMJuliaWrapper::get_complex_double_array_var(
-  const std::string &var_name) const
-{
-  HBEMJuliaValue val = eval_string(var_name);
-  return val.complex_double_array();
 }
 
 void

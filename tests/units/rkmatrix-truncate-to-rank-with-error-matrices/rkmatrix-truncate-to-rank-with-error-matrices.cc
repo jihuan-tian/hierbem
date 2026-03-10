@@ -22,8 +22,6 @@
 
 #include <cmath>
 #include <complex>
-#include <fstream>
-#include <iostream>
 #include <vector>
 
 #include "hbem_cpp_validate.h"
@@ -40,8 +38,6 @@ TEST_CASE(
   "[linalg]")
 {
   INFO("*** test start");
-
-  std::ofstream ofs("rkmatrix-truncate-to-rank-with-error-matrices.log");
 
   const unsigned int n = 6;
 
@@ -70,41 +66,32 @@ TEST_CASE(
 
   for (unsigned int r = 3; r >= 1; r--)
     {
-      ofs << "=== Truncation rank=" << r << std::endl;
-
       LAPACKFullMatrixExt<double>               A_copy(A);
       LAPACKFullMatrixExt<std::complex<double>> A_complex_copy(A_complex);
 
-      ofs << "*** Real valued matrix" << std::endl;
       LAPACKFullMatrixExt<double> C, D;
       RkMatrix<double>            A_rk(r, A_copy, C, D);
-      A_rk.print_formatted(ofs, 8, false, 15, "0");
-      if (C.m() > 0 && C.n() > 0)
-        C.print_formatted_to_mat(ofs, "C", 8, false, 25, "0");
-      if (D.m() > 0 && D.n() > 0)
-        D.print_formatted_to_mat(ofs, "D", 8, false, 25, "0");
 
-      ofs << "*** Complex valued matrix" << std::endl;
+      // Here we check <tt>A_rk.A * A_rk.B^T + C * D^T == A</tt>.
+      LAPACKFullMatrixExt<double> CD_transpose;
+      C.mTmult(CD_transpose, D);
+      LAPACKFullMatrixExt<double> A_reconstructed, A_rk_full;
+      A_rk.convertToFullMatrix(A_rk_full);
+      A_rk_full.add(A_reconstructed, 1.0, CD_transpose);
+      compare_lapack_matrices(A, A_reconstructed, 1e-13, 1e-13);
+
       LAPACKFullMatrixExt<std::complex<double>> C_complex, D_complex;
       RkMatrix<std::complex<double>>            A_complex_rk(r,
                                                   A_complex_copy,
                                                   C_complex,
                                                   D_complex);
-      A_complex_rk.print_formatted(ofs, 8, false, 25, "0");
-      if (C_complex.m() > 0 && C_complex.n() > 0)
-        C_complex.print_formatted_to_mat(ofs, "C_complex", 8, false, 25, "0");
-      if (D_complex.m() > 0 && D_complex.n() > 0)
-        D_complex.print_formatted_to_mat(ofs, "D_complex", 8, false, 25, "0");
+      // Here we check <tt>A_rk.A * A_rk.B^H + C * D^H == A</tt>.
+      LAPACKFullMatrixExt<std::complex<double>> CD_complex_transpose;
+      C_complex.mHmult(CD_complex_transpose, D_complex);
+      LAPACKFullMatrixExt<std::complex<double>> A_complex_reconstructed,
+        A_complex_rk_full;
+      A_complex_rk.convertToFullMatrix(A_complex_rk_full);
+      A_complex_rk_full.add(A_complex_reconstructed, 1.0, CD_complex_transpose);
+      compare_lapack_matrices(A_complex, A_complex_reconstructed, 1e-13, 1e-13);
     }
-
-  ofs.close();
-
-  auto check_equality = [](const auto &a, const auto &b) {
-    INFO("Operand 1: " << a);
-    INFO("Operand 2: " << b);
-    REQUIRE(a == b);
-  };
-  compare_two_files(SOURCE_DIR "/reference.output",
-                    "rkmatrix-truncate-to-rank-with-error-matrices.log",
-                    check_equality);
 }

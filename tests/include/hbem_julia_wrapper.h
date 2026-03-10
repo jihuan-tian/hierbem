@@ -36,9 +36,10 @@ class HBEMJuliaValue
 public:
   HBEMJuliaValue();
   HBEMJuliaValue(jl_value_t *val);
-  HBEMJuliaValue(const HBEMJuliaValue &other);
+  HBEMJuliaValue(const HBEMJuliaValue &other) = delete;
   HBEMJuliaValue &
-  operator=(const HBEMJuliaValue &other);
+  operator=(const HBEMJuliaValue &other) = delete;
+  ~HBEMJuliaValue();
 
   unsigned int
   uint_value() const;
@@ -123,7 +124,7 @@ public:
   /**
    * Evalute a Julia expression which has a return value.
    */
-  HBEMJuliaValue
+  jl_value_t *
   eval_string(const std::string &eval_str) const;
 
   unsigned int
@@ -143,28 +144,6 @@ public:
 
   std::complex<double>
   get_complex_double_var(const std::string &var_name) const;
-
-  unsigned int *
-  get_uint_array_var(const std::string &var_name) const;
-
-  int *
-  get_int_array_var(const std::string &var_name) const;
-
-  float *
-  get_float_array_var(const std::string &var_name) const;
-
-  double *
-  get_double_array_var(const std::string &var_name) const;
-
-  std::complex<float> *
-  get_complex_float_array_var(const std::string &var_name) const;
-
-  std::complex<double> *
-  get_complex_double_array_var(const std::string &var_name) const;
-
-  template <typename Number>
-  Number *
-  get_array_var(const std::string &var_name) const;
 
   /**
    * Source a Julia script file.
@@ -188,16 +167,7 @@ template <typename Number>
 Number *
 HBEMJuliaValue::array() const
 {
-  return (Number *)jl_array_data((jl_array_t *)value);
-}
-
-
-template <typename Number>
-Number *
-HBEMJuliaWrapper::get_array_var(const std::string &var_name) const
-{
-  HBEMJuliaValue val = eval_string(var_name);
-  return val.array<Number>();
+  return (Number *)jl_array_data((jl_array_t *)value, Number);
 }
 
 HBEM_NS_CLOSE

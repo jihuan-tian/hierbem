@@ -1,4 +1,4 @@
-// Copyright (C) 2024-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2024-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -9,23 +9,22 @@
 // file LICENSE at the top level directory of HierBEM.
 
 /**
- * @file create-efield-subdomain-hmatrices.cu
+ * @file create-efield-subdomain-hmatrices.cc
  * @brief
  *
  * @ingroup test_cases
- * @author
+ * @author Jihuan Tian
  * @date 2024-08-09
  */
 #include <catch2/catch_all.hpp>
-#include <cuda_runtime.h>
 
 #include <fstream>
 
+#include "config_file/cu_related.h"
 #include "electric_field/ddm_efield.h"
 #include "grid/grid_in_ext.h"
 #include "grid/grid_out_ext.h"
 #include "hbem_test_config.h"
-#include "quadrature/sauter_quadrature.hcu"
 
 using namespace dealii;
 using namespace HierBEM;
@@ -38,15 +37,9 @@ TEST_CASE("Create subdomain H-hmatrices", "[ddm_efield]")
   deallog.depth_file(5);
   deallog.attach(std::cout);
 
-  const size_t stack_size = 1024 * 10;
-  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));
-  deallog << "CUDA stack size has been set to " << stack_size << std::endl;
-
-  /**
-   * @internal Get GPU device properties.
-   */
-  AssertCuda(
-    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
+  ConfParallelization parallel_params;
+  // Initialize CUDA stack size and device properties.
+  initCudaRuntime(parallel_params);
 
   DDMEfield<2, 3, double, double> efield(1,    // fe order for dirichlet space
                                          0,    // fe order for neumann space

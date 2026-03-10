@@ -27,7 +27,7 @@
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/vector.h>
 
-#include <openblas-pthread/cblas.h>
+#include <mkl_service.h>
 #include <tbb/tbb.h>
 
 #include <algorithm>
@@ -23303,9 +23303,10 @@ HMatrix<spacedim, Number>::vmult_task_parallel(const Number2         beta,
    */
   if (thread_num > 1)
     {
-      // Set OpenBLAS num threads to 1 when task parallelization is used.
-      const int blas_num_threads = openblas_get_num_threads();
-      openblas_set_num_threads(1);
+      // Set MKL num threads to 1 when task parallelization is used.
+      const int mkl_num_threads = mkl_get_max_threads();
+      mkl_set_dynamic(0);
+      mkl_set_num_threads(1);
 
       /**
        * Perform thread local scaling of the result vector and
@@ -23590,8 +23591,9 @@ HMatrix<spacedim, Number>::vmult_task_parallel(const Number2         beta,
 
       assembly_tasks.join_all();
 
-      // Restore the original OpenBLAS num threads.
-      openblas_set_num_threads(blas_num_threads);
+      // Restore the original MKL num threads.
+      mkl_set_num_threads(mkl_num_threads);
+      mkl_set_dynamic(1);
     }
   else
     {
@@ -25844,9 +25846,10 @@ HMatrix<spacedim, Number>::Tvmult_task_parallel(const Number2         beta,
        */
       if (thread_num > 1)
         {
-          // Set OpenBLAS num threads to 1 when task parallelization is used.
-          const int blas_num_threads = openblas_get_num_threads();
-          openblas_set_num_threads(1);
+          // Set MKL num threads to 1 when task parallelization is used.
+          const int mkl_num_threads = mkl_get_max_threads();
+          mkl_set_dynamic(0);
+          mkl_set_num_threads(1);
 
           /**
            * Perform thread local scaling of the result vector and
@@ -26068,8 +26071,9 @@ HMatrix<spacedim, Number>::Tvmult_task_parallel(const Number2         beta,
 
           assembly_tasks.join_all();
 
-          // Restore the original OpenBLAS num threads.
-          openblas_set_num_threads(blas_num_threads);
+          // Restore the original MKL num threads.
+          mkl_set_num_threads(mkl_num_threads);
+          mkl_set_dynamic(1);
         }
       else
         {
@@ -28417,10 +28421,11 @@ HMatrix<spacedim, Number>::Hvmult_task_parallel(const Number2         beta,
            */
           if (thread_num > 1)
             {
-              // Set OpenBLAS num threads to 1 when task parallelization is
+              // Set MKL num threads to 1 when task parallelization is
               // used.
-              const int blas_num_threads = openblas_get_num_threads();
-              openblas_set_num_threads(1);
+              const int mkl_num_threads = mkl_get_max_threads();
+              mkl_set_dynamic(0);
+              mkl_set_num_threads(1);
 
               /**
                * Perform thread local scaling of the result vector and
@@ -28648,8 +28653,9 @@ HMatrix<spacedim, Number>::Hvmult_task_parallel(const Number2         beta,
 
               assembly_tasks.join_all();
 
-              // Restore the original OpenBLAS num threads.
-              openblas_set_num_threads(blas_num_threads);
+              // Restore the original MKL num threads.
+              mkl_set_num_threads(mkl_num_threads);
+              mkl_set_dynamic(1);
             }
           else
             {
@@ -32671,9 +32677,10 @@ void
 HMatrix<spacedim, Number>::compute_lu_factorization_task_parallel(
   const unsigned int fixed_rank)
 {
-  // Set OpenBLAS num threads to 1 when task parallelization is used.
-  const int blas_num_threads = openblas_get_num_threads();
-  openblas_set_num_threads(1);
+  // Set MKL num threads to 1 when task parallelization is used.
+  const int mkl_num_threads = mkl_get_max_threads();
+  mkl_set_dynamic(0);
+  mkl_set_num_threads(1);
 
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
   Timer timer;
@@ -32742,8 +32749,9 @@ HMatrix<spacedim, Number>::compute_lu_factorization_task_parallel(
    */
   this->set_state(HMatrixSupport::lu);
 
-  // Restore the original OpenBLAS num threads.
-  openblas_set_num_threads(blas_num_threads);
+  // Restore the original MKL num threads.
+  mkl_set_num_threads(mkl_num_threads);
+  mkl_set_dynamic(1);
 }
 
 
@@ -35267,9 +35275,10 @@ void
 HMatrix<spacedim, Number>::compute_cholesky_factorization_task_parallel(
   const unsigned int fixed_rank)
 {
-  // Set OpenBLAS num threads to 1 when task parallelization is used.
-  const int blas_num_threads = openblas_get_num_threads();
-  openblas_set_num_threads(1);
+  // Set MKL num threads to 1 when task parallelization is used.
+  const int mkl_num_threads = mkl_get_max_threads();
+  mkl_set_dynamic(0);
+  mkl_set_num_threads(1);
 
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
   Timer timer;
@@ -35340,8 +35349,9 @@ HMatrix<spacedim, Number>::compute_cholesky_factorization_task_parallel(
   this->set_state(HMatrixSupport::cholesky);
   this->set_property(HMatrixSupport::Property::lower_triangular);
 
-  // Restore the original OpenBLAS num threads.
-  openblas_set_num_threads(blas_num_threads);
+  // Restore the original MKL num threads.
+  mkl_set_num_threads(mkl_num_threads);
+  mkl_set_dynamic(1);
 }
 
 

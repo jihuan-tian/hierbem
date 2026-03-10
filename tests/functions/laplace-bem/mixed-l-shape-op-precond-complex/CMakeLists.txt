@@ -15,7 +15,7 @@ find_package(Octave REQUIRED)
 set(_target test-mixed-l-shape-op-precond-complex)
 
 add_executable(${_target} mixed-l-shape-op-precond-complex.cc
-                          run-mixed-l-shape-op-precond-complex.cu)
+                          run-mixed-l-shape-op-precond-complex.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})
@@ -31,7 +31,7 @@ target_link_libraries(
   ${_target}
   hbem_octave_wrapper
   hierbem
-  boost_program_options
+  Boost::program_options
   dl
   ${OCTAVE_LIBRARIES}
   Catch2::Catch2WithMain)

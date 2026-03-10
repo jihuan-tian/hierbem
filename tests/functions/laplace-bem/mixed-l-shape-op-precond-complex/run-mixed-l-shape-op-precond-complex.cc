@@ -11,16 +11,18 @@
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/multithread_info.h>
 
+#include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/manifold_lib.h>
+#include <deal.II/grid/tria.h>
 
-#include <cuda_runtime.h>
-
+#include <cmath>
+#include <complex>
 #include <fstream>
 #include <iostream>
 
 #include "bem/types.h"
 #include "config_file/config_structs.h"
-#include "grid/grid_in_ext.h"
+#include "config_file/cu_related.h"
 #include "hbem_test_config.h"
 #include "hmatrix/hmatrix.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
@@ -31,66 +33,48 @@
 using namespace dealii;
 using namespace HierBEM;
 
-/**
- * Function object for the Dirichlet boundary condition data.
- *
- * On the surface at @p z=0, apply constant potential 1. On the surface at
- * @p z=6, apply constant potential 0.
- */
-class DirichletBC : public Function<3>
+// Dirichlet boundary conditions on the left and top surface of the L-shape
+class DirichletBC : public Function<3, std::complex<double>>
 {
 public:
-  double
+  std::complex<double>
   value(const Point<3> &p, const unsigned int component = 0) const
   {
     (void)component;
 
-    if (p(2) < 3)
+    if (p(0) <= 1e-6)
       {
-        return 1;
+        // left surface
+        return std::complex<double>(0.0);
       }
     else
       {
-        return 0;
+        // top surface
+        const double angle = numbers::PI / 3.0;
+        return std::complex(10.0 * std::cos(angle), 10.0 * std::sin(angle));
       }
   }
 };
 
-/**
- * Function object for the Neumann boundary condition data.
- *
- * For surfaces other than those at @p z=0 and @p z=6, apply homogeneous
- * Neumann boundary condition.
- */
-class NeumannBC : public Function<3>
+// Neumann boundary conditions on the other surfaces of the L-shape
+class NeumannBC : public Function<3, std::complex<double>>
 {
 public:
-  double
+  std::complex<double>
   value(const Point<3> &p, const unsigned int component = 0) const
   {
     (void)component;
     (void)p;
 
-    return 0;
+    return std::complex<double>(0.);
   }
 };
 
-namespace HierBEM
-{
-  namespace CUDAWrappers
-  {
-    extern cudaDeviceProp device_properties;
-  }
-} // namespace HierBEM
-
 void
-run_mixed_hmatrix_op_precond(const IterativeSolverVmultType vmult_type)
+run_mixed_l_shape_op_precond_complex(const IterativeSolverVmultType vmult_type)
 {
-  /**
-   * @internal Pop out the default "DEAL" prefix string.
-   */
   // Write run-time logs to file
-  std::ofstream ofs(std::string("mixed-hmatrix-op-precond-vmult-") +
+  std::ofstream ofs(std::string("mixed-l-shape-op-precond-complex-vmult-") +
                     std::string(vmult_type_name(vmult_type)) +
                     std::string(".log"));
   deallog.pop();
@@ -111,8 +95,8 @@ run_mixed_hmatrix_op_precond(const IterativeSolverVmultType vmult_type)
   ConfLaplaceBEM bem_params;
   bem_params.problem_type        = ProblemType::MixedBCProblem;
   bem_params.is_interior_problem = true;
-  ConfHMatrix                hmat_params{4, 4, 0.8, 5, 0.01};
-  ConfHMatrix                hmat_preconditioner_params{4, 4, 1.0, 2, 0.1};
+  ConfHMatrix                hmat_params{4, 32, 0.8, 5, 0.01};
+  ConfHMatrix                hmat_preconditioner_params{4, 32, 1.0, 2, 0.1};
   ConfSauterQuad             sauter_quad_params;
   ConfSauterQuad             sauter_quad_precond_params;
   ConfLinearSolver           linear_solver_params;
@@ -125,27 +109,26 @@ run_mixed_hmatrix_op_precond(const IterativeSolverVmultType vmult_type)
   else
     MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
 
-  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize,
-                                static_cast<unsigned int>(
-                                  parallel_params.cuda_stack_size_kb)));
-  AssertCuda(
-    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
+  // Initialize CUDA stack size and device properties.
+  initCudaRuntime(parallel_params);
 
-  LaplaceBEM<dim, spacedim, double, double> bem(bem_params,
-                                                hmat_params,
-                                                hmat_preconditioner_params,
-                                                sauter_quad_params,
-                                                sauter_quad_precond_params,
-                                                linear_solver_params,
-                                                op_precond_params,
-                                                parallel_params);
-  bem.set_project_name("mixed-hmatrix-op-precond");
+  LaplaceBEM<dim, spacedim, std::complex<double>, double> bem(
+    bem_params,
+    hmat_params,
+    hmat_preconditioner_params,
+    sauter_quad_params,
+    sauter_quad_precond_params,
+    linear_solver_params,
+    op_precond_params,
+    parallel_params);
+  bem.set_project_name("mixed-l-shape-op-precond-complex");
   bem.set_preconditioner_type(PreconditionerType::OperatorPreconditioning);
   bem.set_iterative_solver_vmult_type(vmult_type);
   if (vmult_type == IterativeSolverVmultType::TaskParallel)
     {
-      HMatrix<spacedim, double>::set_leaf_set_traversal_method(
-        HMatrix<spacedim, double>::SpaceFillingCurveType::Hilbert);
+      HMatrix<spacedim, std::complex<double>>::set_leaf_set_traversal_method(
+        HMatrix<spacedim,
+                std::complex<double>>::SpaceFillingCurveType::Hilbert);
     }
 
   timer.stop();
@@ -153,22 +136,38 @@ run_mixed_hmatrix_op_precond(const IterativeSolverVmultType vmult_type)
 
   timer.start();
 
-  std::ifstream mesh_in(HBEM_TEST_MODEL_DIR "bar.msh");
-  read_msh(mesh_in, bem.get_triangulation());
-  bem.get_subdomain_topology().generate_topology(HBEM_TEST_MODEL_DIR "bar.brep",
-                                                 HBEM_TEST_MODEL_DIR "bar.msh");
+  // Read the 3D mesh.
+  std::ifstream           mesh_file(HBEM_TEST_MODEL_DIR "l-shape.msh");
+  Triangulation<spacedim> tria;
+  GridIn<spacedim>        grid_in;
+  grid_in.attach_triangulation(tria);
+  grid_in.read_msh(mesh_file);
 
-  // Generate flat manifold.
+  // Create the map from material ids to manifold ids.
+  bem.get_manifold_description()[1] = 0;
+  bem.get_manifold_description()[2] = 0;
+  for (types::material_id i = 19; i <= 24; i++)
+    {
+      bem.get_manifold_description()[i] = 0;
+    }
+
   FlatManifold<dim, spacedim> *flat_manifold =
     new FlatManifold<dim, spacedim>();
   bem.get_manifolds()[0] = flat_manifold;
 
-  // Create the map from material ids to manifold ids.
-  for (types::material_id i = 1; i <= 6; i++)
-    bem.get_manifold_description()[i] = 0;
+  // Extract the surface mesh.
+  Triangulation<dim, spacedim> surface_tria(
+    Triangulation<dim,
+                  spacedim>::MeshSmoothing::limit_level_difference_at_vertices);
+  surface_tria.set_manifold(0, *flat_manifold);
+  bem.extract_surface_triangulation(tria, std::move(surface_tria), true);
 
   // Create the map from manifold id to mapping order.
   bem.get_manifold_id_to_mapping_order()[0] = 1;
+
+  // Build surface-to-volume and volume-to-surface relationship.
+  bem.get_subdomain_topology().generate_single_domain_topology_for_dealii_model(
+    {1, 2, 19, 20, 21, 22, 23, 24});
 
   timer.stop();
   print_wall_time(deallog, timer, "read mesh");
@@ -178,8 +177,8 @@ run_mixed_hmatrix_op_precond(const IterativeSolverVmultType vmult_type)
   DirichletBC dirichlet_bc;
   NeumannBC   neumann_bc;
 
-  bem.assign_dirichlet_bc(dirichlet_bc, {5, 6});
-  bem.assign_neumann_bc(neumann_bc, {1, 2, 3, 4});
+  bem.assign_dirichlet_bc(dirichlet_bc, {1, 2});
+  bem.assign_neumann_bc(neumann_bc, {19, 20, 21, 22, 23, 24});
 
   timer.stop();
   print_wall_time(deallog, timer, "assign boundary conditions");

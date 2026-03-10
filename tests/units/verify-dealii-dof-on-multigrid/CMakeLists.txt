@@ -13,7 +13,7 @@ set(TEST_TARGET verify-dealii-dof-on-multigrid)
 # Link TEST_TARGET to hierbem library.
 set(TEST_LIBRARIES
     hierbem
-    boost_program_options
+    Boost::program_options
     dl  # Lazy way: always link with libdl no matter if CUDA is used or not
 )
 

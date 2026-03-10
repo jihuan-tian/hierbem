@@ -10,7 +10,7 @@
 
 set(_target laplace-bem-dirichlet-hmatrix-two-spheres)
 
-add_executable(${_target} laplace-bem-dirichlet-hmatrix-two-spheres.cu)
+add_executable(${_target} laplace-bem-dirichlet-hmatrix-two-spheres.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})
@@ -20,7 +20,12 @@ target_compile_definitions(${_target}
                            PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_link_libraries(
-  ${_target} hierbem boost_program_options dl # Lazy way: always link with
-                                                    # libdl no matter if CUDA is
-                                                    # used or not
+  ${_target}
+  hierbem
+  fmt::fmt
+  reflectcpp::reflectcpp
+  PkgConfig::tomlplusplus
+  cpptrace::cpptrace
+  dl # Lazy way: always link with
+  # libdl no matter if CUDA is used or not
 )

@@ -1,4 +1,4 @@
-// Copyright (C) 2023-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2023-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -26,19 +26,18 @@
 
 #include <boost/program_options.hpp>
 
-#include <cuda_runtime.h>
-
 #include <fstream>
 #include <iostream>
 
 #include "cad_mesh/subdomain_topology.h"
 #include "config_file/config_structs.h"
+#include "config_file/cu_related.h"
 #include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "laplace/laplace_bem.h"
 #include "mapping/mapping_info.h"
-#include "quadrature/sauter_quadrature.hcu"
+#include "quadrature/sauter_quadrature_tools.h"
 #include "utilities/unary_template_arg_containers.h"
 
 using namespace dealii;
@@ -84,19 +83,6 @@ int
 main(int argc, char *argv[])
 {
   CmdOpts opts = parse_cmdline(argc, argv);
-
-  /**
-   * Initialize the CUDA device parameters.
-   */
-  const size_t stack_size = 1024 * 10;
-  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));
-  std::cout << "CUDA stack size has been set to " << stack_size << std::endl;
-
-  /**
-   * Get GPU device properties.
-   */
-  AssertCuda(
-    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
 
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
@@ -167,11 +153,8 @@ main(int argc, char *argv[])
   else
     MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
 
-  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize,
-                                static_cast<unsigned int>(
-                                  parallel_params.cuda_stack_size_kb)));
-  AssertCuda(
-    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
+  // Initialize CUDA stack size and device properties.
+  initCudaRuntime(parallel_params);
 
   TableHandler table;
   for (unsigned int i = 0; i <= opts.refinement; i++)

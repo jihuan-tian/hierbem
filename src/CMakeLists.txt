@@ -18,10 +18,24 @@ include(macro_hbem_std_compile_flags)
 # Enable more strict compilation for C++ and CUDA
 hbem_std_compile_flags()
 
+if(NOT DEFINED HBEM_USE_64BIT_INDICES)
+  set(HBEM_USE_64BIT_INDICES 0)
+endif()
+
+if(HBEM_USE_64BIT_INDICES)
+  set(MKL_INTERFACE ilp64)
+else()
+  set(MKL_INTERFACE lp64)
+endif()
+
+find_package(MKL CONFIG REQUIRED)
+find_package(TBB CONFIG REQUIRED)
+
 set(_target hierbem)
 
 add_library(
   ${_target} SHARED
+  config_file/cu_related.cu
   utilities/debug_tools.cc
   dofs/dof_tools_ext.cc
   hmatrix/aca_plus/aca_plus.cu
@@ -30,15 +44,22 @@ add_library(
   utilities/regex_tools.cc
   laplace/laplace_bem.cu
   helmholtz/helmholtz_acoustic_bem.cu)
+
 # Because my library hierbem has included deal.ii header files, dependent
 # include paths and library paths need to be imported by calling this macro
 # DEAL_II_SETUP_TARGET.
 deal_ii_setup_target(${_target})
 
-# HMatrix class depends on openblas.
+set_target_properties(${_target} PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+
+# HMatrix class depends on MKL.
 target_link_libraries(
-  ${_target} openblas dl # Lazy way: always link with libdl no matter if CUDA is
-                         # used or not
-  fmt::fmt reflectcpp::reflectcpp PkgConfig::tomlplusplus)
+  ${_target}
+  dl # Lazy way: always link with libdl no matter if CUDA is used or not
+  MKL::MKL
+  TBB::tbb
+  fmt::fmt
+  reflectcpp::reflectcpp
+  PkgConfig::tomlplusplus)
 
 add_subdirectory(hbem_laplace)

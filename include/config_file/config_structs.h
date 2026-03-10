@@ -69,12 +69,12 @@ struct ConfHMatrix
 struct ConfSauterQuadNearField
 {
   // Number of producer threads.
-  std::uint32_t producer_num = 4;
+  std::uint32_t producer_num = 2;
   // Number of consumer threads for various cell neighboring types.
   std::uint32_t consumer_num_same_panel    = 1;
   std::uint32_t consumer_num_common_edge   = 1;
   std::uint32_t consumer_num_common_vertex = 1;
-  std::uint32_t consumer_num_regular       = 1;
+  std::uint32_t consumer_num_regular       = 2;
   // The number of consumer thread sets. Each set contains four consumer
   // threads, which correspond to the four types of ring buffers used in the
   // producer-consumer model.

@@ -54,8 +54,8 @@ compare_with_jl_scalar(
     [](typename numbers::NumberTraits<Number>::real_type v) ->
   typename numbers::NumberTraits<Number>::real_type { return v; })
 {
-  HBEMJuliaWrapper &inst     = HBEMJuliaWrapper::get_instance();
-  HBEMJuliaValue    jl_value = inst.eval_string(jl_value_name);
+  HBEMJuliaWrapper &inst = HBEMJuliaWrapper::get_instance();
+  HBEMJuliaValue    jl_value(inst.eval_string(jl_value_name));
 
   if constexpr (std::is_same<Number, int>::value)
     {
@@ -99,61 +99,61 @@ compare_with_jl_complex(
   HBEMJuliaWrapper &inst = HBEMJuliaWrapper::get_instance();
 
   // Compare the real part.
-  HBEMJuliaValue jl_value =
-    inst.eval_string(std::string("real(") + jl_value_name + std::string(")"));
+  HBEMJuliaValue jl_value_real(
+    inst.eval_string(std::string("real(") + jl_value_name + std::string(")")));
 
   if constexpr (std::is_same<Number, int>::value)
     {
       REQUIRE_THAT(func(value.real()),
-                   WithinAbs(func(jl_value.int_value()), abs_error) ||
-                     WithinRel(func(jl_value.int_value()), rel_error));
+                   WithinAbs(func(jl_value_real.int_value()), abs_error) ||
+                     WithinRel(func(jl_value_real.int_value()), rel_error));
     }
   else if constexpr (std::is_same<Number, unsigned int>::value)
     {
       REQUIRE_THAT(func(value.real()),
-                   WithinAbs(func(jl_value.uint_value()), abs_error) ||
-                     WithinRel(func(jl_value.uint_value()), rel_error));
+                   WithinAbs(func(jl_value_real.uint_value()), abs_error) ||
+                     WithinRel(func(jl_value_real.uint_value()), rel_error));
     }
   else if constexpr (std::is_same<Number, float>::value)
     {
       REQUIRE_THAT(func(value.real()),
-                   WithinAbs(func(jl_value.float_value()), abs_error) ||
-                     WithinRel(func(jl_value.float_value()), rel_error));
+                   WithinAbs(func(jl_value_real.float_value()), abs_error) ||
+                     WithinRel(func(jl_value_real.float_value()), rel_error));
     }
   else if constexpr (std::is_same<Number, double>::value)
     {
       REQUIRE_THAT(func(value.real()),
-                   WithinAbs(func(jl_value.double_value()), abs_error) ||
-                     WithinRel(func(jl_value.double_value()), rel_error));
+                   WithinAbs(func(jl_value_real.double_value()), abs_error) ||
+                     WithinRel(func(jl_value_real.double_value()), rel_error));
     }
 
   // Compare the imaginary part
-  jl_value =
-    inst.eval_string(std::string("imag(") + jl_value_name + std::string(")"));
+  HBEMJuliaValue jl_value_imag(
+    inst.eval_string(std::string("imag(") + jl_value_name + std::string(")")));
 
   if constexpr (std::is_same<Number, int>::value)
     {
       REQUIRE_THAT(func(value.imag()),
-                   WithinAbs(func(jl_value.int_value()), abs_error) ||
-                     WithinRel(func(jl_value.int_value()), rel_error));
+                   WithinAbs(func(jl_value_imag.int_value()), abs_error) ||
+                     WithinRel(func(jl_value_imag.int_value()), rel_error));
     }
   else if constexpr (std::is_same<Number, unsigned int>::value)
     {
       REQUIRE_THAT(func(value.imag()),
-                   WithinAbs(func(jl_value.uint_value()), abs_error) ||
-                     WithinRel(func(jl_value.uint_value()), rel_error));
+                   WithinAbs(func(jl_value_imag.uint_value()), abs_error) ||
+                     WithinRel(func(jl_value_imag.uint_value()), rel_error));
     }
   else if constexpr (std::is_same<Number, float>::value)
     {
       REQUIRE_THAT(func(value.imag()),
-                   WithinAbs(func(jl_value.float_value()), abs_error) ||
-                     WithinRel(func(jl_value.float_value()), rel_error));
+                   WithinAbs(func(jl_value_imag.float_value()), abs_error) ||
+                     WithinRel(func(jl_value_imag.float_value()), rel_error));
     }
   else if constexpr (std::is_same<Number, double>::value)
     {
       REQUIRE_THAT(func(value.imag()),
-                   WithinAbs(func(jl_value.double_value()), abs_error) ||
-                     WithinRel(func(jl_value.double_value()), rel_error));
+                   WithinAbs(func(jl_value_imag.double_value()), abs_error) ||
+                     WithinRel(func(jl_value_imag.double_value()), rel_error));
     }
 }
 
@@ -172,7 +172,7 @@ compare_with_jl_array(
 {
   HBEMJuliaWrapper &inst = HBEMJuliaWrapper::get_instance();
 
-  HBEMJuliaValue array_jl      = inst.eval_string(jl_array_name);
+  HBEMJuliaValue array_jl(inst.eval_string(jl_array_name));
   Number        *array_jl_data = array_jl.array<Number>();
   const size_t   n             = array.size();
   REQUIRE(array_jl.nrows() == n);
@@ -215,7 +215,7 @@ compare_with_jl_array(
 
   HBEMJuliaWrapper &inst = HBEMJuliaWrapper::get_instance();
 
-  HBEMJuliaValue array_jl      = inst.eval_string(jl_array_name);
+  HBEMJuliaValue array_jl(inst.eval_string(jl_array_name));
   Number        *array_jl_data = array_jl.array<Number>();
   REQUIRE(array_jl.nrows() == n);
 
@@ -254,7 +254,7 @@ compare_with_jl_matrix(
 {
   HBEMJuliaWrapper &inst = HBEMJuliaWrapper::get_instance();
 
-  HBEMJuliaValue mat_jl      = inst.eval_string(jl_mat_name);
+  HBEMJuliaValue mat_jl(inst.eval_string(jl_mat_name));
   Number        *mat_jl_data = mat_jl.array<Number>();
   const size_t   m           = mat.m();
   const size_t   n           = mat.n();

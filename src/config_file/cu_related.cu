@@ -8,6 +8,7 @@
 // option) any later version. The full text of the license can be found in the
 // file LICENSE at the top level directory of HierBEM.
 
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/logstream.h>
 
 #include <cuda_runtime.h>
@@ -16,7 +17,7 @@
 #include <iostream>
 
 #include "config.h"
-#include "cu_related.h"
+#include "config_file/cu_related.h"
 #include "quadrature/sauter_quadrature.hcu" // for device_properties
 
 using namespace dealii;

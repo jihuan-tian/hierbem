@@ -12,7 +12,7 @@ set(TEST_TARGET occ-nurbs-manifold)
 
 # Link TEST_TARGET to hierbem library.
 set(TEST_LIBRARIES
-    hierbem boost_program_options dl # Lazy way: always link with libdl no
+    hierbem Boost::program_options dl # Lazy way: always link with libdl no
                                            # matter if CUDA is used or not
 )
 

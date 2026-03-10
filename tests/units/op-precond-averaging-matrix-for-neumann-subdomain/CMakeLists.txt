@@ -22,6 +22,7 @@ deal_ii_setup_target(${_target})
 # Define SOURCE_DIR macro to be used in the source files
 target_compile_definitions(${_target}
                            PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+target_compile_options(${_target} PRIVATE -Wno-unused-parameter)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/process.jl.in
                ${CMAKE_CURRENT_SOURCE_DIR}/process.jl)
@@ -29,12 +30,12 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/draw.jl.in
                ${CMAKE_CURRENT_SOURCE_DIR}/draw.jl)
 
 target_link_libraries(
-  ${_target}
-  hierbem
-  boost_program_options
+  ${_target} hierbem Boost::program_options
   dl # Lazy way: always link with libdl no matter if CUDA is used or not
-  julia
-  Catch2::Catch2WithMain)
+  julia Catch2::Catch2WithMain)
+
+# Disable warning about unused parameters which is caused by Julia 1.12.
+target_compile_options(${_target} PRIVATE -Wno-unused-parameter)
 
 # Discover Catch2 testcases
 include(CTest)

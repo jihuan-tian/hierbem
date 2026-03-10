@@ -20,6 +20,7 @@
 #define HIERBEM_INCLUDE_UTILITIES_DEBUG_TOOLS_H_
 
 #include <deal.II/base/logstream.h>
+#include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/table.h>
 #include <deal.II/base/timer.h>
 

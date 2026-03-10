@@ -18,6 +18,7 @@
 #ifndef HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_H_
 #define HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_H_
 
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/table.h>
 #include <deal.II/base/table_indices.h>
 

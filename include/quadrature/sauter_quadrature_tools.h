@@ -19,6 +19,7 @@
 #define HIERBEM_INCLUDE_QUADRATURE_SAUTER_QUADRATURE_TOOLS_H_
 
 #include <deal.II/base/point.h>
+#include <deal.II/base/quadrature_lib.h>
 
 #include <cstdint>
 

@@ -12,7 +12,7 @@
 # Visual Studio Code's TestMate extension
 set(_target solve-laplace-dirichlet)
 
-add_executable(${_target} solve-laplace-dirichlet.cu)
+add_executable(${_target} solve-laplace-dirichlet.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})

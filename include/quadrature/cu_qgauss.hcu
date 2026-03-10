@@ -18,6 +18,8 @@
 #ifndef HIERBEM_INCLUDE_QUADRATURE_CU_QGAUSS_H_
 #define HIERBEM_INCLUDE_QUADRATURE_CU_QGAUSS_H_
 
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/table_indices.h>
 
 #include <cuda_runtime.h>

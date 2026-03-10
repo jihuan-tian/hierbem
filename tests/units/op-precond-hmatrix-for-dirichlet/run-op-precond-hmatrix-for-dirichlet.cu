@@ -18,7 +18,6 @@
 #include <deal.II/grid/manifold_lib.h>
 
 #include <catch2/catch_all.hpp>
-#include <cuda_runtime.h>
 
 #include <fstream>
 #include <iostream>
@@ -28,9 +27,11 @@
 
 #include "cad_mesh/subdomain_topology.h"
 #include "config_file/config_structs.h"
+#include "config_file/cu_related.h"
 #include "grid/grid_in_ext.h"
 #include "grid/grid_out_ext.h"
 #include "preconditioners/preconditioner_for_laplace_single_layer_bio.h"
+#include "quadrature/sauter_quadrature_tools.h"
 #include "utilities/debug_tools.h"
 
 using namespace Catch::Matchers;
@@ -46,14 +47,6 @@ public:
   }
 };
 
-namespace HierBEM
-{
-  namespace CUDAWrappers
-  {
-    extern cudaDeviceProp device_properties;
-  }
-} // namespace HierBEM
-
 void
 run_op_precond_hmatrix_for_dirichlet()
 {
@@ -62,17 +55,6 @@ run_op_precond_hmatrix_for_dirichlet()
   deallog.depth_console(0);
   deallog.depth_file(5);
   deallog.attach(ofs);
-
-  // Initialize CUDA device parameters.
-  const size_t stack_size = 1024 * 10;
-  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));
-  deallog << "CUDA stack size has been set to " << stack_size << std::endl;
-
-  /**
-   * @internal Get GPU device properties.
-   */
-  AssertCuda(
-    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
 
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
@@ -152,6 +134,9 @@ run_op_precond_hmatrix_for_dirichlet()
   ConfHMatrix         hmat_params{64, 64, 1.0, 2, 0.1};
   ConfSauterQuad      sauter_quad_params;
   ConfParallelization parallel_params;
+
+  // Initialize CUDA stack size and device properties.
+  initCudaRuntime(parallel_params);
 
   precond.setup_preconditioner(hmat_params,
                                sauter_quad_params.near_field,

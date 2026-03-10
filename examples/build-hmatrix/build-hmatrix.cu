@@ -36,8 +36,6 @@
 #include <deal.II/grid/manifold_lib.h>
 #include <deal.II/grid/tria.h>
 
-#include <cuda_runtime.h>
-
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -49,6 +47,7 @@
 #include "cluster_tree/block_cluster_tree.h"
 #include "cluster_tree/cluster_tree.h"
 #include "config_file/config_structs.h"
+#include "config_file/cu_related.h"
 #include "dofs/dof_to_cell_topology.h"
 #include "dofs/dof_tools_ext.h"
 #include "grid/grid_in_ext.h"
@@ -312,8 +311,7 @@ BEMFunctionSpace<dim, spacedim>::build_dof_to_cell_topology()
 // define a bilinear form.
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType  = double,
           typename KernelNumberType = double>
 class BEMBilinearForm
@@ -412,8 +410,7 @@ private:
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 BEMBilinearForm<dim,
@@ -431,8 +428,7 @@ BEMBilinearForm<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -468,8 +464,7 @@ BEMBilinearForm<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
@@ -533,8 +528,7 @@ BEMBilinearForm<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename>
-          typename KernelFunctionType,
+          template <int, typename> typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
@@ -601,26 +595,9 @@ BEMBilinearForm<dim,
   return hmat;
 }
 
-
-namespace HierBEM
-{
-  namespace CUDAWrappers
-  {
-    extern cudaDeviceProp device_properties;
-  }
-} // namespace HierBEM
-
 int
 main()
 {
-  // Initialize the CUDA device parameters.
-  const size_t stack_size = 1024 * 10;
-  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));
-  std::cout << "CUDA stack size has been set to " << stack_size << std::endl;
-  // Get GPU device properties.
-  AssertCuda(
-    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
-
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
@@ -678,6 +655,9 @@ main()
     MultithreadInfo::set_thread_limit(MultithreadInfo::n_threads());
   else
     MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
+
+  // Initialize CUDA stack size and device properties.
+  initCudaRuntime(parallel_params);
 
   // Create a continuous Lagrangian finite element and a DoF handler for the
   // Sobolev space \f$H^{1/2}(\Gamma)\f$.

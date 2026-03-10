@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2023-2025 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -9,30 +9,28 @@
 // file LICENSE at the top level directory of HierBEM.
 
 /**
- * \file laplace-bem-neumann-hmatrix.cc
- * \brief Verify solving the Laplace problem with Neumann boundary condition
- * using H-matrix based BEM.
+ * @file laplace-bem-mixed-spanner-model.cc
+ * @brief Verify solve Laplace mixed boundary value problem using \hmat.
  *
- * \ingroup test_cases
- * \author Jihuan Tian
- * \date 2022-09-23
+ * @ingroup test_cases
+ * @author Jihuan Tian
+ * @date 2023-05-24
  */
 
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/multithread_info.h>
 
-#include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/manifold_lib.h>
 
 #include <boost/program_options.hpp>
-
-#include <cuda_runtime.h>
 
 #include <fstream>
 #include <iostream>
 
 #include "bem/types.h"
 #include "config_file/config_structs.h"
+#include "config_file/cu_related.h"
 #include "hbem_test_config.h"
 #include "hmatrix/hmatrix.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
@@ -42,6 +40,7 @@
 
 using namespace dealii;
 using namespace HierBEM;
+
 namespace po = boost::program_options;
 
 struct CmdOpts
@@ -127,60 +126,42 @@ parse_cmdline(int argc, char *argv[])
 }
 
 /**
- * Function object for the Neumann boundary condition data, which is also
- * the solution of the Dirichlet problem. The analytical expression is
- * \f[
- * \frac{\pdiff u}{\pdiff n}\Big\vert_{\Gamma} = \frac{\langle x-x_c,x_0-x
- * \rangle}{4\pi\norm{x_0-x}^3\rho}
- * \f]
+ * Function object for the Dirichlet boundary condition data.
  */
-class NeumannBC : public Function<3>
+class DirichletBC : public Function<3>
 {
 public:
-  // N.B. This function should be defined outside class NeumannBC and
-  // class Example2, if not inline.
-  NeumannBC()
-    : Function<3>()
-    , x0(0.25, 0.25, 0.25)
-    , model_sphere_center(0.0, 0.0, 0.0)
-    , model_sphere_radius(1.0)
-  {}
-
-  NeumannBC(const Point<3> &x0, const Point<3> &center, double radius)
-    : Function<3>()
-    , x0(x0)
-    , model_sphere_center(center)
-    , model_sphere_radius(radius)
-  {}
-
   double
   value(const Point<3> &p, const unsigned int component = 0) const
   {
     (void)component;
 
-    Tensor<1, 3> diff_vector = x0 - p;
-
-    return ((p - model_sphere_center) * diff_vector) / 4.0 / numbers::PI /
-           std::pow(diff_vector.norm(), 3) / model_sphere_radius;
+    if (p(0) < 0)
+      {
+        return 1;
+      }
+    else
+      {
+        return 0;
+      }
   }
-
-private:
-  /**
-   * Location of the Dirac point source \f$\delta(x-x_0)\f$.
-   */
-  Point<3> x0;
-  Point<3> model_sphere_center;
-  double   model_sphere_radius;
 };
 
-
-namespace HierBEM
+/**
+ * Function object for the Neumann boundary condition data.
+ */
+class NeumannBC : public Function<3>
 {
-  namespace CUDAWrappers
+public:
+  double
+  value(const Point<3> &p, const unsigned int component = 0) const
   {
-    extern cudaDeviceProp device_properties;
+    (void)component;
+    (void)p;
+
+    return 0;
   }
-} // namespace HierBEM
+};
 
 int
 main(int argc, char *argv[])
@@ -191,7 +172,7 @@ main(int argc, char *argv[])
    * @internal Pop out the default "DEAL" prefix string.
    */
   // Write run-time logs to file
-  std::ofstream ofs("laplace-bem-neumann-hmatrix.log");
+  std::ofstream ofs("hierbem.log");
   deallog.pop();
   deallog.depth_console(0);
   deallog.depth_file(5);
@@ -209,10 +190,10 @@ main(int argc, char *argv[])
 
   ConfLaplaceBEM             bem_params{opts.dirichlet_space_fe_order,
                             opts.neumann_space_fe_order,
-                            ProblemType::NeumannBCProblem,
-                            false};
+                            ProblemType::MixedBCProblem,
+                            true};
   ConfHMatrix                hmat_params{64, 64, 0.8, 5, 0.01};
-  ConfHMatrix                hmat_preconditioner_params{64, 64, 1.0, 2, 0.1};
+  ConfHMatrix                hmat_preconditioner_params{64, 64, 1.0, 1, 0.1};
   ConfSauterQuad             sauter_quad_params;
   ConfSauterQuad             sauter_quad_precond_params;
   ConfLinearSolver           linear_solver_params;
@@ -225,11 +206,8 @@ main(int argc, char *argv[])
   else
     MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
 
-  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize,
-                                static_cast<unsigned int>(
-                                  parallel_params.cuda_stack_size_kb)));
-  AssertCuda(
-    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
+  // Initialize CUDA stack size and device properties.
+  initCudaRuntime(parallel_params);
 
   LaplaceBEM<dim, spacedim> bem(bem_params,
                                 hmat_params,
@@ -239,7 +217,7 @@ main(int argc, char *argv[])
                                 linear_solver_params,
                                 op_precond_params,
                                 parallel_params);
-  bem.set_project_name("laplace-bem-neumann-hmatrix");
+  bem.set_project_name("laplace-bem-mixed-spanner");
   bem.set_preconditioner_type(opts.precond_type);
   bem.set_iterative_solver_vmult_type(opts.vmult_type);
   if (opts.vmult_type == IterativeSolverVmultType::TaskParallel)
@@ -253,42 +231,23 @@ main(int argc, char *argv[])
 
   timer.start();
 
-  /**
-   * @internal Set the Dirac source location according to interior or exterior
-   * problem.
-   */
-  Point<spacedim> source_loc;
-
-  if (bem_params.is_interior_problem)
-    {
-      source_loc = Point<spacedim>(1, 1, 1);
-    }
-  else
-    {
-      source_loc = Point<spacedim>(0.25, 0.25, 0.25);
-    }
-
-  const Point<spacedim> center(0, 0, 0);
-  const double          radius(1);
-
+  std::ifstream           mesh_file(HBEM_TEST_MODEL_DIR "spanner.msh");
   Triangulation<spacedim> tria;
-  // The manifold_id is set to 0 on the boundary faces in @p hyper_ball.
-  GridGenerator::hyper_ball(tria, center, radius);
-  tria.refine_global(5);
+  GridIn<spacedim>        grid_in;
+  grid_in.attach_triangulation(tria);
+  grid_in.read_msh(mesh_file);
 
-  // Create the map from material ids to manifold ids. By default, the material
-  // ids of all cells are zero, if the triangulation is created by a deal.ii
-  // function in GridGenerator.
+  // Create the map from material ids to manifold ids.
   bem.get_manifold_description()[0] = 0;
+  bem.get_manifold_description()[1] = 0;
+  bem.get_manifold_description()[2] = 0;
 
-  Triangulation<dim, spacedim>      surface_tria;
-  SphericalManifold<dim, spacedim> *ball_surface_manifold =
-    new SphericalManifold<dim, spacedim>(center);
-  bem.get_manifolds()[0] = ball_surface_manifold;
+  FlatManifold<dim, spacedim> *flat_manifold =
+    new FlatManifold<dim, spacedim>();
+  bem.get_manifolds()[0] = flat_manifold;
 
-  // We should first assign manifold objects to the empty surface triangulation,
-  // then perform surface mesh extraction.
-  surface_tria.set_manifold(0, *ball_surface_manifold);
+  Triangulation<dim, spacedim> surface_tria;
+  surface_tria.set_manifold(0, *flat_manifold);
   bem.extract_surface_triangulation(tria, std::move(surface_tria), true);
 
   // Create the map from manifold id to mapping order.
@@ -296,15 +255,18 @@ main(int argc, char *argv[])
 
   // Build surface-to-volume and volume-to-surface relationship.
   bem.get_subdomain_topology().generate_single_domain_topology_for_dealii_model(
-    {0});
+    {0, 1, 2});
 
   timer.stop();
   print_wall_time(deallog, timer, "read mesh");
 
   timer.start();
 
-  NeumannBC neumann_bc(source_loc, center, radius);
-  bem.assign_neumann_bc(neumann_bc);
+  DirichletBC dirichlet_bc;
+  NeumannBC   neumann_bc;
+
+  bem.assign_dirichlet_bc(dirichlet_bc, {1, 2});
+  bem.assign_neumann_bc(neumann_bc, 0);
 
   timer.stop();
   print_wall_time(deallog, timer, "assign boundary conditions");

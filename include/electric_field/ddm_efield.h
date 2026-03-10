@@ -1112,9 +1112,9 @@ DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::
   // has no copy or move-copy constructor defined yet.
   subdomain_hmatrices.reserve(domain.get_dielectric_subdomains().size());
 
-  const unsigned int n_dofs_for_dirichlet_space =
+  [[maybe_unused]] const unsigned int n_dofs_for_dirichlet_space =
     dof_handler_for_dirichlet_space.n_dofs();
-  const unsigned int n_dofs_for_neumann_space =
+  [[maybe_unused]] const unsigned int n_dofs_for_neumann_space =
     dof_handler_for_neumann_space.n_dofs();
 
   // Generate selectors for Dirichlet space on non-Dirichlet boundary.
@@ -1516,7 +1516,8 @@ DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::assemble_system()
   LogStream::Prefix prefix_string("assemble_system");
   Timer             timer;
 
-  for (auto &steklov_poincare_hmat : system_matrix.get_subdomain_hmatrices())
+  for ([[maybe_unused]] auto &steklov_poincare_hmat :
+       system_matrix.get_subdomain_hmatrices())
     {}
 }
 

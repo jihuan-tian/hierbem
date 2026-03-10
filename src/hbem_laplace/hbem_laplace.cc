@@ -29,7 +29,7 @@
 #include "bem/types.h"
 #include "config_file/config_file.h"
 #include "config_file/config_structs.h"
-#include "cu_related.h"
+#include "config_file/cu_related.h"
 #include "grid/grid_in_ext.h"
 #include "laplace/laplace_bem.h"
 #include "utilities/debug_tools.h"

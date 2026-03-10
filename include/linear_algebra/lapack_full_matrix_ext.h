@@ -985,16 +985,6 @@ public:
                    bool                         is_left_associative);
 
   /**
-   * Add two matrix into a new matrix \f$C = A + B\f$, where \f$A\f$ is the
-   * current matrix.
-   */
-  template <typename Number2, typename Number3>
-  void
-  add(LAPACKFullMatrixExt<Number3>       &C,
-      const LAPACKFullMatrixExt<Number2> &B,
-      const bool is_result_matrix_symm_apriori = false) const;
-
-  /**
    * Add two matrix into a new matrix \f$C = A + b*B\f$ with a factor \f$b\f$
    * multiplied with \f$B\f$, where \f$A\f$ is the current matrix.
    */
@@ -1627,16 +1617,11 @@ LAPACKFullMatrixExt<Number>::Reshape(const size_type              rows,
                                      LAPACKFullMatrixExt<Number> &matrix)
 {
   AssertDimension(rows * cols, values.size());
-
   matrix.reinit(rows, cols);
 
-  typename std::vector<Number>::const_iterator it_values = values.begin();
-  for (typename LAPACKFullMatrixExt<Number>::iterator it = matrix.begin();
-       it != matrix.end();
-       it++, it_values++)
-    {
-      (*it) = (*it_values);
-    }
+  Number *dst = matrix.values.data();
+  for (const auto &v : values)
+    *dst++ = v;
 }
 
 
@@ -1648,12 +1633,10 @@ LAPACKFullMatrixExt<Number>::Reshape(const size_type              rows,
                                      LAPACKFullMatrixExt<Number> &matrix)
 {
   matrix.reinit(rows, cols);
-  for (typename LAPACKFullMatrixExt<Number>::iterator it = matrix.begin();
-       it != matrix.end();
-       it++, values++)
-    {
-      (*it) = (*values);
-    }
+  Number *dst = matrix.values.data();
+
+  for (size_type k = 0; k < rows * cols; k++)
+    *dst++ = values[k];
 }
 
 
@@ -4837,56 +4820,6 @@ LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
     }
 
   return effective_rank;
-}
-
-
-template <typename Number>
-template <typename Number2, typename Number3>
-void
-LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number3>       &C,
-                                 const LAPACKFullMatrixExt<Number2> &B,
-                                 const bool is_result_matrix_symm_apriori) const
-{
-  static_assert(is_number_larger_or_equal<Number3, Number>() &&
-                is_number_larger_or_equal<Number3, Number2>());
-
-  AssertDimension(this->m(), B.m());
-  AssertDimension(this->n(), B.n());
-
-  const size_type nrows = this->m();
-  const size_type ncols = this->n();
-
-  C.reinit(nrows, ncols);
-
-  if (is_result_matrix_symm_apriori)
-    {
-      /**
-       * Perform addition for matrix elements in the diagonal part and in the
-       * lower triangular part only.
-       */
-      Assert(C.get_property() == LAPACKSupport::Property::symmetric,
-             ExcMessage(std::string("The result matrix should be ") +
-                        std::string(LAPACKSupport::property_name(
-                          LAPACKSupport::Property::symmetric))));
-
-      for (size_type i = 0; i < nrows; i++)
-        {
-          for (size_type j = 0; j <= i; j++)
-            {
-              C(i, j) = (*this)(i, j) + B(i, j);
-            }
-        }
-    }
-  else
-    {
-      for (size_type i = 0; i < nrows; i++)
-        {
-          for (size_type j = 0; j < ncols; j++)
-            {
-              C(i, j) = (*this)(i, j) + B(i, j);
-            }
-        }
-    }
 }
 
 

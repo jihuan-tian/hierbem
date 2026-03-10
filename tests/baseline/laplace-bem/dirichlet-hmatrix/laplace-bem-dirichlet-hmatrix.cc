@@ -28,13 +28,12 @@
 
 #include <boost/program_options.hpp>
 
-#include <cuda_runtime.h>
-
 #include <fstream>
 #include <iostream>
 
 #include "bem/types.h"
 #include "config_file/config_structs.h"
+#include "config_file/cu_related.h"
 #include "hbem_test_config.h"
 #include "hmatrix/hmatrix.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
@@ -167,15 +166,6 @@ private:
   Point<3> x0;
 };
 
-
-namespace HierBEM
-{
-  namespace CUDAWrappers
-  {
-    extern cudaDeviceProp device_properties;
-  }
-} // namespace HierBEM
-
 int
 main(int argc, char *argv[])
 {
@@ -219,11 +209,8 @@ main(int argc, char *argv[])
   else
     MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
 
-  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize,
-                                static_cast<unsigned int>(
-                                  parallel_params.cuda_stack_size_kb)));
-  AssertCuda(
-    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
+  // Initialize CUDA stack size and device properties.
+  initCudaRuntime(parallel_params);
 
   LaplaceBEM<dim, spacedim> bem(bem_params,
                                 hmat_params,

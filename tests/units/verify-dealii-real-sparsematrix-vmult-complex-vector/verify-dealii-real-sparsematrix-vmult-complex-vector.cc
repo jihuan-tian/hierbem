@@ -45,9 +45,12 @@ TEST_CASE("Verify real valued SparseMatrix multiplies a complex valued vector",
   HBEMJuliaWrapper &inst = HBEMJuliaWrapper::get_instance();
   inst.source_file("process.jl");
 
-  int    *row_indices = inst.get_int_array_var("rows");
-  int    *col_indices = inst.get_int_array_var("cols");
-  double *mat_vals    = inst.get_double_array_var("vals");
+  HBEMJuliaValue row_indices_jl_value(inst.eval_string("rows"));
+  HBEMJuliaValue col_indices_jl_value(inst.eval_string("cols"));
+  HBEMJuliaValue mat_vals_jl_value(inst.eval_string("vals"));
+  int           *row_indices = row_indices_jl_value.int_array();
+  int           *col_indices = col_indices_jl_value.int_array();
+  double        *mat_vals    = mat_vals_jl_value.double_array();
 
   HBEMJuliaValue     jl_value         = inst.eval_string("rows");
   const unsigned int number_of_values = jl_value.nrows();
@@ -71,7 +74,8 @@ TEST_CASE("Verify real valued SparseMatrix multiplies a complex valued vector",
     mat.set(row_indices[i] - 1, col_indices[i] - 1, mat_vals[i]);
 
   // Create input and output vectors.
-  std::complex<double>        *x_jl = inst.get_complex_double_array_var("x");
+  HBEMJuliaValue               x_jl_value(inst.eval_string("x"));
+  std::complex<double>        *x_jl = x_jl_value.complex_double_array();
   Vector<std::complex<double>> x(n);
   for (unsigned int i = 0; i < n; i++)
     x(i) = x_jl[i];

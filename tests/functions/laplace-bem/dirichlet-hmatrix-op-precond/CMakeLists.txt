@@ -15,7 +15,7 @@ find_package(Octave REQUIRED)
 set(_target test-dirichlet-hmatrix-op-precond)
 
 add_executable(${_target} dirichlet-hmatrix-op-precond.cc
-                          run-dirichlet-hmatrix-op-precond.cu)
+                          run-dirichlet-hmatrix-op-precond.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})
@@ -31,7 +31,7 @@ target_link_libraries(
   ${_target}
   hbem_octave_wrapper
   hierbem
-  boost_program_options
+  Boost::program_options
   dl
   ${OCTAVE_LIBRARIES}
   reflectcpp::reflectcpp

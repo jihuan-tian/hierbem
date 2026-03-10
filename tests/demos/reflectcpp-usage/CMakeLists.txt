@@ -19,12 +19,9 @@ target_compile_definitions(${_target}
                            PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_link_libraries(
-  ${_target}
-  boost_program_options
-  dl # Lazy way: always link with libdl no matter if CUDA is used or not
-  reflectcpp::reflectcpp
-  Catch2::Catch2WithMain
-  PkgConfig::tomlplusplus)
+  ${_target} Boost::program_options dl # Lazy way: always link with libdl no
+                                       # matter if CUDA is used or not
+  reflectcpp::reflectcpp Catch2::Catch2WithMain PkgConfig::tomlplusplus)
 
 # Discover Catch2 testcases
 include(CTest)

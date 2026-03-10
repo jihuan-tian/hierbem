@@ -15,6 +15,11 @@ cmake_minimum_required(VERSION 3.25.2)
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27.0")
   # Keep compatible with FindCUDA() macros used in dealii
   cmake_policy(SET CMP0146 OLD)
+  # Ignore <package-name>_ROOT specification where <package-name> contains
+  # lower-case characters
+  cmake_policy(SET CMP0144 OLD)
+  # Search Boost using the upstream BoostConfig.cmake
+  cmake_policy(SET CMP0167 NEW)
 endif()
 
 # Project name
@@ -57,6 +62,9 @@ if(NOT ${reflectcpp_FOUND})
   )
 endif()
 
+find_package(Boost REQUIRED COMPONENTS program_options HINTS ${BOOST_DIR}
+                                       $ENV{BOOST_DIR})
+
 #
 # Check if we are using mixed build mode
 #
@@ -73,6 +81,22 @@ endif()
 if(NOT _mixed_build_mode)
   deal_ii_initialize_cached_variables()
 endif()
+
+# Sanitize deal.II linker flags: semicolons inside path lists (e.g. from MPI
+# rpath) are interpreted as CMake list separators and break the link (g++:
+# missing argument to '-Xlinker'). Replace path-separator semicolons with
+# colons, which are valid for -rpath on Linux.
+foreach(_var DEAL_II_LINKER_FLAGS DEAL_II_LINKER_FLAGS_DEBUG
+             DEAL_II_LINKER_FLAGS_RELEASE)
+  if(DEFINED ${_var})
+    string(REPLACE ";/" ":/" ${_var} "${${_var}}")
+    string(REPLACE "/;" "/:" ${_var} "${${_var}}")
+    set(${_var}
+        "${${_var}}"
+        CACHE STRING "Linker flags from deal.II (path semicolons sanitized)"
+              FORCE)
+  endif()
+endforeach()
 
 # Get CUDA toolkit versions
 find_package(CUDAToolkit)
@@ -256,7 +280,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/extern/cuda_complex)
 
 # Directories for searching libraries to link
-link_directories(${CMAKE_BINARY_DIR}/src /usr/lib/x86_64-linux-gnu)
+link_directories(${CMAKE_BINARY_DIR}/src)
 
 # Folder for header files and source code
 add_subdirectory(include)

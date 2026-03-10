@@ -25,11 +25,12 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/process.jl.in
                ${CMAKE_CURRENT_SOURCE_DIR}/process.jl)
 
 target_link_libraries(
-  ${_target}
-  hierbem
-  hbem_julia_wrapper
-  dl # Lazy way: always link with libdl no matter if CUDA is used or not
+  ${_target} hierbem hbem_julia_wrapper dl # Lazy way: always link with libdl no
+                                           # matter if CUDA is used or not
   Catch2::Catch2WithMain)
+
+# Disable warning about unused parameters which is caused by Julia 1.12.
+target_compile_options(${_target} PRIVATE -Wno-unused-parameter)
 
 # Discover Catch2 testcases
 include(CTest)

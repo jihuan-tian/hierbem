@@ -21,12 +21,7 @@ deal_ii_setup_target(${_target})
 target_compile_definitions(${_target}
                            PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
-target_link_libraries(
-  ${_target}
-  hierbem
-  boost_program_options
-  dl # Lazy way: always link with libdl no matter if CUDA is used or not
-  Catch2::Catch2WithMain)
+target_link_libraries(${_target} hierbem Catch2::Catch2WithMain)
 
 # Discover Catch2 testcases
 include(CTest)

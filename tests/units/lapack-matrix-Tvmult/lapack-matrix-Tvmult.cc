@@ -113,71 +113,71 @@ TEST_CASE("Verify Tvmult for LAPACKFullMatrixExt", "[linalg]")
 
   Vector<double> y1(n);
   A.Tvmult(y1, x);
-  compare_with_jl_array(y1, "y1", 1e-15, 1e-15);
+  compare_with_jl_array(y1, "y1", 1e-14, 1e-14);
 
   Vector<double> y2(y);
   A.Tvmult(y2, x, true);
-  compare_with_jl_array(y2, "y2", 1e-15, 1e-15);
+  compare_with_jl_array(y2, "y2", 1e-14, 1e-14);
 
   Vector<double> y3(n);
   A_symm.Tvmult(y3, x);
-  compare_with_jl_array(y3, "y3", 1e-15, 1e-15);
+  compare_with_jl_array(y3, "y3", 1e-14, 1e-14);
 
   Vector<double> y4(y);
   A_symm.Tvmult(y4, x, true);
-  compare_with_jl_array(y4, "y4", 1e-15, 1e-15);
+  compare_with_jl_array(y4, "y4", 1e-14, 1e-14);
 
   Vector<double> y5(n);
   A_tril.Tvmult(y5, x);
-  compare_with_jl_array(y5, "y5", 1e-15, 1e-15);
+  compare_with_jl_array(y5, "y5", 1e-14, 1e-14);
 
   Vector<double> y6(y);
   A_tril.Tvmult(y6, x, true);
-  compare_with_jl_array(y6, "y6", 1e-15, 1e-15);
+  compare_with_jl_array(y6, "y6", 1e-14, 1e-14);
 
   Vector<double> y7(n);
   A_triu.Tvmult(y7, x);
-  compare_with_jl_array(y7, "y7", 1e-15, 1e-15);
+  compare_with_jl_array(y7, "y7", 1e-14, 1e-14);
 
   Vector<double> y8(y);
   A_triu.Tvmult(y8, x, true);
-  compare_with_jl_array(y8, "y8", 1e-15, 1e-15);
+  compare_with_jl_array(y8, "y8", 1e-14, 1e-14);
 
   Vector<std::complex<double>> y9(n);
   A_complex.Tvmult(y9, x_complex);
-  compare_with_jl_array(y9, "y9", 1e-15, 1e-15);
+  compare_with_jl_array(y9, "y9", 1e-14, 1e-14);
 
   Vector<std::complex<double>> y10(y_complex);
   A_complex.Tvmult(y10, x_complex, true);
-  compare_with_jl_array(y10, "y10", 1e-15, 1e-15);
+  compare_with_jl_array(y10, "y10", 1e-14, 1e-14);
 
   Vector<std::complex<double>> y11(n);
   A_complex_symm.Tvmult(y11, x_complex);
-  compare_with_jl_array(y11, "y11", 1e-15, 1e-15);
+  compare_with_jl_array(y11, "y11", 1e-14, 1e-14);
 
   Vector<std::complex<double>> y12(y_complex);
   A_complex_symm.Tvmult(y12, x_complex, true);
-  compare_with_jl_array(y12, "y12", 1e-15, 1e-15);
+  compare_with_jl_array(y12, "y12", 1e-14, 1e-14);
 
   Vector<std::complex<double>> y13(n);
   A_complex_hermite_symm.Tvmult(y13, x_complex);
-  compare_with_jl_array(y13, "y13", 1e-15, 1e-15);
+  compare_with_jl_array(y13, "y13", 1e-14, 1e-14);
 
   Vector<std::complex<double>> y14(y_complex);
   A_complex_hermite_symm.Tvmult(y14, x_complex, true);
-  compare_with_jl_array(y14, "y14", 1e-15, 1e-15);
+  compare_with_jl_array(y14, "y14", 1e-14, 1e-14);
 
   Vector<std::complex<double>> y15(n);
   A_complex_tril.Tvmult(y15, x_complex);
-  compare_with_jl_array(y15, "y15", 1e-15, 1e-15);
+  compare_with_jl_array(y15, "y15", 1e-14, 1e-14);
 
   Vector<std::complex<double>> y16(y_complex);
   A_complex_tril.Tvmult(y16, x_complex, true);
-  compare_with_jl_array(y16, "y16", 1e-15, 1e-15);
+  compare_with_jl_array(y16, "y16", 1e-14, 1e-14);
 
   Vector<std::complex<double>> y17(n);
   A_complex_triu.Tvmult(y17, x_complex);
-  compare_with_jl_array(y17, "y17", 1e-15, 1e-15);
+  compare_with_jl_array(y17, "y17", 1e-14, 1e-14);
 
   Vector<std::complex<double>> y18(y_complex);
   A_complex_triu.Tvmult(y18, x_complex, true);

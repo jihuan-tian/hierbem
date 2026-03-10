@@ -51,12 +51,17 @@ TEST_CASE("Inner product and linear combination of two vectors", "[linalg]")
   inst.source_file("process.jl");
 
   // Read vectors from Julia.
-  double               *v1_array = inst.get_double_array_var("v1");
-  double               *v2_array = inst.get_double_array_var("v2");
+  HBEMJuliaValue v1_value(inst.eval_string("v1"));
+  HBEMJuliaValue v2_value(inst.eval_string("v2"));
+  double        *v1_array = v1_value.double_array();
+  double        *v2_array = v2_value.double_array();
+
+  HBEMJuliaValue        v1_complex_value(inst.eval_string("v1_complex"));
+  HBEMJuliaValue        v2_complex_value(inst.eval_string("v2_complex"));
   std::complex<double> *v1_complex_array =
-    inst.get_complex_double_array_var("v1_complex");
+    v1_complex_value.complex_double_array();
   std::complex<double> *v2_complex_array =
-    inst.get_complex_double_array_var("v2_complex");
+    v2_complex_value.complex_double_array();
 
   const unsigned int           n = 16 * 1024;
   Vector<double>               v1(n);

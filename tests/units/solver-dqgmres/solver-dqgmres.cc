@@ -58,8 +58,10 @@ TEST_CASE("Verify DQGMRES", "[linalg]")
     // Get matrix and vector data from Julia.
     HBEMJuliaValue jl_value = inst.eval_string("b1");
     const size_t   n        = jl_value.length();
-    double        *A_data   = inst.get_double_array_var("A1");
-    double        *b_data   = inst.get_double_array_var("b1");
+    HBEMJuliaValue A_jl_value(inst.eval_string("A1"));
+    HBEMJuliaValue b_jl_value(inst.eval_string("b1"));
+    double        *A_data = A_jl_value.double_array();
+    double        *b_data = b_jl_value.double_array();
 
     LAPACKFullMatrixExt<double> A;
     LAPACKFullMatrixExt<double>::Reshape(n, n, A_data, A);
@@ -164,8 +166,10 @@ TEST_CASE("Verify DQGMRES", "[linalg]")
     // Get matrix and vector data from Julia.
     HBEMJuliaValue        jl_value = inst.eval_string("b2");
     const size_t          n        = jl_value.length();
-    std::complex<double> *A_data   = inst.get_complex_double_array_var("A2");
-    std::complex<double> *b_data   = inst.get_complex_double_array_var("b2");
+    HBEMJuliaValue        A_jl_value(inst.eval_string("A2"));
+    HBEMJuliaValue        b_jl_value(inst.eval_string("b2"));
+    std::complex<double> *A_data = A_jl_value.complex_double_array();
+    std::complex<double> *b_data = b_jl_value.complex_double_array();
 
     LAPACKFullMatrixExt<std::complex<double>> A;
     LAPACKFullMatrixExt<std::complex<double>>::Reshape(n, n, A_data, A);

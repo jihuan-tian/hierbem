@@ -13,7 +13,7 @@ set(TEST_TARGET verify-gmsh-cell-indices-in-refined-mesh)
 # Link TEST_TARGET to hierbem library.
 set(TEST_LIBRARIES
     hierbem
-    boost_program_options
+    Boost::program_options
     dl  # Lazy way: always link with libdl no matter if CUDA is used or not
 )
 

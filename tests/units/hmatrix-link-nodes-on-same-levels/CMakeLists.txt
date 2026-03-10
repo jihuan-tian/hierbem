@@ -14,7 +14,7 @@ set(TEST_TARGET hmatrix-link-nodes-on-same-levels)
 set(TEST_LIBRARIES
     hbem_octave_wrapper
     hierbem
-    boost_program_options
+    Boost::program_options
     dl  # Lazy way: always link with libdl no matter if CUDA is used or not
 )
 

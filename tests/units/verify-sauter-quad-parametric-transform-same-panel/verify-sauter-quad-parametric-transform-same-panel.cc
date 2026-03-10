@@ -18,6 +18,8 @@
  * @date 2023-03-22
  */
 
+#include <deal.II/base/quadrature_lib.h>
+
 #include <iostream>
 
 #include "quadrature/quadrature.templates.h"
