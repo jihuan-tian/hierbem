@@ -25,7 +25,7 @@ HBEM_NS_OPEN
 // Project name pattern
 using ProjectName = rfl::Pattern<R"(([a-zA-Z][a-zA-Z0-9_]*)?)", "ProjectName">;
 // BEM problem type
-using ProblemTypeLiteral = rfl::Literal<"neumann", "dirichlet", "mixed">;
+using ProblemTypeLiteral = rfl::Literal<"dirichlet", "neumann", "mixed">;
 // Preconditioner type
 using PreconditionerTypeLiteral = rfl::
   Literal<"factorization", "operator", "identity", "jacobi", "block_jacobi">;
@@ -68,8 +68,9 @@ struct ConfBoundaryCondition
  */
 struct ConfBEM
 {
-  BoundaryDim   boundary_dim = 2; // The dimension of model boundary
-  SpaceDim      space_dim    = 3; // The dimension of embeding space
+  BoundaryDim   boundary_dim    = 2; // The dimension of model boundary
+  SpaceDim      space_dim       = 3; // The dimension of embeding space
+  std::uint32_t mesh_refinement = 0; // Number of global mesh refinement
   std::uint32_t fe_order_for_dirichlet_space =
     1;                                          // FE order for Dirichlet space
   std::uint32_t fe_order_for_neumann_space = 0; // FE order for Neumann space

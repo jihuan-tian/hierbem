@@ -8,9 +8,9 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
-set(_target laplace-bem-dirichlet-hmatrix)
+set(_target baseline-laplace-dirichlet-hmatrix)
 
-add_executable(${_target} laplace-bem-dirichlet-hmatrix.cc)
+add_executable(${_target} dirichlet-hmatrix.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})
@@ -21,6 +21,5 @@ target_compile_definitions(${_target}
 
 target_link_libraries(
   ${_target} hierbem Boost::program_options dl # Lazy way: always link with
-                                                    # libdl no matter if CUDA is
-                                                    # used or not
+  # libdl no matter if CUDA is used or not
 )

@@ -6,10 +6,13 @@ output_dir = 'output'
 [bem]
 boundary_dim = 2
 space_dim = 3
+mesh_refinement = 0
 fe_order_for_dirichlet_space = 1
 fe_order_for_neumann_space = 0
 problem_type = 'dirichlet'
 is_interior_problem = false
+precond_type = 'operator'
+vmult_type = 'serial_iterative'
 
 [hmatrix]
 n_min_for_ct = 32

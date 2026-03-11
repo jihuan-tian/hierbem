@@ -9,9 +9,9 @@
 // file LICENSE at the top level directory of HierBEM.
 
 /**
- * \file laplace-bem-neumann-hmatrix.cc
- * \brief Verify solving the Laplace problem with Neumann boundary condition
- * using H-matrix based BEM.
+ * \file dirichlet-hmatrix.cc
+ * \brief Baseline test for solving the Laplace problem with Dirichlet boundary
+ * condition using H-matrix based BEM.
  *
  * \ingroup test_cases
  * \author Jihuan Tian
@@ -20,6 +20,8 @@
 
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/multithread_info.h>
+
+#include <deal.II/fe/mapping_manifold.h>
 
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/manifold_lib.h>
@@ -48,6 +50,7 @@ struct CmdOpts
   unsigned int             dirichlet_space_fe_order;
   unsigned int             neumann_space_fe_order;
   unsigned int             mapping_order;
+  unsigned int             refinement;
   PreconditionerType       precond_type;
   IterativeSolverVmultType vmult_type;
 };
@@ -64,6 +67,7 @@ parse_cmdline(int argc, char *argv[])
     ("dirichlet-order,d", po::value<unsigned int>()->default_value(1), "Finite element space order for the Dirichlet data")
     ("neumann-order,n", po::value<unsigned int>()->default_value(0), "Finite element space order for the Neumann data")
     ("mapping-order,m", po::value<unsigned int>()->default_value(1), "Mapping order for the sphere")
+    ("refinement,r", po::value<unsigned int>()->default_value(5), "Number of global refinement when deal.ii is used to generate the mesh")
     ("precond-type,p", po::value<unsigned int>()->default_value(0), "Preconditioner for iterative solver: 0:H-Cholesky, 1:operator preconditioner, 2:identity")
     ("vmult-type,v", po::value<unsigned int>()->default_value(0), "H-matrix vmult type: 0:serial recursive, 1:serial iterative, 2:task parallel");
   // clang-format on
@@ -81,6 +85,7 @@ parse_cmdline(int argc, char *argv[])
   opts.dirichlet_space_fe_order = vm["dirichlet-order"].as<unsigned int>();
   opts.neumann_space_fe_order   = vm["neumann-order"].as<unsigned int>();
   opts.mapping_order            = vm["mapping-order"].as<unsigned int>();
+  opts.refinement               = vm["refinement"].as<unsigned int>();
 
   switch (vm["precond-type"].as<unsigned int>())
     {
@@ -126,41 +131,32 @@ parse_cmdline(int argc, char *argv[])
 }
 
 /**
- * Function object for the Neumann boundary condition data, which is also
- * the solution of the Dirichlet problem. The analytical expression is
+ * Function object for the Dirichlet boundary condition data, which is
+ * also the solution of the Neumann problem. The analytical expression is:
  * \f[
- * \frac{\pdiff u}{\pdiff n}\Big\vert_{\Gamma} = \frac{\langle x-x_c,x_0-x
- * \rangle}{4\pi\norm{x_0-x}^3\rho}
+ * u=\frac{1}{4\pi\norm{x-x_0}}
  * \f]
  */
-class NeumannBC : public Function<3>
+class DirichletBC : public Function<3>
 {
 public:
-  // N.B. This function should be defined outside class NeumannBC and
-  // class Example2, if not inline.
-  NeumannBC()
+  // N.B. This function should be defined outside class NeumannBC or class
+  // Example2, if no inline.
+  DirichletBC()
     : Function<3>()
     , x0(0.25, 0.25, 0.25)
-    , model_sphere_center(0.0, 0.0, 0.0)
-    , model_sphere_radius(1.0)
   {}
 
-  NeumannBC(const Point<3> &x0, const Point<3> &center, double radius)
+  DirichletBC(const Point<3> &x0)
     : Function<3>()
     , x0(x0)
-    , model_sphere_center(center)
-    , model_sphere_radius(radius)
   {}
 
   double
   value(const Point<3> &p, const unsigned int component = 0) const
   {
     (void)component;
-
-    Tensor<1, 3> diff_vector = x0 - p;
-
-    return ((p - model_sphere_center) * diff_vector) / 4.0 / numbers::PI /
-           std::pow(diff_vector.norm(), 3) / model_sphere_radius;
+    return 1.0 / 4.0 / numbers::PI / (p - x0).norm();
   }
 
 private:
@@ -168,8 +164,6 @@ private:
    * Location of the Dirac point source \f$\delta(x-x_0)\f$.
    */
   Point<3> x0;
-  Point<3> model_sphere_center;
-  double   model_sphere_radius;
 };
 
 int
@@ -181,7 +175,7 @@ main(int argc, char *argv[])
    * @internal Pop out the default "DEAL" prefix string.
    */
   // Write run-time logs to file
-  std::ofstream ofs("laplace-bem-neumann-hmatrix.log");
+  std::ofstream ofs("laplace-bem-dirichlet-hmatrix.log");
   deallog.pop();
   deallog.depth_console(0);
   deallog.depth_file(5);
@@ -199,8 +193,8 @@ main(int argc, char *argv[])
 
   ConfLaplaceBEM             bem_params{opts.dirichlet_space_fe_order,
                             opts.neumann_space_fe_order,
-                            ProblemType::NeumannBCProblem,
-                            false};
+                            ProblemType::DirichletBCProblem,
+                            true};
   ConfHMatrix                hmat_params{64, 64, 0.8, 5, 0.01};
   ConfHMatrix                hmat_preconditioner_params{64, 64, 1.0, 2, 0.1};
   ConfSauterQuad             sauter_quad_params;
@@ -226,14 +220,9 @@ main(int argc, char *argv[])
                                 linear_solver_params,
                                 op_precond_params,
                                 parallel_params);
-  bem.set_project_name("laplace-bem-neumann-hmatrix");
+  bem.set_project_name("laplace-bem-dirichlet-hmatrix");
   bem.set_preconditioner_type(opts.precond_type);
   bem.set_iterative_solver_vmult_type(opts.vmult_type);
-  if (opts.vmult_type == IterativeSolverVmultType::TaskParallel)
-    {
-      HMatrix<spacedim, double>::set_leaf_set_traversal_method(
-        HMatrix<spacedim, double>::SpaceFillingCurveType::Hilbert);
-    }
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");
@@ -261,37 +250,43 @@ main(int argc, char *argv[])
   Triangulation<spacedim> tria;
   // The manifold_id is set to 0 on the boundary faces in @p hyper_ball.
   GridGenerator::hyper_ball(tria, center, radius);
-  tria.refine_global(5);
+  tria.refine_global(opts.refinement);
 
-  // Create the map from material ids to manifold ids. By default, the material
-  // ids of all cells are zero, if the triangulation is created by a deal.ii
-  // function in GridGenerator.
+  Triangulation<dim, spacedim> surface_tria(
+    Triangulation<dim,
+                  spacedim>::MeshSmoothing::limit_level_difference_at_vertices);
+
+  // Create the map from material ids to manifold ids. By default, the
+  // material ids of all cells are zero, if the triangulation is created by a
+  // deal.ii function in GridGenerator.
   bem.get_manifold_description()[0] = 0;
 
-  Triangulation<dim, spacedim>      surface_tria;
+  // Create the map from manifold ids to manifold objects. Because in the
+  // destructor of LaplaceBEM the manifold objects will be released, the
+  // manifold object here is created on the heap.
   SphericalManifold<dim, spacedim> *ball_surface_manifold =
     new SphericalManifold<dim, spacedim>(center);
   bem.get_manifolds()[0] = ball_surface_manifold;
 
-  // We should first assign manifold objects to the empty surface triangulation,
-  // then perform surface mesh extraction.
+  // We should first assign manifold objects to the empty surface
+  // triangulation, then perform surface mesh extraction.
   surface_tria.set_manifold(0, *ball_surface_manifold);
   bem.extract_surface_triangulation(tria, std::move(surface_tria), true);
 
   // Create the map from manifold id to mapping order.
   bem.get_manifold_id_to_mapping_order()[0] = opts.mapping_order;
 
+  timer.stop();
+  print_wall_time(deallog, timer, "read mesh");
+
   // Build surface-to-volume and volume-to-surface relationship.
   bem.get_subdomain_topology().generate_single_domain_topology_for_dealii_model(
     {0});
 
-  timer.stop();
-  print_wall_time(deallog, timer, "read mesh");
-
   timer.start();
 
-  NeumannBC neumann_bc(source_loc, center, radius);
-  bem.assign_neumann_bc(neumann_bc);
+  DirichletBC dirichlet_bc(source_loc);
+  bem.assign_dirichlet_bc(dirichlet_bc);
 
   timer.stop();
   print_wall_time(deallog, timer, "assign boundary conditions");

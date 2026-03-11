@@ -9,9 +9,9 @@
 // file LICENSE at the top level directory of HierBEM.
 
 /**
- * \file laplace-bem-dirichlet-hmatrix-two-spheres.cc
- * \brief Verify solving the Laplace problem with Dirichlet boundary condition
- * using H-matrix based BEM. The two sphere model is solved.
+ * \file dirichlet-hmatrix-two-spheres.cc
+ * \brief Baseline test for solving the Laplace problem with Dirichlet boundary
+ * condition using H-matrix based BEM. The two sphere model is solved.
  *
  * \ingroup test_cases
  * \author Jihuan Tian
@@ -71,10 +71,10 @@ problemTypeLiteralToEnum(const ProblemTypeLiteral &literal)
 {
   switch (literal.value())
     {
-      case ProblemTypeLiteral::value_of<"neumann">():
-        return ProblemType::NeumannBCProblem;
       case ProblemTypeLiteral::value_of<"dirichlet">():
         return ProblemType::DirichletBCProblem;
+      case ProblemTypeLiteral::value_of<"neumann">():
+        return ProblemType::NeumannBCProblem;
       case ProblemTypeLiteral::value_of<"mixed">():
         return ProblemType::MixedBCProblem;
       default:
@@ -155,11 +155,8 @@ main(int argc, char *argv[])
     initWorkDir();
     const auto &conf_inst = ConfigFile::instance().getConfig();
 
-    /**
-     * @internal Pop out the default "DEAL" prefix string.
-     */
-    // Write run-time logs to file
-    std::ofstream ofs("hierbem_laplace.log");
+    std::ofstream ofs(conf_inst.project.project_name.value() +
+                      std::string(".log"));
     deallog.pop();
     deallog.depth_console(0);
     deallog.depth_file(5);
@@ -201,17 +198,11 @@ main(int argc, char *argv[])
                                   conf_inst.linear_solver,
                                   conf_inst.op_precond,
                                   conf_inst.parallel);
-    bem.set_project_name("hierbem_laplace");
+    bem.set_project_name(conf_inst.project.project_name.value());
     bem.set_preconditioner_type(
       preconditionerTypeLiteralToEnum(conf_inst.bem.precond_type));
     bem.set_iterative_solver_vmult_type(
       vmultTypeLiteralToEnum(conf_inst.bem.vmult_type));
-    if (vmultTypeLiteralToEnum(conf_inst.bem.vmult_type) ==
-        IterativeSolverVmultType::TaskParallel)
-      {
-        HMatrix<spacedim, double>::set_leaf_set_traversal_method(
-          HMatrix<spacedim, double>::SpaceFillingCurveType::Hilbert);
-      }
 
     timer.stop();
     print_wall_time(deallog, timer, "program preparation");
@@ -224,6 +215,9 @@ main(int argc, char *argv[])
                                                    "two-spheres.brep",
                                                    HBEM_TEST_MODEL_DIR
                                                    "two-spheres-fine.msh");
+
+    if (conf_inst.bem.mesh_refinement > 0)
+      bem.get_triangulation().refine_global(conf_inst.bem.mesh_refinement);
 
     // Generate two sphere manifolds.
     double                   inter_distance = 8.0;

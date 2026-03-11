@@ -41,6 +41,8 @@
 #include "dofs/dof_tools_ext.h"
 #include "helmholtz_acoustic_bem.h"
 #include "helmholtz_acoustic_bem.priv.hcu"
+#include "hmatrix/hmatrix.h"
+#include "hmatrix/hmatrix_vmult_strategy.h"
 #include "mapping/mapping_info.h"
 #include "quadrature/sauter_quadrature_tools.h"
 
@@ -152,6 +154,14 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
   set_iterative_solver_vmult_type(const IterativeSolverVmultType type)
 {
   priv_->vmult_type_ = type;
+  // When the H-matrix/vector multiplication type is task-parallel, we should
+  // iterate over the leaf set of each H-matrix by following the Hilbert space
+  // curve.
+  if (type == IterativeSolverVmultType::TaskParallel)
+    {
+      HMatrix<spacedim, RangeNumberType>::set_leaf_set_traversal_method(
+        HMatrix<spacedim, RangeNumberType>::SpaceFillingCurveType::Hilbert);
+    }
 }
 
 template <int dim,

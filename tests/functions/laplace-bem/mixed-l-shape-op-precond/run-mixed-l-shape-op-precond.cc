@@ -120,11 +120,6 @@ run_mixed_l_shape_op_precond(const IterativeSolverVmultType vmult_type)
   bem.set_project_name("mixed-l-shape-op-precond");
   bem.set_preconditioner_type(PreconditionerType::OperatorPreconditioning);
   bem.set_iterative_solver_vmult_type(vmult_type);
-  if (vmult_type == IterativeSolverVmultType::TaskParallel)
-    {
-      HMatrix<spacedim, double>::set_leaf_set_traversal_method(
-        HMatrix<spacedim, double>::SpaceFillingCurveType::Hilbert);
-    }
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");

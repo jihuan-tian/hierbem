@@ -9,8 +9,9 @@
 // file LICENSE at the top level directory of HierBEM.
 
 /**
- * @file laplace-bem-mixed-spanner-model.cc
- * @brief Verify solve Laplace mixed boundary value problem using \hmat.
+ * @file mixed-spanner.cc
+ * @brief Baseline test for solving the Laplace mixed boundary value problem
+ * using \hmat.
  *
  * @ingroup test_cases
  * @author Jihuan Tian
@@ -220,11 +221,6 @@ main(int argc, char *argv[])
   bem.set_project_name("laplace-bem-mixed-spanner");
   bem.set_preconditioner_type(opts.precond_type);
   bem.set_iterative_solver_vmult_type(opts.vmult_type);
-  if (opts.vmult_type == IterativeSolverVmultType::TaskParallel)
-    {
-      HMatrix<spacedim, double>::set_leaf_set_traversal_method(
-        HMatrix<spacedim, double>::SpaceFillingCurveType::Hilbert);
-    }
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");

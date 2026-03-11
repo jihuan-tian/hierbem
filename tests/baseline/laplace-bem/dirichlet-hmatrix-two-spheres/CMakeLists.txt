@@ -8,9 +8,9 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
-set(_target laplace-bem-dirichlet-hmatrix-two-spheres)
+set(_target baseline-laplace-dirichlet-hmatrix-two-spheres)
 
-add_executable(${_target} laplace-bem-dirichlet-hmatrix-two-spheres.cc)
+add_executable(${_target} dirichlet-hmatrix-two-spheres.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})

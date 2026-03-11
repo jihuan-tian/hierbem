@@ -9,7 +9,7 @@
 // file LICENSE at the top level directory of HierBEM.
 
 /**
- * @file test-dirichlet-full-matrix-single-thread.cc
+ * @file dirichlet-full-matrix-single-thread.cc
  * @brief Baseline test for solving Laplace problem with Dirichlet boundary
  * condition based on full matrix BEM, which runs in a single thread.
  *
