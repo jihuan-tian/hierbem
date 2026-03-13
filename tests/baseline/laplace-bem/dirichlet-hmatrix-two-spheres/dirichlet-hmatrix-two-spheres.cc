@@ -28,6 +28,7 @@
 #include <fmt/core.h>
 
 #include <exception>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -121,10 +122,11 @@ vmultTypeLiteralToEnum(const VmultTypeLiteral &literal)
 void
 initWorkDir()
 {
-  const auto &conf_inst  = ConfigFile::instance().getConfig();
-  const auto &output_dir = conf_inst.project.output_dir;
-  const auto &proj_name  = conf_inst.project.project_name.value();
-  const auto &work_dir   = std::filesystem::path(output_dir) / proj_name;
+  const auto       &conf_inst  = ConfigFile::instance().getConfig();
+  const std::string output_dir = conf_inst.project.output_dir;
+  const std::string proj_name  = conf_inst.project.project_name.value();
+  const std::filesystem::path work_dir =
+    std::filesystem::path(output_dir) / proj_name;
 
   // Create working directory if it doesn't exist
   std::error_code ec;
@@ -153,10 +155,10 @@ main(int argc, char *argv[])
 
     ConfigFile::instance().initialize(argv[1]); // Load configuration file
     initWorkDir();
-    const auto &conf_inst = ConfigFile::instance().getConfig();
+    const auto       &conf_inst    = ConfigFile::instance().getConfig();
+    const std::string project_name = conf_inst.project.project_name.value();
 
-    std::ofstream ofs(conf_inst.project.project_name.value() +
-                      std::string(".log"));
+    std::ofstream ofs(project_name + std::string(".log"));
     deallog.pop();
     deallog.depth_console(0);
     deallog.depth_file(5);
@@ -198,7 +200,7 @@ main(int argc, char *argv[])
                                   conf_inst.linear_solver,
                                   conf_inst.op_precond,
                                   conf_inst.parallel);
-    bem.set_project_name(conf_inst.project.project_name.value());
+    bem.set_project_name(project_name);
     bem.set_preconditioner_type(
       preconditionerTypeLiteralToEnum(conf_inst.bem.precond_type));
     bem.set_iterative_solver_vmult_type(
@@ -208,9 +210,8 @@ main(int argc, char *argv[])
     print_wall_time(deallog, timer, "program preparation");
 
     timer.start();
-
-    read_msh(HBEM_TEST_MODEL_DIR "two-spheres-fine.msh",
-             bem.get_triangulation());
+    std::ifstream mesh_in(HBEM_TEST_MODEL_DIR "two-spheres-fine.msh");
+    read_msh(mesh_in, bem.get_triangulation());
     bem.get_subdomain_topology().generate_topology(HBEM_TEST_MODEL_DIR
                                                    "two-spheres.brep",
                                                    HBEM_TEST_MODEL_DIR

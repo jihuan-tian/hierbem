@@ -4579,8 +4579,8 @@ namespace CUDAWrappers
              const SauterQuadratureTaskScalarData &scalar_data,
              const real_type                       mass_matrix_entry,
              const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
-                                    &scratch_data,
-             HMatrixAssemblyProfile *hmat_profile)
+                                                     &scratch_data,
+             [[maybe_unused]] HMatrixAssemblyProfile *hmat_profile)
   {
 #if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
     LogStream::Prefix prefix_string(
@@ -4765,8 +4765,8 @@ namespace CUDAWrappers
       const CUDAKernelNumberType                                kernel_factor,
       const unsigned int                                        block_size,
       const CUDABEMValues<dim, spacedim, real_type>            &bem_values,
-      const cudaStream_t      cuda_stream_handle,
-      HMatrixAssemblyProfile *hmat_profile)
+      const cudaStream_t                       cuda_stream_handle,
+      [[maybe_unused]] HMatrixAssemblyProfile *hmat_profile)
   {
 #if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
     LogStream::Prefix prefix_string(

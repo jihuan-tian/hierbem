@@ -55,10 +55,11 @@ public:
   void
   initWorkDir()
   {
-    const auto &conf_inst  = ConfigFile::instance().getConfig();
-    const auto &output_dir = conf_inst.project.output_dir;
-    const auto &proj_name  = conf_inst.project.project_name.value();
-    const auto &work_dir   = std::filesystem::path(output_dir) / proj_name;
+    const auto       &conf_inst  = ConfigFile::instance().getConfig();
+    const std::string output_dir = conf_inst.project.output_dir;
+    const std::string proj_name  = conf_inst.project.project_name.value();
+    const std::filesystem::path work_dir =
+      std::filesystem::path(output_dir) / proj_name;
 
     // Create working directory if it doesn't exist
     std::error_code ec;
