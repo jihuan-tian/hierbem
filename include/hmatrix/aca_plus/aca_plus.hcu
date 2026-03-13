@@ -58,6 +58,7 @@
 #include "config.h"
 #include "config_file/config_structs.h"
 #include "hmatrix/hmatrix.h"
+#include "hmatrix/hmatrix_assembly_profile.h"
 #include "linear_algebra/cu_table.hcu"
 #include "linear_algebra/lapack_full_matrix_ext.h"
 #include "linear_algebra/linalg.h"
@@ -8544,6 +8545,12 @@ fill_hmatrix_with_aca_plus_smp(
       real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+  HMatrixAssemblyProfile *hmat_profile = new HMatrixAssemblyProfile();
+#else
+  HMatrixAssemblyProfile *hmat_profile = nullptr;
+#endif
+
   LogStream::Prefix prefix_string("build_hmatrix_aca");
 #if ENABLE_NVTX == 1
   HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_hmat");
@@ -8716,7 +8723,8 @@ fill_hmatrix_with_aca_plus_smp(
             material_id_to_mapping_index,
             normal_detector,
             kernel.is_symmetric(),
-            enable_build_symmetric_hmat);
+            enable_build_symmetric_hmat,
+            hmat_profile);
       });
     }
 
@@ -8732,70 +8740,68 @@ fill_hmatrix_with_aca_plus_smp(
     sauter_quad_near_field_params.consumer_num_common_vertex);
   const unsigned int consumer_num_regular = static_cast<unsigned int>(
     sauter_quad_near_field_params.consumer_num_regular);
-  const unsigned int consumer_set_num =
-    static_cast<unsigned int>(sauter_quad_near_field_params.consumer_set_num);
-  consumers.reserve((consumer_num_same_panel + consumer_num_common_edge +
-                     consumer_num_common_vertex + consumer_num_regular) *
-                    consumer_set_num);
+  consumers.reserve(consumer_num_same_panel + consumer_num_common_edge +
+                    consumer_num_common_vertex + consumer_num_regular);
 
-  for (unsigned int m = 0; m < consumer_set_num; m++)
-    {
-      for (unsigned int i = 0; i < consumer_num_same_panel; i++)
-        consumers.emplace_back([&]() {
-          HierBEM::CUDAWrappers::
-            sauter_quadrature_for_near_field_matrix_entries_consumer(
-              kernel,
-              kernel_factor,
-              ring_buffer_for_same_panel,
-              bem_values_gpu,
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.task_num_per_block),
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.consumer_wait_time_us));
-        });
+  for (unsigned int i = 0; i < consumer_num_same_panel; i++)
+    consumers.emplace_back([&]() {
+      HierBEM::CUDAWrappers::
+        sauter_quadrature_for_near_field_matrix_entries_consumer(
+          kernel,
+          kernel_factor,
+          ring_buffer_for_same_panel,
+          bem_values_gpu,
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.task_num_per_block),
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.consumer_wait_time_us),
+          hmat_profile);
+    });
 
-      for (unsigned int i = 0; i < consumer_num_common_edge; i++)
-        consumers.emplace_back([&]() {
-          HierBEM::CUDAWrappers::
-            sauter_quadrature_for_near_field_matrix_entries_consumer(
-              kernel,
-              kernel_factor,
-              ring_buffer_for_common_edge,
-              bem_values_gpu,
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.task_num_per_block),
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.consumer_wait_time_us));
-        });
+  for (unsigned int i = 0; i < consumer_num_common_edge; i++)
+    consumers.emplace_back([&]() {
+      HierBEM::CUDAWrappers::
+        sauter_quadrature_for_near_field_matrix_entries_consumer(
+          kernel,
+          kernel_factor,
+          ring_buffer_for_common_edge,
+          bem_values_gpu,
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.task_num_per_block),
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.consumer_wait_time_us),
+          hmat_profile);
+    });
 
-      for (unsigned int i = 0; i < consumer_num_common_vertex; i++)
-        consumers.emplace_back([&]() {
-          HierBEM::CUDAWrappers::
-            sauter_quadrature_for_near_field_matrix_entries_consumer(
-              kernel,
-              kernel_factor,
-              ring_buffer_for_common_vertex,
-              bem_values_gpu,
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.task_num_per_block),
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.consumer_wait_time_us));
-        });
+  for (unsigned int i = 0; i < consumer_num_common_vertex; i++)
+    consumers.emplace_back([&]() {
+      HierBEM::CUDAWrappers::
+        sauter_quadrature_for_near_field_matrix_entries_consumer(
+          kernel,
+          kernel_factor,
+          ring_buffer_for_common_vertex,
+          bem_values_gpu,
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.task_num_per_block),
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.consumer_wait_time_us),
+          hmat_profile);
+    });
 
-      for (unsigned int i = 0; i < consumer_num_regular; i++)
-        consumers.emplace_back([&]() {
-          HierBEM::CUDAWrappers::
-            sauter_quadrature_for_near_field_matrix_entries_consumer(
-              kernel,
-              kernel_factor,
-              ring_buffer_for_regular,
-              bem_values_gpu,
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.task_num_per_block),
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.consumer_wait_time_us));
-        });
-    }
+  for (unsigned int i = 0; i < consumer_num_regular; i++)
+    consumers.emplace_back([&]() {
+      HierBEM::CUDAWrappers::
+        sauter_quadrature_for_near_field_matrix_entries_consumer(
+          kernel,
+          kernel_factor,
+          ring_buffer_for_regular,
+          bem_values_gpu,
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.task_num_per_block),
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.consumer_wait_time_us),
+          hmat_profile);
+    });
 
   /**
    * @internal Wait for all producer and consumer threads to exit.
@@ -8845,6 +8851,9 @@ fill_hmatrix_with_aca_plus_smp(
   ring_buffer_for_regular.release();
 
   timer.stop();
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+  hmat_profile->near_field_total_time = timer.last_wall_time();
+#endif
   print_wall_time(deallog, timer, "build near field H-matrix nodes");
 
   /**
@@ -8900,12 +8909,20 @@ fill_hmatrix_with_aca_plus_smp(
     }
 
   timer.stop();
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+  hmat_profile->far_field_total_time = timer.last_wall_time();
+#endif
   print_wall_time(deallog, timer, "build far field H-matrix nodes");
 
   /**
    * Release BEM values on the GPU device.
    */
   bem_values_gpu.release();
+
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+  deallog << *hmat_profile << std::endl;
+  delete hmat_profile;
+#endif
 }
 
 
@@ -9002,6 +9019,12 @@ fill_hmatrix_with_aca_plus_smp(
     std::is_same<
       real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+  HMatrixAssemblyProfile *hmat_profile = new HMatrixAssemblyProfile();
+#else
+  HMatrixAssemblyProfile *hmat_profile = nullptr;
+#endif
 
   LogStream::Prefix prefix_string("build_hmatrix_aca with stabilization");
 #if ENABLE_NVTX == 1
@@ -9175,7 +9198,8 @@ fill_hmatrix_with_aca_plus_smp(
             material_id_to_mapping_index,
             normal_detector,
             kernel.is_symmetric(),
-            enable_build_symmetric_hmat);
+            enable_build_symmetric_hmat,
+            hmat_profile);
       });
     }
 
@@ -9191,70 +9215,68 @@ fill_hmatrix_with_aca_plus_smp(
     sauter_quad_near_field_params.consumer_num_common_vertex);
   const unsigned int consumer_num_regular = static_cast<unsigned int>(
     sauter_quad_near_field_params.consumer_num_regular);
-  const unsigned int consumer_set_num =
-    static_cast<unsigned int>(sauter_quad_near_field_params.consumer_set_num);
-  consumers.reserve((consumer_num_same_panel + consumer_num_common_edge +
-                     consumer_num_common_vertex + consumer_num_regular) *
-                    consumer_set_num);
+  consumers.reserve(consumer_num_same_panel + consumer_num_common_edge +
+                    consumer_num_common_vertex + consumer_num_regular);
 
-  for (unsigned int m = 0; m < consumer_set_num; m++)
-    {
-      for (unsigned int i = 0; i < consumer_num_same_panel; i++)
-        consumers.emplace_back([&]() {
-          HierBEM::CUDAWrappers::
-            sauter_quadrature_for_near_field_matrix_entries_consumer(
-              kernel,
-              kernel_factor,
-              ring_buffer_for_same_panel,
-              bem_values_gpu,
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.task_num_per_block),
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.consumer_wait_time_us));
-        });
+  for (unsigned int i = 0; i < consumer_num_same_panel; i++)
+    consumers.emplace_back([&]() {
+      HierBEM::CUDAWrappers::
+        sauter_quadrature_for_near_field_matrix_entries_consumer(
+          kernel,
+          kernel_factor,
+          ring_buffer_for_same_panel,
+          bem_values_gpu,
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.task_num_per_block),
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.consumer_wait_time_us),
+          hmat_profile);
+    });
 
-      for (unsigned int i = 0; i < consumer_num_common_edge; i++)
-        consumers.emplace_back([&]() {
-          HierBEM::CUDAWrappers::
-            sauter_quadrature_for_near_field_matrix_entries_consumer(
-              kernel,
-              kernel_factor,
-              ring_buffer_for_common_edge,
-              bem_values_gpu,
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.task_num_per_block),
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.consumer_wait_time_us));
-        });
+  for (unsigned int i = 0; i < consumer_num_common_edge; i++)
+    consumers.emplace_back([&]() {
+      HierBEM::CUDAWrappers::
+        sauter_quadrature_for_near_field_matrix_entries_consumer(
+          kernel,
+          kernel_factor,
+          ring_buffer_for_common_edge,
+          bem_values_gpu,
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.task_num_per_block),
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.consumer_wait_time_us),
+          hmat_profile);
+    });
 
-      for (unsigned int i = 0; i < consumer_num_common_vertex; i++)
-        consumers.emplace_back([&]() {
-          HierBEM::CUDAWrappers::
-            sauter_quadrature_for_near_field_matrix_entries_consumer(
-              kernel,
-              kernel_factor,
-              ring_buffer_for_common_vertex,
-              bem_values_gpu,
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.task_num_per_block),
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.consumer_wait_time_us));
-        });
+  for (unsigned int i = 0; i < consumer_num_common_vertex; i++)
+    consumers.emplace_back([&]() {
+      HierBEM::CUDAWrappers::
+        sauter_quadrature_for_near_field_matrix_entries_consumer(
+          kernel,
+          kernel_factor,
+          ring_buffer_for_common_vertex,
+          bem_values_gpu,
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.task_num_per_block),
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.consumer_wait_time_us),
+          hmat_profile);
+    });
 
-      for (unsigned int i = 0; i < consumer_num_regular; i++)
-        consumers.emplace_back([&]() {
-          HierBEM::CUDAWrappers::
-            sauter_quadrature_for_near_field_matrix_entries_consumer(
-              kernel,
-              kernel_factor,
-              ring_buffer_for_regular,
-              bem_values_gpu,
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.task_num_per_block),
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.consumer_wait_time_us));
-        });
-    }
+  for (unsigned int i = 0; i < consumer_num_regular; i++)
+    consumers.emplace_back([&]() {
+      HierBEM::CUDAWrappers::
+        sauter_quadrature_for_near_field_matrix_entries_consumer(
+          kernel,
+          kernel_factor,
+          ring_buffer_for_regular,
+          bem_values_gpu,
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.task_num_per_block),
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.consumer_wait_time_us),
+          hmat_profile);
+    });
 
   /**
    * @internal Wait for all producer and consumer threads to exit.
@@ -9330,6 +9352,9 @@ fill_hmatrix_with_aca_plus_smp(
 #endif
 
   timer.stop();
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+  hmat_profile->near_field_total_time = timer.last_wall_time();
+#endif
   print_wall_time(deallog, timer, "build near field H-matrix nodes");
 
   /**
@@ -9387,12 +9412,20 @@ fill_hmatrix_with_aca_plus_smp(
     }
 
   timer.stop();
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+  hmat_profile->far_field_total_time = timer.last_wall_time();
+#endif
   print_wall_time(deallog, timer, "build far field H-matrix nodes");
 
   /**
    * Release BEM values on the GPU device.
    */
   bem_values_gpu.release();
+
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+  deallog << *hmat_profile << std::endl;
+  delete hmat_profile;
+#endif
 }
 
 
@@ -9490,6 +9523,12 @@ fill_hmatrix_with_aca_plus_smp(
     std::is_same<
       real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+  HMatrixAssemblyProfile *hmat_profile = new HMatrixAssemblyProfile();
+#else
+  HMatrixAssemblyProfile *hmat_profile = nullptr;
+#endif
 
   LogStream::Prefix prefix_string("build_hmatrix_aca with mass matrix");
 #if ENABLE_NVTX == 1
@@ -9665,7 +9704,8 @@ fill_hmatrix_with_aca_plus_smp(
             material_id_to_mapping_index,
             normal_detector,
             kernel.is_symmetric(),
-            enable_build_symmetric_hmat);
+            enable_build_symmetric_hmat,
+            hmat_profile);
       });
     }
 
@@ -9681,70 +9721,68 @@ fill_hmatrix_with_aca_plus_smp(
     sauter_quad_near_field_params.consumer_num_common_vertex);
   const unsigned int consumer_num_regular = static_cast<unsigned int>(
     sauter_quad_near_field_params.consumer_num_regular);
-  const unsigned int consumer_set_num =
-    static_cast<unsigned int>(sauter_quad_near_field_params.consumer_set_num);
-  consumers.reserve((consumer_num_same_panel + consumer_num_common_edge +
-                     consumer_num_common_vertex + consumer_num_regular) *
-                    consumer_set_num);
+  consumers.reserve(consumer_num_same_panel + consumer_num_common_edge +
+                    consumer_num_common_vertex + consumer_num_regular);
 
-  for (unsigned int m = 0; m < consumer_set_num; m++)
-    {
-      for (unsigned int i = 0; i < consumer_num_same_panel; i++)
-        consumers.emplace_back([&]() {
-          HierBEM::CUDAWrappers::
-            sauter_quadrature_for_near_field_matrix_entries_consumer(
-              kernel,
-              kernel_factor,
-              ring_buffer_for_same_panel,
-              bem_values_gpu,
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.task_num_per_block),
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.consumer_wait_time_us));
-        });
+  for (unsigned int i = 0; i < consumer_num_same_panel; i++)
+    consumers.emplace_back([&]() {
+      HierBEM::CUDAWrappers::
+        sauter_quadrature_for_near_field_matrix_entries_consumer(
+          kernel,
+          kernel_factor,
+          ring_buffer_for_same_panel,
+          bem_values_gpu,
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.task_num_per_block),
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.consumer_wait_time_us),
+          hmat_profile);
+    });
 
-      for (unsigned int i = 0; i < consumer_num_common_edge; i++)
-        consumers.emplace_back([&]() {
-          HierBEM::CUDAWrappers::
-            sauter_quadrature_for_near_field_matrix_entries_consumer(
-              kernel,
-              kernel_factor,
-              ring_buffer_for_common_edge,
-              bem_values_gpu,
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.task_num_per_block),
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.consumer_wait_time_us));
-        });
+  for (unsigned int i = 0; i < consumer_num_common_edge; i++)
+    consumers.emplace_back([&]() {
+      HierBEM::CUDAWrappers::
+        sauter_quadrature_for_near_field_matrix_entries_consumer(
+          kernel,
+          kernel_factor,
+          ring_buffer_for_common_edge,
+          bem_values_gpu,
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.task_num_per_block),
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.consumer_wait_time_us),
+          hmat_profile);
+    });
 
-      for (unsigned int i = 0; i < consumer_num_common_vertex; i++)
-        consumers.emplace_back([&]() {
-          HierBEM::CUDAWrappers::
-            sauter_quadrature_for_near_field_matrix_entries_consumer(
-              kernel,
-              kernel_factor,
-              ring_buffer_for_common_vertex,
-              bem_values_gpu,
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.task_num_per_block),
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.consumer_wait_time_us));
-        });
+  for (unsigned int i = 0; i < consumer_num_common_vertex; i++)
+    consumers.emplace_back([&]() {
+      HierBEM::CUDAWrappers::
+        sauter_quadrature_for_near_field_matrix_entries_consumer(
+          kernel,
+          kernel_factor,
+          ring_buffer_for_common_vertex,
+          bem_values_gpu,
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.task_num_per_block),
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.consumer_wait_time_us),
+          hmat_profile);
+    });
 
-      for (unsigned int i = 0; i < consumer_num_regular; i++)
-        consumers.emplace_back([&]() {
-          HierBEM::CUDAWrappers::
-            sauter_quadrature_for_near_field_matrix_entries_consumer(
-              kernel,
-              kernel_factor,
-              ring_buffer_for_regular,
-              bem_values_gpu,
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.task_num_per_block),
-              static_cast<unsigned int>(
-                sauter_quad_near_field_params.consumer_wait_time_us));
-        });
-    }
+  for (unsigned int i = 0; i < consumer_num_regular; i++)
+    consumers.emplace_back([&]() {
+      HierBEM::CUDAWrappers::
+        sauter_quadrature_for_near_field_matrix_entries_consumer(
+          kernel,
+          kernel_factor,
+          ring_buffer_for_regular,
+          bem_values_gpu,
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.task_num_per_block),
+          static_cast<unsigned int>(
+            sauter_quad_near_field_params.consumer_wait_time_us),
+          hmat_profile);
+    });
 
   /**
    * @internal Wait for all producer and consumer threads to exit.
@@ -9794,6 +9832,9 @@ fill_hmatrix_with_aca_plus_smp(
   ring_buffer_for_regular.release();
 
   timer.stop();
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+  hmat_profile->near_field_total_time = timer.last_wall_time();
+#endif
   print_wall_time(deallog, timer, "build near field H-matrix nodes");
 
   /**
@@ -9849,12 +9890,20 @@ fill_hmatrix_with_aca_plus_smp(
     }
 
   timer.stop();
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+  hmat_profile->far_field_total_time = timer.last_wall_time();
+#endif
   print_wall_time(deallog, timer, "build far field H-matrix nodes");
 
   /**
    * Release BEM values on the GPU device.
    */
   bem_values_gpu.release();
+
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+  deallog << *hmat_profile << std::endl;
+  delete hmat_profile;
+#endif
 }
 
 HBEM_NS_CLOSE

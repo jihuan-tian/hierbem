@@ -30,11 +30,10 @@ aca_relative_err = 0.1
 
 [sauter_quad]
 near_field.producer_num = 2
-near_field.consumer_num_same_panel = 1;
-near_field.consumer_num_common_edge = 1;
-near_field.consumer_num_common_vertex = 1;
-near_field.consumer_num_regular = 2;
-near_field.consumer_set_num = 1
+near_field.consumer_num_same_panel = 1
+near_field.consumer_num_common_edge = 1
+near_field.consumer_num_common_vertex = 1
+near_field.consumer_num_regular = 2
 near_field.task_num_per_block = 256
 near_field.block_num_per_batch = 8
 near_field.batch_num_in_buffer = 8
@@ -61,10 +60,10 @@ hyper_singular_order.regular = 3
 
 [sauter_quad_precond]
 near_field.producer_num = 2
-near_field.consumer_num_same_panel = 1;
-near_field.consumer_num_common_edge = 1;
-near_field.consumer_num_common_vertex = 1;
-near_field.consumer_num_regular = 2;
+near_field.consumer_num_same_panel = 1
+near_field.consumer_num_common_edge = 1
+near_field.consumer_num_common_vertex = 1
+near_field.consumer_num_regular = 2
 near_field.consumer_set_num = 1
 near_field.task_num_per_block = 256
 near_field.block_num_per_batch = 8
@@ -103,7 +102,7 @@ omega = 1.0
 log_history = true
 log_result = true
 
-[misc]
+[parallel]
 tbb_thread_num = -1
 cuda_stack_size_kb = 10240
 hmat_far_field_grain_size = 1

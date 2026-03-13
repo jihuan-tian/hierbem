@@ -75,10 +75,6 @@ struct ConfSauterQuadNearField
   std::uint32_t consumer_num_common_edge   = 1;
   std::uint32_t consumer_num_common_vertex = 1;
   std::uint32_t consumer_num_regular       = 2;
-  // The number of consumer thread sets. Each set contains four consumer
-  // threads, which correspond to the four types of ring buffers used in the
-  // producer-consumer model.
-  std::uint32_t consumer_set_num = 1;
   // Number of Sauter quadrature tasks in a thread block.
   std::uint32_t task_num_per_block = 256;
   // Number of thread blocks in a task batch.

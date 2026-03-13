@@ -21,6 +21,9 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/numbers.h>
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+#  include <deal.II/base/timer.h>
+#endif
 #include <deal.II/base/utilities.h>
 
 #include <deal.II/dofs/dof_accessor.h>
@@ -58,6 +61,7 @@
 #include "cuda_complex.hcu"
 #include "dofs/dof_to_cell_topology.h"
 #include "hmatrix/hmatrix.h"
+#include "hmatrix/hmatrix_assembly_profile.h"
 #include "mapping/mapping_q_ext.h"
 #include "sauter_quadrature_tools.h"
 #include "utilities/cu_profile.hcu"
@@ -2450,7 +2454,8 @@ namespace CUDAWrappers
              const SauterQuadratureTaskScalarData &scalar_data,
              const real_type                       mass_matrix_entry,
              const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
-               &scratch_data);
+                                    &scratch_data,
+             HMatrixAssemblyProfile *hmat_profile = nullptr);
 
     /**
      * Fetch and process quadrature tasks from the ring buffer in batch.
@@ -2462,7 +2467,8 @@ namespace CUDAWrappers
       const CUDAKernelNumberType                                kernel_factor,
       const unsigned int                                        block_size,
       const CUDABEMValues<dim, spacedim, real_type>            &bem_values,
-      const cudaStream_t cuda_stream_handle);
+      const cudaStream_t      cuda_stream_handle,
+      HMatrixAssemblyProfile *hmat_profile = nullptr);
 
     /**
      * Print the current values of all ring buffer pointers. For debugging
@@ -4573,7 +4579,8 @@ namespace CUDAWrappers
              const SauterQuadratureTaskScalarData &scalar_data,
              const real_type                       mass_matrix_entry,
              const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
-               &scratch_data)
+                                    &scratch_data,
+             HMatrixAssemblyProfile *hmat_profile)
   {
 #if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
     LogStream::Prefix prefix_string(
@@ -4613,6 +4620,10 @@ namespace CUDAWrappers
       print_pointers(deallog);
 #endif
     } // Release lock on the ring buffer
+
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+    Timer timer;
+#endif
 
     {
 #if ENABLE_NVTX == 1
@@ -4729,6 +4740,13 @@ namespace CUDAWrappers
       {
         batch_task_ready.notify_all();
       }
+
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+    timer.stop();
+    Assert(hmat_profile != nullptr, ExcInternalError());
+    hmat_profile->producer_time_per_type[cell_neighboring_type].fetch_add(
+      timer.last_wall_time());
+#endif
   }
 
 
@@ -4747,7 +4765,8 @@ namespace CUDAWrappers
       const CUDAKernelNumberType                                kernel_factor,
       const unsigned int                                        block_size,
       const CUDABEMValues<dim, spacedim, real_type>            &bem_values,
-      const cudaStream_t cuda_stream_handle)
+      const cudaStream_t      cuda_stream_handle,
+      HMatrixAssemblyProfile *hmat_profile)
   {
 #if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
     LogStream::Prefix prefix_string(
@@ -4823,6 +4842,9 @@ namespace CUDAWrappers
 #endif
     } // Release the buffer lock
 
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+    Timer timer;
+#endif
 
     if (is_finished)
       {
@@ -5365,6 +5387,13 @@ namespace CUDAWrappers
      */
     buffer_not_full.notify_all();
 
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+    timer.stop();
+    Assert(hmat_profile != nullptr, ExcInternalError());
+    hmat_profile->consumer_time_per_type[cell_neighboring_type].fetch_add(
+      timer.last_wall_time());
+#endif
+
     return is_finished;
   }
 
@@ -5814,7 +5843,8 @@ namespace CUDAWrappers
                                 &material_id_to_mapping_index,
     const SurfaceNormalDetector &normal_detector,
     const bool                   is_kernel_symmetric,
-    const bool                   enable_build_symmetric_hmat = false)
+    const bool                   enable_build_symmetric_hmat = false,
+    HMatrixAssemblyProfile      *hmat_profile                = nullptr)
   {
     using real_type =
       typename numbers::NumberTraits<RangeNumberType>::real_type;
@@ -5949,7 +5979,8 @@ namespace CUDAWrappers
                               material_id_to_mapping_index,
                               normal_detector,
                               scratch_data,
-                              copy_data);
+                              copy_data,
+                              hmat_profile);
                           }
                       }
 
@@ -6010,7 +6041,8 @@ namespace CUDAWrappers
                               material_id_to_mapping_index,
                               normal_detector,
                               scratch_data,
-                              copy_data);
+                              copy_data,
+                              hmat_profile);
                           }
                       }
 
@@ -6069,7 +6101,8 @@ namespace CUDAWrappers
                       material_id_to_mapping_index,
                       normal_detector,
                       scratch_data,
-                      copy_data);
+                      copy_data,
+                      hmat_profile);
                   }
               }
           }
@@ -6179,7 +6212,8 @@ namespace CUDAWrappers
                                 &material_id_to_mapping_index,
     const SurfaceNormalDetector &normal_detector,
     const bool                   is_kernel_symmetric,
-    const bool                   enable_build_symmetric_hmat = false)
+    const bool                   enable_build_symmetric_hmat = false,
+    HMatrixAssemblyProfile      *hmat_profile                = nullptr)
   {
     using real_type =
       typename numbers::NumberTraits<RangeNumberType>::real_type;
@@ -6325,7 +6359,8 @@ namespace CUDAWrappers
                               normal_detector,
                               mass_matrix_scratch_data,
                               scratch_data,
-                              copy_data);
+                              copy_data,
+                              hmat_profile);
                           }
                       }
 
@@ -6388,7 +6423,8 @@ namespace CUDAWrappers
                               normal_detector,
                               mass_matrix_scratch_data,
                               scratch_data,
-                              copy_data);
+                              copy_data,
+                              hmat_profile);
                           }
                       }
 
@@ -6449,7 +6485,8 @@ namespace CUDAWrappers
                       normal_detector,
                       mass_matrix_scratch_data,
                       scratch_data,
-                      copy_data);
+                      copy_data,
+                      hmat_profile);
                   }
               }
           }
@@ -6485,9 +6522,10 @@ namespace CUDAWrappers
       dim,
       spacedim,
       typename numbers::NumberTraits<RangeNumberType>::real_type>
-                      &bem_values_gpu,
-    const unsigned int block_size,
-    const unsigned int consumer_wait_time_us)
+                           &bem_values_gpu,
+    const unsigned int      block_size,
+    const unsigned int      consumer_wait_time_us,
+    HMatrixAssemblyProfile *hmat_profile = nullptr)
   {
     using real_type =
       typename numbers::NumberTraits<RangeNumberType>::real_type;
@@ -6516,8 +6554,12 @@ namespace CUDAWrappers
      * Continuously process the Sauter quadrature tasks in the ring buffer
      * for same panel case.
      */
-    while (!ring_buffer.fetch_and_process_task_batch(
-      kernel, kernel_factor, block_size, bem_values_gpu, cuda_stream_handle))
+    while (!ring_buffer.fetch_and_process_task_batch(kernel,
+                                                     kernel_factor,
+                                                     block_size,
+                                                     bem_values_gpu,
+                                                     cuda_stream_handle,
+                                                     hmat_profile))
       {
         std::this_thread::sleep_for(
           std::chrono::microseconds(consumer_wait_time_us));
@@ -6610,7 +6652,8 @@ namespace CUDAWrappers
                                 &material_id_to_mapping_index,
     const SurfaceNormalDetector &normal_detector,
     PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
-    PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+    PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
+    HMatrixAssemblyProfile *hmat_profile = nullptr)
   {
     using real_type =
       typename numbers::NumberTraits<RangeNumberType>::real_type;
@@ -6676,6 +6719,10 @@ namespace CUDAWrappers
         for (auto ky_cell_iter_pointer :
              ky_dof_to_cell_topo[j_global_dof_index])
           {
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+            Timer timer;
+#endif
+
             const typename DoFHandler<dim, spacedim>::cell_iterator
               &ky_cell_iter = *ky_cell_iter_pointer;
 
@@ -6756,6 +6803,15 @@ namespace CUDAWrappers
             unsigned int j_index =
               j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+            timer.stop();
+            Assert(hmat_profile != nullptr, ExcInternalError());
+            hmat_profile->producer_time_per_type[cell_neighboring_type]
+              .fetch_add(timer.last_wall_time());
+            hmat_profile->near_field_tasks_per_type[cell_neighboring_type]
+              .fetch_add(1);
+#endif
+
 #if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
             deallog << "Create Sauter task: " << fullmat << ","
                     << i_global_dof_index << "," << j_global_dof_index << ","
@@ -6785,7 +6841,8 @@ namespace CUDAWrappers
                         is_kx_normal_inward,
                         is_ky_normal_inward),
                       0.,
-                      scratch_data);
+                      scratch_data,
+                      hmat_profile);
 
                     break;
                   }
@@ -6809,7 +6866,8 @@ namespace CUDAWrappers
                         is_kx_normal_inward,
                         is_ky_normal_inward),
                       0.,
-                      scratch_data);
+                      scratch_data,
+                      hmat_profile);
 
                     break;
                   }
@@ -6833,7 +6891,8 @@ namespace CUDAWrappers
                         is_kx_normal_inward,
                         is_ky_normal_inward),
                       0.,
-                      scratch_data);
+                      scratch_data,
+                      hmat_profile);
 
                     break;
                   }
@@ -6857,7 +6916,8 @@ namespace CUDAWrappers
                         is_kx_normal_inward,
                         is_ky_normal_inward),
                       0.,
-                      scratch_data);
+                      scratch_data,
+                      hmat_profile);
 
                     break;
                   }
@@ -6958,7 +7018,8 @@ namespace CUDAWrappers
     const SurfaceNormalDetector &normal_detector,
     CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
     PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
-    PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+    PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
+    HMatrixAssemblyProfile *hmat_profile = nullptr)
   {
     using real_type =
       typename numbers::NumberTraits<RangeNumberType>::real_type;
@@ -7025,6 +7086,10 @@ namespace CUDAWrappers
         for (auto ky_cell_iter_pointer :
              ky_dof_to_cell_topo[j_global_dof_index])
           {
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+            Timer timer;
+#endif
+
             const typename DoFHandler<dim, spacedim>::cell_iterator
                               &ky_cell_iter = *ky_cell_iter_pointer;
             const unsigned int ky_cell_index =
@@ -7268,7 +7333,8 @@ namespace CUDAWrappers
                         is_kx_normal_inward,
                         is_ky_normal_inward),
                       mass_matrix_entry,
-                      scratch_data);
+                      scratch_data,
+                      hmat_profile);
 
                     break;
                   }
@@ -7292,7 +7358,8 @@ namespace CUDAWrappers
                         is_kx_normal_inward,
                         is_ky_normal_inward),
                       mass_matrix_entry,
-                      scratch_data);
+                      scratch_data,
+                      hmat_profile);
 
                     break;
                   }
@@ -7316,7 +7383,8 @@ namespace CUDAWrappers
                         is_kx_normal_inward,
                         is_ky_normal_inward),
                       mass_matrix_entry,
-                      scratch_data);
+                      scratch_data,
+                      hmat_profile);
 
                     break;
                   }
@@ -7340,7 +7408,8 @@ namespace CUDAWrappers
                         is_kx_normal_inward,
                         is_ky_normal_inward),
                       mass_matrix_entry,
-                      scratch_data);
+                      scratch_data,
+                      hmat_profile);
 
                     break;
                   }
@@ -7350,6 +7419,15 @@ namespace CUDAWrappers
                     break;
                   }
               }
+
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+            timer.stop();
+            Assert(hmat_profile != nullptr, ExcInternalError());
+            hmat_profile->producer_time_per_type[cell_neighboring_type]
+              .fetch_add(timer.last_wall_time());
+            hmat_profile->near_field_tasks_per_type[cell_neighboring_type]
+              .fetch_add(1);
+#endif
           }
       }
   }
@@ -8690,17 +8768,7 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
           /**
            * @internal Copy the scratch data and copy data from CPU to GPU.
            */
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.start();
-#endif
           scratch_data_gpu.assign_from_host(scratch_data);
-
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.stop();
-          print_wall_time(scratch_data.log_stream,
-                          scratch_data.timer,
-                          "copy scratch data from host to device");
-#endif
 
           /**
            * @internal Determine thread block dimensions.
@@ -8711,9 +8779,6 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
             configure_thread_blocks_for_sauter_quadrature_points(
               cell_neighboring_type, bem_values_gpu, blocks_rect, threads_rect);
 
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.start();
-#endif
           switch (cell_neighboring_type)
             {
                 case CellNeighboringType::SamePanel: {
@@ -8815,22 +8880,12 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
                 }
             }
 
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.stop();
-          print_wall_time(scratch_data.log_stream,
-                          scratch_data.timer,
-                          "calculate Jacobians and normal vectors");
-#endif
-
           /**
            * When the bilinear form for the hyper singular operator is
            * evaluated, the covariant transformation is required.
            */
           if (kernel.kernel_type == HyperSingularRegular)
             {
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-              scratch_data.timer.start();
-#endif
               switch (cell_neighboring_type)
                 {
                     case CellNeighboringType::SamePanel: {
@@ -8923,13 +8978,6 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
                       break;
                     }
                 }
-
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-              scratch_data.timer.stop();
-              print_wall_time(scratch_data.log_stream,
-                              scratch_data.timer,
-                              "calculate covariant matrices");
-#endif
             }
 
           /**
@@ -8959,9 +9007,6 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
             j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
           // Apply 4d Sauter numerical quadrature on the GPU device.
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.start();
-#endif
           switch (cell_neighboring_type)
             {
                 case BEMTools::CellNeighboringType::SamePanel: {
@@ -9068,12 +9113,6 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
             {
               double_integral += scratch_data.quad_values_in_thread_blocks[t];
             }
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.stop();
-          print_wall_time(scratch_data.log_stream,
-                          scratch_data.timer,
-                          "apply Sauter quadrature");
-#endif
         }
     }
 
@@ -9283,17 +9322,7 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
           /**
            * @internal Copy the scratch data and copy data from CPU to GPU.
            */
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.start();
-#endif
           scratch_data_gpu.assign_from_host(scratch_data);
-
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.stop();
-          print_wall_time(scratch_data.log_stream,
-                          scratch_data.timer,
-                          "copy scratch data from host to device");
-#endif
 
           // Determine thread block dimensions.
           dim3 blocks_rect;
@@ -9302,9 +9331,6 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
             configure_thread_blocks_for_sauter_quadrature_points(
               cell_neighboring_type, bem_values_gpu, blocks_rect, threads_rect);
 
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.start();
-#endif
           switch (cell_neighboring_type)
             {
                 case CellNeighboringType::SamePanel: {
@@ -9406,22 +9432,12 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
                 }
             }
 
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.stop();
-          print_wall_time(scratch_data.log_stream,
-                          scratch_data.timer,
-                          "calculate Jacobians and normal vectors");
-#endif
-
           /**
            * When the bilinear form for the hyper singular operator is
            * evaluated, the covariant transformation is required.
            */
           if (kernel.kernel_type == HyperSingularRegular)
             {
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-              scratch_data.timer.start();
-#endif
               switch (cell_neighboring_type)
                 {
                     case CellNeighboringType::SamePanel: {
@@ -9514,13 +9530,6 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
                       break;
                     }
                 }
-
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-              scratch_data.timer.stop();
-              print_wall_time(scratch_data.log_stream,
-                              scratch_data.timer,
-                              "calculate covariant matrices");
-#endif
             }
 
           /**
@@ -9550,9 +9559,6 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
             j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
           // Apply 4d Sauter numerical quadrature on the GPU device.
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.start();
-#endif
           switch (cell_neighboring_type)
             {
                 case BEMTools::CellNeighboringType::SamePanel: {
@@ -9659,12 +9665,6 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
             {
               double_integral += scratch_data.quad_values_in_thread_blocks[t];
             }
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.stop();
-          print_wall_time(scratch_data.log_stream,
-                          scratch_data.timer,
-                          "apply Sauter quadrature");
-#endif
 
           /**
            * Append the FEM mass matrix contribution.
@@ -9913,17 +9913,7 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
           /**
            * @internal Copy the scratch data and copy data from CPU to GPU.
            */
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.start();
-#endif
           scratch_data_gpu.assign_from_host(scratch_data);
-
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.stop();
-          print_wall_time(scratch_data.log_stream,
-                          scratch_data.timer,
-                          "copy scratch data from host to device");
-#endif
 
           /**
            * @internal Determine thread block dimensions.
@@ -9937,9 +9927,6 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
               blocks_rect,
               threads_rect);
 
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.start();
-#endif
           {
 #if ENABLE_NVTX == 1
             HierBEM::CUDAWrappers::NVTXRange nvtx_range(
@@ -9961,22 +9948,12 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
                                                    scratch_data_gpu);
           }
 
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.stop();
-          print_wall_time(scratch_data.log_stream,
-                          scratch_data.timer,
-                          "calculate Jacobians and normal vectors");
-#endif
-
           /**
            * When the bilinear form for the hyper singular operator is
            * evaluated, the covariant transformation is required.
            */
           if (kernel.kernel_type == HyperSingularRegular)
             {
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-              scratch_data.timer.start();
-#endif
 #if ENABLE_NVTX == 1
               HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                 "calc_covariant_regular");
@@ -9994,13 +9971,6 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
                                                    is_kx_normal_inward,
                                                    is_ky_normal_inward,
                                                    scratch_data_gpu);
-
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-              scratch_data.timer.stop();
-              print_wall_time(scratch_data.log_stream,
-                              scratch_data.timer,
-                              "calculate covariant matrices");
-#endif
             }
 
           /**
@@ -10030,9 +10000,6 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
             j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
           // Apply 4d Sauter numerical quadrature on the GPU device.
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.start();
-#endif
           {
 #if ENABLE_NVTX == 1
             HierBEM::CUDAWrappers::NVTXRange nvtx_range("apply_quad_regular");
@@ -10067,12 +10034,6 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
             {
               double_integral += scratch_data.quad_values_in_thread_blocks[t];
             }
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
-          scratch_data.timer.stop();
-          print_wall_time(scratch_data.log_stream,
-                          scratch_data.timer,
-                          "apply Sauter quadrature");
-#endif
         }
     }
 
