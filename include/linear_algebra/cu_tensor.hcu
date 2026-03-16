@@ -23,7 +23,6 @@
 
 #include "config.h"
 #include "cu_vector.hcu"
-#include "platform_shared/tensor.h"
 
 HBEM_NS_OPEN
 

@@ -64,6 +64,8 @@
 #include "linear_algebra/linalg.h"
 #include "mapping/mapping_info.h"
 #include "quadrature/sauter_quadrature.hcu"
+#include "quadrature/sauter_quadrature_task_buffer_for_vector.hcu"
+#include "quadrature/sauter_quadrature_task_ring_buffer.hcu"
 #include "sequence_partition/sequence_partition.h"
 #include "utilities/debug_tools.h"
 #include "utilities/generic_functors.h"
