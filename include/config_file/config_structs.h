@@ -70,6 +70,9 @@ struct ConfSauterQuadNearField
 {
   // Number of producer threads.
   std::uint32_t producer_num = 2;
+  // Capacity of producer's local task buffers for various cell neighboring
+  // types.
+  std::uint32_t producer_buffer_capacity = 4096;
   // Number of consumer threads for various cell neighboring types.
   std::uint32_t consumer_num_same_panel    = 1;
   std::uint32_t consumer_num_common_edge   = 1;

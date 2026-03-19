@@ -8609,53 +8609,55 @@ fill_hmatrix_with_aca_plus_smp(
     static_cast<unsigned int>(sauter_quad_near_field_params.producer_num);
 
   // Create ring buffers for various cell neighboring types.
+  const unsigned int max_mapping_n_shape_functions =
+    bem_values.mappings.back()->get_data()->n_shape_functions;
   HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
-    ring_buffer_for_same_panel;
-  ring_buffer_for_same_panel.allocate(
+    ring_buffer_same_panel;
+  ring_buffer_same_panel.allocate(
     CellNeighboringType::SamePanel,
     batch_size,
     static_cast<unsigned int>(
       sauter_quad_near_field_params.batch_num_in_buffer),
-    bem_values);
+    max_mapping_n_shape_functions);
 
   HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
-    ring_buffer_for_common_edge;
-  ring_buffer_for_common_edge.allocate(
+    ring_buffer_common_edge;
+  ring_buffer_common_edge.allocate(
     CellNeighboringType::CommonEdge,
     batch_size,
     static_cast<unsigned int>(
       sauter_quad_near_field_params.batch_num_in_buffer),
-    bem_values);
+    max_mapping_n_shape_functions);
 
   HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
-    ring_buffer_for_common_vertex;
-  ring_buffer_for_common_vertex.allocate(
+    ring_buffer_common_vertex;
+  ring_buffer_common_vertex.allocate(
     CellNeighboringType::CommonVertex,
     batch_size,
     static_cast<unsigned int>(
       sauter_quad_near_field_params.batch_num_in_buffer),
-    bem_values);
+    max_mapping_n_shape_functions);
 
   HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
-    ring_buffer_for_regular;
-  ring_buffer_for_regular.allocate(
+    ring_buffer_regular;
+  ring_buffer_regular.allocate(
     CellNeighboringType::Regular,
     batch_size,
     static_cast<unsigned int>(
       sauter_quad_near_field_params.batch_num_in_buffer),
-    bem_values);
+    max_mapping_n_shape_functions);
 
   std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
     hmat.get_near_field_leaf_set();
@@ -8705,13 +8707,14 @@ fill_hmatrix_with_aca_plus_smp(
       producers.emplace_back([&]() {
         HierBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_producer(
+            sauter_quad_near_field_params,
             near_field_leaf_set,
             partition.first,
             partition.second + 1,
-            ring_buffer_for_same_panel,
-            ring_buffer_for_common_edge,
-            ring_buffer_for_common_vertex,
-            ring_buffer_for_regular,
+            ring_buffer_same_panel,
+            ring_buffer_common_edge,
+            ring_buffer_common_vertex,
+            ring_buffer_regular,
             kx_dof_to_cell_topo.topology,
             ky_dof_to_cell_topo.topology,
             bem_values,
@@ -8751,7 +8754,7 @@ fill_hmatrix_with_aca_plus_smp(
         sauter_quadrature_for_near_field_matrix_entries_consumer(
           kernel,
           kernel_factor,
-          ring_buffer_for_same_panel,
+          ring_buffer_same_panel,
           bem_values_gpu,
           static_cast<unsigned int>(
             sauter_quad_near_field_params.task_num_per_block),
@@ -8766,7 +8769,7 @@ fill_hmatrix_with_aca_plus_smp(
         sauter_quadrature_for_near_field_matrix_entries_consumer(
           kernel,
           kernel_factor,
-          ring_buffer_for_common_edge,
+          ring_buffer_common_edge,
           bem_values_gpu,
           static_cast<unsigned int>(
             sauter_quad_near_field_params.task_num_per_block),
@@ -8781,7 +8784,7 @@ fill_hmatrix_with_aca_plus_smp(
         sauter_quadrature_for_near_field_matrix_entries_consumer(
           kernel,
           kernel_factor,
-          ring_buffer_for_common_vertex,
+          ring_buffer_common_vertex,
           bem_values_gpu,
           static_cast<unsigned int>(
             sauter_quad_near_field_params.task_num_per_block),
@@ -8796,7 +8799,7 @@ fill_hmatrix_with_aca_plus_smp(
         sauter_quadrature_for_near_field_matrix_entries_consumer(
           kernel,
           kernel_factor,
-          ring_buffer_for_regular,
+          ring_buffer_regular,
           bem_values_gpu,
           static_cast<unsigned int>(
             sauter_quad_near_field_params.task_num_per_block),
@@ -8814,28 +8817,28 @@ fill_hmatrix_with_aca_plus_smp(
   // After all producer threads exit, we set the flag in each ring buffer which
   // indicates tasks for all matrix entries have been added.
   {
-    std::lock_guard<std::mutex> lg(ring_buffer_for_same_panel.buffer_lock);
-    ring_buffer_for_same_panel.if_all_near_field_hmat_entries_added = true;
+    std::lock_guard<std::mutex> lg(ring_buffer_same_panel.buffer_lock);
+    ring_buffer_same_panel.if_all_near_field_hmat_entries_added = true;
   }
-  ring_buffer_for_same_panel.batch_task_ready.notify_all();
+  ring_buffer_same_panel.batch_task_ready.notify_all();
 
   {
-    std::lock_guard<std::mutex> lg(ring_buffer_for_common_edge.buffer_lock);
-    ring_buffer_for_common_edge.if_all_near_field_hmat_entries_added = true;
+    std::lock_guard<std::mutex> lg(ring_buffer_common_edge.buffer_lock);
+    ring_buffer_common_edge.if_all_near_field_hmat_entries_added = true;
   }
-  ring_buffer_for_common_edge.batch_task_ready.notify_all();
+  ring_buffer_common_edge.batch_task_ready.notify_all();
 
   {
-    std::lock_guard<std::mutex> lg(ring_buffer_for_common_vertex.buffer_lock);
-    ring_buffer_for_common_vertex.if_all_near_field_hmat_entries_added = true;
+    std::lock_guard<std::mutex> lg(ring_buffer_common_vertex.buffer_lock);
+    ring_buffer_common_vertex.if_all_near_field_hmat_entries_added = true;
   }
-  ring_buffer_for_common_vertex.batch_task_ready.notify_all();
+  ring_buffer_common_vertex.batch_task_ready.notify_all();
 
   {
-    std::lock_guard<std::mutex> lg(ring_buffer_for_regular.buffer_lock);
-    ring_buffer_for_regular.if_all_near_field_hmat_entries_added = true;
+    std::lock_guard<std::mutex> lg(ring_buffer_regular.buffer_lock);
+    ring_buffer_regular.if_all_near_field_hmat_entries_added = true;
   }
-  ring_buffer_for_regular.batch_task_ready.notify_all();
+  ring_buffer_regular.batch_task_ready.notify_all();
 
   for (auto &consumer : consumers)
     consumer.join();
@@ -8847,10 +8850,10 @@ fill_hmatrix_with_aca_plus_smp(
   /**
    * @internal Release all ring buffers.
    */
-  ring_buffer_for_same_panel.release();
-  ring_buffer_for_common_edge.release();
-  ring_buffer_for_common_vertex.release();
-  ring_buffer_for_regular.release();
+  ring_buffer_same_panel.release();
+  ring_buffer_common_edge.release();
+  ring_buffer_common_vertex.release();
+  ring_buffer_regular.release();
 
   timer.stop();
 #if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
@@ -9084,53 +9087,56 @@ fill_hmatrix_with_aca_plus_smp(
   unsigned int producer_num =
     static_cast<unsigned int>(sauter_quad_near_field_params.producer_num);
 
+  // Create ring buffers for various cell neighboring types.
+  const unsigned int max_mapping_n_shape_functions =
+    bem_values.mappings.back()->get_data()->n_shape_functions;
   HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
-    ring_buffer_for_same_panel;
-  ring_buffer_for_same_panel.allocate(
+    ring_buffer_same_panel;
+  ring_buffer_same_panel.allocate(
     CellNeighboringType::SamePanel,
     batch_size,
     static_cast<unsigned int>(
       sauter_quad_near_field_params.batch_num_in_buffer),
-    bem_values);
+    max_mapping_n_shape_functions);
 
   HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
-    ring_buffer_for_common_edge;
-  ring_buffer_for_common_edge.allocate(
+    ring_buffer_common_edge;
+  ring_buffer_common_edge.allocate(
     CellNeighboringType::CommonEdge,
     batch_size,
     static_cast<unsigned int>(
       sauter_quad_near_field_params.batch_num_in_buffer),
-    bem_values);
+    max_mapping_n_shape_functions);
 
   HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
-    ring_buffer_for_common_vertex;
-  ring_buffer_for_common_vertex.allocate(
+    ring_buffer_common_vertex;
+  ring_buffer_common_vertex.allocate(
     CellNeighboringType::CommonVertex,
     batch_size,
     static_cast<unsigned int>(
       sauter_quad_near_field_params.batch_num_in_buffer),
-    bem_values);
+    max_mapping_n_shape_functions);
 
   HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
-    ring_buffer_for_regular;
-  ring_buffer_for_regular.allocate(
+    ring_buffer_regular;
+  ring_buffer_regular.allocate(
     CellNeighboringType::Regular,
     batch_size,
     static_cast<unsigned int>(
       sauter_quad_near_field_params.batch_num_in_buffer),
-    bem_values);
+    max_mapping_n_shape_functions);
 
   std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
     hmat.get_near_field_leaf_set();
@@ -9180,13 +9186,14 @@ fill_hmatrix_with_aca_plus_smp(
       producers.emplace_back([&]() {
         HierBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_producer(
+            sauter_quad_near_field_params,
             near_field_leaf_set,
             partition.first,
             partition.second + 1,
-            ring_buffer_for_same_panel,
-            ring_buffer_for_common_edge,
-            ring_buffer_for_common_vertex,
-            ring_buffer_for_regular,
+            ring_buffer_same_panel,
+            ring_buffer_common_edge,
+            ring_buffer_common_vertex,
+            ring_buffer_regular,
             kx_dof_to_cell_topo.topology,
             ky_dof_to_cell_topo.topology,
             bem_values,
@@ -9226,7 +9233,7 @@ fill_hmatrix_with_aca_plus_smp(
         sauter_quadrature_for_near_field_matrix_entries_consumer(
           kernel,
           kernel_factor,
-          ring_buffer_for_same_panel,
+          ring_buffer_same_panel,
           bem_values_gpu,
           static_cast<unsigned int>(
             sauter_quad_near_field_params.task_num_per_block),
@@ -9241,7 +9248,7 @@ fill_hmatrix_with_aca_plus_smp(
         sauter_quadrature_for_near_field_matrix_entries_consumer(
           kernel,
           kernel_factor,
-          ring_buffer_for_common_edge,
+          ring_buffer_common_edge,
           bem_values_gpu,
           static_cast<unsigned int>(
             sauter_quad_near_field_params.task_num_per_block),
@@ -9256,7 +9263,7 @@ fill_hmatrix_with_aca_plus_smp(
         sauter_quadrature_for_near_field_matrix_entries_consumer(
           kernel,
           kernel_factor,
-          ring_buffer_for_common_vertex,
+          ring_buffer_common_vertex,
           bem_values_gpu,
           static_cast<unsigned int>(
             sauter_quad_near_field_params.task_num_per_block),
@@ -9271,7 +9278,7 @@ fill_hmatrix_with_aca_plus_smp(
         sauter_quadrature_for_near_field_matrix_entries_consumer(
           kernel,
           kernel_factor,
-          ring_buffer_for_regular,
+          ring_buffer_regular,
           bem_values_gpu,
           static_cast<unsigned int>(
             sauter_quad_near_field_params.task_num_per_block),
@@ -9289,28 +9296,28 @@ fill_hmatrix_with_aca_plus_smp(
   // After all producer threads exit, we set the flag in each ring buffer which
   // indicates tasks for all matrix entries have been added.
   {
-    std::lock_guard<std::mutex> lg(ring_buffer_for_same_panel.buffer_lock);
-    ring_buffer_for_same_panel.if_all_near_field_hmat_entries_added = true;
+    std::lock_guard<std::mutex> lg(ring_buffer_same_panel.buffer_lock);
+    ring_buffer_same_panel.if_all_near_field_hmat_entries_added = true;
   }
-  ring_buffer_for_same_panel.batch_task_ready.notify_all();
+  ring_buffer_same_panel.batch_task_ready.notify_all();
 
   {
-    std::lock_guard<std::mutex> lg(ring_buffer_for_common_edge.buffer_lock);
-    ring_buffer_for_common_edge.if_all_near_field_hmat_entries_added = true;
+    std::lock_guard<std::mutex> lg(ring_buffer_common_edge.buffer_lock);
+    ring_buffer_common_edge.if_all_near_field_hmat_entries_added = true;
   }
-  ring_buffer_for_common_edge.batch_task_ready.notify_all();
+  ring_buffer_common_edge.batch_task_ready.notify_all();
 
   {
-    std::lock_guard<std::mutex> lg(ring_buffer_for_common_vertex.buffer_lock);
-    ring_buffer_for_common_vertex.if_all_near_field_hmat_entries_added = true;
+    std::lock_guard<std::mutex> lg(ring_buffer_common_vertex.buffer_lock);
+    ring_buffer_common_vertex.if_all_near_field_hmat_entries_added = true;
   }
-  ring_buffer_for_common_vertex.batch_task_ready.notify_all();
+  ring_buffer_common_vertex.batch_task_ready.notify_all();
 
   {
-    std::lock_guard<std::mutex> lg(ring_buffer_for_regular.buffer_lock);
-    ring_buffer_for_regular.if_all_near_field_hmat_entries_added = true;
+    std::lock_guard<std::mutex> lg(ring_buffer_regular.buffer_lock);
+    ring_buffer_regular.if_all_near_field_hmat_entries_added = true;
   }
-  ring_buffer_for_regular.batch_task_ready.notify_all();
+  ring_buffer_regular.batch_task_ready.notify_all();
 
   for (auto &consumer : consumers)
     consumer.join();
@@ -9318,10 +9325,10 @@ fill_hmatrix_with_aca_plus_smp(
   /**
    * @internal Release all ring buffers.
    */
-  ring_buffer_for_same_panel.release();
-  ring_buffer_for_common_edge.release();
-  ring_buffer_for_common_vertex.release();
-  ring_buffer_for_regular.release();
+  ring_buffer_same_panel.release();
+  ring_buffer_common_edge.release();
+  ring_buffer_common_vertex.release();
+  ring_buffer_regular.release();
 
   if (mass_vmult_weq.size() > 0)
     {
@@ -9588,53 +9595,56 @@ fill_hmatrix_with_aca_plus_smp(
   unsigned int producer_num =
     static_cast<unsigned int>(sauter_quad_near_field_params.producer_num);
 
+  // Create ring buffers for various cell neighboring types.
+  const unsigned int max_mapping_n_shape_functions =
+    bem_values.mappings.back()->get_data()->n_shape_functions;
   HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
-    ring_buffer_for_same_panel;
-  ring_buffer_for_same_panel.allocate(
+    ring_buffer_same_panel;
+  ring_buffer_same_panel.allocate(
     CellNeighboringType::SamePanel,
     batch_size,
     static_cast<unsigned int>(
       sauter_quad_near_field_params.batch_num_in_buffer),
-    bem_values);
+    max_mapping_n_shape_functions);
 
   HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
-    ring_buffer_for_common_edge;
-  ring_buffer_for_common_edge.allocate(
+    ring_buffer_common_edge;
+  ring_buffer_common_edge.allocate(
     CellNeighboringType::CommonEdge,
     batch_size,
     static_cast<unsigned int>(
       sauter_quad_near_field_params.batch_num_in_buffer),
-    bem_values);
+    max_mapping_n_shape_functions);
 
   HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
-    ring_buffer_for_common_vertex;
-  ring_buffer_for_common_vertex.allocate(
+    ring_buffer_common_vertex;
+  ring_buffer_common_vertex.allocate(
     CellNeighboringType::CommonVertex,
     batch_size,
     static_cast<unsigned int>(
       sauter_quad_near_field_params.batch_num_in_buffer),
-    bem_values);
+    max_mapping_n_shape_functions);
 
   HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
                                                         spacedim,
                                                         RangeNumberType,
                                                         KernelNumberType>
-    ring_buffer_for_regular;
-  ring_buffer_for_regular.allocate(
+    ring_buffer_regular;
+  ring_buffer_regular.allocate(
     CellNeighboringType::Regular,
     batch_size,
     static_cast<unsigned int>(
       sauter_quad_near_field_params.batch_num_in_buffer),
-    bem_values);
+    max_mapping_n_shape_functions);
 
   std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
     hmat.get_near_field_leaf_set();
@@ -9684,13 +9694,14 @@ fill_hmatrix_with_aca_plus_smp(
       producers.emplace_back([&]() {
         HierBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_producer(
+            sauter_quad_near_field_params,
             near_field_leaf_set,
             partition.first,
             partition.second + 1,
-            ring_buffer_for_same_panel,
-            ring_buffer_for_common_edge,
-            ring_buffer_for_common_vertex,
-            ring_buffer_for_regular,
+            ring_buffer_same_panel,
+            ring_buffer_common_edge,
+            ring_buffer_common_vertex,
+            ring_buffer_regular,
             mass_matrix_factor,
             kx_dof_to_cell_topo.topology,
             ky_dof_to_cell_topo.topology,
@@ -9732,7 +9743,7 @@ fill_hmatrix_with_aca_plus_smp(
         sauter_quadrature_for_near_field_matrix_entries_consumer(
           kernel,
           kernel_factor,
-          ring_buffer_for_same_panel,
+          ring_buffer_same_panel,
           bem_values_gpu,
           static_cast<unsigned int>(
             sauter_quad_near_field_params.task_num_per_block),
@@ -9747,7 +9758,7 @@ fill_hmatrix_with_aca_plus_smp(
         sauter_quadrature_for_near_field_matrix_entries_consumer(
           kernel,
           kernel_factor,
-          ring_buffer_for_common_edge,
+          ring_buffer_common_edge,
           bem_values_gpu,
           static_cast<unsigned int>(
             sauter_quad_near_field_params.task_num_per_block),
@@ -9762,7 +9773,7 @@ fill_hmatrix_with_aca_plus_smp(
         sauter_quadrature_for_near_field_matrix_entries_consumer(
           kernel,
           kernel_factor,
-          ring_buffer_for_common_vertex,
+          ring_buffer_common_vertex,
           bem_values_gpu,
           static_cast<unsigned int>(
             sauter_quad_near_field_params.task_num_per_block),
@@ -9777,7 +9788,7 @@ fill_hmatrix_with_aca_plus_smp(
         sauter_quadrature_for_near_field_matrix_entries_consumer(
           kernel,
           kernel_factor,
-          ring_buffer_for_regular,
+          ring_buffer_regular,
           bem_values_gpu,
           static_cast<unsigned int>(
             sauter_quad_near_field_params.task_num_per_block),
@@ -9795,28 +9806,28 @@ fill_hmatrix_with_aca_plus_smp(
   // After all producer threads exit, we set the flag in each ring buffer which
   // indicates tasks for all matrix entries have been added.
   {
-    std::lock_guard<std::mutex> lg(ring_buffer_for_same_panel.buffer_lock);
-    ring_buffer_for_same_panel.if_all_near_field_hmat_entries_added = true;
+    std::lock_guard<std::mutex> lg(ring_buffer_same_panel.buffer_lock);
+    ring_buffer_same_panel.if_all_near_field_hmat_entries_added = true;
   }
-  ring_buffer_for_same_panel.batch_task_ready.notify_all();
+  ring_buffer_same_panel.batch_task_ready.notify_all();
 
   {
-    std::lock_guard<std::mutex> lg(ring_buffer_for_common_edge.buffer_lock);
-    ring_buffer_for_common_edge.if_all_near_field_hmat_entries_added = true;
+    std::lock_guard<std::mutex> lg(ring_buffer_common_edge.buffer_lock);
+    ring_buffer_common_edge.if_all_near_field_hmat_entries_added = true;
   }
-  ring_buffer_for_common_edge.batch_task_ready.notify_all();
+  ring_buffer_common_edge.batch_task_ready.notify_all();
 
   {
-    std::lock_guard<std::mutex> lg(ring_buffer_for_common_vertex.buffer_lock);
-    ring_buffer_for_common_vertex.if_all_near_field_hmat_entries_added = true;
+    std::lock_guard<std::mutex> lg(ring_buffer_common_vertex.buffer_lock);
+    ring_buffer_common_vertex.if_all_near_field_hmat_entries_added = true;
   }
-  ring_buffer_for_common_vertex.batch_task_ready.notify_all();
+  ring_buffer_common_vertex.batch_task_ready.notify_all();
 
   {
-    std::lock_guard<std::mutex> lg(ring_buffer_for_regular.buffer_lock);
-    ring_buffer_for_regular.if_all_near_field_hmat_entries_added = true;
+    std::lock_guard<std::mutex> lg(ring_buffer_regular.buffer_lock);
+    ring_buffer_regular.if_all_near_field_hmat_entries_added = true;
   }
-  ring_buffer_for_regular.batch_task_ready.notify_all();
+  ring_buffer_regular.batch_task_ready.notify_all();
 
   for (auto &consumer : consumers)
     consumer.join();
@@ -9828,10 +9839,10 @@ fill_hmatrix_with_aca_plus_smp(
   /**
    * @internal Release all ring buffers.
    */
-  ring_buffer_for_same_panel.release();
-  ring_buffer_for_common_edge.release();
-  ring_buffer_for_common_vertex.release();
-  ring_buffer_for_regular.release();
+  ring_buffer_same_panel.release();
+  ring_buffer_common_edge.release();
+  ring_buffer_common_vertex.release();
+  ring_buffer_regular.release();
 
   timer.stop();
 #if ENABLE_HMAT_ASSEMBLY_PROFILE == 1

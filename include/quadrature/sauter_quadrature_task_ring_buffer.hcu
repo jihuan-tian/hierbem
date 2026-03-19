@@ -40,13 +40,13 @@
 #include <vector>
 
 #include "bem/bem_tools.h"
-#include "bem/bem_values.hcu"
 #include "bem/cu_bem_values.hcu"
 #include "config.h"
 #include "hmatrix/hmatrix_assembly_profile.h"
 #include "linear_algebra/cu_table.hcu"
 #include "linear_algebra/lapack_full_matrix_ext.h"
 #include "sauter_quadrature_near_field_kernels.hcu"
+#include "sauter_quadrature_task_producer_buffer.h"
 #include "sauter_quadrature_task_scalar_data.h"
 #include "utilities/cu_profile.hcu"
 #include "utilities/number_traits.h"
@@ -57,6 +57,14 @@ using namespace dealii;
 
 namespace CUDAWrappers
 {
+  enum SauterQuadratureTaskStatus
+  {
+    before_creation,
+    during_creation,
+    created,
+    during_processing
+  };
+
   /**
    * Ring buffer for holding Sauter quadrature tasks, which is used in the
    * producer-consumer model for building near field \hmatrices.
@@ -73,14 +81,6 @@ namespace CUDAWrappers
   class SauterQuadratureTaskRingBuffer
   {
   public:
-    enum SauterQuadratureTaskStatus
-    {
-      before_creation,
-      during_creation,
-      created,
-      during_processing
-    };
-
     using real_type =
       typename numbers::NumberTraits<RangeNumberType>::real_type;
     using CUDAKernelNumberType = DeviceNumberType<KernelNumberType>;
@@ -93,15 +93,14 @@ namespace CUDAWrappers
      * @param batch_size_ The number of quadrature tasks, which are treated
      * as a batch for being processed by a consumer thread.
      * @param batch_num Number of batches in the ring buffer.
-     * @param bem_values @p BEMValues on the host, which is used to pass
-     * necessary data sizes, such as the number of shape functions used by the
-     * mapping objects, the number of quadrature points, etc.
+     * @param max_mapping_n_shape_functions Number of shape functions in the
+     * mapping object with the highest order.
      */
     HBEM_ATTR_HOST void
-    allocate(const CellNeighboringType                  neighboring_type,
-             const unsigned int                         batch_size_,
-             const unsigned int                         batch_num,
-             const BEMValues<dim, spacedim, real_type> &bem_values);
+    allocate(const CellNeighboringType neighboring_type,
+             const unsigned int        batch_size_,
+             const unsigned int        batch_num,
+             const unsigned int        max_mapping_n_shape_functions);
 
     /**
      * Release the memory on the host and device.
@@ -118,8 +117,11 @@ namespace CUDAWrappers
     HBEM_ATTR_HOST unsigned int
     task_num_during_processing() const;
 
-    HBEM_ATTR_HOST unsigned
+    HBEM_ATTR_HOST unsigned int
     task_num_total() const;
+
+    HBEM_ATTR_HOST unsigned int
+    empty_slot_num() const;
 
     HBEM_ATTR_HOST bool
     is_full() const;
@@ -167,6 +169,12 @@ namespace CUDAWrappers
              const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
                                     &scratch_data,
              HMatrixAssemblyProfile *hmat_profile = nullptr);
+
+    HBEM_ATTR_HOST void
+    add_tasks_from_producer_buffer(
+      SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+                &producer_buffer,
+      const bool has_mass_matrix_entries);
 
     /**
      * Fetch and process quadrature tasks from the ring buffer in batch.
@@ -396,10 +404,10 @@ namespace CUDAWrappers
                                  spacedim,
                                  RangeNumberType,
                                  KernelNumberType>::
-    allocate(const CellNeighboringType                  neighboring_type,
-             const unsigned int                         batch_size_,
-             const unsigned int                         batch_num,
-             const BEMValues<dim, spacedim, real_type> &bem_values)
+    allocate(const CellNeighboringType neighboring_type,
+             const unsigned int        batch_size_,
+             const unsigned int        batch_num,
+             const unsigned int        max_mapping_n_shape_functions)
   {
     static_assert(
       is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
@@ -423,14 +431,6 @@ namespace CUDAWrappers
     fullmat_row_index_ring_buffer_cpu.resize(capacity);
     fullmat_col_index_ring_buffer_cpu.resize(capacity);
     mass_matrix_entries_ring_buffer_cpu.resize(capacity);
-
-    /**
-     * @internal For each data table in @p PairCellWiseScratchData, its
-     * counterpart in the ring buffer should have one more dimension which
-     * corresponds to the task index.
-     */
-    const unsigned int max_mapping_n_shape_functions =
-      bem_values.mappings.back()->get_data()->n_shape_functions;
 
     kx_mapping_support_points_permuted_ring_buffer_cpu.reinit(
       TableIndices<2>(capacity, max_mapping_n_shape_functions));
@@ -499,10 +499,10 @@ namespace CUDAWrappers
 
     AssertCuda(cudaHostUnregister(
       (void *)&(kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0))));
-
     AssertCuda(cudaHostUnregister(
       (void *)&(ky_mapping_support_points_permuted_ring_buffer_cpu(0, 0))));
-
+    kx_mapping_support_points_permuted_ring_buffer_cpu.clear();
+    ky_mapping_support_points_permuted_ring_buffer_cpu.clear();
     kx_mapping_support_points_permuted_ring_buffer_gpu.release();
     ky_mapping_support_points_permuted_ring_buffer_gpu.release();
 
@@ -595,6 +595,20 @@ namespace CUDAWrappers
     return (tail_pending < head_committed ? tail_pending + capacity :
                                             tail_pending) -
            head_committed;
+  }
+
+
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
+  HBEM_ATTR_HOST inline unsigned int
+  SauterQuadratureTaskRingBuffer<dim,
+                                 spacedim,
+                                 RangeNumberType,
+                                 KernelNumberType>::empty_slot_num() const
+  {
+    return capacity - 1 - task_num_total();
   }
 
 
@@ -834,6 +848,323 @@ namespace CUDAWrappers
             int spacedim,
             typename RangeNumberType,
             typename KernelNumberType>
+  HBEM_ATTR_HOST void
+  SauterQuadratureTaskRingBuffer<dim,
+                                 spacedim,
+                                 RangeNumberType,
+                                 KernelNumberType>::
+    add_tasks_from_producer_buffer(
+      SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+                &producer_buffer,
+      const bool has_mass_matrix_entries)
+  {
+    Assert(producer_buffer.cell_neighboring_type == cell_neighboring_type,
+           ExcInternalError());
+    Assert(producer_buffer.capacity < capacity, ExcInternalError());
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+    LogStream::Prefix prefix_string(std::string("transfer_tasks in ") +
+                                    std::string(cell_neighboring_type_name(
+                                      producer_buffer.cell_neighboring_type)));
+#endif
+#if ENABLE_NVTX == 1
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+      std::string("transfer_tasks_") +
+      std::string(
+        cell_neighboring_type_name(producer_buffer.cell_neighboring_type)));
+#endif
+
+    if (producer_buffer.task_num > 0)
+      {
+        unsigned int task_index_in_ring_buffer;
+        {
+#if ENABLE_NVTX == 1
+          HierBEM::CUDAWrappers::NVTXRange nvtx_range("wait_buffer_slots");
+#endif
+
+          std::unique_lock<std::mutex> ul(buffer_lock);
+
+          /**
+           * @internal Wait for enough empty slots.
+           */
+          buffer_not_full.wait(ul, [this, &producer_buffer]() {
+            return this->empty_slot_num() >= producer_buffer.task_num;
+          });
+          task_index_in_ring_buffer = tail_pending;
+          tail_pending =
+            (tail_pending + producer_buffer.task_num) >= capacity ?
+              (tail_pending + producer_buffer.task_num - capacity) :
+              (tail_pending + producer_buffer.task_num);
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+          print_pointers(deallog);
+#endif
+        } // Release lock on the ring buffer
+
+        // Transfer task data.
+        unsigned int number_of_data_until_ring_buffer_end  = 0;
+        unsigned int number_of_data_from_ring_buffer_start = 0;
+        const bool   is_task_batch_before_ring_buffer_end =
+          (task_index_in_ring_buffer + producer_buffer.task_num) <= capacity;
+        if (is_task_batch_before_ring_buffer_end)
+          {
+            // Set tasks status to @p during_creation.
+            for (unsigned int i = task_index_in_ring_buffer;
+                 i < task_index_in_ring_buffer + producer_buffer.task_num;
+                 i++)
+              task_status_ring_buffer[i].store(
+                SauterQuadratureTaskStatus::during_creation);
+
+            std::copy(producer_buffer.fullmat_buffer.begin(),
+                      producer_buffer.fullmat_buffer.begin() +
+                        producer_buffer.task_num,
+                      fullmat_ring_buffer_cpu.begin() +
+                        task_index_in_ring_buffer);
+            std::copy(producer_buffer.fullmat_row_index_buffer.begin(),
+                      producer_buffer.fullmat_row_index_buffer.begin() +
+                        producer_buffer.task_num,
+                      fullmat_row_index_ring_buffer_cpu.begin() +
+                        task_index_in_ring_buffer);
+            std::copy(producer_buffer.fullmat_col_index_buffer.begin(),
+                      producer_buffer.fullmat_col_index_buffer.begin() +
+                        producer_buffer.task_num,
+                      fullmat_col_index_ring_buffer_cpu.begin() +
+                        task_index_in_ring_buffer);
+            std::memcpy(scalar_data_ring_buffer_cpu + task_index_in_ring_buffer,
+                        producer_buffer.scalar_data_buffer,
+                        producer_buffer.task_num *
+                          sizeof(SauterQuadratureTaskScalarData));
+            // No matter which mapping order is used, we copy the whole memory
+            // which can contain support points of the maximum mapping order.
+            std::memcpy(
+              &kx_mapping_support_points_permuted_ring_buffer_cpu(
+                task_index_in_ring_buffer, 0),
+              &producer_buffer.kx_mapping_support_points_permuted_buffer(0, 0),
+              producer_buffer.task_num *
+                producer_buffer.kx_mapping_support_points_permuted_buffer.size(
+                  1) *
+                sizeof(Point<spacedim, real_type>));
+            std::memcpy(
+              &ky_mapping_support_points_permuted_ring_buffer_cpu(
+                task_index_in_ring_buffer, 0),
+              &producer_buffer.ky_mapping_support_points_permuted_buffer(0, 0),
+              producer_buffer.task_num *
+                producer_buffer.ky_mapping_support_points_permuted_buffer.size(
+                  1) *
+                sizeof(Point<spacedim, real_type>));
+
+            if (has_mass_matrix_entries)
+              {
+                std::copy(producer_buffer.mass_matrix_entries_buffer.begin(),
+                          producer_buffer.mass_matrix_entries_buffer.begin() +
+                            producer_buffer.task_num,
+                          mass_matrix_entries_ring_buffer_cpu.begin() +
+                            task_index_in_ring_buffer);
+              }
+
+            // Set tasks status to @p created.
+            for (unsigned int i = task_index_in_ring_buffer;
+                 i < task_index_in_ring_buffer + producer_buffer.task_num;
+                 i++)
+              task_status_ring_buffer[i].store(
+                SauterQuadratureTaskStatus::created);
+          }
+        else
+          {
+            number_of_data_until_ring_buffer_end =
+              capacity - task_index_in_ring_buffer;
+            number_of_data_from_ring_buffer_start =
+              producer_buffer.task_num - number_of_data_until_ring_buffer_end;
+
+            // Set tasks status to @p during_creation.
+            for (unsigned int i = task_index_in_ring_buffer; i < capacity; i++)
+              task_status_ring_buffer[i].store(
+                SauterQuadratureTaskStatus::during_creation);
+            for (unsigned int i = 0; i < number_of_data_from_ring_buffer_start;
+                 i++)
+              task_status_ring_buffer[i].store(
+                SauterQuadratureTaskStatus::during_creation);
+
+            std::copy(producer_buffer.fullmat_buffer.begin(),
+                      producer_buffer.fullmat_buffer.begin() +
+                        number_of_data_until_ring_buffer_end,
+                      fullmat_ring_buffer_cpu.begin() +
+                        task_index_in_ring_buffer);
+            std::copy(producer_buffer.fullmat_buffer.begin() +
+                        number_of_data_until_ring_buffer_end,
+                      producer_buffer.fullmat_buffer.begin() +
+                        producer_buffer.task_num,
+                      fullmat_ring_buffer_cpu.begin());
+
+            std::copy(producer_buffer.fullmat_row_index_buffer.begin(),
+                      producer_buffer.fullmat_row_index_buffer.begin() +
+                        number_of_data_until_ring_buffer_end,
+                      fullmat_row_index_ring_buffer_cpu.begin() +
+                        task_index_in_ring_buffer);
+            std::copy(producer_buffer.fullmat_row_index_buffer.begin() +
+                        number_of_data_until_ring_buffer_end,
+                      producer_buffer.fullmat_row_index_buffer.begin() +
+                        producer_buffer.task_num,
+                      fullmat_row_index_ring_buffer_cpu.begin());
+
+            std::copy(producer_buffer.fullmat_col_index_buffer.begin(),
+                      producer_buffer.fullmat_col_index_buffer.begin() +
+                        number_of_data_until_ring_buffer_end,
+                      fullmat_col_index_ring_buffer_cpu.begin() +
+                        task_index_in_ring_buffer);
+            std::copy(producer_buffer.fullmat_col_index_buffer.begin() +
+                        number_of_data_until_ring_buffer_end,
+                      producer_buffer.fullmat_col_index_buffer.begin() +
+                        producer_buffer.task_num,
+                      fullmat_col_index_ring_buffer_cpu.begin());
+
+            std::memcpy(scalar_data_ring_buffer_cpu + task_index_in_ring_buffer,
+                        producer_buffer.scalar_data_buffer,
+                        number_of_data_until_ring_buffer_end *
+                          sizeof(SauterQuadratureTaskScalarData));
+            std::memcpy(scalar_data_ring_buffer_cpu,
+                        producer_buffer.scalar_data_buffer +
+                          number_of_data_until_ring_buffer_end,
+                        number_of_data_from_ring_buffer_start *
+                          sizeof(SauterQuadratureTaskScalarData));
+
+            // No matter which mapping order is used, we copy the whole memory
+            // which can contain support points of the maximum mapping order.
+            std::memcpy(
+              &kx_mapping_support_points_permuted_ring_buffer_cpu(
+                task_index_in_ring_buffer, 0),
+              &producer_buffer.kx_mapping_support_points_permuted_buffer(0, 0),
+              number_of_data_until_ring_buffer_end *
+                producer_buffer.kx_mapping_support_points_permuted_buffer.size(
+                  1) *
+                sizeof(Point<spacedim, real_type>));
+            std::memcpy(
+              &kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0),
+              &producer_buffer.kx_mapping_support_points_permuted_buffer(
+                number_of_data_until_ring_buffer_end, 0),
+              number_of_data_from_ring_buffer_start *
+                producer_buffer.kx_mapping_support_points_permuted_buffer.size(
+                  1) *
+                sizeof(Point<spacedim, real_type>));
+
+            std::memcpy(
+              &ky_mapping_support_points_permuted_ring_buffer_cpu(
+                task_index_in_ring_buffer, 0),
+              &producer_buffer.ky_mapping_support_points_permuted_buffer(0, 0),
+              number_of_data_until_ring_buffer_end *
+                producer_buffer.ky_mapping_support_points_permuted_buffer.size(
+                  1) *
+                sizeof(Point<spacedim, real_type>));
+            std::memcpy(
+              &ky_mapping_support_points_permuted_ring_buffer_cpu(0, 0),
+              &producer_buffer.ky_mapping_support_points_permuted_buffer(
+                number_of_data_until_ring_buffer_end, 0),
+              number_of_data_from_ring_buffer_start *
+                producer_buffer.ky_mapping_support_points_permuted_buffer.size(
+                  1) *
+                sizeof(Point<spacedim, real_type>));
+
+            if (has_mass_matrix_entries)
+              {
+                std::copy(producer_buffer.mass_matrix_entries_buffer.begin(),
+                          producer_buffer.mass_matrix_entries_buffer.begin() +
+                            number_of_data_until_ring_buffer_end,
+                          mass_matrix_entries_ring_buffer_cpu.begin() +
+                            task_index_in_ring_buffer);
+                std::copy(producer_buffer.mass_matrix_entries_buffer.begin() +
+                            number_of_data_until_ring_buffer_end,
+                          producer_buffer.mass_matrix_entries_buffer.begin() +
+                            producer_buffer.task_num,
+                          mass_matrix_entries_ring_buffer_cpu.begin());
+              }
+
+            // Set tasks status to @p created.
+            for (unsigned int i = task_index_in_ring_buffer; i < capacity; i++)
+              task_status_ring_buffer[i].store(
+                SauterQuadratureTaskStatus::created);
+            for (unsigned int i = 0; i < number_of_data_from_ring_buffer_start;
+                 i++)
+              task_status_ring_buffer[i].store(
+                SauterQuadratureTaskStatus::created);
+          }
+
+        bool if_notify_consumers;
+        {
+          std::lock_guard<std::mutex> lg(buffer_lock);
+
+          // We use the following predicate to ensure that the pointer
+          // @p tail_committed is within the batch handled by the current
+          // producer.
+          bool if_moving_tail_committed;
+          if (is_task_batch_before_ring_buffer_end)
+            {
+              if (tail_committed >= task_index_in_ring_buffer &&
+                  tail_committed <
+                    task_index_in_ring_buffer + producer_buffer.task_num)
+                if_moving_tail_committed = true;
+              else
+                if_moving_tail_committed = false;
+            }
+          else
+            {
+              if (tail_committed >= task_index_in_ring_buffer ||
+                  tail_committed < number_of_data_from_ring_buffer_start)
+                if_moving_tail_committed = true;
+              else
+                if_moving_tail_committed = false;
+            }
+
+          if (if_moving_tail_committed)
+            {
+              tail_committed =
+                (task_index_in_ring_buffer + producer_buffer.task_num) >=
+                    capacity ?
+                  (task_index_in_ring_buffer + producer_buffer.task_num -
+                   capacity) :
+                  (task_index_in_ring_buffer + producer_buffer.task_num);
+
+              while (tail_committed != tail_pending &&
+                     task_status_ring_buffer[tail_committed].load() ==
+                       SauterQuadratureTaskStatus::created)
+                {
+                  tail_committed = (tail_committed + 1) >= capacity ?
+                                     (tail_committed + 1 - capacity) :
+                                     (tail_committed + 1);
+                }
+            }
+
+          const unsigned int task_num_to_fetch =
+            task_num_ready_for_processing();
+          if (task_num_to_fetch >= batch_size ||
+              (is_full() && task_num_to_fetch > 0))
+            {
+              if_notify_consumers = true;
+            }
+          else
+            {
+              if_notify_consumers = false;
+            }
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+          deallog << "Tasks [" << task_index_in_ring_buffer << ", "
+                  << task_index_in_ring_buffer + producer_buffer.task_num
+                  << ") are created" << std::endl;
+          print_pointers(deallog);
+#endif
+        } // Release the buffer lock
+
+        if (if_notify_consumers)
+          {
+            batch_task_ready.notify_all();
+          }
+      }
+  }
+
+
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename KernelNumberType>
   template <template <int, typename> typename KernelFunctionType>
   HBEM_ATTR_HOST bool
   SauterQuadratureTaskRingBuffer<dim,
@@ -940,8 +1271,8 @@ namespace CUDAWrappers
          * @internal When the data in the ring buffer are not
          * contiguous, we should perform two times of memory copy.
          */
-        unsigned int number_of_data_until_buffer_end  = 0;
-        unsigned int number_of_data_from_buffer_start = 0;
+        unsigned int number_of_data_until_ring_buffer_end  = 0;
+        unsigned int number_of_data_from_ring_buffer_start = 0;
         const bool   is_task_batch_before_buffer_end =
           (task_start_index_to_fetch + task_num_to_fetch) <= capacity;
 
@@ -964,10 +1295,10 @@ namespace CUDAWrappers
           }
         else
           {
-            number_of_data_until_buffer_end =
+            number_of_data_until_ring_buffer_end =
               capacity - task_start_index_to_fetch;
-            number_of_data_from_buffer_start =
-              task_num_to_fetch - number_of_data_until_buffer_end;
+            number_of_data_from_ring_buffer_start =
+              task_num_to_fetch - number_of_data_until_ring_buffer_end;
 
             for (unsigned int i = task_start_index_to_fetch; i < capacity; i++)
               {
@@ -979,7 +1310,8 @@ namespace CUDAWrappers
                   SauterQuadratureTaskStatus::during_processing);
               }
 
-            for (unsigned int i = 0; i < number_of_data_from_buffer_start; i++)
+            for (unsigned int i = 0; i < number_of_data_from_ring_buffer_start;
+                 i++)
               {
                 Assert(task_status_ring_buffer[i].load() ==
                          SauterQuadratureTaskStatus::created,
@@ -1034,7 +1366,7 @@ namespace CUDAWrappers
                 task_start_index_to_fetch, 0)),
               kx_mapping_support_points_permuted_ring_buffer_gpu.offset(
                 task_start_index_to_fetch, 0),
-              number_of_data_until_buffer_end *
+              number_of_data_until_ring_buffer_end *
                 kx_mapping_support_points_permuted_ring_buffer_cpu.size(1),
               cuda_stream_handle);
 
@@ -1043,7 +1375,7 @@ namespace CUDAWrappers
                 task_start_index_to_fetch, 0)),
               ky_mapping_support_points_permuted_ring_buffer_gpu.offset(
                 task_start_index_to_fetch, 0),
-              number_of_data_until_buffer_end *
+              number_of_data_until_ring_buffer_end *
                 ky_mapping_support_points_permuted_ring_buffer_cpu.size(1),
               cuda_stream_handle);
 
@@ -1051,28 +1383,28 @@ namespace CUDAWrappers
               (void *)(scalar_data_ring_buffer_gpu + task_start_index_to_fetch),
               (void *)(scalar_data_ring_buffer_cpu + task_start_index_to_fetch),
               sizeof(SauterQuadratureTaskScalarData) *
-                number_of_data_until_buffer_end,
+                number_of_data_until_ring_buffer_end,
               cudaMemcpyHostToDevice,
               cuda_stream_handle));
 
             kx_mapping_support_points_permuted_ring_buffer_gpu.assign_from_host(
               &(kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
               kx_mapping_support_points_permuted_ring_buffer_gpu.offset(0, 0),
-              number_of_data_from_buffer_start *
+              number_of_data_from_ring_buffer_start *
                 kx_mapping_support_points_permuted_ring_buffer_cpu.size(1),
               cuda_stream_handle);
 
             ky_mapping_support_points_permuted_ring_buffer_gpu.assign_from_host(
               &(ky_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
               ky_mapping_support_points_permuted_ring_buffer_gpu.offset(0, 0),
-              number_of_data_from_buffer_start *
+              number_of_data_from_ring_buffer_start *
                 ky_mapping_support_points_permuted_ring_buffer_cpu.size(1),
               cuda_stream_handle);
 
             AssertCuda(cudaMemcpyAsync((void *)scalar_data_ring_buffer_gpu,
                                        (void *)scalar_data_ring_buffer_cpu,
                                        sizeof(SauterQuadratureTaskScalarData) *
-                                         number_of_data_from_buffer_start,
+                                         number_of_data_from_ring_buffer_start,
                                        cudaMemcpyHostToDevice,
                                        cuda_stream_handle));
           }
@@ -1265,7 +1597,7 @@ namespace CUDAWrappers
                                        task_start_index_to_fetch),
                               (void *)(quadrature_value_ring_buffer_gpu +
                                        task_start_index_to_fetch),
-                              number_of_data_until_buffer_end *
+                              number_of_data_until_ring_buffer_end *
                                 sizeof(KernelNumberType),
                               cudaMemcpyDeviceToHost,
                               cuda_stream_handle));
@@ -1274,7 +1606,7 @@ namespace CUDAWrappers
             AssertCuda(
               cudaMemcpyAsync((void *)(quadrature_value_ring_buffer_cpu),
                               (void *)(quadrature_value_ring_buffer_gpu),
-                              number_of_data_from_buffer_start *
+                              number_of_data_from_ring_buffer_start *
                                 sizeof(KernelNumberType),
                               cudaMemcpyDeviceToHost,
                               cuda_stream_handle));
@@ -1341,7 +1673,8 @@ namespace CUDAWrappers
                     SauterQuadratureTaskStatus::before_creation);
                 }
 
-              for (unsigned int i = 0; i < number_of_data_from_buffer_start;
+              for (unsigned int i = 0;
+                   i < number_of_data_from_ring_buffer_start;
                    i++)
                 {
                   RangeNumberType &entry = (*fullmat_ring_buffer_cpu[i])(
@@ -1416,8 +1749,7 @@ namespace CUDAWrappers
           else
             {
               if (head_committed >= task_start_index_to_fetch ||
-                  head_committed <
-                    task_start_index_to_fetch + task_num_to_fetch - capacity)
+                  head_committed < number_of_data_from_ring_buffer_start)
                 if_moving_head_committed = true;
               else
                 if_moving_head_committed = false;
@@ -1462,8 +1794,8 @@ namespace CUDAWrappers
     /**
      * @internal When a batch of tasks have been processed by a consumer
      * thread, there are a large amount of empty spaces into which new tasks
-     * can be inserted. Therefore, we use notify all producer threads to start
-     * working.
+     * can be inserted. Therefore, we use notify all producer threads to try to
+     * start working.
      */
     buffer_not_full.notify_all();
 

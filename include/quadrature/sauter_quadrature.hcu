@@ -45,6 +45,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <cstring>
 #include <iostream>
 #include <iterator>
 #include <vector>
@@ -67,6 +68,7 @@
 #include "linear_algebra/lapack_full_matrix_ext.h"
 #include "mapping/mapping_q_ext.h"
 #include "sauter_quadrature_task_buffer_for_vector.hcu"
+#include "sauter_quadrature_task_producer_buffer.h"
 #include "sauter_quadrature_task_ring_buffer.hcu"
 #include "sauter_quadrature_task_scalar_data.h"
 #include "sauter_quadrature_tools.h"
@@ -2301,10 +2303,10 @@ namespace CUDAWrappers
    * @param near_field_leaf_set
    * @param start_leaf_set_index
    * @param end_leaf_set_index This is the pass-the-end index.
-   * @param ring_buffer_for_same_panel
-   * @param ring_buffer_for_common_edge
-   * @param ring_buffer_for_common_vertex
-   * @param ring_buffer_for_regular
+   * @param ring_buffer_same_panel
+   * @param ring_buffer_common_edge
+   * @param ring_buffer_common_vertex
+   * @param ring_buffer_regular
    * @param kx_dof_to_cell_topo
    * @param ky_dof_to_cell_topo
    * @param bem_values
@@ -2327,29 +2329,27 @@ namespace CUDAWrappers
             typename SurfaceNormalDetector>
   void
   sauter_quadrature_for_near_field_matrix_entries_producer(
+    const ConfSauterQuadNearField &sauter_quad_near_field_params,
     const std::vector<HMatrix<spacedim, RangeNumberType> *>
-                      &near_field_leaf_set,
-    const unsigned int start_leaf_set_index,
-    const unsigned int end_leaf_set_index,
+                                                     &near_field_leaf_set,
+    const unsigned int                                start_leaf_set_index,
+    const unsigned int                                end_leaf_set_index,
     SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
-                                   KernelNumberType>
-      &ring_buffer_for_same_panel,
+                                   KernelNumberType> &ring_buffer_same_panel,
     SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
-                                   KernelNumberType>
-      &ring_buffer_for_common_edge,
+                                   KernelNumberType> &ring_buffer_common_edge,
     SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
-                                   KernelNumberType>
-      &ring_buffer_for_common_vertex,
+                                   KernelNumberType> &ring_buffer_common_vertex,
     SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
-                                   KernelNumberType> &ring_buffer_for_regular,
+                                   KernelNumberType> &ring_buffer_regular,
     const std::vector<
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
       &kx_dof_to_cell_topo,
@@ -2409,6 +2409,49 @@ namespace CUDAWrappers
     PairCellWisePerTaskData<dim, spacedim, KernelNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
+    // Create four local buffers for producing quadrature tasks in batch.
+    SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+      producer_buffer_same_panel;
+    SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+      producer_buffer_common_edge;
+    SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+      producer_buffer_common_vertex;
+    SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+      producer_buffer_regular;
+
+    Assert(sauter_quad_near_field_params.producer_buffer_capacity <
+             ring_buffer_same_panel.capacity,
+           ExcInternalError());
+    Assert(sauter_quad_near_field_params.producer_buffer_capacity <
+             ring_buffer_common_edge.capacity,
+           ExcInternalError());
+    Assert(sauter_quad_near_field_params.producer_buffer_capacity <
+             ring_buffer_common_vertex.capacity,
+           ExcInternalError());
+    Assert(sauter_quad_near_field_params.producer_buffer_capacity <
+             ring_buffer_regular.capacity,
+           ExcInternalError());
+
+    const unsigned int max_mapping_n_shape_functions =
+      bem_values.mappings.back()->get_data()->n_shape_functions;
+
+    producer_buffer_same_panel.allocate(
+      CellNeighboringType::SamePanel,
+      sauter_quad_near_field_params.producer_buffer_capacity,
+      max_mapping_n_shape_functions);
+    producer_buffer_common_edge.allocate(
+      CellNeighboringType::CommonEdge,
+      sauter_quad_near_field_params.producer_buffer_capacity,
+      max_mapping_n_shape_functions);
+    producer_buffer_common_vertex.allocate(
+      CellNeighboringType::CommonVertex,
+      sauter_quad_near_field_params.producer_buffer_capacity,
+      max_mapping_n_shape_functions);
+    producer_buffer_regular.allocate(
+      CellNeighboringType::Regular,
+      sauter_quad_near_field_params.producer_buffer_capacity,
+      max_mapping_n_shape_functions);
+
     /**
      * @internal Iterate over each \hmatrix node in the near field leaf set.
      */
@@ -2422,6 +2465,9 @@ namespace CUDAWrappers
         HMatrix<spacedim, RangeNumberType>   *leaf_mat = near_field_leaf_set[l];
         LAPACKFullMatrixExt<RangeNumberType> *fullmat =
           leaf_mat->get_fullmatrix();
+        // Get matrix size.
+        const auto fullmat_m = fullmat->m();
+        const auto fullmat_n = fullmat->n();
 
         Assert(fullmat != nullptr, ExcInternalError());
 
@@ -2469,7 +2515,7 @@ namespace CUDAWrappers
                      * elements in the full matrix.
                      */
                     for (size_t fullmat_row_index = 0;
-                         fullmat_row_index < fullmat->m();
+                         fullmat_row_index < fullmat_m;
                          fullmat_row_index++)
                       {
                         i_global_dof_index =
@@ -2493,11 +2539,20 @@ namespace CUDAWrappers
                                   ky_dof_i2e_numbering[(*col_index_range)[0] +
                                                        fullmat_col_index]);
 
+                            const bool is_last_matrix_entry =
+                              l == end_leaf_set_index - 1 &&
+                              fullmat_row_index == fullmat_m - 1 &&
+                              fullmat_col_index == fullmat_row_index;
+
                             create_sauter_quadrature_tasks_on_one_pair_of_dofs(
-                              ring_buffer_for_same_panel,
-                              ring_buffer_for_common_edge,
-                              ring_buffer_for_common_vertex,
-                              ring_buffer_for_regular,
+                              producer_buffer_same_panel,
+                              producer_buffer_common_edge,
+                              producer_buffer_common_vertex,
+                              producer_buffer_regular,
+                              ring_buffer_same_panel,
+                              ring_buffer_common_edge,
+                              ring_buffer_common_vertex,
+                              ring_buffer_regular,
                               fullmat,
                               fullmat_row_index,
                               fullmat_col_index,
@@ -2510,6 +2565,7 @@ namespace CUDAWrappers
                               normal_detector,
                               scratch_data,
                               copy_data,
+                              is_last_matrix_entry,
                               hmat_profile);
                           }
                       }
@@ -2531,7 +2587,7 @@ namespace CUDAWrappers
                      * usual.
                      */
                     for (size_t fullmat_row_index = 0;
-                         fullmat_row_index < fullmat->m();
+                         fullmat_row_index < fullmat_m;
                          fullmat_row_index++)
                       {
                         i_global_dof_index =
@@ -2543,7 +2599,7 @@ namespace CUDAWrappers
                                                    fullmat_row_index]);
 
                         for (size_t fullmat_col_index = 0;
-                             fullmat_col_index < fullmat->n();
+                             fullmat_col_index < fullmat_n;
                              fullmat_col_index++)
                           {
                             j_global_dof_index =
@@ -2555,11 +2611,20 @@ namespace CUDAWrappers
                                   ky_dof_i2e_numbering[(*col_index_range)[0] +
                                                        fullmat_col_index]);
 
+                            const bool is_last_matrix_entry =
+                              l == end_leaf_set_index - 1 &&
+                              fullmat_row_index == fullmat_m - 1 &&
+                              fullmat_col_index == fullmat_n - 1;
+
                             create_sauter_quadrature_tasks_on_one_pair_of_dofs(
-                              ring_buffer_for_same_panel,
-                              ring_buffer_for_common_edge,
-                              ring_buffer_for_common_vertex,
-                              ring_buffer_for_regular,
+                              producer_buffer_same_panel,
+                              producer_buffer_common_edge,
+                              producer_buffer_common_vertex,
+                              producer_buffer_regular,
+                              ring_buffer_same_panel,
+                              ring_buffer_common_edge,
+                              ring_buffer_common_vertex,
+                              ring_buffer_regular,
                               fullmat,
                               fullmat_row_index,
                               fullmat_col_index,
@@ -2572,6 +2637,7 @@ namespace CUDAWrappers
                               normal_detector,
                               scratch_data,
                               copy_data,
+                              is_last_matrix_entry,
                               hmat_profile);
                           }
                       }
@@ -2592,7 +2658,7 @@ namespace CUDAWrappers
             /**
              * Evaluate the whole full matrix.
              */
-            for (size_t fullmat_row_index = 0; fullmat_row_index < fullmat->m();
+            for (size_t fullmat_row_index = 0; fullmat_row_index < fullmat_m;
                  fullmat_row_index++)
               {
                 i_global_dof_index =
@@ -2604,7 +2670,7 @@ namespace CUDAWrappers
                                            fullmat_row_index]);
 
                 for (size_t fullmat_col_index = 0;
-                     fullmat_col_index < fullmat->n();
+                     fullmat_col_index < fullmat_n;
                      fullmat_col_index++)
                   {
                     j_global_dof_index =
@@ -2615,11 +2681,20 @@ namespace CUDAWrappers
                           ky_dof_i2e_numbering[(*col_index_range)[0] +
                                                fullmat_col_index]);
 
+                    const bool is_last_matrix_entry =
+                      l == end_leaf_set_index - 1 &&
+                      fullmat_row_index == fullmat_m - 1 &&
+                      fullmat_col_index == fullmat_n - 1;
+
                     create_sauter_quadrature_tasks_on_one_pair_of_dofs(
-                      ring_buffer_for_same_panel,
-                      ring_buffer_for_common_edge,
-                      ring_buffer_for_common_vertex,
-                      ring_buffer_for_regular,
+                      producer_buffer_same_panel,
+                      producer_buffer_common_edge,
+                      producer_buffer_common_vertex,
+                      producer_buffer_regular,
+                      ring_buffer_same_panel,
+                      ring_buffer_common_edge,
+                      ring_buffer_common_vertex,
+                      ring_buffer_regular,
                       fullmat,
                       fullmat_row_index,
                       fullmat_col_index,
@@ -2632,6 +2707,7 @@ namespace CUDAWrappers
                       normal_detector,
                       scratch_data,
                       copy_data,
+                      is_last_matrix_entry,
                       hmat_profile);
                   }
               }
@@ -2644,6 +2720,10 @@ namespace CUDAWrappers
      */
     scratch_data.release();
     copy_data.release();
+    producer_buffer_same_panel.release();
+    producer_buffer_common_edge.release();
+    producer_buffer_common_vertex.release();
+    producer_buffer_regular.release();
 
     deallog << "Producer thread " << current_thread_id << " exits...\n";
   }
@@ -2665,10 +2745,10 @@ namespace CUDAWrappers
    * @param near_field_leaf_set
    * @param start_leaf_set_index
    * @param end_leaf_set_index This is the pass-the-end index.
-   * @param ring_buffer_for_same_panel
-   * @param ring_buffer_for_common_edge
-   * @param ring_buffer_for_common_vertex
-   * @param ring_buffer_for_regular
+   * @param ring_buffer_same_panel
+   * @param ring_buffer_common_edge
+   * @param ring_buffer_common_vertex
+   * @param ring_buffer_regular
    * @param mass_matrix_factor
    * @param kx_dof_to_cell_topo
    * @param ky_dof_to_cell_topo
@@ -2693,29 +2773,27 @@ namespace CUDAWrappers
             typename SurfaceNormalDetector>
   void
   sauter_quadrature_for_near_field_matrix_entries_producer(
+    const ConfSauterQuadNearField &sauter_quad_near_field_params,
     const std::vector<HMatrix<spacedim, RangeNumberType> *>
-                      &near_field_leaf_set,
-    const unsigned int start_leaf_set_index,
-    const unsigned int end_leaf_set_index,
+                                                     &near_field_leaf_set,
+    const unsigned int                                start_leaf_set_index,
+    const unsigned int                                end_leaf_set_index,
     SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
-                                   KernelNumberType>
-      &ring_buffer_for_same_panel,
+                                   KernelNumberType> &ring_buffer_same_panel,
     SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
-                                   KernelNumberType>
-      &ring_buffer_for_common_edge,
+                                   KernelNumberType> &ring_buffer_common_edge,
     SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
-                                   KernelNumberType>
-      &ring_buffer_for_common_vertex,
+                                   KernelNumberType> &ring_buffer_common_vertex,
     SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
-                                   KernelNumberType> &ring_buffer_for_regular,
+                                   KernelNumberType> &ring_buffer_regular,
     const typename numbers::NumberTraits<RangeNumberType>::real_type
       mass_matrix_factor,
     const std::vector<
@@ -2787,6 +2865,49 @@ namespace CUDAWrappers
     PairCellWisePerTaskData<dim, spacedim, KernelNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
+    // Create four local buffers for producing quadrature tasks in batch.
+    SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+      producer_buffer_same_panel;
+    SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+      producer_buffer_common_edge;
+    SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+      producer_buffer_common_vertex;
+    SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+      producer_buffer_regular;
+
+    Assert(sauter_quad_near_field_params.producer_buffer_capacity <
+             ring_buffer_same_panel.capacity,
+           ExcInternalError());
+    Assert(sauter_quad_near_field_params.producer_buffer_capacity <
+             ring_buffer_common_edge.capacity,
+           ExcInternalError());
+    Assert(sauter_quad_near_field_params.producer_buffer_capacity <
+             ring_buffer_common_vertex.capacity,
+           ExcInternalError());
+    Assert(sauter_quad_near_field_params.producer_buffer_capacity <
+             ring_buffer_regular.capacity,
+           ExcInternalError());
+
+    const unsigned int max_mapping_n_shape_functions =
+      bem_values.mappings.back()->get_data()->n_shape_functions;
+
+    producer_buffer_same_panel.allocate(
+      CellNeighboringType::SamePanel,
+      sauter_quad_near_field_params.producer_buffer_capacity,
+      max_mapping_n_shape_functions);
+    producer_buffer_common_edge.allocate(
+      CellNeighboringType::CommonEdge,
+      sauter_quad_near_field_params.producer_buffer_capacity,
+      max_mapping_n_shape_functions);
+    producer_buffer_common_vertex.allocate(
+      CellNeighboringType::CommonVertex,
+      sauter_quad_near_field_params.producer_buffer_capacity,
+      max_mapping_n_shape_functions);
+    producer_buffer_regular.allocate(
+      CellNeighboringType::Regular,
+      sauter_quad_near_field_params.producer_buffer_capacity,
+      max_mapping_n_shape_functions);
+
     /**
      * @internal Iterate over each \hmatrix node in the near field leaf set.
      */
@@ -2800,6 +2921,9 @@ namespace CUDAWrappers
         HMatrix<spacedim, RangeNumberType>   *leaf_mat = near_field_leaf_set[l];
         LAPACKFullMatrixExt<RangeNumberType> *fullmat =
           leaf_mat->get_fullmatrix();
+        // Get matrix size.
+        const auto fullmat_m = fullmat->m();
+        const auto fullmat_n = fullmat->n();
 
         Assert(fullmat != nullptr, ExcInternalError());
 
@@ -2847,7 +2971,7 @@ namespace CUDAWrappers
                      * elements in the full matrix.
                      */
                     for (size_t fullmat_row_index = 0;
-                         fullmat_row_index < fullmat->m();
+                         fullmat_row_index < fullmat_m;
                          fullmat_row_index++)
                       {
                         i_global_dof_index =
@@ -2871,11 +2995,20 @@ namespace CUDAWrappers
                                   ky_dof_i2e_numbering[(*col_index_range)[0] +
                                                        fullmat_col_index]);
 
+                            const bool is_last_matrix_entry =
+                              l == end_leaf_set_index - 1 &&
+                              fullmat_row_index == fullmat_m - 1 &&
+                              fullmat_col_index == fullmat_row_index;
+
                             create_sauter_quadrature_tasks_on_one_pair_of_dofs(
-                              ring_buffer_for_same_panel,
-                              ring_buffer_for_common_edge,
-                              ring_buffer_for_common_vertex,
-                              ring_buffer_for_regular,
+                              producer_buffer_same_panel,
+                              producer_buffer_common_edge,
+                              producer_buffer_common_vertex,
+                              producer_buffer_regular,
+                              ring_buffer_same_panel,
+                              ring_buffer_common_edge,
+                              ring_buffer_common_vertex,
+                              ring_buffer_regular,
                               mass_matrix_factor,
                               fullmat,
                               fullmat_row_index,
@@ -2890,6 +3023,7 @@ namespace CUDAWrappers
                               mass_matrix_scratch_data,
                               scratch_data,
                               copy_data,
+                              is_last_matrix_entry,
                               hmat_profile);
                           }
                       }
@@ -2911,7 +3045,7 @@ namespace CUDAWrappers
                      * usual.
                      */
                     for (size_t fullmat_row_index = 0;
-                         fullmat_row_index < fullmat->m();
+                         fullmat_row_index < fullmat_m;
                          fullmat_row_index++)
                       {
                         i_global_dof_index =
@@ -2923,7 +3057,7 @@ namespace CUDAWrappers
                                                    fullmat_row_index]);
 
                         for (size_t fullmat_col_index = 0;
-                             fullmat_col_index < fullmat->n();
+                             fullmat_col_index < fullmat_n;
                              fullmat_col_index++)
                           {
                             j_global_dof_index =
@@ -2935,11 +3069,20 @@ namespace CUDAWrappers
                                   ky_dof_i2e_numbering[(*col_index_range)[0] +
                                                        fullmat_col_index]);
 
+                            const bool is_last_matrix_entry =
+                              l == end_leaf_set_index - 1 &&
+                              fullmat_row_index == fullmat_m - 1 &&
+                              fullmat_col_index == fullmat_n - 1;
+
                             create_sauter_quadrature_tasks_on_one_pair_of_dofs(
-                              ring_buffer_for_same_panel,
-                              ring_buffer_for_common_edge,
-                              ring_buffer_for_common_vertex,
-                              ring_buffer_for_regular,
+                              producer_buffer_same_panel,
+                              producer_buffer_common_edge,
+                              producer_buffer_common_vertex,
+                              producer_buffer_regular,
+                              ring_buffer_same_panel,
+                              ring_buffer_common_edge,
+                              ring_buffer_common_vertex,
+                              ring_buffer_regular,
                               mass_matrix_factor,
                               fullmat,
                               fullmat_row_index,
@@ -2954,6 +3097,7 @@ namespace CUDAWrappers
                               mass_matrix_scratch_data,
                               scratch_data,
                               copy_data,
+                              is_last_matrix_entry,
                               hmat_profile);
                           }
                       }
@@ -2974,7 +3118,7 @@ namespace CUDAWrappers
             /**
              * Evaluate the whole full matrix.
              */
-            for (size_t fullmat_row_index = 0; fullmat_row_index < fullmat->m();
+            for (size_t fullmat_row_index = 0; fullmat_row_index < fullmat_m;
                  fullmat_row_index++)
               {
                 i_global_dof_index =
@@ -2986,7 +3130,7 @@ namespace CUDAWrappers
                                            fullmat_row_index]);
 
                 for (size_t fullmat_col_index = 0;
-                     fullmat_col_index < fullmat->n();
+                     fullmat_col_index < fullmat_n;
                      fullmat_col_index++)
                   {
                     j_global_dof_index =
@@ -2997,11 +3141,20 @@ namespace CUDAWrappers
                           ky_dof_i2e_numbering[(*col_index_range)[0] +
                                                fullmat_col_index]);
 
+                    const bool is_last_matrix_entry =
+                      l == end_leaf_set_index - 1 &&
+                      fullmat_row_index == fullmat_m - 1 &&
+                      fullmat_col_index == fullmat_n - 1;
+
                     create_sauter_quadrature_tasks_on_one_pair_of_dofs(
-                      ring_buffer_for_same_panel,
-                      ring_buffer_for_common_edge,
-                      ring_buffer_for_common_vertex,
-                      ring_buffer_for_regular,
+                      producer_buffer_same_panel,
+                      producer_buffer_common_edge,
+                      producer_buffer_common_vertex,
+                      producer_buffer_regular,
+                      ring_buffer_same_panel,
+                      ring_buffer_common_edge,
+                      ring_buffer_common_vertex,
+                      ring_buffer_regular,
                       mass_matrix_factor,
                       fullmat,
                       fullmat_row_index,
@@ -3016,6 +3169,7 @@ namespace CUDAWrappers
                       mass_matrix_scratch_data,
                       scratch_data,
                       copy_data,
+                      is_last_matrix_entry,
                       hmat_profile);
                   }
               }
@@ -3028,6 +3182,10 @@ namespace CUDAWrappers
      */
     scratch_data.release();
     copy_data.release();
+    producer_buffer_same_panel.release();
+    producer_buffer_common_edge.release();
+    producer_buffer_common_vertex.release();
+    producer_buffer_regular.release();
 
     deallog << "Producer thread " << current_thread_id << " exits...\n";
   }
@@ -3117,10 +3275,14 @@ namespace CUDAWrappers
    * @tparam RangeNumberType
    * @tparam KernelNumberType
    * @tparam SurfaceNormalDetector
-   * @param ring_buffer_for_same_panel
-   * @param ring_buffer_for_common_edge
-   * @param ring_buffer_for_common_vertex
-   * @param ring_buffer_for_regular
+   * @param producer_buffer_same_panel
+   * @param producer_buffer_common_edge
+   * @param producer_buffer_common_vertex
+   * @param producer_buffer_regular
+   * @param ring_buffer_same_panel
+   * @param ring_buffer_common_edge
+   * @param ring_buffer_common_vertex
+   * @param ring_buffer_regular
    * @param fullmat
    * @param fullmat_row_index
    * @param fullmat_col_index
@@ -3139,6 +3301,8 @@ namespace CUDAWrappers
    * @param normal_detector
    * @param scratch_data
    * @param copy_data
+   * @param is_last_matrix_entry
+   * @param hmat_profile
    */
   template <int dim,
             int spacedim,
@@ -3147,25 +3311,30 @@ namespace CUDAWrappers
             typename SurfaceNormalDetector>
   void
   create_sauter_quadrature_tasks_on_one_pair_of_dofs(
+    SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+      &producer_buffer_same_panel,
+    SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+      &producer_buffer_common_edge,
+    SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+      &producer_buffer_common_vertex,
+    SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+                                                     &producer_buffer_regular,
     SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
-                                   KernelNumberType>
-      &ring_buffer_for_same_panel,
+                                   KernelNumberType> &ring_buffer_same_panel,
     SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
-                                   KernelNumberType>
-      &ring_buffer_for_common_edge,
+                                   KernelNumberType> &ring_buffer_common_edge,
     SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
-                                   KernelNumberType>
-      &ring_buffer_for_common_vertex,
+                                   KernelNumberType> &ring_buffer_common_vertex,
     SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
-                                   KernelNumberType> &ring_buffer_for_regular,
+                                   KernelNumberType> &ring_buffer_regular,
     LAPACKFullMatrixExt<RangeNumberType>             *fullmat,
     const unsigned int                                fullmat_row_index,
     const unsigned int                                fullmat_col_index,
@@ -3183,7 +3352,8 @@ namespace CUDAWrappers
     const SurfaceNormalDetector &normal_detector,
     PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
     PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
-    HMatrixAssemblyProfile *hmat_profile = nullptr)
+    const bool                               is_last_matrix_entry,
+    [[maybe_unused]] HMatrixAssemblyProfile *hmat_profile = nullptr)
   {
     using real_type =
       typename numbers::NumberTraits<RangeNumberType>::real_type;
@@ -3206,10 +3376,14 @@ namespace CUDAWrappers
      * Iterate over each cell in the support of the basis function
      * associated with the i-th global DoF in the external numbering.
      */
-    for (auto kx_cell_iter_pointer : kx_dof_to_cell_topo[i_global_dof_index])
+    const unsigned int cell_num_in_kx_dof_support =
+      kx_dof_to_cell_topo[i_global_dof_index].size();
+    for (unsigned int kx_dof_support_cell_index = 0;
+         kx_dof_support_cell_index < cell_num_in_kx_dof_support;
+         kx_dof_support_cell_index++)
       {
         const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter =
-          *kx_cell_iter_pointer;
+          *kx_dof_to_cell_topo[i_global_dof_index][kx_dof_support_cell_index];
 
         const unsigned int kx_mapping_index =
           material_id_to_mapping_index.at(kx_cell_iter->material_id());
@@ -3246,15 +3420,19 @@ namespace CUDAWrappers
          * Iterate over each cell in the support of the basis function
          * associated with the j-th global DoF in the external numbering.
          */
-        for (auto ky_cell_iter_pointer :
-             ky_dof_to_cell_topo[j_global_dof_index])
+        const unsigned int cell_num_in_ky_dof_support =
+          ky_dof_to_cell_topo[j_global_dof_index].size();
+        for (unsigned int ky_dof_support_cell_index = 0;
+             ky_dof_support_cell_index < cell_num_in_ky_dof_support;
+             ky_dof_support_cell_index++)
           {
 #if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
             Timer timer;
 #endif
 
             const typename DoFHandler<dim, spacedim>::cell_iterator
-              &ky_cell_iter = *ky_cell_iter_pointer;
+              &ky_cell_iter = *ky_dof_to_cell_topo[j_global_dof_index]
+                                                  [ky_dof_support_cell_index];
 
             /**
              * Detect the cell neighboring type based on cell vertex
@@ -3333,15 +3511,6 @@ namespace CUDAWrappers
             unsigned int j_index =
               j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
-#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
-            timer.stop();
-            Assert(hmat_profile != nullptr, ExcInternalError());
-            hmat_profile->producer_time_per_type[cell_neighboring_type]
-              .fetch_add(timer.last_wall_time());
-            hmat_profile->near_field_tasks_per_type[cell_neighboring_type]
-              .fetch_add(1);
-#endif
-
 #if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
             deallog << "Create Sauter task: " << fullmat << ","
                     << i_global_dof_index << "," << j_global_dof_index << ","
@@ -3352,12 +3521,19 @@ namespace CUDAWrappers
             switch (cell_neighboring_type)
               {
                   case CellNeighboringType::SamePanel: {
+                    if (producer_buffer_same_panel.is_full())
+                      {
+                        ring_buffer_same_panel.add_tasks_from_producer_buffer(
+                          producer_buffer_same_panel, false);
+                        producer_buffer_same_panel.reset();
+                      }
+
 #if ENABLE_NVTX == 1
                     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "add_task_same_panel");
 #endif
 
-                    ring_buffer_for_same_panel.add_task(
+                    producer_buffer_same_panel.add_task(
                       fullmat,
                       fullmat_row_index,
                       fullmat_col_index,
@@ -3371,18 +3547,24 @@ namespace CUDAWrappers
                         is_kx_normal_inward,
                         is_ky_normal_inward),
                       0.,
-                      scratch_data,
-                      hmat_profile);
+                      scratch_data);
 
                     break;
                   }
                   case CellNeighboringType::CommonEdge: {
+                    if (producer_buffer_common_edge.is_full())
+                      {
+                        ring_buffer_common_edge.add_tasks_from_producer_buffer(
+                          producer_buffer_common_edge, false);
+                        producer_buffer_common_edge.reset();
+                      }
+
 #if ENABLE_NVTX == 1
                     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "add_task_common_edge");
 #endif
 
-                    ring_buffer_for_common_edge.add_task(
+                    producer_buffer_common_edge.add_task(
                       fullmat,
                       fullmat_row_index,
                       fullmat_col_index,
@@ -3396,18 +3578,25 @@ namespace CUDAWrappers
                         is_kx_normal_inward,
                         is_ky_normal_inward),
                       0.,
-                      scratch_data,
-                      hmat_profile);
+                      scratch_data);
 
                     break;
                   }
                   case CellNeighboringType::CommonVertex: {
+                    if (producer_buffer_common_vertex.is_full())
+                      {
+                        ring_buffer_common_vertex
+                          .add_tasks_from_producer_buffer(
+                            producer_buffer_common_vertex, false);
+                        producer_buffer_common_vertex.reset();
+                      }
+
 #if ENABLE_NVTX == 1
                     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "add_task_common_vertex");
 #endif
 
-                    ring_buffer_for_common_vertex.add_task(
+                    producer_buffer_common_vertex.add_task(
                       fullmat,
                       fullmat_row_index,
                       fullmat_col_index,
@@ -3421,18 +3610,24 @@ namespace CUDAWrappers
                         is_kx_normal_inward,
                         is_ky_normal_inward),
                       0.,
-                      scratch_data,
-                      hmat_profile);
+                      scratch_data);
 
                     break;
                   }
                   case CellNeighboringType::Regular: {
+                    if (producer_buffer_regular.is_full())
+                      {
+                        ring_buffer_regular.add_tasks_from_producer_buffer(
+                          producer_buffer_regular, false);
+                        producer_buffer_regular.reset();
+                      }
+
 #if ENABLE_NVTX == 1
                     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "add_task_regular");
 #endif
 
-                    ring_buffer_for_regular.add_task(
+                    producer_buffer_regular.add_task(
                       fullmat,
                       fullmat_row_index,
                       fullmat_col_index,
@@ -3446,8 +3641,7 @@ namespace CUDAWrappers
                         is_kx_normal_inward,
                         is_ky_normal_inward),
                       0.,
-                      scratch_data,
-                      hmat_profile);
+                      scratch_data);
 
                     break;
                   }
@@ -3457,6 +3651,37 @@ namespace CUDAWrappers
                     break;
                   }
               }
+
+            // After adding the current task to one of the local producer
+            // buffers, we check if this is the last task. If so we transfer all
+            // tasks in local buffers to ring buffers.
+            if (is_last_matrix_entry &&
+                kx_dof_support_cell_index == cell_num_in_kx_dof_support - 1 &&
+                ky_dof_support_cell_index == cell_num_in_ky_dof_support - 1)
+              {
+                ring_buffer_same_panel.add_tasks_from_producer_buffer(
+                  producer_buffer_same_panel, false);
+                ring_buffer_common_edge.add_tasks_from_producer_buffer(
+                  producer_buffer_common_edge, false);
+                ring_buffer_common_vertex.add_tasks_from_producer_buffer(
+                  producer_buffer_common_vertex, false);
+                ring_buffer_regular.add_tasks_from_producer_buffer(
+                  producer_buffer_regular, false);
+
+                producer_buffer_same_panel.reset();
+                producer_buffer_common_edge.reset();
+                producer_buffer_common_vertex.reset();
+                producer_buffer_regular.reset();
+              }
+
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+            timer.stop();
+            Assert(hmat_profile != nullptr, ExcInternalError());
+            hmat_profile->producer_time_per_type[cell_neighboring_type]
+              .fetch_add(timer.last_wall_time());
+            hmat_profile->near_field_tasks_per_type[cell_neighboring_type]
+              .fetch_add(1);
+#endif
           }
       }
   }
@@ -3478,10 +3703,14 @@ namespace CUDAWrappers
    * @tparam RangeNumberType
    * @tparam KernelNumberType
    * @tparam SurfaceNormalDetector
-   * @param ring_buffer_for_same_panel
-   * @param ring_buffer_for_common_edge
-   * @param ring_buffer_for_common_vertex
-   * @param ring_buffer_for_regular
+   * @param producer_buffer_same_panel
+   * @param producer_buffer_common_edge
+   * @param producer_buffer_common_vertex
+   * @param producer_buffer_regular
+   * @param ring_buffer_same_panel
+   * @param ring_buffer_common_edge
+   * @param ring_buffer_common_vertex
+   * @param ring_buffer_regular
    * @param mass_matrix_factor
    * @param fullmat
    * @param fullmat_row_index
@@ -3502,6 +3731,8 @@ namespace CUDAWrappers
    * @param mass_matrix_scratch_data
    * @param scratch_data
    * @param copy_data
+   * @param is_last_matrix_entry
+   * @param hmat_profile
    */
   template <int dim,
             int spacedim,
@@ -3510,25 +3741,30 @@ namespace CUDAWrappers
             typename SurfaceNormalDetector>
   void
   create_sauter_quadrature_tasks_on_one_pair_of_dofs(
+    SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+      &producer_buffer_same_panel,
+    SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+      &producer_buffer_common_edge,
+    SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+      &producer_buffer_common_vertex,
+    SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+                                                     &producer_buffer_regular,
     SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
-                                   KernelNumberType>
-      &ring_buffer_for_same_panel,
+                                   KernelNumberType> &ring_buffer_same_panel,
     SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
-                                   KernelNumberType>
-      &ring_buffer_for_common_edge,
+                                   KernelNumberType> &ring_buffer_common_edge,
     SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
-                                   KernelNumberType>
-      &ring_buffer_for_common_vertex,
+                                   KernelNumberType> &ring_buffer_common_vertex,
     SauterQuadratureTaskRingBuffer<dim,
                                    spacedim,
                                    RangeNumberType,
-                                   KernelNumberType> &ring_buffer_for_regular,
+                                   KernelNumberType> &ring_buffer_regular,
     const typename numbers::NumberTraits<RangeNumberType>::real_type
                                           mass_matrix_factor,
     LAPACKFullMatrixExt<RangeNumberType> *fullmat,
@@ -3549,7 +3785,8 @@ namespace CUDAWrappers
     CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
     PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
     PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
-    HMatrixAssemblyProfile *hmat_profile = nullptr)
+    const bool                               is_last_matrix_entry,
+    [[maybe_unused]] HMatrixAssemblyProfile *hmat_profile = nullptr)
   {
     using real_type =
       typename numbers::NumberTraits<RangeNumberType>::real_type;
@@ -3572,10 +3809,14 @@ namespace CUDAWrappers
      * Iterate over each cell in the support of the basis function
      * associated with the i-th global DoF in the external numbering.
      */
-    for (auto kx_cell_iter_pointer : kx_dof_to_cell_topo[i_global_dof_index])
+    const unsigned int cell_num_in_kx_dof_support =
+      kx_dof_to_cell_topo[i_global_dof_index].size();
+    for (unsigned int kx_dof_support_cell_index = 0;
+         kx_dof_support_cell_index < cell_num_in_kx_dof_support;
+         kx_dof_support_cell_index++)
       {
         const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter =
-          *kx_cell_iter_pointer;
+          *kx_dof_to_cell_topo[i_global_dof_index][kx_dof_support_cell_index];
         const unsigned int kx_cell_index = kx_cell_iter->active_cell_index();
 
         const unsigned int kx_mapping_index =
@@ -3613,15 +3854,19 @@ namespace CUDAWrappers
          * Iterate over each cell in the support of the basis function
          * associated with the j-th global DoF in the external numbering.
          */
-        for (auto ky_cell_iter_pointer :
-             ky_dof_to_cell_topo[j_global_dof_index])
+        const unsigned int cell_num_in_ky_dof_support =
+          ky_dof_to_cell_topo[j_global_dof_index].size();
+        for (unsigned int ky_dof_support_cell_index = 0;
+             ky_dof_support_cell_index < cell_num_in_ky_dof_support;
+             ky_dof_support_cell_index++)
           {
 #if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
             Timer timer;
 #endif
 
             const typename DoFHandler<dim, spacedim>::cell_iterator
-                              &ky_cell_iter = *ky_cell_iter_pointer;
+              &ky_cell_iter = *ky_dof_to_cell_topo[j_global_dof_index]
+                                                  [ky_dof_support_cell_index];
             const unsigned int ky_cell_index =
               ky_cell_iter->active_cell_index();
 
@@ -3844,12 +4089,19 @@ namespace CUDAWrappers
             switch (cell_neighboring_type)
               {
                   case CellNeighboringType::SamePanel: {
+                    if (producer_buffer_same_panel.is_full())
+                      {
+                        ring_buffer_same_panel.add_tasks_from_producer_buffer(
+                          producer_buffer_same_panel, true);
+                        producer_buffer_same_panel.reset();
+                      }
+
 #if ENABLE_NVTX == 1
                     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "add_task_same_panel");
 #endif
 
-                    ring_buffer_for_same_panel.add_task(
+                    producer_buffer_same_panel.add_task(
                       fullmat,
                       fullmat_row_index,
                       fullmat_col_index,
@@ -3863,18 +4115,24 @@ namespace CUDAWrappers
                         is_kx_normal_inward,
                         is_ky_normal_inward),
                       mass_matrix_entry,
-                      scratch_data,
-                      hmat_profile);
+                      scratch_data);
 
                     break;
                   }
                   case CellNeighboringType::CommonEdge: {
+                    if (producer_buffer_common_edge.is_full())
+                      {
+                        ring_buffer_common_edge.add_tasks_from_producer_buffer(
+                          producer_buffer_common_edge, true);
+                        producer_buffer_common_edge.reset();
+                      }
+
 #if ENABLE_NVTX == 1
                     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "add_task_common_edge");
 #endif
 
-                    ring_buffer_for_common_edge.add_task(
+                    producer_buffer_common_edge.add_task(
                       fullmat,
                       fullmat_row_index,
                       fullmat_col_index,
@@ -3888,18 +4146,25 @@ namespace CUDAWrappers
                         is_kx_normal_inward,
                         is_ky_normal_inward),
                       mass_matrix_entry,
-                      scratch_data,
-                      hmat_profile);
+                      scratch_data);
 
                     break;
                   }
                   case CellNeighboringType::CommonVertex: {
+                    if (producer_buffer_common_vertex.is_full())
+                      {
+                        ring_buffer_common_vertex
+                          .add_tasks_from_producer_buffer(
+                            producer_buffer_common_vertex, true);
+                        producer_buffer_common_vertex.reset();
+                      }
+
 #if ENABLE_NVTX == 1
                     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "add_task_common_vertex");
 #endif
 
-                    ring_buffer_for_common_vertex.add_task(
+                    producer_buffer_common_vertex.add_task(
                       fullmat,
                       fullmat_row_index,
                       fullmat_col_index,
@@ -3913,18 +4178,24 @@ namespace CUDAWrappers
                         is_kx_normal_inward,
                         is_ky_normal_inward),
                       mass_matrix_entry,
-                      scratch_data,
-                      hmat_profile);
+                      scratch_data);
 
                     break;
                   }
                   case CellNeighboringType::Regular: {
+                    if (producer_buffer_regular.is_full())
+                      {
+                        ring_buffer_regular.add_tasks_from_producer_buffer(
+                          producer_buffer_regular, true);
+                        producer_buffer_regular.reset();
+                      }
+
 #if ENABLE_NVTX == 1
                     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "add_task_regular");
 #endif
 
-                    ring_buffer_for_regular.add_task(
+                    producer_buffer_regular.add_task(
                       fullmat,
                       fullmat_row_index,
                       fullmat_col_index,
@@ -3938,8 +4209,7 @@ namespace CUDAWrappers
                         is_kx_normal_inward,
                         is_ky_normal_inward),
                       mass_matrix_entry,
-                      scratch_data,
-                      hmat_profile);
+                      scratch_data);
 
                     break;
                   }
@@ -3948,6 +4218,28 @@ namespace CUDAWrappers
 
                     break;
                   }
+              }
+
+            // After adding the current task to one of the local producer
+            // buffers, we check if this is the last task. If so we transfer all
+            // tasks in local buffers to ring buffers.
+            if (is_last_matrix_entry &&
+                kx_dof_support_cell_index == cell_num_in_kx_dof_support - 1 &&
+                ky_dof_support_cell_index == cell_num_in_ky_dof_support - 1)
+              {
+                ring_buffer_same_panel.add_tasks_from_producer_buffer(
+                  producer_buffer_same_panel, true);
+                ring_buffer_common_edge.add_tasks_from_producer_buffer(
+                  producer_buffer_common_edge, true);
+                ring_buffer_common_vertex.add_tasks_from_producer_buffer(
+                  producer_buffer_common_vertex, true);
+                ring_buffer_regular.add_tasks_from_producer_buffer(
+                  producer_buffer_regular, true);
+
+                producer_buffer_same_panel.reset();
+                producer_buffer_common_edge.reset();
+                producer_buffer_common_vertex.reset();
+                producer_buffer_regular.reset();
               }
 
 #if ENABLE_HMAT_ASSEMBLY_PROFILE == 1

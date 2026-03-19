@@ -145,7 +145,7 @@ private:
   ConfHierBEM
   loadConf(const std::string &file_path)
   {
-    auto &conf =
+    auto conf =
       rfl::toml::load<ConfHierBEM, rfl::DefaultIfMissing, rfl::NoExtraFields>(
         file_path)
         .value();
