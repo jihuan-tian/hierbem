@@ -1068,7 +1068,7 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
     const SauterQuadratureRule<dim> &sauter_quad_rule)
 {
 #if ENABLE_NVTX == 1
-  HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_hmat_op_precond");
+  nvtxRangeId_t nvtx_id = nvtxRangeStartA("build_hmat_op_precond");
 #endif
   /**
    * Get the internal-to-external DoF numberings.
@@ -1285,6 +1285,10 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
           normal_detector,
           true);
     }
+
+#if ENABLE_NVTX == 1
+  nvtxRangeEnd(nvtx_id);
+#endif
 }
 
 
