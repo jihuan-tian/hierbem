@@ -35,7 +35,6 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <thread>
 
 #include "bem_tools.h"
 #include "config.h"
@@ -1872,11 +1871,6 @@ public:
   using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
 
   /**
-   * ID for the working thread associated with this scratch data.
-   */
-  std::thread::id thread_id;
-
-  /**
    * CUDA stream associated with this CPU work stream.
    */
   cudaStream_t cuda_stream_handle;
@@ -2190,8 +2184,7 @@ public:
   KernelNumberType *quad_values_in_thread_blocks;
 
   /**
-   * Constructor to be used for assembling full BEM matrix, which does not
-   * involve @p thread_id.
+   * Constructor
    *
    * @param kx_fe
    * @param ky_fe
@@ -2204,201 +2197,6 @@ public:
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const BEMValues<dim, spacedim, real_type>       &bem_values)
     : cuda_stream_handle(0)
-    , common_vertex_pair_local_indices(0)
-    , kx_mapping_support_points_permuted(
-        mappings.back()->get_data()->n_shape_functions)
-    , ky_mapping_support_points_permuted(
-        mappings.back()->get_data()->n_shape_functions)
-    , kx_mapping_support_points_permuted_xy_components(
-        mappings.back()->get_data()->n_shape_functions)
-    , kx_mapping_support_points_permuted_yz_components(
-        mappings.back()->get_data()->n_shape_functions)
-    , kx_mapping_support_points_permuted_zx_components(
-        mappings.back()->get_data()->n_shape_functions)
-    , ky_mapping_support_points_permuted_xy_components(
-        mappings.back()->get_data()->n_shape_functions)
-    , ky_mapping_support_points_permuted_yz_components(
-        mappings.back()->get_data()->n_shape_functions)
-    , ky_mapping_support_points_permuted_zx_components(
-        mappings.back()->get_data()->n_shape_functions)
-    , kx_local_dof_indices_in_default_dof_order(kx_fe.dofs_per_cell)
-    , ky_local_dof_indices_in_default_dof_order(ky_fe.dofs_per_cell)
-    , kx_fe_poly_space_numbering_inverse(kx_fe.dofs_per_cell)
-    , ky_fe_poly_space_numbering_inverse(ky_fe.dofs_per_cell)
-    , kx_local_dof_permutation(kx_fe.dofs_per_cell)
-    , ky_local_dof_permutation(ky_fe.dofs_per_cell)
-    , kx_jacobians_same_panel(8, bem_values.quad_rule_for_same_panel.size())
-    , kx_jacobians_common_edge(6, bem_values.quad_rule_for_common_edge.size())
-    , kx_jacobians_common_vertex(4,
-                                 bem_values.quad_rule_for_common_vertex.size())
-    , kx_jacobians_regular(1, bem_values.quad_rule_for_regular.size())
-    , kx_normals_same_panel(8, bem_values.quad_rule_for_same_panel.size())
-    , kx_normals_common_edge(6, bem_values.quad_rule_for_common_edge.size())
-    , kx_normals_common_vertex(4, bem_values.quad_rule_for_common_vertex.size())
-    , kx_normals_regular(1, bem_values.quad_rule_for_regular.size())
-    , kx_covariants_same_panel(8, bem_values.quad_rule_for_same_panel.size())
-    , kx_covariants_common_edge(6, bem_values.quad_rule_for_common_edge.size())
-    , kx_covariants_common_vertex(4,
-                                  bem_values.quad_rule_for_common_vertex.size())
-    , kx_covariants_regular(1, bem_values.quad_rule_for_regular.size())
-    , kx_quad_points_same_panel(8, bem_values.quad_rule_for_same_panel.size())
-    , kx_quad_points_common_edge(6, bem_values.quad_rule_for_common_edge.size())
-    , kx_quad_points_common_vertex(
-        4,
-        bem_values.quad_rule_for_common_vertex.size())
-    , kx_quad_points_regular(1, bem_values.quad_rule_for_regular.size())
-    , ky_jacobians_same_panel(8, bem_values.quad_rule_for_same_panel.size())
-    , ky_jacobians_common_edge(6, bem_values.quad_rule_for_common_edge.size())
-    , ky_jacobians_common_vertex(4,
-                                 bem_values.quad_rule_for_common_vertex.size())
-    , ky_jacobians_regular(1, bem_values.quad_rule_for_regular.size())
-    , ky_normals_same_panel(8, bem_values.quad_rule_for_same_panel.size())
-    , ky_normals_common_edge(6, bem_values.quad_rule_for_common_edge.size())
-    , ky_normals_common_vertex(4, bem_values.quad_rule_for_common_vertex.size())
-    , ky_normals_regular(1, bem_values.quad_rule_for_regular.size())
-    , ky_covariants_same_panel(8, bem_values.quad_rule_for_same_panel.size())
-    , ky_covariants_common_edge(6, bem_values.quad_rule_for_common_edge.size())
-    , ky_covariants_common_vertex(4,
-                                  bem_values.quad_rule_for_common_vertex.size())
-    , ky_covariants_regular(1, bem_values.quad_rule_for_regular.size())
-    , ky_quad_points_same_panel(8, bem_values.quad_rule_for_same_panel.size())
-    , ky_quad_points_common_edge(6, bem_values.quad_rule_for_common_edge.size())
-    , ky_quad_points_common_vertex(
-        4,
-        bem_values.quad_rule_for_common_vertex.size())
-    , ky_quad_points_regular(1, bem_values.quad_rule_for_regular.size())
-    , quad_values_in_thread_blocks(nullptr)
-  {
-    AssertCuda(cudaStreamCreate(&cuda_stream_handle));
-
-    common_vertex_pair_local_indices.reserve(
-      GeometryInfo<dim>::vertices_per_cell);
-
-    // Polynomial space inverse numbering for recovering the lexicographic
-    // order.
-    const FE_Poly_short &kx_fe_poly =
-      dynamic_cast<const FE_Poly_short &>(kx_fe);
-    const FE_Poly_short &ky_fe_poly =
-      dynamic_cast<const FE_Poly_short &>(ky_fe);
-
-    kx_fe_poly_space_numbering_inverse =
-      kx_fe_poly.get_poly_space_numbering_inverse();
-    ky_fe_poly_space_numbering_inverse =
-      ky_fe_poly.get_poly_space_numbering_inverse();
-
-    /**
-     * @internal Register host memory for asynchronous transfer to the device.
-     */
-    AssertCuda(
-      cudaHostRegister((void *)kx_mapping_support_points_permuted.data(),
-                       kx_mapping_support_points_permuted.size() *
-                         sizeof(Point<spacedim, real_type>),
-                       0));
-
-    AssertCuda(
-      cudaHostRegister((void *)ky_mapping_support_points_permuted.data(),
-                       ky_mapping_support_points_permuted.size() *
-                         sizeof(Point<spacedim, real_type>),
-                       0));
-
-    AssertCuda(cudaHostRegister(
-      (void *)kx_mapping_support_points_permuted_xy_components.data(),
-      kx_mapping_support_points_permuted_xy_components.size() *
-        sizeof(Point<2, real_type>),
-      0));
-
-    AssertCuda(cudaHostRegister(
-      (void *)kx_mapping_support_points_permuted_yz_components.data(),
-      kx_mapping_support_points_permuted_yz_components.size() *
-        sizeof(Point<2, real_type>),
-      0));
-
-    AssertCuda(cudaHostRegister(
-      (void *)kx_mapping_support_points_permuted_zx_components.data(),
-      kx_mapping_support_points_permuted_zx_components.size() *
-        sizeof(Point<2, real_type>),
-      0));
-
-    AssertCuda(cudaHostRegister(
-      (void *)ky_mapping_support_points_permuted_xy_components.data(),
-      ky_mapping_support_points_permuted_xy_components.size() *
-        sizeof(Point<2, real_type>),
-      0));
-
-    AssertCuda(cudaHostRegister(
-      (void *)ky_mapping_support_points_permuted_yz_components.data(),
-      ky_mapping_support_points_permuted_yz_components.size() *
-        sizeof(Point<2, real_type>),
-      0));
-
-    AssertCuda(cudaHostRegister(
-      (void *)ky_mapping_support_points_permuted_zx_components.data(),
-      ky_mapping_support_points_permuted_zx_components.size() *
-        sizeof(Point<2, real_type>),
-      0));
-
-    AssertCuda(cudaHostRegister((void *)&(kx_quad_points_same_panel(0, 0)),
-                                kx_quad_points_same_panel.n_elements() *
-                                  sizeof(Point<spacedim, real_type>),
-                                0));
-
-    AssertCuda(cudaHostRegister((void *)&(kx_quad_points_common_edge(0, 0)),
-                                kx_quad_points_common_edge.n_elements() *
-                                  sizeof(Point<spacedim, real_type>),
-                                0));
-
-    AssertCuda(cudaHostRegister((void *)&(kx_quad_points_common_vertex(0, 0)),
-                                kx_quad_points_common_vertex.n_elements() *
-                                  sizeof(Point<spacedim, real_type>),
-                                0));
-
-    AssertCuda(cudaHostRegister((void *)&(kx_quad_points_regular(0, 0)),
-                                kx_quad_points_regular.n_elements() *
-                                  sizeof(Point<spacedim, real_type>),
-                                0));
-
-    AssertCuda(cudaHostRegister((void *)&(ky_quad_points_same_panel(0, 0)),
-                                ky_quad_points_same_panel.n_elements() *
-                                  sizeof(Point<spacedim, real_type>),
-                                0));
-
-    AssertCuda(cudaHostRegister((void *)&(ky_quad_points_common_edge(0, 0)),
-                                ky_quad_points_common_edge.n_elements() *
-                                  sizeof(Point<spacedim, real_type>),
-                                0));
-
-    AssertCuda(cudaHostRegister((void *)&(ky_quad_points_common_vertex(0, 0)),
-                                ky_quad_points_common_vertex.n_elements() *
-                                  sizeof(Point<spacedim, real_type>),
-                                0));
-
-    AssertCuda(cudaHostRegister((void *)&(ky_quad_points_regular(0, 0)),
-                                ky_quad_points_regular.n_elements() *
-                                  sizeof(Point<spacedim, real_type>),
-                                0));
-
-    AssertCuda(cudaMallocHost((void **)&quad_values_in_thread_blocks,
-                              100 * sizeof(KernelNumberType)));
-  }
-
-  /**
-   * Constructor for assembling hierarchical BEM matrix, which involves
-   * @p thread_id.
-   *
-   * @param thread_id
-   * @param kx_fe
-   * @param ky_fe
-   * @param mappings
-   * @param bem_values
-   */
-  PairCellWiseScratchData(
-    std::thread::id                                  thread_id,
-    const FiniteElement<dim, spacedim>              &kx_fe,
-    const FiniteElement<dim, spacedim>              &ky_fe,
-    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
-    const BEMValues<dim, spacedim, real_type>       &bem_values)
-    : thread_id(thread_id)
-    , cuda_stream_handle(0)
     , common_vertex_pair_local_indices(0)
     , kx_mapping_support_points_permuted(
         mappings.back()->get_data()->n_shape_functions)

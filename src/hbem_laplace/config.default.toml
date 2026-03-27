@@ -30,6 +30,7 @@ aca_relative_err = 0.1
 
 [sauter_quad]
 near_field.producer_num = 2
+near_field.producer_buffer_capacity = 4096
 near_field.consumer_num_same_panel = 1
 near_field.consumer_num_common_edge = 1
 near_field.consumer_num_common_vertex = 1
@@ -60,6 +61,7 @@ hyper_singular_order.regular = 3
 
 [sauter_quad_precond]
 near_field.producer_num = 2
+near_field.producer_buffer_capacity = 4096
 near_field.consumer_num_same_panel = 1
 near_field.consumer_num_common_edge = 1
 near_field.consumer_num_common_vertex = 1

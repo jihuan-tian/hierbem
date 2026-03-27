@@ -7595,20 +7595,13 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
       real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
-  const std::thread::id current_thread_id = std::this_thread::get_id();
-  deallog << "WorkStream " << current_thread_id << " starts..." << std::endl;
-
   /**
    * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
    * are local to the current working thread. This is mandatory because
    * each current working thread should have its own copy of these data.
    */
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> scratch_data(
-    current_thread_id,
-    kx_dof_handler.get_fe(),
-    ky_dof_handler.get_fe(),
-    mappings,
-    bem_values);
+    kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings, bem_values);
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> copy_data(
     kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
@@ -7644,8 +7637,6 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
    */
   scratch_data.release();
   copy_data.release();
-
-  deallog << "WorkStream " << current_thread_id << " exits..." << std::endl;
 }
 
 
@@ -7724,20 +7715,13 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
       real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
-  const std::thread::id current_thread_id = std::this_thread::get_id();
-  deallog << "WorkStream " << current_thread_id << " starts..." << std::endl;
-
   /**
    * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
    * are local to the current working thread. This is mandatory because
    * each current working thread should have its own copy of these data.
    */
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> scratch_data(
-    current_thread_id,
-    kx_dof_handler.get_fe(),
-    ky_dof_handler.get_fe(),
-    mappings,
-    bem_values);
+    kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings, bem_values);
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> copy_data(
     kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
@@ -7775,8 +7759,6 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
    */
   scratch_data.release();
   copy_data.release();
-
-  deallog << "WorkStream " << current_thread_id << " exits..." << std::endl;
 }
 
 

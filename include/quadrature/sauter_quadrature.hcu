@@ -2385,8 +2385,6 @@ namespace CUDAWrappers
         real_type,
         typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
-    const std::thread::id current_thread_id = std::this_thread::get_id();
-    deallog << "Producer thread " << current_thread_id << " starts...\n";
 #if ENABLE_NVTX == 1
     nvtxNameOsThread(gettid(), "producer");
 #endif
@@ -2401,11 +2399,7 @@ namespace CUDAWrappers
      * data.
      */
     PairCellWiseScratchData<dim, spacedim, KernelNumberType> scratch_data(
-      current_thread_id,
-      kx_dof_handler.get_fe(),
-      ky_dof_handler.get_fe(),
-      mappings,
-      bem_values);
+      kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings, bem_values);
     PairCellWisePerTaskData<dim, spacedim, KernelNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
@@ -2724,8 +2718,6 @@ namespace CUDAWrappers
     producer_buffer_common_edge.release();
     producer_buffer_common_vertex.release();
     producer_buffer_regular.release();
-
-    deallog << "Producer thread " << current_thread_id << " exits...\n";
   }
 
 
@@ -2832,8 +2824,6 @@ namespace CUDAWrappers
         real_type,
         typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
-    const std::thread::id current_thread_id = std::this_thread::get_id();
-    deallog << "Producer thread " << current_thread_id << " starts...\n";
 #if ENABLE_NVTX == 1
     nvtxNameOsThread(gettid(), "producer");
 #endif
@@ -2857,11 +2847,7 @@ namespace CUDAWrappers
      * data.
      */
     PairCellWiseScratchData<dim, spacedim, KernelNumberType> scratch_data(
-      current_thread_id,
-      kx_dof_handler.get_fe(),
-      ky_dof_handler.get_fe(),
-      mappings,
-      bem_values);
+      kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings, bem_values);
     PairCellWisePerTaskData<dim, spacedim, KernelNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
@@ -3186,8 +3172,6 @@ namespace CUDAWrappers
     producer_buffer_common_edge.release();
     producer_buffer_common_vertex.release();
     producer_buffer_regular.release();
-
-    deallog << "Producer thread " << current_thread_id << " exits...\n";
   }
 
 
@@ -3224,10 +3208,6 @@ namespace CUDAWrappers
         real_type,
         typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
-    const std::thread::id current_thread_id = std::this_thread::get_id();
-    deallog << "Consumer thread " << current_thread_id << " for "
-            << cell_neighboring_type_name(ring_buffer.cell_neighboring_type)
-            << " starts..." << std::endl;
 #if ENABLE_NVTX == 1
     std::string nvtx_thread_name(std::string("consumer_") +
                                  std::string(cell_neighboring_type_name(
@@ -3254,11 +3234,6 @@ namespace CUDAWrappers
       }
 
     AssertCuda(cudaStreamDestroy(cuda_stream_handle));
-
-
-    deallog << "Consumer thread " << current_thread_id << " for "
-            << cell_neighboring_type_name(ring_buffer.cell_neighboring_type)
-            << " exits..." << std::endl;
   }
 
 
