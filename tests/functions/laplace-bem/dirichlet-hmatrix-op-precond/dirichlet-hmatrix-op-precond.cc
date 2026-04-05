@@ -1,4 +1,4 @@
-// Copyright (C) 2024-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2024-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -34,8 +34,10 @@ using namespace Catch::Matchers;
 using namespace HierBEM;
 
 extern void
-run_dirichlet_hmatrix_op_precond(const unsigned int             refinement,
-                                 const IterativeSolverVmultType vmult_type);
+run_dirichlet_hmatrix_op_precond(
+  const unsigned int             refinement,
+  const IterativeSolverVmultType vmult_type,
+  const bool                     cpu_serial_without_producer_consumer = false);
 
 TEST_CASE(
   "Solve Laplace problem with Dirichlet boundary condition using operator preconditioning",
@@ -47,25 +49,51 @@ TEST_CASE(
 
   SECTION("serial recursive vmult")
   {
-    run_dirichlet_hmatrix_op_precond(1,
-                                     IterativeSolverVmultType::SerialRecursive);
+    SECTION("cpu serial without producer and consumer")
+    {
+      run_dirichlet_hmatrix_op_precond(
+        1, IterativeSolverVmultType::SerialRecursive, true);
 
-    try
-      {
-        inst.source_file(SOURCE_DIR "/process.m");
-      }
-    catch (...)
-      {
-        // Ignore errors
-      }
+      try
+        {
+          inst.source_file(SOURCE_DIR "/process.m");
+        }
+      catch (...)
+        {
+          // Ignore errors
+        }
 
-    // Check relative error
-    HBEMOctaveValue out;
-    out = inst.eval_string("solution_l2_rel_err");
-    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+      // Check relative error
+      HBEMOctaveValue out;
+      out = inst.eval_string("solution_l2_rel_err");
+      REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
 
-    out = inst.eval_string("solution_inf_rel_err");
-    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+      out = inst.eval_string("solution_inf_rel_err");
+      REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+    }
+
+    SECTION("with producer and consumer")
+    {
+      run_dirichlet_hmatrix_op_precond(
+        1, IterativeSolverVmultType::SerialRecursive);
+
+      try
+        {
+          inst.source_file(SOURCE_DIR "/process.m");
+        }
+      catch (...)
+        {
+          // Ignore errors
+        }
+
+      // Check relative error
+      HBEMOctaveValue out;
+      out = inst.eval_string("solution_l2_rel_err");
+      REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+
+      out = inst.eval_string("solution_inf_rel_err");
+      REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+    }
   }
 
   SECTION("serial iterative vmult")

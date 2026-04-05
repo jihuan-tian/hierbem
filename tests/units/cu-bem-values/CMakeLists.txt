@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+# Copyright (C) 2021-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 #
 # This file is part of the HierBEM library.
 #
@@ -8,9 +8,17 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
-SET(TEST_TARGET cu-bem-values)
+# Target should contains 'test' substring in any cases in order to be found by
+# Visual Studio Code's TestMate extension
+set(_target test-cu-bem-values)
 
-# Link TEST_TARGET to hierbem library.
-SET(TEST_LIBRARIES hierbem Boost::program_options)
+add_executable(${_target} cu-bem-values.cu)
 
-DEAL_II_PICKUP_TESTS()
+# Allow target to include deal.ii header files
+deal_ii_setup_target(${_target})
+
+target_link_libraries(${_target} hierbem Catch2::Catch2WithMain)
+
+include(CTest)
+include(Catch)
+catch_discover_tests(${_target})

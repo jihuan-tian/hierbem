@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2022-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -23,6 +23,7 @@
 #include <deal.II/base/subscriptor.h>
 #include <deal.II/base/table.h>
 #include <deal.II/base/table_indices.h>
+#include <deal.II/base/types.h>
 #include <deal.II/base/utilities.h>
 
 #include <deal.II/dofs/dof_accessor.h>
@@ -50,6 +51,7 @@
 
 #include "config.h"
 #include "linear_algebra/lapack_full_matrix_ext.h"
+#include "mapping/mapping_info.h"
 #include "mapping/mapping_q_ext.h"
 #include "utilities/generic_functors.h"
 
@@ -114,11 +116,12 @@ namespace BEMTools
    * @tparam VectorType1
    * @tparam VectorType2
    * @tparam IndexType
-   * @param input_vector
+   * @param input_vector Its size should be >= the size of
+   * <tt>permutation_indices</tt>.
    * @param permutation_indices
    * @param permuted_vector Result vector, whose memory should be allocated
-   * before calling this function. Its size should be >= the size of the input
-   * vector.
+   * before calling this function. Its size should be >= the size of
+   * <tt>permutation_indices</tt>.
    */
   template <typename VectorType1, typename VectorType2, typename IndexType>
   void
@@ -126,14 +129,34 @@ namespace BEMTools
                  const std::vector<IndexType> &permutation_indices,
                  VectorType2                  &permuted_vector)
   {
-    const IndexType N = input_vector.size();
-    AssertDimension(N, permutation_indices.size());
+    const IndexType N = permutation_indices.size();
+    Assert(N <= input_vector.size(), ExcInternalError());
     Assert(N <= permuted_vector.size(), ExcInternalError());
 
     for (IndexType i = 0; i < N; i++)
-      {
-        permuted_vector[i] = input_vector[permutation_indices[i]];
-      }
+      permuted_vector[i] = input_vector[permutation_indices[i]];
+  }
+
+
+  /**
+   * @brief Permute a vector by using the given permutation indices to access
+   * its elements.
+   *
+   * @param input_vector Point to an array of vector elements to be permuted.
+   * @param permutation_indices
+   * @param permuted_vector
+   */
+  template <typename ElementType, typename VectorType, typename IndexType>
+  void
+  permute_vector(const ElementType            *input_vector,
+                 const std::vector<IndexType> &permutation_indices,
+                 VectorType                   &permuted_vector)
+  {
+    const IndexType N = permutation_indices.size();
+    Assert(N <= permuted_vector.size(), ExcInternalError());
+
+    for (IndexType i = 0; i < N; i++)
+      permuted_vector[i] = input_vector[permutation_indices[i]];
   }
 
 
@@ -4038,6 +4061,48 @@ namespace BEMTools
         default:
           Assert(false, ExcInternalError());
           break;
+      }
+  }
+
+
+  /**
+   * Compute mapping support points for all cells in the given triangulation.
+   *
+   * @tparam Number Value type of @p Point objects.
+   *
+   * @param tria Triangulation object
+   * @param mappings Array of pointers to @p MappingInfo objects from the 1st
+   * order to a fixed highest order.
+   * @param material_id_to_mapping_index Map from cell material ids to indices
+   * for accessing the array of pointers to @p MappingInfo objects.
+   * @param mapping_support_point_table A two dimensional table storing the
+   * mapping support points for all cells. Dim1: cell index. Dim2: mapping
+   * support point index.
+   */
+  template <int dim, int spacedim, typename Number>
+  void
+  compute_mapping_support_points_for_tria(
+    const Triangulation<dim, spacedim>              &tria,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                      &material_id_to_mapping_index,
+    Table<2, Point<spacedim, Number>> &mapping_support_point_table)
+  {
+    mapping_support_point_table.reinit(
+      TableIndices<2>(tria.n_active_cells(),
+                      mappings.back()->get_data()->n_shape_functions));
+
+    for (const auto &cell : tria.active_cell_iterators())
+      {
+        MappingQExt<dim, spacedim> cell_mapping(
+          mappings[material_id_to_mapping_index.at(cell->material_id())]
+            ->get_mapping());
+        cell_mapping.compute_mapping_support_points(cell);
+        const auto &mapping_support_points = cell_mapping.get_support_points();
+
+        for (unsigned int i = 0; i < mapping_support_points.size(); i++)
+          mapping_support_point_table(cell->active_cell_index(), i) =
+            mapping_support_points[i];
       }
   }
 } // namespace BEMTools

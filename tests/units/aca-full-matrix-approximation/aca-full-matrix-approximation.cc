@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2022-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -120,7 +120,7 @@ main(int argc, char *argv[])
   A.read_from_mat(in, matrix_var_name);
   in.close();
 
-  ConfHMatrix hmat_params{4, 4, eta, max_iter, epsilon};
+  ConfHMatrix hmat_params{4, 4, eta, max_iter, epsilon, false};
 
   const unsigned int m = A.m();
   const unsigned int n = A.n();

@@ -1,4 +1,4 @@
-// Copyright (C) 2024-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2024-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -27,7 +27,7 @@ using namespace Catch::Matchers;
 using namespace HierBEM;
 
 extern void
-run_dirichlet_full_matrix_complex();
+run_dirichlet_full_matrix_complex(const bool is_serial);
 
 TEST_CASE(
   "Solve Laplace problem with complex valued Dirichlet boundary condition using full matrix",
@@ -37,22 +37,47 @@ TEST_CASE(
   inst.add_path(HBEM_ROOT_DIR "/scripts");
   inst.add_path(SOURCE_DIR);
 
-  run_dirichlet_full_matrix_complex();
+  SECTION("serial")
+  {
+    run_dirichlet_full_matrix_complex(true);
 
-  try
-    {
-      inst.source_file(SOURCE_DIR "/process.m");
-    }
-  catch (...)
-    {
-      // Ignore errors
-    }
+    try
+      {
+        inst.source_file(SOURCE_DIR "/process.m");
+      }
+    catch (...)
+      {
+        // Ignore errors
+      }
 
-  // Check relative error
-  HBEMOctaveValue out;
-  out = inst.eval_string("solution_l2_rel_err");
-  REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+    // Check relative error
+    HBEMOctaveValue out;
+    out = inst.eval_string("solution_l2_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
 
-  out = inst.eval_string("solution_inf_rel_err");
-  REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+    out = inst.eval_string("solution_inf_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+  }
+
+  SECTION("parallel")
+  {
+    run_dirichlet_full_matrix_complex(false);
+
+    try
+      {
+        inst.source_file(SOURCE_DIR "/process.m");
+      }
+    catch (...)
+      {
+        // Ignore errors
+      }
+
+    // Check relative error
+    HBEMOctaveValue out;
+    out = inst.eval_string("solution_l2_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+
+    out = inst.eval_string("solution_inf_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+  }
 }

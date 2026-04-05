@@ -1,4 +1,4 @@
-// Copyright (C) 2023-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2023-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -80,7 +80,7 @@ is_equal(const QGauss<dim>                            &quad_cpu,
                 {
                   std::cout << "(" << quad_cpu.point(q)(i) << ","
                             << quad_points_from_gpu(q, i) << ")" << std::endl;
-                  delete weights_from_gpu;
+                  delete[] weights_from_gpu;
                   return false;
                 }
             }
@@ -89,12 +89,12 @@ is_equal(const QGauss<dim>                            &quad_cpu,
             {
               std::cout << "(" << quad_cpu.weight(q) << ","
                         << *(weights_from_gpu + q) << ")" << std::endl;
-              delete weights_from_gpu;
+              delete[] weights_from_gpu;
               return false;
             }
         }
 
-      delete weights_from_gpu;
+      delete[] weights_from_gpu;
       return true;
     }
   else
@@ -690,6 +690,55 @@ is_equal(const Table<3, T>                            &table_cpu,
 
 
 /**
+ * Check the equality of the table (4 dimensions) of scalar values on CPU and
+ * GPU.
+ *
+ * @tparam T
+ * @param table_cpu
+ * @param table_gpu
+ * @return
+ */
+template <typename T>
+bool
+is_equal(const Table<4, T>                            &table_cpu,
+         const HierBEM::CUDAWrappers::CUDATable<4, T> &table_gpu)
+{
+  const unsigned int N = 4;
+
+  // Make a copy of the GPU table on the host.
+  TableIndices<N> table_sizes;
+  HierBEM::CUDAWrappers::copy_table_indices(table_sizes, table_gpu.size());
+  Table<N, T> table_copied_from_gpu(table_sizes[0],
+                                    table_sizes[1],
+                                    table_sizes[2],
+                                    table_sizes[3]);
+  table_gpu.copy_to_host(table_copied_from_gpu);
+
+  // Check the equality of number of elements.
+  if (table_cpu.n_elements() == table_copied_from_gpu.n_elements())
+    {
+      // Get the pointers to the first element in the two tables.
+      const T *table_cpu_ptr      = &(table_cpu(TableIndices<N>()));
+      const T *table_from_gpu_ptr = &(table_copied_from_gpu(TableIndices<N>()));
+
+      for (std::size_t i = 0; i < table_cpu.n_elements(); i++)
+        {
+          if (*(table_cpu_ptr + i) != *(table_from_gpu_ptr + i))
+            {
+              return false;
+            }
+        }
+
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+/**
  * Check the equality of the table of matrices for the gradient of shape
  * functions.
  *
@@ -759,6 +808,104 @@ is_equal(const Table<2, LAPACKFullMatrixExt<T>>       &table_cpu,
     {
       std::cout << "(" << table_cpu.n_elements() * m * n << ","
                 << table_copied_from_gpu.n_elements() << ")" << std::endl;
+      return false;
+    }
+}
+
+
+/**
+ * Check the equality of the table of matrices for the gradient of mapping shape
+ * functions under different mapping orders.
+ *
+ * @tparam T
+ * @param table_cpu It has 3 dimensions:
+ * 1. Mapping index, which is mapping order minus 1. It is used to get the
+ * corresponding pointer to the MappingInfo object in BEMValues::mappings.
+ * 2. \f$k_3\f$ term index: size=8
+ * 3. Quadrature point index: size=number of quadrature points
+ * N.B. Each data item in the table is itself a matrix with the dimension
+ * \f$MappingQ::InternalData.n_shape_functions*dim\f$.
+ * @param table_gpu It has 4 dimensions:
+ * 1. Mapping index, which is mapping order minus 1. It is used to get the
+ * corresponding pointer to the MappingInfo object in BEMValues::mappings.
+ * 2. \f$k_3\f$ term index: size=4
+ * 3. Quadrature point index: size=number of quadrature points
+ * 4. Gradient matrix element index in column major. The total number of
+ * elements is (number of shape functions in the highest order mapping
+ * object)*dim.
+ * @return
+ */
+template <typename T>
+bool
+is_equal(const Table<3, LAPACKFullMatrixExt<T>>       &table_cpu,
+         const HierBEM::CUDAWrappers::CUDATable<4, T> &table_gpu)
+{
+  const unsigned int N = 4;
+
+  // Make a copy of the GPU table on the host.
+  TableIndices<N> table_sizes;
+  HierBEM::CUDAWrappers::copy_table_indices(table_sizes, table_gpu.size());
+
+  const unsigned int mapping_num                   = table_sizes[0];
+  const unsigned int k3_terms                      = table_sizes[1];
+  const unsigned int quad_num                      = table_sizes[2];
+  const unsigned int max_n_mapping_shape_functions = table_sizes[3];
+
+  Table<N, T> table_copied_from_gpu(mapping_num,
+                                    k3_terms,
+                                    quad_num,
+                                    max_n_mapping_shape_functions);
+  table_gpu.copy_to_host(table_copied_from_gpu);
+
+  // Get the number of columns of gradient matrix.
+  const unsigned int n = table_cpu(0, 0, 0).n();
+
+  // Check the total number of elements.
+  if (table_cpu.n_elements() * max_n_mapping_shape_functions ==
+      table_copied_from_gpu.n_elements())
+    {
+      for (unsigned int mapping_index = 0; mapping_index < mapping_num;
+           mapping_index++)
+        {
+          // Get the number of rows of gradient matrix, which depends on the
+          // mapping order.
+          const unsigned int m = table_cpu(mapping_index, 0, 0).m();
+
+          for (unsigned int k = 0; k < k3_terms; k++)
+            {
+              for (unsigned int q = 0; q < quad_num; q++)
+                {
+                  for (unsigned int j = 0; j < n; j++)
+                    {
+                      for (unsigned int i = 0; i < m; i++)
+                        {
+                          if (table_copied_from_gpu(
+                                mapping_index, k, q, j * m + i) !=
+                              table_cpu(mapping_index, k, q)(i, j))
+                            {
+                              std::cout << "("
+                                        << table_cpu(mapping_index, k, q)(i, j)
+                                        << ","
+                                        << table_copied_from_gpu(mapping_index,
+                                                                 k,
+                                                                 q,
+                                                                 j * m + i)
+                                        << ")" << std::endl;
+                              return false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+      return true;
+    }
+  else
+    {
+      std::cout << "("
+                << table_cpu.n_elements() * max_n_mapping_shape_functions * n
+                << "," << table_copied_from_gpu.n_elements() << ")"
+                << std::endl;
       return false;
     }
 }

@@ -8,6 +8,8 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
+find_package(Julia REQUIRED)
+
 set(_target hbem_julia_wrapper)
 
 add_library(${_target} SHARED ${_target}.cc)
@@ -16,6 +18,6 @@ add_library(${_target} SHARED ${_target}.cc)
 set_target_properties(${_target} PROPERTIES HBEM_CHECK_RELAXED 1)
 target_compile_options(${_target} PRIVATE -Wno-unused-parameter)
 
-target_include_directories(${_target} PUBLIC ${JULIA_DIR}/include/julia)
-target_link_directories(${_target} PUBLIC ${JULIA_DIR}/lib)
-target_link_libraries(${_target} PUBLIC julia)
+target_include_directories(${_target} PUBLIC ${JULIA_INCLUDE_DIR})
+target_link_directories(${_target} PUBLIC ${JULIA_LIBRARY_DIR})
+target_link_libraries(${_target} PUBLIC ${JULIA_LIBRARY})

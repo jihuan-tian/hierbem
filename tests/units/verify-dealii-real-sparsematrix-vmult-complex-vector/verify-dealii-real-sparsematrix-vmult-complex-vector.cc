@@ -29,10 +29,13 @@
 #include <deal.II/lac/sparsity_pattern.h>
 #include <deal.II/lac/vector.h>
 
+#include <catch2/catch_all.hpp>
+
 #include <complex>
 #include <iostream>
 
 #include "hbem_julia_cpp_compare.h"
+#include "hbem_julia_wrapper.h"
 
 using namespace Catch::Matchers;
 using namespace dealii;
@@ -45,15 +48,15 @@ TEST_CASE("Verify real valued SparseMatrix multiplies a complex valued vector",
   HBEMJuliaWrapper &inst = HBEMJuliaWrapper::get_instance();
   inst.source_file("process.jl");
 
-  HBEMJuliaValue row_indices_jl_value(inst.eval_string("rows"));
-  HBEMJuliaValue col_indices_jl_value(inst.eval_string("cols"));
-  HBEMJuliaValue mat_vals_jl_value(inst.eval_string("vals"));
-  int           *row_indices = row_indices_jl_value.int_array();
-  int           *col_indices = col_indices_jl_value.int_array();
-  double        *mat_vals    = mat_vals_jl_value.double_array();
+  HBEMJuliaValue row_indices_jl_value(std::string("rows"));
+  HBEMJuliaValue col_indices_jl_value(std::string("cols"));
+  HBEMJuliaValue mat_vals_jl_value(std::string("vals"));
 
-  HBEMJuliaValue     jl_value         = inst.eval_string("rows");
-  const unsigned int number_of_values = jl_value.nrows();
+  int    *row_indices = row_indices_jl_value.int_array();
+  int    *col_indices = col_indices_jl_value.int_array();
+  double *mat_vals    = mat_vals_jl_value.double_array();
+
+  const unsigned int number_of_values = row_indices_jl_value.nrows();
   const unsigned int m                = 5;
   const unsigned int n                = 5;
 
@@ -74,7 +77,7 @@ TEST_CASE("Verify real valued SparseMatrix multiplies a complex valued vector",
     mat.set(row_indices[i] - 1, col_indices[i] - 1, mat_vals[i]);
 
   // Create input and output vectors.
-  HBEMJuliaValue               x_jl_value(inst.eval_string("x"));
+  HBEMJuliaValue               x_jl_value(std::string("x"));
   std::complex<double>        *x_jl = x_jl_value.complex_double_array();
   Vector<std::complex<double>> x(n);
   for (unsigned int i = 0; i < n; i++)

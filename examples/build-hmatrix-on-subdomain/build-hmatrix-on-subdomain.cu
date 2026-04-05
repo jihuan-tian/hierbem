@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2025-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -23,6 +23,7 @@
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature_lib.h>
+#include <deal.II/base/table.h>
 #include <deal.II/base/types.h>
 
 #include <deal.II/dofs/dof_handler.h>
@@ -47,6 +48,7 @@
 #include <set>
 #include <vector>
 
+#include "bem/bem_tools.h"
 #include "cad_mesh/gmsh_manipulation.h"
 #include "cad_mesh/subdomain_topology.h"
 #include "cluster_tree/block_cluster_tree.h"
@@ -63,7 +65,6 @@
 #include "mapping/mapping_info.h"
 #include "platform_shared/laplace_kernels.h"
 #include "quadrature/sauter_quadrature_tools.h"
-#include "utilities/generic_functors.h"
 #include "utilities/number_traits.h"
 #include "utilities/unary_template_arg_containers.h"
 
@@ -529,12 +530,15 @@ BEMFunctionSpace<dim, spacedim>::build_dof_to_cell_topology()
 // define a bilinear form.
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType  = double,
           typename KernelNumberType = double>
 class BEMBilinearForm
 {
 public:
+  using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+
   BEMBilinearForm(const BEMFunctionSpace<dim, spacedim> &trial_space_,
                   const BEMFunctionSpace<dim, spacedim> &test_space_);
 
@@ -549,16 +553,18 @@ public:
 
   // Build an H-matrix for the bilinear form.
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
-  build_hmatrix(const ConfHMatrix             &hmat_params,
-                const ConfSauterQuadNearField &sauter_quad_near_field_params,
-                const ConfSauterQuadFarField  &sauter_quad_far_field_params,
-                const ConfParallelization     &parallel_params,
-                const DeviceNumberType<KernelNumberType> kernel_factor,
-                const SauterQuadratureRule<dim>         &sauter_quad_rule,
-                const std::vector<MappingInfo<dim, spacedim> *> &mappings,
-                const std::map<types::material_id, unsigned int>
-                                                 &material_id_to_mapping_index,
-                SubdomainTopology<dim, spacedim> &subdomain_topology);
+  build_hmatrix(
+    const ConfHMatrix                       &hmat_params,
+    const ConfSauterQuadNearField           &sauter_quad_near_field_params,
+    const ConfSauterQuadFarField            &sauter_quad_far_field_params,
+    const ConfParallelization               &parallel_params,
+    const DeviceNumberType<KernelNumberType> kernel_factor,
+    const SauterQuadratureRule<dim>         &sauter_quad_rule,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                               &material_id_to_mapping_index,
+    const Table<2, Point<spacedim, real_type>> &mapping_support_point_table,
+    SubdomainTopology<dim, spacedim>           &subdomain_topology);
 
   // Build an H-matrix for the bilinear form and add a mass matrix directly into
   // it.
@@ -575,8 +581,9 @@ public:
     const QGauss<dim>                               &mass_matrix_quad_rule,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
-                                     &material_id_to_mapping_index,
-    SubdomainTopology<dim, spacedim> &subdomain_topology);
+                                               &material_id_to_mapping_index,
+    const Table<2, Point<spacedim, real_type>> &mapping_support_point_table,
+    SubdomainTopology<dim, spacedim>           &subdomain_topology);
 
   ClusterTree<spacedim> &
   get_cluster_tree_trial_space()
@@ -627,7 +634,8 @@ private:
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 BEMBilinearForm<dim,
@@ -645,7 +653,8 @@ BEMBilinearForm<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 void
@@ -681,7 +690,8 @@ BEMBilinearForm<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
@@ -690,16 +700,18 @@ BEMBilinearForm<dim,
                 KernelFunctionType,
                 RangeNumberType,
                 KernelNumberType>::
-  build_hmatrix(const ConfHMatrix             &hmat_params,
-                const ConfSauterQuadNearField &sauter_quad_near_field_params,
-                const ConfSauterQuadFarField  &sauter_quad_far_field_params,
-                const ConfParallelization     &parallel_params,
-                const DeviceNumberType<KernelNumberType> kernel_factor,
-                const SauterQuadratureRule<dim>         &sauter_quad_rule,
-                const std::vector<MappingInfo<dim, spacedim> *> &mappings,
-                const std::map<types::material_id, unsigned int>
-                                                 &material_id_to_mapping_index,
-                SubdomainTopology<dim, spacedim> &subdomain_topology)
+  build_hmatrix(
+    const ConfHMatrix                       &hmat_params,
+    const ConfSauterQuadNearField           &sauter_quad_near_field_params,
+    const ConfSauterQuadFarField            &sauter_quad_far_field_params,
+    const ConfParallelization               &parallel_params,
+    const DeviceNumberType<KernelNumberType> kernel_factor,
+    const SauterQuadratureRule<dim>         &sauter_quad_rule,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                               &material_id_to_mapping_index,
+    const Table<2, Point<spacedim, real_type>> &mapping_support_point_table,
+    SubdomainTopology<dim, spacedim>           &subdomain_topology)
 {
   HMatrixSupport::Property  property = is_symmetric ?
                                          HMatrixSupport::Property::symmetric :
@@ -740,6 +752,7 @@ BEMBilinearForm<dim,
     trial_space.get_internal_to_external_dof_numbering(),
     mappings,
     material_id_to_mapping_index,
+    mapping_support_point_table,
     SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
     is_symmetric);
 
@@ -749,7 +762,8 @@ BEMBilinearForm<dim,
 
 template <int dim,
           int spacedim,
-          template <int, typename> typename KernelFunctionType,
+          template <int, typename>
+          typename KernelFunctionType,
           typename RangeNumberType,
           typename KernelNumberType>
 std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
@@ -770,8 +784,9 @@ BEMBilinearForm<dim,
     const QGauss<dim>                               &mass_matrix_quad_rule,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
-                                     &material_id_to_mapping_index,
-    SubdomainTopology<dim, spacedim> &subdomain_topology)
+                                               &material_id_to_mapping_index,
+    const Table<2, Point<spacedim, real_type>> &mapping_support_point_table,
+    SubdomainTopology<dim, spacedim>           &subdomain_topology)
 {
   HMatrixSupport::Property  property = is_symmetric ?
                                          HMatrixSupport::Property::symmetric :
@@ -814,6 +829,7 @@ BEMBilinearForm<dim,
     trial_space.get_internal_to_external_dof_numbering(),
     mappings,
     material_id_to_mapping_index,
+    mapping_support_point_table,
     SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
     is_symmetric);
 
@@ -891,8 +907,12 @@ main()
   for (types::material_id i = 1; i <= 6; i++)
     material_id_to_mapping_index[i] = 0;
 
+  Table<2, Point<spacedim>> tria_mapping_support_points;
+  BEMTools::compute_mapping_support_points_for_tria(
+    tria, mappings, material_id_to_mapping_index, tria_mapping_support_points);
+
   // Parameters for building H-matrices.
-  ConfHMatrix             hmat_params{4, 4, 1.2, 5, 0.01};
+  ConfHMatrix             hmat_params{4, 4, 1.2, 5, 0.01, false};
   ConfSauterQuadNearField sauter_quad_near_field_params;
   ConfSauterQuadFarField  sauter_quad_far_field_params;
   ConfParallelization     parallel_params;
@@ -984,6 +1004,7 @@ main()
                       SauterQuadratureRule<dim>(5, 4, 4, 3),
                       mappings,
                       material_id_to_mapping_index,
+                      tria_mapping_support_points,
                       subdomain_topology);
   // Build an H-matrix for bK1.
   std::unique_ptr<HMatrix<spacedim, double>> K1 =
@@ -995,6 +1016,7 @@ main()
                       SauterQuadratureRule<dim>(5, 4, 4, 3),
                       mappings,
                       material_id_to_mapping_index,
+                      tria_mapping_support_points,
                       subdomain_topology);
   // Build an H-matrix for bV2.
   std::unique_ptr<HMatrix<spacedim, double>> V2 =
@@ -1006,6 +1028,7 @@ main()
                       SauterQuadratureRule<dim>(5, 4, 4, 3),
                       mappings,
                       material_id_to_mapping_index,
+                      tria_mapping_support_points,
                       subdomain_topology);
   // Build an H-matrix for bI1K2.
   std::unique_ptr<HMatrix<spacedim, double>> I1K2 =
@@ -1019,6 +1042,7 @@ main()
                                          QGauss<dim>(2),
                                          mappings,
                                          material_id_to_mapping_index,
+                                         tria_mapping_support_points,
                                          subdomain_topology);
 
   // Generate visualizations of all function spaces.

@@ -18,23 +18,32 @@
  * @date 2024-01-10
  */
 
+#include <deal.II/base/point.h>
+#include <deal.II/base/table.h>
+#include <deal.II/base/types.h>
+
 #include <deal.II/fe/fe.h>
 #include <deal.II/fe/fe_dgq.h>
 
 #include <deal.II/grid/manifold_lib.h>
+#include <deal.II/grid/tria.h>
 
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <map>
 
+#include "bem/bem_tools.h"
 #include "cad_mesh/subdomain_topology.h"
 #include "config_file/config_structs.h"
 #include "config_file/cu_related.h"
+#include "dofs/dof_tools_ext.h"
 #include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
-#include "laplace/laplace_bem.h"
+#include "hmatrix/hmatrix.h"
 #include "mapping/mapping_info.h"
+#include "platform_shared/laplace_kernels.h"
 #include "quadrature/sauter_quadrature_tools.h"
 #include "utilities/unary_template_arg_containers.h"
 
@@ -108,7 +117,7 @@ main(int argc, char *argv[])
     single_layer_kernel;
 
   // Parameters for building H-matrices.
-  ConfHMatrix             hmat_params{32, 32, 0.8, 5, 0.01};
+  ConfHMatrix             hmat_params{32, 32, 0.8, 5, 0.01, false};
   ConfSauterQuadNearField sauter_quad_near_field_params;
   ConfSauterQuadFarField  sauter_quad_far_field_params;
   ConfParallelization     parallel_params;
@@ -118,6 +127,10 @@ main(int argc, char *argv[])
 
   // Refine the volume mesh.
   tria.refine_global(1);
+
+  Table<2, Point<spacedim>> tria_mapping_support_points;
+  BEMTools::compute_mapping_support_points_for_tria(
+    tria, mappings, material_id_to_mapping_index, tria_mapping_support_points);
 
   dof_handler.distribute_dofs(fe);
 
@@ -203,6 +216,7 @@ main(int argc, char *argv[])
     ct.get_internal_to_external_dof_numbering(),
     mappings,
     material_id_to_mapping_index,
+    tria_mapping_support_points,
     SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
     false);
   timer.stop();

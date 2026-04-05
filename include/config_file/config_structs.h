@@ -64,6 +64,10 @@ struct ConfHMatrix
   std::uint32_t max_rank      = 100; // max_rank for H-matrix
   double        aca_relative_err =
     0.001; // for ACA: max relative error while assembling H-matrix
+  // Assemble H-matrix using the old implementation, which is serial on the host
+  // and does not use the producer-consumer model on the device. This method is
+  // obsolete and is only used for test and performance profile.
+  bool cpu_serial_without_producer_consumer = false;
 };
 
 struct ConfSauterQuadNearField

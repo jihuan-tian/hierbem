@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2022-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -81,6 +81,8 @@ public:
   BEMValues(const FiniteElement<dim, spacedim>              &kx_fe,
             const FiniteElement<dim, spacedim>              &ky_fe,
             const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+            const Table<2, Point<spacedim, RangeNumberType>>
+                                  &mapping_support_point_table,
             const QGauss<dim * 2> &quad_rule_for_same_panel,
             const QGauss<dim * 2> &quad_rule_for_common_edge,
             const QGauss<dim * 2> &quad_rule_for_common_vertex,
@@ -143,6 +145,11 @@ public:
    * Mappings of from smallest to maximum order.
    */
   const std::vector<MappingInfo<dim, spacedim> *> &mappings;
+  /**
+   * Mapping objects for all active cells on the highest level in the
+   * triangulation.
+   */
+  const Table<2, Point<spacedim, RangeNumberType>> &mapping_support_point_table;
   /**
    * Reference to 4D Sauter quadrature rule for the case that \f$K_x \equiv
    * K_y\f$.
@@ -581,16 +588,18 @@ protected:
 
 template <int dim, int spacedim, typename RangeNumberType>
 BEMValues<dim, spacedim, RangeNumberType>::BEMValues(
-  const FiniteElement<dim, spacedim>              &kx_fe,
-  const FiniteElement<dim, spacedim>              &ky_fe,
-  const std::vector<MappingInfo<dim, spacedim> *> &mappings,
-  const QGauss<dim * 2>                           &quad_rule_for_same_panel,
-  const QGauss<dim * 2>                           &quad_rule_for_common_edge,
-  const QGauss<dim * 2>                           &quad_rule_for_common_vertex,
-  const QGauss<dim * 2>                           &quad_rule_for_regular)
+  const FiniteElement<dim, spacedim>               &kx_fe,
+  const FiniteElement<dim, spacedim>               &ky_fe,
+  const std::vector<MappingInfo<dim, spacedim> *>  &mappings,
+  const Table<2, Point<spacedim, RangeNumberType>> &mapping_support_point_table,
+  const QGauss<dim * 2>                            &quad_rule_for_same_panel,
+  const QGauss<dim * 2>                            &quad_rule_for_common_edge,
+  const QGauss<dim * 2>                            &quad_rule_for_common_vertex,
+  const QGauss<dim * 2>                            &quad_rule_for_regular)
   : kx_fe(kx_fe)
   , ky_fe(ky_fe)
   , mappings(mappings)
+  , mapping_support_point_table(mapping_support_point_table)
   , quad_rule_for_same_panel(quad_rule_for_same_panel)
   , quad_rule_for_common_edge(quad_rule_for_common_edge)
   , quad_rule_for_common_vertex(quad_rule_for_common_vertex)
@@ -1881,25 +1890,6 @@ public:
    */
   std::vector<std::pair<unsigned int, unsigned int>>
     common_vertex_pair_local_indices;
-
-  /**
-   * List of mapping support points in the real cell \f$K_x\f$ in the
-   * hierarchic order.
-   *
-   * This vector will be filled with values (by copy) from the support points
-   * generated within the mapping object. Therefore, its size will
-   * automatically adjusted and needs not be preallocated.
-   */
-  std::vector<Point<spacedim>> kx_mapping_support_points_in_default_order;
-  /**
-   * List of mapping support points in the real cell \f$K_y\f$ in the
-   * hierarchic order.
-   *
-   * This vector will be filled with values (by copy) from the support points
-   * generated within the mapping object. Therefore, its size will
-   * automatically adjusted and needs not be preallocated.
-   */
-  std::vector<Point<spacedim>> ky_mapping_support_points_in_default_order;
 
   /**
    * Permuted list of mapping support points in the real cell \f$K_x\f$.

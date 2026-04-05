@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2025-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -36,9 +36,16 @@ class HBEMJuliaValue
 public:
   HBEMJuliaValue();
   HBEMJuliaValue(jl_value_t *val);
+  HBEMJuliaValue(const std::string &eval_str);
+
+  // Delete copy constructor and assignment operator, because if multiple
+  // @p HBEMJuliaValue objects hold a same Julia value, there will be repeated
+  // adding and deleting its container from the global dictionary in
+  // @p HBEMJuliaWrapper.
   HBEMJuliaValue(const HBEMJuliaValue &other) = delete;
   HBEMJuliaValue &
   operator=(const HBEMJuliaValue &other) = delete;
+
   ~HBEMJuliaValue();
 
   unsigned int
@@ -105,13 +112,21 @@ public:
   length() const;
 
 private:
+  void
+  add_value_to_dict();
+  void
+  remove_value_from_dict();
+
   jl_value_t *value;
+  jl_value_t *value_ref;
 };
 
 
 class HBEMJuliaWrapper
 {
 public:
+  friend HBEMJuliaValue;
+
   static HBEMJuliaWrapper &
   get_instance();
 
@@ -156,6 +171,23 @@ private:
    * Mutex for protecting Julia session from multithreads.
    */
   static std::mutex julia_mutex;
+  /**
+   * Pointer to the dictionary for holding references to Julia variables to be
+   * used in C++.
+   */
+  static jl_value_t *dict;
+  /**
+   * Pointer to the Julia function @p setindex!.
+   */
+  static jl_function_t *setindex;
+  /**
+   * Pointer to the Julia function @p delete!.
+   */
+  static jl_function_t *delete_func;
+  /**
+   * Pointer to the data type which is used for wrapping a Julia variable.
+   */
+  static jl_datatype_t *container_type;
 
   HBEMJuliaWrapper();
 

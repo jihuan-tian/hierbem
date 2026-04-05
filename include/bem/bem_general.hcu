@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2022-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -24,6 +24,7 @@
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature.h>
 #include <deal.II/base/quadrature_lib.h>
+#include <deal.II/base/table.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/types.h>
 #include <deal.II/base/work_stream.h>
@@ -806,7 +807,12 @@ assemble_bem_full_matrix(
   const DoFHandler<dim, spacedim>                 &dof_handler_for_trial_space,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                                  &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                                  &mapping_support_point_table,
   const SurfaceNormalDetector     &normal_detector,
   const SauterQuadratureRule<dim> &sauter_quad_rule,
   MatrixType                      &target_full_matrix)
@@ -848,6 +854,7 @@ assemble_bem_full_matrix(
     dof_handler_for_test_space.get_fe(),
     dof_handler_for_trial_space.get_fe(),
     mappings,
+    mapping_support_point_table,
     sauter_quad_rule.quad_rule_for_same_panel,
     sauter_quad_rule.quad_rule_for_common_edge,
     sauter_quad_rule.quad_rule_for_common_vertex,
@@ -880,9 +887,6 @@ assemble_bem_full_matrix(
         material_id_to_mapping_index.at(e->material_id());
       MappingInfo<dim, spacedim> &kx_mapping_info = *mappings[kx_mapping_index];
 
-      kx_mapping_info.get_mapping().compute_mapping_support_points(e);
-      scratch_data.kx_mapping_support_points_in_default_order =
-        kx_mapping_info.get_mapping().get_support_points();
       e->get_dof_indices(
         scratch_data.kx_local_dof_indices_in_default_dof_order);
 
@@ -959,7 +963,12 @@ assemble_bem_full_matrix_serial(
   const DoFHandler<dim, spacedim>                 &dof_handler_for_trial_space,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                                  &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                                  &mapping_support_point_table,
   const SurfaceNormalDetector     &normal_detector,
   const SauterQuadratureRule<dim> &sauter_quad_rule,
   MatrixType                      &target_full_matrix)
@@ -1001,6 +1010,7 @@ assemble_bem_full_matrix_serial(
     dof_handler_for_test_space.get_fe(),
     dof_handler_for_trial_space.get_fe(),
     mappings,
+    mapping_support_point_table,
     sauter_quad_rule.quad_rule_for_same_panel,
     sauter_quad_rule.quad_rule_for_common_edge,
     sauter_quad_rule.quad_rule_for_common_vertex,
@@ -1033,9 +1043,6 @@ assemble_bem_full_matrix_serial(
         material_id_to_mapping_index.at(e->material_id());
       MappingInfo<dim, spacedim> &kx_mapping_info = *mappings[kx_mapping_index];
 
-      kx_mapping_info.get_mapping().compute_mapping_support_points(e);
-      scratch_data.kx_mapping_support_points_in_default_order =
-        kx_mapping_info.get_mapping().get_support_points();
       e->get_dof_indices(
         scratch_data.kx_local_dof_indices_in_default_dof_order);
 

@@ -259,13 +259,30 @@ public:
     , __im_(__c.imag())
   {}
 
+  template <class _Xp>
+  CUDA_CALLABLE_MEMBER
+  complex(const volatile complex<_Xp> &__c)
+    : __re_(__c.real())
+    , __im_(__c.imag())
+  {}
+
   CUDA_CALLABLE_MEMBER value_type
   real() const
   {
     return __re_;
   }
   CUDA_CALLABLE_MEMBER value_type
+  real() const volatile
+  {
+    return __re_;
+  }
+  CUDA_CALLABLE_MEMBER value_type
   imag() const
+  {
+    return __im_;
+  }
+  CUDA_CALLABLE_MEMBER value_type
+  imag() const volatile
   {
     return __im_;
   }
@@ -286,6 +303,34 @@ public:
   {
     __re_ = __re;
     __im_ = value_type();
+    return *this;
+  }
+  CUDA_CALLABLE_MEMBER volatile complex &
+  operator=(const value_type &__re) volatile
+  {
+    __re_ = __re;
+    __im_ = value_type();
+    return *this;
+  }
+  CUDA_CALLABLE_MEMBER complex &
+  operator=(const complex &__c)
+  {
+    __re_ = __c.real();
+    __im_ = __c.imag();
+    return *this;
+  }
+  CUDA_CALLABLE_MEMBER complex &
+  operator=(const volatile complex &__c)
+  {
+    __re_ = __c.real();
+    __im_ = __c.imag();
+    return *this;
+  }
+  CUDA_CALLABLE_MEMBER volatile complex &
+  operator=(const complex &__c) volatile
+  {
+    __re_ = __c.real();
+    __im_ = __c.imag();
     return *this;
   }
   CUDA_CALLABLE_MEMBER complex &
@@ -318,6 +363,22 @@ public:
   template <class _Xp>
   CUDA_CALLABLE_MEMBER complex &
   operator=(const complex<_Xp> &__c)
+  {
+    __re_ = __c.real();
+    __im_ = __c.imag();
+    return *this;
+  }
+  template <class _Xp>
+  CUDA_CALLABLE_MEMBER complex &
+  operator=(const volatile complex<_Xp> &__c)
+  {
+    __re_ = __c.real();
+    __im_ = __c.imag();
+    return *this;
+  }
+  template <class _Xp>
+  CUDA_CALLABLE_MEMBER volatile complex &
+  operator=(const complex<_Xp> &__c) volatile
   {
     __re_ = __c.real();
     __im_ = __c.imag();
@@ -372,8 +433,17 @@ public:
     : __re_(__re)
     , __im_(__im)
   {}
+  /*constexpr*/ CUDA_CALLABLE_MEMBER
+  complex(const complex<float> &__c);
+
+  /*constexpr*/ CUDA_CALLABLE_MEMBER
+  complex(const volatile complex<float> &__c);
+
   explicit /*constexpr*/ CUDA_CALLABLE_MEMBER
   complex(const complex<double> &__c);
+
+  explicit /*constexpr*/ CUDA_CALLABLE_MEMBER
+  complex(const volatile complex<double> &__c);
 
   /*constexpr*/ CUDA_CALLABLE_MEMBER float
   real() const
@@ -381,7 +451,17 @@ public:
     return __re_;
   }
   /*constexpr*/ CUDA_CALLABLE_MEMBER float
+  real() const volatile
+  {
+    return __re_;
+  }
+  /*constexpr*/ CUDA_CALLABLE_MEMBER float
   imag() const
+  {
+    return __im_;
+  }
+  /*constexpr*/ CUDA_CALLABLE_MEMBER float
+  imag() const volatile
   {
     return __im_;
   }
@@ -402,6 +482,34 @@ public:
   {
     __re_ = __re;
     __im_ = value_type();
+    return *this;
+  }
+  CUDA_CALLABLE_MEMBER volatile complex &
+  operator=(float __re) volatile
+  {
+    __re_ = __re;
+    __im_ = value_type();
+    return *this;
+  }
+  CUDA_CALLABLE_MEMBER complex &
+  operator=(const complex &__c)
+  {
+    __re_ = __c.real();
+    __im_ = __c.imag();
+    return *this;
+  }
+  CUDA_CALLABLE_MEMBER complex &
+  operator=(const volatile complex &__c)
+  {
+    __re_ = __c.real();
+    __im_ = __c.imag();
+    return *this;
+  }
+  CUDA_CALLABLE_MEMBER volatile complex &
+  operator=(const complex &__c) volatile
+  {
+    __re_ = __c.real();
+    __im_ = __c.imag();
     return *this;
   }
   CUDA_CALLABLE_MEMBER complex &
@@ -434,6 +542,22 @@ public:
   template <class _Xp>
   CUDA_CALLABLE_MEMBER complex &
   operator=(const complex<_Xp> &__c)
+  {
+    __re_ = __c.real();
+    __im_ = __c.imag();
+    return *this;
+  }
+  template <class _Xp>
+  CUDA_CALLABLE_MEMBER complex &
+  operator=(const volatile complex<_Xp> &__c)
+  {
+    __re_ = __c.real();
+    __im_ = __c.imag();
+    return *this;
+  }
+  template <class _Xp>
+  CUDA_CALLABLE_MEMBER volatile complex &
+  operator=(const complex<_Xp> &__c) volatile
   {
     __re_ = __c.real();
     __im_ = __c.imag();
@@ -486,7 +610,16 @@ public:
     , __im_(__im)
   {}
   /*constexpr*/ CUDA_CALLABLE_MEMBER
+  complex(const complex<double> &__c);
+
+  /*constexpr*/ CUDA_CALLABLE_MEMBER
+  complex(const volatile complex<double> &__c);
+
+  explicit /*constexpr*/ CUDA_CALLABLE_MEMBER
   complex(const complex<float> &__c);
+
+  explicit /*constexpr*/ CUDA_CALLABLE_MEMBER
+  complex(const volatile complex<float> &__c);
 
   /*constexpr*/ CUDA_CALLABLE_MEMBER double
   real() const
@@ -494,7 +627,17 @@ public:
     return __re_;
   }
   /*constexpr*/ CUDA_CALLABLE_MEMBER double
+  real() const volatile
+  {
+    return __re_;
+  }
+  /*constexpr*/ CUDA_CALLABLE_MEMBER double
   imag() const
+  {
+    return __im_;
+  }
+  /*constexpr*/ CUDA_CALLABLE_MEMBER double
+  imag() const volatile
   {
     return __im_;
   }
@@ -515,6 +658,34 @@ public:
   {
     __re_ = __re;
     __im_ = value_type();
+    return *this;
+  }
+  CUDA_CALLABLE_MEMBER volatile complex &
+  operator=(double __re) volatile
+  {
+    __re_ = __re;
+    __im_ = value_type();
+    return *this;
+  }
+  CUDA_CALLABLE_MEMBER complex &
+  operator=(const complex &__c)
+  {
+    __re_ = __c.real();
+    __im_ = __c.imag();
+    return *this;
+  }
+  CUDA_CALLABLE_MEMBER complex &
+  operator=(const volatile complex &__c)
+  {
+    __re_ = __c.real();
+    __im_ = __c.imag();
+    return *this;
+  }
+  CUDA_CALLABLE_MEMBER volatile complex &
+  operator=(const complex &__c) volatile
+  {
+    __re_ = __c.real();
+    __im_ = __c.imag();
     return *this;
   }
   CUDA_CALLABLE_MEMBER complex &
@@ -554,6 +725,22 @@ public:
   }
   template <class _Xp>
   CUDA_CALLABLE_MEMBER complex &
+  operator=(const volatile complex<_Xp> &__c)
+  {
+    __re_ = __c.real();
+    __im_ = __c.imag();
+    return *this;
+  }
+  template <class _Xp>
+  CUDA_CALLABLE_MEMBER volatile complex &
+  operator=(const complex<_Xp> &__c) volatile
+  {
+    __re_ = __c.real();
+    __im_ = __c.imag();
+    return *this;
+  }
+  template <class _Xp>
+  CUDA_CALLABLE_MEMBER complex &
   operator+=(const complex<_Xp> &__c)
   {
     __re_ += __c.real();
@@ -586,7 +773,25 @@ public:
 
 // constexpr
 inline CUDA_CALLABLE_MEMBER
+complex<float>::complex(const complex<float> &__c)
+  : __re_(__c.real())
+  , __im_(__c.imag())
+{}
+
+inline CUDA_CALLABLE_MEMBER
+complex<float>::complex(const volatile complex<float> &__c)
+  : __re_(__c.real())
+  , __im_(__c.imag())
+{}
+
+inline CUDA_CALLABLE_MEMBER
 complex<float>::complex(const complex<double> &__c)
+  : __re_(__c.real())
+  , __im_(__c.imag())
+{}
+
+inline CUDA_CALLABLE_MEMBER
+complex<float>::complex(const volatile complex<double> &__c)
   : __re_(__c.real())
   , __im_(__c.imag())
 {}
@@ -598,11 +803,38 @@ complex<double>::complex(const complex<float> &__c)
   , __im_(__c.imag())
 {}
 
+inline CUDA_CALLABLE_MEMBER
+complex<double>::complex(const volatile complex<float> &__c)
+  : __re_(__c.real())
+  , __im_(__c.imag())
+{}
+
+inline CUDA_CALLABLE_MEMBER
+complex<double>::complex(const complex<double> &__c)
+  : __re_(__c.real())
+  , __im_(__c.imag())
+{}
+
+inline CUDA_CALLABLE_MEMBER
+complex<double>::complex(const volatile complex<double> &__c)
+  : __re_(__c.real())
+  , __im_(__c.imag())
+{}
+
 // 26.3.6 operators:
 
 template <class _Tp>
 inline CUDA_CALLABLE_MEMBER complex<_Tp>
 operator+(const complex<_Tp> &__x, const complex<_Tp> &__y)
+{
+  complex<_Tp> __t(__x);
+  __t += __y;
+  return __t;
+}
+
+template <class _Tp>
+inline CUDA_CALLABLE_MEMBER complex<_Tp>
+operator+(const volatile complex<_Tp> &__x, const complex<_Tp> &__y)
 {
   complex<_Tp> __t(__x);
   __t += __y;

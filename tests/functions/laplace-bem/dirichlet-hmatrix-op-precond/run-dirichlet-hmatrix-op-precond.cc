@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2022-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -70,8 +70,10 @@ private:
 };
 
 void
-run_dirichlet_hmatrix_op_precond(const unsigned int             refinement,
-                                 const IterativeSolverVmultType vmult_type)
+run_dirichlet_hmatrix_op_precond(
+  const unsigned int             refinement,
+  const IterativeSolverVmultType vmult_type,
+  const bool                     cpu_serial_without_producer_consumer)
 {
   /**
    * @internal Pop out the default "DEAL" prefix string.
@@ -98,8 +100,10 @@ run_dirichlet_hmatrix_op_precond(const unsigned int             refinement,
   ConfLaplaceBEM bem_params;
   bem_params.problem_type        = ProblemType::DirichletBCProblem;
   bem_params.is_interior_problem = true;
-  ConfHMatrix                hmat_params{4, 4, 0.8, 5, 0.01};
-  ConfHMatrix                hmat_preconditioner_params{4, 4, 1.0, 2, 0.1};
+  ConfHMatrix hmat_params{
+    4, 4, 0.8, 5, 0.01, cpu_serial_without_producer_consumer};
+  ConfHMatrix hmat_preconditioner_params{
+    4, 4, 1.0, 2, 0.1, cpu_serial_without_producer_consumer};
   ConfSauterQuad             sauter_quad_params;
   ConfSauterQuad             sauter_quad_precond_params;
   ConfLinearSolver           linear_solver_params;

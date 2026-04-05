@@ -56,10 +56,9 @@ TEST_CASE("Verify DQGMRES", "[linalg]")
     // Verify the real valued case.
 
     // Get matrix and vector data from Julia.
-    HBEMJuliaValue jl_value = inst.eval_string("b1");
-    const size_t   n        = jl_value.length();
     HBEMJuliaValue A_jl_value(inst.eval_string("A1"));
     HBEMJuliaValue b_jl_value(inst.eval_string("b1"));
+    const size_t   n      = b_jl_value.length();
     double        *A_data = A_jl_value.double_array();
     double        *b_data = b_jl_value.double_array();
 
@@ -164,10 +163,9 @@ TEST_CASE("Verify DQGMRES", "[linalg]")
     // Verify the complex valued case.
 
     // Get matrix and vector data from Julia.
-    HBEMJuliaValue        jl_value = inst.eval_string("b2");
-    const size_t          n        = jl_value.length();
     HBEMJuliaValue        A_jl_value(inst.eval_string("A2"));
     HBEMJuliaValue        b_jl_value(inst.eval_string("b2"));
+    const size_t          n      = b_jl_value.length();
     std::complex<double> *A_data = A_jl_value.complex_double_array();
     std::complex<double> *b_data = b_jl_value.complex_double_array();
 

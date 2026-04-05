@@ -1,4 +1,4 @@
-// Copyright (C) 2024-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2024-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -24,6 +24,7 @@
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature.h>
 #include <deal.II/base/subscriptor.h>
+#include <deal.II/base/table.h>
 
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_tools.h>
@@ -253,7 +254,12 @@ public:
     const SubdomainTopology<dim, spacedim>          &subdomain_topology,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
-                                    &material_id_to_mapping_index,
+      &material_id_to_mapping_index,
+    const Table<
+      2,
+      Point<spacedim,
+            typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                                    &mapping_support_point_table,
     const SurfaceNormalDetector     &normal_detector,
     const SauterQuadratureRule<dim> &sauter_quad_rule);
 
@@ -1063,7 +1069,12 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
     const SubdomainTopology<dim, spacedim>          &subdomain_topology,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
-                                    &material_id_to_mapping_index,
+      &material_id_to_mapping_index,
+    const Table<
+      2,
+      Point<spacedim,
+            typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                                    &mapping_support_point_table,
     const SurfaceNormalDetector     &normal_detector,
     const SauterQuadratureRule<dim> &sauter_quad_rule)
 {
@@ -1137,6 +1148,168 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
               // stabilization factor.
               const KernelNumberType alpha_for_neumann(1.0);
 
+              if (hmat_params.cpu_serial_without_producer_consumer)
+                {
+                  fill_hmatrix_with_aca_plus_serial<dim,
+                                                    spacedim,
+                                                    KernelFunctionType,
+                                                    RangeNumberType,
+                                                    KernelNumberType,
+                                                    SurfaceNormalDetector>(
+                    hmat,
+                    hmat_params,
+                    preconditioner_kernel,
+                    DeviceNumberType<KernelNumberType>(1.0),
+                    mass_vmult_weq,
+                    alpha_for_neumann,
+                    dof_to_cell_topo_dual_space,
+                    dof_to_cell_topo_dual_space,
+                    sauter_quad_rule,
+                    dof_handler_dual_space,
+                    dof_handler_dual_space,
+                    nullptr,
+                    nullptr,
+                    dof_i2e_numbering,
+                    dof_i2e_numbering,
+                    mappings,
+                    material_id_to_mapping_index,
+                    mapping_support_point_table,
+                    normal_detector,
+                    true);
+                }
+              else
+                {
+                  fill_hmatrix_with_aca_plus_smp<dim,
+                                                 spacedim,
+                                                 KernelFunctionType,
+                                                 RangeNumberType,
+                                                 KernelNumberType,
+                                                 SurfaceNormalDetector>(
+                    hmat,
+                    hmat_params,
+                    sauter_quad_near_field_params,
+                    sauter_quad_far_field_params,
+                    parallel_params,
+                    preconditioner_kernel,
+                    DeviceNumberType<KernelNumberType>(1.0),
+                    mass_vmult_weq,
+                    alpha_for_neumann,
+                    dof_to_cell_topo_dual_space,
+                    dof_to_cell_topo_dual_space,
+                    sauter_quad_rule,
+                    dof_handler_dual_space,
+                    dof_handler_dual_space,
+                    nullptr,
+                    nullptr,
+                    dof_i2e_numbering,
+                    dof_i2e_numbering,
+                    mappings,
+                    material_id_to_mapping_index,
+                    mapping_support_point_table,
+                    normal_detector,
+                    true);
+                }
+            }
+          else
+            {
+              if (hmat_params.cpu_serial_without_producer_consumer)
+                {
+                  fill_hmatrix_with_aca_plus_serial<dim,
+                                                    spacedim,
+                                                    KernelFunctionType,
+                                                    RangeNumberType,
+                                                    KernelNumberType,
+                                                    SurfaceNormalDetector>(
+                    hmat,
+                    hmat_params,
+                    preconditioner_kernel,
+                    DeviceNumberType<KernelNumberType>(1.0),
+                    {},
+                    KernelNumberType(0.),
+                    dof_to_cell_topo_dual_space,
+                    dof_to_cell_topo_dual_space,
+                    sauter_quad_rule,
+                    dof_handler_dual_space,
+                    dof_handler_dual_space,
+                    nullptr,
+                    nullptr,
+                    dof_i2e_numbering,
+                    dof_i2e_numbering,
+                    mappings,
+                    material_id_to_mapping_index,
+                    mapping_support_point_table,
+                    normal_detector,
+                    true);
+                }
+              else
+                {
+                  fill_hmatrix_with_aca_plus_smp<dim,
+                                                 spacedim,
+                                                 KernelFunctionType,
+                                                 RangeNumberType,
+                                                 KernelNumberType,
+                                                 SurfaceNormalDetector>(
+                    hmat,
+                    hmat_params,
+                    sauter_quad_near_field_params,
+                    sauter_quad_far_field_params,
+                    parallel_params,
+                    preconditioner_kernel,
+                    DeviceNumberType<KernelNumberType>(1.0),
+                    {},
+                    KernelNumberType(0.),
+                    dof_to_cell_topo_dual_space,
+                    dof_to_cell_topo_dual_space,
+                    sauter_quad_rule,
+                    dof_handler_dual_space,
+                    dof_handler_dual_space,
+                    nullptr,
+                    nullptr,
+                    dof_i2e_numbering,
+                    dof_i2e_numbering,
+                    mappings,
+                    material_id_to_mapping_index,
+                    mapping_support_point_table,
+                    normal_detector,
+                    true);
+                }
+            }
+        }
+      else
+        {
+          // When the preconditioner is on a subdomain, there is no need to
+          // stabilize the hyper singular bilinear form.
+          if (hmat_params.cpu_serial_without_producer_consumer)
+            {
+              fill_hmatrix_with_aca_plus_serial<dim,
+                                                spacedim,
+                                                KernelFunctionType,
+                                                RangeNumberType,
+                                                KernelNumberType,
+                                                SurfaceNormalDetector>(
+                hmat,
+                hmat_params,
+                preconditioner_kernel,
+                DeviceNumberType<KernelNumberType>(1.0),
+                {},
+                KernelNumberType(0.),
+                dof_to_cell_topo_dual_space,
+                dof_to_cell_topo_dual_space,
+                sauter_quad_rule,
+                dof_handler_dual_space,
+                dof_handler_dual_space,
+                &dual_space_local_to_full_dof_id_map_on_refined_mesh,
+                &dual_space_local_to_full_dof_id_map_on_refined_mesh,
+                dof_i2e_numbering,
+                dof_i2e_numbering,
+                mappings,
+                material_id_to_mapping_index,
+                mapping_support_point_table,
+                normal_detector,
+                true);
+            }
+          else
+            {
               fill_hmatrix_with_aca_plus_smp<dim,
                                              spacedim,
                                              KernelFunctionType,
@@ -1150,8 +1323,41 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                 parallel_params,
                 preconditioner_kernel,
                 DeviceNumberType<KernelNumberType>(1.0),
-                mass_vmult_weq,
-                alpha_for_neumann,
+                {},
+                KernelNumberType(0.),
+                dof_to_cell_topo_dual_space,
+                dof_to_cell_topo_dual_space,
+                sauter_quad_rule,
+                dof_handler_dual_space,
+                dof_handler_dual_space,
+                &dual_space_local_to_full_dof_id_map_on_refined_mesh,
+                &dual_space_local_to_full_dof_id_map_on_refined_mesh,
+                dof_i2e_numbering,
+                dof_i2e_numbering,
+                mappings,
+                material_id_to_mapping_index,
+                mapping_support_point_table,
+                normal_detector,
+                true);
+            }
+        }
+    }
+  else
+    {
+      if (is_full_domain)
+        {
+          if (hmat_params.cpu_serial_without_producer_consumer)
+            {
+              fill_hmatrix_with_aca_plus_serial<dim,
+                                                spacedim,
+                                                KernelFunctionType,
+                                                RangeNumberType,
+                                                KernelNumberType,
+                                                SurfaceNormalDetector>(
+                hmat,
+                hmat_params,
+                preconditioner_kernel,
+                DeviceNumberType<KernelNumberType>(1.0),
                 dof_to_cell_topo_dual_space,
                 dof_to_cell_topo_dual_space,
                 sauter_quad_rule,
@@ -1163,127 +1369,101 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                 dof_i2e_numbering,
                 mappings,
                 material_id_to_mapping_index,
+                mapping_support_point_table,
                 normal_detector,
                 true);
             }
           else
-            fill_hmatrix_with_aca_plus_smp<dim,
-                                           spacedim,
-                                           KernelFunctionType,
-                                           RangeNumberType,
-                                           KernelNumberType,
-                                           SurfaceNormalDetector>(
-              hmat,
-              hmat_params,
-              sauter_quad_near_field_params,
-              sauter_quad_far_field_params,
-              parallel_params,
-              preconditioner_kernel,
-              DeviceNumberType<KernelNumberType>(1.0),
-              {},
-              KernelNumberType(0.),
-              dof_to_cell_topo_dual_space,
-              dof_to_cell_topo_dual_space,
-              sauter_quad_rule,
-              dof_handler_dual_space,
-              dof_handler_dual_space,
-              nullptr,
-              nullptr,
-              dof_i2e_numbering,
-              dof_i2e_numbering,
-              mappings,
-              material_id_to_mapping_index,
-              normal_detector,
-              true);
+            {
+              fill_hmatrix_with_aca_plus_smp<dim,
+                                             spacedim,
+                                             KernelFunctionType,
+                                             RangeNumberType,
+                                             KernelNumberType,
+                                             SurfaceNormalDetector>(
+                hmat,
+                hmat_params,
+                sauter_quad_near_field_params,
+                sauter_quad_far_field_params,
+                parallel_params,
+                preconditioner_kernel,
+                DeviceNumberType<KernelNumberType>(1.0),
+                dof_to_cell_topo_dual_space,
+                dof_to_cell_topo_dual_space,
+                sauter_quad_rule,
+                dof_handler_dual_space,
+                dof_handler_dual_space,
+                nullptr,
+                nullptr,
+                dof_i2e_numbering,
+                dof_i2e_numbering,
+                mappings,
+                material_id_to_mapping_index,
+                mapping_support_point_table,
+                normal_detector,
+                true);
+            }
         }
       else
-        // When the preconditioner is on a subdomain, there is no need to
-        // stabilize the hyper singular bilinear form.
-        fill_hmatrix_with_aca_plus_smp<dim,
-                                       spacedim,
-                                       KernelFunctionType,
-                                       RangeNumberType,
-                                       KernelNumberType,
-                                       SurfaceNormalDetector>(
-          hmat,
-          hmat_params,
-          sauter_quad_near_field_params,
-          sauter_quad_far_field_params,
-          parallel_params,
-          preconditioner_kernel,
-          DeviceNumberType<KernelNumberType>(1.0),
-          {},
-          KernelNumberType(0.),
-          dof_to_cell_topo_dual_space,
-          dof_to_cell_topo_dual_space,
-          sauter_quad_rule,
-          dof_handler_dual_space,
-          dof_handler_dual_space,
-          &dual_space_local_to_full_dof_id_map_on_refined_mesh,
-          &dual_space_local_to_full_dof_id_map_on_refined_mesh,
-          dof_i2e_numbering,
-          dof_i2e_numbering,
-          mappings,
-          material_id_to_mapping_index,
-          normal_detector,
-          true);
-    }
-  else
-    {
-      if (is_full_domain)
-        fill_hmatrix_with_aca_plus_smp<dim,
-                                       spacedim,
-                                       KernelFunctionType,
-                                       RangeNumberType,
-                                       KernelNumberType,
-                                       SurfaceNormalDetector>(
-          hmat,
-          hmat_params,
-          sauter_quad_near_field_params,
-          sauter_quad_far_field_params,
-          parallel_params,
-          preconditioner_kernel,
-          DeviceNumberType<KernelNumberType>(1.0),
-          dof_to_cell_topo_dual_space,
-          dof_to_cell_topo_dual_space,
-          sauter_quad_rule,
-          dof_handler_dual_space,
-          dof_handler_dual_space,
-          nullptr,
-          nullptr,
-          dof_i2e_numbering,
-          dof_i2e_numbering,
-          mappings,
-          material_id_to_mapping_index,
-          normal_detector,
-          true);
-      else
-        fill_hmatrix_with_aca_plus_smp<dim,
-                                       spacedim,
-                                       KernelFunctionType,
-                                       RangeNumberType,
-                                       KernelNumberType,
-                                       SurfaceNormalDetector>(
-          hmat,
-          hmat_params,
-          sauter_quad_near_field_params,
-          sauter_quad_far_field_params,
-          parallel_params,
-          preconditioner_kernel,
-          DeviceNumberType<KernelNumberType>(1.0),
-          dof_to_cell_topo_dual_space,
-          dof_to_cell_topo_dual_space,
-          sauter_quad_rule,
-          dof_handler_dual_space,
-          dof_handler_dual_space,
-          &dual_space_local_to_full_dof_id_map_on_refined_mesh,
-          &dual_space_local_to_full_dof_id_map_on_refined_mesh,
-          dof_i2e_numbering,
-          dof_i2e_numbering,
-          mappings,
-          material_id_to_mapping_index,
-          normal_detector,
-          true);
+        {
+          if (hmat_params.cpu_serial_without_producer_consumer)
+            {
+              fill_hmatrix_with_aca_plus_serial<dim,
+                                                spacedim,
+                                                KernelFunctionType,
+                                                RangeNumberType,
+                                                KernelNumberType,
+                                                SurfaceNormalDetector>(
+                hmat,
+                hmat_params,
+                preconditioner_kernel,
+                DeviceNumberType<KernelNumberType>(1.0),
+                dof_to_cell_topo_dual_space,
+                dof_to_cell_topo_dual_space,
+                sauter_quad_rule,
+                dof_handler_dual_space,
+                dof_handler_dual_space,
+                &dual_space_local_to_full_dof_id_map_on_refined_mesh,
+                &dual_space_local_to_full_dof_id_map_on_refined_mesh,
+                dof_i2e_numbering,
+                dof_i2e_numbering,
+                mappings,
+                material_id_to_mapping_index,
+                mapping_support_point_table,
+                normal_detector,
+                true);
+            }
+          else
+            {
+              fill_hmatrix_with_aca_plus_smp<dim,
+                                             spacedim,
+                                             KernelFunctionType,
+                                             RangeNumberType,
+                                             KernelNumberType,
+                                             SurfaceNormalDetector>(
+                hmat,
+                hmat_params,
+                sauter_quad_near_field_params,
+                sauter_quad_far_field_params,
+                parallel_params,
+                preconditioner_kernel,
+                DeviceNumberType<KernelNumberType>(1.0),
+                dof_to_cell_topo_dual_space,
+                dof_to_cell_topo_dual_space,
+                sauter_quad_rule,
+                dof_handler_dual_space,
+                dof_handler_dual_space,
+                &dual_space_local_to_full_dof_id_map_on_refined_mesh,
+                &dual_space_local_to_full_dof_id_map_on_refined_mesh,
+                dof_i2e_numbering,
+                dof_i2e_numbering,
+                mappings,
+                material_id_to_mapping_index,
+                mapping_support_point_table,
+                normal_detector,
+                true);
+            }
+        }
     }
 
 #if ENABLE_NVTX == 1

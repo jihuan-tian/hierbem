@@ -29,6 +29,7 @@
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/subscriptor.h>
+#include <deal.II/base/table.h>
 #include <deal.II/base/table_handler.h>
 #include <deal.II/base/timer.h>
 #include <deal.II/base/types.h>
@@ -356,6 +357,22 @@ private:
    * Map @p material_id to mapping index.
    */
   std::map<types::material_id, unsigned int> material_id_to_mapping_index_;
+
+  /**
+   * A 2D table of mapping support points for all active cells on the highest
+   * level in the triangulation.
+   *
+   * Dim1: cell index. Dim2: mapping support point index in a cell.
+   */
+  Table<2, Point<spacedim, real_type>> tria_mapping_support_points_;
+
+  /**
+   * A 2D table of mapping support points for all active cells on the highest
+   * level in the multigrid triangulation.
+   *
+   * Dim1: cell index. Dim2: mapping support point index in a cell.
+   */
+  Table<2, Point<spacedim, real_type>> mg_tria_mapping_support_points_;
 
   /**
    * Surface-to-volume and volume-to-surface relationship.
@@ -701,10 +718,11 @@ private:
     const DoFHandler<dim1, spacedim1> &dof_handler_for_trial_space,
     const std::vector<MappingInfo<dim1, spacedim1> *> &mappings,
     const std::map<types::material_id, unsigned int>
-                                     &material_id_to_mapping_index,
-    const SurfaceNormalDetector      &normal_detector,
-    const SauterQuadratureRule<dim1> &sauter_quad_rule,
-    MatrixType                       &target_full_matrix);
+                                                &material_id_to_mapping_index,
+    const Table<2, Point<spacedim1, real_type>> &mapping_support_point_table,
+    const SurfaceNormalDetector                 &normal_detector,
+    const SauterQuadratureRule<dim1>            &sauter_quad_rule,
+    MatrixType                                  &target_full_matrix);
 
   template <int dim1,
             int spacedim1,
@@ -721,10 +739,11 @@ private:
     const DoFHandler<dim1, spacedim1> &dof_handler_for_trial_space,
     const std::vector<MappingInfo<dim1, spacedim1> *> &mappings,
     const std::map<types::material_id, unsigned int>
-                                     &material_id_to_mapping_order,
-    const SurfaceNormalDetector      &normal_detector,
-    const SauterQuadratureRule<dim1> &sauter_quad_rule,
-    MatrixType                       &target_full_matrix);
+                                                &material_id_to_mapping_order,
+    const Table<2, Point<spacedim1, real_type>> &mapping_support_point_table,
+    const SurfaceNormalDetector                 &normal_detector,
+    const SauterQuadratureRule<dim1>            &sauter_quad_rule,
+    MatrixType                                  &target_full_matrix);
 #pragma endregion
 };
 
@@ -870,6 +889,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
     dof_handler_for_neumann_space_,
     mappings_,
     material_id_to_mapping_index_,
+    tria_mapping_support_points_,
     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
     SauterQuadratureRule<dim>(sauter_quad_params_.slp_order),
     V);
@@ -1030,6 +1050,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                      SauterQuadratureRule<dim>(sauter_quad_params_.slp_order),
                      mappings_,
                      material_id_to_mapping_index_,
+                     tria_mapping_support_points_,
                      subdomain_topology_);
   add_memory_consumption_row("V for weq", *V, "After assembly");
 
@@ -1289,6 +1310,11 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
   initialize_manifolds_from_manifold_description();
   initialize_mappings();
+  BEMTools::compute_mapping_support_points_for_tria(
+    tria_,
+    mappings_,
+    material_id_to_mapping_index_,
+    tria_mapping_support_points_);
 
   switch (problem_type_)
     {
@@ -2152,6 +2178,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_dirichlet_space_,
                 mappings_,
                 material_id_to_mapping_index_,
+                tria_mapping_support_points_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(sauter_quad_params_.dlp_order),
                 I1K2_mat_);
@@ -2170,6 +2197,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_dirichlet_space_,
                 mappings_,
                 material_id_to_mapping_index_,
+                tria_mapping_support_points_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(sauter_quad_params_.dlp_order),
                 I1K2_mat_);
@@ -2198,6 +2226,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_neumann_space_,
                 mappings_,
                 material_id_to_mapping_index_,
+                tria_mapping_support_points_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(sauter_quad_params_.slp_order),
                 V1_mat_);
@@ -2216,6 +2245,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_neumann_space_,
                 mappings_,
                 material_id_to_mapping_index_,
+                tria_mapping_support_points_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(sauter_quad_params_.slp_order),
                 V1_mat_);
@@ -2327,6 +2357,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_neumann_space_,
                 mappings_,
                 material_id_to_mapping_index_,
+                tria_mapping_support_points_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(sauter_quad_params_.adlp_order),
                 I2K_prime2_mat_);
@@ -2345,6 +2376,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_neumann_space_,
                 mappings_,
                 material_id_to_mapping_index_,
+                tria_mapping_support_points_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(sauter_quad_params_.adlp_order),
                 I2K_prime2_mat_);
@@ -2397,6 +2429,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_dirichlet_space_,
                 mappings_,
                 material_id_to_mapping_index_,
+                tria_mapping_support_points_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(
                   sauter_quad_params_.hyper_singular_order),
@@ -2416,6 +2449,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_dirichlet_space_,
                 mappings_,
                 material_id_to_mapping_index_,
+                tria_mapping_support_points_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(
                   sauter_quad_params_.hyper_singular_order),
@@ -2499,6 +2533,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
+                tria_mapping_support_points_,
                 subdomain_topology_);
               timer.stop();
               print_wall_time(deallog, timer, "assemble sigma*I1+K2");
@@ -2517,6 +2552,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
+                tria_mapping_support_points_,
                 subdomain_topology_);
               timer.stop();
               print_wall_time(deallog, timer, "assemble (sigma-1)*I1+K2");
@@ -2582,6 +2618,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                              sauter_quad_params_.slp_order),
                                            mappings_,
                                            material_id_to_mapping_index_,
+                                           tria_mapping_support_points_,
                                            subdomain_topology_);
             timer.stop();
             print_wall_time(deallog, timer, "assemble V1");
@@ -2634,6 +2671,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
+                tria_mapping_support_points_,
                 subdomain_topology_);
               timer.stop();
               print_wall_time(deallog, timer, "assemble (1-sigma)*I2-K'2");
@@ -2652,6 +2690,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
+                tria_mapping_support_points_,
                 subdomain_topology_);
               timer.stop();
               print_wall_time(deallog, timer, "assemble -sigma*I2-K'2");
@@ -2726,6 +2765,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             SauterQuadratureRule<dim>(sauter_quad_params_.hyper_singular_order),
             mappings_,
             material_id_to_mapping_index_,
+            tria_mapping_support_points_,
             subdomain_topology_);
           timer.stop();
           print_wall_time(deallog, timer, "assemble D1");
@@ -2781,6 +2821,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
+                tria_mapping_support_points_,
                 subdomain_topology_);
               timer.stop();
               print_wall_time(deallog, timer, "assemble sigma*I1+K2");
@@ -2798,6 +2839,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
+                tria_mapping_support_points_,
                 subdomain_topology_);
               timer.stop();
               print_wall_time(deallog, timer, "assemble (1-sigma)*I2-K'2");
@@ -2816,6 +2858,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
+                tria_mapping_support_points_,
                 subdomain_topology_);
               timer.stop();
               print_wall_time(deallog, timer, "assemble (sigma-1)*I1+K2");
@@ -2833,6 +2876,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
+                tria_mapping_support_points_,
                 subdomain_topology_);
               timer.stop();
               print_wall_time(deallog, timer, "assemble -sigma*I2-K'2");
@@ -2857,6 +2901,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                            sauter_quad_params_.slp_order),
                                          mappings_,
                                          material_id_to_mapping_index_,
+                                         tria_mapping_support_points_,
                                          subdomain_topology_);
           timer.stop();
           print_wall_time(deallog, timer, "assemble -V2");
@@ -2877,6 +2922,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             SauterQuadratureRule<dim>(sauter_quad_params_.hyper_singular_order),
             mappings_,
             material_id_to_mapping_index_,
+            tria_mapping_support_points_,
             subdomain_topology_);
           timer.stop();
           print_wall_time(deallog, timer, "assemble -D2");
@@ -3022,6 +3068,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                            sauter_quad_params_.slp_order),
                                          mappings_,
                                          material_id_to_mapping_index_,
+                                         tria_mapping_support_points_,
                                          subdomain_topology_);
           timer.stop();
           print_wall_time(deallog, timer, "assemble V1");
@@ -3040,6 +3087,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                            sauter_quad_params_.dlp_order),
                                          mappings_,
                                          material_id_to_mapping_index_,
+                                         tria_mapping_support_points_,
                                          subdomain_topology_);
           timer.stop();
           print_wall_time(deallog, timer, "assemble -K1");
@@ -3060,6 +3108,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             SauterQuadratureRule<dim>(sauter_quad_params_.hyper_singular_order),
             mappings_,
             material_id_to_mapping_index_,
+            tria_mapping_support_points_,
             subdomain_topology_);
           timer.stop();
           print_wall_time(deallog, timer, "assemble D1");
@@ -3199,6 +3248,11 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   // Generate the multigrid.
                   mg_tria_for_preconditioner_.copy_triangulation(tria_);
                   mg_tria_for_preconditioner_.refine_global();
+                  BEMTools::compute_mapping_support_points_for_tria(
+                    mg_tria_for_preconditioner_,
+                    mappings_,
+                    material_id_to_mapping_index_,
+                    mg_tria_mapping_support_points_);
 
                   op_precond_for_slp_ = std::make_unique<
                     LaplaceSingleLayerPreconditioner<dim,
@@ -3222,6 +3276,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
+                    mg_tria_mapping_support_points_,
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                     SauterQuadratureRule<dim>(
                       sauter_quad_precond_params_.hyper_singular_order),
@@ -3304,6 +3359,11 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   // Generate the multigrid.
                   mg_tria_for_preconditioner_.copy_triangulation(tria_);
                   mg_tria_for_preconditioner_.refine_global();
+                  BEMTools::compute_mapping_support_points_for_tria(
+                    mg_tria_for_preconditioner_,
+                    mappings_,
+                    material_id_to_mapping_index_,
+                    mg_tria_mapping_support_points_);
 
                   op_precond_for_hyper_singular_ = std::make_unique<
                     LaplaceHyperSingularPreconditioner<dim,
@@ -3327,6 +3387,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
+                    mg_tria_mapping_support_points_,
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                     SauterQuadratureRule<dim>(
                       sauter_quad_precond_params_.slp_order),
@@ -3440,6 +3501,11 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   // Generate the multigrid.
                   mg_tria_for_preconditioner_.copy_triangulation(tria_);
                   mg_tria_for_preconditioner_.refine_global();
+                  BEMTools::compute_mapping_support_points_for_tria(
+                    mg_tria_for_preconditioner_,
+                    mappings_,
+                    material_id_to_mapping_index_,
+                    mg_tria_mapping_support_points_);
 
                   // Collect material ids into sets.
                   std::set<types::material_id> dirichlet_domain_material_ids;
@@ -3488,6 +3554,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
+                    mg_tria_mapping_support_points_,
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                     SauterQuadratureRule<dim>(
                       sauter_quad_precond_params_.hyper_singular_order),
@@ -3501,6 +3568,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
+                    mg_tria_mapping_support_points_,
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                     SauterQuadratureRule<dim>(
                       sauter_quad_precond_params_.slp_order),

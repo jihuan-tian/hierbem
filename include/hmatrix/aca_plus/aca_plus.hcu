@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2022-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -144,8 +144,6 @@ assemble_kernel_row(
     dim,
     spacedim,
     typename numbers::NumberTraits<RangeNumberType>::real_type> &bem_values_gpu,
-  const DoFHandler<dim, spacedim>                               &kx_dof_handler,
-  const DoFHandler<dim, spacedim>                               &ky_dof_handler,
   const std::vector<types::global_dof_index>
     *kx_map_from_local_to_full_dof_indices,
   const std::vector<types::global_dof_index>
@@ -154,7 +152,12 @@ assemble_kernel_row(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
@@ -196,10 +199,9 @@ assemble_kernel_row(
         kx_dof_to_cell_topo,
         ky_dof_to_cell_topo,
         bem_values_gpu,
-        kx_dof_handler,
-        ky_dof_handler,
         mappings,
         material_id_to_mapping_index,
+        mapping_support_point_table,
         normal_detector,
         scratch_data,
         scratch_data_gpu,
@@ -227,8 +229,6 @@ assemble_kernel_row(
  * @param kx_dof_to_cell_topo
  * @param ky_dof_to_cell_topo
  * @param bem_values
- * @param kx_dof_handler
- * @param ky_dof_handler
  * @param kx_dof_i2e_numbering
  * @param ky_dof_i2e_numbering
  * @param kx_mapping
@@ -263,8 +263,6 @@ assemble_kernel_row(
     dim,
     spacedim,
     typename numbers::NumberTraits<RangeNumberType>::real_type> &bem_values_gpu,
-  const DoFHandler<dim, spacedim>                               &kx_dof_handler,
-  const DoFHandler<dim, spacedim>                               &ky_dof_handler,
   const std::vector<types::global_dof_index>
     *kx_map_from_local_to_full_dof_indices,
   const std::vector<types::global_dof_index>
@@ -273,7 +271,12 @@ assemble_kernel_row(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
@@ -315,10 +318,9 @@ assemble_kernel_row(
         kx_dof_to_cell_topo,
         ky_dof_to_cell_topo,
         bem_values_gpu,
-        kx_dof_handler,
-        ky_dof_handler,
         mappings,
         material_id_to_mapping_index,
+        mapping_support_point_table,
         normal_detector,
         scratch_data,
         scratch_data_gpu,
@@ -374,7 +376,12 @@ assemble_kernel_row(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
@@ -422,6 +429,7 @@ assemble_kernel_row(
             ky_dof_to_cell_topo,
             mappings,
             material_id_to_mapping_index,
+            mapping_support_point_table,
             normal_detector,
             scratch_data,
             copy_data);
@@ -485,7 +493,12 @@ assemble_kernel_row(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
@@ -512,6 +525,7 @@ assemble_kernel_row(
                       ky_dof_i2e_numbering,
                       mappings,
                       material_id_to_mapping_index,
+                      mapping_support_point_table,
                       normal_detector,
                       scratch_data,
                       copy_data);
@@ -586,7 +600,12 @@ assemble_kernel_column(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
@@ -630,6 +649,7 @@ assemble_kernel_column(
         bem_values_gpu,
         mappings,
         material_id_to_mapping_index,
+        mapping_support_point_table,
         normal_detector,
         scratch_data,
         scratch_data_gpu,
@@ -700,7 +720,12 @@ assemble_kernel_column(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
@@ -744,6 +769,7 @@ assemble_kernel_column(
         bem_values_gpu,
         mappings,
         material_id_to_mapping_index,
+        mapping_support_point_table,
         normal_detector,
         scratch_data,
         scratch_data_gpu,
@@ -800,7 +826,12 @@ assemble_kernel_column(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
@@ -844,6 +875,7 @@ assemble_kernel_column(
             ky_dof_to_cell_topo,
             mappings,
             material_id_to_mapping_index,
+            mapping_support_point_table,
             normal_detector,
             scratch_data,
             copy_data);
@@ -907,7 +939,12 @@ assemble_kernel_column(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
@@ -934,6 +971,7 @@ assemble_kernel_column(
                          ky_dof_i2e_numbering,
                          mappings,
                          material_id_to_mapping_index,
+                         mapping_support_point_table,
                          normal_detector,
                          scratch_data,
                          copy_data);
@@ -1015,7 +1053,12 @@ random_select_ref_row(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
@@ -1074,6 +1117,7 @@ random_select_ref_row(
                               ky_dof_i2e_numbering,
                               mappings,
                               material_id_to_mapping_index,
+                              mapping_support_point_table,
                               normal_detector,
                               scratch_data,
                               scratch_data_gpu,
@@ -1198,7 +1242,12 @@ random_select_ref_row(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
@@ -1259,6 +1308,7 @@ random_select_ref_row(
                               ky_dof_i2e_numbering,
                               mappings,
                               material_id_to_mapping_index,
+                              mapping_support_point_table,
                               normal_detector,
                               scratch_data,
                               scratch_data_gpu,
@@ -1352,7 +1402,12 @@ random_select_ref_row(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
@@ -1409,6 +1464,7 @@ random_select_ref_row(
                               ky_dof_i2e_numbering,
                               mappings,
                               material_id_to_mapping_index,
+                              mapping_support_point_table,
                               normal_detector,
                               scratch_data,
                               copy_data);
@@ -1503,7 +1559,12 @@ random_select_ref_row(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
@@ -1562,6 +1623,7 @@ random_select_ref_row(
                               ky_dof_i2e_numbering,
                               mappings,
                               material_id_to_mapping_index,
+                              mapping_support_point_table,
                               normal_detector,
                               scratch_data,
                               copy_data);
@@ -1771,7 +1833,12 @@ random_select_ref_column(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
@@ -1830,6 +1897,7 @@ random_select_ref_column(
                                  ky_dof_i2e_numbering,
                                  mappings,
                                  material_id_to_mapping_index,
+                                 mapping_support_point_table,
                                  normal_detector,
                                  scratch_data,
                                  scratch_data_gpu,
@@ -1954,7 +2022,12 @@ random_select_ref_column(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
@@ -2015,6 +2088,7 @@ random_select_ref_column(
                                  ky_dof_i2e_numbering,
                                  mappings,
                                  material_id_to_mapping_index,
+                                 mapping_support_point_table,
                                  normal_detector,
                                  scratch_data,
                                  scratch_data_gpu,
@@ -2109,7 +2183,12 @@ random_select_ref_column(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
@@ -2166,6 +2245,7 @@ random_select_ref_column(
                                  ky_dof_i2e_numbering,
                                  mappings,
                                  material_id_to_mapping_index,
+                                 mapping_support_point_table,
                                  normal_detector,
                                  scratch_data,
                                  copy_data);
@@ -2261,7 +2341,12 @@ random_select_ref_column(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
@@ -2320,6 +2405,7 @@ random_select_ref_column(
                                  ky_dof_i2e_numbering,
                                  mappings,
                                  material_id_to_mapping_index,
+                                 mapping_support_point_table,
                                  normal_detector,
                                  scratch_data,
                                  copy_data);
@@ -2519,7 +2605,12 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
@@ -2610,6 +2701,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                       ky_dof_i2e_numbering,
                                       mappings,
                                       material_id_to_mapping_index,
+                                      mapping_support_point_table,
                                       normal_detector,
                                       scratch_data,
                                       scratch_data_gpu,
@@ -2640,6 +2732,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                          ky_dof_i2e_numbering,
                                          mappings,
                                          material_id_to_mapping_index,
+                                         mapping_support_point_table,
                                          normal_detector,
                                          scratch_data,
                                          scratch_data_gpu,
@@ -2669,11 +2762,15 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   std::transform(vr.begin(),
                  vr.end(),
                  vr_abs.begin(),
-                 static_cast<real_type (*)(RangeNumberType)>(std::abs));
+                 [](const RangeNumberType &val) -> real_type {
+                   return std::abs(val);
+                 });
   std::transform(uc.begin(),
                  uc.end(),
                  uc_abs.begin(),
-                 static_cast<real_type (*)(RangeNumberType)>(std::abs));
+                 [](const RangeNumberType &val) -> real_type {
+                   return std::abs(val);
+                 });
 
   /**
    * Row and column indices for the \f$k\f$'th step. The corresponding row
@@ -2750,6 +2847,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                               ky_dof_i2e_numbering,
                               mappings,
                               material_id_to_mapping_index,
+                              mapping_support_point_table,
                               normal_detector,
                               scratch_data,
                               scratch_data_gpu,
@@ -2781,7 +2879,9 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
           std::transform(vk.begin(),
                          vk.end(),
                          vk_abs.begin(),
-                         static_cast<real_type (*)(RangeNumberType)>(std::abs));
+                         [](const RangeNumberType &val) -> real_type {
+                           return std::abs(val);
+                         });
           jk = std::distance(vk_abs.begin(),
                              std::max_element(vk_abs.begin(), vk_abs.end()));
 
@@ -2808,6 +2908,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                  ky_dof_i2e_numbering,
                                  mappings,
                                  material_id_to_mapping_index,
+                                 mapping_support_point_table,
                                  normal_detector,
                                  scratch_data,
                                  scratch_data_gpu,
@@ -2848,6 +2949,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                  ky_dof_i2e_numbering,
                                  mappings,
                                  material_id_to_mapping_index,
+                                 mapping_support_point_table,
                                  normal_detector,
                                  scratch_data,
                                  scratch_data_gpu,
@@ -2871,7 +2973,9 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
           std::transform(uk.begin(),
                          uk.end(),
                          uk_abs.begin(),
-                         static_cast<real_type (*)(RangeNumberType)>(std::abs));
+                         [](const RangeNumberType &val) -> real_type {
+                           return std::abs(val);
+                         });
           ik = std::distance(uk_abs.begin(),
                              std::max_element(uk_abs.begin(), uk_abs.end()));
 
@@ -2892,6 +2996,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                               ky_dof_i2e_numbering,
                               mappings,
                               material_id_to_mapping_index,
+                              mapping_support_point_table,
                               normal_detector,
                               scratch_data,
                               scratch_data_gpu,
@@ -2958,6 +3063,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                     ky_dof_i2e_numbering,
                                     mappings,
                                     material_id_to_mapping_index,
+                                    mapping_support_point_table,
                                     normal_detector,
                                     scratch_data,
                                     scratch_data_gpu,
@@ -3016,7 +3122,9 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       std::transform(vr.begin(),
                      vr.end(),
                      vr_abs.begin(),
-                     static_cast<real_type (*)(RangeNumberType)>(std::abs));
+                     [](const RangeNumberType &val) -> real_type {
+                       return std::abs(val);
+                     });
 
       if (jk == c)
         {
@@ -3041,6 +3149,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                        ky_dof_i2e_numbering,
                                        mappings,
                                        material_id_to_mapping_index,
+                                       mapping_support_point_table,
                                        normal_detector,
                                        scratch_data,
                                        scratch_data_gpu,
@@ -3099,7 +3208,9 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       std::transform(uc.begin(),
                      uc.end(),
                      uc_abs.begin(),
-                     static_cast<real_type (*)(RangeNumberType)>(std::abs));
+                     [](const RangeNumberType &val) -> real_type {
+                       return std::abs(val);
+                     });
 
       /**
        * Check the convergence condition.
@@ -3231,7 +3342,12 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
@@ -3324,6 +3440,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                       ky_dof_i2e_numbering,
                                       mappings,
                                       material_id_to_mapping_index,
+                                      mapping_support_point_table,
                                       normal_detector,
                                       scratch_data,
                                       scratch_data_gpu,
@@ -3356,6 +3473,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                          ky_dof_i2e_numbering,
                                          mappings,
                                          material_id_to_mapping_index,
+                                         mapping_support_point_table,
                                          normal_detector,
                                          scratch_data,
                                          scratch_data_gpu,
@@ -3385,11 +3503,15 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   std::transform(vr.begin(),
                  vr.end(),
                  vr_abs.begin(),
-                 static_cast<real_type (*)(RangeNumberType)>(std::abs));
+                 [](const RangeNumberType &val) -> real_type {
+                   return std::abs(val);
+                 });
   std::transform(uc.begin(),
                  uc.end(),
                  uc_abs.begin(),
-                 static_cast<real_type (*)(RangeNumberType)>(std::abs));
+                 [](const RangeNumberType &val) -> real_type {
+                   return std::abs(val);
+                 });
 
   /**
    * Row and column indices for the \f$k\f$'th step. The corresponding row
@@ -3468,6 +3590,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                               ky_dof_i2e_numbering,
                               mappings,
                               material_id_to_mapping_index,
+                              mapping_support_point_table,
                               normal_detector,
                               scratch_data,
                               scratch_data_gpu,
@@ -3499,7 +3622,9 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
           std::transform(vk.begin(),
                          vk.end(),
                          vk_abs.begin(),
-                         static_cast<real_type (*)(RangeNumberType)>(std::abs));
+                         [](const RangeNumberType &val) -> real_type {
+                           return std::abs(val);
+                         });
           jk = std::distance(vk_abs.begin(),
                              std::max_element(vk_abs.begin(), vk_abs.end()));
 
@@ -3528,6 +3653,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                  ky_dof_i2e_numbering,
                                  mappings,
                                  material_id_to_mapping_index,
+                                 mapping_support_point_table,
                                  normal_detector,
                                  scratch_data,
                                  scratch_data_gpu,
@@ -3570,6 +3696,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                  ky_dof_i2e_numbering,
                                  mappings,
                                  material_id_to_mapping_index,
+                                 mapping_support_point_table,
                                  normal_detector,
                                  scratch_data,
                                  scratch_data_gpu,
@@ -3593,7 +3720,9 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
           std::transform(uk.begin(),
                          uk.end(),
                          uk_abs.begin(),
-                         static_cast<real_type (*)(RangeNumberType)>(std::abs));
+                         [](const RangeNumberType &val) -> real_type {
+                           return std::abs(val);
+                         });
           ik = std::distance(uk_abs.begin(),
                              std::max_element(uk_abs.begin(), uk_abs.end()));
 
@@ -3616,6 +3745,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                               ky_dof_i2e_numbering,
                               mappings,
                               material_id_to_mapping_index,
+                              mapping_support_point_table,
                               normal_detector,
                               scratch_data,
                               scratch_data_gpu,
@@ -3684,6 +3814,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                     ky_dof_i2e_numbering,
                                     mappings,
                                     material_id_to_mapping_index,
+                                    mapping_support_point_table,
                                     normal_detector,
                                     scratch_data,
                                     scratch_data_gpu,
@@ -3742,7 +3873,9 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       std::transform(vr.begin(),
                      vr.end(),
                      vr_abs.begin(),
-                     static_cast<real_type (*)(RangeNumberType)>(std::abs));
+                     [](const RangeNumberType &val) -> real_type {
+                       return std::abs(val);
+                     });
 
       if (jk == c)
         {
@@ -3769,6 +3902,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                        ky_dof_i2e_numbering,
                                        mappings,
                                        material_id_to_mapping_index,
+                                       mapping_support_point_table,
                                        normal_detector,
                                        scratch_data,
                                        scratch_data_gpu,
@@ -3827,7 +3961,9 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       std::transform(uc.begin(),
                      uc.end(),
                      uc_abs.begin(),
-                     static_cast<real_type (*)(RangeNumberType)>(std::abs));
+                     [](const RangeNumberType &val) -> real_type {
+                       return std::abs(val);
+                     });
 
       /**
        * Check the convergence condition.
@@ -4059,6 +4195,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                       ky_dof_i2e_numbering,
                                       mappings,
                                       material_id_to_mapping_index,
+                                      bem_values.mapping_support_point_table,
                                       normal_detector,
                                       scratch_data,
                                       copy_data);
@@ -4094,6 +4231,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                          ky_dof_i2e_numbering,
                                          mappings,
                                          material_id_to_mapping_index,
+                                         bem_values.mapping_support_point_table,
                                          normal_detector,
                                          scratch_data,
                                          copy_data);
@@ -4119,9 +4257,6 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   /**
    * Calculate the absolute values for the reference row and column
    * vectors.
-   *
-   * \mynote{In the following, we use @p static_cast to explicitly
-   * specify which version of @p std::abs to call.}
    */
   std::transform(vr.begin(),
                  vr.end(),
@@ -4218,6 +4353,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                               ky_dof_i2e_numbering,
                               mappings,
                               material_id_to_mapping_index,
+                              bem_values.mapping_support_point_table,
                               normal_detector,
                               scratch_data,
                               copy_data);
@@ -4279,6 +4415,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                  ky_dof_i2e_numbering,
                                  mappings,
                                  material_id_to_mapping_index,
+                                 bem_values.mapping_support_point_table,
                                  normal_detector,
                                  scratch_data,
                                  copy_data);
@@ -4320,6 +4457,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                  ky_dof_i2e_numbering,
                                  mappings,
                                  material_id_to_mapping_index,
+                                 bem_values.mapping_support_point_table,
                                  normal_detector,
                                  scratch_data,
                                  copy_data);
@@ -4367,6 +4505,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                               ky_dof_i2e_numbering,
                               mappings,
                               material_id_to_mapping_index,
+                              bem_values.mapping_support_point_table,
                               normal_detector,
                               scratch_data,
                               copy_data);
@@ -4434,6 +4573,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                     ky_dof_i2e_numbering,
                                     mappings,
                                     material_id_to_mapping_index,
+                                    bem_values.mapping_support_point_table,
                                     normal_detector,
                                     scratch_data,
                                     copy_data);
@@ -4525,6 +4665,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                        ky_dof_i2e_numbering,
                                        mappings,
                                        material_id_to_mapping_index,
+                                       bem_values.mapping_support_point_table,
                                        normal_detector,
                                        scratch_data,
                                        copy_data);
@@ -4833,6 +4974,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                       ky_dof_i2e_numbering,
                                       mappings,
                                       material_id_to_mapping_index,
+                                      bem_values.mapping_support_point_table,
                                       normal_detector,
                                       scratch_data,
                                       copy_data);
@@ -4870,6 +5012,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                          ky_dof_i2e_numbering,
                                          mappings,
                                          material_id_to_mapping_index,
+                                         bem_values.mapping_support_point_table,
                                          normal_detector,
                                          scratch_data,
                                          copy_data);
@@ -4996,6 +5139,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                               ky_dof_i2e_numbering,
                               mappings,
                               material_id_to_mapping_index,
+                              bem_values.mapping_support_point_table,
                               normal_detector,
                               scratch_data,
                               copy_data);
@@ -5059,6 +5203,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                  ky_dof_i2e_numbering,
                                  mappings,
                                  material_id_to_mapping_index,
+                                 bem_values.mapping_support_point_table,
                                  normal_detector,
                                  scratch_data,
                                  copy_data);
@@ -5102,6 +5247,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                  ky_dof_i2e_numbering,
                                  mappings,
                                  material_id_to_mapping_index,
+                                 bem_values.mapping_support_point_table,
                                  normal_detector,
                                  scratch_data,
                                  copy_data);
@@ -5151,6 +5297,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                               ky_dof_i2e_numbering,
                               mappings,
                               material_id_to_mapping_index,
+                              bem_values.mapping_support_point_table,
                               normal_detector,
                               scratch_data,
                               copy_data);
@@ -5220,6 +5367,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                     ky_dof_i2e_numbering,
                                     mappings,
                                     material_id_to_mapping_index,
+                                    bem_values.mapping_support_point_table,
                                     normal_detector,
                                     scratch_data,
                                     copy_data);
@@ -5313,6 +5461,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                        ky_dof_i2e_numbering,
                                        mappings,
                                        material_id_to_mapping_index,
+                                       bem_values.mapping_support_point_table,
                                        normal_detector,
                                        scratch_data,
                                        copy_data);
@@ -6041,8 +6190,6 @@ fill_hmatrix_leaf_node_with_aca_plus(
     dim,
     spacedim,
     typename numbers::NumberTraits<RangeNumberType>::real_type> &bem_values_gpu,
-  const DoFHandler<dim, spacedim>                               &kx_dof_handler,
-  const DoFHandler<dim, spacedim>                               &ky_dof_handler,
   const std::vector<types::global_dof_index>
     *kx_map_from_local_to_full_dof_indices,
   const std::vector<types::global_dof_index>
@@ -6051,7 +6198,12 @@ fill_hmatrix_leaf_node_with_aca_plus(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
@@ -6151,6 +6303,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                                   bem_values_gpu,
                                   mappings,
                                   material_id_to_mapping_index,
+                                  mapping_support_point_table,
                                   normal_detector,
                                   scratch_data,
                                   scratch_data_gpu,
@@ -6205,6 +6358,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                                   bem_values_gpu,
                                   mappings,
                                   material_id_to_mapping_index,
+                                  mapping_support_point_table,
                                   normal_detector,
                                   scratch_data,
                                   scratch_data_gpu,
@@ -6255,6 +6409,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                           bem_values_gpu,
                           mappings,
                           material_id_to_mapping_index,
+                          mapping_support_point_table,
                           normal_detector,
                           scratch_data,
                           scratch_data_gpu,
@@ -6301,6 +6456,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                         ky_dof_i2e_numbering,
                         mappings,
                         material_id_to_mapping_index,
+                        mapping_support_point_table,
                         normal_detector,
                         scratch_data,
                         scratch_data_gpu,
@@ -6347,14 +6503,13 @@ fill_hmatrix_leaf_node_with_aca_plus(
                 kx_dof_to_cell_topo,
                 ky_dof_to_cell_topo,
                 bem_values_gpu,
-                kx_dof_handler,
-                ky_dof_handler,
                 kx_map_from_local_to_full_dof_indices,
                 ky_map_from_local_to_full_dof_indices,
                 kx_dof_i2e_numbering,
                 ky_dof_i2e_numbering,
                 mappings,
                 material_id_to_mapping_index,
+                mapping_support_point_table,
                 normal_detector,
                 scratch_data,
                 scratch_data_gpu,
@@ -6461,8 +6616,6 @@ fill_hmatrix_leaf_node_with_aca_plus(
     dim,
     spacedim,
     typename numbers::NumberTraits<RangeNumberType>::real_type> &bem_values_gpu,
-  const DoFHandler<dim, spacedim>                               &kx_dof_handler,
-  const DoFHandler<dim, spacedim>                               &ky_dof_handler,
   const std::vector<types::global_dof_index>
     *kx_map_from_local_to_full_dof_indices,
   const std::vector<types::global_dof_index>
@@ -6471,7 +6624,12 @@ fill_hmatrix_leaf_node_with_aca_plus(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<
@@ -6564,6 +6722,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                                   bem_values_gpu,
                                   mappings,
                                   material_id_to_mapping_index,
+                                  mapping_support_point_table,
                                   normal_detector,
                                   scratch_data,
                                   scratch_data_gpu,
@@ -6627,6 +6786,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                                   bem_values_gpu,
                                   mappings,
                                   material_id_to_mapping_index,
+                                  mapping_support_point_table,
                                   normal_detector,
                                   scratch_data,
                                   scratch_data_gpu,
@@ -6686,6 +6846,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                           bem_values_gpu,
                           mappings,
                           material_id_to_mapping_index,
+                          mapping_support_point_table,
                           normal_detector,
                           scratch_data,
                           scratch_data_gpu,
@@ -6742,6 +6903,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                         ky_dof_i2e_numbering,
                         mappings,
                         material_id_to_mapping_index,
+                        mapping_support_point_table,
                         normal_detector,
                         scratch_data,
                         scratch_data_gpu,
@@ -6790,6 +6952,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                 ky_dof_i2e_numbering,
                 mappings,
                 material_id_to_mapping_index,
+                mapping_support_point_table,
                 normal_detector,
                 scratch_data,
                 scratch_data_gpu,
@@ -6877,8 +7040,6 @@ fill_hmatrix_leaf_node_with_aca_plus(
     dim,
     spacedim,
     typename numbers::NumberTraits<RangeNumberType>::real_type> &bem_values_gpu,
-  const DoFHandler<dim, spacedim>                               &kx_dof_handler,
-  const DoFHandler<dim, spacedim>                               &ky_dof_handler,
   const std::vector<types::global_dof_index>
     *kx_map_from_local_to_full_dof_indices,
   const std::vector<types::global_dof_index>
@@ -6887,7 +7048,12 @@ fill_hmatrix_leaf_node_with_aca_plus(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                                                  &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                                                  &mapping_support_point_table,
   const SurfaceNormalDetector                     &normal_detector,
   CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
   PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data,
@@ -6982,6 +7148,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                                   bem_values_gpu,
                                   mappings,
                                   material_id_to_mapping_index,
+                                  mapping_support_point_table,
                                   normal_detector,
                                   mass_matrix_scratch_data,
                                   scratch_data,
@@ -7038,6 +7205,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                                   bem_values_gpu,
                                   mappings,
                                   material_id_to_mapping_index,
+                                  mapping_support_point_table,
                                   normal_detector,
                                   mass_matrix_scratch_data,
                                   scratch_data,
@@ -7087,6 +7255,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                           bem_values_gpu,
                           mappings,
                           material_id_to_mapping_index,
+                          mapping_support_point_table,
                           normal_detector,
                           mass_matrix_scratch_data,
                           scratch_data,
@@ -7126,6 +7295,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                         ky_dof_i2e_numbering,
                         mappings,
                         material_id_to_mapping_index,
+                        mapping_support_point_table,
                         normal_detector,
                         scratch_data,
                         scratch_data_gpu,
@@ -7172,6 +7342,7 @@ fill_hmatrix_leaf_node_with_aca_plus(
                 ky_dof_i2e_numbering,
                 mappings,
                 material_id_to_mapping_index,
+                mapping_support_point_table,
                 normal_detector,
                 scratch_data,
                 scratch_data_gpu,
@@ -7962,7 +8133,12 @@ fill_hmatrix_with_aca_plus_serial(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   const bool                   enable_build_symmetric_hmat = false)
 {
@@ -7994,6 +8170,7 @@ fill_hmatrix_with_aca_plus_serial(
     kx_dof_handler.get_fe(),
     ky_dof_handler.get_fe(),
     mappings,
+    mapping_support_point_table,
     sauter_quad_rule.quad_rule_for_same_panel,
     sauter_quad_rule.quad_rule_for_common_edge,
     sauter_quad_rule.quad_rule_for_common_vertex,
@@ -8037,14 +8214,13 @@ fill_hmatrix_with_aca_plus_serial(
         kx_dof_to_cell_topo,
         ky_dof_to_cell_topo,
         bem_values_gpu,
-        kx_dof_handler,
-        ky_dof_handler,
         kx_map_from_local_to_full_dof_indices,
         ky_map_from_local_to_full_dof_indices,
         kx_dof_i2e_numbering,
         ky_dof_i2e_numbering,
         mappings,
         material_id_to_mapping_index,
+        mapping_support_point_table,
         normal_detector,
         scratch_data,
         scratch_data_gpu,
@@ -8059,9 +8235,14 @@ fill_hmatrix_with_aca_plus_serial(
 
   /**
    * Release pair cell wise scratch and copy data on the GPU device.
+   *
+   * @internal @p scratch_data_gpu.release() must run before
+   * @p scratch_data.release(), because the latter destroys
+   * @p scratch_data.cuda_stream_handle while @p CUDATable::release(stream)
+   * enqueues @p cudaFreeAsync on that stream.
    */
-  scratch_data.release();
   scratch_data_gpu.release(scratch_data.cuda_stream_handle);
+  scratch_data.release();
   copy_data.release();
 }
 
@@ -8149,7 +8330,12 @@ fill_hmatrix_with_aca_plus_serial(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   const bool                   enable_build_symmetric_hmat = false)
 {
@@ -8181,6 +8367,7 @@ fill_hmatrix_with_aca_plus_serial(
     kx_dof_handler.get_fe(),
     ky_dof_handler.get_fe(),
     mappings,
+    mapping_support_point_table,
     sauter_quad_rule.quad_rule_for_same_panel,
     sauter_quad_rule.quad_rule_for_common_edge,
     sauter_quad_rule.quad_rule_for_common_vertex,
@@ -8226,14 +8413,13 @@ fill_hmatrix_with_aca_plus_serial(
         kx_dof_to_cell_topo,
         ky_dof_to_cell_topo,
         bem_values_gpu,
-        kx_dof_handler,
-        ky_dof_handler,
         kx_map_from_local_to_full_dof_indices,
         ky_map_from_local_to_full_dof_indices,
         kx_dof_i2e_numbering,
         ky_dof_i2e_numbering,
         mappings,
         material_id_to_mapping_index,
+        mapping_support_point_table,
         normal_detector,
         scratch_data,
         scratch_data_gpu,
@@ -8248,9 +8434,12 @@ fill_hmatrix_with_aca_plus_serial(
 
   /**
    * Release pair cell wise scratch and copy data.
+   *
+   * @internal @p scratch_data_gpu.release() must run before
+   * @p scratch_data.release(); see @p fill_hmatrix_with_aca_plus_serial.
    */
-  scratch_data.release();
   scratch_data_gpu.release(scratch_data.cuda_stream_handle);
+  scratch_data.release();
   copy_data.release();
 }
 
@@ -8326,7 +8515,12 @@ fill_hmatrix_with_aca_plus_serial(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   const bool                   enable_build_symmetric_hmat = false)
 {
@@ -8358,6 +8552,7 @@ fill_hmatrix_with_aca_plus_serial(
     kx_dof_handler.get_fe(),
     ky_dof_handler.get_fe(),
     mappings,
+    mapping_support_point_table,
     sauter_quad_rule.quad_rule_for_same_panel,
     sauter_quad_rule.quad_rule_for_common_edge,
     sauter_quad_rule.quad_rule_for_common_vertex,
@@ -8412,14 +8607,13 @@ fill_hmatrix_with_aca_plus_serial(
         kx_dof_to_cell_topo,
         ky_dof_to_cell_topo,
         bem_values_gpu,
-        kx_dof_handler,
-        ky_dof_handler,
         kx_map_from_local_to_full_dof_indices,
         ky_map_from_local_to_full_dof_indices,
         kx_dof_i2e_numbering,
         ky_dof_i2e_numbering,
         mappings,
         material_id_to_mapping_index,
+        mapping_support_point_table,
         normal_detector,
         mass_matrix_scratch_data,
         scratch_data,
@@ -8435,9 +8629,12 @@ fill_hmatrix_with_aca_plus_serial(
 
   /**
    * Release pair cell wise scratch and copy data.
+   *
+   * @internal @p scratch_data_gpu.release() must run before
+   * @p scratch_data.release(); see @p fill_hmatrix_with_aca_plus_serial.
    */
-  scratch_data.release();
   scratch_data_gpu.release(scratch_data.cuda_stream_handle);
+  scratch_data.release();
   copy_data.release();
 }
 
@@ -8518,7 +8715,12 @@ fill_hmatrix_with_aca_plus_smp(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   const bool                   enable_build_symmetric_hmat = false)
 {
@@ -8562,6 +8764,7 @@ fill_hmatrix_with_aca_plus_smp(
     kx_dof_handler.get_fe(),
     ky_dof_handler.get_fe(),
     mappings,
+    mapping_support_point_table,
     sauter_quad_rule.quad_rule_for_same_panel,
     sauter_quad_rule.quad_rule_for_common_edge,
     sauter_quad_rule.quad_rule_for_common_vertex,
@@ -8996,7 +9199,12 @@ fill_hmatrix_with_aca_plus_smp(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   const bool                   enable_build_symmetric_hmat = false)
 {
@@ -9041,6 +9249,7 @@ fill_hmatrix_with_aca_plus_smp(
     kx_dof_handler.get_fe(),
     ky_dof_handler.get_fe(),
     mappings,
+    mapping_support_point_table,
     sauter_quad_rule.quad_rule_for_same_panel,
     sauter_quad_rule.quad_rule_for_common_edge,
     sauter_quad_rule.quad_rule_for_common_vertex,
@@ -9504,7 +9713,12 @@ fill_hmatrix_with_aca_plus_smp(
   const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
   const std::map<types::material_id, unsigned int>
-                              &material_id_to_mapping_index,
+    &material_id_to_mapping_index,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   const bool                   enable_build_symmetric_hmat = false)
 {
@@ -9549,6 +9763,7 @@ fill_hmatrix_with_aca_plus_smp(
     kx_dof_handler.get_fe(),
     ky_dof_handler.get_fe(),
     mappings,
+    mapping_support_point_table,
     sauter_quad_rule.quad_rule_for_same_panel,
     sauter_quad_rule.quad_rule_for_common_edge,
     sauter_quad_rule.quad_rule_for_common_vertex,

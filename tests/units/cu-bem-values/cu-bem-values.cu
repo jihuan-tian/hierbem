@@ -1,4 +1,4 @@
-// Copyright (C) 2023-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2023-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -17,61 +17,63 @@
  * @date 2023-02-01
  */
 
+#include <deal.II/base/point.h>
+#include <deal.II/base/table.h>
+
+#include <deal.II/fe/fe.h>
+#include <deal.II/fe/fe_dgq.h>
+
+#include <catch2/catch_all.hpp>
+
 #include <iostream>
+#include <vector>
 
+#include "bem/bem_values.hcu"
 #include "bem/cu_bem_values.hcu"
-#include "laplace/laplace_bem.h"
+#include "mapping/mapping_info.h"
+#include "quadrature/sauter_quadrature_tools.h"
+#include "utilities/cu_debug_tools.hcu"
 
+using namespace Catch::Matchers;
 using namespace dealii;
 using namespace HierBEM;
 
-#include "debug_tools.hcu"
-
-int
-main()
+// Initialize mapping objects from the first order to the maximum.
+template <int dim, int spacedim>
+void
+initialize_mappings(std::vector<MappingInfo<dim, spacedim> *> &mappings,
+                    const unsigned int max_mapping_order)
 {
-  const unsigned     dim      = 2;
+  // Create different orders of mapping.
+  mappings.reserve(max_mapping_order);
+  for (unsigned int i = 1; i <= max_mapping_order; i++)
+    {
+      mappings.push_back(new MappingInfo<dim, spacedim>(i));
+    }
+}
+
+TEST_CASE("Initialize BEMValues on GPU", "[cuda]")
+{
+  const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
   FE_Q<dim, spacedim>   fe_for_dirichlet_space(3);
   FE_DGQ<dim, spacedim> fe_for_neumann_space(2);
 
-  MappingQExt<dim, spacedim> kx_mapping(1);
-  MappingQExt<dim, spacedim> ky_mapping(1);
-
-  std::unique_ptr<typename MappingQ<dim, spacedim>::InternalData>
-    kx_mapping_data;
-  std::unique_ptr<typename MappingQ<dim, spacedim>::InternalData>
-    ky_mapping_data;
-
-  std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
-    kx_mapping_database = kx_mapping.get_data(update_default, QGauss<dim>(1));
-
-  /**
-   * Downcast the smart pointer of @p Mapping<dim, spacedim>::InternalDataBase to
-   * @p MappingQ<dim,spacedim>::InternalData by first unwrapping
-   * the original smart pointer via @p static_cast then wrapping it again.
-   */
-  kx_mapping_data =
-    std::unique_ptr<typename MappingQ<dim, spacedim>::InternalData>(
-      static_cast<typename MappingQ<dim, spacedim>::InternalData *>(
-        kx_mapping_database.release()));
-
-  std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
-    ky_mapping_database = ky_mapping.get_data(update_default, QGauss<dim>(1));
-
-  ky_mapping_data =
-    std::unique_ptr<typename MappingQ<dim, spacedim>::InternalData>(
-      static_cast<typename MappingQ<dim, spacedim>::InternalData *>(
-        ky_mapping_database.release()));
+  const unsigned int                        max_mapping_order = 3;
+  std::vector<MappingInfo<dim, spacedim> *> mappings;
+  initialize_mappings(mappings, max_mapping_order);
 
   SauterQuadratureRule<dim> sauter_quad_rule(5, 4, 4, 3);
 
+  // Here we create a dummy mapping support point table which is used to create
+  // a @p BEMValues object.
+  Table<2, Point<spacedim>>        tria_mapping_support_points;
   BEMValues<dim, spacedim, double> bem_values_cpu(
     fe_for_dirichlet_space,
     fe_for_neumann_space,
-    *kx_mapping_data,
-    *ky_mapping_data,
+    mappings,
+    tria_mapping_support_points,
     sauter_quad_rule.quad_rule_for_same_panel,
     sauter_quad_rule.quad_rule_for_common_edge,
     sauter_quad_rule.quad_rule_for_common_vertex,
@@ -79,12 +81,10 @@ main()
 
   bem_values_cpu.fill_shape_function_value_tables();
 
-  HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim> bem_values_gpu;
+  HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, double> bem_values_gpu;
   bem_values_gpu.allocate_and_assign_from_host(bem_values_cpu);
 
-  Assert(is_equal(bem_values_cpu, bem_values_gpu), ExcInternalError());
+  REQUIRE(is_equal(bem_values_cpu, bem_values_gpu));
 
   bem_values_gpu.release();
-
-  return 0;
 }

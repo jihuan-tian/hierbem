@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2025-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -21,7 +21,9 @@
 
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/numbers.h>
+#include <deal.II/base/point.h>
 #include <deal.II/base/quadrature_lib.h>
+#include <deal.II/base/table.h>
 #include <deal.II/base/types.h>
 
 #include <deal.II/lac/vector.h>
@@ -89,16 +91,18 @@ public:
    * Build an H-matrix for the bilinear form.
    */
   std::unique_ptr<HMatrix<spacedim, RangeNumberType>>
-  build_hmatrix(const ConfHMatrix             &hmat_params,
-                const ConfSauterQuadNearField &sauter_quad_near_field_params,
-                const ConfSauterQuadFarField  &sauter_quad_far_field_params,
-                const ConfParallelization     &parallel_params,
-                const DeviceNumberType<KernelNumberType> kernel_factor,
-                const SauterQuadratureRule<dim>         &sauter_quad_rule,
-                const std::vector<MappingInfo<dim, spacedim> *> &mappings,
-                const std::map<types::material_id, unsigned int>
-                                                 &material_id_to_mapping_index,
-                SubdomainTopology<dim, spacedim> &subdomain_topology);
+  build_hmatrix(
+    const ConfHMatrix                       &hmat_params,
+    const ConfSauterQuadNearField           &sauter_quad_near_field_params,
+    const ConfSauterQuadFarField            &sauter_quad_far_field_params,
+    const ConfParallelization               &parallel_params,
+    const DeviceNumberType<KernelNumberType> kernel_factor,
+    const SauterQuadratureRule<dim>         &sauter_quad_rule,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                               &material_id_to_mapping_index,
+    const Table<2, Point<spacedim, real_type>> &mapping_support_point_table,
+    SubdomainTopology<dim, spacedim>           &subdomain_topology);
 
   /**
    * Build an H-matrix for the bilinear form and add a mass matrix directly into
@@ -116,8 +120,9 @@ public:
     const QGauss<dim>                       &mass_matrix_quad_rule,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
-                                     &material_id_to_mapping_index,
-    SubdomainTopology<dim, spacedim> &subdomain_topology);
+                                               &material_id_to_mapping_index,
+    const Table<2, Point<spacedim, real_type>> &mapping_support_point_table,
+    SubdomainTopology<dim, spacedim>           &subdomain_topology);
 
   /**
    * @brief Build an H-matrix for a bilinear form which needs regularization,
@@ -144,8 +149,9 @@ public:
     const SauterQuadratureRule<dim>             &sauter_quad_rule,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
-                                     &material_id_to_mapping_index,
-    SubdomainTopology<dim, spacedim> &subdomain_topology);
+                                               &material_id_to_mapping_index,
+    const Table<2, Point<spacedim, real_type>> &mapping_support_point_table,
+    SubdomainTopology<dim, spacedim>           &subdomain_topology);
 
   KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>> &
   get_kernel()
@@ -311,16 +317,18 @@ BEMBilinearForm<dim,
                 KernelFunctionType,
                 RangeNumberType,
                 KernelNumberType>::
-  build_hmatrix(const ConfHMatrix             &hmat_params,
-                const ConfSauterQuadNearField &sauter_quad_near_field_params,
-                const ConfSauterQuadFarField  &sauter_quad_far_field_params,
-                const ConfParallelization     &parallel_params,
-                const DeviceNumberType<KernelNumberType> kernel_factor,
-                const SauterQuadratureRule<dim>         &sauter_quad_rule,
-                const std::vector<MappingInfo<dim, spacedim> *> &mappings,
-                const std::map<types::material_id, unsigned int>
-                                                 &material_id_to_mapping_index,
-                SubdomainTopology<dim, spacedim> &subdomain_topology)
+  build_hmatrix(
+    const ConfHMatrix                       &hmat_params,
+    const ConfSauterQuadNearField           &sauter_quad_near_field_params,
+    const ConfSauterQuadFarField            &sauter_quad_far_field_params,
+    const ConfParallelization               &parallel_params,
+    const DeviceNumberType<KernelNumberType> kernel_factor,
+    const SauterQuadratureRule<dim>         &sauter_quad_rule,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                               &material_id_to_mapping_index,
+    const Table<2, Point<spacedim, real_type>> &mapping_support_point_table,
+    SubdomainTopology<dim, spacedim>           &subdomain_topology)
 {
   // The kernel does not need regularization.
   Assert(!kernel.needs_regularization(), ExcInternalError());
@@ -336,36 +344,71 @@ BEMBilinearForm<dim,
     property,
     block_type);
 
-  fill_hmatrix_with_aca_plus_smp<dim,
-                                 spacedim,
-                                 KernelFunctionType,
-                                 RangeNumberType,
-                                 KernelNumberType,
-                                 SurfaceNormalDetector<dim, spacedim>>(
-    *hmat,
-    hmat_params,
-    sauter_quad_near_field_params,
-    sauter_quad_far_field_params,
-    parallel_params,
-    kernel,
-    kernel_factor,
-    test_space.get_dof_to_cell_topo(),
-    trial_space.get_dof_to_cell_topo(),
-    sauter_quad_rule,
-    test_space.get_dof_handler(),
-    trial_space.get_dof_handler(),
-    test_space.get_is_full_domain() ?
-      nullptr :
-      &test_space.get_local_to_full_dof_id_map(),
-    trial_space.get_is_full_domain() ?
-      nullptr :
-      &trial_space.get_local_to_full_dof_id_map(),
-    test_space.get_internal_to_external_dof_numbering(),
-    trial_space.get_internal_to_external_dof_numbering(),
-    mappings,
-    material_id_to_mapping_index,
-    SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
-    is_symmetric);
+  if (hmat_params.cpu_serial_without_producer_consumer)
+    {
+      fill_hmatrix_with_aca_plus_serial<dim,
+                                        spacedim,
+                                        KernelFunctionType,
+                                        RangeNumberType,
+                                        KernelNumberType,
+                                        SurfaceNormalDetector<dim, spacedim>>(
+        *hmat,
+        hmat_params,
+        kernel,
+        kernel_factor,
+        test_space.get_dof_to_cell_topo(),
+        trial_space.get_dof_to_cell_topo(),
+        sauter_quad_rule,
+        test_space.get_dof_handler(),
+        trial_space.get_dof_handler(),
+        test_space.get_is_full_domain() ?
+          nullptr :
+          &test_space.get_local_to_full_dof_id_map(),
+        trial_space.get_is_full_domain() ?
+          nullptr :
+          &trial_space.get_local_to_full_dof_id_map(),
+        test_space.get_internal_to_external_dof_numbering(),
+        trial_space.get_internal_to_external_dof_numbering(),
+        mappings,
+        material_id_to_mapping_index,
+        mapping_support_point_table,
+        SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
+        is_symmetric);
+    }
+  else
+    {
+      fill_hmatrix_with_aca_plus_smp<dim,
+                                     spacedim,
+                                     KernelFunctionType,
+                                     RangeNumberType,
+                                     KernelNumberType,
+                                     SurfaceNormalDetector<dim, spacedim>>(
+        *hmat,
+        hmat_params,
+        sauter_quad_near_field_params,
+        sauter_quad_far_field_params,
+        parallel_params,
+        kernel,
+        kernel_factor,
+        test_space.get_dof_to_cell_topo(),
+        trial_space.get_dof_to_cell_topo(),
+        sauter_quad_rule,
+        test_space.get_dof_handler(),
+        trial_space.get_dof_handler(),
+        test_space.get_is_full_domain() ?
+          nullptr :
+          &test_space.get_local_to_full_dof_id_map(),
+        trial_space.get_is_full_domain() ?
+          nullptr :
+          &trial_space.get_local_to_full_dof_id_map(),
+        test_space.get_internal_to_external_dof_numbering(),
+        trial_space.get_internal_to_external_dof_numbering(),
+        mappings,
+        material_id_to_mapping_index,
+        mapping_support_point_table,
+        SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
+        is_symmetric);
+    }
 
   return hmat;
 }
@@ -396,8 +439,9 @@ BEMBilinearForm<dim,
     const QGauss<dim>                       &mass_matrix_quad_rule,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
-                                     &material_id_to_mapping_index,
-    SubdomainTopology<dim, spacedim> &subdomain_topology)
+                                               &material_id_to_mapping_index,
+    const Table<2, Point<spacedim, real_type>> &mapping_support_point_table,
+    SubdomainTopology<dim, spacedim>           &subdomain_topology)
 {
   // The kernel does not need regularization.
   Assert(!kernel.needs_regularization(), ExcInternalError());
@@ -413,38 +457,75 @@ BEMBilinearForm<dim,
     property,
     block_type);
 
-  fill_hmatrix_with_aca_plus_smp<dim,
-                                 spacedim,
-                                 KernelFunctionType,
-                                 RangeNumberType,
-                                 KernelNumberType,
-                                 SurfaceNormalDetector<dim, spacedim>>(
-    *hmat,
-    hmat_params,
-    sauter_quad_near_field_params,
-    sauter_quad_far_field_params,
-    parallel_params,
-    kernel,
-    kernel_factor,
-    mass_matrix_factor,
-    test_space.get_dof_to_cell_topo(),
-    trial_space.get_dof_to_cell_topo(),
-    sauter_quad_rule,
-    mass_matrix_quad_rule,
-    test_space.get_dof_handler(),
-    trial_space.get_dof_handler(),
-    test_space.get_is_full_domain() ?
-      nullptr :
-      &test_space.get_local_to_full_dof_id_map(),
-    trial_space.get_is_full_domain() ?
-      nullptr :
-      &trial_space.get_local_to_full_dof_id_map(),
-    test_space.get_internal_to_external_dof_numbering(),
-    trial_space.get_internal_to_external_dof_numbering(),
-    mappings,
-    material_id_to_mapping_index,
-    SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
-    is_symmetric);
+  if (hmat_params.cpu_serial_without_producer_consumer)
+    {
+      fill_hmatrix_with_aca_plus_serial<dim,
+                                        spacedim,
+                                        KernelFunctionType,
+                                        RangeNumberType,
+                                        KernelNumberType,
+                                        SurfaceNormalDetector<dim, spacedim>>(
+        *hmat,
+        hmat_params,
+        kernel,
+        kernel_factor,
+        mass_matrix_factor,
+        test_space.get_dof_to_cell_topo(),
+        trial_space.get_dof_to_cell_topo(),
+        sauter_quad_rule,
+        mass_matrix_quad_rule,
+        test_space.get_dof_handler(),
+        trial_space.get_dof_handler(),
+        test_space.get_is_full_domain() ?
+          nullptr :
+          &test_space.get_local_to_full_dof_id_map(),
+        trial_space.get_is_full_domain() ?
+          nullptr :
+          &trial_space.get_local_to_full_dof_id_map(),
+        test_space.get_internal_to_external_dof_numbering(),
+        trial_space.get_internal_to_external_dof_numbering(),
+        mappings,
+        material_id_to_mapping_index,
+        mapping_support_point_table,
+        SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
+        is_symmetric);
+    }
+  else
+    {
+      fill_hmatrix_with_aca_plus_smp<dim,
+                                     spacedim,
+                                     KernelFunctionType,
+                                     RangeNumberType,
+                                     KernelNumberType,
+                                     SurfaceNormalDetector<dim, spacedim>>(
+        *hmat,
+        hmat_params,
+        sauter_quad_near_field_params,
+        sauter_quad_far_field_params,
+        parallel_params,
+        kernel,
+        kernel_factor,
+        mass_matrix_factor,
+        test_space.get_dof_to_cell_topo(),
+        trial_space.get_dof_to_cell_topo(),
+        sauter_quad_rule,
+        mass_matrix_quad_rule,
+        test_space.get_dof_handler(),
+        trial_space.get_dof_handler(),
+        test_space.get_is_full_domain() ?
+          nullptr :
+          &test_space.get_local_to_full_dof_id_map(),
+        trial_space.get_is_full_domain() ?
+          nullptr :
+          &trial_space.get_local_to_full_dof_id_map(),
+        test_space.get_internal_to_external_dof_numbering(),
+        trial_space.get_internal_to_external_dof_numbering(),
+        mappings,
+        material_id_to_mapping_index,
+        mapping_support_point_table,
+        SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
+        is_symmetric);
+    }
 
   return hmat;
 }
@@ -475,8 +556,9 @@ BEMBilinearForm<dim,
     const SauterQuadratureRule<dim>             &sauter_quad_rule,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
-                                     &material_id_to_mapping_index,
-    SubdomainTopology<dim, spacedim> &subdomain_topology)
+                                               &material_id_to_mapping_index,
+    const Table<2, Point<spacedim, real_type>> &mapping_support_point_table,
+    SubdomainTopology<dim, spacedim>           &subdomain_topology)
 {
   // The kernel must be regularized.
   Assert(kernel.needs_regularization(), ExcInternalError());
@@ -498,38 +580,75 @@ BEMBilinearForm<dim,
     property,
     block_type);
 
-  fill_hmatrix_with_aca_plus_smp<dim,
-                                 spacedim,
-                                 KernelFunctionType,
-                                 RangeNumberType,
-                                 KernelNumberType,
-                                 SurfaceNormalDetector<dim, spacedim>>(
-    *hmat,
-    hmat_params,
-    sauter_quad_near_field_params,
-    sauter_quad_far_field_params,
-    parallel_params,
-    kernel,
-    kernel_factor,
-    mass_vmult_weq,
-    stabilization_factor,
-    test_space.get_dof_to_cell_topo(),
-    trial_space.get_dof_to_cell_topo(),
-    sauter_quad_rule,
-    test_space.get_dof_handler(),
-    trial_space.get_dof_handler(),
-    test_space.get_is_full_domain() ?
-      nullptr :
-      &test_space.get_local_to_full_dof_id_map(),
-    trial_space.get_is_full_domain() ?
-      nullptr :
-      &trial_space.get_local_to_full_dof_id_map(),
-    test_space.get_internal_to_external_dof_numbering(),
-    trial_space.get_internal_to_external_dof_numbering(),
-    mappings,
-    material_id_to_mapping_index,
-    SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
-    is_symmetric);
+  if (hmat_params.cpu_serial_without_producer_consumer)
+    {
+      fill_hmatrix_with_aca_plus_serial<dim,
+                                        spacedim,
+                                        KernelFunctionType,
+                                        RangeNumberType,
+                                        KernelNumberType,
+                                        SurfaceNormalDetector<dim, spacedim>>(
+        *hmat,
+        hmat_params,
+        kernel,
+        kernel_factor,
+        mass_vmult_weq,
+        stabilization_factor,
+        test_space.get_dof_to_cell_topo(),
+        trial_space.get_dof_to_cell_topo(),
+        sauter_quad_rule,
+        test_space.get_dof_handler(),
+        trial_space.get_dof_handler(),
+        test_space.get_is_full_domain() ?
+          nullptr :
+          &test_space.get_local_to_full_dof_id_map(),
+        trial_space.get_is_full_domain() ?
+          nullptr :
+          &trial_space.get_local_to_full_dof_id_map(),
+        test_space.get_internal_to_external_dof_numbering(),
+        trial_space.get_internal_to_external_dof_numbering(),
+        mappings,
+        material_id_to_mapping_index,
+        mapping_support_point_table,
+        SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
+        is_symmetric);
+    }
+  else
+    {
+      fill_hmatrix_with_aca_plus_smp<dim,
+                                     spacedim,
+                                     KernelFunctionType,
+                                     RangeNumberType,
+                                     KernelNumberType,
+                                     SurfaceNormalDetector<dim, spacedim>>(
+        *hmat,
+        hmat_params,
+        sauter_quad_near_field_params,
+        sauter_quad_far_field_params,
+        parallel_params,
+        kernel,
+        kernel_factor,
+        mass_vmult_weq,
+        stabilization_factor,
+        test_space.get_dof_to_cell_topo(),
+        trial_space.get_dof_to_cell_topo(),
+        sauter_quad_rule,
+        test_space.get_dof_handler(),
+        trial_space.get_dof_handler(),
+        test_space.get_is_full_domain() ?
+          nullptr :
+          &test_space.get_local_to_full_dof_id_map(),
+        trial_space.get_is_full_domain() ?
+          nullptr :
+          &trial_space.get_local_to_full_dof_id_map(),
+        test_space.get_internal_to_external_dof_numbering(),
+        trial_space.get_internal_to_external_dof_numbering(),
+        mappings,
+        material_id_to_mapping_index,
+        mapping_support_point_table,
+        SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
+        is_symmetric);
+    }
 
   return hmat;
 }

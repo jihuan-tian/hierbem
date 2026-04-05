@@ -1,4 +1,4 @@
-// Copyright (C) 2024-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2024-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -9,7 +9,9 @@
 // file LICENSE at the top level directory of HierBEM.
 
 #include <deal.II/base/logstream.h>
+#include <deal.II/base/point.h>
 #include <deal.II/base/quadrature_lib.h>
+#include <deal.II/base/table.h>
 
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
@@ -25,6 +27,7 @@
 #include <set>
 #include <vector>
 
+#include "bem/bem_tools.h"
 #include "cad_mesh/subdomain_topology.h"
 #include "config_file/config_structs.h"
 #include "config_file/cu_related.h"
@@ -168,7 +171,7 @@ run_op_precond_hmatrix_for_dirichlet()
     subdomain_material_ids,
     ConfOperatorPreconditioner());
 
-  ConfHMatrix         hmat_params{64, 64, 1.0, 2, 0.1};
+  ConfHMatrix         hmat_params{64, 64, 1.0, 2, 0.1, false};
   ConfSauterQuad      sauter_quad_params;
   ConfParallelization parallel_params;
 
@@ -181,6 +184,10 @@ run_op_precond_hmatrix_for_dirichlet()
   // Initialize CUDA stack size and device properties.
   initCudaRuntime(parallel_params);
 
+  Table<2, Point<spacedim>> tria_mapping_support_points;
+  BEMTools::compute_mapping_support_points_for_tria(
+    tria, mappings, material_id_to_mapping_index, tria_mapping_support_points);
+
   precond.setup_preconditioner(hmat_params,
                                sauter_quad_params.near_field,
                                sauter_quad_params.far_field,
@@ -188,6 +195,7 @@ run_op_precond_hmatrix_for_dirichlet()
                                subdomain_topology,
                                mappings,
                                material_id_to_mapping_index,
+                               tria_mapping_support_points,
                                OutwardSurfaceNormalDetector(),
                                SauterQuadratureRule<dim>(
                                  sauter_quad_params.hyper_singular_order),

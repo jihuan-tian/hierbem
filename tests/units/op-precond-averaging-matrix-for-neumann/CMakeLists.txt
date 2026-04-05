@@ -8,13 +8,15 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
+find_package(Julia REQUIRED)
+
 # Target should contains 'test' substring in any cases in order to be found by
 # Visual Studio Code's TestMate extension
 set(_target test-op-precond-averaging-matrix-for-neumann)
 
 add_executable(${_target} op-precond-averaging-matrix-for-neumann.cu)
-target_include_directories(${_target} PUBLIC ${JULIA_DIR}/include/julia)
-target_link_directories(${_target} PUBLIC ${JULIA_DIR}/lib)
+target_include_directories(${_target} PUBLIC ${JULIA_INCLUDE_DIR})
+target_link_directories(${_target} PUBLIC ${JULIA_LIBRARY_DIR})
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})
@@ -29,9 +31,12 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/draw.jl.in
                ${CMAKE_CURRENT_SOURCE_DIR}/draw.jl)
 
 target_link_libraries(
-  ${_target} hierbem Boost::program_options
+  ${_target}
+  hierbem
+  Boost::program_options
   dl # Lazy way: always link with libdl no matter if CUDA is used or not
-  julia Catch2::Catch2WithMain)
+  ${JULIA_LIBRARY}
+  Catch2::Catch2WithMain)
 
 # Disable warning about unused parameters which is caused by Julia 1.12.
 target_compile_options(${_target} PRIVATE -Wno-unused-parameter)

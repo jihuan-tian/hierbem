@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2025-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -25,17 +25,46 @@ HBEM_NS_OPEN
 
 HBEMJuliaValue::HBEMJuliaValue()
   : value(nullptr)
+  , value_ref(nullptr)
 {}
+
+HBEMJuliaValue::HBEMJuliaValue(const std::string &eval_str)
+{
+  value = jl_eval_string(eval_str.c_str());
+  add_value_to_dict();
+}
 
 HBEMJuliaValue::HBEMJuliaValue(jl_value_t *val)
   : value(val)
 {
-  JL_GC_PUSH1(&value);
+  add_value_to_dict();
 }
 
 HBEMJuliaValue::~HBEMJuliaValue()
 {
+  remove_value_from_dict();
+}
+
+void
+HBEMJuliaValue::add_value_to_dict()
+{
+  // Protect the Julia value until we wrap its reference to a container.
+  JL_GC_PUSH1(&value);
+  value_ref = jl_new_struct(HBEMJuliaWrapper::container_type, value);
   JL_GC_POP();
+
+  // Add the container to the global dictionary in @p HBEMJuliaWrapper, so that the
+  // Julia value will not be destroyed by GC.
+  jl_call3(HBEMJuliaWrapper::setindex,
+           HBEMJuliaWrapper::dict,
+           value_ref,
+           value_ref);
+}
+
+void
+HBEMJuliaValue::remove_value_from_dict()
+{
+  jl_call2(HBEMJuliaWrapper::delete_func, HBEMJuliaWrapper::dict, value_ref);
 }
 
 unsigned int
@@ -124,7 +153,11 @@ HBEMJuliaValue::length() const
   return jl_array_len((jl_array_t *)value);
 }
 
-std::mutex HBEMJuliaWrapper::julia_mutex;
+std::mutex     HBEMJuliaWrapper::julia_mutex;
+jl_value_t    *HBEMJuliaWrapper::dict;
+jl_function_t *HBEMJuliaWrapper::setindex;
+jl_function_t *HBEMJuliaWrapper::delete_func;
+jl_datatype_t *HBEMJuliaWrapper::container_type;
 
 HBEMJuliaWrapper &
 HBEMJuliaWrapper::get_instance()
@@ -135,11 +168,19 @@ HBEMJuliaWrapper::get_instance()
 
 HBEMJuliaWrapper::HBEMJuliaWrapper()
 {
+  // Initialize a Julia session.
   jl_init();
+
+  HBEMJuliaWrapper::dict        = jl_eval_string("refs = IdDict()");
+  HBEMJuliaWrapper::setindex    = jl_get_function(jl_base_module, "setindex!");
+  HBEMJuliaWrapper::delete_func = jl_get_function(jl_base_module, "delete!");
+  HBEMJuliaWrapper::container_type =
+    (jl_datatype_t *)jl_eval_string("Base.RefValue{Any}");
 }
 
 HBEMJuliaWrapper::~HBEMJuliaWrapper()
 {
+  // Exit from the Julia session.
   jl_atexit_hook(0);
 }
 

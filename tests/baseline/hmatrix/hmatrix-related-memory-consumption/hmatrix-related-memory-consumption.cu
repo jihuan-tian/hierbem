@@ -1,4 +1,4 @@
-// Copyright (C) 2023-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2023-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -20,7 +20,10 @@
 
 #include <deal.II/base/memory_consumption.h>
 #include <deal.II/base/multithread_info.h>
+#include <deal.II/base/point.h>
+#include <deal.II/base/table.h>
 #include <deal.II/base/table_handler.h>
+#include <deal.II/base/types.h>
 
 #include <deal.II/fe/fe.h>
 #include <deal.II/fe/fe_dgq.h>
@@ -31,14 +34,17 @@
 
 #include <fstream>
 #include <iostream>
+#include <map>
+#include <random>
 
+#include "bem/bem_tools.h"
 #include "cad_mesh/subdomain_topology.h"
 #include "config_file/config_structs.h"
 #include "config_file/cu_related.h"
+#include "dofs/dof_tools_ext.h"
 #include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
-#include "laplace/laplace_bem.h"
 #include "mapping/mapping_info.h"
 #include "platform_shared/laplace_kernels.h"
 #include "quadrature/sauter_quadrature_tools.h"
@@ -102,7 +108,7 @@ main(int argc, char *argv[])
 
   // Parameters for building H-matrices.
   ConfHMatrix hmat_params{
-    opts.n_min, opts.n_min, opts.eta, opts.max_rank, opts.epsilon};
+    opts.n_min, opts.n_min, opts.eta, opts.max_rank, opts.epsilon, false};
   ConfSauterQuadNearField sauter_quad_near_field_params;
   ConfSauterQuadFarField  sauter_quad_far_field_params;
   ConfParallelization     parallel_params;
@@ -179,6 +185,13 @@ main(int argc, char *argv[])
       table.add_value("Refinement", i);
       table.add_value("Object", "Surface triangulation");
       table.add_value("Memory", tria.memory_consumption());
+
+      Table<2, Point<spacedim>> tria_mapping_support_points;
+      BEMTools::compute_mapping_support_points_for_tria(
+        tria,
+        mappings,
+        material_id_to_mapping_index,
+        tria_mapping_support_points);
 
       dof_handler.distribute_dofs(fe);
 
@@ -276,6 +289,7 @@ main(int argc, char *argv[])
         ct.get_internal_to_external_dof_numbering(),
         mappings,
         material_id_to_mapping_index,
+        tria_mapping_support_points,
         SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
         true);
 

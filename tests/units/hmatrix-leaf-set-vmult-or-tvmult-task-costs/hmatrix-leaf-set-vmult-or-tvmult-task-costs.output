@@ -1,4 +1,3 @@
-CUDA stack size has been set to 10240
 # name: V_near_field_set_storage_before_assembly
 # type: matrix
 # rows: 9222

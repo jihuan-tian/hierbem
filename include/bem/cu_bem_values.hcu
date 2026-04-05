@@ -1,4 +1,4 @@
-// Copyright (C) 2023-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2023-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -421,7 +421,7 @@ namespace CUDAWrappers
 
     /**
      * Data table of mapping shape function's gradient values for
-     * \f$K_x\f$ in the same panel case. It has 5 dimensions:
+     * \f$K_x\f$ in the same panel case. It has 4 dimensions:
      * 1. Mapping index, which is mapping order minus 1. It is used to get the
      * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. \f$k_3\f$ term index: size=8
@@ -434,7 +434,7 @@ namespace CUDAWrappers
       kx_mapping_shape_grad_matrix_table_for_same_panel;
     /**
      * Data table of mapping shape function's gradient values for
-     * \f$K_y\f$ in the same panel case. It has 5 dimensions:
+     * \f$K_y\f$ in the same panel case. It has 4 dimensions:
      * 1. Mapping index, which is mapping order minus 1. It is used to get the
      * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. \f$k_3\f$ term index: size=8
@@ -447,7 +447,7 @@ namespace CUDAWrappers
       ky_mapping_shape_grad_matrix_table_for_same_panel;
     /**
      * Data table of mapping shape function's gradient values for
-     * \f$K_x\f$ in the common edge case. It has 5 dimensions:
+     * \f$K_x\f$ in the common edge case. It has 4 dimensions:
      * 1. Mapping index, which is mapping order minus 1. It is used to get the
      * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. \f$k_3\f$ term index: size=6
@@ -460,7 +460,7 @@ namespace CUDAWrappers
       kx_mapping_shape_grad_matrix_table_for_common_edge;
     /**
      * Data table of mapping shape function's gradient values for
-     * \f$K_y\f$ in the common edge case. It has 5 dimensions:
+     * \f$K_y\f$ in the common edge case. It has 4 dimensions:
      * 1. Mapping index, which is mapping order minus 1. It is used to get the
      * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. \f$k_3\f$ term index: size=6
@@ -473,7 +473,7 @@ namespace CUDAWrappers
       ky_mapping_shape_grad_matrix_table_for_common_edge;
     /**
      * Data table of mapping shape function's gradient values for
-     * \f$K_x\f$ in the common vertex case. It has 5 dimensions:
+     * \f$K_x\f$ in the common vertex case. It has 4 dimensions:
      * 1. Mapping index, which is mapping order minus 1. It is used to get the
      * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. \f$k_3\f$ term index: size=4
@@ -486,7 +486,7 @@ namespace CUDAWrappers
       kx_mapping_shape_grad_matrix_table_for_common_vertex;
     /**
      * Data table of mapping shape function's gradient values for
-     * \f$K_y\f$ in the common vertex case. It has 5 dimensions:
+     * \f$K_y\f$ in the common vertex case. It has 4 dimensions:
      * 1. Mapping index, which is mapping order minus 1. It is used to get the
      * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. \f$k_3\f$ term index: size=4
@@ -499,7 +499,7 @@ namespace CUDAWrappers
       ky_mapping_shape_grad_matrix_table_for_common_vertex;
     /**
      * Data table of mapping shape function's gradient values for
-     * \f$K_x\f$ in the regular case. It has 5 dimensions:
+     * \f$K_x\f$ in the regular case. It has 4 dimensions:
      * 1. Mapping index, which is mapping order minus 1. It is used to get the
      * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. \f$k_3\f$ term index: size=1
@@ -512,7 +512,7 @@ namespace CUDAWrappers
       kx_mapping_shape_grad_matrix_table_for_regular;
     /**
      * Data table of mapping shape function's gradient values for
-     * \f$K_y\f$ in the regular case. It has 5 dimensions:
+     * \f$K_y\f$ in the regular case. It has 4 dimensions:
      * 1. Mapping index, which is mapping order minus 1. It is used to get the
      * corresponding pointer to the MappingInfo object in BEMValues::mappings.
      * 2. \f$k_3\f$ term index: size=1

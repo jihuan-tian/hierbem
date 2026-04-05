@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2025-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -21,7 +21,10 @@
 #define HIERBEM_INCLUDE_PRECONDITIONERS_PRECONDITIONER_FOR_HELMHOLTZ_ACOUSTIC_DIRICHLET_H_
 
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/numbers.h>
+#include <deal.II/base/point.h>
 #include <deal.II/base/quadrature.h>
+#include <deal.II/base/table.h>
 #include <deal.II/base/types.h>
 
 #include <deal.II/dofs/dof_handler.h>
@@ -112,7 +115,12 @@ public:
     const SubdomainTopology<dim, spacedim> &subdomain_topology,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
-                                    &material_id_to_mapping_index,
+      &material_id_to_mapping_index,
+    const Table<
+      2,
+      Point<spacedim,
+            typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                                    &mapping_support_point_table,
     const SurfaceNormalDetector     &normal_detector,
     const SauterQuadratureRule<dim> &sauter_quad_rule1,
     const SauterQuadratureRule<dim> &sauter_quad_rule2,
@@ -261,7 +269,12 @@ HelmholtzAcousticSingleLayerPreconditioner<dim,
     const SubdomainTopology<dim, spacedim> &subdomain_topology,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
-                                    &material_id_to_mapping_index,
+      &material_id_to_mapping_index,
+    const Table<
+      2,
+      Point<spacedim,
+            typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                                    &mapping_support_point_table,
     const SurfaceNormalDetector     &normal_detector,
     const SauterQuadratureRule<dim> &sauter_quad_rule1,
     const SauterQuadratureRule<dim> &sauter_quad_rule2,
@@ -285,6 +298,7 @@ HelmholtzAcousticSingleLayerPreconditioner<dim,
                       subdomain_topology,
                       mappings,
                       material_id_to_mapping_index,
+                      mapping_support_point_table,
                       normal_detector,
                       sauter_quad_rule1);
 
@@ -301,6 +315,7 @@ HelmholtzAcousticSingleLayerPreconditioner<dim,
                       subdomain_topology,
                       mappings,
                       material_id_to_mapping_index,
+                      mapping_support_point_table,
                       normal_detector,
                       sauter_quad_rule2);
 

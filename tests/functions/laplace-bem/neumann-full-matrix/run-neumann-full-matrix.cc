@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2022-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -74,7 +74,7 @@ private:
 };
 
 void
-run_neumann_full_matrix()
+run_neumann_full_matrix(const bool is_serial)
 {
   // Write run-time logs to file
   std::ofstream ofs("neumann-full-matrix.log");
@@ -93,6 +93,11 @@ run_neumann_full_matrix()
 
   LaplaceBEM<dim, spacedim, double, double> bem(bem_params);
   bem.set_project_name("neumann-full-matrix");
+  bem.set_cpu_serial(is_serial);
+
+  if (is_serial)
+    parallel_params.tbb_thread_num = 1;
+
   // Set TBB thread num.
   if (parallel_params.tbb_thread_num == -1)
     MultithreadInfo::set_thread_limit(MultithreadInfo::n_threads());

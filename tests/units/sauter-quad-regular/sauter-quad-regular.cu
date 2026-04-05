@@ -1,4 +1,4 @@
-// Copyright (C) 2023-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2023-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -17,6 +17,10 @@
  * @author Jihuan Tian
  */
 
+#include <deal.II/base/point.h>
+#include <deal.II/base/table.h>
+#include <deal.II/base/types.h>
+
 #include <deal.II/fe/fe.h>
 #include <deal.II/fe/fe_dgq.h>
 
@@ -24,7 +28,9 @@
 #include <deal.II/grid/grid_out.h>
 
 #include <fstream>
+#include <map>
 
+#include "bem/bem_tools.h"
 #include "quadrature/sauter_quadrature.hcu"
 
 using namespace dealii;
@@ -104,6 +110,27 @@ main()
   std::vector<MappingInfo<dim, spacedim> *> mappings;
   initialize_mappings(mappings, max_mapping_order);
 
+  const unsigned int          mapping_order = 2;
+  MappingInfo<dim, spacedim> &mapping_info_test_space =
+    *mappings[mapping_order - 1];
+  MappingInfo<dim, spacedim> &mapping_info_ansatz_space =
+    *mappings[mapping_order - 1];
+
+  /**
+   * A 2D table of mapping support points for all active cells on the highest
+   * level in the triangulation.
+   *
+   * Dim1: cell index. Dim2: mapping support point index in a cell.
+   */
+  std::map<types::material_id, unsigned int> material_id_to_mapping_index;
+  material_id_to_mapping_index[0] = mapping_order - 1;
+  Table<2, Point<spacedim>> tria_mapping_support_points;
+  BEMTools::compute_mapping_support_points_for_tria(
+    triangulation,
+    mappings,
+    material_id_to_mapping_index,
+    tria_mapping_support_points);
+
   {
     std::cout << "=== fe-order=(dirichlet:2, neumann:2), mapping order=2 ==="
               << std::endl;
@@ -120,12 +147,6 @@ main()
      */
     DoFHandler<dim, spacedim> dof_handler(triangulation);
     dof_handler.distribute_dofs(fe);
-
-    const unsigned int          mapping_order = 2;
-    MappingInfo<dim, spacedim> &mapping_test_space =
-      *mappings[mapping_order - 1];
-    MappingInfo<dim, spacedim> &mapping_ansatz_space =
-      *mappings[mapping_order - 1];
 
     /**
      * Create different Laplace kernel functions.
@@ -165,6 +186,7 @@ main()
     HierBEM::BEMValues<dim, spacedim> bem_values(fe,
                                                  fe,
                                                  mappings,
+                                                 tria_mapping_support_points,
                                                  quad_rule_for_same_panel,
                                                  quad_rule_for_common_edge,
                                                  quad_rule_for_common_vertex,
@@ -208,8 +230,8 @@ main()
                 j,
                 cell_iterators[0],
                 cell_iterators[5],
-                mapping_test_space,
-                mapping_ansatz_space,
+                mapping_info_test_space,
+                mapping_info_ansatz_space,
                 bem_values,
                 OutwardSurfaceNormalDetector(),
                 scratch_data,
@@ -235,8 +257,8 @@ main()
                 j,
                 cell_iterators[0],
                 cell_iterators[5],
-                mapping_test_space,
-                mapping_ansatz_space,
+                mapping_info_test_space,
+                mapping_info_ansatz_space,
                 bem_values,
                 OutwardSurfaceNormalDetector(),
                 scratch_data,
@@ -262,8 +284,8 @@ main()
                 j,
                 cell_iterators[0],
                 cell_iterators[5],
-                mapping_test_space,
-                mapping_ansatz_space,
+                mapping_info_test_space,
+                mapping_info_ansatz_space,
                 bem_values,
                 OutwardSurfaceNormalDetector(),
                 scratch_data,
@@ -289,8 +311,8 @@ main()
                 j,
                 cell_iterators[0],
                 cell_iterators[5],
-                mapping_test_space,
-                mapping_ansatz_space,
+                mapping_info_test_space,
+                mapping_info_ansatz_space,
                 bem_values,
                 OutwardSurfaceNormalDetector(),
                 scratch_data,
@@ -325,12 +347,6 @@ main()
     DoFHandler<dim, spacedim> dof_handler_dirichlet_space(triangulation);
     dof_handler_neumann_space.distribute_dofs(fe_neumann_space);
     dof_handler_dirichlet_space.distribute_dofs(fe_dirichlet_space);
-
-    const unsigned int          mapping_order = 2;
-    MappingInfo<dim, spacedim> &mapping_info_test_space =
-      *mappings[mapping_order - 1];
-    MappingInfo<dim, spacedim> &mapping_info_ansatz_space =
-      *mappings[mapping_order - 1];
 
     /**
      * Create different Laplace kernel functions.
@@ -376,6 +392,7 @@ main()
       HierBEM::BEMValues<dim, spacedim> bem_values(fe_neumann_space,
                                                    fe_neumann_space,
                                                    mappings,
+                                                   tria_mapping_support_points,
                                                    quad_rule_for_same_panel,
                                                    quad_rule_for_common_edge,
                                                    quad_rule_for_common_vertex,
@@ -429,6 +446,7 @@ main()
       HierBEM::BEMValues<dim, spacedim> bem_values(fe_neumann_space,
                                                    fe_dirichlet_space,
                                                    mappings,
+                                                   tria_mapping_support_points,
                                                    quad_rule_for_same_panel,
                                                    quad_rule_for_common_edge,
                                                    quad_rule_for_common_vertex,
@@ -478,6 +496,7 @@ main()
       HierBEM::BEMValues<dim, spacedim> bem_values(fe_dirichlet_space,
                                                    fe_neumann_space,
                                                    mappings,
+                                                   tria_mapping_support_points,
                                                    quad_rule_for_same_panel,
                                                    quad_rule_for_common_edge,
                                                    quad_rule_for_common_vertex,
@@ -527,6 +546,7 @@ main()
       HierBEM::BEMValues<dim, spacedim> bem_values(fe_dirichlet_space,
                                                    fe_dirichlet_space,
                                                    mappings,
+                                                   tria_mapping_support_points,
                                                    quad_rule_for_same_panel,
                                                    quad_rule_for_common_edge,
                                                    quad_rule_for_common_vertex,

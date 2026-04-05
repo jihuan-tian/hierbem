@@ -1,4 +1,4 @@
-// Copyright (C) 2024-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2024-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -24,7 +24,6 @@
 
 #include <memory>
 
-#include "bem/bem_tools.h"
 #include "config.h"
 #include "mapping_q_ext.h"
 
@@ -123,6 +122,16 @@ public:
   {
     return mapping;
   }
+
+  void
+  generate_forward_mapping_support_point_permutation(
+    unsigned int               starting_corner,
+    std::vector<unsigned int> &support_point_permutation) const;
+
+  void
+  generate_backward_mapping_support_point_permutation(
+    unsigned int               starting_corner,
+    std::vector<unsigned int> &support_point_permutation) const;
 
   const std::array<std::vector<unsigned int>,
                    GeometryInfo<dim>::vertices_per_cell> &
@@ -244,6 +253,179 @@ MappingInfo<dim, spacedim>::init_mapping_data()
 
 template <int dim, int spacedim>
 void
+MappingInfo<dim, spacedim>::generate_forward_mapping_support_point_permutation(
+  unsigned int               starting_corner,
+  std::vector<unsigned int> &support_point_permutation) const
+{
+  // Currently, only dim=2 and spacedim=3 are supported.
+  Assert((dim == 2) && (spacedim == 3), ExcInternalError());
+  const int poly_degree = mapping.get_degree();
+
+  std::vector<unsigned int> poly_space_inverse_numbering(
+    FETools::lexicographic_to_hierarchic_numbering<dim>(poly_degree));
+
+  AssertDimension(support_point_permutation.size(),
+                  poly_space_inverse_numbering.size());
+
+  // Store the inverse numbering into a matrix for further traversing.
+  unsigned int             c = 0;
+  FullMatrix<unsigned int> support_point_numbering_matrix(poly_degree + 1,
+                                                          poly_degree + 1);
+  for (int i = poly_degree; i >= 0; i--)
+    {
+      for (int j = 0; j <= poly_degree; j++)
+        {
+          support_point_numbering_matrix(i, j) =
+            poly_space_inverse_numbering[c];
+          c++;
+        }
+    }
+
+  switch (starting_corner)
+    {
+      case 0:
+        support_point_permutation = poly_space_inverse_numbering;
+
+        break;
+      case 1:
+        c = 0;
+        for (int j = poly_degree; j >= 0; j--)
+          {
+            for (int i = poly_degree; i >= 0; i--)
+              {
+                support_point_permutation[c] =
+                  support_point_numbering_matrix(i, j);
+                c++;
+              }
+          }
+
+        break;
+      case 2:
+        c = 0;
+        for (int j = 0; j <= poly_degree; j++)
+          {
+            for (int i = 0; i <= poly_degree; i++)
+              {
+                support_point_permutation[c] =
+                  support_point_numbering_matrix(i, j);
+                c++;
+              }
+          }
+
+        break;
+      case 3:
+        c = 0;
+        for (int i = 0; i <= poly_degree; i++)
+          {
+            for (int j = poly_degree; j >= 0; j--)
+              {
+                support_point_permutation[c] =
+                  support_point_numbering_matrix(i, j);
+                c++;
+              }
+          }
+
+        break;
+      default:
+        Assert(false, ExcInternalError());
+        break;
+    }
+}
+
+
+template <int dim, int spacedim>
+void
+MappingInfo<dim, spacedim>::generate_backward_mapping_support_point_permutation(
+  unsigned int               starting_corner,
+  std::vector<unsigned int> &support_point_permutation) const
+{
+  // Currently, only dim=2 and spacedim=3 are supported.
+  Assert((dim == 2) && (spacedim == 3), ExcInternalError());
+  const int poly_degree = mapping.get_degree();
+
+  std::vector<unsigned int> poly_space_inverse_numbering(
+    FETools::lexicographic_to_hierarchic_numbering<dim>(poly_degree));
+
+  AssertDimension(support_point_permutation.size(),
+                  poly_space_inverse_numbering.size());
+
+  // Store the inverse numbering into a matrix for further traversing.
+  unsigned int             c = 0;
+  FullMatrix<unsigned int> support_point_numbering_matrix(poly_degree + 1,
+                                                          poly_degree + 1);
+  for (int i = poly_degree; i >= 0; i--)
+    {
+      for (int j = 0; j <= poly_degree; j++)
+        {
+          support_point_numbering_matrix(i, j) =
+            poly_space_inverse_numbering[c];
+          c++;
+        }
+    }
+
+  switch (starting_corner)
+    {
+      case 0:
+        c = 0;
+        for (int j = 0; j <= poly_degree; j++)
+          {
+            for (int i = poly_degree; i >= 0; i--)
+              {
+                support_point_permutation[c] =
+                  support_point_numbering_matrix(i, j);
+                c++;
+              }
+          }
+
+        break;
+      case 1:
+        c = 0;
+        for (int i = poly_degree; i >= 0; i--)
+          {
+            for (int j = poly_degree; j >= 0; j--)
+              {
+                support_point_permutation[c] =
+                  support_point_numbering_matrix(i, j);
+                c++;
+              }
+          }
+
+        break;
+      case 2:
+        c = 0;
+        for (int i = 0; i <= poly_degree; i++)
+          {
+            for (int j = 0; j <= poly_degree; j++)
+              {
+                support_point_permutation[c] =
+                  support_point_numbering_matrix(i, j);
+                c++;
+              }
+          }
+
+        break;
+      case 3:
+        c = 0;
+        for (int j = poly_degree; j >= 0; j--)
+          {
+            for (int i = 0; i <= poly_degree; i++)
+              {
+                support_point_permutation[c] =
+                  support_point_numbering_matrix(i, j);
+                c++;
+              }
+          }
+
+        break;
+      default:
+        Assert(false, ExcInternalError());
+        break;
+    }
+}
+
+
+template <int dim, int spacedim>
+void
 MappingInfo<dim, spacedim>::init_lexicographic_numberings_and_reverse()
 {
   // Generate lexicographic numberings.
@@ -259,8 +441,8 @@ MappingInfo<dim, spacedim>::init_lexicographic_numberings_and_reverse()
         }
       else
         {
-          BEMTools::generate_forward_mapping_support_point_permutation(
-            mapping, v, lexicographic_numberings[v]);
+          generate_forward_mapping_support_point_permutation(
+            v, lexicographic_numberings[v]);
         }
     }
 
@@ -269,8 +451,8 @@ MappingInfo<dim, spacedim>::init_lexicographic_numberings_and_reverse()
     {
       reversed_lexicographic_numberings[v].resize(data->n_shape_functions);
 
-      BEMTools::generate_backward_mapping_support_point_permutation(
-        mapping, v, reversed_lexicographic_numberings[v]);
+      generate_backward_mapping_support_point_permutation(
+        v, reversed_lexicographic_numberings[v]);
     }
 }
 

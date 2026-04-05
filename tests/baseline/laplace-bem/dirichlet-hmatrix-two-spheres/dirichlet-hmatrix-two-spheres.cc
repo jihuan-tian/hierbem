@@ -179,7 +179,7 @@ main(int argc, char *argv[])
                               problemTypeLiteralToEnum(
                                 conf_inst.bem.problem_type),
                               conf_inst.bem.is_interior_problem};
-    // ConfHMatrix                hmat_params{64, 64, 0.8, 5, 0.01};
+    // ConfHMatrix                hmat_params{64, 64, 0.8, 5, 0.01, false};
     // ConfHMatrix                hmat_preconditioner_params{64, 64, 1.0, 2,
     // 0.1};
 

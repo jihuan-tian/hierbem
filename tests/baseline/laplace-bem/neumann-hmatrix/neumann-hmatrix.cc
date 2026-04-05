@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2022-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -197,15 +197,15 @@ main(int argc, char *argv[])
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  ConfLaplaceBEM             bem_params{opts.dirichlet_space_fe_order,
+  ConfLaplaceBEM   bem_params{opts.dirichlet_space_fe_order,
                             opts.neumann_space_fe_order,
                             ProblemType::NeumannBCProblem,
                             false};
-  ConfHMatrix                hmat_params{64, 64, 0.8, 5, 0.01};
-  ConfHMatrix                hmat_preconditioner_params{64, 64, 1.0, 2, 0.1};
-  ConfSauterQuad             sauter_quad_params;
-  ConfSauterQuad             sauter_quad_precond_params;
-  ConfLinearSolver           linear_solver_params;
+  ConfHMatrix      hmat_params{64, 64, 0.8, 5, 0.01, false};
+  ConfHMatrix      hmat_preconditioner_params{64, 64, 1.0, 2, 0.1, false};
+  ConfSauterQuad   sauter_quad_params;
+  ConfSauterQuad   sauter_quad_precond_params;
+  ConfLinearSolver linear_solver_params;
   ConfOperatorPreconditioner op_precond_params;
   ConfParallelization        parallel_params;
 
