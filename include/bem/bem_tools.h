@@ -3050,9 +3050,8 @@ namespace BEMTools
    * @param k3_index \f$k_3\f$ term index
    * @param quad_no Quadrature point index
    * @param mapping_shape_grad_matrix_table The data table storing the
-   * gradient values
-   * of the shape functions. Refer to
-   * BEMValues::kx_shape_grad_matrix_table_for_same_panel.
+   * gradient values of the shape functions. Refer to
+   * <tt>BEMValues::kx_shape_grad_matrix_table_for_same_panel</tt>.
    * @param mapping_index Index to the mapping object for the current cell.
    * @param support_points_in_real_cell A list of support points in the real
    * cell in the lexicographic order.

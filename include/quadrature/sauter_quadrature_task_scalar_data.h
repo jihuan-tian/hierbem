@@ -20,9 +20,13 @@
 #ifndef HIERBEM_INCLUDE_QUADRATURE_SAUTER_QUADRATURE_TASK_SCALAR_DATA_H_
 #define HIERBEM_INCLUDE_QUADRATURE_SAUTER_QUADRATURE_TASK_SCALAR_DATA_H_
 
+#include <deal.II/base/types.h>
+
 #include "config.h"
 
 HBEM_NS_OPEN
+
+using namespace dealii;
 
 /**
  * This class is used as a wrapper for small scalar values that are
@@ -31,6 +35,14 @@ HBEM_NS_OPEN
 class SauterQuadratureTaskScalarData
 {
 public:
+  /**
+   * Cell index of \f$K_x\f$.
+   */
+  types::global_cell_index kx_cell_index;
+  /**
+   * Cell index of \f$K_y\f$.
+   */
+  types::global_cell_index ky_cell_index;
   /**
    * Given a full DoF index, find its index in the permuted list of DoF
    * indices in the cell \f$K_x\f$.
