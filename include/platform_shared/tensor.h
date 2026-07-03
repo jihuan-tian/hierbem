@@ -1,4 +1,4 @@
-// Copyright (C) 2023-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2023-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 // Copyright (C) 2024 Xiaozhe Wang <chaoslawful@gmail.com>
 //
 // This file is part of the HierBEM library.
@@ -11,7 +11,7 @@
 
 /**
  * @file tensor.h
- * @brief Introduction of tensor.h
+ * @brief Arithmetic related to tensor.
  *
  * @date 2023-02-10
  * @author Jihuan Tian
@@ -23,6 +23,7 @@
 #include <deal.II/base/tensor.h>
 
 #include "config.h"
+#include "vector_wrapper.h"
 
 HBEM_NS_OPEN
 
@@ -50,6 +51,28 @@ namespace PlatformShared
     return result;
   }
 
+
+  template <int dim, typename Number1, typename Number2>
+  HBEM_ATTR_HOST
+    HBEM_ATTR_DEV Tensor<1, dim, typename ProductType<Number1, Number2>::type>
+                  cross_product_3d(const Tensor<1, dim, Number1> &src1,
+                                   const VectorWrapper<Number2>  &src2)
+  {
+    Tensor<1, dim, typename ProductType<Number1, Number2>::type> result;
+
+    // avoid compiler warnings
+    constexpr int s0 = 0 % dim;
+    constexpr int s1 = 1 % dim;
+    constexpr int s2 = 2 % dim;
+
+    result[s0] = src1[s1] * src2[s2] - src1[s2] * src2[s1];
+    result[s1] = src1[s2] * src2[s0] - src1[s0] * src2[s2];
+    result[s2] = src1[s0] * src2[s1] - src1[s1] * src2[s0];
+
+    return result;
+  }
+
+
   /**
    * Calculate the scalar product of two rank-1 tensors.
    *
@@ -71,9 +94,7 @@ namespace PlatformShared
 #  pragma unroll
 #endif
     for (unsigned int i = 0; i < dim; i++)
-      {
-        result += t1[i] * t2[i];
-      }
+      result += t1[i] * t2[i];
 
     return result;
   }

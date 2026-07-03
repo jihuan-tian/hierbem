@@ -1,0 +1,4508 @@
+// Copyright (C) 2022-2026 Jihuan Tian <jihuan_tian@hotmail.com>
+//
+// This file is part of the HierBEM library.
+//
+// HierBEM is free software: you can use it, redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License as published by the
+// Free Software Foundation, either version 3 of the License, or (at your
+// option) any later version. The full text of the license can be found in the
+// file LICENSE at the top level directory of HierBEM.
+
+/**
+ * @file cu_sauter_quadrature.hcu
+ * @brief Introduction of cu_sauter_quadrature.hcu
+ * @ingroup sauter_quadrature
+ *
+ * @date 2022-03-02
+ * @author Jihuan Tian
+ */
+#ifndef HIERBEM_INCLUDE_QUADRATURE_CU_SAUTER_QUADRATURE_HCU_
+#define HIERBEM_INCLUDE_QUADRATURE_CU_SAUTER_QUADRATURE_HCU_
+
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/logstream.h>
+#include <deal.II/base/numbers.h>
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+#  include <deal.II/base/timer.h>
+#endif
+#include <deal.II/base/point.h>
+#include <deal.II/base/quadrature.h>
+#include <deal.II/base/quadrature_lib.h>
+#include <deal.II/base/table.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/types.h>
+#include <deal.II/base/utilities.h>
+
+#include <deal.II/dofs/dof_accessor.h>
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/fe/fe.h>
+#include <deal.II/fe/fe_data.h>
+#include <deal.II/fe/fe_update_flags.h>
+
+#include <deal.II/grid/tria_accessor.h>
+
+#include <cuda_runtime.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#include <algorithm>
+#include <cstring>
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+#  include <iostream>
+#endif
+#include <vector>
+
+#include "bem/bem_tools.h"
+#include "bem/bem_values.h"
+#include "bem/cell_neighboring_type.h"
+#include "bem/cu_bem_values.hcu"
+#include "bem/types.h"
+#include "config.h"
+#include "config_file/config_structs.h"
+#include "hmatrix/hmatrix.h"
+#include "hmatrix/hmatrix_assembly_profile.h"
+#include "linear_algebra/cu_table.hcu"
+#include "linear_algebra/lapack_full_matrix_ext.h"
+#include "mapping/mapping_info.h"
+#include "platform_shared/bem_tools.h"
+#include "platform_shared/full_matrix_wrapper.h"
+#include "platform_shared/tensor.h"
+#include "platform_shared/utilities.h"
+#include "sauter_quadrature.h"
+#include "sauter_quadrature_task_buffer_for_vector.hcu"
+#include "sauter_quadrature_task_producer_buffer.h"
+#include "sauter_quadrature_task_ring_buffer.hcu"
+#include "sauter_quadrature_task_scalar_data_far_field.h"
+#include "sauter_quadrature_task_scalar_data_near_field.h"
+#include "utilities/cu_profile.hcu"
+#include "utilities/number_traits.h"
+
+HBEM_NS_OPEN
+
+using namespace dealii;
+
+namespace CUDAWrappers
+{
+  extern cudaDeviceProp device_properties;
+
+  /**
+   * @brief Determine the dimensions of block rectangle and thread rectangle
+   * for CUDA parallelization over Sauter quadrature points.
+   *
+   * N.B. The allocation of thread blocks are enough to cover all quadrature
+   * points. Therefore, there is no for-loop inside related kernel functions.
+   *
+   * @tparam dim
+   * @tparam spacedim
+   * @tparam RangeNumberType
+   * @param cell_neighboring_type
+   * @param bem_values
+   * @param blocks_rect
+   * @param threads_rect
+   */
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  configure_thread_blocks_for_sauter_quadrature_points(
+    const CellNeighboringType                            cell_neighboring_type,
+    const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    dim3                                                &blocks_rect,
+    dim3                                                &threads_rect)
+  {
+    switch (cell_neighboring_type)
+      {
+          case CellNeighboringType::SamePanel: {
+            threads_rect.x = 32;
+            threads_rect.y = 8;
+
+            blocks_rect.x = (bem_values.quad_rule_for_same_panel.size() +
+                             threads_rect.x - 1) /
+                            threads_rect.x;
+            blocks_rect.y = 1;
+
+            break;
+          }
+          case CellNeighboringType::CommonEdge: {
+            threads_rect.x = 32;
+            threads_rect.y = 6;
+
+            blocks_rect.x = (bem_values.quad_rule_for_common_edge.size() +
+                             threads_rect.x - 1) /
+                            threads_rect.x;
+            blocks_rect.y = 1;
+
+            break;
+          }
+          case CellNeighboringType::CommonVertex: {
+            threads_rect.x = 32;
+            threads_rect.y = 4;
+
+            blocks_rect.x = (bem_values.quad_rule_for_common_vertex.size() +
+                             threads_rect.x - 1) /
+                            threads_rect.x;
+            blocks_rect.y = 1;
+
+            break;
+          }
+          case CellNeighboringType::Regular: {
+            threads_rect.x = 32;
+            threads_rect.y = 1;
+
+            // Quadrature rule for the regular cell neighboring type is 2D, so
+            // the total number of 4D quadrature points to be distributed over
+            // the 1D CUDA thread grid is a square of the point number in the 2D
+            // quadrature object.
+            blocks_rect.x = (dealii::Utilities::fixed_power<2>(
+                               bem_values.quad_rule_for_regular.size()) +
+                             threads_rect.x - 1) /
+                            threads_rect.x;
+            blocks_rect.y = 1;
+
+            break;
+          }
+          default: {
+            threads_rect.x = 32;
+            threads_rect.y = 1;
+
+            blocks_rect.x = 1;
+            blocks_rect.y = 1;
+
+            break;
+          }
+      }
+  }
+
+
+  /**
+   * Compute cell values at quadrature points (surface Jacobians, normal
+   * vectors, quadrature points and surface curls of a pair of finite element
+   * shape functions) in the real cell to be used in the Sauter quadrature for a
+   * pair of cells.
+   *
+   * This function is only used for the same panel cell neighboring type in the
+   * H-matrix assembler without the producer-consumer model. It runs on GPU and
+   * 2D thread grid is adopted. The X direction is associated with quadrature
+   * point index, while the Y direction is associated with k3 index.
+   *
+   * \mynote{Since this is a @p __global__ function, the parameters should be
+   * passed by value.}
+   *
+   * \alert{Computation of the Jacobian matrix as well as related quantities
+   * such as normal vector, covariant transformation matrix, metric tensor,
+   * etc., is related to the mapping object and has nothing to do with the
+   * finite element. A mapping object is used to describe geometry, while a
+   * finite element object is used to describe the ansatz or test functions.}
+   *
+   * @param kx_dof_index_local
+   * @param ky_dof_index_local
+   * @param kx_cell_index_global Global index of the active cell Kx
+   * @param ky_cell_index_global Global index of the active cell Ky
+   * @param kx_mapping_index
+   * @param ky_mapping_index
+   * @param kx_mapping_n_shape_functions
+   * @param ky_mapping_n_shape_functions
+   * @param is_kx_normal_inward
+   * @param is_ky_normal_inward
+   * @param bem_values
+   * @param scratch_data
+   */
+  template <int dim, int spacedim, typename CUDAKernelNumberType = double>
+  __global__ void
+  compute_cell_values_for_one_pair_of_shape_functions_same_panel(
+    const unsigned int             kx_dof_index_local,
+    const unsigned int             ky_dof_index_local,
+    const types::global_cell_index kx_cell_index_global,
+    const types::global_cell_index ky_cell_index_global,
+    const unsigned int             kx_mapping_index,
+    const unsigned int             ky_mapping_index,
+    const unsigned int             kx_mapping_n_shape_functions,
+    const unsigned int             ky_mapping_n_shape_functions,
+    const bool                     is_kx_normal_inward,
+    const bool                     is_ky_normal_inward,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<CUDAKernelNumberType>::real_type>
+      bem_values,
+    CUDAPairCellWiseScratchDataForHMatrix<dim, spacedim, CUDAKernelNumberType>
+      scratch_data)
+  {
+    using real_type =
+      typename numbers::NumberTraits<CUDAKernelNumberType>::real_type;
+
+    assert(kx_cell_index_global == ky_cell_index_global);
+    assert(kx_mapping_index == ky_mapping_index);
+    assert(kx_mapping_n_shape_functions == ky_mapping_n_shape_functions);
+    assert(is_kx_normal_inward == is_ky_normal_inward);
+    assert(bem_values.is_surface_curl_needed ==
+           scratch_data.is_surface_curl_needed);
+
+    const unsigned int quad_no = gridDim.x * blockDim.x * blockIdx.y +
+                                 (blockIdx.x * blockDim.x + threadIdx.x);
+
+    // Computation and usage of normal vectors stored in local variables, which
+    // reduces then number of CUDA global memory access.
+    Tensor<1, spacedim, real_type> kx_normal;
+    Tensor<1, spacedim, real_type> ky_normal;
+
+    if (quad_no < bem_values.quad_rule_for_same_panel.size())
+      {
+        BEMTools::PlatformShared::
+          transform_quad_point_from_unit_to_permuted_real_cell(
+            &bem_values.kx_mapping_shape_value_table_for_same_panel(
+              threadIdx.y, quad_no, kx_mapping_index, 0),
+            &bem_values.mapping_support_point_table(kx_cell_index_global, 0),
+            kx_mapping_n_shape_functions,
+            scratch_data.kx_quad_points_same_panel(threadIdx.y, quad_no));
+
+        BEMTools::PlatformShared::
+          transform_quad_point_from_unit_to_permuted_real_cell(
+            &bem_values.ky_mapping_shape_value_table_for_same_panel(
+              threadIdx.y, quad_no, ky_mapping_index, 0),
+            &bem_values.mapping_support_point_table(ky_cell_index_global, 0),
+            ky_mapping_n_shape_functions,
+            scratch_data.ky_quad_points_same_panel(threadIdx.y, quad_no));
+
+        if (bem_values.is_surface_curl_needed)
+          {
+            // Covariant matrix is computed on the stack without storing
+            // into data tables.
+            real_type kx_covariant_matrix_data[spacedim * dim];
+            real_type ky_covariant_matrix_data[spacedim * dim];
+            HierBEM::PlatformShared::FullMatrixWrapper<real_type>
+              kx_covariant_matrix(kx_covariant_matrix_data, spacedim, dim);
+            HierBEM::PlatformShared::FullMatrixWrapper<real_type>
+              ky_covariant_matrix(ky_covariant_matrix_data, spacedim, dim);
+
+            scratch_data.kx_jacobians_same_panel(threadIdx.y, quad_no) =
+              BEMTools::PlatformShared::
+                surface_jacobian_det_normal_vector_and_covariant(
+                  &bem_values.kx_mapping_shape_grad_matrix_table_for_same_panel(
+                    kx_mapping_index, threadIdx.y, quad_no, 0),
+                  &bem_values.mapping_support_point_table(kx_cell_index_global,
+                                                          0),
+                  kx_mapping_n_shape_functions,
+                  kx_normal,
+                  kx_covariant_matrix,
+                  is_kx_normal_inward);
+
+            scratch_data.ky_jacobians_same_panel(threadIdx.y, quad_no) =
+              BEMTools::PlatformShared::
+                surface_jacobian_det_normal_vector_and_covariant(
+                  &bem_values.ky_mapping_shape_grad_matrix_table_for_same_panel(
+                    ky_mapping_index, threadIdx.y, quad_no, 0),
+                  &bem_values.mapping_support_point_table(ky_cell_index_global,
+                                                          0),
+                  ky_mapping_n_shape_functions,
+                  ky_normal,
+                  ky_covariant_matrix,
+                  is_ky_normal_inward);
+
+            BEMTools::PlatformShared::surface_curl<dim, spacedim, real_type>(
+              kx_dof_index_local,
+              &bem_values.kx_shape_grad_matrix_table_for_same_panel(
+                threadIdx.y, quad_no, 0, 0),
+              bem_values.kx_shape_value_table_for_same_panel.size(0),
+              kx_covariant_matrix,
+              kx_normal,
+              scratch_data.kx_shape_curls_same_panel(kx_dof_index_local,
+                                                     threadIdx.y,
+                                                     quad_no));
+
+            BEMTools::PlatformShared::surface_curl<dim, spacedim, real_type>(
+              ky_dof_index_local,
+              &bem_values.ky_shape_grad_matrix_table_for_same_panel(
+                threadIdx.y, quad_no, 0, 0),
+              bem_values.ky_shape_value_table_for_same_panel.size(0),
+              ky_covariant_matrix,
+              ky_normal,
+              scratch_data.ky_shape_curls_same_panel(ky_dof_index_local,
+                                                     threadIdx.y,
+                                                     quad_no));
+          }
+        else
+          {
+            scratch_data.kx_jacobians_same_panel(threadIdx.y, quad_no) =
+              BEMTools::PlatformShared::surface_jacobian_det_and_normal_vector(
+                &bem_values.kx_mapping_shape_grad_matrix_table_for_same_panel(
+                  kx_mapping_index, threadIdx.y, quad_no, 0),
+                &bem_values.mapping_support_point_table(kx_cell_index_global,
+                                                        0),
+                kx_mapping_n_shape_functions,
+                kx_normal,
+                is_kx_normal_inward);
+
+            scratch_data.ky_jacobians_same_panel(threadIdx.y, quad_no) =
+              BEMTools::PlatformShared::surface_jacobian_det_and_normal_vector(
+                &bem_values.ky_mapping_shape_grad_matrix_table_for_same_panel(
+                  ky_mapping_index, threadIdx.y, quad_no, 0),
+                &bem_values.mapping_support_point_table(ky_cell_index_global,
+                                                        0),
+                ky_mapping_n_shape_functions,
+                ky_normal,
+                is_ky_normal_inward);
+          }
+
+        scratch_data.kx_normals_same_panel(threadIdx.y, quad_no) = kx_normal;
+        scratch_data.ky_normals_same_panel(threadIdx.y, quad_no) = ky_normal;
+      }
+  }
+
+
+  /**
+   * Compute cell values at quadrature points (surface Jacobians, normal
+   * vectors, quadrature points and surface curls of a pair of finite element
+   * shape functions) in the real cell to be used in the Sauter quadrature for a
+   * pair of cells.
+   *
+   * This function is only used for the common edge cell neighboring type in the
+   * H-matrix assembler without the producer-consumer model. It runs on GPU and
+   * 2D thread grid is adopted. The X direction is associated with quadrature
+   * point index, while the Y direction is associated with k3 index.
+   *
+   * \mynote{Since this is a @p __global__ function, the parameters should be
+   * passed by value.}
+   *
+   * \alert{Computation of the Jacobian matrix as well as related quantities
+   * such as normal vector, covariant transformation matrix, metric tensor,
+   * etc., is related to the mapping object and has nothing to do with the
+   * finite element. A mapping object is used to describe geometry, while a
+   * finite element object is used to describe the ansatz or test functions.}
+   *
+   * @param kx_dof_index_local
+   * @param ky_dof_index_local
+   * @param kx_mapping_index
+   * @param ky_mapping_index
+   * @param kx_mapping_n_shape_functions
+   * @param ky_mapping_n_shape_functions
+   * @param is_kx_normal_inward
+   * @param is_ky_normal_inward
+   * @param bem_values
+   * @param scratch_data
+   */
+  template <int dim, int spacedim, typename CUDARangeNumberType = double>
+  __global__ void
+  compute_cell_values_for_one_pair_of_shape_functions_common_edge(
+    const unsigned int kx_dof_index_local,
+    const unsigned int ky_dof_index_local,
+    const unsigned int kx_mapping_index,
+    const unsigned int ky_mapping_index,
+    const unsigned int kx_mapping_n_shape_functions,
+    const unsigned int ky_mapping_n_shape_functions,
+    const bool         is_kx_normal_inward,
+    const bool         is_ky_normal_inward,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<CUDARangeNumberType>::real_type>
+      bem_values,
+    CUDAPairCellWiseScratchDataForHMatrix<dim, spacedim, CUDARangeNumberType>
+      scratch_data)
+  {
+    using real_type =
+      typename numbers::NumberTraits<CUDARangeNumberType>::real_type;
+
+    assert(bem_values.is_surface_curl_needed ==
+           scratch_data.is_surface_curl_needed);
+
+    const unsigned int quad_no = gridDim.x * blockDim.x * blockIdx.y +
+                                 (blockIdx.x * blockDim.x + threadIdx.x);
+
+    // Computation and usage of normal vectors stored in local variables, which
+    // reduces then number of CUDA global memory access.
+    Tensor<1, spacedim, real_type> kx_normal;
+    Tensor<1, spacedim, real_type> ky_normal;
+
+    if (quad_no < bem_values.quad_rule_for_common_edge.size())
+      {
+        BEMTools::PlatformShared::
+          transform_quad_point_from_unit_to_permuted_real_cell(
+            &bem_values.kx_mapping_shape_value_table_for_common_edge(
+              threadIdx.y, quad_no, kx_mapping_index, 0),
+            &scratch_data.kx_mapping_support_points_permuted(0),
+            kx_mapping_n_shape_functions,
+            scratch_data.kx_quad_points_common_edge(threadIdx.y, quad_no));
+
+        BEMTools::PlatformShared::
+          transform_quad_point_from_unit_to_permuted_real_cell(
+            &bem_values.ky_mapping_shape_value_table_for_common_edge(
+              threadIdx.y, quad_no, ky_mapping_index, 0),
+            &scratch_data.ky_mapping_support_points_permuted(0),
+            ky_mapping_n_shape_functions,
+            scratch_data.ky_quad_points_common_edge(threadIdx.y, quad_no));
+
+        if (bem_values.is_surface_curl_needed)
+          {
+            // Covariant matrix is computed on the stack without storing
+            // into data tables.
+            real_type kx_covariant_matrix_data[spacedim * dim];
+            real_type ky_covariant_matrix_data[spacedim * dim];
+            HierBEM::PlatformShared::FullMatrixWrapper<real_type>
+              kx_covariant_matrix(kx_covariant_matrix_data, spacedim, dim);
+            HierBEM::PlatformShared::FullMatrixWrapper<real_type>
+              ky_covariant_matrix(ky_covariant_matrix_data, spacedim, dim);
+
+            scratch_data.kx_jacobians_common_edge(threadIdx.y,
+                                                  quad_no) = BEMTools::
+              PlatformShared::surface_jacobian_det_normal_vector_and_covariant(
+                &bem_values.kx_mapping_shape_grad_matrix_table_for_common_edge(
+                  kx_mapping_index, threadIdx.y, quad_no, 0),
+                &scratch_data.kx_mapping_support_points_permuted(0),
+                kx_mapping_n_shape_functions,
+                kx_normal,
+                kx_covariant_matrix,
+                is_kx_normal_inward);
+
+            scratch_data.ky_jacobians_common_edge(threadIdx.y,
+                                                  quad_no) = BEMTools::
+              PlatformShared::surface_jacobian_det_normal_vector_and_covariant(
+                &bem_values.ky_mapping_shape_grad_matrix_table_for_common_edge(
+                  ky_mapping_index, threadIdx.y, quad_no, 0),
+                &scratch_data.ky_mapping_support_points_permuted(0),
+                ky_mapping_n_shape_functions,
+                ky_normal,
+                ky_covariant_matrix,
+                !is_ky_normal_inward);
+
+            BEMTools::PlatformShared::surface_curl<dim, spacedim, real_type>(
+              kx_dof_index_local,
+              &bem_values.kx_shape_grad_matrix_table_for_common_edge(
+                threadIdx.y, quad_no, 0, 0),
+              bem_values.kx_shape_value_table_for_common_edge.size(0),
+              kx_covariant_matrix,
+              kx_normal,
+              scratch_data.kx_shape_curls_common_edge(kx_dof_index_local,
+                                                      threadIdx.y,
+                                                      quad_no));
+
+            BEMTools::PlatformShared::surface_curl<dim, spacedim, real_type>(
+              ky_dof_index_local,
+              &bem_values.ky_shape_grad_matrix_table_for_common_edge(
+                threadIdx.y, quad_no, 0, 0),
+              bem_values.ky_shape_value_table_for_common_edge.size(0),
+              ky_covariant_matrix,
+              ky_normal,
+              scratch_data.ky_shape_curls_common_edge(ky_dof_index_local,
+                                                      threadIdx.y,
+                                                      quad_no));
+          }
+        else
+          {
+            scratch_data.kx_jacobians_common_edge(threadIdx.y, quad_no) =
+              BEMTools::PlatformShared::surface_jacobian_det_and_normal_vector(
+                &bem_values.kx_mapping_shape_grad_matrix_table_for_common_edge(
+                  kx_mapping_index, threadIdx.y, quad_no, 0),
+                &scratch_data.kx_mapping_support_points_permuted(0),
+                kx_mapping_n_shape_functions,
+                kx_normal,
+                is_kx_normal_inward);
+
+            // In common edge case, the support points in ky are reversed,
+            // therefore, there is a negation on @p is_ky_normal_inward.
+            scratch_data.ky_jacobians_common_edge(threadIdx.y, quad_no) =
+              BEMTools::PlatformShared::surface_jacobian_det_and_normal_vector(
+                &bem_values.ky_mapping_shape_grad_matrix_table_for_common_edge(
+                  ky_mapping_index, threadIdx.y, quad_no, 0),
+                &scratch_data.ky_mapping_support_points_permuted(0),
+                ky_mapping_n_shape_functions,
+                ky_normal,
+                !is_ky_normal_inward);
+          }
+
+        scratch_data.kx_normals_common_edge(threadIdx.y, quad_no) = kx_normal;
+        scratch_data.ky_normals_common_edge(threadIdx.y, quad_no) = ky_normal;
+      }
+  }
+
+
+  /**
+   * Compute cell values at quadrature points (surface Jacobians, normal
+   * vectors, quadrature points and surface curls of a pair of finite element
+   * shape functions) in the real cell to be used in the Sauter quadrature for a
+   * pair of cells.
+   *
+   * This function is only used for the common vertex cell neighboring type in
+   * the H-matrix assembler without the producer-consumer model. It runs on GPU
+   * and 2D thread grid is adopted. The X direction is associated with
+   * quadrature point index, while the Y direction is associated with k3 index.
+   *
+   * \mynote{Since this is a @p __global__ function, the parameters should be
+   * passed by value.}
+   *
+   * \alert{Computation of the Jacobian matrix as well as related quantities
+   * such as normal vector, covariant transformation matrix, metric tensor,
+   * etc., is related to the mapping object and has nothing to do with the
+   * finite element. A mapping object is used to describe geometry, while a
+   * finite element object is used to describe the ansatz or test functions.}
+   *
+   * @param kx_dof_index_local
+   * @param ky_dof_index_local
+   * @param kx_mapping_index
+   * @param ky_mapping_index
+   * @param kx_mapping_n_shape_functions
+   * @param ky_mapping_n_shape_functions
+   * @param is_kx_normal_inward
+   * @param is_ky_normal_inward
+   * @param bem_values
+   * @param scratch_data
+   */
+  template <int dim, int spacedim, typename CUDARangeNumberType = double>
+  __global__ void
+  compute_cell_values_for_one_pair_of_shape_functions_common_vertex(
+    const unsigned int kx_dof_index_local,
+    const unsigned int ky_dof_index_local,
+    const unsigned int kx_mapping_index,
+    const unsigned int ky_mapping_index,
+    const unsigned int kx_mapping_n_shape_functions,
+    const unsigned int ky_mapping_n_shape_functions,
+    const bool         is_kx_normal_inward,
+    const bool         is_ky_normal_inward,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<CUDARangeNumberType>::real_type>
+      bem_values,
+    CUDAPairCellWiseScratchDataForHMatrix<dim, spacedim, CUDARangeNumberType>
+      scratch_data)
+  {
+    using real_type =
+      typename numbers::NumberTraits<CUDARangeNumberType>::real_type;
+
+    assert(bem_values.is_surface_curl_needed ==
+           scratch_data.is_surface_curl_needed);
+
+    const unsigned int quad_no = gridDim.x * blockDim.x * blockIdx.y +
+                                 (blockIdx.x * blockDim.x + threadIdx.x);
+
+    // Computation and usage of normal vectors stored in local variables, which
+    // reduces then number of CUDA global memory access.
+    Tensor<1, spacedim, real_type> kx_normal;
+    Tensor<1, spacedim, real_type> ky_normal;
+
+    if (quad_no < bem_values.quad_rule_for_common_vertex.size())
+      {
+        BEMTools::PlatformShared::
+          transform_quad_point_from_unit_to_permuted_real_cell(
+            &bem_values.kx_mapping_shape_value_table_for_common_vertex(
+              threadIdx.y, quad_no, kx_mapping_index, 0),
+            &scratch_data.kx_mapping_support_points_permuted(0),
+            kx_mapping_n_shape_functions,
+            scratch_data.kx_quad_points_common_vertex(threadIdx.y, quad_no));
+
+        BEMTools::PlatformShared::
+          transform_quad_point_from_unit_to_permuted_real_cell(
+            &bem_values.ky_mapping_shape_value_table_for_common_vertex(
+              threadIdx.y, quad_no, ky_mapping_index, 0),
+            &scratch_data.ky_mapping_support_points_permuted(0),
+            ky_mapping_n_shape_functions,
+            scratch_data.ky_quad_points_common_vertex(threadIdx.y, quad_no));
+
+        if (bem_values.is_surface_curl_needed)
+          {
+            // Covariant matrix is computed on the stack without storing
+            // into data tables.
+            real_type kx_covariant_matrix_data[spacedim * dim];
+            real_type ky_covariant_matrix_data[spacedim * dim];
+            HierBEM::PlatformShared::FullMatrixWrapper<real_type>
+              kx_covariant_matrix(kx_covariant_matrix_data, spacedim, dim);
+            HierBEM::PlatformShared::FullMatrixWrapper<real_type>
+              ky_covariant_matrix(ky_covariant_matrix_data, spacedim, dim);
+
+            scratch_data.kx_jacobians_common_vertex(threadIdx.y, quad_no) =
+              BEMTools::PlatformShared::
+                surface_jacobian_det_normal_vector_and_covariant(
+                  &bem_values
+                     .kx_mapping_shape_grad_matrix_table_for_common_vertex(
+                       kx_mapping_index, threadIdx.y, quad_no, 0),
+                  &scratch_data.kx_mapping_support_points_permuted(0),
+                  kx_mapping_n_shape_functions,
+                  kx_normal,
+                  kx_covariant_matrix,
+                  is_kx_normal_inward);
+
+            scratch_data.ky_jacobians_common_vertex(threadIdx.y, quad_no) =
+              BEMTools::PlatformShared::
+                surface_jacobian_det_normal_vector_and_covariant(
+                  &bem_values
+                     .ky_mapping_shape_grad_matrix_table_for_common_vertex(
+                       ky_mapping_index, threadIdx.y, quad_no, 0),
+                  &scratch_data.ky_mapping_support_points_permuted(0),
+                  ky_mapping_n_shape_functions,
+                  ky_normal,
+                  ky_covariant_matrix,
+                  is_ky_normal_inward);
+
+            BEMTools::PlatformShared::surface_curl<dim, spacedim, real_type>(
+              kx_dof_index_local,
+              &bem_values.kx_shape_grad_matrix_table_for_common_vertex(
+                threadIdx.y, quad_no, 0, 0),
+              bem_values.kx_shape_value_table_for_common_vertex.size(0),
+              kx_covariant_matrix,
+              kx_normal,
+              scratch_data.kx_shape_curls_common_vertex(kx_dof_index_local,
+                                                        threadIdx.y,
+                                                        quad_no));
+
+            BEMTools::PlatformShared::surface_curl<dim, spacedim, real_type>(
+              ky_dof_index_local,
+              &bem_values.ky_shape_grad_matrix_table_for_common_vertex(
+                threadIdx.y, quad_no, 0, 0),
+              bem_values.ky_shape_value_table_for_common_vertex.size(0),
+              ky_covariant_matrix,
+              ky_normal,
+              scratch_data.ky_shape_curls_common_vertex(ky_dof_index_local,
+                                                        threadIdx.y,
+                                                        quad_no));
+          }
+        else
+          {
+            scratch_data.kx_jacobians_common_vertex(threadIdx.y, quad_no) =
+              BEMTools::PlatformShared::surface_jacobian_det_and_normal_vector(
+                &bem_values
+                   .kx_mapping_shape_grad_matrix_table_for_common_vertex(
+                     kx_mapping_index, threadIdx.y, quad_no, 0),
+                &scratch_data.kx_mapping_support_points_permuted(0),
+                kx_mapping_n_shape_functions,
+                kx_normal,
+                is_kx_normal_inward);
+
+            // In common edge case, the support points in ky are reversed,
+            // therefore, there is a negation on @p is_ky_normal_inward.
+            scratch_data.ky_jacobians_common_vertex(threadIdx.y, quad_no) =
+              BEMTools::PlatformShared::surface_jacobian_det_and_normal_vector(
+                &bem_values
+                   .ky_mapping_shape_grad_matrix_table_for_common_vertex(
+                     ky_mapping_index, threadIdx.y, quad_no, 0),
+                &scratch_data.ky_mapping_support_points_permuted(0),
+                ky_mapping_n_shape_functions,
+                ky_normal,
+                is_ky_normal_inward);
+          }
+
+        scratch_data.kx_normals_common_vertex(threadIdx.y, quad_no) = kx_normal;
+        scratch_data.ky_normals_common_vertex(threadIdx.y, quad_no) = ky_normal;
+      }
+  }
+
+  /**
+   * Sum using warp reduce.
+   *
+   * @param data
+   * @param tid
+   */
+  template <typename RangeNumberType = double>
+  HBEM_ATTR_DEV void
+  warpReduce(volatile RangeNumberType *data, const unsigned int tid)
+  {
+    assert(warpSize == 32);
+
+    RangeNumberType temp;
+    temp = data[tid + 16];
+    __syncwarp();
+    data[tid] = data[tid] + temp;
+    __syncwarp();
+    temp = data[tid + 8];
+    __syncwarp();
+    data[tid] = data[tid] + temp;
+    __syncwarp();
+    temp = data[tid + 4];
+    __syncwarp();
+    data[tid] = data[tid] + temp;
+    __syncwarp();
+    temp = data[tid + 2];
+    __syncwarp();
+    data[tid] = data[tid] + temp;
+    __syncwarp();
+    temp = data[tid + 1];
+    __syncwarp();
+    data[tid] = data[tid] + temp;
+    __syncwarp();
+  }
+
+
+  /**
+   * Apply Sauter quadrature directly to the kernel function for the same
+   * panel cell neighboring type.
+   */
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename CUDAKernelNumberType = double>
+  __global__ void
+  ApplyQuadratureUsingBEMValuesSamePanel(
+    const KernelFunctionType<spacedim, CUDAKernelNumberType> kernel_function,
+    const CUDAKernelNumberType                               factor,
+    const unsigned int                                       kx_dof_index_local,
+    const unsigned int                                       ky_dof_index_local,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<CUDAKernelNumberType>::real_type>
+      bem_values,
+    const CUDAPairCellWiseScratchDataForHMatrix<dim,
+                                                spacedim,
+                                                CUDAKernelNumberType>
+                 scratch_data,
+    unsigned int component = 0)
+  {
+    using real_type =
+      typename numbers::NumberTraits<CUDAKernelNumberType>::real_type;
+
+    /**
+     * @internal Result array in the shared memory which stores the quadrature
+     * results for each thread in a same thread block. Its dimension should be
+     * @p blockDim.x.
+     */
+    extern __shared__ unsigned char quad_values_in_thread_block_raw[];
+    CUDAKernelNumberType           *quad_values_in_thread_block =
+      reinterpret_cast<CUDAKernelNumberType *>(quad_values_in_thread_block_raw);
+
+    const unsigned int tid     = threadIdx.x;
+    const unsigned int quad_no = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (quad_no < bem_values.quad_rule_for_same_panel.size())
+      {
+        const CUDATable<2, double> &quad_points =
+          bem_values.quad_rule_for_same_panel.get_points();
+
+        /**
+         * @internal Evaluate the kernel function at the current quadrature
+         * point, which is an accumulation of all @p k3 terms.
+         */
+        CUDAKernelNumberType kernel_value = CUDAKernelNumberType();
+
+#pragma unroll
+        for (unsigned int k3_index = 0; k3_index < 8; k3_index++)
+          {
+            /**
+             * @internal Evaluate the kernel function at the specified
+             * pair of points in the real cells with their normal vectors,
+             * the result of which is then multiplied by the Jacobians
+             * from unit cell to real cell and shape function values.
+             */
+            if (kernel_function.kernel_type == KernelType::HyperSingularRegular)
+              {
+                kernel_value +=
+                  kernel_function.value(
+                    scratch_data.kx_quad_points_same_panel(k3_index, quad_no),
+                    scratch_data.ky_quad_points_same_panel(k3_index, quad_no),
+                    scratch_data.kx_normals_same_panel(k3_index, quad_no),
+                    scratch_data.ky_normals_same_panel(k3_index, quad_no),
+                    component) *
+                  scratch_data.kx_jacobians_same_panel(k3_index, quad_no) *
+                  scratch_data.ky_jacobians_same_panel(k3_index, quad_no) *
+                  HierBEM::PlatformShared::scalar_product(
+                    scratch_data.kx_shape_curls_same_panel(kx_dof_index_local,
+                                                           k3_index,
+                                                           quad_no),
+                    scratch_data.ky_shape_curls_same_panel(ky_dof_index_local,
+                                                           k3_index,
+                                                           quad_no));
+              }
+            else
+              {
+                kernel_value +=
+                  kernel_function.value(
+                    scratch_data.kx_quad_points_same_panel(k3_index, quad_no),
+                    scratch_data.ky_quad_points_same_panel(k3_index, quad_no),
+                    scratch_data.kx_normals_same_panel(k3_index, quad_no),
+                    scratch_data.ky_normals_same_panel(k3_index, quad_no),
+                    component) *
+                  scratch_data.kx_jacobians_same_panel(k3_index, quad_no) *
+                  scratch_data.ky_jacobians_same_panel(k3_index, quad_no) *
+                  bem_values.kx_shape_value_table_for_same_panel(
+                    kx_dof_index_local, k3_index, quad_no) *
+                  bem_values.ky_shape_value_table_for_same_panel(
+                    ky_dof_index_local, k3_index, quad_no);
+              }
+          }
+
+        /**
+         * @internal Multiply the kernel function value with the Jacobian from
+         * the Sauter 4D parametric space to the product space of two unit
+         * cells, then with the quadrature weight. The result is stored into the
+         * shared memory.
+         */
+        quad_values_in_thread_block[tid] =
+          kernel_value *
+          static_cast<real_type>(
+            quad_points(quad_no, 0) * (1 - quad_points(quad_no, 0)) *
+            (1 - quad_points(quad_no, 0) * quad_points(quad_no, 1))) *
+          static_cast<real_type>(
+            bem_values.quad_rule_for_same_panel.get_weights()[quad_no]);
+      }
+    else
+      {
+        quad_values_in_thread_block[tid] = CUDAKernelNumberType();
+      }
+
+    /**
+     * @internal Synchronize all the threads in the current thread block for
+     * finishing their function evaluation at the specified quadrature point.
+     */
+    __syncthreads();
+
+    /**
+     * @internal Sum up the values saved in the shared memory.
+     */
+    //! Accumulate the data in a thread block. N.B. Here s is the stride for
+    //! sum and 2*s is the stride for classification of the array into
+    //! segments.
+    for (unsigned int s = blockDim.x / 2; s >= warpSize; s >>= 1)
+      {
+        if (tid < s)
+          {
+            quad_values_in_thread_block[tid] +=
+              quad_values_in_thread_block[tid + s];
+          }
+
+        __syncthreads();
+      }
+
+    if (tid < warpSize)
+      warpReduce(quad_values_in_thread_block, tid);
+
+    //! Write out the result (scaled by the factor) for the current block.
+    if (tid == 0)
+      {
+        scratch_data.quad_values_in_thread_blocks[blockIdx.x] =
+          quad_values_in_thread_block[0] * factor;
+      }
+
+    __syncthreads();
+  }
+
+
+  /**
+   * Apply Sauter quadrature directly to the kernel function for the common
+   * edge cell neighboring type.
+   *
+   * \myalert{During the computation, the normal vector of \f$K_y\f$} needs
+   * not be negated anymore, since this has been considered during computing
+   * the normal vector.
+   */
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename CUDAKernelNumberType = double>
+  __global__ void
+  ApplyQuadratureUsingBEMValuesCommonEdge(
+    const KernelFunctionType<spacedim, CUDAKernelNumberType> kernel_function,
+    const CUDAKernelNumberType                               factor,
+    const unsigned int                                       kx_dof_index_local,
+    const unsigned int                                       ky_dof_index_local,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<CUDAKernelNumberType>::real_type>
+      bem_values,
+    const CUDAPairCellWiseScratchDataForHMatrix<dim,
+                                                spacedim,
+                                                CUDAKernelNumberType>
+                 scratch_data,
+    unsigned int component = 0)
+  {
+    using real_type =
+      typename numbers::NumberTraits<CUDAKernelNumberType>::real_type;
+
+    /**
+     * @internal Result array in the shared memory which stores the quadrature
+     * results for each thread in a same thread block. Its dimension should be
+     * @p blockDim.x.
+     */
+    extern __shared__ unsigned char quad_values_in_thread_block_raw[];
+    CUDAKernelNumberType           *quad_values_in_thread_block =
+      reinterpret_cast<CUDAKernelNumberType *>(quad_values_in_thread_block_raw);
+
+    const unsigned int tid     = threadIdx.x;
+    const unsigned int quad_no = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (quad_no < bem_values.quad_rule_for_common_edge.size())
+      {
+        const CUDATable<2, double> &quad_points =
+          bem_values.quad_rule_for_common_edge.get_points();
+
+        // Compute Jacobian determinants from the Sauter parametric space to the
+        // product space of two unit cells. The first determinant is used for
+        // the first two k3 terms, while the second determinant is used for the
+        // remaining four k3 terms.
+        real_type jacobian_det1 = static_cast<real_type>(
+          quad_points(quad_no, 0) * quad_points(quad_no, 0) *
+          (1 - quad_points(quad_no, 0)));
+        real_type jacobian_det2 = static_cast<real_type>(
+          quad_points(quad_no, 0) * quad_points(quad_no, 0) *
+          (1 - quad_points(quad_no, 0) * quad_points(quad_no, 1)));
+
+        /**
+         * @internal Evaluate the kernel function at the current quadrature
+         * point, which is an accumulation of all @p k3 terms.
+         */
+        CUDAKernelNumberType kernel_value = CUDAKernelNumberType();
+
+#pragma unroll
+        for (unsigned int k3_index = 0; k3_index < 6; k3_index++)
+          {
+            if (kernel_function.kernel_type == KernelType::HyperSingularRegular)
+              {
+                kernel_value +=
+                  kernel_function.value(
+                    scratch_data.kx_quad_points_common_edge(k3_index, quad_no),
+                    scratch_data.ky_quad_points_common_edge(k3_index, quad_no),
+                    scratch_data.kx_normals_common_edge(k3_index, quad_no),
+                    scratch_data.ky_normals_common_edge(k3_index, quad_no),
+                    component) *
+                  scratch_data.kx_jacobians_common_edge(k3_index, quad_no) *
+                  scratch_data.ky_jacobians_common_edge(k3_index, quad_no) *
+                  HierBEM::PlatformShared::scalar_product(
+                    scratch_data.kx_shape_curls_common_edge(kx_dof_index_local,
+                                                            k3_index,
+                                                            quad_no),
+                    scratch_data.ky_shape_curls_common_edge(ky_dof_index_local,
+                                                            k3_index,
+                                                            quad_no)) *
+                  (k3_index <= 1 ? jacobian_det1 : jacobian_det2);
+              }
+            else
+              {
+                /**
+                 * @internal Evaluate the kernel function at the specified
+                 * pair of points in the real cells with their normal vectors,
+                 * the result of which is then multiplied by the Jacobians
+                 * from unit cell to real cell, Jacobian from Sauter 4D space
+                 * to unit cell, and shape function values.
+                 */
+                kernel_value +=
+                  kernel_function.value(
+                    scratch_data.kx_quad_points_common_edge(k3_index, quad_no),
+                    scratch_data.ky_quad_points_common_edge(k3_index, quad_no),
+                    scratch_data.kx_normals_common_edge(k3_index, quad_no),
+                    scratch_data.ky_normals_common_edge(k3_index, quad_no),
+                    component) *
+                  scratch_data.kx_jacobians_common_edge(k3_index, quad_no) *
+                  scratch_data.ky_jacobians_common_edge(k3_index, quad_no) *
+                  bem_values.kx_shape_value_table_for_common_edge(
+                    kx_dof_index_local, k3_index, quad_no) *
+                  bem_values.ky_shape_value_table_for_common_edge(
+                    ky_dof_index_local, k3_index, quad_no) *
+                  (k3_index <= 1 ? jacobian_det1 : jacobian_det2);
+              }
+          }
+
+        /**
+         * @internal Multiply the kernel function value with the quadrature
+         * weight. The result is stored into the shared memory.
+         */
+        quad_values_in_thread_block[tid] =
+          kernel_value *
+          static_cast<real_type>(
+            bem_values.quad_rule_for_common_edge.get_weights()[quad_no]);
+      }
+    else
+      {
+        quad_values_in_thread_block[tid] = CUDAKernelNumberType();
+      }
+
+    /**
+     * @internal Synchronize all the threads in the current thread block for
+     * finishing their function evaluation at the specified quadrature point.
+     */
+    __syncthreads();
+
+    /**
+     * @internal Sum up the values saved in the shared memory by first
+     * accumulating the data in a thread block into a warp, then applying warp
+     * reduce to accumulate values in the warp to a scalar value.
+     */
+    for (unsigned int s = blockDim.x / 2; s >= warpSize; s >>= 1)
+      {
+        if (tid < s)
+          {
+            quad_values_in_thread_block[tid] +=
+              quad_values_in_thread_block[tid + s];
+          }
+
+        __syncthreads();
+      }
+
+    if (tid < warpSize)
+      warpReduce(quad_values_in_thread_block, tid);
+
+    //! Write out the result (scaled by the factor) for the current block.
+    if (tid == 0)
+      {
+        scratch_data.quad_values_in_thread_blocks[blockIdx.x] =
+          quad_values_in_thread_block[0] * factor;
+      }
+
+    __syncthreads();
+  }
+
+
+  /**
+   * Apply Sauter quadrature directly to the kernel function for the common
+   * vertex cell neighboring type.
+   */
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename CUDAKernelNumberType = double>
+  __global__ void
+  ApplyQuadratureUsingBEMValuesCommonVertex(
+    const KernelFunctionType<spacedim, CUDAKernelNumberType> kernel_function,
+    const CUDAKernelNumberType                               factor,
+    const unsigned int                                       kx_dof_index_local,
+    const unsigned int                                       ky_dof_index_local,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<CUDAKernelNumberType>::real_type>
+      bem_values,
+    const CUDAPairCellWiseScratchDataForHMatrix<dim,
+                                                spacedim,
+                                                CUDAKernelNumberType>
+                 scratch_data,
+    unsigned int component = 0)
+  {
+    using real_type =
+      typename numbers::NumberTraits<CUDAKernelNumberType>::real_type;
+
+    /**
+     * @internal Result array in the shared memory which stores the quadrature
+     * results for each thread in a same thread block. Its dimension should be
+     * @p blockDim.x.
+     */
+    extern __shared__ unsigned char quad_values_in_thread_block_raw[];
+    CUDAKernelNumberType           *quad_values_in_thread_block =
+      reinterpret_cast<CUDAKernelNumberType *>(quad_values_in_thread_block_raw);
+
+    const unsigned int tid     = threadIdx.x;
+    const unsigned int quad_no = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (quad_no < bem_values.quad_rule_for_common_vertex.size())
+      {
+        const CUDATable<2, double> &quad_points =
+          bem_values.quad_rule_for_common_vertex.get_points();
+
+        /**
+         * @internal Evaluate the kernel function at the current quadrature
+         * point, which is an accumulation of all @p k3 terms.
+         */
+        CUDAKernelNumberType kernel_value = CUDAKernelNumberType();
+
+#pragma unroll
+        for (unsigned int k3_index = 0; k3_index < 4; k3_index++)
+          {
+            if (kernel_function.kernel_type == KernelType::HyperSingularRegular)
+              {
+                kernel_value +=
+                  kernel_function.value(
+                    scratch_data.kx_quad_points_common_vertex(k3_index,
+                                                              quad_no),
+                    scratch_data.ky_quad_points_common_vertex(k3_index,
+                                                              quad_no),
+                    scratch_data.kx_normals_common_vertex(k3_index, quad_no),
+                    scratch_data.ky_normals_common_vertex(k3_index, quad_no),
+                    component) *
+                  scratch_data.kx_jacobians_common_vertex(k3_index, quad_no) *
+                  scratch_data.ky_jacobians_common_vertex(k3_index, quad_no) *
+                  HierBEM::PlatformShared::scalar_product(
+                    scratch_data.kx_shape_curls_common_vertex(
+                      kx_dof_index_local, k3_index, quad_no),
+                    scratch_data.ky_shape_curls_common_vertex(
+                      ky_dof_index_local, k3_index, quad_no));
+              }
+            else
+              {
+                /**
+                 * @internal Evaluate the kernel function at the specified
+                 * pair of points in the real cells with their normal vectors,
+                 * the result of which is then multiplied by the Jacobians
+                 * from unit cell to real cell and shape function values.
+                 */
+                kernel_value +=
+                  kernel_function.value(
+                    scratch_data.kx_quad_points_common_vertex(k3_index,
+                                                              quad_no),
+                    scratch_data.ky_quad_points_common_vertex(k3_index,
+                                                              quad_no),
+                    scratch_data.kx_normals_common_vertex(k3_index, quad_no),
+                    scratch_data.ky_normals_common_vertex(k3_index, quad_no),
+                    component) *
+                  scratch_data.kx_jacobians_common_vertex(k3_index, quad_no) *
+                  scratch_data.ky_jacobians_common_vertex(k3_index, quad_no) *
+                  bem_values.kx_shape_value_table_for_common_vertex(
+                    kx_dof_index_local, k3_index, quad_no) *
+                  bem_values.ky_shape_value_table_for_common_vertex(
+                    ky_dof_index_local, k3_index, quad_no);
+              }
+          }
+
+        /**
+         * @internal Multiply the kernel function value with the Jacobian from
+         * the Sauter 4D parametric space to the product space of two unit
+         * cells, then with the quadrature weight. The result is stored into the
+         * shared memory.
+         */
+        quad_values_in_thread_block[tid] =
+          kernel_value *
+          HierBEM::PlatformShared::Utilities::fixed_power<3>(
+            static_cast<real_type>(quad_points(quad_no, 0))) *
+          static_cast<real_type>(
+            bem_values.quad_rule_for_common_vertex.get_weights()[quad_no]);
+      }
+    else
+      {
+        quad_values_in_thread_block[tid] = CUDAKernelNumberType();
+      }
+
+    /**
+     * @internal Synchronize all the threads in the current thread block for
+     * finishing their function evaluation at the specified quadrature point.
+     */
+    __syncthreads();
+
+    /**
+     * @internal Sum up the values saved in the shared memory.
+     */
+    //! Accumulate the data in a thread block. N.B. Here s is the stride for
+    //! sum and 2*s is the stride for classification of the array into
+    //! segments.
+    for (unsigned int s = blockDim.x / 2; s >= warpSize; s >>= 1)
+      {
+        if (tid < s)
+          {
+            quad_values_in_thread_block[tid] +=
+              quad_values_in_thread_block[tid + s];
+          }
+
+        __syncthreads();
+      }
+
+    if (tid < warpSize)
+      warpReduce(quad_values_in_thread_block, tid);
+
+    //! Write out the result (scaled by the factor) for the current block.
+    if (tid == 0)
+      {
+        scratch_data.quad_values_in_thread_blocks[blockIdx.x] =
+          quad_values_in_thread_block[0] * factor;
+      }
+
+    __syncthreads();
+  }
+
+
+  /**
+   * Apply Sauter quadrature directly to the kernel function for the regular
+   * cell neighboring type.
+   */
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename CUDAKernelNumberType = double>
+  __global__ void
+  ApplyQuadratureUsingBEMValuesRegular(
+    const KernelFunctionType<spacedim, CUDAKernelNumberType> kernel_function,
+    const CUDAKernelNumberType                               factor,
+    const unsigned int                                       kx_dof_index_local,
+    const unsigned int                                       ky_dof_index_local,
+    const types::global_cell_index kx_cell_index_local,
+    const types::global_cell_index ky_cell_index_local,
+    const CUDABEMValues<
+      dim,
+      spacedim,
+      typename numbers::NumberTraits<CUDAKernelNumberType>::real_type>
+      bem_values,
+    const CUDAPairCellWiseScratchDataForHMatrix<dim,
+                                                spacedim,
+                                                CUDAKernelNumberType>
+                 scratch_data,
+    unsigned int component = 0)
+  {
+    using real_type =
+      typename numbers::NumberTraits<CUDAKernelNumberType>::real_type;
+
+    /**
+     * @internal Result array in the shared memory which stores the quadrature
+     * results for each thread in a same thread block. Its dimension should be
+     * @p blockDim.x.
+     */
+    extern __shared__ unsigned char quad_values_in_thread_block_raw[];
+    CUDAKernelNumberType           *quad_values_in_thread_block =
+      reinterpret_cast<CUDAKernelNumberType *>(quad_values_in_thread_block_raw);
+
+    const unsigned int tid = threadIdx.x;
+    // This is the quad No. in an equivalent 4D quadrature object.
+    const unsigned int quad_no       = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int n_quad_points = bem_values.quad_rule_for_regular.size();
+
+    if (quad_no <
+        HierBEM::PlatformShared::Utilities::fixed_power<2>(n_quad_points))
+      {
+        // Convert the 4D quadrature point index to two 2D quadrature indices,
+        // which are used for accessing precomputed data tables in Kx and Ky for
+        // the regular cell neighboring type.
+        const unsigned int kx_quad_no = quad_no % n_quad_points;
+        const unsigned int ky_quad_no = quad_no / n_quad_points;
+
+        if (kernel_function.kernel_type == KernelType::HyperSingularRegular)
+          {
+            quad_values_in_thread_block[tid] =
+              kernel_function.value(
+                bem_values.quad_points_for_regular(kx_cell_index_local,
+                                                   kx_quad_no),
+                bem_values.quad_points_for_regular(ky_cell_index_local,
+                                                   ky_quad_no),
+                bem_values.normals_at_quad_points_for_regular(
+                  kx_cell_index_local, kx_quad_no),
+                bem_values.normals_at_quad_points_for_regular(
+                  ky_cell_index_local, ky_quad_no),
+                component) *
+              bem_values.JxW_at_quad_points_for_regular(kx_cell_index_local,
+                                                        kx_quad_no) *
+              bem_values.JxW_at_quad_points_for_regular(ky_cell_index_local,
+                                                        ky_quad_no) *
+              HierBEM::PlatformShared::scalar_product(
+                bem_values.kx_shape_curls_at_quad_points_for_regular(
+                  kx_cell_index_local, kx_dof_index_local, kx_quad_no),
+                bem_values.ky_shape_curls_at_quad_points_for_regular(
+                  ky_cell_index_local, ky_dof_index_local, ky_quad_no));
+          }
+        else
+          {
+            /**
+             * @internal Evaluate the kernel function at the specified
+             * pair of points in the real cells with their normal vectors,
+             * the result of which is then multiplied by the Jacobians
+             * from unit cell to real cell, shape function values. Quadrature
+             * weight is not needed here, because they have been computed into
+             * JxW.
+             */
+            quad_values_in_thread_block[tid] =
+              kernel_function.value(
+                bem_values.quad_points_for_regular(kx_cell_index_local,
+                                                   kx_quad_no),
+                bem_values.quad_points_for_regular(ky_cell_index_local,
+                                                   ky_quad_no),
+                bem_values.normals_at_quad_points_for_regular(
+                  kx_cell_index_local, kx_quad_no),
+                bem_values.normals_at_quad_points_for_regular(
+                  ky_cell_index_local, ky_quad_no),
+                component) *
+              bem_values.JxW_at_quad_points_for_regular(kx_cell_index_local,
+                                                        kx_quad_no) *
+              bem_values.JxW_at_quad_points_for_regular(ky_cell_index_local,
+                                                        ky_quad_no) *
+              bem_values.kx_shape_value_table_for_regular(kx_dof_index_local,
+                                                          kx_quad_no) *
+              bem_values.ky_shape_value_table_for_regular(ky_dof_index_local,
+                                                          ky_quad_no);
+          }
+      }
+    else
+      {
+        quad_values_in_thread_block[tid] = CUDAKernelNumberType();
+      }
+
+    /**
+     * @internal Synchronize all the threads in the current thread block for
+     * finishing their function evaluation at the specified quadrature point.
+     */
+    __syncthreads();
+
+    /**
+     * @internal Sum up the values saved in the shared memory.
+     */
+    //! Accumulate the data in a thread block. N.B. Here s is the stride for
+    //! sum and 2*s is the stride for classification of the array into
+    //! segments.
+    for (unsigned int s = blockDim.x / 2; s >= warpSize; s >>= 1)
+      {
+        if (tid < s)
+          {
+            quad_values_in_thread_block[tid] +=
+              quad_values_in_thread_block[tid + s];
+          }
+
+        __syncthreads();
+      }
+
+    if (tid < warpSize)
+      warpReduce(quad_values_in_thread_block, tid);
+
+    //! Write out the result (scaled by the factor) for the current block.
+    if (tid == 0)
+      {
+        scratch_data.quad_values_in_thread_blocks[blockIdx.x] =
+          quad_values_in_thread_block[0] * factor;
+      }
+
+    __syncthreads();
+  }
+} // namespace CUDAWrappers
+
+
+/**
+ * @brief Perform Galerkin-BEM double integral with respect to a given kernel
+ * on a pair of DoFs \f$(i, j)\f$ using the Sauter quadrature.
+ *
+ * Assume \f$\mathcal{K}_i\f$ is the collection of cells sharing the DoF
+ * support point \f$i\f$ and \f$\mathcal{K}_j\f$ is the collection of cells
+ * sharing the DoF support point \f$j\f$. Then Galerkin-BEM double integral
+ * will be over each cell pair which is comprised of an arbitrary cell in
+ * \f$\mathcal{K}_i\f$ and an arbitrary cell in \f$\mathcal{K}_j\f$.
+ *
+ * \mynote{The DoF indices \f$(i, j)\f$ are global, i.e. global in the sense
+ * of all DoFs contained in the associated DoF handlers. In mixed boundary
+ * value problem, when dealing with the Dirichlet function space, only a
+ * subset of these DoFs are selected. Hence, the DoF indices in an \hmat are
+ * local, i.e. local in the sense of DoF indices renumbered for the subset.
+ * When coming to this function for Sauter quadrature, the global DoF
+ * indices should be used.}
+ *
+ * @tparam dim
+ * @tparam spacedim
+ * @tparam KernelFunctionType
+ * @tparam KernelNumberType
+ * @tparam SurfaceNormalDetector
+ * @param kernel
+ * @param kernel_factor
+ * @param i Global DoF index in the external numbering. If only a subset of
+ * the complete DoFs in the associated DoF handler is effective or selected,
+ * this index is with respect to the complete DoF set.
+ * @param j Global DoF index in the external numbering. If only a subset of
+ * the complete DoFs in the associated DoF handler is effective or selected,
+ * this index is with respect to the complete DoF set.
+ * @param kx_dof_to_cell_topo
+ * @param ky_dof_to_cell_topo
+ * @param bem_values_gpu
+ * @param mappings
+ * @param material_id_to_mapping_index
+ * @param normal_detector
+ * @param scratch_data
+ * @param scratch_data_gpu
+ * @param copy_data
+ * @return
+ */
+template <int dim,
+          int spacedim,
+          template <int, typename>
+          typename KernelFunctionType,
+          typename KernelNumberType,
+          typename SurfaceNormalDetector>
+KernelNumberType
+sauter_quadrature_on_one_pair_of_near_field_dofs(
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                          &kernel,
+  const DeviceNumberType<KernelNumberType> kernel_factor,
+  const types::global_dof_index            i,
+  const types::global_dof_index            j,
+  const std::vector<
+    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+    &kx_dof_to_cell_topo,
+  const std::vector<
+    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+    &ky_dof_to_cell_topo,
+  const HierBEM::CUDAWrappers::CUDABEMValues<
+    dim,
+    spacedim,
+    typename numbers::NumberTraits<KernelNumberType>::real_type>
+                                                  &bem_values_gpu,
+  const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+  const std::map<types::material_id, unsigned int>
+                                              &material_id_to_mapping_index,
+  const std::vector<types::global_cell_index> &global_to_local_cell_index_map,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
+  const SurfaceNormalDetector &normal_detector,
+  PairCellWiseScratchDataForHMatrix<dim, spacedim, KernelNumberType>
+    &scratch_data,
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+{
+  using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
+
+#if ENABLE_NVTX == 1
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+    "sauter_quad_pair_dofs_near_field");
+#endif
+
+  /**
+   * @internal This result variable accumulates all contributions from pairs
+   * of cells related to the global DoF indices @p (i,j).
+   */
+  KernelNumberType double_integral = KernelNumberType();
+
+
+  // Iterate over each cell in the support of the basis function associated
+  // with the i-th DoF.
+  for (auto kx_cell_iter_pointer : kx_dof_to_cell_topo[i])
+    {
+      const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter =
+        *kx_cell_iter_pointer;
+      const types::global_cell_index kx_cell_index_global =
+        kx_cell_iter->active_cell_index();
+      const types::global_cell_index kx_cell_index_local =
+        global_to_local_cell_index_map[kx_cell_index_global];
+      const unsigned int kx_mapping_index =
+        material_id_to_mapping_index.at(kx_cell_iter->material_id());
+      MappingInfo<dim, spacedim> &kx_mapping_info = *mappings[kx_mapping_index];
+      const unsigned int          kx_mapping_n_shape_functions =
+        kx_mapping_info.get_data()->n_shape_functions;
+      const bool is_kx_normal_inward =
+        normal_detector.is_normal_vector_inward(kx_cell_iter->material_id());
+
+      // Update the DoF indices.
+      kx_cell_iter->get_dof_indices(
+        scratch_data.kx_local_dof_indices_in_default_dof_order);
+
+      // Iterate over each cell in the support of the basis function
+      // associated with the j-th DoF.
+      for (auto ky_cell_iter_pointer : ky_dof_to_cell_topo[j])
+        {
+          const typename DoFHandler<dim, spacedim>::cell_iterator
+            &ky_cell_iter = *ky_cell_iter_pointer;
+
+          // Detect the cell neighboring type based on cell vertex indices.
+          CellNeighboringType cell_neighboring_type = BEMTools::
+            detect_cell_neighboring_type_for_same_triangulations<dim, spacedim>(
+              kx_cell_iter,
+              ky_cell_iter,
+              scratch_data.common_vertex_pair_local_indices);
+
+          const types::global_cell_index ky_cell_index_global =
+            ky_cell_iter->active_cell_index();
+          const types::global_cell_index ky_cell_index_local =
+            global_to_local_cell_index_map[ky_cell_index_global];
+          const unsigned int ky_mapping_index =
+            material_id_to_mapping_index.at(ky_cell_iter->material_id());
+          MappingInfo<dim, spacedim> &ky_mapping_info =
+            *mappings[ky_mapping_index];
+          const unsigned int ky_mapping_n_shape_functions =
+            ky_mapping_info.get_data()->n_shape_functions;
+          const bool is_ky_normal_inward =
+            normal_detector.is_normal_vector_inward(
+              ky_cell_iter->material_id());
+
+          // Update the DoF indices.
+          ky_cell_iter->get_dof_indices(
+            scratch_data.ky_local_dof_indices_in_default_dof_order);
+
+          permute_dofs_and_mapping_support_points_for_sauter_quad(
+            scratch_data,
+            copy_data,
+            cell_neighboring_type,
+            kx_cell_iter,
+            ky_cell_iter,
+            kx_mapping_info,
+            ky_mapping_info,
+            mapping_support_point_table);
+
+          // Copy permuted mapping support points to the device for Kx and Ky.
+          if (cell_neighboring_type != CellNeighboringType::SamePanel &&
+              cell_neighboring_type != CellNeighboringType::Regular)
+            scratch_data_gpu.assign_from_host(scratch_data);
+
+          // Find the cell local DoF index of the i-th DoF in the permuted DoF
+          // indices of \f$K_x\f$.
+          typename std::vector<types::global_dof_index>::const_iterator i_iter =
+            std::find(copy_data.kx_local_dof_indices_permuted.begin(),
+                      copy_data.kx_local_dof_indices_permuted.end(),
+                      i);
+          Assert(i_iter != copy_data.kx_local_dof_indices_permuted.end(),
+                 ExcInternalError());
+          unsigned int i_index =
+            i_iter - copy_data.kx_local_dof_indices_permuted.begin();
+
+          // Find the index cell local DoF of the j-th DoF in the permuted DoF
+          // indices of \f$K_y\f$.
+          typename std::vector<types::global_dof_index>::const_iterator j_iter =
+            std::find(copy_data.ky_local_dof_indices_permuted.begin(),
+                      copy_data.ky_local_dof_indices_permuted.end(),
+                      j);
+          Assert(j_iter != copy_data.ky_local_dof_indices_permuted.end(),
+                 ExcInternalError());
+          unsigned int j_index =
+            j_iter - copy_data.ky_local_dof_indices_permuted.begin();
+
+          // Determine thread block dimensions.
+          dim3 blocks_rect;
+          dim3 threads_rect;
+          HierBEM::CUDAWrappers::
+            configure_thread_blocks_for_sauter_quadrature_points(
+              cell_neighboring_type, bem_values_gpu, blocks_rect, threads_rect);
+
+          // Compute cell values into the scratch data for non-regular cell
+          // neighboring types.
+          switch (cell_neighboring_type)
+            {
+                case CellNeighboringType::SamePanel: {
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "compute_cell_values_same_panel");
+#endif
+
+                  HierBEM::CUDAWrappers::
+                    compute_cell_values_for_one_pair_of_shape_functions_same_panel<<<
+                      blocks_rect,
+                      threads_rect,
+                      0,
+                      scratch_data.cuda_stream_handle>>>(
+                      i_index,
+                      j_index,
+                      kx_cell_index_global,
+                      ky_cell_index_global,
+                      kx_mapping_index,
+                      ky_mapping_index,
+                      kx_mapping_n_shape_functions,
+                      ky_mapping_n_shape_functions,
+                      is_kx_normal_inward,
+                      is_ky_normal_inward,
+                      bem_values_gpu,
+                      scratch_data_gpu);
+
+                  break;
+                }
+                case CellNeighboringType::CommonEdge: {
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "compute_cell_values_common_edge");
+#endif
+
+                  HierBEM::CUDAWrappers::
+                    compute_cell_values_for_one_pair_of_shape_functions_common_edge<<<
+                      blocks_rect,
+                      threads_rect,
+                      0,
+                      scratch_data.cuda_stream_handle>>>(
+                      i_index,
+                      j_index,
+                      kx_mapping_index,
+                      ky_mapping_index,
+                      kx_mapping_n_shape_functions,
+                      ky_mapping_n_shape_functions,
+                      is_kx_normal_inward,
+                      is_ky_normal_inward,
+                      bem_values_gpu,
+                      scratch_data_gpu);
+
+                  break;
+                }
+                case CellNeighboringType::CommonVertex: {
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "compute_cell_values_common_vertex");
+#endif
+
+                  HierBEM::CUDAWrappers::
+                    compute_cell_values_for_one_pair_of_shape_functions_common_vertex<<<
+                      blocks_rect,
+                      threads_rect,
+                      0,
+                      scratch_data.cuda_stream_handle>>>(
+                      i_index,
+                      j_index,
+                      kx_mapping_index,
+                      ky_mapping_index,
+                      kx_mapping_n_shape_functions,
+                      ky_mapping_n_shape_functions,
+                      is_kx_normal_inward,
+                      is_ky_normal_inward,
+                      bem_values_gpu,
+                      scratch_data_gpu);
+
+                  break;
+                }
+              default:
+                break;
+            }
+
+          // Apply 4d Sauter numerical quadrature on the GPU device.
+          switch (cell_neighboring_type)
+            {
+                case CellNeighboringType::SamePanel: {
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "apply_quad_same_panel");
+#endif
+
+                  HierBEM::CUDAWrappers::
+                    ApplyQuadratureUsingBEMValuesSamePanel<<<
+                      blocks_rect.x,
+                      threads_rect.x,
+                      threads_rect.x * sizeof(KernelNumberType),
+                      scratch_data.cuda_stream_handle>>>(kernel,
+                                                         kernel_factor,
+                                                         i_index,
+                                                         j_index,
+                                                         bem_values_gpu,
+                                                         scratch_data_gpu);
+
+                  break;
+                }
+                case CellNeighboringType::CommonEdge: {
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "apply_quad_common_edge");
+#endif
+
+                  HierBEM::CUDAWrappers::
+                    ApplyQuadratureUsingBEMValuesCommonEdge<<<
+                      blocks_rect.x,
+                      threads_rect.x,
+                      threads_rect.x * sizeof(KernelNumberType),
+                      scratch_data.cuda_stream_handle>>>(kernel,
+                                                         kernel_factor,
+                                                         i_index,
+                                                         j_index,
+                                                         bem_values_gpu,
+                                                         scratch_data_gpu);
+
+                  break;
+                }
+                case CellNeighboringType::CommonVertex: {
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "apply_quad_common_vertex");
+#endif
+
+                  HierBEM::CUDAWrappers::
+                    ApplyQuadratureUsingBEMValuesCommonVertex<<<
+                      blocks_rect.x,
+                      threads_rect.x,
+                      threads_rect.x * sizeof(KernelNumberType),
+                      scratch_data.cuda_stream_handle>>>(kernel,
+                                                         kernel_factor,
+                                                         i_index,
+                                                         j_index,
+                                                         bem_values_gpu,
+                                                         scratch_data_gpu);
+
+                  break;
+                }
+                case CellNeighboringType::Regular: {
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "apply_quad_regular");
+#endif
+
+                  HierBEM::CUDAWrappers::ApplyQuadratureUsingBEMValuesRegular<<<
+                    blocks_rect.x,
+                    threads_rect.x,
+                    threads_rect.x * sizeof(KernelNumberType),
+                    scratch_data.cuda_stream_handle>>>(kernel,
+                                                       kernel_factor,
+                                                       i_index,
+                                                       j_index,
+                                                       kx_cell_index_local,
+                                                       ky_cell_index_local,
+                                                       bem_values_gpu,
+                                                       scratch_data_gpu);
+
+                  break;
+                }
+                default: {
+                  Assert(false, ExcInternalError());
+                  break;
+                }
+            }
+
+          /**
+           * @internal Extract quadrature results accumulated from all
+           * thread blocks.
+           */
+          AssertCuda(cudaMemcpyAsync(
+            (void *)(scratch_data.quad_values_in_thread_blocks),
+            (const void *)(scratch_data_gpu.quad_values_in_thread_blocks),
+            sizeof(KernelNumberType) * blocks_rect.x,
+            cudaMemcpyDeviceToHost,
+            scratch_data.cuda_stream_handle));
+
+          AssertCuda(cudaStreamSynchronize(scratch_data.cuda_stream_handle));
+
+          for (unsigned int t = 0; t < blocks_rect.x; t++)
+            double_integral += scratch_data.quad_values_in_thread_blocks[t];
+        }
+    }
+
+  return double_integral;
+}
+
+
+/**
+ * @brief Perform Galerkin-BEM double integral with respect to a given kernel
+ * on a pair of DoFs \f$(i, j)\f$ using the Sauter quadrature. In addition,
+ * entries of the mass matrix are calculated and added into this matrix.
+ * Because the evaluation of mass matrix entries involves integrating the
+ * product of two shape functions with compact support, there is no
+ * long-range interaction between them like the case in BEM. Hence, these
+ * mass matrix entries are added into the near field \hmat node.
+ *
+ * Assume \f$\mathcal{K}_i\f$ is the collection of cells sharing the DoF
+ * support point \f$i\f$ and \f$\mathcal{K}_j\f$ is the collection of cells
+ * sharing the DoF support point \f$j\f$. Then Galerkin-BEM double integral
+ * will be over each cell pair which is comprised of an arbitrary cell in
+ * \f$\mathcal{K}_i\f$ and an arbitrary cell in \f$\mathcal{K}_j\f$.
+ *
+ * \mynote{The DoF indices \f$(i, j)\f$ are global, i.e. global in the sense
+ * of all DoFs contained in the associated DoF handlers. In mixed boundary
+ * value problem, when dealing with the Dirichlet function space, only a
+ * subset of these DoFs are selected. Hence, the DoF indices in an \hmat are
+ * local, i.e. local in the sense of DoF indices renumbered for the subset.
+ * When coming to this function for Sauter quadrature, the global DoF
+ * indices should be used.}
+ *
+ * @tparam dim
+ * @tparam spacedim
+ * @tparam KernelFunctionType
+ * @tparam KernelNumberType
+ * @tparam SurfaceNormalDetector
+ * @param kernel
+ * @param kernel_factor
+ * @param mass_matrix_factor
+ * @param i Global DoF index in the external numbering. If only a subset of
+ * the complete DoFs in the associated DoF handler is effective or selected,
+ * this index is with respect to the complete DoF set.
+ * @param j Global DoF index in the external numbering. If only a subset of
+ * the complete DoFs in the associated DoF handler is effective or selected,
+ * this index is with respect to the complete DoF set.
+ * @param kx_dof_to_cell_topo
+ * @param ky_dof_to_cell_topo
+ * @param bem_values_gpu
+ * @param mappings
+ * @param material_id_to_mapping_index
+ * @param normal_detector
+ * @param mass_matrix_scratch_data
+ * @param scratch_data
+ * @param scratch_data_gpu
+ * @param copy_data
+ * @return
+ */
+template <int dim,
+          int spacedim,
+          template <int, typename>
+          typename KernelFunctionType,
+          typename KernelNumberType,
+          typename SurfaceNormalDetector>
+KernelNumberType
+sauter_quadrature_on_one_pair_of_near_field_dofs(
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                          &kernel,
+  const DeviceNumberType<KernelNumberType> kernel_factor,
+  const typename numbers::NumberTraits<KernelNumberType>::real_type
+                                mass_matrix_factor,
+  const types::global_dof_index i,
+  const types::global_dof_index j,
+  const std::vector<
+    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+    &kx_dof_to_cell_topo,
+  const std::vector<
+    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+    &ky_dof_to_cell_topo,
+  const HierBEM::CUDAWrappers::CUDABEMValues<
+    dim,
+    spacedim,
+    typename numbers::NumberTraits<KernelNumberType>::real_type>
+                                                  &bem_values_gpu,
+  const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+  const std::map<types::material_id, unsigned int>
+                                              &material_id_to_mapping_index,
+  const std::vector<types::global_cell_index> &global_to_local_cell_index_map,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                                                  &mapping_support_point_table,
+  const SurfaceNormalDetector                     &normal_detector,
+  CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
+  PairCellWiseScratchDataForHMatrix<dim, spacedim, KernelNumberType>
+    &scratch_data,
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+{
+  using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
+
+#if ENABLE_NVTX == 1
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+    "sauter_quad_pair_dofs_near_field_with_mass");
+#endif
+
+  /**
+   * @internal This result variable accumulates all contributions from pairs
+   * of cells related to the global DoF indices @p (i,j).
+   */
+  KernelNumberType double_integral = KernelNumberType();
+
+
+  // Iterate over each cell in the support of the basis function associated
+  // with the i-th DoF.
+  for (auto kx_cell_iter_pointer : kx_dof_to_cell_topo[i])
+    {
+      const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter =
+        *kx_cell_iter_pointer;
+      const types::global_cell_index kx_cell_index_global =
+        kx_cell_iter->active_cell_index();
+      const types::global_cell_index kx_cell_index_local =
+        global_to_local_cell_index_map[kx_cell_index_global];
+      const unsigned int kx_mapping_index =
+        material_id_to_mapping_index.at(kx_cell_iter->material_id());
+      MappingInfo<dim, spacedim> &kx_mapping_info = *mappings[kx_mapping_index];
+      const unsigned int          kx_mapping_n_shape_functions =
+        kx_mapping_info.get_data()->n_shape_functions;
+      const bool is_kx_normal_inward =
+        normal_detector.is_normal_vector_inward(kx_cell_iter->material_id());
+
+      // Update the DoF indices.
+      kx_cell_iter->get_dof_indices(
+        scratch_data.kx_local_dof_indices_in_default_dof_order);
+
+
+      // Iterate over each cell in the support of the basis function
+      // associated with the j-th DoF.
+      for (auto ky_cell_iter_pointer : ky_dof_to_cell_topo[j])
+        {
+          const typename DoFHandler<dim, spacedim>::cell_iterator
+            &ky_cell_iter = *ky_cell_iter_pointer;
+
+          // Detect the cell neighboring type based on cell vertex indices.
+          CellNeighboringType cell_neighboring_type = BEMTools::
+            detect_cell_neighboring_type_for_same_triangulations<dim, spacedim>(
+              kx_cell_iter,
+              ky_cell_iter,
+              scratch_data.common_vertex_pair_local_indices);
+
+          const types::global_cell_index ky_cell_index_global =
+            ky_cell_iter->active_cell_index();
+          const types::global_cell_index ky_cell_index_local =
+            global_to_local_cell_index_map[ky_cell_index_global];
+          const unsigned int ky_mapping_index =
+            material_id_to_mapping_index.at(ky_cell_iter->material_id());
+          MappingInfo<dim, spacedim> &ky_mapping_info =
+            *mappings[ky_mapping_index];
+          const unsigned int ky_mapping_n_shape_functions =
+            ky_mapping_info.get_data()->n_shape_functions;
+          const bool is_ky_normal_inward =
+            normal_detector.is_normal_vector_inward(
+              ky_cell_iter->material_id());
+
+          // Update the DoF indices.
+          ky_cell_iter->get_dof_indices(
+            scratch_data.ky_local_dof_indices_in_default_dof_order);
+
+          permute_dofs_and_mapping_support_points_for_sauter_quad(
+            scratch_data,
+            copy_data,
+            cell_neighboring_type,
+            kx_cell_iter,
+            ky_cell_iter,
+            kx_mapping_info,
+            ky_mapping_info,
+            mapping_support_point_table);
+
+          // Copy permuted mapping support points to the device for Kx and Ky.
+          if (cell_neighboring_type != CellNeighboringType::SamePanel &&
+              cell_neighboring_type != CellNeighboringType::Regular)
+            scratch_data_gpu.assign_from_host(scratch_data);
+
+          // Find the cell local DoF index of the i-th DoF in the permuted DoF
+          // indices of \f$K_x\f$.
+          typename std::vector<types::global_dof_index>::const_iterator i_iter =
+            std::find(copy_data.kx_local_dof_indices_permuted.begin(),
+                      copy_data.kx_local_dof_indices_permuted.end(),
+                      i);
+          Assert(i_iter != copy_data.kx_local_dof_indices_permuted.end(),
+                 ExcInternalError());
+          unsigned int i_index =
+            i_iter - copy_data.kx_local_dof_indices_permuted.begin();
+
+          // Find the cell local DoF index of the j-th DoF in the permuted DoF
+          // indices of \f$K_y\f$.
+          typename std::vector<types::global_dof_index>::const_iterator j_iter =
+            std::find(copy_data.ky_local_dof_indices_permuted.begin(),
+                      copy_data.ky_local_dof_indices_permuted.end(),
+                      j);
+          Assert(j_iter != copy_data.ky_local_dof_indices_permuted.end(),
+                 ExcInternalError());
+          unsigned int j_index =
+            j_iter - copy_data.ky_local_dof_indices_permuted.begin();
+
+          // Determine thread block dimensions.
+          dim3 blocks_rect;
+          dim3 threads_rect;
+          HierBEM::CUDAWrappers::
+            configure_thread_blocks_for_sauter_quadrature_points(
+              cell_neighboring_type, bem_values_gpu, blocks_rect, threads_rect);
+
+          // Compute cell values into the scratch data for non-regular cell
+          // neighboring types.
+          switch (cell_neighboring_type)
+            {
+                case CellNeighboringType::SamePanel: {
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "compute_cell_values_same_panel");
+#endif
+
+                  HierBEM::CUDAWrappers::
+                    compute_cell_values_for_one_pair_of_shape_functions_same_panel<<<
+                      blocks_rect,
+                      threads_rect,
+                      0,
+                      scratch_data.cuda_stream_handle>>>(
+                      i_index,
+                      j_index,
+                      kx_cell_index_global,
+                      ky_cell_index_global,
+                      kx_mapping_index,
+                      ky_mapping_index,
+                      kx_mapping_n_shape_functions,
+                      ky_mapping_n_shape_functions,
+                      is_kx_normal_inward,
+                      is_ky_normal_inward,
+                      bem_values_gpu,
+                      scratch_data_gpu);
+
+                  break;
+                }
+                case CellNeighboringType::CommonEdge: {
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "compute_cell_values_common_edge");
+#endif
+
+                  HierBEM::CUDAWrappers::
+                    compute_cell_values_for_one_pair_of_shape_functions_common_edge<<<
+                      blocks_rect,
+                      threads_rect,
+                      0,
+                      scratch_data.cuda_stream_handle>>>(
+                      i_index,
+                      j_index,
+                      kx_mapping_index,
+                      ky_mapping_index,
+                      kx_mapping_n_shape_functions,
+                      ky_mapping_n_shape_functions,
+                      is_kx_normal_inward,
+                      is_ky_normal_inward,
+                      bem_values_gpu,
+                      scratch_data_gpu);
+
+                  break;
+                }
+                case CellNeighboringType::CommonVertex: {
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "compute_cell_values_common_vertex");
+#endif
+
+                  HierBEM::CUDAWrappers::
+                    compute_cell_values_for_one_pair_of_shape_functions_common_vertex<<<
+                      blocks_rect,
+                      threads_rect,
+                      0,
+                      scratch_data.cuda_stream_handle>>>(
+                      i_index,
+                      j_index,
+                      kx_mapping_index,
+                      ky_mapping_index,
+                      kx_mapping_n_shape_functions,
+                      ky_mapping_n_shape_functions,
+                      is_kx_normal_inward,
+                      is_ky_normal_inward,
+                      bem_values_gpu,
+                      scratch_data_gpu);
+
+                  break;
+                }
+              default:
+                break;
+            }
+
+          // Apply 4d Sauter numerical quadrature on the GPU device.
+          switch (cell_neighboring_type)
+            {
+                case CellNeighboringType::SamePanel: {
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "apply_quad_same_panel");
+#endif
+
+                  HierBEM::CUDAWrappers::
+                    ApplyQuadratureUsingBEMValuesSamePanel<<<
+                      blocks_rect.x,
+                      threads_rect.x,
+                      threads_rect.x * sizeof(KernelNumberType),
+                      scratch_data.cuda_stream_handle>>>(kernel,
+                                                         kernel_factor,
+                                                         i_index,
+                                                         j_index,
+                                                         bem_values_gpu,
+                                                         scratch_data_gpu);
+
+                  break;
+                }
+                case CellNeighboringType::CommonEdge: {
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "apply_quad_common_edge");
+#endif
+
+                  HierBEM::CUDAWrappers::
+                    ApplyQuadratureUsingBEMValuesCommonEdge<<<
+                      blocks_rect.x,
+                      threads_rect.x,
+                      threads_rect.x * sizeof(KernelNumberType),
+                      scratch_data.cuda_stream_handle>>>(kernel,
+                                                         kernel_factor,
+                                                         i_index,
+                                                         j_index,
+                                                         bem_values_gpu,
+                                                         scratch_data_gpu);
+
+                  break;
+                }
+                case CellNeighboringType::CommonVertex: {
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "apply_quad_common_vertex");
+#endif
+
+                  HierBEM::CUDAWrappers::
+                    ApplyQuadratureUsingBEMValuesCommonVertex<<<
+                      blocks_rect.x,
+                      threads_rect.x,
+                      threads_rect.x * sizeof(KernelNumberType),
+                      scratch_data.cuda_stream_handle>>>(kernel,
+                                                         kernel_factor,
+                                                         i_index,
+                                                         j_index,
+                                                         bem_values_gpu,
+                                                         scratch_data_gpu);
+
+                  break;
+                }
+                case CellNeighboringType::Regular: {
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "apply_quad_regular");
+#endif
+
+                  HierBEM::CUDAWrappers::ApplyQuadratureUsingBEMValuesRegular<<<
+                    blocks_rect.x,
+                    threads_rect.x,
+                    threads_rect.x * sizeof(KernelNumberType),
+                    scratch_data.cuda_stream_handle>>>(kernel,
+                                                       kernel_factor,
+                                                       i_index,
+                                                       j_index,
+                                                       kx_cell_index_local,
+                                                       ky_cell_index_local,
+                                                       bem_values_gpu,
+                                                       scratch_data_gpu);
+
+                  break;
+                }
+                default: {
+                  Assert(false, ExcInternalError());
+                  break;
+                }
+            }
+
+          /**
+           * @internal Extract quadrature results accumulated from all
+           * thread blocks.
+           */
+          AssertCuda(cudaMemcpyAsync(
+            (void *)(scratch_data.quad_values_in_thread_blocks),
+            (const void *)(scratch_data_gpu.quad_values_in_thread_blocks),
+            sizeof(KernelNumberType) * blocks_rect.x,
+            cudaMemcpyDeviceToHost,
+            scratch_data.cuda_stream_handle));
+
+          AssertCuda(cudaStreamSynchronize(scratch_data.cuda_stream_handle));
+
+          for (unsigned int t = 0; t < blocks_rect.x; t++)
+            double_integral += scratch_data.quad_values_in_thread_blocks[t];
+
+          // Append the FEM mass matrix contribution.
+          //
+          // \myalert{N.B. The DoF handlers for the test and ansatz spaces
+          // should be constructed on a same triangulation. Then the
+          // following comparison @p kx_cell_index_global == ky_cell_index_global is
+          // meaningful.}
+          if ((kx_cell_index_global == ky_cell_index_global) &&
+              (mass_matrix_factor != 0))
+            {
+#if ENABLE_NVTX == 1
+              HierBEM::CUDAWrappers::NVTXRange nvtx_range("calc_mass_entry");
+#endif
+
+              Assert(cell_neighboring_type == CellNeighboringType::SamePanel,
+                     ExcInternalError());
+
+              // Update the finite element values for the test space.
+              mass_matrix_scratch_data.fe_values_for_test_space.reinit(
+                kx_cell_iter);
+
+              // Update the finite element values for the trial space.
+              //
+              // \mynote{N.B. The @p FEValues related to the trial
+              // space must also be updated, since the trial space may
+              // be different from the test space.}
+              mass_matrix_scratch_data.fe_values_for_trial_space.reinit(
+                ky_cell_iter);
+
+              const unsigned int n_q_points =
+                mass_matrix_scratch_data.fe_values_for_test_space
+                  .get_quadrature()
+                  .size();
+              // The trial space is on a same triangulation as the test
+              // space and they share a same quadrature object.
+              AssertDimension(n_q_points,
+                              mass_matrix_scratch_data.fe_values_for_trial_space
+                                .get_quadrature()
+                                .size());
+
+              // Get the index of the global DoF index \f$i\f$ in
+              // the current cell \f$K_x\f$.
+              //
+              // \mynote{N.B. The local DoF index in \f$K_x\f$ is
+              // searched from the list from DoF indices held in the
+              // @p ScratchData for BEM. This is valid because the
+              // test and trial spaces associated with the mass matrix
+              // and the BEM bilinear form are the same.
+              //
+              // Since there is no support point permutation during FEM mass
+              // matrix assembly, the DoF indices here are in the default
+              // order.}
+              auto i_local_dof_iter = std::find(
+                scratch_data.kx_local_dof_indices_in_default_dof_order.begin(),
+                scratch_data.kx_local_dof_indices_in_default_dof_order.end(),
+                i);
+              Assert(
+                i_local_dof_iter !=
+                  scratch_data.kx_local_dof_indices_in_default_dof_order.end(),
+                ExcMessage(std::string("Cannot find the global DoF index ") +
+                           std::to_string(i) +
+                           std::string(" in the list of cell DoF indices!")));
+              const unsigned int i_local_dof_index =
+                i_local_dof_iter -
+                scratch_data.kx_local_dof_indices_in_default_dof_order.begin();
+
+              // Get the index of the global DoF index \f$j\f$ in
+              // the current cell \f$K_y\f$.
+              auto j_local_dof_iter = std::find(
+                scratch_data.ky_local_dof_indices_in_default_dof_order.begin(),
+                scratch_data.ky_local_dof_indices_in_default_dof_order.end(),
+                j);
+              Assert(
+                j_local_dof_iter !=
+                  scratch_data.ky_local_dof_indices_in_default_dof_order.end(),
+                ExcMessage(std::string("Cannot find the global DoF index ") +
+                           std::to_string(j) +
+                           std::string(" in the list of cell DoF indices!")));
+              const unsigned int j_local_dof_index =
+                j_local_dof_iter -
+                scratch_data.ky_local_dof_indices_in_default_dof_order.begin();
+
+              for (unsigned int q = 0; q < n_q_points; q++)
+                {
+                  double_integral +=
+                    mass_matrix_factor *
+                    mass_matrix_scratch_data.fe_values_for_test_space
+                      .shape_value(i_local_dof_index, q) *
+                    mass_matrix_scratch_data.fe_values_for_trial_space
+                      .shape_value(j_local_dof_index, q) *
+                    mass_matrix_scratch_data.fe_values_for_test_space.JxW(q);
+                }
+            }
+        }
+    }
+
+  return double_integral;
+}
+
+
+/**
+ * Sauter quadrature for a pair of DoFs which belongs to a far field \hmatrix
+ * node.
+ *
+ * 1. There is no contribution from mass matrix.
+ * 2. There is no need to detect the cell neighboring type, since it can only
+ * be @p regular.
+ */
+template <int dim,
+          int spacedim,
+          template <int, typename>
+          typename KernelFunctionType,
+          typename KernelNumberType>
+KernelNumberType
+sauter_quadrature_on_one_pair_of_far_field_dofs(
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                          &kernel,
+  const DeviceNumberType<KernelNumberType> kernel_factor,
+  const types::global_dof_index            i,
+  const types::global_dof_index            j,
+  const std::vector<
+    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+    &kx_dof_to_cell_topo,
+  const std::vector<
+    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+    &ky_dof_to_cell_topo,
+  const HierBEM::CUDAWrappers::CUDABEMValues<
+    dim,
+    spacedim,
+    typename numbers::NumberTraits<KernelNumberType>::real_type>
+                                                  &bem_values_gpu,
+  const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+  const std::map<types::material_id, unsigned int>
+                                              &material_id_to_mapping_index,
+  const std::vector<types::global_cell_index> &global_to_local_cell_index_map,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+    &mapping_support_point_table,
+  PairCellWiseScratchDataForHMatrix<dim, spacedim, KernelNumberType>
+    &scratch_data,
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
+    dim,
+    spacedim,
+    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+{
+  using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
+
+#if ENABLE_NVTX == 1
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+    "sauter_quad_pair_dofs_far_field");
+#endif
+
+  /**
+   * @internal This result variable accumulates all contributions from pairs
+   * of cells related to the global DoF indices @p (i,j).
+   */
+  KernelNumberType double_integral = KernelNumberType();
+
+  /**
+   * Iterate over each cell in the support of the basis function associated
+   * with the i-th DoF.
+   */
+  for (auto kx_cell_iter_pointer : kx_dof_to_cell_topo[i])
+    {
+      const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter =
+        *kx_cell_iter_pointer;
+      const types::global_cell_index kx_cell_index_global =
+        kx_cell_iter->active_cell_index();
+      const types::global_cell_index kx_cell_index_local =
+        global_to_local_cell_index_map[kx_cell_index_global];
+      const unsigned int kx_mapping_index =
+        material_id_to_mapping_index.at(kx_cell_iter->material_id());
+      MappingInfo<dim, spacedim> &kx_mapping_info = *mappings[kx_mapping_index];
+
+      // Update the DoF indices.
+      kx_cell_iter->get_dof_indices(
+        scratch_data.kx_local_dof_indices_in_default_dof_order);
+
+      // Iterate over each cell in the support of the basis function
+      // associated with the j-th DoF.
+      for (auto ky_cell_iter_pointer : ky_dof_to_cell_topo[j])
+        {
+          const typename DoFHandler<dim, spacedim>::cell_iterator
+                                        &ky_cell_iter = *ky_cell_iter_pointer;
+          const types::global_cell_index ky_cell_index_global =
+            ky_cell_iter->active_cell_index();
+          const types::global_cell_index ky_cell_index_local =
+            global_to_local_cell_index_map[ky_cell_index_global];
+          const unsigned int ky_mapping_index =
+            material_id_to_mapping_index.at(ky_cell_iter->material_id());
+          MappingInfo<dim, spacedim> &ky_mapping_info =
+            *mappings[ky_mapping_index];
+
+          // Update the DoF indices.
+          ky_cell_iter->get_dof_indices(
+            scratch_data.ky_local_dof_indices_in_default_dof_order);
+
+          permute_dofs_and_mapping_support_points_for_sauter_quad(
+            scratch_data,
+            copy_data,
+            CellNeighboringType::Regular,
+            kx_cell_iter,
+            ky_cell_iter,
+            kx_mapping_info,
+            ky_mapping_info,
+            mapping_support_point_table);
+
+          // Find the cell local DoF index of the i-th DoF in the permuted DoF
+          // indices of \f$K_x\f$.
+          typename std::vector<types::global_dof_index>::const_iterator i_iter =
+            std::find(copy_data.kx_local_dof_indices_permuted.begin(),
+                      copy_data.kx_local_dof_indices_permuted.end(),
+                      i);
+          Assert(i_iter != copy_data.kx_local_dof_indices_permuted.end(),
+                 ExcInternalError());
+          unsigned int i_index =
+            i_iter - copy_data.kx_local_dof_indices_permuted.begin();
+
+
+          // Find the cell local DoF index of the j-th DoF in the permuted DoF
+          // indices of \f$K_y\f$.
+          typename std::vector<types::global_dof_index>::const_iterator j_iter =
+            std::find(copy_data.ky_local_dof_indices_permuted.begin(),
+                      copy_data.ky_local_dof_indices_permuted.end(),
+                      j);
+          Assert(j_iter != copy_data.ky_local_dof_indices_permuted.end(),
+                 ExcInternalError());
+          unsigned int j_index =
+            j_iter - copy_data.ky_local_dof_indices_permuted.begin();
+
+          // Apply 4d Sauter numerical quadrature on the GPU device.
+          dim3 blocks_rect;
+          dim3 threads_rect;
+          HierBEM::CUDAWrappers::
+            configure_thread_blocks_for_sauter_quadrature_points(
+              CellNeighboringType::Regular,
+              bem_values_gpu,
+              blocks_rect,
+              threads_rect);
+          {
+#if ENABLE_NVTX == 1
+            HierBEM::CUDAWrappers::NVTXRange nvtx_range("apply_quad_regular");
+#endif
+
+            HierBEM::CUDAWrappers::ApplyQuadratureUsingBEMValuesRegular<<<
+              blocks_rect.x,
+              threads_rect.x,
+              threads_rect.x * sizeof(KernelNumberType),
+              scratch_data.cuda_stream_handle>>>(kernel,
+                                                 kernel_factor,
+                                                 i_index,
+                                                 j_index,
+                                                 kx_cell_index_local,
+                                                 ky_cell_index_local,
+                                                 bem_values_gpu,
+                                                 scratch_data_gpu);
+          }
+
+          /**
+           * @internal Extract quadrature results accumulated from all
+           * thread blocks.
+           */
+          AssertCuda(cudaMemcpyAsync(
+            (void *)(scratch_data.quad_values_in_thread_blocks),
+            (const void *)(scratch_data_gpu.quad_values_in_thread_blocks),
+            sizeof(KernelNumberType) * blocks_rect.x,
+            cudaMemcpyDeviceToHost,
+            scratch_data.cuda_stream_handle));
+
+          AssertCuda(cudaStreamSynchronize(scratch_data.cuda_stream_handle));
+
+          for (unsigned int t = 0; t < blocks_rect.x; t++)
+            {
+              double_integral += scratch_data.quad_values_in_thread_blocks[t];
+            }
+        }
+    }
+
+  return double_integral;
+}
+
+
+/**
+ * @brief Iterate over each matrix entry of the full matrices in the
+ * collection of near field \hmatrices and add it as a Sauter quadrature
+ * task.
+ *
+ * This is the work function associated with a producer thread.
+ *
+ * @tparam dim
+ * @tparam spacedim
+ * @tparam RangeNumberType
+ * @tparam KernelNumberType
+ * @tparam SurfaceNormalDetector
+ * @param near_field_leaf_set
+ * @param start_leaf_set_index
+ * @param end_leaf_set_index This is the pass-the-end index.
+ * @param ring_buffer_same_panel
+ * @param ring_buffer_common_edge
+ * @param ring_buffer_common_vertex
+ * @param ring_buffer_regular
+ * @param kx_dof_to_cell_topo
+ * @param ky_dof_to_cell_topo
+ * @param bem_values
+ * @param kx_dof_handler
+ * @param ky_dof_handler
+ * @param kx_map_from_local_to_full_dof_indices
+ * @param ky_map_from_local_to_full_dof_indices
+ * @param kx_dof_i2e_numbering
+ * @param ky_dof_i2e_numbering
+ * @param mappings
+ * @param material_id_to_mapping_index
+ * @param normal_detector
+ * @param is_kernel_symmetric
+ * @param enable_build_symmetric_hmat
+ */
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType,
+          typename SurfaceNormalDetector>
+void
+sauter_quadrature_for_near_field_matrix_entries_producer(
+  const ConfSauterQuadNearField &sauter_quad_near_field_params,
+  const std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set,
+  const unsigned int                                       start_leaf_set_index,
+  const unsigned int                                       end_leaf_set_index,
+  CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
+                                               spacedim,
+                                               RangeNumberType,
+                                               KernelNumberType>
+    &ring_buffer_same_panel,
+  CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
+                                               spacedim,
+                                               RangeNumberType,
+                                               KernelNumberType>
+    &ring_buffer_common_edge,
+  CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
+                                               spacedim,
+                                               RangeNumberType,
+                                               KernelNumberType>
+    &ring_buffer_common_vertex,
+  CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
+                                               spacedim,
+                                               RangeNumberType,
+                                               KernelNumberType>
+    &ring_buffer_regular,
+  const std::vector<
+    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+    &kx_dof_to_cell_topo,
+  const std::vector<
+    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+    &ky_dof_to_cell_topo,
+  const BEMValues<dim,
+                  spacedim,
+                  typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                  &bem_values,
+  const DoFHandler<dim, spacedim> &kx_dof_handler,
+  const DoFHandler<dim, spacedim> &ky_dof_handler,
+  const std::vector<types::global_dof_index>
+    *kx_map_from_local_to_full_dof_indices,
+  const std::vector<types::global_dof_index>
+    *ky_map_from_local_to_full_dof_indices,
+  const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+  const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+  const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+  const std::map<types::material_id, unsigned int>
+                                              &material_id_to_mapping_index,
+  const std::vector<types::global_cell_index> &global_to_local_cell_index_map,
+  const SurfaceNormalDetector                 &normal_detector,
+  const bool                                   is_kernel_symmetric,
+  const bool              enable_build_symmetric_hmat = false,
+  HMatrixAssemblyProfile *hmat_profile                = nullptr)
+{
+  using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+  static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
+  static_assert(
+    std::is_same<
+      real_type,
+      typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
+#if ENABLE_NVTX == 1
+  nvtxNameOsThread(gettid(), "producer");
+#endif
+
+  /**
+   * @internal Define @p PairCellWiseScratchData and @p
+   * PairCellWisePerTaskData which are local to the current working
+   * thread. This is mandatory because each producer thread should have
+   * its own copy of these data.
+   */
+  PairCellWiseScratchDataBase<dim, spacedim, KernelNumberType> scratch_data(
+    kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings);
+  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> copy_data(
+    kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
+
+  // Create four local buffers for producing quadrature tasks in batch.
+  SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+    producer_buffer_same_panel;
+  SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+    producer_buffer_common_edge;
+  SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+    producer_buffer_common_vertex;
+  SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+    producer_buffer_regular;
+
+  Assert(sauter_quad_near_field_params.producer_buffer_capacity <
+           ring_buffer_same_panel.capacity,
+         ExcInternalError());
+  Assert(sauter_quad_near_field_params.producer_buffer_capacity <
+           ring_buffer_common_edge.capacity,
+         ExcInternalError());
+  Assert(sauter_quad_near_field_params.producer_buffer_capacity <
+           ring_buffer_common_vertex.capacity,
+         ExcInternalError());
+  Assert(sauter_quad_near_field_params.producer_buffer_capacity <
+           ring_buffer_regular.capacity,
+         ExcInternalError());
+
+  const unsigned int max_mapping_n_shape_functions =
+    bem_values.mappings.back()->get_data()->n_shape_functions;
+
+  producer_buffer_same_panel.allocate(
+    CellNeighboringType::SamePanel,
+    sauter_quad_near_field_params.producer_buffer_capacity,
+    max_mapping_n_shape_functions);
+  producer_buffer_common_edge.allocate(
+    CellNeighboringType::CommonEdge,
+    sauter_quad_near_field_params.producer_buffer_capacity,
+    max_mapping_n_shape_functions);
+  producer_buffer_common_vertex.allocate(
+    CellNeighboringType::CommonVertex,
+    sauter_quad_near_field_params.producer_buffer_capacity,
+    max_mapping_n_shape_functions);
+  producer_buffer_regular.allocate(
+    CellNeighboringType::Regular,
+    sauter_quad_near_field_params.producer_buffer_capacity,
+    max_mapping_n_shape_functions);
+
+  /**
+   * @internal Iterate over each \hmatrix node in the near field leaf set.
+   */
+  for (unsigned int l = start_leaf_set_index; l < end_leaf_set_index; l++)
+    {
+#if ENABLE_NVTX == 1
+      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+        std::string("create_tasks_for_hmat_node"));
+#endif
+
+      HMatrix<spacedim, RangeNumberType>   *leaf_mat = near_field_leaf_set[l];
+      LAPACKFullMatrixExt<RangeNumberType> *fullmat =
+        leaf_mat->get_fullmatrix();
+      // Get matrix size.
+      const auto fullmat_m = fullmat->m();
+      const auto fullmat_n = fullmat->n();
+
+      Assert(fullmat != nullptr, ExcInternalError());
+
+      /**
+       * @internal The row index range and column index range follow the
+       * internal DoF numbering.
+       */
+      const std::array<types::global_dof_index, 2> *row_index_range =
+        leaf_mat->get_row_index_range();
+      const std::array<types::global_dof_index, 2> *col_index_range =
+        leaf_mat->get_col_index_range();
+
+      /**
+       * @internal Global DoF indices in the external DoF numbering, which
+       * are associated with the current full matrix's row and column
+       * indices.
+       */
+      types::global_dof_index i_global_dof_index;
+      types::global_dof_index j_global_dof_index;
+
+      if (enable_build_symmetric_hmat && is_kernel_symmetric)
+        {
+          /**
+           * When the flag @p enable_build_symmetric_hmat is true and the
+           * kernel function is symmetric, try to build a symmetric
+           * \hmatrix. Otherwise, the whole full matrix will be built.
+           */
+          switch (leaf_mat->get_block_type())
+            {
+                case HMatrixSupport::BlockType::diagonal_block: {
+                  /**
+                   * A diagonal \hmatrix block as well as its associated
+                   * full matrix should be symmetric.
+                   */
+                  Assert(leaf_mat->get_property() ==
+                           HMatrixSupport::Property::symmetric,
+                         ExcInvalidHMatrixProperty(leaf_mat->get_property()));
+                  Assert(fullmat->get_property() ==
+                           LAPACKSupport::Property::symmetric,
+                         ExcInvalidLAPACKFullMatrixProperty(
+                           fullmat->get_property()));
+
+                  /**
+                   * Only evaluate the diagonal and lower triangular
+                   * elements in the full matrix.
+                   */
+                  for (size_t fullmat_row_index = 0;
+                       fullmat_row_index < fullmat_m;
+                       fullmat_row_index++)
+                    {
+                      i_global_dof_index =
+                        (kx_map_from_local_to_full_dof_indices == nullptr) ?
+                          kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                               fullmat_row_index] :
+                          kx_map_from_local_to_full_dof_indices->at(
+                            kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                 fullmat_row_index]);
+
+                      for (size_t fullmat_col_index = 0;
+                           fullmat_col_index <= fullmat_row_index;
+                           fullmat_col_index++)
+                        {
+                          j_global_dof_index =
+                            (ky_map_from_local_to_full_dof_indices == nullptr) ?
+                              ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                   fullmat_col_index] :
+                              ky_map_from_local_to_full_dof_indices->at(
+                                ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                     fullmat_col_index]);
+
+                          const bool is_last_matrix_entry =
+                            l == end_leaf_set_index - 1 &&
+                            fullmat_row_index == fullmat_m - 1 &&
+                            fullmat_col_index == fullmat_row_index;
+
+                          create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
+                            producer_buffer_same_panel,
+                            producer_buffer_common_edge,
+                            producer_buffer_common_vertex,
+                            producer_buffer_regular,
+                            ring_buffer_same_panel,
+                            ring_buffer_common_edge,
+                            ring_buffer_common_vertex,
+                            ring_buffer_regular,
+                            fullmat,
+                            fullmat_row_index,
+                            fullmat_col_index,
+                            i_global_dof_index,
+                            j_global_dof_index,
+                            kx_dof_to_cell_topo,
+                            ky_dof_to_cell_topo,
+                            mappings,
+                            material_id_to_mapping_index,
+                            global_to_local_cell_index_map,
+                            bem_values.mapping_support_point_table,
+                            normal_detector,
+                            scratch_data,
+                            copy_data,
+                            is_last_matrix_entry,
+                            hmat_profile);
+                        }
+                    }
+
+                  break;
+                }
+                case HMatrixSupport::BlockType::upper_triangular_block: {
+                  /**
+                   * Do not build \hmatrix block belonging to the upper
+                   * triangular part.
+                   */
+
+                  break;
+                }
+                case HMatrixSupport::BlockType::lower_triangular_block: {
+                  /**
+                   * When the current \hmatrix block belongs to the lower
+                   * triangular part, evaluate all of its elements as
+                   * usual.
+                   */
+                  for (size_t fullmat_row_index = 0;
+                       fullmat_row_index < fullmat_m;
+                       fullmat_row_index++)
+                    {
+                      i_global_dof_index =
+                        (kx_map_from_local_to_full_dof_indices == nullptr) ?
+                          kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                               fullmat_row_index] :
+                          kx_map_from_local_to_full_dof_indices->at(
+                            kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                 fullmat_row_index]);
+
+                      for (size_t fullmat_col_index = 0;
+                           fullmat_col_index < fullmat_n;
+                           fullmat_col_index++)
+                        {
+                          j_global_dof_index =
+                            (ky_map_from_local_to_full_dof_indices == nullptr) ?
+                              ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                   fullmat_col_index] :
+                              ky_map_from_local_to_full_dof_indices->at(
+                                ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                     fullmat_col_index]);
+
+                          const bool is_last_matrix_entry =
+                            l == end_leaf_set_index - 1 &&
+                            fullmat_row_index == fullmat_m - 1 &&
+                            fullmat_col_index == fullmat_n - 1;
+
+                          create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
+                            producer_buffer_same_panel,
+                            producer_buffer_common_edge,
+                            producer_buffer_common_vertex,
+                            producer_buffer_regular,
+                            ring_buffer_same_panel,
+                            ring_buffer_common_edge,
+                            ring_buffer_common_vertex,
+                            ring_buffer_regular,
+                            fullmat,
+                            fullmat_row_index,
+                            fullmat_col_index,
+                            i_global_dof_index,
+                            j_global_dof_index,
+                            kx_dof_to_cell_topo,
+                            ky_dof_to_cell_topo,
+                            mappings,
+                            material_id_to_mapping_index,
+                            global_to_local_cell_index_map,
+                            bem_values.mapping_support_point_table,
+                            normal_detector,
+                            scratch_data,
+                            copy_data,
+                            is_last_matrix_entry,
+                            hmat_profile);
+                        }
+                    }
+
+                  break;
+                }
+                case HMatrixSupport::BlockType::undefined_block: {
+                  Assert(false,
+                         ExcInvalidHMatrixBlockType(
+                           leaf_mat->get_block_type()));
+
+                  break;
+                }
+            }
+        }
+      else
+        {
+          /**
+           * Evaluate the whole full matrix.
+           */
+          for (size_t fullmat_row_index = 0; fullmat_row_index < fullmat_m;
+               fullmat_row_index++)
+            {
+              i_global_dof_index =
+                (kx_map_from_local_to_full_dof_indices == nullptr) ?
+                  kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                       fullmat_row_index] :
+                  kx_map_from_local_to_full_dof_indices->at(
+                    kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                         fullmat_row_index]);
+
+              for (size_t fullmat_col_index = 0; fullmat_col_index < fullmat_n;
+                   fullmat_col_index++)
+                {
+                  j_global_dof_index =
+                    (ky_map_from_local_to_full_dof_indices == nullptr) ?
+                      ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                           fullmat_col_index] :
+                      ky_map_from_local_to_full_dof_indices->at(
+                        ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                             fullmat_col_index]);
+
+                  const bool is_last_matrix_entry =
+                    l == end_leaf_set_index - 1 &&
+                    fullmat_row_index == fullmat_m - 1 &&
+                    fullmat_col_index == fullmat_n - 1;
+
+                  create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
+                    producer_buffer_same_panel,
+                    producer_buffer_common_edge,
+                    producer_buffer_common_vertex,
+                    producer_buffer_regular,
+                    ring_buffer_same_panel,
+                    ring_buffer_common_edge,
+                    ring_buffer_common_vertex,
+                    ring_buffer_regular,
+                    fullmat,
+                    fullmat_row_index,
+                    fullmat_col_index,
+                    i_global_dof_index,
+                    j_global_dof_index,
+                    kx_dof_to_cell_topo,
+                    ky_dof_to_cell_topo,
+                    mappings,
+                    material_id_to_mapping_index,
+                    global_to_local_cell_index_map,
+                    bem_values.mapping_support_point_table,
+                    normal_detector,
+                    scratch_data,
+                    copy_data,
+                    is_last_matrix_entry,
+                    hmat_profile);
+                }
+            }
+        }
+    }
+
+  producer_buffer_same_panel.release();
+  producer_buffer_common_edge.release();
+  producer_buffer_common_vertex.release();
+  producer_buffer_regular.release();
+}
+
+
+/**
+ * @brief Iterate over each matrix entry of the full matrices in the
+ * collection of near field \hmatrices and add it as a Sauter quadrature
+ * task.
+ *
+ * This is the work function associated with a producer thread. This
+ * overloaded version add a mass matrix to the \hmat.
+ *
+ * @tparam dim
+ * @tparam spacedim
+ * @tparam RangeNumberType
+ * @tparam KernelNumberType
+ * @tparam SurfaceNormalDetector
+ * @param near_field_leaf_set
+ * @param start_leaf_set_index
+ * @param end_leaf_set_index This is the pass-the-end index.
+ * @param ring_buffer_same_panel
+ * @param ring_buffer_common_edge
+ * @param ring_buffer_common_vertex
+ * @param ring_buffer_regular
+ * @param mass_matrix_factor
+ * @param kx_dof_to_cell_topo
+ * @param ky_dof_to_cell_topo
+ * @param bem_values
+ * @param mass_matrix_quadrature_formula
+ * @param kx_dof_handler
+ * @param ky_dof_handler
+ * @param kx_map_from_local_to_full_dof_indices
+ * @param ky_map_from_local_to_full_dof_indices
+ * @param kx_dof_i2e_numbering
+ * @param ky_dof_i2e_numbering
+ * @param mappings
+ * @param material_id_to_mapping_index
+ * @param normal_detector
+ * @param is_kernel_symmetric
+ * @param enable_build_symmetric_hmat
+ */
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType,
+          typename SurfaceNormalDetector>
+void
+sauter_quadrature_for_near_field_matrix_entries_producer(
+  const ConfSauterQuadNearField &sauter_quad_near_field_params,
+  const std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set,
+  const unsigned int                                       start_leaf_set_index,
+  const unsigned int                                       end_leaf_set_index,
+  CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
+                                               spacedim,
+                                               RangeNumberType,
+                                               KernelNumberType>
+    &ring_buffer_same_panel,
+  CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
+                                               spacedim,
+                                               RangeNumberType,
+                                               KernelNumberType>
+    &ring_buffer_common_edge,
+  CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
+                                               spacedim,
+                                               RangeNumberType,
+                                               KernelNumberType>
+    &ring_buffer_common_vertex,
+  CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
+                                               spacedim,
+                                               RangeNumberType,
+                                               KernelNumberType>
+    &ring_buffer_regular,
+  const typename numbers::NumberTraits<RangeNumberType>::real_type
+    mass_matrix_factor,
+  const std::vector<
+    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+    &kx_dof_to_cell_topo,
+  const std::vector<
+    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+    &ky_dof_to_cell_topo,
+  const BEMValues<dim,
+                  spacedim,
+                  typename numbers::NumberTraits<RangeNumberType>::real_type>
+                                  &bem_values,
+  const QGauss<dim>               &mass_matrix_quadrature_formula,
+  const DoFHandler<dim, spacedim> &kx_dof_handler,
+  const DoFHandler<dim, spacedim> &ky_dof_handler,
+  const std::vector<types::global_dof_index>
+    *kx_map_from_local_to_full_dof_indices,
+  const std::vector<types::global_dof_index>
+    *ky_map_from_local_to_full_dof_indices,
+  const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+  const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+  const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+  const std::map<types::material_id, unsigned int>
+                                              &material_id_to_mapping_index,
+  const std::vector<types::global_cell_index> &global_to_local_cell_index_map,
+  const SurfaceNormalDetector                 &normal_detector,
+  const bool                                   is_kernel_symmetric,
+  const bool              enable_build_symmetric_hmat = false,
+  HMatrixAssemblyProfile *hmat_profile                = nullptr)
+{
+  using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+  static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
+  static_assert(
+    std::is_same<
+      real_type,
+      typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
+#if ENABLE_NVTX == 1
+  nvtxNameOsThread(gettid(), "producer");
+#endif
+
+  /**
+   * Define @p CellWiseScratchData which is local to the current working thread.
+   */
+  CellWiseScratchDataForMassMatrix<dim, spacedim> mass_matrix_scratch_data(
+    kx_dof_handler.get_fe(),
+    ky_dof_handler.get_fe(),
+    mass_matrix_quadrature_formula,
+    update_values | update_JxW_values);
+
+  /**
+   * @internal Define @p PairCellWiseScratchData and
+   * @p PairCellWisePerTaskData which are local to the current working
+   * thread. This is mandatory because each producer thread should
+   * have its own copy of these data.
+   */
+  PairCellWiseScratchDataBase<dim, spacedim, KernelNumberType> scratch_data(
+    kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings);
+  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> copy_data(
+    kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
+
+  // Create four local buffers for producing quadrature tasks in batch.
+  SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+    producer_buffer_same_panel;
+  SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+    producer_buffer_common_edge;
+  SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+    producer_buffer_common_vertex;
+  SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+    producer_buffer_regular;
+
+  Assert(sauter_quad_near_field_params.producer_buffer_capacity <
+           ring_buffer_same_panel.capacity,
+         ExcInternalError());
+  Assert(sauter_quad_near_field_params.producer_buffer_capacity <
+           ring_buffer_common_edge.capacity,
+         ExcInternalError());
+  Assert(sauter_quad_near_field_params.producer_buffer_capacity <
+           ring_buffer_common_vertex.capacity,
+         ExcInternalError());
+  Assert(sauter_quad_near_field_params.producer_buffer_capacity <
+           ring_buffer_regular.capacity,
+         ExcInternalError());
+
+  const unsigned int max_mapping_n_shape_functions =
+    bem_values.mappings.back()->get_data()->n_shape_functions;
+
+  producer_buffer_same_panel.allocate(
+    CellNeighboringType::SamePanel,
+    sauter_quad_near_field_params.producer_buffer_capacity,
+    max_mapping_n_shape_functions);
+  producer_buffer_common_edge.allocate(
+    CellNeighboringType::CommonEdge,
+    sauter_quad_near_field_params.producer_buffer_capacity,
+    max_mapping_n_shape_functions);
+  producer_buffer_common_vertex.allocate(
+    CellNeighboringType::CommonVertex,
+    sauter_quad_near_field_params.producer_buffer_capacity,
+    max_mapping_n_shape_functions);
+  producer_buffer_regular.allocate(
+    CellNeighboringType::Regular,
+    sauter_quad_near_field_params.producer_buffer_capacity,
+    max_mapping_n_shape_functions);
+
+  /**
+   * @internal Iterate over each \hmatrix node in the near field leaf set.
+   */
+  for (unsigned int l = start_leaf_set_index; l < end_leaf_set_index; l++)
+    {
+#if ENABLE_NVTX == 1
+      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+        std::string("create_tasks_for_hmat_node_mass"));
+#endif
+
+      HMatrix<spacedim, RangeNumberType>   *leaf_mat = near_field_leaf_set[l];
+      LAPACKFullMatrixExt<RangeNumberType> *fullmat =
+        leaf_mat->get_fullmatrix();
+      // Get matrix size.
+      const auto fullmat_m = fullmat->m();
+      const auto fullmat_n = fullmat->n();
+
+      Assert(fullmat != nullptr, ExcInternalError());
+
+      /**
+       * @internal The row index range and column index range follow the
+       * internal DoF numbering.
+       */
+      const std::array<types::global_dof_index, 2> *row_index_range =
+        leaf_mat->get_row_index_range();
+      const std::array<types::global_dof_index, 2> *col_index_range =
+        leaf_mat->get_col_index_range();
+
+      /**
+       * @internal Global DoF indices in the external DoF numbering, which
+       * are associated with the current full matrix's row and column
+       * indices.
+       */
+      types::global_dof_index i_global_dof_index;
+      types::global_dof_index j_global_dof_index;
+
+      if (enable_build_symmetric_hmat && is_kernel_symmetric)
+        {
+          /**
+           * When the flag @p enable_build_symmetric_hmat is true and the
+           * kernel function is symmetric, try to build a symmetric
+           * \hmatrix. Otherwise, the whole full matrix will be built.
+           */
+          switch (leaf_mat->get_block_type())
+            {
+                case HMatrixSupport::BlockType::diagonal_block: {
+                  /**
+                   * A diagonal \hmatrix block as well as its associated
+                   * full matrix should be symmetric.
+                   */
+                  Assert(leaf_mat->get_property() ==
+                           HMatrixSupport::Property::symmetric,
+                         ExcInvalidHMatrixProperty(leaf_mat->get_property()));
+                  Assert(fullmat->get_property() ==
+                           LAPACKSupport::Property::symmetric,
+                         ExcInvalidLAPACKFullMatrixProperty(
+                           fullmat->get_property()));
+
+                  /**
+                   * Only evaluate the diagonal and lower triangular
+                   * elements in the full matrix.
+                   */
+                  for (size_t fullmat_row_index = 0;
+                       fullmat_row_index < fullmat_m;
+                       fullmat_row_index++)
+                    {
+                      i_global_dof_index =
+                        (kx_map_from_local_to_full_dof_indices == nullptr) ?
+                          kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                               fullmat_row_index] :
+                          kx_map_from_local_to_full_dof_indices->at(
+                            kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                 fullmat_row_index]);
+
+                      for (size_t fullmat_col_index = 0;
+                           fullmat_col_index <= fullmat_row_index;
+                           fullmat_col_index++)
+                        {
+                          j_global_dof_index =
+                            (ky_map_from_local_to_full_dof_indices == nullptr) ?
+                              ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                   fullmat_col_index] :
+                              ky_map_from_local_to_full_dof_indices->at(
+                                ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                     fullmat_col_index]);
+
+                          const bool is_last_matrix_entry =
+                            l == end_leaf_set_index - 1 &&
+                            fullmat_row_index == fullmat_m - 1 &&
+                            fullmat_col_index == fullmat_row_index;
+
+                          create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
+                            producer_buffer_same_panel,
+                            producer_buffer_common_edge,
+                            producer_buffer_common_vertex,
+                            producer_buffer_regular,
+                            ring_buffer_same_panel,
+                            ring_buffer_common_edge,
+                            ring_buffer_common_vertex,
+                            ring_buffer_regular,
+                            mass_matrix_factor,
+                            fullmat,
+                            fullmat_row_index,
+                            fullmat_col_index,
+                            i_global_dof_index,
+                            j_global_dof_index,
+                            kx_dof_to_cell_topo,
+                            ky_dof_to_cell_topo,
+                            mappings,
+                            material_id_to_mapping_index,
+                            global_to_local_cell_index_map,
+                            bem_values.mapping_support_point_table,
+                            normal_detector,
+                            mass_matrix_scratch_data,
+                            scratch_data,
+                            copy_data,
+                            is_last_matrix_entry,
+                            hmat_profile);
+                        }
+                    }
+
+                  break;
+                }
+                case HMatrixSupport::BlockType::upper_triangular_block: {
+                  /**
+                   * Do not build \hmatrix block belonging to the upper
+                   * triangular part.
+                   */
+
+                  break;
+                }
+                case HMatrixSupport::BlockType::lower_triangular_block: {
+                  /**
+                   * When the current \hmatrix block belongs to the lower
+                   * triangular part, evaluate all of its elements as
+                   * usual.
+                   */
+                  for (size_t fullmat_row_index = 0;
+                       fullmat_row_index < fullmat_m;
+                       fullmat_row_index++)
+                    {
+                      i_global_dof_index =
+                        (kx_map_from_local_to_full_dof_indices == nullptr) ?
+                          kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                               fullmat_row_index] :
+                          kx_map_from_local_to_full_dof_indices->at(
+                            kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                 fullmat_row_index]);
+
+                      for (size_t fullmat_col_index = 0;
+                           fullmat_col_index < fullmat_n;
+                           fullmat_col_index++)
+                        {
+                          j_global_dof_index =
+                            (ky_map_from_local_to_full_dof_indices == nullptr) ?
+                              ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                   fullmat_col_index] :
+                              ky_map_from_local_to_full_dof_indices->at(
+                                ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                     fullmat_col_index]);
+
+                          const bool is_last_matrix_entry =
+                            l == end_leaf_set_index - 1 &&
+                            fullmat_row_index == fullmat_m - 1 &&
+                            fullmat_col_index == fullmat_n - 1;
+
+                          create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
+                            producer_buffer_same_panel,
+                            producer_buffer_common_edge,
+                            producer_buffer_common_vertex,
+                            producer_buffer_regular,
+                            ring_buffer_same_panel,
+                            ring_buffer_common_edge,
+                            ring_buffer_common_vertex,
+                            ring_buffer_regular,
+                            mass_matrix_factor,
+                            fullmat,
+                            fullmat_row_index,
+                            fullmat_col_index,
+                            i_global_dof_index,
+                            j_global_dof_index,
+                            kx_dof_to_cell_topo,
+                            ky_dof_to_cell_topo,
+                            mappings,
+                            material_id_to_mapping_index,
+                            global_to_local_cell_index_map,
+                            bem_values.mapping_support_point_table,
+                            normal_detector,
+                            mass_matrix_scratch_data,
+                            scratch_data,
+                            copy_data,
+                            is_last_matrix_entry,
+                            hmat_profile);
+                        }
+                    }
+
+                  break;
+                }
+                case HMatrixSupport::BlockType::undefined_block: {
+                  Assert(false,
+                         ExcInvalidHMatrixBlockType(
+                           leaf_mat->get_block_type()));
+
+                  break;
+                }
+            }
+        }
+      else
+        {
+          /**
+           * Evaluate the whole full matrix.
+           */
+          for (size_t fullmat_row_index = 0; fullmat_row_index < fullmat_m;
+               fullmat_row_index++)
+            {
+              i_global_dof_index =
+                (kx_map_from_local_to_full_dof_indices == nullptr) ?
+                  kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                       fullmat_row_index] :
+                  kx_map_from_local_to_full_dof_indices->at(
+                    kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                         fullmat_row_index]);
+
+              for (size_t fullmat_col_index = 0; fullmat_col_index < fullmat_n;
+                   fullmat_col_index++)
+                {
+                  j_global_dof_index =
+                    (ky_map_from_local_to_full_dof_indices == nullptr) ?
+                      ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                           fullmat_col_index] :
+                      ky_map_from_local_to_full_dof_indices->at(
+                        ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                             fullmat_col_index]);
+
+                  const bool is_last_matrix_entry =
+                    l == end_leaf_set_index - 1 &&
+                    fullmat_row_index == fullmat_m - 1 &&
+                    fullmat_col_index == fullmat_n - 1;
+
+                  create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
+                    producer_buffer_same_panel,
+                    producer_buffer_common_edge,
+                    producer_buffer_common_vertex,
+                    producer_buffer_regular,
+                    ring_buffer_same_panel,
+                    ring_buffer_common_edge,
+                    ring_buffer_common_vertex,
+                    ring_buffer_regular,
+                    mass_matrix_factor,
+                    fullmat,
+                    fullmat_row_index,
+                    fullmat_col_index,
+                    i_global_dof_index,
+                    j_global_dof_index,
+                    kx_dof_to_cell_topo,
+                    ky_dof_to_cell_topo,
+                    mappings,
+                    material_id_to_mapping_index,
+                    global_to_local_cell_index_map,
+                    bem_values.mapping_support_point_table,
+                    normal_detector,
+                    mass_matrix_scratch_data,
+                    scratch_data,
+                    copy_data,
+                    is_last_matrix_entry,
+                    hmat_profile);
+                }
+            }
+        }
+    }
+
+  producer_buffer_same_panel.release();
+  producer_buffer_common_edge.release();
+  producer_buffer_common_vertex.release();
+  producer_buffer_regular.release();
+}
+
+
+template <int dim,
+          int spacedim,
+          template <int, typename>
+          typename KernelFunctionType,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+sauter_quadrature_for_near_field_matrix_entries_consumer(
+  const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
+                                                                 &kernel,
+  const DeviceNumberType<KernelNumberType>                        kernel_factor,
+  CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
+                                               spacedim,
+                                               RangeNumberType,
+                                               KernelNumberType> &ring_buffer,
+  const CUDAWrappers::CUDABEMValues<
+    dim,
+    spacedim,
+    typename numbers::NumberTraits<RangeNumberType>::real_type> &bem_values_gpu,
+  const unsigned int                                             block_size,
+  const unsigned int      consumer_wait_time_us,
+  HMatrixAssemblyProfile *hmat_profile = nullptr)
+{
+  using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+  static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
+  static_assert(
+    std::is_same<
+      real_type,
+      typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
+#if ENABLE_NVTX == 1
+  std::string nvtx_thread_name(
+    std::string("consumer_") +
+    std::string(cell_neighboring_type_name(ring_buffer.cell_neighboring_type)));
+  nvtxNameOsThread(gettid(), nvtx_thread_name.c_str());
+#endif
+
+  cudaStream_t cuda_stream_handle;
+  AssertCuda(cudaStreamCreate(&cuda_stream_handle));
+
+  /**
+   * Continuously process the Sauter quadrature tasks in the ring buffer
+   * for same panel case.
+   */
+  while (!ring_buffer.fetch_and_process_task_batch(kernel,
+                                                   kernel_factor,
+                                                   block_size,
+                                                   bem_values_gpu,
+                                                   cuda_stream_handle,
+                                                   hmat_profile))
+    {
+      std::this_thread::sleep_for(
+        std::chrono::microseconds(consumer_wait_time_us));
+    }
+
+  AssertCuda(cudaStreamDestroy(cuda_stream_handle));
+}
+
+
+/**
+ * @brief Create Sauter quadrature tasks during near field H-matrix block
+ * assembly.
+ *
+ * Each task is associated with a pair of global DoF indices in the external
+ * numbering with respect to the complete DoF set in the DoF handler. This
+ * task has a definite cell neighboring type and will be added to a producer's
+ * task buffer with the same cell neighboring type. When the producer's task
+ * buffer is full or all tasks have been added to it, the tasks in this buffer
+ * will be transferred to a ring buffer with the same cell neighboring type
+ * for further processing.
+ *
+ * @tparam dim
+ * @tparam spacedim
+ * @tparam RangeNumberType
+ * @tparam KernelNumberType
+ * @tparam SurfaceNormalDetector
+ * @param producer_buffer_same_panel
+ * @param producer_buffer_common_edge
+ * @param producer_buffer_common_vertex
+ * @param producer_buffer_regular
+ * @param ring_buffer_same_panel
+ * @param ring_buffer_common_edge
+ * @param ring_buffer_common_vertex
+ * @param ring_buffer_regular
+ * @param fullmat
+ * @param fullmat_row_index
+ * @param fullmat_col_index
+ * @param i_global_dof_index Global DoF index in the external numbering. If
+ * only a subset of the complete DoFs in the associated DoF handler is
+ * effective or selected, this index is with respect to the complete DoF
+ * set.
+ * @param j_global_dof_index Global DoF index in the external numbering. If
+ * only a subset of the complete DoFs in the associated DoF handler is
+ * effective or selected, this index is with respect to the complete DoF
+ * set.
+ * @param kx_dof_to_cell_topo
+ * @param ky_dof_to_cell_topo
+ * @param mappings
+ * @param material_id_to_mapping_index
+ * @param global_to_local_cell_index_map
+ * @param mapping_support_point_table
+ * @param normal_detector
+ * @param scratch_data
+ * @param copy_data
+ * @param is_last_matrix_entry
+ * @param hmat_profile
+ */
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType,
+          typename SurfaceNormalDetector>
+void
+create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
+  SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+    &producer_buffer_same_panel,
+  SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+    &producer_buffer_common_edge,
+  SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+    &producer_buffer_common_vertex,
+  SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+    &producer_buffer_regular,
+  CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
+                                               spacedim,
+                                               RangeNumberType,
+                                               KernelNumberType>
+    &ring_buffer_same_panel,
+  CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
+                                               spacedim,
+                                               RangeNumberType,
+                                               KernelNumberType>
+    &ring_buffer_common_edge,
+  CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
+                                               spacedim,
+                                               RangeNumberType,
+                                               KernelNumberType>
+    &ring_buffer_common_vertex,
+  CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
+                                               spacedim,
+                                               RangeNumberType,
+                                               KernelNumberType>
+                                       &ring_buffer_regular,
+  LAPACKFullMatrixExt<RangeNumberType> *fullmat,
+  const unsigned int                    fullmat_row_index,
+  const unsigned int                    fullmat_col_index,
+  const types::global_dof_index         i_global_dof_index,
+  const types::global_dof_index         j_global_dof_index,
+  const std::vector<
+    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+    &kx_dof_to_cell_topo,
+  const std::vector<
+    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                  &ky_dof_to_cell_topo,
+  const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+  const std::map<types::material_id, unsigned int>
+                                              &material_id_to_mapping_index,
+  const std::vector<types::global_cell_index> &global_to_local_cell_index_map,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                              &mapping_support_point_table,
+  const SurfaceNormalDetector &normal_detector,
+  PairCellWiseScratchDataBase<dim, spacedim, KernelNumberType> &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim, KernelNumberType>     &copy_data,
+  const bool                               is_last_matrix_entry,
+  [[maybe_unused]] HMatrixAssemblyProfile *hmat_profile = nullptr)
+{
+  using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+  static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
+  static_assert(
+    std::is_same<
+      real_type,
+      typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+  LogStream::Prefix prefix_string("create_sauter_task");
+#endif
+#if ENABLE_NVTX == 1
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+    std::string("create_tasks_for_dof_pair"));
+#endif
+
+  // Iterate over each cell in the support of the basis function
+  // associated with the i-th global DoF in the external numbering.
+  const unsigned int cell_num_in_kx_dof_support =
+    kx_dof_to_cell_topo[i_global_dof_index].size();
+  for (unsigned int kx_dof_support_cell_index = 0;
+       kx_dof_support_cell_index < cell_num_in_kx_dof_support;
+       kx_dof_support_cell_index++)
+    {
+      const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter =
+        *kx_dof_to_cell_topo[i_global_dof_index][kx_dof_support_cell_index];
+      const types::global_cell_index kx_cell_index_global =
+        kx_cell_iter->active_cell_index();
+      const types::global_cell_index kx_cell_index_local =
+        global_to_local_cell_index_map[kx_cell_index_global];
+
+      const unsigned int kx_mapping_index =
+        material_id_to_mapping_index.at(kx_cell_iter->material_id());
+      MappingInfo<dim, spacedim> &kx_mapping_info = *mappings[kx_mapping_index];
+      const unsigned int          kx_mapping_n_shape_functions =
+        kx_mapping_info.get_data()->n_shape_functions;
+      const bool is_kx_normal_inward =
+        normal_detector.is_normal_vector_inward(kx_cell_iter->material_id());
+
+      // Update the DoF indices.
+      kx_cell_iter->get_dof_indices(
+        scratch_data.kx_local_dof_indices_in_default_dof_order);
+
+      // Iterate over each cell in the support of the basis function
+      // associated with the j-th global DoF in the external numbering.
+      const unsigned int cell_num_in_ky_dof_support =
+        ky_dof_to_cell_topo[j_global_dof_index].size();
+      for (unsigned int ky_dof_support_cell_index = 0;
+           ky_dof_support_cell_index < cell_num_in_ky_dof_support;
+           ky_dof_support_cell_index++)
+        {
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+          Timer timer;
+#endif
+
+          const typename DoFHandler<dim,
+                                    spacedim>::cell_iterator &ky_cell_iter =
+            *ky_dof_to_cell_topo[j_global_dof_index][ky_dof_support_cell_index];
+          const types::global_cell_index ky_cell_index_global =
+            ky_cell_iter->active_cell_index();
+          const types::global_cell_index ky_cell_index_local =
+            global_to_local_cell_index_map[ky_cell_index_global];
+
+          // Detect the cell neighboring type based on cell vertex
+          // indices.
+          CellNeighboringType cell_neighboring_type = BEMTools::
+            detect_cell_neighboring_type_for_same_triangulations<dim, spacedim>(
+              kx_cell_iter,
+              ky_cell_iter,
+              scratch_data.common_vertex_pair_local_indices);
+
+          const unsigned int ky_mapping_index =
+            material_id_to_mapping_index.at(ky_cell_iter->material_id());
+          MappingInfo<dim, spacedim> &ky_mapping_info =
+            *mappings[ky_mapping_index];
+          const unsigned int ky_mapping_n_shape_functions =
+            ky_mapping_info.get_data()->n_shape_functions;
+          const bool is_ky_normal_inward =
+            normal_detector.is_normal_vector_inward(
+              ky_cell_iter->material_id());
+
+          // Update the DoF indices.
+          ky_cell_iter->get_dof_indices(
+            scratch_data.ky_local_dof_indices_in_default_dof_order);
+
+          permute_dofs_and_mapping_support_points_for_sauter_quad(
+            scratch_data,
+            copy_data,
+            cell_neighboring_type,
+            kx_cell_iter,
+            ky_cell_iter,
+            kx_mapping_info,
+            ky_mapping_info,
+            mapping_support_point_table);
+
+          /**
+           * @internal Find the array index in the permuted DoF indices of
+           * \f$K_x\f$ for the i-th global DoF in the external numbering
+           * with respect to the complete DoF set in the DoF handler.
+           *
+           * \mynote{The permuted cell DoF indices are stored in the
+           * @p CopyData.}
+           */
+          typename std::vector<types::global_dof_index>::const_iterator i_iter =
+            std::find(copy_data.kx_local_dof_indices_permuted.begin(),
+                      copy_data.kx_local_dof_indices_permuted.end(),
+                      i_global_dof_index);
+          Assert(i_iter != copy_data.kx_local_dof_indices_permuted.end(),
+                 ExcInternalError());
+          unsigned int i_index =
+            i_iter - copy_data.kx_local_dof_indices_permuted.begin();
+
+          /**
+           * @internal Find the array index in the permuted DoF indices of
+           * \f$K_y\f$ for the j-th global DoF in the external numbering
+           * with respect to the complete DoF set in the DoF handler.
+           */
+          typename std::vector<types::global_dof_index>::const_iterator j_iter =
+            std::find(copy_data.ky_local_dof_indices_permuted.begin(),
+                      copy_data.ky_local_dof_indices_permuted.end(),
+                      j_global_dof_index);
+          Assert(j_iter != copy_data.ky_local_dof_indices_permuted.end(),
+                 ExcInternalError());
+          unsigned int j_index =
+            j_iter - copy_data.ky_local_dof_indices_permuted.begin();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+          deallog << "Create Sauter task: " << fullmat << ","
+                  << i_global_dof_index << "," << j_global_dof_index << ","
+                  << fullmat_row_index << "," << fullmat_col_index << ","
+                  << i_index << "," << j_index << std::endl;
+#endif
+
+          switch (cell_neighboring_type)
+            {
+                case CellNeighboringType::SamePanel: {
+                  if (producer_buffer_same_panel.is_full())
+                    {
+                      ring_buffer_same_panel.add_tasks_from_producer_buffer(
+                        producer_buffer_same_panel, false);
+                      producer_buffer_same_panel.reset();
+                    }
+
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "add_task_same_panel");
+#endif
+
+                  producer_buffer_same_panel.add_task(
+                    fullmat,
+                    fullmat_row_index,
+                    fullmat_col_index,
+                    SauterQuadratureTaskScalarDataNearField(
+                      kx_cell_index_global,
+                      ky_cell_index_global,
+                      kx_cell_index_local,
+                      ky_cell_index_local,
+                      i_index,
+                      j_index,
+                      kx_mapping_index,
+                      ky_mapping_index,
+                      kx_mapping_n_shape_functions,
+                      ky_mapping_n_shape_functions,
+                      is_kx_normal_inward,
+                      is_ky_normal_inward),
+                    0.);
+
+                  break;
+                }
+                case CellNeighboringType::CommonEdge: {
+                  if (producer_buffer_common_edge.is_full())
+                    {
+                      ring_buffer_common_edge.add_tasks_from_producer_buffer(
+                        producer_buffer_common_edge, false);
+                      producer_buffer_common_edge.reset();
+                    }
+
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "add_task_common_edge");
+#endif
+
+                  producer_buffer_common_edge.add_task(
+                    fullmat,
+                    fullmat_row_index,
+                    fullmat_col_index,
+                    SauterQuadratureTaskScalarDataNearField(
+                      kx_cell_index_global,
+                      ky_cell_index_global,
+                      kx_cell_index_local,
+                      ky_cell_index_local,
+                      i_index,
+                      j_index,
+                      kx_mapping_index,
+                      ky_mapping_index,
+                      kx_mapping_n_shape_functions,
+                      ky_mapping_n_shape_functions,
+                      is_kx_normal_inward,
+                      is_ky_normal_inward),
+                    0.,
+                    scratch_data.kx_mapping_support_points_permuted.data(),
+                    scratch_data.ky_mapping_support_points_permuted.data());
+
+                  break;
+                }
+                case CellNeighboringType::CommonVertex: {
+                  if (producer_buffer_common_vertex.is_full())
+                    {
+                      ring_buffer_common_vertex.add_tasks_from_producer_buffer(
+                        producer_buffer_common_vertex, false);
+                      producer_buffer_common_vertex.reset();
+                    }
+
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "add_task_common_vertex");
+#endif
+
+                  producer_buffer_common_vertex.add_task(
+                    fullmat,
+                    fullmat_row_index,
+                    fullmat_col_index,
+                    SauterQuadratureTaskScalarDataNearField(
+                      kx_cell_index_global,
+                      ky_cell_index_global,
+                      kx_cell_index_local,
+                      ky_cell_index_local,
+                      i_index,
+                      j_index,
+                      kx_mapping_index,
+                      ky_mapping_index,
+                      kx_mapping_n_shape_functions,
+                      ky_mapping_n_shape_functions,
+                      is_kx_normal_inward,
+                      is_ky_normal_inward),
+                    0.,
+                    scratch_data.kx_mapping_support_points_permuted.data(),
+                    scratch_data.ky_mapping_support_points_permuted.data());
+
+                  break;
+                }
+                case CellNeighboringType::Regular: {
+                  if (producer_buffer_regular.is_full())
+                    {
+                      ring_buffer_regular.add_tasks_from_producer_buffer(
+                        producer_buffer_regular, false);
+                      producer_buffer_regular.reset();
+                    }
+
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "add_task_regular");
+#endif
+
+                  producer_buffer_regular.add_task(
+                    fullmat,
+                    fullmat_row_index,
+                    fullmat_col_index,
+                    SauterQuadratureTaskScalarDataNearField(
+                      kx_cell_index_global,
+                      ky_cell_index_global,
+                      kx_cell_index_local,
+                      ky_cell_index_local,
+                      i_index,
+                      j_index,
+                      kx_mapping_index,
+                      ky_mapping_index,
+                      kx_mapping_n_shape_functions,
+                      ky_mapping_n_shape_functions,
+                      is_kx_normal_inward,
+                      is_ky_normal_inward),
+                    0.);
+
+                  break;
+                }
+                default: {
+                  Assert(false, ExcInternalError());
+
+                  break;
+                }
+            }
+
+          // After adding the current task to one of the local producer
+          // buffers, we check if this is the last task. If so we transfer all
+          // tasks in local buffers to ring buffers.
+          if (is_last_matrix_entry &&
+              kx_dof_support_cell_index == cell_num_in_kx_dof_support - 1 &&
+              ky_dof_support_cell_index == cell_num_in_ky_dof_support - 1)
+            {
+              ring_buffer_same_panel.add_tasks_from_producer_buffer(
+                producer_buffer_same_panel, false);
+              ring_buffer_common_edge.add_tasks_from_producer_buffer(
+                producer_buffer_common_edge, false);
+              ring_buffer_common_vertex.add_tasks_from_producer_buffer(
+                producer_buffer_common_vertex, false);
+              ring_buffer_regular.add_tasks_from_producer_buffer(
+                producer_buffer_regular, false);
+
+              producer_buffer_same_panel.reset();
+              producer_buffer_common_edge.reset();
+              producer_buffer_common_vertex.reset();
+              producer_buffer_regular.reset();
+            }
+
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+          timer.stop();
+          Assert(hmat_profile != nullptr, ExcInternalError());
+          hmat_profile->producer_time_per_type[cell_neighboring_type].fetch_add(
+            timer.last_wall_time());
+          hmat_profile->near_field_tasks_per_type[cell_neighboring_type]
+            .fetch_add(1);
+#endif
+        }
+    }
+}
+
+
+/**
+ * @brief Create Sauter quadrature tasks which are associated with a pair of
+ * global DoF indices in the external numbering with respect to the
+ * complete set of DoFs in the DoF handler. This version handles the case
+ * when a mass matrix (scaled by @p mass_matrix_factor) is to be added to
+ * the bilinear form.
+ *
+ * \mynote{Before performing the Sauter quadrature, we first compute the
+ * mass matrix entry if needed. The final result will be the addition of
+ * this value and the Sauter quadrature result.}
+ *
+ * @tparam dim
+ * @tparam spacedim
+ * @tparam RangeNumberType
+ * @tparam KernelNumberType
+ * @tparam SurfaceNormalDetector
+ * @param producer_buffer_same_panel
+ * @param producer_buffer_common_edge
+ * @param producer_buffer_common_vertex
+ * @param producer_buffer_regular
+ * @param ring_buffer_same_panel
+ * @param ring_buffer_common_edge
+ * @param ring_buffer_common_vertex
+ * @param ring_buffer_regular
+ * @param mass_matrix_factor
+ * @param fullmat
+ * @param fullmat_row_index
+ * @param fullmat_col_index
+ * @param i_global_dof_index Global DoF index in the external numbering. If
+ * only a subset of the complete DoFs in the associated DoF handler is
+ * effective or selected, this index is with respect to the complete DoF
+ * set.
+ * @param j_global_dof_index Global DoF index in the external numbering. If
+ * only a subset of the complete DoFs in the associated DoF handler is
+ * effective or selected, this index is with respect to the complete DoF
+ * set.
+ * @param kx_dof_to_cell_topo
+ * @param ky_dof_to_cell_topo
+ * @param mappings
+ * @param material_id_to_mapping_index
+ * @param global_to_local_cell_index_map
+ * @param mapping_support_point_table
+ * @param normal_detector
+ * @param mass_matrix_scratch_data
+ * @param scratch_data
+ * @param copy_data
+ * @param is_last_matrix_entry
+ * @param hmat_profile
+ */
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType,
+          typename SurfaceNormalDetector>
+void
+create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
+  SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+    &producer_buffer_same_panel,
+  SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+    &producer_buffer_common_edge,
+  SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+    &producer_buffer_common_vertex,
+  SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
+    &producer_buffer_regular,
+  CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
+                                               spacedim,
+                                               RangeNumberType,
+                                               KernelNumberType>
+    &ring_buffer_same_panel,
+  CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
+                                               spacedim,
+                                               RangeNumberType,
+                                               KernelNumberType>
+    &ring_buffer_common_edge,
+  CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
+                                               spacedim,
+                                               RangeNumberType,
+                                               KernelNumberType>
+    &ring_buffer_common_vertex,
+  CUDAWrappers::SauterQuadratureTaskRingBuffer<dim,
+                                               spacedim,
+                                               RangeNumberType,
+                                               KernelNumberType>
+    &ring_buffer_regular,
+  const typename numbers::NumberTraits<RangeNumberType>::real_type
+                                        mass_matrix_factor,
+  LAPACKFullMatrixExt<RangeNumberType> *fullmat,
+  const unsigned int                    fullmat_row_index,
+  const unsigned int                    fullmat_col_index,
+  const types::global_dof_index         i_global_dof_index,
+  const types::global_dof_index         j_global_dof_index,
+  const std::vector<
+    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+    &kx_dof_to_cell_topo,
+  const std::vector<
+    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                  &ky_dof_to_cell_topo,
+  const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+  const std::map<types::material_id, unsigned int>
+                                              &material_id_to_mapping_index,
+  const std::vector<types::global_cell_index> &global_to_local_cell_index_map,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+                                                  &mapping_support_point_table,
+  const SurfaceNormalDetector                     &normal_detector,
+  CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
+  PairCellWiseScratchDataBase<dim, spacedim, KernelNumberType> &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim, KernelNumberType>     &copy_data,
+  const bool                               is_last_matrix_entry,
+  [[maybe_unused]] HMatrixAssemblyProfile *hmat_profile = nullptr)
+{
+  using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
+  static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
+  static_assert(
+    std::is_same<
+      real_type,
+      typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+  LogStream::Prefix prefix_string("create_sauter_task");
+#endif
+#if ENABLE_NVTX == 1
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+    std::string("create_tasks_for_dof_pair_mass"));
+#endif
+
+  // Iterate over each cell in the support of the basis function
+  // associated with the i-th global DoF in the external numbering.
+  const unsigned int cell_num_in_kx_dof_support =
+    kx_dof_to_cell_topo[i_global_dof_index].size();
+  for (unsigned int kx_dof_support_cell_index = 0;
+       kx_dof_support_cell_index < cell_num_in_kx_dof_support;
+       kx_dof_support_cell_index++)
+    {
+      const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter =
+        *kx_dof_to_cell_topo[i_global_dof_index][kx_dof_support_cell_index];
+      const types::global_cell_index kx_cell_index_global =
+        kx_cell_iter->active_cell_index();
+      const types::global_cell_index kx_cell_index_local =
+        global_to_local_cell_index_map[kx_cell_index_global];
+
+      const unsigned int kx_mapping_index =
+        material_id_to_mapping_index.at(kx_cell_iter->material_id());
+      MappingInfo<dim, spacedim> &kx_mapping_info = *mappings[kx_mapping_index];
+      const unsigned int          kx_mapping_n_shape_functions =
+        kx_mapping_info.get_data()->n_shape_functions;
+      const bool is_kx_normal_inward =
+        normal_detector.is_normal_vector_inward(kx_cell_iter->material_id());
+
+      // Update the DoF indices.
+      kx_cell_iter->get_dof_indices(
+        scratch_data.kx_local_dof_indices_in_default_dof_order);
+
+      // Iterate over each cell in the support of the basis function
+      // associated with the j-th global DoF in the external numbering.
+      const unsigned int cell_num_in_ky_dof_support =
+        ky_dof_to_cell_topo[j_global_dof_index].size();
+      for (unsigned int ky_dof_support_cell_index = 0;
+           ky_dof_support_cell_index < cell_num_in_ky_dof_support;
+           ky_dof_support_cell_index++)
+        {
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+          Timer timer;
+#endif
+
+          const typename DoFHandler<dim,
+                                    spacedim>::cell_iterator &ky_cell_iter =
+            *ky_dof_to_cell_topo[j_global_dof_index][ky_dof_support_cell_index];
+          const types::global_cell_index ky_cell_index_global =
+            ky_cell_iter->active_cell_index();
+          const types::global_cell_index ky_cell_index_local =
+            global_to_local_cell_index_map[ky_cell_index_global];
+
+          // Detect the cell neighboring type based on cell vertex
+          // indices.
+          CellNeighboringType cell_neighboring_type = BEMTools::
+            detect_cell_neighboring_type_for_same_triangulations<dim, spacedim>(
+              kx_cell_iter,
+              ky_cell_iter,
+              scratch_data.common_vertex_pair_local_indices);
+
+          const unsigned int ky_mapping_index =
+            material_id_to_mapping_index.at(ky_cell_iter->material_id());
+          MappingInfo<dim, spacedim> &ky_mapping_info =
+            *mappings[ky_mapping_index];
+          const unsigned int ky_mapping_n_shape_functions =
+            ky_mapping_info.get_data()->n_shape_functions;
+          const bool is_ky_normal_inward =
+            normal_detector.is_normal_vector_inward(
+              ky_cell_iter->material_id());
+
+          // Update the DoF indices.
+          ky_cell_iter->get_dof_indices(
+            scratch_data.ky_local_dof_indices_in_default_dof_order);
+
+          permute_dofs_and_mapping_support_points_for_sauter_quad(
+            scratch_data,
+            copy_data,
+            cell_neighboring_type,
+            kx_cell_iter,
+            ky_cell_iter,
+            kx_mapping_info,
+            ky_mapping_info,
+            mapping_support_point_table);
+
+          /**
+           * @internal Before creating the Sauter quadrature task, compute
+           * the FEM mass matrix entry if necessary.
+           *
+           * \myalert{N.B. The DoF handlers for the test and ansatz spaces
+           * should be constructed on a same triangulation. Then the
+           * following comparison <code>kx_cell_index_global ==
+           * ky_cell_index_global</code> is meaningful.}
+           */
+          real_type mass_matrix_entry = 0.;
+          if ((kx_cell_index_global == ky_cell_index_global) &&
+              (mass_matrix_factor != 0))
+            {
+#if ENABLE_NVTX == 1
+              HierBEM::CUDAWrappers::NVTXRange nvtx_range("calc_mass_entry");
+#endif
+
+              Assert(cell_neighboring_type == CellNeighboringType::SamePanel,
+                     ExcInternalError());
+
+              /**
+               * @internal Update the finite element values for the test
+               * space.
+               */
+              mass_matrix_scratch_data.fe_values_for_test_space.reinit(
+                kx_cell_iter);
+
+              /**
+               * @internal Update the finite element values for the trial
+               * space.
+               *
+               * \mynote{N.B. The @p FEValues related to the trial
+               * space must also be updated, since the trial space may
+               * be different from the test space.}
+               */
+              mass_matrix_scratch_data.fe_values_for_trial_space.reinit(
+                ky_cell_iter);
+
+              const unsigned int n_q_points =
+                mass_matrix_scratch_data.fe_values_for_test_space
+                  .get_quadrature()
+                  .size();
+              /**
+               * @internal The trial space is on a same triangulation as
+               * the test space and they share a same quadrature object.
+               * Hence, we make assertion about their quadrature sizes.
+               */
+              AssertDimension(n_q_points,
+                              mass_matrix_scratch_data.fe_values_for_trial_space
+                                .get_quadrature()
+                                .size());
+
+              /**
+               * Get the array index of the global DoF index
+               * @p i_global_dof_index in the current cell \f$K_x\f$.
+               *
+               * \mynote{N.B. The local DoF index in \f$K_x\f$ is
+               * searched from the list of DoF indices held in the
+               * @p ScratchData for BEM. This is valid because the
+               * test and trial spaces associated with the mass matrix
+               * and the BEM bilinear form are the same.
+               *
+               * Since there is no support point permutation during FEM
+               * mass matrix assembly, the cell DoF indices here are in
+               * the default order. BTW, the permuted cell DoF indices are
+               * stored in the @p CopyData.}
+               */
+              auto i_local_dof_iter = std::find(
+                scratch_data.kx_local_dof_indices_in_default_dof_order.begin(),
+                scratch_data.kx_local_dof_indices_in_default_dof_order.end(),
+                i_global_dof_index);
+              Assert(
+                i_local_dof_iter !=
+                  scratch_data.kx_local_dof_indices_in_default_dof_order.end(),
+                ExcMessage(std::string("Cannot find the global DoF index ") +
+                           std::to_string(i_global_dof_index) +
+                           std::string(" in the list of cell DoF indices!")));
+              const unsigned int i_local_dof_index =
+                i_local_dof_iter -
+                scratch_data.kx_local_dof_indices_in_default_dof_order.begin();
+
+              /**
+               * Get the array index of the global DoF index
+               * @p j_global_dof_index in the current cell \f$K_y\f$.
+               */
+              auto j_local_dof_iter = std::find(
+                scratch_data.ky_local_dof_indices_in_default_dof_order.begin(),
+                scratch_data.ky_local_dof_indices_in_default_dof_order.end(),
+                j_global_dof_index);
+              Assert(
+                j_local_dof_iter !=
+                  scratch_data.ky_local_dof_indices_in_default_dof_order.end(),
+                ExcMessage(std::string("Cannot find the global DoF index ") +
+                           std::to_string(j_global_dof_index) +
+                           std::string(" in the list of cell DoF indices!")));
+              const unsigned int j_local_dof_index =
+                j_local_dof_iter -
+                scratch_data.ky_local_dof_indices_in_default_dof_order.begin();
+
+              /**
+               * @internal Iterate over each quadrature point.
+               */
+              for (unsigned int q = 0; q < n_q_points; q++)
+                {
+                  mass_matrix_entry +=
+                    mass_matrix_scratch_data.fe_values_for_test_space
+                      .shape_value(i_local_dof_index, q) *
+                    mass_matrix_scratch_data.fe_values_for_trial_space
+                      .shape_value(j_local_dof_index, q) *
+                    mass_matrix_scratch_data.fe_values_for_test_space.JxW(q);
+                }
+
+              mass_matrix_entry *= mass_matrix_factor;
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+              deallog << "kx=" << kx_cell_index_global
+                      << ", ky=" << ky_cell_index_global
+                      << ", i=" << i_global_dof_index
+                      << ", j=" << j_global_dof_index
+                      << ", Mij=" << mass_matrix_entry << std::endl;
+#endif
+            }
+
+          /**
+           * @internal Now we start to create the Sauter quadrature task.
+           */
+
+          /**
+           * @internal Find the array index in the permuted DoF indices of
+           * \f$K_x\f$ for the i-th global DoF in the external numbering
+           * with respect to the complete DoF set in the DoF handler.
+           *
+           * \mynote{The permuted cell DoF indices are stored in the
+           * @p CopyData.}
+           */
+          typename std::vector<types::global_dof_index>::const_iterator i_iter =
+            std::find(copy_data.kx_local_dof_indices_permuted.begin(),
+                      copy_data.kx_local_dof_indices_permuted.end(),
+                      i_global_dof_index);
+          Assert(i_iter != copy_data.kx_local_dof_indices_permuted.end(),
+                 ExcInternalError());
+          unsigned int i_index =
+            i_iter - copy_data.kx_local_dof_indices_permuted.begin();
+
+          /**
+           * @internal Find the array index in the permuted DoF indices of
+           * \f$K_y\f$ for the j-th global DoF in the external numbering
+           * with respect to the complete DoF set in the DoF handler.
+           */
+          typename std::vector<types::global_dof_index>::const_iterator j_iter =
+            std::find(copy_data.ky_local_dof_indices_permuted.begin(),
+                      copy_data.ky_local_dof_indices_permuted.end(),
+                      j_global_dof_index);
+          Assert(j_iter != copy_data.ky_local_dof_indices_permuted.end(),
+                 ExcInternalError());
+          unsigned int j_index =
+            j_iter - copy_data.ky_local_dof_indices_permuted.begin();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+          deallog << "Create Sauter task: " << fullmat << ","
+                  << i_global_dof_index << "," << j_global_dof_index << ","
+                  << fullmat_row_index << "," << fullmat_col_index << ","
+                  << i_index << "," << j_index << ",mass=" << mass_matrix_entry
+                  << std::endl;
+#endif
+
+          switch (cell_neighboring_type)
+            {
+                case CellNeighboringType::SamePanel: {
+                  if (producer_buffer_same_panel.is_full())
+                    {
+                      ring_buffer_same_panel.add_tasks_from_producer_buffer(
+                        producer_buffer_same_panel, true);
+                      producer_buffer_same_panel.reset();
+                    }
+
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "add_task_same_panel");
+#endif
+
+                  producer_buffer_same_panel.add_task(
+                    fullmat,
+                    fullmat_row_index,
+                    fullmat_col_index,
+                    SauterQuadratureTaskScalarDataNearField(
+                      kx_cell_index_global,
+                      ky_cell_index_global,
+                      kx_cell_index_local,
+                      ky_cell_index_local,
+                      i_index,
+                      j_index,
+                      kx_mapping_index,
+                      ky_mapping_index,
+                      kx_mapping_n_shape_functions,
+                      ky_mapping_n_shape_functions,
+                      is_kx_normal_inward,
+                      is_ky_normal_inward),
+                    mass_matrix_entry);
+
+                  break;
+                }
+                case CellNeighboringType::CommonEdge: {
+                  if (producer_buffer_common_edge.is_full())
+                    {
+                      ring_buffer_common_edge.add_tasks_from_producer_buffer(
+                        producer_buffer_common_edge, true);
+                      producer_buffer_common_edge.reset();
+                    }
+
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "add_task_common_edge");
+#endif
+
+                  producer_buffer_common_edge.add_task(
+                    fullmat,
+                    fullmat_row_index,
+                    fullmat_col_index,
+                    SauterQuadratureTaskScalarDataNearField(
+                      kx_cell_index_global,
+                      ky_cell_index_global,
+                      kx_cell_index_local,
+                      ky_cell_index_local,
+                      i_index,
+                      j_index,
+                      kx_mapping_index,
+                      ky_mapping_index,
+                      kx_mapping_n_shape_functions,
+                      ky_mapping_n_shape_functions,
+                      is_kx_normal_inward,
+                      is_ky_normal_inward),
+                    mass_matrix_entry,
+                    scratch_data.kx_mapping_support_points_permuted.data(),
+                    scratch_data.ky_mapping_support_points_permuted.data());
+
+                  break;
+                }
+                case CellNeighboringType::CommonVertex: {
+                  if (producer_buffer_common_vertex.is_full())
+                    {
+                      ring_buffer_common_vertex.add_tasks_from_producer_buffer(
+                        producer_buffer_common_vertex, true);
+                      producer_buffer_common_vertex.reset();
+                    }
+
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "add_task_common_vertex");
+#endif
+
+                  producer_buffer_common_vertex.add_task(
+                    fullmat,
+                    fullmat_row_index,
+                    fullmat_col_index,
+                    SauterQuadratureTaskScalarDataNearField(
+                      kx_cell_index_global,
+                      ky_cell_index_global,
+                      kx_cell_index_local,
+                      ky_cell_index_local,
+                      i_index,
+                      j_index,
+                      kx_mapping_index,
+                      ky_mapping_index,
+                      kx_mapping_n_shape_functions,
+                      ky_mapping_n_shape_functions,
+                      is_kx_normal_inward,
+                      is_ky_normal_inward),
+                    mass_matrix_entry,
+                    scratch_data.kx_mapping_support_points_permuted.data(),
+                    scratch_data.ky_mapping_support_points_permuted.data());
+
+                  break;
+                }
+                case CellNeighboringType::Regular: {
+                  if (producer_buffer_regular.is_full())
+                    {
+                      ring_buffer_regular.add_tasks_from_producer_buffer(
+                        producer_buffer_regular, true);
+                      producer_buffer_regular.reset();
+                    }
+
+#if ENABLE_NVTX == 1
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    "add_task_regular");
+#endif
+
+                  producer_buffer_regular.add_task(
+                    fullmat,
+                    fullmat_row_index,
+                    fullmat_col_index,
+                    SauterQuadratureTaskScalarDataNearField(
+                      kx_cell_index_global,
+                      ky_cell_index_global,
+                      kx_cell_index_local,
+                      ky_cell_index_local,
+                      i_index,
+                      j_index,
+                      kx_mapping_index,
+                      ky_mapping_index,
+                      kx_mapping_n_shape_functions,
+                      ky_mapping_n_shape_functions,
+                      is_kx_normal_inward,
+                      is_ky_normal_inward),
+                    mass_matrix_entry);
+
+                  break;
+                }
+                default: {
+                  Assert(false, ExcInternalError());
+
+                  break;
+                }
+            }
+
+          // After adding the current task to one of the local producer
+          // buffers, we check if this is the last task. If so we transfer all
+          // tasks in local buffers to ring buffers.
+          if (is_last_matrix_entry &&
+              kx_dof_support_cell_index == cell_num_in_kx_dof_support - 1 &&
+              ky_dof_support_cell_index == cell_num_in_ky_dof_support - 1)
+            {
+              ring_buffer_same_panel.add_tasks_from_producer_buffer(
+                producer_buffer_same_panel, true);
+              ring_buffer_common_edge.add_tasks_from_producer_buffer(
+                producer_buffer_common_edge, true);
+              ring_buffer_common_vertex.add_tasks_from_producer_buffer(
+                producer_buffer_common_vertex, true);
+              ring_buffer_regular.add_tasks_from_producer_buffer(
+                producer_buffer_regular, true);
+
+              producer_buffer_same_panel.reset();
+              producer_buffer_common_edge.reset();
+              producer_buffer_common_vertex.reset();
+              producer_buffer_regular.reset();
+            }
+
+#if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
+          timer.stop();
+          Assert(hmat_profile != nullptr, ExcInternalError());
+          hmat_profile->producer_time_per_type[cell_neighboring_type].fetch_add(
+            timer.last_wall_time());
+          hmat_profile->near_field_tasks_per_type[cell_neighboring_type]
+            .fetch_add(1);
+#endif
+        }
+    }
+}
+
+
+/**
+ * @brief This version is used for assembling a row or column vector in a
+ * far field \hmat.
+ *
+ * \mynote{The cell neighboring type for each pair of cells is @p regular.}
+ *
+ * @tparam dim
+ * @tparam spacedim
+ * @tparam RangeNumberType
+ * @tparam KernelNumberType
+ * @param task_buffer
+ * @param i_global_dof_index
+ * @param j_global_dof_index
+ * @param kx_dof_to_cell_topo
+ * @param ky_dof_to_cell_topo
+ * @param mappings
+ * @param material_id_to_mapping_index
+ * @param global_to_local_cell_index_map
+ * @param mapping_support_point_table
+ * @param normal_detector
+ * @param scratch_data
+ * @param copy_data
+ * @return The total number of quadrature tasks for the pair of DoFs.
+ */
+template <int dim,
+          int spacedim,
+          typename CUDARangeNumberType,
+          typename KernelNumberType>
+unsigned int
+create_sauter_quadrature_tasks_on_one_pair_of_far_field_dofs(
+  CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    CUDARangeNumberType,
+    DeviceNumberType<KernelNumberType>> &task_buffer,
+  const types::global_dof_index          i_global_dof_index,
+  const types::global_dof_index          j_global_dof_index,
+  const std::vector<
+    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+    &kx_dof_to_cell_topo,
+  const std::vector<
+    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                  &ky_dof_to_cell_topo,
+  const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+  const std::map<types::material_id, unsigned int>
+                                              &material_id_to_mapping_index,
+  const std::vector<types::global_cell_index> &global_to_local_cell_index_map,
+  const Table<
+    2,
+    Point<spacedim,
+          typename numbers::NumberTraits<KernelNumberType>::real_type>>
+    &mapping_support_point_table,
+  PairCellWiseScratchDataForHMatrixFarField<dim, spacedim, KernelNumberType>
+                                                           &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+{
+  static_assert(
+    is_number_larger_or_equal<CUDARangeNumberType, KernelNumberType>());
+  static_assert(
+    std::is_same<
+      typename numbers::NumberTraits<CUDARangeNumberType>::real_type,
+      typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
+
+#if ENABLE_NVTX == 1
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
+    std::string("create_tasks_for_dof_pair_far_field"));
+#endif
+
+  unsigned int number_of_tasks_for_dof_pair = 0;
+
+
+  // Iterate over each cell in the support of the basis function
+  // associated with the i-th global DoF in the external numbering.
+  for (auto kx_cell_iter_pointer : kx_dof_to_cell_topo[i_global_dof_index])
+    {
+      const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter =
+        *kx_cell_iter_pointer;
+      const types::global_cell_index kx_cell_index_global =
+        kx_cell_iter->active_cell_index();
+      const types::global_cell_index kx_cell_index_local =
+        global_to_local_cell_index_map[kx_cell_index_global];
+
+      const unsigned int kx_mapping_index =
+        material_id_to_mapping_index.at(kx_cell_iter->material_id());
+      MappingInfo<dim, spacedim> &kx_mapping_info = *mappings[kx_mapping_index];
+
+      // Update the DoF indices.
+      kx_cell_iter->get_dof_indices(
+        scratch_data.kx_local_dof_indices_in_default_dof_order);
+
+      // Iterate over each cell in the support of the basis function
+      // associated with the j-th global DoF in the external numbering.
+      for (auto ky_cell_iter_pointer : ky_dof_to_cell_topo[j_global_dof_index])
+        {
+          const typename DoFHandler<dim, spacedim>::cell_iterator
+                                        &ky_cell_iter = *ky_cell_iter_pointer;
+          const types::global_cell_index ky_cell_index_global =
+            ky_cell_iter->active_cell_index();
+          const types::global_cell_index ky_cell_index_local =
+            global_to_local_cell_index_map[ky_cell_index_global];
+
+          const unsigned int ky_mapping_index =
+            material_id_to_mapping_index.at(ky_cell_iter->material_id());
+          MappingInfo<dim, spacedim> &ky_mapping_info =
+            *mappings[ky_mapping_index];
+
+          // Update the DoF indices.
+          ky_cell_iter->get_dof_indices(
+            scratch_data.ky_local_dof_indices_in_default_dof_order);
+
+          permute_dofs_and_mapping_support_points_for_sauter_quad(
+            scratch_data,
+            copy_data,
+            CellNeighboringType::Regular,
+            kx_cell_iter,
+            ky_cell_iter,
+            kx_mapping_info,
+            ky_mapping_info,
+            mapping_support_point_table);
+
+          /**
+           * @internal Find the array index in the permuted DoF indices of
+           * \f$K_x\f$ for the i-th global DoF in the external numbering
+           * with respect to the complete DoF set in the DoF handler.
+           *
+           * \mynote{The permuted cell DoF indices are stored in the
+           * @p CopyData.}
+           */
+          typename std::vector<types::global_dof_index>::const_iterator i_iter =
+            std::find(copy_data.kx_local_dof_indices_permuted.begin(),
+                      copy_data.kx_local_dof_indices_permuted.end(),
+                      i_global_dof_index);
+          Assert(i_iter != copy_data.kx_local_dof_indices_permuted.end(),
+                 ExcInternalError());
+          unsigned int i_index =
+            i_iter - copy_data.kx_local_dof_indices_permuted.begin();
+
+          /**
+           * @internal Find the array index in the permuted DoF indices of
+           * \f$K_y\f$ for the j-th global DoF in the external numbering
+           * with respect to the complete DoF set in the DoF handler.
+           */
+          typename std::vector<types::global_dof_index>::const_iterator j_iter =
+            std::find(copy_data.ky_local_dof_indices_permuted.begin(),
+                      copy_data.ky_local_dof_indices_permuted.end(),
+                      j_global_dof_index);
+          Assert(j_iter != copy_data.ky_local_dof_indices_permuted.end(),
+                 ExcInternalError());
+          unsigned int j_index =
+            j_iter - copy_data.ky_local_dof_indices_permuted.begin();
+
+          task_buffer.add_task(SauterQuadratureTaskScalarDataFarField(
+            kx_cell_index_local, ky_cell_index_local, i_index, j_index));
+
+          number_of_tasks_for_dof_pair++;
+        }
+    }
+
+  return number_of_tasks_for_dof_pair;
+}
+
+HBEM_NS_CLOSE
+
+#endif // HIERBEM_INCLUDE_QUADRATURE_CU_SAUTER_QUADRATURE_HCU_

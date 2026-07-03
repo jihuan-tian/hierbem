@@ -23,7 +23,6 @@
 
 #include <iostream>
 
-#include "quadrature/quadrature.templates.h"
 #include "utilities/debug_tools.h"
 
 using namespace std;
@@ -39,6 +38,7 @@ main()
    * @internal The argument in the constructor is the number of quadrature
    * points in each dimension, which should be @p quad_order+1.
    */
+  cout << "=== QGauss<4> ===" << endl;
   QGauss<dim * 2> quad(quad_order + 1);
   print_qgauss(cout, quad, " ");
 
@@ -49,6 +49,7 @@ main()
    * @internal Print out quadrature points and weights in 4D by taking the
    * tensor product of @p quad1 and @p quad2.
    */
+  cout << "=== Tensor product of two QGauss<2> ===" << endl;
   unsigned int counter = 0;
   for (unsigned int j = 0; j < quad2.size(); j++)
     {

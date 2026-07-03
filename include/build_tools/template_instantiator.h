@@ -48,7 +48,8 @@
     TI_INSTANTIATE_CLS_4_WITH_RANGE_KERNEL_NUMBER_TYPES_,                        \
     (cls_seq)(arg1_seq)(arg2_seq)(arg3_seq))
 
-#define TI_INST_NUM_TYPES (float)(double)
+// #define TI_INST_NUM_TYPES (float)(double)
+#define TI_INST_NUM_TYPES (double)
 #define TI_INST_SPACE_DIMS (3)
 #define TI_INST_BOUNDARY_DIMS (2)
 

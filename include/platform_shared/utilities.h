@@ -28,8 +28,6 @@
 
 HBEM_NS_OPEN
 
-using namespace dealii;
-
 namespace PlatformShared
 {
   namespace Utilities
@@ -38,14 +36,14 @@ namespace PlatformShared
     HBEM_ATTR_HOST HBEM_ATTR_DEV inline T
     fixed_power(const T x)
     {
-      if (N == 0)
+      if constexpr (N == 0)
         return T(1.);
-      else if (N < 0)
+      else if constexpr (N < 0)
         return T(1.) / fixed_power<-N>(x);
+      else if constexpr (N % 2 == 1)
+        return x * fixed_power<N / 2>(x * x);
       else
-        // Use exponentiation by squaring:
-        return ((N % 2 == 1) ? x * fixed_power<N / 2>(x * x) :
-                               fixed_power<N / 2>(x * x));
+        return fixed_power<N / 2>(x * x);
     }
 
     /**
@@ -55,9 +53,10 @@ namespace PlatformShared
     HBEM_ATTR_DEV inline Number
     exp(const Number x)
     {
-      using real_type = typename numbers::NumberTraits<Number>::real_type;
+      using real_type =
+        typename dealii::numbers::NumberTraits<Number>::real_type;
 
-      if constexpr (numbers::NumberTraits<Number>::is_complex)
+      if constexpr (dealii::numbers::NumberTraits<Number>::is_complex)
         {
           // When the number is complex valued, we use the Euler's identity to
           // compute the exponential of the input number.

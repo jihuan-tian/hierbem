@@ -26,7 +26,6 @@
 #include "config_file/cu_related.h"
 #include "grid/grid_in_ext.h"
 #include "grid/grid_out_ext.h"
-#include "hbem_test_config.h"
 #include "hmatrix/hmatrix.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
 #include "laplace/laplace_bem.h"

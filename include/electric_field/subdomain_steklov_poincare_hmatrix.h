@@ -356,6 +356,8 @@ SubdomainSteklovPoincareHMatrix<spacedim, Number>::
         }
     }
 
+  subdomain_to_skeleton_dirichlet_dof_index_map.shrink_to_fit();
+
   subdomain_to_skeleton_neumann_dof_index_map.reserve(
     dof_handler_for_neumann_space.n_dofs());
   skeleton_to_subdomain_neumann_dof_index_map.resize(
@@ -375,6 +377,8 @@ SubdomainSteklovPoincareHMatrix<spacedim, Number>::
             subdomain_to_skeleton_neumann_dof_index_map.size() - 1;
         }
     }
+
+  subdomain_to_skeleton_neumann_dof_index_map.shrink_to_fit();
 }
 
 HBEM_NS_CLOSE

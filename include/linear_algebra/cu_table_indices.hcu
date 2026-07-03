@@ -9,14 +9,14 @@
 // file LICENSE at the top level directory of HierBEM.
 
 /**
- * @file cu_table_indices.h
- * @brief Introduction of cu_table_indices.h
+ * @file cu_table_indices.hcu
+ * @brief Multi-dimensional table indices used on the device.
  *
  * @date 2023-01-24
  * @author Jihuan Tian
  */
-#ifndef HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_INDICES_H_
-#define HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_INDICES_H_
+#ifndef HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_INDICES_HCU_
+#define HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_INDICES_HCU_
 
 #include <deal.II/base/table_indices.h>
 
@@ -348,9 +348,7 @@ namespace CUDAWrappers
   copy_table_indices(TableIndices<N> &dest, const CUDATableIndices<N> &src)
   {
     for (int i = 0; i < N; i++)
-      {
-        dest[i] = src[i];
-      }
+      dest[i] = src[i];
   }
 
 
@@ -367,9 +365,7 @@ namespace CUDAWrappers
   copy_table_indices(CUDATableIndices<N> &dest, const TableIndices<N> &src)
   {
     for (int i = 0; i < N; i++)
-      {
-        dest[i] = src[i];
-      }
+      dest[i] = src[i];
   }
 
 
@@ -463,4 +459,4 @@ namespace CUDAWrappers
 
 HBEM_NS_CLOSE
 
-#endif // HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_INDICES_H_
+#endif // HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_INDICES_HCU_

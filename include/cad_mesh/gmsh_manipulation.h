@@ -139,7 +139,13 @@ public:
    * @post
    * @param volume_tag
    * @param oriented_surface_tags
-   * @param face_to_subdomain
+   * @param face_to_subdomain It is a map from a surface entity tag to an array
+   * with two elements of volume entity tags. The first element in the array
+   * means the normal vector of the current surface points outward with respect
+   * to the first volume, while the second element means the normal vector
+   * points inward with respect to the second volume. If the volume does not
+   * exist, its entity tag is zero. This is because a surface can either be
+   * shared by two volumes or belong to a single volume.
    * @param eps
    */
   static void
@@ -347,11 +353,23 @@ GmshManip<dim, spacedim>::get_oriented_volume_boundaries(
         {
           if (pos->second[0] != 0 && pos->second[1] == 0)
             {
+              // There is already another volume found to be in contact with the
+              // current face and the normal vector of the face points outward
+              // with respect to  it. Therefore, for the given volume, the
+              // normal vector can only point into it. Therefore, its volume tag
+              // should be assigned to the second element in the array and the
+              // surface orientation is negative.
               surface_orientation = -1;
               pos->second[1]      = volume_tag;
             }
           else if (pos->second[0] == 0 && pos->second[1] != 0)
             {
+              // There is already another volume found to be in contact with the
+              // current face and the normal vector of the face points inward
+              // with respect to  it. Therefore, for the given volume, the
+              // normal vector can only point outside of it. Therefore, its
+              // volume tag should be assigned to the first element in the array
+              // and the surface orientation is positive.
               surface_orientation = 1;
               pos->second[0]      = volume_tag;
             }

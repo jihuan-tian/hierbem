@@ -43,16 +43,12 @@ class MappingInfo
 public:
   /**
    * Default constructor.
-   * @pre
-   * @post
    */
   MappingInfo();
 
   /**
    * Constructor.
    *
-   * @pre
-   * @post
    * @param order
    */
   MappingInfo(const unsigned int order);
@@ -60,21 +56,12 @@ public:
   /**
    * Disable the copy constructor, because this class contains a @p unique_ptr
    * member.
-   *
-   * @pre
-   * @post
-   * @param
    */
   MappingInfo(const MappingInfo<dim, spacedim> &) = delete;
 
   /**
    * Disable the copy assignment operator, because this class contains a
    * @p unique_ptr member.
-   *
-   * @pre
-   * @post
-   * @param
-   * @return
    */
   MappingInfo<dim, spacedim> &
   operator=(const MappingInfo<dim, spacedim> &) = delete;
@@ -92,8 +79,6 @@ public:
    * copied into BEMValues. Then the internal data can be resized to be used
    * for other cases.
    *
-   * @pre
-   * @post
    * @param n_points_in_unit_cell
    */
   void
@@ -123,46 +108,70 @@ public:
     return mapping;
   }
 
+  /**
+   * @brief Generate mapping support point permutation in the forward traverse
+   * direction.
+   *
+   * @param starting_corner Starting corner/vertex index in the cell.
+   * @param support_point_permutation Returned permutation
+   * @param if_support_points_or_shape_functions_in_lexicographic_order If the
+   * original mapping support points are stored in the lexicographic order.
+   */
   void
   generate_forward_mapping_support_point_permutation(
     unsigned int               starting_corner,
-    std::vector<unsigned int> &support_point_permutation) const;
+    std::vector<unsigned int> &support_point_permutation,
+    const bool if_support_points_or_shape_functions_in_lexicographic_order =
+      true) const;
 
+  /**
+   * @brief Generate mapping support point permutation in the backward traverse
+   * direction.
+   *
+   * @param starting_corner Starting corner/vertex index in the cell.
+   * @param support_point_permutation Returned permutation
+   * @param if_support_points_or_shape_functions_in_lexicographic_order If the
+   * original mapping support points are stored in the lexicographic order.
+   */
   void
   generate_backward_mapping_support_point_permutation(
     unsigned int               starting_corner,
-    std::vector<unsigned int> &support_point_permutation) const;
+    std::vector<unsigned int> &support_point_permutation,
+    const bool if_support_points_or_shape_functions_in_lexicographic_order =
+      true) const;
 
   const std::array<std::vector<unsigned int>,
                    GeometryInfo<dim>::vertices_per_cell> &
-  get_lexicographic_numberings() const
+  get_lexicographic_numberings_for_support_points() const
   {
-    return lexicographic_numberings;
+    return lexicographic_numberings_for_support_points;
   }
 
   const std::array<std::vector<unsigned int>,
                    GeometryInfo<dim>::vertices_per_cell> &
-  get_reversed_lexicographic_numberings() const
+  get_reversed_lexicographic_numberings_for_support_points() const
   {
-    return reversed_lexicographic_numberings;
+    return reversed_lexicographic_numberings_for_support_points;
+  }
+
+  const std::array<std::vector<unsigned int>,
+                   GeometryInfo<dim>::vertices_per_cell> &
+  get_lexicographic_numberings_for_shape_functions() const
+  {
+    return lexicographic_numberings_for_shape_functions;
   }
 
 private:
   /**
    * Create the internal data object in the parent @p Mapping object.
-   *
-   * @pre
-   * @post
    */
   void
   init_mapping_data();
 
   /**
    * Initialize the lexicographic numberings and their reversed numberings for
-   * accessing mapping support points.
-   *
-   * @pre
-   * @post
+   * accessing mapping support points, mapping shape functions as well as their
+   * derivatives.
    */
   void
   init_lexicographic_numberings_and_reverse();
@@ -180,19 +189,19 @@ private:
   /**
    * The numbering used for accessing the list of support points in the
    * mapping object in the lexicographic order by starting from a specific
-   * cell vertex, where the list of support points are stored in the
-   * hierarchic order.
+   * cell vertex, where the list of support points are already stored in the
+   * lexicographic numbering starting from the first vertex.
    *
    * The array index is the vertex index.
    */
   std::array<std::vector<unsigned int>, GeometryInfo<dim>::vertices_per_cell>
-    lexicographic_numberings;
+    lexicographic_numberings_for_support_points;
 
   /**
    * The numbering used for accessing the list of support points in the
    * mapping object in the reversed lexicographic order by starting from a
-   * specific cell vertex, where the list of support points are stored in the
-   * hierarchical order.
+   * specific cell vertex, where the list of support points are already stored
+   * in the lexicographic numbering starting from the first vertex.
    *
    * The array index is the vertex index.
    *
@@ -200,7 +209,18 @@ private:
    * common edge and it is applied to the mapping for \f$K_y\f$.}
    */
   std::array<std::vector<unsigned int>, GeometryInfo<dim>::vertices_per_cell>
-    reversed_lexicographic_numberings;
+    reversed_lexicographic_numberings_for_support_points;
+
+  /**
+   * The numbering used for accessing mapping shape functions and their
+   * derivatives in the lexicographic order by starting from a specific cell
+   * vertex, where the mapping shape function and derivative values are already
+   * stored in the hierarchic numbering starting from the first vertex.
+   *
+   * The array index is the vertex index.
+   */
+  std::array<std::vector<unsigned int>, GeometryInfo<dim>::vertices_per_cell>
+    lexicographic_numberings_for_shape_functions;
 };
 
 
@@ -255,7 +275,8 @@ template <int dim, int spacedim>
 void
 MappingInfo<dim, spacedim>::generate_forward_mapping_support_point_permutation(
   unsigned int               starting_corner,
-  std::vector<unsigned int> &support_point_permutation) const
+  std::vector<unsigned int> &support_point_permutation,
+  const bool if_support_points_or_shape_functions_in_lexicographic_order) const
 {
   // Currently, only dim=2 and spacedim=3 are supported.
   Assert((dim == 2) && (spacedim == 3), ExcInternalError());
@@ -276,7 +297,9 @@ MappingInfo<dim, spacedim>::generate_forward_mapping_support_point_permutation(
       for (int j = 0; j <= poly_degree; j++)
         {
           support_point_numbering_matrix(i, j) =
-            poly_space_inverse_numbering[c];
+            if_support_points_or_shape_functions_in_lexicographic_order ?
+              c :
+              poly_space_inverse_numbering[c];
           c++;
         }
     }
@@ -284,7 +307,16 @@ MappingInfo<dim, spacedim>::generate_forward_mapping_support_point_permutation(
   switch (starting_corner)
     {
       case 0:
-        support_point_permutation = poly_space_inverse_numbering;
+        c = 0;
+        for (int i = poly_degree; i >= 0; i--)
+          {
+            for (int j = 0; j <= poly_degree; j++)
+              {
+                support_point_permutation[c] =
+                  support_point_numbering_matrix(i, j);
+                c++;
+              }
+          }
 
         break;
       case 1:
@@ -337,7 +369,8 @@ template <int dim, int spacedim>
 void
 MappingInfo<dim, spacedim>::generate_backward_mapping_support_point_permutation(
   unsigned int               starting_corner,
-  std::vector<unsigned int> &support_point_permutation) const
+  std::vector<unsigned int> &support_point_permutation,
+  const bool if_support_points_or_shape_functions_in_lexicographic_order) const
 {
   // Currently, only dim=2 and spacedim=3 are supported.
   Assert((dim == 2) && (spacedim == 3), ExcInternalError());
@@ -358,7 +391,9 @@ MappingInfo<dim, spacedim>::generate_backward_mapping_support_point_permutation(
       for (int j = 0; j <= poly_degree; j++)
         {
           support_point_numbering_matrix(i, j) =
-            poly_space_inverse_numbering[c];
+            if_support_points_or_shape_functions_in_lexicographic_order ?
+              c :
+              poly_space_inverse_numbering[c];
           c++;
         }
     }
@@ -431,28 +466,24 @@ MappingInfo<dim, spacedim>::init_lexicographic_numberings_and_reverse()
   // Generate lexicographic numberings.
   for (unsigned int v = 0; v < GeometryInfo<dim>::vertices_per_cell; v++)
     {
-      lexicographic_numberings[v].resize(data->n_shape_functions);
+      lexicographic_numberings_for_support_points[v].resize(
+        data->n_shape_functions);
+      generate_forward_mapping_support_point_permutation(
+        v, lexicographic_numberings_for_support_points[v]);
 
-      if (v == 0)
-        {
-          lexicographic_numberings[v] =
-            FETools::lexicographic_to_hierarchic_numbering<dim>(
-              mapping.get_degree());
-        }
-      else
-        {
-          generate_forward_mapping_support_point_permutation(
-            v, lexicographic_numberings[v]);
-        }
+      lexicographic_numberings_for_shape_functions[v].resize(
+        data->n_shape_functions);
+      generate_forward_mapping_support_point_permutation(
+        v, lexicographic_numberings_for_shape_functions[v], false);
     }
 
   // Generate reversed lexicographic numberings.
   for (unsigned int v = 0; v < GeometryInfo<dim>::vertices_per_cell; v++)
     {
-      reversed_lexicographic_numberings[v].resize(data->n_shape_functions);
-
+      reversed_lexicographic_numberings_for_support_points[v].resize(
+        data->n_shape_functions);
       generate_backward_mapping_support_point_permutation(
-        v, reversed_lexicographic_numberings[v]);
+        v, reversed_lexicographic_numberings_for_support_points[v]);
     }
 }
 

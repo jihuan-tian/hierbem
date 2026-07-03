@@ -24,16 +24,15 @@
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
 
-#include "bem/bem_tools.h"
 #include "bem/cu_bem_values.hcu"
 #include "bem/types.h"
 #include "config.h"
-#include "linear_algebra/cu_fullmatrix.hcu"
 #include "linear_algebra/cu_table.hcu"
-#include "linear_algebra/cu_tensor.hcu"
-#include "linear_algebra/cu_vector.hcu"
+#include "platform_shared/bem_tools.h"
+#include "platform_shared/full_matrix_wrapper.h"
 #include "platform_shared/tensor.h"
-#include "sauter_quadrature_task_scalar_data.h"
+#include "platform_shared/utilities.h"
+#include "sauter_quadrature_task_scalar_data_near_field.h"
 #include "utilities/number_traits.h"
 
 HBEM_NS_OPEN
@@ -41,37 +40,26 @@ HBEM_NS_OPEN
 namespace CUDAWrappers
 {
   /**
-   * Perform Sauter quadrature for a pair of DoFs with associated pair of
-   * cells \f$K_x\f$ and \f$K_y\f$, which have the same panel neighboring
-   * type.
+   * Compute Sauter quadratures of a task batch for the same panel cell
+   * neighboring type during near field H-matrix block assembly.
    *
-   * \mynote{There can be several pairs of cells contributing to the full
-   * matrix entries associated with the pair of DoFs, because the
-   * support of each DoF usually contains more than one cells.}
+   * Each quadrature task corresponds to a pair of shape functions associated
+   * with a pair of global DoF indices.
    */
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
-  process_sauter_task_on_one_pair_of_dofs_same_panel(
+  process_near_field_sauter_task_batch_same_panel(
     const KernelFunctionType<spacedim, CUDAKernelNumberType> kernel,
     const CUDAKernelNumberType                               kernel_factor,
     const unsigned int                                       capacity,
-    CUDATable<
-      2,
-      Point<spacedim,
-            typename numbers::NumberTraits<CUDAKernelNumberType>::real_type>>
-      kx_mapping_support_points_permuted_ring_buffer,
-    CUDATable<
-      2,
-      Point<spacedim,
-            typename numbers::NumberTraits<CUDAKernelNumberType>::real_type>>
-      ky_mapping_support_points_permuted_ring_buffer,
-    SauterQuadratureTaskScalarData *scalar_data_ring_buffer_gpu,
-    CUDAKernelNumberType           *quadrature_value_ring_buffer_gpu,
-    const unsigned int              start_task_index,
-    const unsigned int              fetched_task_num,
+    SauterQuadratureTaskScalarDataNearField *scalar_data_ring_buffer_gpu,
+    CUDAKernelNumberType                    *quadrature_value_ring_buffer_gpu,
+    const unsigned int                       start_task_index,
+    const unsigned int                       fetched_task_num,
     const CUDABEMValues<
       dim,
       spacedim,
@@ -89,19 +77,6 @@ namespace CUDAWrappers
     real_type                      kx_jacobian, ky_jacobian;
     Tensor<1, spacedim, real_type> kx_normal, ky_normal;
     Point<spacedim, real_type>     kx_quad_point, ky_quad_point;
-    /**
-     * @internal Create a wrapper matrix for the covariant matrix
-     * on \f$K_x\f$. N.B. Only when the kernel function is
-     * @p HyperSingularRegular, this matrix will be evaluated.
-     */
-    real_type                 kx_covariant_matrix_data[spacedim * dim];
-    real_type                 ky_covariant_matrix_data[spacedim * dim];
-    CUDAFullMatrix<real_type> kx_covariant_matrix(kx_covariant_matrix_data,
-                                                  spacedim,
-                                                  dim);
-    CUDAFullMatrix<real_type> ky_covariant_matrix(ky_covariant_matrix_data,
-                                                  spacedim,
-                                                  dim);
 
     /**
      * @internal Get the list of quadrature points in the Sauter
@@ -158,138 +133,113 @@ namespace CUDAWrappers
 #pragma unroll
             for (unsigned int k3_index = 0; k3_index < 8; k3_index++)
               {
-                /**
-                 * @internal Calculate Jacobians, normal vectors, covariant
-                 * matrices and quadrature point coordinates in the real cell
-                 * for the current quadrature point in \f$K_x\f$.
-                 */
-                kx_jacobian = BEMTools::CUDAWrappers::
-                  surface_jacobian_det_normal_vector_and_covariant(
-                    k3_index,
-                    quad_no,
-                    bem_values
-                      .kx_mapping_shape_grad_matrix_table_for_same_panel,
-                    scalar_data_ring_buffer_gpu[task_index].kx_mapping_index,
-                    scalar_data_ring_buffer_gpu[task_index]
-                      .kx_mapping_n_shape_functions,
-                    &kx_mapping_support_points_permuted_ring_buffer(task_index,
-                                                                    0),
-                    kx_normal,
-                    kx_covariant_matrix,
-                    scalar_data_ring_buffer_gpu[task_index].is_kx_normal_inward,
-                    kernel.kernel_type == KernelType::HyperSingularRegular);
-
-                BEMTools::CUDAWrappers::
+                BEMTools::PlatformShared::
                   transform_quad_point_from_unit_to_permuted_real_cell(
-                    k3_index,
-                    quad_no,
-                    bem_values.kx_mapping_shape_value_table_for_same_panel,
-                    scalar_data_ring_buffer_gpu[task_index].kx_mapping_index,
+                    &bem_values.kx_mapping_shape_value_table_for_same_panel(
+                      k3_index,
+                      quad_no,
+                      scalar_data_ring_buffer_gpu[task_index].kx_mapping_index,
+                      0),
+                    &bem_values.mapping_support_point_table(
+                      scalar_data_ring_buffer_gpu[task_index]
+                        .kx_cell_index_global,
+                      0),
                     scalar_data_ring_buffer_gpu[task_index]
                       .kx_mapping_n_shape_functions,
-                    &kx_mapping_support_points_permuted_ring_buffer(task_index,
-                                                                    0),
                     kx_quad_point);
 
-                /**
-                 * @internal Calculate Jacobians, normal vectors, covariant
-                 * matrices and quadrature point coordinates in the real cell
-                 * for the current quadrature point in \f$K_y\f$.
-                 */
-                ky_jacobian = BEMTools::CUDAWrappers::
-                  surface_jacobian_det_normal_vector_and_covariant(
-                    k3_index,
-                    quad_no,
-                    bem_values
-                      .ky_mapping_shape_grad_matrix_table_for_same_panel,
-                    scalar_data_ring_buffer_gpu[task_index].ky_mapping_index,
-                    scalar_data_ring_buffer_gpu[task_index]
-                      .ky_mapping_n_shape_functions,
-                    &ky_mapping_support_points_permuted_ring_buffer(task_index,
-                                                                    0),
-                    ky_normal,
-                    ky_covariant_matrix,
-                    scalar_data_ring_buffer_gpu[task_index].is_ky_normal_inward,
-                    kernel.kernel_type == KernelType::HyperSingularRegular);
-
-                BEMTools::CUDAWrappers::
+                BEMTools::PlatformShared::
                   transform_quad_point_from_unit_to_permuted_real_cell(
-                    k3_index,
-                    quad_no,
-                    bem_values.ky_mapping_shape_value_table_for_same_panel,
-                    scalar_data_ring_buffer_gpu[task_index].ky_mapping_index,
+                    &bem_values.ky_mapping_shape_value_table_for_same_panel(
+                      k3_index,
+                      quad_no,
+                      scalar_data_ring_buffer_gpu[task_index].ky_mapping_index,
+                      0),
+                    &bem_values.mapping_support_point_table(
+                      scalar_data_ring_buffer_gpu[task_index]
+                        .ky_cell_index_global,
+                      0),
                     scalar_data_ring_buffer_gpu[task_index]
                       .ky_mapping_n_shape_functions,
-                    &ky_mapping_support_points_permuted_ring_buffer(task_index,
-                                                                    0),
                     ky_quad_point);
 
-                if (kernel.kernel_type == HyperSingularRegular)
+                if (bem_values.is_surface_curl_needed)
                   {
-                    /**
-                     * @internal Extract the gradient values of the current
-                     * shape function at the current quadrature point in the
-                     * unit cells for \f$K_x\f$ and \f$K_y\f$.
-                     */
-                    real_type             kx_shape_grad_in_unit_cell[dim];
-                    real_type             ky_shape_grad_in_unit_cell[dim];
-                    CUDAVector<real_type> kx_shape_grad_in_unit_cell_vector(
-                      kx_shape_grad_in_unit_cell, dim);
-                    CUDAVector<real_type> ky_shape_grad_in_unit_cell_vector(
-                      ky_shape_grad_in_unit_cell, dim);
+                    assert(kernel.kernel_type ==
+                           KernelType::HyperSingularRegular);
 
-#pragma unroll
-                    for (unsigned int d = 0; d < dim; d++)
-                      {
-                        kx_shape_grad_in_unit_cell[d] =
-                          bem_values.kx_shape_grad_matrix_table_for_same_panel(
-                            k3_index,
-                            quad_no,
-                            d,
-                            scalar_data_ring_buffer_gpu[task_index]
-                              .i_local_index);
-                        ky_shape_grad_in_unit_cell[d] =
-                          bem_values.ky_shape_grad_matrix_table_for_same_panel(
-                            k3_index,
-                            quad_no,
-                            d,
-                            scalar_data_ring_buffer_gpu[task_index]
-                              .j_local_index);
-                      }
+                    real_type kx_covariant_matrix_data[spacedim * dim];
+                    real_type ky_covariant_matrix_data[spacedim * dim];
+                    HierBEM::PlatformShared::FullMatrixWrapper<real_type>
+                      kx_covariant_matrix(kx_covariant_matrix_data,
+                                          spacedim,
+                                          dim);
+                    HierBEM::PlatformShared::FullMatrixWrapper<real_type>
+                      ky_covariant_matrix(ky_covariant_matrix_data,
+                                          spacedim,
+                                          dim);
 
-                    /**
-                     * Apply covariant transformation \f$JG^{-1}\f$ to the
-                     * gradient tensors in the unit cells, then we get the
-                     * gradient tensors in the real cells.
-                     */
-                    real_type             kx_shape_grad_in_real_cell[spacedim];
-                    real_type             ky_shape_grad_in_real_cell[spacedim];
-                    CUDAVector<real_type> kx_shape_grad_in_real_cell_vector(
-                      kx_shape_grad_in_real_cell, spacedim);
-                    CUDAVector<real_type> ky_shape_grad_in_real_cell_vector(
-                      ky_shape_grad_in_real_cell, spacedim);
+                    kx_jacobian = BEMTools::PlatformShared::
+                      surface_jacobian_det_normal_vector_and_covariant(
+                        &bem_values
+                           .kx_mapping_shape_grad_matrix_table_for_same_panel(
+                             scalar_data_ring_buffer_gpu[task_index]
+                               .kx_mapping_index,
+                             k3_index,
+                             quad_no,
+                             0),
+                        &bem_values.mapping_support_point_table(
+                          scalar_data_ring_buffer_gpu[task_index]
+                            .kx_cell_index_global,
+                          0),
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .kx_mapping_n_shape_functions,
+                        kx_normal,
+                        kx_covariant_matrix,
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .is_kx_normal_inward);
 
-                    kx_covariant_matrix.vmult(
-                      kx_shape_grad_in_real_cell_vector,
-                      kx_shape_grad_in_unit_cell_vector);
-                    ky_covariant_matrix.vmult(
-                      ky_shape_grad_in_real_cell_vector,
-                      ky_shape_grad_in_unit_cell_vector);
+                    ky_jacobian = BEMTools::PlatformShared::
+                      surface_jacobian_det_normal_vector_and_covariant(
+                        &bem_values
+                           .ky_mapping_shape_grad_matrix_table_for_same_panel(
+                             scalar_data_ring_buffer_gpu[task_index]
+                               .ky_mapping_index,
+                             k3_index,
+                             quad_no,
+                             0),
+                        &bem_values.mapping_support_point_table(
+                          scalar_data_ring_buffer_gpu[task_index]
+                            .ky_cell_index_global,
+                          0),
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .ky_mapping_n_shape_functions,
+                        ky_normal,
+                        ky_covariant_matrix,
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .is_ky_normal_inward);
 
-                    /**
-                     * Calculate the surface gradient tensor of the shape
-                     * functions, which is the cross product of normal vector
-                     * and the volume gradient vector.
-                     *
-                     * \mynote{The cross product operation requires the input
-                     * vectors to be transformed to tensors.}
-                     */
-                    Tensor<1, spacedim, real_type> kx_shape_surface_curl =
-                      cross_product_3d(kx_normal,
-                                       kx_shape_grad_in_real_cell_vector);
-                    Tensor<1, spacedim, real_type> ky_shape_surface_curl =
-                      cross_product_3d(ky_normal,
-                                       ky_shape_grad_in_real_cell_vector);
+                    Tensor<1, spacedim, real_type> kx_shape_surface_curl;
+                    BEMTools::PlatformShared::
+                      surface_curl<dim, spacedim, real_type>(
+                        scalar_data_ring_buffer_gpu[task_index].i_local_index,
+                        &bem_values.kx_shape_grad_matrix_table_for_same_panel(
+                          k3_index, quad_no, 0, 0),
+                        bem_values.kx_shape_value_table_for_same_panel.size(0),
+                        kx_covariant_matrix,
+                        kx_normal,
+                        kx_shape_surface_curl);
+
+                    Tensor<1, spacedim, real_type> ky_shape_surface_curl;
+                    BEMTools::PlatformShared::
+                      surface_curl<dim, spacedim, real_type>(
+                        scalar_data_ring_buffer_gpu[task_index].j_local_index,
+                        &bem_values.ky_shape_grad_matrix_table_for_same_panel(
+                          k3_index, quad_no, 0, 0),
+                        bem_values.ky_shape_value_table_for_same_panel.size(0),
+                        ky_covariant_matrix,
+                        ky_normal,
+                        ky_shape_surface_curl);
 
                     kernel_value +=
                       kernel.value(kx_quad_point,
@@ -302,6 +252,44 @@ namespace CUDAWrappers
                   }
                 else
                   {
+                    kx_jacobian = BEMTools::PlatformShared::
+                      surface_jacobian_det_and_normal_vector(
+                        &bem_values
+                           .kx_mapping_shape_grad_matrix_table_for_same_panel(
+                             scalar_data_ring_buffer_gpu[task_index]
+                               .kx_mapping_index,
+                             k3_index,
+                             quad_no,
+                             0),
+                        &bem_values.mapping_support_point_table(
+                          scalar_data_ring_buffer_gpu[task_index]
+                            .kx_cell_index_global,
+                          0),
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .kx_mapping_n_shape_functions,
+                        kx_normal,
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .is_kx_normal_inward);
+
+                    ky_jacobian = BEMTools::PlatformShared::
+                      surface_jacobian_det_and_normal_vector(
+                        &bem_values
+                           .ky_mapping_shape_grad_matrix_table_for_same_panel(
+                             scalar_data_ring_buffer_gpu[task_index]
+                               .ky_mapping_index,
+                             k3_index,
+                             quad_no,
+                             0),
+                        &bem_values.mapping_support_point_table(
+                          scalar_data_ring_buffer_gpu[task_index]
+                            .ky_cell_index_global,
+                          0),
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .ky_mapping_n_shape_functions,
+                        ky_normal,
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .is_ky_normal_inward);
+
                     kernel_value +=
                       kernel.value(kx_quad_point,
                                    ky_quad_point,
@@ -319,6 +307,9 @@ namespace CUDAWrappers
                   }
               }
 
+            // The Jacobian determinant from the Sauter parameter space to the
+            // product unit cell space and the quadrature weight are finally
+            // applied here.
             quad_value +=
               kernel_value *
               static_cast<real_type>(
@@ -336,12 +327,20 @@ namespace CUDAWrappers
   }
 
 
+  /**
+   * Compute Sauter quadratures of a task batch for the common edge cell
+   * neighboring type during near field H-matrix block assembly.
+   *
+   * Each quadrature task corresponds to a pair of shape functions associated
+   * with a pair of global DoF indices.
+   */
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
-  process_sauter_task_on_one_pair_of_dofs_common_edge(
+  process_near_field_sauter_task_batch_common_edge(
     const KernelFunctionType<spacedim, CUDAKernelNumberType> kernel,
     const CUDAKernelNumberType                               kernel_factor,
     const unsigned int                                       capacity,
@@ -355,10 +354,10 @@ namespace CUDAWrappers
       Point<spacedim,
             typename numbers::NumberTraits<CUDAKernelNumberType>::real_type>>
       ky_mapping_support_points_permuted_ring_buffer,
-    SauterQuadratureTaskScalarData *scalar_data_ring_buffer_gpu,
-    CUDAKernelNumberType           *quadrature_value_ring_buffer_gpu,
-    const unsigned int              start_task_index,
-    const unsigned int              fetched_task_num,
+    SauterQuadratureTaskScalarDataNearField *scalar_data_ring_buffer_gpu,
+    CUDAKernelNumberType                    *quadrature_value_ring_buffer_gpu,
+    const unsigned int                       start_task_index,
+    const unsigned int                       fetched_task_num,
     const CUDABEMValues<
       dim,
       spacedim,
@@ -376,19 +375,6 @@ namespace CUDAWrappers
     real_type                      kx_jacobian, ky_jacobian;
     Tensor<1, spacedim, real_type> kx_normal, ky_normal;
     Point<spacedim, real_type>     kx_quad_point, ky_quad_point;
-    /**
-     * @internal Create a wrapper matrix for the covariant matrix
-     * on \f$K_x\f$. N.B. Only when the kernel function is
-     * @p HyperSingularRegular, this matrix will be evaluated.
-     */
-    real_type                 kx_covariant_matrix_data[spacedim * dim];
-    real_type                 ky_covariant_matrix_data[spacedim * dim];
-    CUDAFullMatrix<real_type> kx_covariant_matrix(kx_covariant_matrix_data,
-                                                  spacedim,
-                                                  dim);
-    CUDAFullMatrix<real_type> ky_covariant_matrix(ky_covariant_matrix_data,
-                                                  spacedim,
-                                                  dim);
 
     /**
      * @internal Get the list of quadrature points in the Sauter
@@ -427,6 +413,10 @@ namespace CUDAWrappers
              quad_no < bem_values.quad_rule_for_common_edge.size();
              quad_no++)
           {
+            // Compute the Jacobian determinant from the Sauter parametric space
+            // to the product unit cell space. N.B. There are two different
+            // Jacobian determinants. The first one is applied to the first two
+            // k3 terms and the other is applied to the remaining four k3 terms.
             real_type jacobian_det1 = static_cast<real_type>(
               quad_points(quad_no, 0) * quad_points(quad_no, 0) *
               (1 - quad_points(quad_no, 0)));
@@ -452,142 +442,109 @@ namespace CUDAWrappers
 #pragma unroll
             for (unsigned int k3_index = 0; k3_index < 6; k3_index++)
               {
-                /**
-                 * @internal Calculate Jacobians, normal vectors, covariant
-                 * matrices and quadrature point coordinates in the real cell
-                 * for the current quadrature point in \f$K_x\f$.
-                 */
-                kx_jacobian = BEMTools::CUDAWrappers::
-                  surface_jacobian_det_normal_vector_and_covariant(
-                    k3_index,
-                    quad_no,
-                    bem_values
-                      .kx_mapping_shape_grad_matrix_table_for_common_edge,
-                    scalar_data_ring_buffer_gpu[task_index].kx_mapping_index,
-                    scalar_data_ring_buffer_gpu[task_index]
-                      .kx_mapping_n_shape_functions,
-                    &kx_mapping_support_points_permuted_ring_buffer(task_index,
-                                                                    0),
-                    kx_normal,
-                    kx_covariant_matrix,
-                    scalar_data_ring_buffer_gpu[task_index].is_kx_normal_inward,
-                    kernel.kernel_type == KernelType::HyperSingularRegular);
-
-                BEMTools::CUDAWrappers::
+                BEMTools::PlatformShared::
                   transform_quad_point_from_unit_to_permuted_real_cell(
-                    k3_index,
-                    quad_no,
-                    bem_values.kx_mapping_shape_value_table_for_common_edge,
-                    scalar_data_ring_buffer_gpu[task_index].kx_mapping_index,
-                    scalar_data_ring_buffer_gpu[task_index]
-                      .kx_mapping_n_shape_functions,
+                    &bem_values.kx_mapping_shape_value_table_for_common_edge(
+                      k3_index,
+                      quad_no,
+                      scalar_data_ring_buffer_gpu[task_index].kx_mapping_index,
+                      0),
                     &kx_mapping_support_points_permuted_ring_buffer(task_index,
                                                                     0),
+                    scalar_data_ring_buffer_gpu[task_index]
+                      .kx_mapping_n_shape_functions,
                     kx_quad_point);
 
-                /**
-                 * @internal Calculate Jacobians, normal vectors, covariant
-                 * matrices and quadrature point coordinates in the real cell
-                 * for the current quadrature point in \f$K_y\f$.
-                 */
-                ky_jacobian = BEMTools::CUDAWrappers::
-                  surface_jacobian_det_normal_vector_and_covariant(
-                    k3_index,
-                    quad_no,
-                    bem_values
-                      .ky_mapping_shape_grad_matrix_table_for_common_edge,
-                    scalar_data_ring_buffer_gpu[task_index].ky_mapping_index,
-                    scalar_data_ring_buffer_gpu[task_index]
-                      .ky_mapping_n_shape_functions,
-                    &ky_mapping_support_points_permuted_ring_buffer(task_index,
-                                                                    0),
-                    ky_normal,
-                    ky_covariant_matrix,
-                    // The ky normal vector should be further negated for ky
-                    // in the common edge case.
-                    !(scalar_data_ring_buffer_gpu[task_index]
-                        .is_ky_normal_inward),
-                    kernel.kernel_type == KernelType::HyperSingularRegular);
-
-                BEMTools::CUDAWrappers::
+                BEMTools::PlatformShared::
                   transform_quad_point_from_unit_to_permuted_real_cell(
-                    k3_index,
-                    quad_no,
-                    bem_values.ky_mapping_shape_value_table_for_common_edge,
-                    scalar_data_ring_buffer_gpu[task_index].ky_mapping_index,
-                    scalar_data_ring_buffer_gpu[task_index]
-                      .ky_mapping_n_shape_functions,
+                    &bem_values.ky_mapping_shape_value_table_for_common_edge(
+                      k3_index,
+                      quad_no,
+                      scalar_data_ring_buffer_gpu[task_index].ky_mapping_index,
+                      0),
                     &ky_mapping_support_points_permuted_ring_buffer(task_index,
                                                                     0),
+                    scalar_data_ring_buffer_gpu[task_index]
+                      .ky_mapping_n_shape_functions,
                     ky_quad_point);
 
-                if (kernel.kernel_type == HyperSingularRegular)
+                if (bem_values.is_surface_curl_needed)
                   {
-                    /**
-                     * @internal Extract the gradient values of the current
-                     * shape function at the current quadrature point in the
-                     * unit cells for \f$K_x\f$ and \f$K_y\f$.
-                     */
-                    real_type             kx_shape_grad_in_unit_cell[dim];
-                    real_type             ky_shape_grad_in_unit_cell[dim];
-                    CUDAVector<real_type> kx_shape_grad_in_unit_cell_vector(
-                      kx_shape_grad_in_unit_cell, dim);
-                    CUDAVector<real_type> ky_shape_grad_in_unit_cell_vector(
-                      ky_shape_grad_in_unit_cell, dim);
+                    assert(kernel.kernel_type ==
+                           KernelType::HyperSingularRegular);
 
-#pragma unroll
-                    for (unsigned int d = 0; d < dim; d++)
-                      {
-                        kx_shape_grad_in_unit_cell[d] =
-                          bem_values.kx_shape_grad_matrix_table_for_common_edge(
-                            k3_index,
-                            quad_no,
-                            d,
-                            scalar_data_ring_buffer_gpu[task_index]
-                              .i_local_index);
-                        ky_shape_grad_in_unit_cell[d] =
-                          bem_values.ky_shape_grad_matrix_table_for_common_edge(
-                            k3_index,
-                            quad_no,
-                            d,
-                            scalar_data_ring_buffer_gpu[task_index]
-                              .j_local_index);
-                      }
+                    real_type kx_covariant_matrix_data[spacedim * dim];
+                    real_type ky_covariant_matrix_data[spacedim * dim];
+                    HierBEM::PlatformShared::FullMatrixWrapper<real_type>
+                      kx_covariant_matrix(kx_covariant_matrix_data,
+                                          spacedim,
+                                          dim);
+                    HierBEM::PlatformShared::FullMatrixWrapper<real_type>
+                      ky_covariant_matrix(ky_covariant_matrix_data,
+                                          spacedim,
+                                          dim);
 
-                    /**
-                     * Apply covariant transformation \f$JG^{-1}\f$ to the
-                     * gradient tensors in the unit cells, then we get the
-                     * gradient tensors in the real cells.
-                     */
-                    real_type             kx_shape_grad_in_real_cell[spacedim];
-                    real_type             ky_shape_grad_in_real_cell[spacedim];
-                    CUDAVector<real_type> kx_shape_grad_in_real_cell_vector(
-                      kx_shape_grad_in_real_cell, spacedim);
-                    CUDAVector<real_type> ky_shape_grad_in_real_cell_vector(
-                      ky_shape_grad_in_real_cell, spacedim);
+                    kx_jacobian = BEMTools::PlatformShared::
+                      surface_jacobian_det_normal_vector_and_covariant(
+                        &bem_values
+                           .kx_mapping_shape_grad_matrix_table_for_common_edge(
+                             scalar_data_ring_buffer_gpu[task_index]
+                               .kx_mapping_index,
+                             k3_index,
+                             quad_no,
+                             0),
+                        &kx_mapping_support_points_permuted_ring_buffer(
+                          task_index, 0),
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .kx_mapping_n_shape_functions,
+                        kx_normal,
+                        kx_covariant_matrix,
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .is_kx_normal_inward);
 
-                    kx_covariant_matrix.vmult(
-                      kx_shape_grad_in_real_cell_vector,
-                      kx_shape_grad_in_unit_cell_vector);
-                    ky_covariant_matrix.vmult(
-                      ky_shape_grad_in_real_cell_vector,
-                      ky_shape_grad_in_unit_cell_vector);
+                    ky_jacobian = BEMTools::PlatformShared::
+                      surface_jacobian_det_normal_vector_and_covariant(
+                        &bem_values
+                           .ky_mapping_shape_grad_matrix_table_for_common_edge(
+                             scalar_data_ring_buffer_gpu[task_index]
+                               .ky_mapping_index,
+                             k3_index,
+                             quad_no,
+                             0),
+                        &ky_mapping_support_points_permuted_ring_buffer(
+                          task_index, 0),
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .ky_mapping_n_shape_functions,
+                        ky_normal,
+                        ky_covariant_matrix,
+                        !scalar_data_ring_buffer_gpu[task_index]
+                           .is_ky_normal_inward);
 
-                    /**
-                     * Calculate the surface gradient tensor of the shape
-                     * functions, which is the cross product of normal vector
-                     * and the volume gradient vector.
-                     *
-                     * \mynote{The cross product operation requires the input
-                     * vectors to be transformed to tensors.}
-                     */
-                    Tensor<1, spacedim, real_type> kx_shape_surface_curl =
-                      cross_product_3d(kx_normal,
-                                       kx_shape_grad_in_real_cell_vector);
-                    Tensor<1, spacedim, real_type> ky_shape_surface_curl =
-                      cross_product_3d(ky_normal,
-                                       ky_shape_grad_in_real_cell_vector);
+                    Tensor<1, spacedim, real_type> kx_shape_surface_curl;
+                    BEMTools::PlatformShared::
+                      surface_curl<dim, spacedim, real_type>(
+                        scalar_data_ring_buffer_gpu[task_index].i_local_index,
+                        &bem_values.kx_shape_grad_matrix_table_for_common_edge(
+                          k3_index, quad_no, 0, 0),
+                        bem_values.kx_shape_value_table_for_common_edge.size(0),
+                        kx_covariant_matrix,
+                        kx_normal,
+                        kx_shape_surface_curl);
 
+                    Tensor<1, spacedim, real_type> ky_shape_surface_curl;
+                    BEMTools::PlatformShared::
+                      surface_curl<dim, spacedim, real_type>(
+                        scalar_data_ring_buffer_gpu[task_index].j_local_index,
+                        &bem_values.ky_shape_grad_matrix_table_for_common_edge(
+                          k3_index, quad_no, 0, 0),
+                        bem_values.ky_shape_value_table_for_common_edge.size(0),
+                        ky_covariant_matrix,
+                        ky_normal,
+                        ky_shape_surface_curl);
+
+                    // Apply the Jacobian determinant from the Sauter parametric
+                    // space to the product unit cell space, which depends on
+                    // the k3 index.
                     kernel_value +=
                       kernel.value(kx_quad_point,
                                    ky_quad_point,
@@ -600,6 +557,43 @@ namespace CUDAWrappers
                   }
                 else
                   {
+                    kx_jacobian = BEMTools::PlatformShared::
+                      surface_jacobian_det_and_normal_vector(
+                        &bem_values
+                           .kx_mapping_shape_grad_matrix_table_for_common_edge(
+                             scalar_data_ring_buffer_gpu[task_index]
+                               .kx_mapping_index,
+                             k3_index,
+                             quad_no,
+                             0),
+                        &kx_mapping_support_points_permuted_ring_buffer(
+                          task_index, 0),
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .kx_mapping_n_shape_functions,
+                        kx_normal,
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .is_kx_normal_inward);
+
+                    ky_jacobian = BEMTools::PlatformShared::
+                      surface_jacobian_det_and_normal_vector(
+                        &bem_values
+                           .ky_mapping_shape_grad_matrix_table_for_common_edge(
+                             scalar_data_ring_buffer_gpu[task_index]
+                               .ky_mapping_index,
+                             k3_index,
+                             quad_no,
+                             0),
+                        &ky_mapping_support_points_permuted_ring_buffer(
+                          task_index, 0),
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .ky_mapping_n_shape_functions,
+                        ky_normal,
+                        !scalar_data_ring_buffer_gpu[task_index]
+                           .is_ky_normal_inward);
+
+                    // Apply the Jacobian determinant from the Sauter parametric
+                    // space to the product unit cell space, which depends on
+                    // the k3 index.
                     kernel_value +=
                       kernel.value(kx_quad_point,
                                    ky_quad_point,
@@ -618,6 +612,7 @@ namespace CUDAWrappers
                   }
               }
 
+            // Apply the quadrature weight.
             quad_value +=
               kernel_value *
               static_cast<real_type>(
@@ -633,12 +628,20 @@ namespace CUDAWrappers
   }
 
 
+  /**
+   * Compute Sauter quadratures of a task batch for the common vertex cell
+   * neighboring type during near field H-matrix block assembly.
+   *
+   * Each quadrature task corresponds to a pair of shape functions associated
+   * with a pair of global DoF indices.
+   */
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
-  process_sauter_task_on_one_pair_of_dofs_common_vertex(
+  process_near_field_sauter_task_batch_common_vertex(
     const KernelFunctionType<spacedim, CUDAKernelNumberType> kernel,
     const CUDAKernelNumberType                               kernel_factor,
     const unsigned int                                       capacity,
@@ -652,10 +655,10 @@ namespace CUDAWrappers
       Point<spacedim,
             typename numbers::NumberTraits<CUDAKernelNumberType>::real_type>>
       ky_mapping_support_points_permuted_ring_buffer,
-    SauterQuadratureTaskScalarData *scalar_data_ring_buffer_gpu,
-    CUDAKernelNumberType           *quadrature_value_ring_buffer_gpu,
-    const unsigned int              start_task_index,
-    const unsigned int              fetched_task_num,
+    SauterQuadratureTaskScalarDataNearField *scalar_data_ring_buffer_gpu,
+    CUDAKernelNumberType                    *quadrature_value_ring_buffer_gpu,
+    const unsigned int                       start_task_index,
+    const unsigned int                       fetched_task_num,
     const CUDABEMValues<
       dim,
       spacedim,
@@ -673,19 +676,6 @@ namespace CUDAWrappers
     real_type                      kx_jacobian, ky_jacobian;
     Tensor<1, spacedim, real_type> kx_normal, ky_normal;
     Point<spacedim, real_type>     kx_quad_point, ky_quad_point;
-    /**
-     * @internal Create a wrapper matrix for the covariant matrix
-     * on \f$K_x\f$. N.B. Only when the kernel function is
-     * @p HyperSingularRegular, this matrix will be evaluated.
-     */
-    real_type                 kx_covariant_matrix_data[spacedim * dim];
-    real_type                 ky_covariant_matrix_data[spacedim * dim];
-    CUDAFullMatrix<real_type> kx_covariant_matrix(kx_covariant_matrix_data,
-                                                  spacedim,
-                                                  dim);
-    CUDAFullMatrix<real_type> ky_covariant_matrix(ky_covariant_matrix_data,
-                                                  spacedim,
-                                                  dim);
 
     /**
      * @internal Get the list of quadrature points in the Sauter
@@ -742,140 +732,107 @@ namespace CUDAWrappers
 #pragma unroll
             for (unsigned int k3_index = 0; k3_index < 4; k3_index++)
               {
-                /**
-                 * @internal Calculate Jacobians, normal vectors, covariant
-                 * matrices and quadrature point coordinates in the real cell
-                 * for the current quadrature point in \f$K_x\f$.
-                 */
-                kx_jacobian = BEMTools::CUDAWrappers::
-                  surface_jacobian_det_normal_vector_and_covariant(
-                    k3_index,
-                    quad_no,
-                    bem_values
-                      .kx_mapping_shape_grad_matrix_table_for_common_vertex,
-                    scalar_data_ring_buffer_gpu[task_index].kx_mapping_index,
-                    scalar_data_ring_buffer_gpu[task_index]
-                      .kx_mapping_n_shape_functions,
-                    &kx_mapping_support_points_permuted_ring_buffer(task_index,
-                                                                    0),
-                    kx_normal,
-                    kx_covariant_matrix,
-                    scalar_data_ring_buffer_gpu[task_index].is_kx_normal_inward,
-                    kernel.kernel_type == KernelType::HyperSingularRegular);
-
-                BEMTools::CUDAWrappers::
+                BEMTools::PlatformShared::
                   transform_quad_point_from_unit_to_permuted_real_cell(
-                    k3_index,
-                    quad_no,
-                    bem_values.kx_mapping_shape_value_table_for_common_vertex,
-                    scalar_data_ring_buffer_gpu[task_index].kx_mapping_index,
-                    scalar_data_ring_buffer_gpu[task_index]
-                      .kx_mapping_n_shape_functions,
+                    &bem_values.kx_mapping_shape_value_table_for_common_vertex(
+                      k3_index,
+                      quad_no,
+                      scalar_data_ring_buffer_gpu[task_index].kx_mapping_index,
+                      0),
                     &kx_mapping_support_points_permuted_ring_buffer(task_index,
                                                                     0),
+                    scalar_data_ring_buffer_gpu[task_index]
+                      .kx_mapping_n_shape_functions,
                     kx_quad_point);
 
-                /**
-                 * @internal Calculate Jacobians, normal vectors, covariant
-                 * matrices and quadrature point coordinates in the real cell
-                 * for the current quadrature point in \f$K_y\f$.
-                 */
-                ky_jacobian = BEMTools::CUDAWrappers::
-                  surface_jacobian_det_normal_vector_and_covariant(
-                    k3_index,
-                    quad_no,
-                    bem_values
-                      .ky_mapping_shape_grad_matrix_table_for_common_vertex,
-                    scalar_data_ring_buffer_gpu[task_index].ky_mapping_index,
-                    scalar_data_ring_buffer_gpu[task_index]
-                      .ky_mapping_n_shape_functions,
-                    &ky_mapping_support_points_permuted_ring_buffer(task_index,
-                                                                    0),
-                    ky_normal,
-                    ky_covariant_matrix,
-                    scalar_data_ring_buffer_gpu[task_index].is_ky_normal_inward,
-                    kernel.kernel_type == KernelType::HyperSingularRegular);
-
-                BEMTools::CUDAWrappers::
+                BEMTools::PlatformShared::
                   transform_quad_point_from_unit_to_permuted_real_cell(
-                    k3_index,
-                    quad_no,
-                    bem_values.ky_mapping_shape_value_table_for_common_vertex,
-                    scalar_data_ring_buffer_gpu[task_index].ky_mapping_index,
-                    scalar_data_ring_buffer_gpu[task_index]
-                      .ky_mapping_n_shape_functions,
+                    &bem_values.ky_mapping_shape_value_table_for_common_vertex(
+                      k3_index,
+                      quad_no,
+                      scalar_data_ring_buffer_gpu[task_index].ky_mapping_index,
+                      0),
                     &ky_mapping_support_points_permuted_ring_buffer(task_index,
                                                                     0),
+                    scalar_data_ring_buffer_gpu[task_index]
+                      .ky_mapping_n_shape_functions,
                     ky_quad_point);
 
-                if (kernel.kernel_type == HyperSingularRegular)
+                if (bem_values.is_surface_curl_needed)
                   {
-                    /**
-                     * @internal Extract the gradient values of the current
-                     * shape function at the current quadrature point in the
-                     * unit cells for \f$K_x\f$ and \f$K_y\f$.
-                     */
-                    real_type             kx_shape_grad_in_unit_cell[dim];
-                    real_type             ky_shape_grad_in_unit_cell[dim];
-                    CUDAVector<real_type> kx_shape_grad_in_unit_cell_vector(
-                      kx_shape_grad_in_unit_cell, dim);
-                    CUDAVector<real_type> ky_shape_grad_in_unit_cell_vector(
-                      ky_shape_grad_in_unit_cell, dim);
+                    assert(kernel.kernel_type ==
+                           KernelType::HyperSingularRegular);
 
-#pragma unroll
-                    for (unsigned int d = 0; d < dim; d++)
-                      {
-                        kx_shape_grad_in_unit_cell[d] =
-                          bem_values
-                            .kx_shape_grad_matrix_table_for_common_vertex(
-                              k3_index,
-                              quad_no,
-                              d,
-                              scalar_data_ring_buffer_gpu[task_index]
-                                .i_local_index);
-                        ky_shape_grad_in_unit_cell[d] =
-                          bem_values
-                            .ky_shape_grad_matrix_table_for_common_vertex(
-                              k3_index,
-                              quad_no,
-                              d,
-                              scalar_data_ring_buffer_gpu[task_index]
-                                .j_local_index);
-                      }
+                    real_type kx_covariant_matrix_data[spacedim * dim];
+                    real_type ky_covariant_matrix_data[spacedim * dim];
+                    HierBEM::PlatformShared::FullMatrixWrapper<real_type>
+                      kx_covariant_matrix(kx_covariant_matrix_data,
+                                          spacedim,
+                                          dim);
+                    HierBEM::PlatformShared::FullMatrixWrapper<real_type>
+                      ky_covariant_matrix(ky_covariant_matrix_data,
+                                          spacedim,
+                                          dim);
 
-                    /**
-                     * Apply covariant transformation \f$JG^{-1}\f$ to the
-                     * gradient tensors in the unit cells, then we get the
-                     * gradient tensors in the real cells.
-                     */
-                    real_type             kx_shape_grad_in_real_cell[spacedim];
-                    real_type             ky_shape_grad_in_real_cell[spacedim];
-                    CUDAVector<real_type> kx_shape_grad_in_real_cell_vector(
-                      kx_shape_grad_in_real_cell, spacedim);
-                    CUDAVector<real_type> ky_shape_grad_in_real_cell_vector(
-                      ky_shape_grad_in_real_cell, spacedim);
+                    kx_jacobian = BEMTools::PlatformShared::
+                      surface_jacobian_det_normal_vector_and_covariant(
+                        &bem_values
+                           .kx_mapping_shape_grad_matrix_table_for_common_vertex(
+                             scalar_data_ring_buffer_gpu[task_index]
+                               .kx_mapping_index,
+                             k3_index,
+                             quad_no,
+                             0),
+                        &kx_mapping_support_points_permuted_ring_buffer(
+                          task_index, 0),
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .kx_mapping_n_shape_functions,
+                        kx_normal,
+                        kx_covariant_matrix,
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .is_kx_normal_inward);
 
-                    kx_covariant_matrix.vmult(
-                      kx_shape_grad_in_real_cell_vector,
-                      kx_shape_grad_in_unit_cell_vector);
-                    ky_covariant_matrix.vmult(
-                      ky_shape_grad_in_real_cell_vector,
-                      ky_shape_grad_in_unit_cell_vector);
+                    ky_jacobian = BEMTools::PlatformShared::
+                      surface_jacobian_det_normal_vector_and_covariant(
+                        &bem_values
+                           .ky_mapping_shape_grad_matrix_table_for_common_vertex(
+                             scalar_data_ring_buffer_gpu[task_index]
+                               .ky_mapping_index,
+                             k3_index,
+                             quad_no,
+                             0),
+                        &ky_mapping_support_points_permuted_ring_buffer(
+                          task_index, 0),
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .ky_mapping_n_shape_functions,
+                        ky_normal,
+                        ky_covariant_matrix,
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .is_ky_normal_inward);
 
-                    /**
-                     * Calculate the surface gradient tensor of the shape
-                     * functions, which is the cross product of normal vector
-                     * and the volume gradient vector.
-                     *
-                     * \mynote{The cross product operation requires the input
-                     * vectors to be transformed to tensors.}
-                     */
-                    Tensor<1, spacedim, real_type> kx_shape_surface_curl =
-                      cross_product_3d(kx_normal,
-                                       kx_shape_grad_in_real_cell_vector);
-                    Tensor<1, spacedim, real_type> ky_shape_surface_curl =
-                      cross_product_3d(ky_normal,
-                                       ky_shape_grad_in_real_cell_vector);
+                    Tensor<1, spacedim, real_type> kx_shape_surface_curl;
+                    BEMTools::PlatformShared::surface_curl<dim,
+                                                           spacedim,
+                                                           real_type>(
+                      scalar_data_ring_buffer_gpu[task_index].i_local_index,
+                      &bem_values.kx_shape_grad_matrix_table_for_common_vertex(
+                        k3_index, quad_no, 0, 0),
+                      bem_values.kx_shape_value_table_for_common_vertex.size(0),
+                      kx_covariant_matrix,
+                      kx_normal,
+                      kx_shape_surface_curl);
+
+                    Tensor<1, spacedim, real_type> ky_shape_surface_curl;
+                    BEMTools::PlatformShared::surface_curl<dim,
+                                                           spacedim,
+                                                           real_type>(
+                      scalar_data_ring_buffer_gpu[task_index].j_local_index,
+                      &bem_values.ky_shape_grad_matrix_table_for_common_vertex(
+                        k3_index, quad_no, 0, 0),
+                      bem_values.ky_shape_value_table_for_common_vertex.size(0),
+                      ky_covariant_matrix,
+                      ky_normal,
+                      ky_shape_surface_curl);
 
                     kernel_value +=
                       kernel.value(kx_quad_point,
@@ -888,6 +845,40 @@ namespace CUDAWrappers
                   }
                 else
                   {
+                    kx_jacobian = BEMTools::PlatformShared::
+                      surface_jacobian_det_and_normal_vector(
+                        &bem_values
+                           .kx_mapping_shape_grad_matrix_table_for_common_vertex(
+                             scalar_data_ring_buffer_gpu[task_index]
+                               .kx_mapping_index,
+                             k3_index,
+                             quad_no,
+                             0),
+                        &kx_mapping_support_points_permuted_ring_buffer(
+                          task_index, 0),
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .kx_mapping_n_shape_functions,
+                        kx_normal,
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .is_kx_normal_inward);
+
+                    ky_jacobian = BEMTools::PlatformShared::
+                      surface_jacobian_det_and_normal_vector(
+                        &bem_values
+                           .ky_mapping_shape_grad_matrix_table_for_common_vertex(
+                             scalar_data_ring_buffer_gpu[task_index]
+                               .ky_mapping_index,
+                             k3_index,
+                             quad_no,
+                             0),
+                        &ky_mapping_support_points_permuted_ring_buffer(
+                          task_index, 0),
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .ky_mapping_n_shape_functions,
+                        ky_normal,
+                        scalar_data_ring_buffer_gpu[task_index]
+                          .is_ky_normal_inward);
+
                     kernel_value +=
                       kernel.value(kx_quad_point,
                                    ky_quad_point,
@@ -905,6 +896,9 @@ namespace CUDAWrappers
                   }
               }
 
+            // The Jacobian determinant from the Sauter parameter space to the
+            // product unit cell space and the quadrature weight are finally
+            // applied here.
             quad_value +=
               kernel_value *
               static_cast<real_type>(
@@ -922,29 +916,27 @@ namespace CUDAWrappers
   }
 
 
+  /**
+   * Compute Sauter quadratures of a task batch for the regular cell neighboring
+   * type during near field H-matrix block assembly.
+   *
+   * Each quadrature task corresponds to a pair of shape functions associated
+   * with a pair of global DoF indices.
+   */
   template <int dim,
             int spacedim,
-            template <int, typename> typename KernelFunctionType,
+            template <int, typename>
+            typename KernelFunctionType,
             typename CUDAKernelNumberType = double>
   __global__ void
-  process_sauter_task_on_one_pair_of_dofs_regular(
+  process_near_field_sauter_task_batch_regular(
     const KernelFunctionType<spacedim, CUDAKernelNumberType> kernel,
     const CUDAKernelNumberType                               kernel_factor,
     const unsigned int                                       capacity,
-    CUDATable<
-      2,
-      Point<spacedim,
-            typename numbers::NumberTraits<CUDAKernelNumberType>::real_type>>
-      kx_mapping_support_points_permuted_ring_buffer,
-    CUDATable<
-      2,
-      Point<spacedim,
-            typename numbers::NumberTraits<CUDAKernelNumberType>::real_type>>
-      ky_mapping_support_points_permuted_ring_buffer,
-    SauterQuadratureTaskScalarData *scalar_data_ring_buffer_gpu,
-    CUDAKernelNumberType           *quadrature_value_ring_buffer_gpu,
-    const unsigned int              start_task_index,
-    const unsigned int              fetched_task_num,
+    SauterQuadratureTaskScalarDataNearField *scalar_data_ring_buffer_gpu,
+    CUDAKernelNumberType                    *quadrature_value_ring_buffer_gpu,
+    const unsigned int                       start_task_index,
+    const unsigned int                       fetched_task_num,
     const CUDABEMValues<
       dim,
       spacedim,
@@ -958,23 +950,6 @@ namespace CUDAWrappers
      * @internal For simplicity, we use 1D linear thread grid.
      */
     const unsigned int thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
-
-    real_type                      kx_jacobian, ky_jacobian;
-    Tensor<1, spacedim, real_type> kx_normal, ky_normal;
-    Point<spacedim, real_type>     kx_quad_point, ky_quad_point;
-    /**
-     * @internal Create a wrapper matrix for the covariant matrix
-     * on \f$K_x\f$. N.B. Only when the kernel function is
-     * @p HyperSingularRegular, this matrix will be evaluated.
-     */
-    real_type                 kx_covariant_matrix_data[spacedim * dim];
-    real_type                 ky_covariant_matrix_data[spacedim * dim];
-    CUDAFullMatrix<real_type> kx_covariant_matrix(kx_covariant_matrix_data,
-                                                  spacedim,
-                                                  dim);
-    CUDAFullMatrix<real_type> ky_covariant_matrix(ky_covariant_matrix_data,
-                                                  spacedim,
-                                                  dim);
 
     /**
      * @internal The number of allocated CUDA threads for executing this
@@ -997,173 +972,81 @@ namespace CUDAWrappers
          * which is efficient for accumulating values contributed from all
          * \f$k_3\f$ terms and quadrature points.
          */
-        CUDAKernelNumberType quad_value = CUDAKernelNumberType();
+        CUDAKernelNumberType     quad_value = CUDAKernelNumberType();
+        types::global_cell_index kx_cell_index_local =
+          scalar_data_ring_buffer_gpu[task_index].kx_cell_index_local;
+        types::global_cell_index ky_cell_index_local =
+          scalar_data_ring_buffer_gpu[task_index].ky_cell_index_local;
 
-        /**
-         * @internal Iterate over each quadrature point.
-         */
-        for (unsigned int quad_no = 0;
-             quad_no < bem_values.quad_rule_for_regular.size();
-             quad_no++)
+        // Number of quadrature point in the 2D quadrature object.
+        const unsigned int n_quad_points =
+          bem_values.quad_rule_for_regular.size();
+        // Iterate over each quadrature point in the tensor product of two 2D
+        // quadrature objects.
+        for (unsigned int kx_quad_no = 0; kx_quad_no < n_quad_points;
+             kx_quad_no++)
           {
-            /**
-             * @internal Calculate Jacobians, normal vectors, covariant
-             * matrices and quadrature point coordinates in the real cell for
-             * the current quadrature point in \f$K_x\f$.
-             */
-            kx_jacobian = BEMTools::CUDAWrappers::
-              surface_jacobian_det_normal_vector_and_covariant(
-                0,
-                quad_no,
-                bem_values.kx_mapping_shape_grad_matrix_table_for_regular,
-                scalar_data_ring_buffer_gpu[task_index].kx_mapping_index,
-                scalar_data_ring_buffer_gpu[task_index]
-                  .kx_mapping_n_shape_functions,
-                &kx_mapping_support_points_permuted_ring_buffer(task_index, 0),
-                kx_normal,
-                kx_covariant_matrix,
-                scalar_data_ring_buffer_gpu[task_index].is_kx_normal_inward,
-                kernel.kernel_type == KernelType::HyperSingularRegular);
-
-            BEMTools::CUDAWrappers::
-              transform_quad_point_from_unit_to_permuted_real_cell(
-                0,
-                quad_no,
-                bem_values.kx_mapping_shape_value_table_for_regular,
-                scalar_data_ring_buffer_gpu[task_index].kx_mapping_index,
-                scalar_data_ring_buffer_gpu[task_index]
-                  .kx_mapping_n_shape_functions,
-                &kx_mapping_support_points_permuted_ring_buffer(task_index, 0),
-                kx_quad_point);
-
-            /**
-             * @internal Calculate Jacobians, normal vectors, covariant
-             * matrices and quadrature point coordinates in the real cell for
-             * the current quadrature point in \f$K_y\f$.
-             */
-            ky_jacobian = BEMTools::CUDAWrappers::
-              surface_jacobian_det_normal_vector_and_covariant(
-                0,
-                quad_no,
-                bem_values.ky_mapping_shape_grad_matrix_table_for_regular,
-                scalar_data_ring_buffer_gpu[task_index].ky_mapping_index,
-                scalar_data_ring_buffer_gpu[task_index]
-                  .ky_mapping_n_shape_functions,
-                &ky_mapping_support_points_permuted_ring_buffer(task_index, 0),
-                ky_normal,
-                ky_covariant_matrix,
-                scalar_data_ring_buffer_gpu[task_index].is_ky_normal_inward,
-                kernel.kernel_type == KernelType::HyperSingularRegular);
-
-            BEMTools::CUDAWrappers::
-              transform_quad_point_from_unit_to_permuted_real_cell(
-                0,
-                quad_no,
-                bem_values.ky_mapping_shape_value_table_for_regular,
-                scalar_data_ring_buffer_gpu[task_index].ky_mapping_index,
-                scalar_data_ring_buffer_gpu[task_index]
-                  .ky_mapping_n_shape_functions,
-                &ky_mapping_support_points_permuted_ring_buffer(task_index, 0),
-                ky_quad_point);
-
-            if (kernel.kernel_type == HyperSingularRegular)
+            for (unsigned int ky_quad_no = 0; ky_quad_no < n_quad_points;
+                 ky_quad_no++)
               {
-                /**
-                 * @internal Extract the gradient values of the current
-                 * shape function at the current quadrature point in the
-                 * unit cells for \f$K_x\f$ and \f$K_y\f$.
-                 */
-                real_type             kx_shape_grad_in_unit_cell[dim];
-                real_type             ky_shape_grad_in_unit_cell[dim];
-                CUDAVector<real_type> kx_shape_grad_in_unit_cell_vector(
-                  kx_shape_grad_in_unit_cell, dim);
-                CUDAVector<real_type> ky_shape_grad_in_unit_cell_vector(
-                  ky_shape_grad_in_unit_cell, dim);
-
-#pragma unroll
-                for (unsigned int d = 0; d < dim; d++)
+                if (kernel.kernel_type == HyperSingularRegular)
                   {
-                    kx_shape_grad_in_unit_cell[d] =
-                      bem_values.kx_shape_grad_matrix_table_for_regular(
-                        0,
-                        quad_no,
-                        d,
-                        scalar_data_ring_buffer_gpu[task_index].i_local_index);
-                    ky_shape_grad_in_unit_cell[d] =
-                      bem_values.ky_shape_grad_matrix_table_for_regular(
-                        0,
-                        quad_no,
-                        d,
-                        scalar_data_ring_buffer_gpu[task_index].j_local_index);
+                    quad_value +=
+                      kernel.value(
+                        bem_values.quad_points_for_regular(kx_cell_index_local,
+                                                           kx_quad_no),
+                        bem_values.quad_points_for_regular(ky_cell_index_local,
+                                                           ky_quad_no),
+                        bem_values.normals_at_quad_points_for_regular(
+                          kx_cell_index_local, kx_quad_no),
+                        bem_values.normals_at_quad_points_for_regular(
+                          ky_cell_index_local, ky_quad_no)) *
+                      bem_values.JxW_at_quad_points_for_regular(
+                        kx_cell_index_local, kx_quad_no) *
+                      bem_values.JxW_at_quad_points_for_regular(
+                        ky_cell_index_local, ky_quad_no) *
+                      HierBEM::PlatformShared::scalar_product(
+                        bem_values.kx_shape_curls_at_quad_points_for_regular(
+                          kx_cell_index_local,
+                          scalar_data_ring_buffer_gpu[task_index].i_local_index,
+                          kx_quad_no),
+                        bem_values.ky_shape_curls_at_quad_points_for_regular(
+                          ky_cell_index_local,
+                          scalar_data_ring_buffer_gpu[task_index].j_local_index,
+                          ky_quad_no));
                   }
-
-                /**
-                 * Apply covariant transformation \f$JG^{-1}\f$ to the
-                 * gradient tensors in the unit cells, then we get the
-                 * gradient tensors in the real cells.
-                 */
-                real_type             kx_shape_grad_in_real_cell[spacedim];
-                real_type             ky_shape_grad_in_real_cell[spacedim];
-                CUDAVector<real_type> kx_shape_grad_in_real_cell_vector(
-                  kx_shape_grad_in_real_cell, spacedim);
-                CUDAVector<real_type> ky_shape_grad_in_real_cell_vector(
-                  ky_shape_grad_in_real_cell, spacedim);
-
-                kx_covariant_matrix.vmult(kx_shape_grad_in_real_cell_vector,
-                                          kx_shape_grad_in_unit_cell_vector);
-                ky_covariant_matrix.vmult(ky_shape_grad_in_real_cell_vector,
-                                          ky_shape_grad_in_unit_cell_vector);
-
-                /**
-                 * Calculate the surface gradient tensor of the shape
-                 * functions, which is the cross product of normal vector
-                 * and the volume gradient vector.
-                 *
-                 * \mynote{The cross product operation requires the input
-                 * vectors to be transformed to tensors.}
-                 */
-                Tensor<1, spacedim, real_type> kx_shape_surface_curl =
-                  cross_product_3d(kx_normal,
-                                   kx_shape_grad_in_real_cell_vector);
-                Tensor<1, spacedim, real_type> ky_shape_surface_curl =
-                  cross_product_3d(ky_normal,
-                                   ky_shape_grad_in_real_cell_vector);
-
-                quad_value +=
-                  kernel.value(kx_quad_point,
-                               ky_quad_point,
-                               kx_normal,
-                               ky_normal) *
-                  kx_jacobian * ky_jacobian *
-                  HierBEM::PlatformShared::scalar_product(
-                    kx_shape_surface_curl, ky_shape_surface_curl) *
-                  static_cast<real_type>(
-                    bem_values.quad_rule_for_regular.get_weights()[quad_no]);
-              }
-            else
-              {
-                quad_value +=
-                  kernel.value(kx_quad_point,
-                               ky_quad_point,
-                               kx_normal,
-                               ky_normal) *
-                  kx_jacobian * ky_jacobian *
-                  bem_values.kx_shape_value_table_for_regular(
-                    scalar_data_ring_buffer_gpu[task_index].i_local_index,
-                    0,
-                    quad_no) *
-                  bem_values.ky_shape_value_table_for_regular(
-                    scalar_data_ring_buffer_gpu[task_index].j_local_index,
-                    0,
-                    quad_no) *
-                  static_cast<real_type>(
-                    bem_values.quad_rule_for_regular.get_weights()[quad_no]);
+                else
+                  {
+                    quad_value +=
+                      kernel.value(
+                        bem_values.quad_points_for_regular(kx_cell_index_local,
+                                                           kx_quad_no),
+                        bem_values.quad_points_for_regular(ky_cell_index_local,
+                                                           ky_quad_no),
+                        bem_values.normals_at_quad_points_for_regular(
+                          kx_cell_index_local, kx_quad_no),
+                        bem_values.normals_at_quad_points_for_regular(
+                          ky_cell_index_local, ky_quad_no)) *
+                      bem_values.JxW_at_quad_points_for_regular(
+                        kx_cell_index_local, kx_quad_no) *
+                      bem_values.JxW_at_quad_points_for_regular(
+                        ky_cell_index_local, ky_quad_no) *
+                      bem_values.kx_shape_value_table_for_regular(
+                        scalar_data_ring_buffer_gpu[task_index].i_local_index,
+                        kx_quad_no) *
+                      bem_values.ky_shape_value_table_for_regular(
+                        scalar_data_ring_buffer_gpu[task_index].j_local_index,
+                        ky_quad_no);
+                  }
               }
           }
 
-        /**
-         * @internal Save the scaled quadrature value to the ring buffer.
-         */
+        // Save the scaled quadrature value to the ring buffer. N.B. With the
+        // regular cell neighboring type, there is no coordinate transformation
+        // from the Sauter parameter space to the product unit cell space
+        // anymore; hence there is no such Jacobian determinant. Meanwhile,
+        // quadrature weights have been multiplied into Jacobian values,
+        // therefore they do not appear here.
         quadrature_value_ring_buffer_gpu[task_index] =
           quad_value * kernel_factor;
       }

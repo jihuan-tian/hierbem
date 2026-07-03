@@ -12,6 +12,7 @@
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/table.h>
+#include <deal.II/base/types.h>
 
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
@@ -22,33 +23,23 @@
 #include <catch2/catch_all.hpp>
 
 #include <fstream>
-#include <iostream>
 #include <map>
 #include <string>
 #include <vector>
 
 #include "bem/bem_tools.h"
+#include "cad_mesh/outward_surface_normal_detector.h"
 #include "cad_mesh/subdomain_topology.h"
 #include "config_file/config_structs.h"
 #include "config_file/cu_related.h"
 #include "grid/grid_in_ext.h"
 #include "grid/grid_out_ext.h"
+#include "linear_algebra/cu_table.hcu"
 #include "preconditioners/preconditioner_for_laplace_single_layer_bio.h"
 #include "quadrature/sauter_quadrature_tools.h"
-#include "utilities/debug_tools.h"
 
 using namespace Catch::Matchers;
 using namespace HierBEM;
-
-class OutwardSurfaceNormalDetector
-{
-public:
-  bool
-  is_normal_vector_inward([[maybe_unused]] const types::material_id m) const
-  {
-    return false;
-  }
-};
 
 void
 run_op_precond_hmatrix_for_dirichlet()
@@ -141,9 +132,27 @@ run_op_precond_hmatrix_for_dirichlet()
   // Initialize CUDA stack size and device properties.
   initCudaRuntime(parallel_params);
 
-  Table<2, Point<spacedim>> tria_mapping_support_points;
-  BEMTools::compute_mapping_support_points_for_tria(
-    tria, mappings, material_id_to_mapping_index, tria_mapping_support_points);
+  Table<2, Point<spacedim>> tria_mapping_support_points_cpu;
+  HierBEM::CUDAWrappers::CUDATable<2, Point<spacedim>>
+                            tria_mapping_support_points_gpu;
+  std::vector<unsigned int> tria_mapping_indices_cpu;
+  HierBEM::CUDAWrappers::CUDATable<1, unsigned int> tria_mapping_indices_gpu;
+
+  BEMTools::compute_mapping_support_points_and_indices_for_tria(
+    tria,
+    mappings,
+    material_id_to_mapping_index,
+    tria_mapping_support_points_cpu,
+    tria_mapping_indices_cpu);
+
+  const types::global_cell_index n_cells = tria.n_active_cells();
+  tria_mapping_support_points_gpu.allocate(
+    TableIndices<2>(n_cells, mappings.back()->get_data()->n_shape_functions));
+  tria_mapping_support_points_gpu.assign_from_host(
+    tria_mapping_support_points_cpu);
+
+  tria_mapping_indices_gpu.allocate(TableIndices<1>(n_cells));
+  tria_mapping_indices_gpu.assign_from_host(tria_mapping_indices_cpu);
 
   precond.setup_preconditioner(hmat_params,
                                sauter_quad_params.near_field,
@@ -152,7 +161,9 @@ run_op_precond_hmatrix_for_dirichlet()
                                subdomain_topology,
                                mappings,
                                material_id_to_mapping_index,
-                               tria_mapping_support_points,
+                               tria_mapping_support_points_cpu,
+                               tria_mapping_support_points_gpu,
+                               tria_mapping_indices_gpu,
                                OutwardSurfaceNormalDetector(),
                                SauterQuadratureRule<dim>(
                                  sauter_quad_params.hyper_singular_order),
@@ -168,6 +179,9 @@ run_op_precond_hmatrix_for_dirichlet()
   // Get the averaging matrix for matrix size compatibility checking.
   const SparseMatrix<double> &Cd = precond.get_averaging_matrix();
   REQUIRE(Cd.n() == Br.get_m());
+
+  tria_mapping_support_points_gpu.release();
+  tria_mapping_indices_gpu.release();
 
   // Release manifold objects.
   for (auto &m : manifolds)

@@ -1,0 +1,376 @@
+// Copyright (C) 2026 Jihuan Tian <jihuan_tian@hotmail.com>
+//
+// This file is part of the HierBEM library.
+//
+// HierBEM is free software: you can use it, redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License as published by the
+// Free Software Foundation, either version 3 of the License, or (at your
+// option) any later version. The full text of the license can be found in the
+// file LICENSE at the top level directory of HierBEM.
+
+/**
+ * @file cu_table_view.hcu
+ * @brief Multi-dimensional read-only table view on the device with the C index
+ * style.
+ *
+ * @date 2026-04-16
+ * @author Jihuan Tian
+ */
+#ifndef HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_VIEW_HCU_
+#define HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_VIEW_HCU_
+
+#include <cassert>
+
+#include "config.h"
+#include "cu_table.hcu"
+#include "cu_table_indices.hcu"
+
+HBEM_NS_OPEN
+
+namespace CUDAWrappers
+{
+  template <int N, typename T = double>
+  class CUDATableView;
+
+  template <int N, typename T>
+  HBEM_ATTR_HOST CUDATableView<N, T>
+                 make_view(const CUDATable<N, T> &table);
+
+  /**
+   * Class for a view of an @p CUDATable object.
+   *
+   * @tparam N Table dimension
+   * @tparam T Value type
+   */
+  template <int N, typename T>
+  class CUDATableView
+  {
+    template <int N1, typename T1>
+    friend HBEM_ATTR_HOST CUDATableView<N1, T1>
+                          make_view(const CUDATable<N1, T1> &table);
+
+  public:
+    using value_type    = T;
+    using size_type     = std::size_t;
+    using const_pointer = const T *;
+
+    /**
+     * Get the total number of elements in the table.
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
+    n_elements() const
+    {
+      return element_num;
+    }
+
+    /**
+     * Get the const reference to the i'th element in the table using linear
+     * index.
+     *
+     * \alert{This function can only be called on the device, since the table
+     * data are stored on the device and accessing only one element at a time
+     * is inefficient.}
+     *
+     * @param i
+     * @return
+     */
+    HBEM_ATTR_DEV const T &
+    operator[](const size_type i) const
+    {
+      return values[i];
+    }
+
+    /**
+     * Get the const reference to the element specified by the table indices.
+     * C style indexing is adopted.
+     *
+     * \alert{This function can only be called on the device, since the table
+     * data are stored on the device and accessing only one element at a time
+     * is inefficient.}
+     *
+     * @param indices
+     * @return
+     */
+    HBEM_ATTR_DEV const T &
+    operator()(const CUDATableIndices<N> &indices) const
+    {
+      return values[ndarray_indices_to_linear_index(indices, table_size)];
+    }
+
+    /**
+     * Get the const reference to the i'th element in the table.
+     *
+     * \mynote{The table should have only one dimension.}
+     *
+     * @param i
+     * @return
+     */
+    HBEM_ATTR_DEV const T &
+    operator()(const size_type i) const
+    {
+      assert(N == 1);
+
+      return values[i];
+    }
+
+    /**
+     * Get the const reference to the element (i,j) in the table.
+     *
+     * \mynote{The table should have two dimensions.}
+     *
+     * @param i
+     * @param j
+     * @return
+     */
+    HBEM_ATTR_DEV const T &
+    operator()(const size_type i, const size_type j) const
+    {
+      assert(N == 2);
+
+      return values[i * table_size[1] + j];
+    }
+
+    /**
+     * Get the const reference to the element (i,j,k) in the table.
+     *
+     * \mynote{The table should have three dimensions.}
+     *
+     * @param i
+     * @param j
+     * @param k
+     * @return
+     */
+    HBEM_ATTR_DEV const T &
+    operator()(const size_type i, const size_type j, const size_type k) const
+    {
+      assert(N == 3);
+
+      return values[(i * table_size[1] + j) * table_size[2] + k];
+    }
+
+    /**
+     * Get the const reference to the element (i,j,k,l) in the table.
+     *
+     * \mynote{The table should have four dimensions.}
+     *
+     * @param i
+     * @param j
+     * @param k
+     * @param l
+     * @return
+     */
+    HBEM_ATTR_DEV const T &
+    operator()(const size_type i,
+               const size_type j,
+               const size_type k,
+               const size_type l) const
+    {
+      assert(N == 4);
+
+      return values[((i * table_size[1] + j) * table_size[2] + k) *
+                      table_size[3] +
+                    l];
+    }
+
+    /**
+     * Get the const reference to the element (i,j,k,l,m) in the table.
+     *
+     * \mynote{The table should have five dimensions.}
+     *
+     * @param i
+     * @param j
+     * @param k
+     * @param l
+     * @param m
+     * @return
+     */
+    HBEM_ATTR_DEV const T &
+    operator()(const size_type i,
+               const size_type j,
+               const size_type k,
+               const size_type l,
+               const size_type m) const
+    {
+      assert(N == 5);
+
+      return values
+        [(((i * table_size[1] + j) * table_size[2] + k) * table_size[3] + l) *
+           table_size[4] +
+         m];
+    }
+
+    /**
+     * Compute the offset in the linear memory of the table entry, which is
+     * specified by its table indices.
+     *
+     * \mynote{The table entries are accessed using the C style.}
+     *
+     * @param indices
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
+    offset(const CUDATableIndices<N> &indices) const
+    {
+      return ndarray_indices_to_linear_index(indices, table_size);
+    }
+
+    /**
+     * Compute the offset in the linear memory of the table entry, which is
+     * specified by its table indices.
+     *
+     * \mynote{The table entries are accessed using the C style. This version
+     * is used for table dimension 2.}
+     *
+     * @param i
+     * @param j
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
+    offset(const size_type i, const size_type j) const
+    {
+      assert(N == 2);
+
+      return i * table_size[1] + j;
+    }
+
+    /**
+     * Compute the offset in the linear memory of the table entry, which is
+     * specified by its table indices.
+     *
+     * \mynote{The table entries are accessed using the C style. This version
+     * is used for table dimension 3.}
+     *
+     * @param i
+     * @param j
+     * @param k
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
+    offset(const size_type i, const size_type j, const size_type k) const
+    {
+      assert(N == 3);
+
+      return (i * table_size[1] + j) * table_size[2] + k;
+    }
+
+    /**
+     * Compute the offset in the linear memory of the table entry, which is
+     * specified by its table indices.
+     *
+     * \mynote{The table entries are accessed using the C style. This version
+     * is used for table dimension 4.}
+     *
+     * @param i
+     * @param j
+     * @param k
+     * @param l
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
+    offset(const size_type i,
+           const size_type j,
+           const size_type k,
+           const size_type l) const
+    {
+      assert(N == 4);
+
+      return ((i * table_size[1] + j) * table_size[2] + k) * table_size[3] + l;
+    }
+
+    /**
+     * Compute the offset in the linear memory of the table entry, which is
+     * specified by its table indices.
+     *
+     * \mynote{The table entries are accessed using the C style. This version
+     * is used for table dimension 5.}
+     *
+     * @param i
+     * @param j
+     * @param k
+     * @param l
+     * @param m
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
+    offset(const size_type i,
+           const size_type j,
+           const size_type k,
+           const size_type l,
+           const size_type m) const
+    {
+      assert(N == 5);
+
+      return (((i * table_size[1] + j) * table_size[2] + k) * table_size[3] +
+              l) *
+               table_size[4] +
+             m;
+    }
+
+    /**
+     * Get table sizes.
+     *
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV const CUDATableIndices<N>                                    &
+    size() const
+    {
+      return table_size;
+    }
+
+    /**
+     * Get the table size in the i'th dimension.
+     *
+     * @param i
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV size_type
+    size(const size_type i) const
+    {
+      return table_size[i];
+    }
+
+    /**
+     * Get the pointer to the internal data.
+     *
+     * @return
+     */
+    HBEM_ATTR_HOST HBEM_ATTR_DEV const_pointer
+    data() const
+    {
+      return values;
+    }
+
+  private:
+    /**
+     * Non-owning pointer to a data table on the device, the memory of which is
+     * managed by another @p CUDATable object.
+     */
+    const_pointer values = nullptr;
+    /**
+     * Total number of entries in the table.
+     */
+    size_type element_num = 0;
+    /**
+     * Table size in each dimension.
+     */
+    CUDATableIndices<N> table_size{};
+  };
+
+  template <int N, typename T>
+  HBEM_ATTR_HOST CUDATableView<N, T>
+                 make_view(const CUDATable<N, T> &table)
+  {
+    CUDATableView<N, T> v;
+    v.values = table.data();
+    assert(v.values != nullptr);
+    v.table_size  = table.size();
+    v.element_num = table.n_elements();
+
+    return v;
+  }
+} // namespace CUDAWrappers
+
+HBEM_NS_CLOSE
+
+#endif // HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_VIEW_HCU_

@@ -27,22 +27,29 @@
 #include <deal.II/fe/fe_dgq.h>
 
 #include <deal.II/grid/manifold_lib.h>
+#include <deal.II/grid/tria.h>
 
-#include <cstdlib>
-#include <fstream>
+#include <cstdlib> // atoi
 #include <iostream>
+#include <map>
+#include <memory>
+#include <set>
+#include <vector>
 
+#include "bem/bem_bilinear_form.h"
+#include "bem/bem_function_space.h"
 #include "bem/bem_tools.h"
+#include "cad_mesh/gmsh_manipulation.h"
 #include "cad_mesh/subdomain_topology.h"
 #include "config_file/config_structs.h"
 #include "config_file/cu_related.h"
-#include "dofs/dof_tools_ext.h"
 #include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
-#include "hmatrix/aca_plus/aca_plus.hcu"
+#include "linear_algebra/cu_table.hcu"
 #include "mapping/mapping_info.h"
 #include "platform_shared/laplace_kernels.h"
 #include "quadrature/sauter_quadrature_tools.h"
+#include "utilities/debug_tools.h"
 #include "utilities/unary_template_arg_containers.h"
 
 using namespace dealii;
@@ -59,6 +66,8 @@ main(int argc, char *argv[])
 
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
+
+  using SearchableMaterialIdContainer = std::set<EntityTag>;
 
   const double inter_distance = 8.0;
 
@@ -96,9 +105,7 @@ main(int argc, char *argv[])
   // Define mappings of different orders.
   std::vector<MappingInfo<dim, spacedim> *> mappings(3);
   for (unsigned int i = 1; i <= 3; i++)
-    {
-      mappings[i - 1] = new MappingInfo<dim, spacedim>(i);
-    }
+    mappings[i - 1] = new MappingInfo<dim, spacedim>(i);
 
   // Construct the map from material ids to mapping indices.
   std::map<types::material_id, unsigned int> material_id_to_mapping_index;
@@ -110,9 +117,6 @@ main(int argc, char *argv[])
 
   FE_DGQ<dim, spacedim>     fe(0);
   DoFHandler<dim, spacedim> dof_handler(tria);
-
-  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim>
-    single_layer_kernel;
 
   // Parameters for building H-matrices.
   ConfHMatrix             hmat_params{32, 32, 0.8, 5, 0.01, false};
@@ -132,104 +136,64 @@ main(int argc, char *argv[])
   // Refine the volume mesh.
   tria.refine_global(1);
 
-  Table<2, Point<spacedim>> tria_mapping_support_points;
-  BEMTools::compute_mapping_support_points_for_tria(
-    tria, mappings, material_id_to_mapping_index, tria_mapping_support_points);
+  Table<2, Point<spacedim>> tria_mapping_support_points_cpu;
+  HierBEM::CUDAWrappers::CUDATable<2, Point<spacedim>>
+                            tria_mapping_support_points_gpu;
+  std::vector<unsigned int> tria_mapping_indices_cpu;
+  HierBEM::CUDAWrappers::CUDATable<1, unsigned int> tria_mapping_indices_gpu;
+
+  BEMTools::compute_mapping_support_points_and_indices_for_tria(
+    tria,
+    mappings,
+    material_id_to_mapping_index,
+    tria_mapping_support_points_cpu,
+    tria_mapping_indices_cpu);
+
+  const types::global_cell_index n_cells = tria.n_active_cells();
+  tria_mapping_support_points_gpu.allocate(
+    TableIndices<2>(n_cells, mappings.back()->get_data()->n_shape_functions));
+  tria_mapping_support_points_gpu.assign_from_host(
+    tria_mapping_support_points_cpu);
+
+  tria_mapping_indices_gpu.allocate(TableIndices<1>(n_cells));
+  tria_mapping_indices_gpu.assign_from_host(tria_mapping_indices_cpu);
 
   dof_handler.distribute_dofs(fe);
 
-  // Generate a list of cell iterators which will be used for constructing
-  // the dof-to-cell topology.
-  std::vector<typename DoFHandler<dim, spacedim>::cell_iterator> cell_iterators;
-  for (const auto &cell : dof_handler.active_cell_iterators())
-    {
-      cell_iterators.push_back(cell);
-    }
+  BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, double>
+    H_minus_half(dof_handler,
+                 static_cast<unsigned int>(hmat_params.n_min_for_ct));
+  BEMBilinearForm<dim,
+                  spacedim,
+                  SearchableMaterialIdContainer,
+                  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
+                  double,
+                  double>
+    bV(H_minus_half, H_minus_half);
 
-  DoFToCellTopology<dim, spacedim> dof_to_cell_topo;
-  DoFToolsExt::build_dof_to_cell_topology(dof_to_cell_topo,
-                                          cell_iterators,
-                                          dof_handler);
-
-  // Generate lists of DoF indices.
-  std::vector<types::global_dof_index> dof_indices(dof_handler.n_dofs());
-  gen_linear_indices<vector_uta, types::global_dof_index>(dof_indices);
-  // Get the spatial coordinates of the support points. Even though
-  // different surfaces may be assigned a manifold which is further
-  // associated with a high order mapping, here we only use the first order
-  // mapping to generate the support points for finite element shape
-  // functions. This is good enough for the partition of cluster trees.
-  std::vector<Point<spacedim>> support_points(dof_handler.n_dofs());
-  DoFTools::map_dofs_to_support_points(mappings[0]->get_mapping(),
-                                       dof_handler,
-                                       support_points);
-
-  // Compute average cell size at each support points.
-  std::vector<double> cell_size_at_support_points(dof_handler.n_dofs());
-  cell_size_at_support_points.assign(dof_handler.n_dofs(), 0);
-  DoFToolsExt::map_dofs_to_average_cell_size(dof_handler,
-                                             cell_size_at_support_points);
-
-  // Create and partition the cluster tree.
-  ClusterTree<spacedim> ct(dof_indices,
-                           support_points,
-                           cell_size_at_support_points,
-                           static_cast<unsigned int>(hmat_params.n_min_for_ct));
-  ct.partition(support_points, cell_size_at_support_points);
-
-  // Create and partition the block cluster tree.
-  BlockClusterTree<spacedim> bct(ct,
-                                 ct,
-                                 hmat_params.eta,
-                                 static_cast<unsigned int>(
-                                   hmat_params.n_min_for_bct));
-  bct.partition(ct.get_internal_to_external_dof_numbering(),
-                support_points,
-                cell_size_at_support_points);
-
-  // Create a symmetric H-matrix with respect to the block cluster tree.
-  HMatrix<spacedim> V(bct,
-                      static_cast<unsigned int>(hmat_params.max_rank),
-                      HMatrixSupport::Property::symmetric,
-                      HMatrixSupport::BlockType::diagonal_block);
-
-  // Assemble the H-matrix using ACA.
   Timer timer;
-  fill_hmatrix_with_aca_plus_smp<
-    dim,
-    spacedim,
-    HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
-    double,
-    double,
-    SurfaceNormalDetector<dim, spacedim>>(
-    V,
-    hmat_params,
-    sauter_quad_near_field_params,
-    sauter_quad_far_field_params,
-    parallel_params,
-    single_layer_kernel,
-    1.0,
-    dof_to_cell_topo,
-    dof_to_cell_topo,
-    SauterQuadratureRule<dim>(5, 4, 4, 3),
-    dof_handler,
-    dof_handler,
-    nullptr,
-    nullptr,
-    ct.get_internal_to_external_dof_numbering(),
-    ct.get_internal_to_external_dof_numbering(),
-    mappings,
-    material_id_to_mapping_index,
-    tria_mapping_support_points,
-    SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
-    true);
+  bV.build_block_cluster_tree(
+    hmat_params.eta, static_cast<unsigned int>(hmat_params.n_min_for_bct));
+  std::unique_ptr<HMatrix<spacedim, double>> V =
+    bV.build_hmatrix(hmat_params,
+                     sauter_quad_near_field_params,
+                     sauter_quad_far_field_params,
+                     parallel_params,
+                     1.0,
+                     SauterQuadratureRule<dim>(5, 4, 4, 3),
+                     mappings,
+                     material_id_to_mapping_index,
+                     tria_mapping_support_points_cpu,
+                     tria_mapping_support_points_gpu,
+                     tria_mapping_indices_gpu,
+                     subdomain_topology);
   timer.stop();
   print_wall_time(std::cout, timer, "assemble H-matrix V");
 
   for (unsigned int i = 0; i < REPEATS; i++)
     {
       // Make a copy of the SLP matrix.
-      HMatrix<spacedim, double> V_tmp(V);
+      HMatrix<spacedim, double> V_tmp(*V);
 
       // Perform Cholesky factorization.
       timer.start();
@@ -238,6 +202,9 @@ main(int argc, char *argv[])
       timer.stop();
       print_wall_time(std::cout, timer, "cholesky factorization");
     }
+
+  tria_mapping_support_points_gpu.release();
+  tria_mapping_indices_gpu.release();
 
   // Delete manifolds and mappings.
   for (auto &m : manifolds)

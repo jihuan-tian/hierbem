@@ -39,7 +39,7 @@ main()
     quad_gpu.assign_from_host(quad_cpu);
 
     print_cuda_object<<<1, 96>>>(quad_gpu);
-    cudaThreadSynchronize();
+    cudaDeviceSynchronize();
 
     quad_gpu.release();
   }
@@ -55,7 +55,7 @@ main()
     quad_gpu.assign_from_host(quad_cpu);
 
     print_cuda_object<<<1, 96>>>(quad_gpu);
-    cudaThreadSynchronize();
+    cudaDeviceSynchronize();
 
     quad_gpu.release();
   }
@@ -71,7 +71,7 @@ main()
     quad_gpu.assign_from_host(quad_cpu);
 
     print_cuda_object<<<1, 96>>>(quad_gpu);
-    cudaThreadSynchronize();
+    cudaDeviceSynchronize();
 
     quad_gpu.release();
   }
@@ -87,7 +87,7 @@ main()
     quad_gpu.assign_from_host(quad_cpu);
 
     print_cuda_object<<<1, 96>>>(quad_gpu);
-    cudaThreadSynchronize();
+    cudaDeviceSynchronize();
 
     quad_gpu.release();
   }

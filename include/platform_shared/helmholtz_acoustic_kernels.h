@@ -23,10 +23,8 @@
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
 
-#include <assert.h>
-
+#include <cassert>
 #include <cmath>
-#include <complex>
 
 #include "bem/types.h"
 #include "config.h"
@@ -193,8 +191,8 @@ namespace PlatformShared
               const real_type r = (x - y).norm();
 
               return (real_type(0.25 / numbers::PI) / r *
-                      PlatformShared::Utilities::exp(KernelNumberType(0., 1.0) *
-                                                     kappa * r));
+                      HierBEM::PlatformShared::Utilities::exp(
+                        KernelNumberType(0., 1.0) * kappa * r));
             }
           default:
             assert(false);
@@ -311,7 +309,7 @@ namespace PlatformShared
                 KernelNumberType(0., 1.0) * kappa * r;
 
               return real_type(0.25 / numbers::PI) /
-                     PlatformShared::Utilities::fixed_power<3>(r) *
+                     HierBEM::PlatformShared::Utilities::fixed_power<3>(r) *
                      std::exp(ikr) * (real_type(1.0) - ikr) *
                      scalar_product(x - y, ny);
             }
@@ -343,8 +341,8 @@ namespace PlatformShared
                 KernelNumberType(0., 1.0) * kappa * r;
 
               return real_type(0.25 / numbers::PI) /
-                     PlatformShared::Utilities::fixed_power<3>(r) *
-                     PlatformShared::Utilities::exp(ikr) *
+                     HierBEM::PlatformShared::Utilities::fixed_power<3>(r) *
+                     HierBEM::PlatformShared::Utilities::exp(ikr) *
                      (real_type(1.0) - ikr) * scalar_product(x - y, ny);
             }
           default:
@@ -466,7 +464,7 @@ namespace PlatformShared
                 KernelNumberType(0., 1.0) * kappa * r;
 
               return real_type(0.25 / numbers::PI) /
-                     PlatformShared::Utilities::fixed_power<3>(r) *
+                     HierBEM::PlatformShared::Utilities::fixed_power<3>(r) *
                      std::exp(ikr) * (real_type(1.0) - ikr) *
                      scalar_product(y - x, nx);
             }
@@ -498,8 +496,8 @@ namespace PlatformShared
                 KernelNumberType(0., 1.0) * kappa * r;
 
               return real_type(0.25 / numbers::PI) /
-                     PlatformShared::Utilities::fixed_power<3>(r) *
-                     PlatformShared::Utilities::exp(ikr) *
+                     HierBEM::PlatformShared::Utilities::fixed_power<3>(r) *
+                     HierBEM::PlatformShared::Utilities::exp(ikr) *
                      (real_type(1.0) - ikr) * scalar_product(y - x, nx);
             }
           default:
@@ -653,7 +651,7 @@ namespace PlatformShared
                 KernelNumberType(0., 1.0) * kappa * r;
 
               return real_type(0.25 / numbers::PI) *
-                     PlatformShared::Utilities::exp(ikr) *
+                     HierBEM::PlatformShared::Utilities::exp(ikr) *
                      ((ikr - real_type(1.0)) * scalar_product(nx, ny) / r3 -
                       (kappa * kappa / r3 +
                        real_type(3.0) * (ikr - real_type(1.0)) / r5) *
@@ -825,8 +823,8 @@ namespace PlatformShared
               const real_type r = (x - y).norm();
 
               return (real_type(0.25 / numbers::PI) / r *
-                      PlatformShared::Utilities::exp(KernelNumberType(0., 1.0) *
-                                                     kappa * r));
+                      HierBEM::PlatformShared::Utilities::exp(
+                        KernelNumberType(0., 1.0) * kappa * r));
             }
           default:
             assert(false);
@@ -974,8 +972,8 @@ namespace PlatformShared
               const real_type r = (x - y).norm();
 
               return (-kappa * kappa * real_type(0.25 / numbers::PI) / r *
-                      PlatformShared::Utilities::exp(KernelNumberType(0., 1.0) *
-                                                     kappa * r) *
+                      HierBEM::PlatformShared::Utilities::exp(
+                        KernelNumberType(0., 1.0) * kappa * r) *
                       scalar_product(nx, ny));
             }
           default:

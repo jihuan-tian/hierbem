@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2022-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -11,7 +11,8 @@
 /**
  * \file verify-cross-product-of-tensors.cc
  * \brief Verify the cross product in 3D of two rank-1 tensors.
- * \ingroup test_cases
+ *
+ * \ingroup test_cases linalg
  * \author Jihuan Tian
  * \date 2022-09-18
  */

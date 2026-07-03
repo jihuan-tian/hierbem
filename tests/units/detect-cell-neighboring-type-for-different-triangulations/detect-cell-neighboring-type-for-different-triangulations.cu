@@ -37,6 +37,7 @@
 #include <vector>
 
 #include "bem/bem_tools.h"
+#include "bem/cell_neighboring_type.h"
 #include "utilities/debug_tools.h"
 
 using namespace dealii;
@@ -94,8 +95,8 @@ main()
      * Check the cell neighboring type for each pair of cells.
      */
     std::vector<std::pair<types::global_dof_index, types::global_dof_index>>
-                                           common_vertex_dof_indices;
-    HierBEM::BEMTools::CellNeighboringType cell_neighboring_type;
+                        common_vertex_dof_indices;
+    CellNeighboringType cell_neighboring_type;
 
     unsigned int e1_index = 0;
     for (const typename DoFHandler<dim, spacedim>::active_cell_iterator &e1 :
@@ -118,8 +119,7 @@ main()
 
             std::cout << "Cell neighboring type for cells (" << e1_index << ","
                       << e2_index << ") is: "
-                      << HierBEM::BEMTools::cell_neighboring_type_name(
-                           cell_neighboring_type)
+                      << cell_neighboring_type_name(cell_neighboring_type)
                       << "\n";
 
             if (common_vertex_dof_indices.size() > 0)
@@ -170,8 +170,8 @@ main()
      * Check the cell neighboring type for each pair of cells.
      */
     std::vector<std::pair<types::global_dof_index, types::global_dof_index>>
-                                           common_vertex_dof_indices;
-    HierBEM::BEMTools::CellNeighboringType cell_neighboring_type;
+                        common_vertex_dof_indices;
+    CellNeighboringType cell_neighboring_type;
 
     unsigned int e1_index = 0;
     for (const typename DoFHandler<dim, spacedim>::active_cell_iterator &e1 :
@@ -194,8 +194,7 @@ main()
 
             std::cout << "Cell neighboring type for cells (" << e1_index << ","
                       << e2_index << ") is: "
-                      << HierBEM::BEMTools::cell_neighboring_type_name(
-                           cell_neighboring_type)
+                      << cell_neighboring_type_name(cell_neighboring_type)
                       << "\n";
 
             if (common_vertex_dof_indices.size() > 0)
@@ -246,8 +245,8 @@ main()
      * Check the cell neighboring type for each pair of cells.
      */
     std::vector<std::pair<types::global_dof_index, types::global_dof_index>>
-                                           common_vertex_dof_indices;
-    HierBEM::BEMTools::CellNeighboringType cell_neighboring_type;
+                        common_vertex_dof_indices;
+    CellNeighboringType cell_neighboring_type;
 
     unsigned int e1_index = 0;
     for (const typename DoFHandler<dim, spacedim>::active_cell_iterator &e1 :
@@ -270,8 +269,7 @@ main()
 
             std::cout << "Cell neighboring type for cells (" << e1_index << ","
                       << e2_index << ") is: "
-                      << HierBEM::BEMTools::cell_neighboring_type_name(
-                           cell_neighboring_type)
+                      << cell_neighboring_type_name(cell_neighboring_type)
                       << "\n";
 
             if (common_vertex_dof_indices.size() > 0)

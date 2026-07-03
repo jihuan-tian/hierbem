@@ -217,9 +217,7 @@ gen_linear_indices(Container<number> &a,
 {
   for (typename Container<number>::iterator iter = a.begin(); iter != a.end();
        std::advance(iter, 1), starting_value += step)
-    {
-      (*iter) = starting_value;
-    }
+    (*iter) = starting_value;
 }
 
 

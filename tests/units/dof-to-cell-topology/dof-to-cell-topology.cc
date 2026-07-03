@@ -24,11 +24,10 @@
 #include <deal.II/grid/grid_out.h>
 #include <deal.II/grid/tria.h>
 
-#include <fstream>
 #include <iostream>
 #include <vector>
 
-#inlcude "dofs/dof_tools_ext.h"
+#include "dofs/dof_tools_ext.h"
 
 using namespace HierBEM;
 using namespace dealii;
@@ -56,9 +55,7 @@ main()
   std::vector<typename DoFHandler<dim, spacedim>::cell_iterator> cell_iterators;
   cell_iterators.reserve(triangulation.n_active_cells());
   for (const auto &cell : dof_handler.active_cell_iterators())
-    {
-      cell_iterators.push_back(cell);
-    }
+    cell_iterators.push_back(cell);
 
   std::vector<
     std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
@@ -71,9 +68,7 @@ main()
   for (const auto &e : dof_to_cell_topo)
     {
       for (const typename DoFHandler<dim, spacedim>::cell_iterator *f : e)
-        {
-          std::cout << (*f)->active_cell_index() << std::endl;
-        }
+        std::cout << (*f)->active_cell_index() << std::endl;
     }
 
   return 0;

@@ -41,11 +41,11 @@
 #include <vector>
 
 #include "bem/bem_tools.h"
-#include "cad_mesh/gmsh_manipulation.h"
 #include "config.h"
 #include "dof_to_cell_topology.h"
 #include "linear_algebra/lapack_full_matrix_ext.h"
 #include "mapping/mapping_info.h"
+#include "platform_shared/bem_tools.h"
 
 using namespace dealii;
 
@@ -672,11 +672,13 @@ namespace DoFToolsExt
 
                 // Compute normal vector.
                 Tensor<1, spacedim> normal_vector;
-                BEMTools::surface_jacobian_det_and_normal_vector(
-                  mapping_support_points,
-                  mapping_grad_matrices[d],
-                  normal_vector,
-                  is_normal_vector_negated);
+                BEMTools::PlatformShared::
+                  surface_jacobian_det_and_normal_vector(
+                    &(mapping_grad_matrices[d].begin()->value()),
+                    mapping_support_points.data(),
+                    mapping_n_shape_functions,
+                    normal_vector,
+                    is_normal_vector_negated);
                 // N.B. The locally computed @p normal_vector has the number
                 // type double, which may be different from the template
                 // argument Number.
@@ -1493,12 +1495,20 @@ namespace DoFToolsExt
   /**
    * Build the topology for "DoF support point-to-cell" relation.
    *
-   * \mynote{2022-06-06 This topology is needed when the continuous finite
-   * element such as @p FE_Q is adopted. For the discontinuous finite element
-   * such as @p FE_DGQ, the DoFs in a cell are separated from those in other
-   * cells. Hence, such point-to-cell topology is not necessary.}
+   * In this version, all DoFs in a DoF handler are used.
    *
-   * @param dof_to_cell_topo
+   * \mynote{2022-06-06 This topology is needed when the continuous finite
+   * element such as @p FE_Q is adopted, since the support of a basis function
+   * may contain several cells.
+   *
+   * For the discontinuous finite element such as @p FE_DGQ, the DoFs in a cell
+   * are separated from those in other cells. Hence, such point-to-cell topology
+   * is not necessary.}
+   *
+   * @param dof_to_cell_topo The array index for accessing this variable is a
+   * full DoF index, which follows the natural DoF numbering in a DoF handler.
+   * Each entry is another array of pointers to cell iterators, which are
+   * associated with the DoF index.
    * @param dof_handler
    * @param fe_index
    */
@@ -1524,9 +1534,7 @@ namespace DoFToolsExt
       {
         cell->get_dof_indices(cell_full_dof_indices);
         for (auto dof_index : cell_full_dof_indices)
-          {
-            dof_to_cell_topo[dof_index].push_back(&cell);
-          }
+          dof_to_cell_topo[dof_index].push_back(&cell);
       }
   }
 
@@ -1534,11 +1542,12 @@ namespace DoFToolsExt
   /**
    * @brief Build the topology for "DoF support point-to-cell" relation.
    *
-   * @tparam dim
-   * @tparam spacedim
+   * In this version, all DoFs in a DoF handler are used.
+   *
    * @param dof_to_cell_topo The result is returned in this object of type
-   * @p DoFToCellTopology, which also stores the maximum number of cells
-   * associated with a DoF.
+   * @p DoFToCellTopology, which not only includes an array of cell iterator
+   * pointer vectors, but also the maximum number of cells associated with a
+   * DoF.
    * @param cell_iterators_in_dof_handler
    * @param dof_handler
    * @param fe_index
@@ -1564,17 +1573,13 @@ namespace DoFToolsExt
       {
         cell->get_dof_indices(cell_full_dof_indices);
         for (auto dof_index : cell_full_dof_indices)
-          {
-            dof_to_cell_topo.topology[dof_index].push_back(&cell);
-          }
+          dof_to_cell_topo.topology[dof_index].push_back(&cell);
       }
 
     for (const auto &dof_to_cells : dof_to_cell_topo.topology)
       {
         if (dof_to_cells.size() > dof_to_cell_topo.max_cells_per_dof)
-          {
-            dof_to_cell_topo.max_cells_per_dof = dof_to_cells.size();
-          }
+          dof_to_cell_topo.max_cells_per_dof = dof_to_cells.size();
       }
   }
 
@@ -1583,11 +1588,12 @@ namespace DoFToolsExt
    * @brief Build the topology for "DoF support point-to-cell" relation. Only
    * selected DoFs are considered.
    *
-   * @tparam dim
-   * @tparam spacedim
+   * In this version, only a part of the DoFs in a DoF handler are used.
+   *
    * @param dof_to_cell_topo The result is returned in this object of type
-   * @p DoFToCellTopology, which also stores the maximum number of cells
-   * associated with a DoF.
+   * @p DoFToCellTopology, which not only includes an array of cell iterator
+   * pointer vectors, but also the maximum number of cells associated with a
+   * DoF.
    * @param cell_iterators_in_dof_handler
    * @param dof_handler
    * @param dof_selectors
@@ -1624,9 +1630,7 @@ namespace DoFToolsExt
     for (const auto &dof_to_cells : dof_to_cell_topo.topology)
       {
         if (dof_to_cells.size() > dof_to_cell_topo.max_cells_per_dof)
-          {
-            dof_to_cell_topo.max_cells_per_dof = dof_to_cells.size();
-          }
+          dof_to_cell_topo.max_cells_per_dof = dof_to_cells.size();
       }
   }
 
@@ -1635,9 +1639,12 @@ namespace DoFToolsExt
    * @brief Build the topology for "DoF support point-to-cell" relation. The
    * DoFs are on a specific level in the multigrid.
    *
-   * @tparam dim
-   * @tparam spacedim
-   * @param dof_to_cell_topo
+   * In this version, all DoFs on the specified level in a DoF handler are used.
+   *
+   * @param dof_to_cell_topo The array index for accessing this variable is a
+   * full DoF index, which follows the natural DoF numbering in a DoF handler.
+   * Each entry is another array of pointers to cell iterators, which are
+   * associated with the DoF index.
    * @param mg_cell_iterators_in_dof_handler
    * @param dof_handler
    * @param level
@@ -1666,9 +1673,7 @@ namespace DoFToolsExt
       {
         cell->get_mg_dof_indices(cell_full_dof_indices);
         for (auto dof_index : cell_full_dof_indices)
-          {
-            dof_to_cell_topo[dof_index].push_back(&cell);
-          }
+          dof_to_cell_topo[dof_index].push_back(&cell);
       }
   }
 
@@ -1677,11 +1682,12 @@ namespace DoFToolsExt
    * @brief Build the topology for "DoF support point-to-cell" relation. The
    * DoFs are on a specific level in the multigrid.
    *
-   * @tparam dim
-   * @tparam spacedim
+   * In this version, all DoFs on the specified level in a DoF handler are used.
+   *
    * @param dof_to_cell_topo The result is returned in this object of type
-   * @p DoFToCellTopology, which also stores the maximum number of cells
-   * associated with a DoF.
+   * @p DoFToCellTopology, which not only includes an array of cell iterator
+   * pointer vectors, but also the maximum number of cells associated with a
+   * DoF.
    * @param mg_cell_iterators_in_dof_handler
    * @param dof_handler
    * @param level
@@ -1709,17 +1715,13 @@ namespace DoFToolsExt
       {
         cell->get_mg_dof_indices(cell_full_dof_indices);
         for (auto dof_index : cell_full_dof_indices)
-          {
-            dof_to_cell_topo.topology[dof_index].push_back(&cell);
-          }
+          dof_to_cell_topo.topology[dof_index].push_back(&cell);
       }
 
     for (const auto &dof_to_cells : dof_to_cell_topo.topology)
       {
         if (dof_to_cells.size() > dof_to_cell_topo.max_cells_per_dof)
-          {
-            dof_to_cell_topo.max_cells_per_dof = dof_to_cells.size();
-          }
+          dof_to_cell_topo.max_cells_per_dof = dof_to_cells.size();
       }
   }
 
@@ -1728,11 +1730,13 @@ namespace DoFToolsExt
    * @brief Build the topology for "DoF support point-to-cell" relation. Only
    * selected DoFs on a specific level in the multigrid are considered.
    *
-   * @tparam dim
-   * @tparam spacedim
+   * In this version, only a part of DoFs on the specified level in a DoF
+   * handler are used.
+   *
    * @param dof_to_cell_topo The result is returned in this object of type
-   * @p DoFToCellTopology, which also stores the maximum number of cells
-   * associated with a DoF.
+   * @p DoFToCellTopology, which not only includes an array of cell iterator
+   * pointer vectors, but also the maximum number of cells associated with a
+   * DoF.
    * @param mg_cell_iterators_in_dof_handler
    * @param dof_handler
    * @param level
@@ -1773,9 +1777,7 @@ namespace DoFToolsExt
     for (const auto &dof_to_cells : dof_to_cell_topo.topology)
       {
         if (dof_to_cells.size() > dof_to_cell_topo.max_cells_per_dof)
-          {
-            dof_to_cell_topo.max_cells_per_dof = dof_to_cells.size();
-          }
+          dof_to_cell_topo.max_cells_per_dof = dof_to_cells.size();
       }
   }
 

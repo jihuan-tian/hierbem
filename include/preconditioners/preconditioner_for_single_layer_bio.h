@@ -45,6 +45,9 @@ using namespace dealii;
  * @brief Abstract class for the dual mesh operator preconditioner, which
  * preconditions the single layer potential boundary integral operator.
  *
+ * This class implements the virtual methods @p build_coupling_matrix and
+ * @p build_averaging_matrix.
+ *
  * @tparam dim Manifold dimension of the surface
  * @tparam spacedim Space dimension
  * @tparam RangeNumberType Number type of matrix and vector entries

@@ -23,7 +23,6 @@
 #include <rfl/json.hpp>
 #include <rfl/toml.hpp>
 
-#include <iostream>
 #include <string>
 
 #include "hbem_octave_wrapper.h"

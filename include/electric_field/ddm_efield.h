@@ -521,19 +521,18 @@ private:
   /**
    * Kernel function for the single layer potential.
    */
-  HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<3, KernelNumberType>
+  PlatformShared::LaplaceKernel::SingleLayerKernel<3, KernelNumberType>
     single_layer_kernel;
   /**
    * Kernel function for the double layer potential.
    */
-  HierBEM::PlatformShared::LaplaceKernel::DoubleLayerKernel<3, KernelNumberType>
+  PlatformShared::LaplaceKernel::DoubleLayerKernel<3, KernelNumberType>
     double_layer_kernel;
   /**
    * Kernel function for the hyper-singular potential.
    */
-  HierBEM::PlatformShared::LaplaceKernel::
-    HyperSingularKernelRegular<3, KernelNumberType>
-      hyper_singular_kernel;
+  PlatformShared::LaplaceKernel::HyperSingularKernelRegular<3, KernelNumberType>
+    hyper_singular_kernel;
 
   /**
    * Dirichlet space on the whole skeleton.

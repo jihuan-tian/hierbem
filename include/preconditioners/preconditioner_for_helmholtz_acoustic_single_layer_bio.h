@@ -43,6 +43,7 @@
 #include "cad_mesh/subdomain_topology.h"
 #include "config.h"
 #include "config_file/config_structs.h"
+#include "linear_algebra/cu_table.hcu"
 #include "mapping/mapping_info.h"
 #include "platform_shared/helmholtz_acoustic_kernels.h"
 #include "preconditioners/operator_preconditioner.h"
@@ -120,11 +121,17 @@ public:
       2,
       Point<spacedim,
             typename numbers::NumberTraits<KernelNumberType>::real_type>>
-                                    &mapping_support_point_table,
-    const SurfaceNormalDetector     &normal_detector,
-    const SauterQuadratureRule<dim> &sauter_quad_rule1,
-    const SauterQuadratureRule<dim> &sauter_quad_rule2,
-    const Quadrature<dim>           &quad_rule_for_mass);
+      &tria_mapping_support_points_cpu,
+    const CUDAWrappers::CUDATable<
+      2,
+      Point<spacedim,
+            typename numbers::NumberTraits<KernelNumberType>::real_type>>
+      &tria_mapping_support_points_gpu,
+    const CUDAWrappers::CUDATable<1, unsigned int> &tria_mapping_indices_gpu,
+    const SurfaceNormalDetector                    &normal_detector,
+    const SauterQuadratureRule<dim>                &sauter_quad_rule1,
+    const SauterQuadratureRule<dim>                &sauter_quad_rule2,
+    const Quadrature<dim>                          &quad_rule_for_mass);
 
   /**
    * Compute the product of the preconditioner H-matrix on the refined mesh and
@@ -157,14 +164,14 @@ private:
    * number type, i.e. the second template parameter should be
    * <tt>DeviceNumberType<KernelNumberType></tt>.}
    */
-  PlatformShared::HelmholtzAcousticKernel::
+  HierBEM::PlatformShared::HelmholtzAcousticKernel::
     HyperSingularKernelRegular1<spacedim, DeviceNumberType<KernelNumberType>>
       hyper_singular_kernel1;
   /**
    * Kernel function for the second part of the regularized hyper singular
    * boundary integral operator in the Helmholtz acoustic equation.
    */
-  PlatformShared::HelmholtzAcousticKernel::
+  HierBEM::PlatformShared::HelmholtzAcousticKernel::
     HyperSingularKernelRegular2<spacedim, DeviceNumberType<KernelNumberType>>
       hyper_singular_kernel2;
   /**
@@ -274,21 +281,26 @@ HelmholtzAcousticSingleLayerPreconditioner<dim,
       2,
       Point<spacedim,
             typename numbers::NumberTraits<KernelNumberType>::real_type>>
-                                    &mapping_support_point_table,
-    const SurfaceNormalDetector     &normal_detector,
-    const SauterQuadratureRule<dim> &sauter_quad_rule1,
-    const SauterQuadratureRule<dim> &sauter_quad_rule2,
-    const Quadrature<dim>           &quad_rule_for_mass)
+      &tria_mapping_support_points_cpu,
+    const CUDAWrappers::CUDATable<
+      2,
+      Point<spacedim,
+            typename numbers::NumberTraits<KernelNumberType>::real_type>>
+      &tria_mapping_support_points_gpu,
+    const CUDAWrappers::CUDATable<1, unsigned int> &tria_mapping_indices_gpu,
+    const SurfaceNormalDetector                    &normal_detector,
+    const SauterQuadratureRule<dim>                &sauter_quad_rule1,
+    const SauterQuadratureRule<dim>                &sauter_quad_rule2,
+    const Quadrature<dim>                          &quad_rule_for_mass)
 {
-  // Call the parent class's function to setup the preconditioner, but without
-  // building the H-matrix on the refined mesh.
   OperatorPreconditioner<dim, spacedim, RangeNumberType>::setup_preconditioner(
     hmat_params, mappings, quad_rule_for_mass);
 
   // Build the H-matrix for the first part of the regularized bilinear form for
   // the hyper singular boundary integral operator.
   this->template build_preconditioner_hmat_on_refined_mesh<
-    PlatformShared::HelmholtzAcousticKernel::HyperSingularKernelRegular1,
+    HierBEM::PlatformShared::HelmholtzAcousticKernel::
+      HyperSingularKernelRegular1,
     KernelNumberType>(this->preconditioner_hmat,
                       hmat_params,
                       sauter_quad_near_field_params,
@@ -298,14 +310,17 @@ HelmholtzAcousticSingleLayerPreconditioner<dim,
                       subdomain_topology,
                       mappings,
                       material_id_to_mapping_index,
-                      mapping_support_point_table,
+                      tria_mapping_support_points_cpu,
+                      tria_mapping_support_points_gpu,
+                      tria_mapping_indices_gpu,
                       normal_detector,
                       sauter_quad_rule1);
 
   // Build the H-matrix for the second part of the regularized bilinear form for
   // the hyper singular boundary integral operator.
   this->template build_preconditioner_hmat_on_refined_mesh<
-    PlatformShared::HelmholtzAcousticKernel::HyperSingularKernelRegular2,
+    HierBEM::PlatformShared::HelmholtzAcousticKernel::
+      HyperSingularKernelRegular2,
     KernelNumberType>(preconditioner_hmat2,
                       hmat_params,
                       sauter_quad_near_field_params,
@@ -315,7 +330,9 @@ HelmholtzAcousticSingleLayerPreconditioner<dim,
                       subdomain_topology,
                       mappings,
                       material_id_to_mapping_index,
-                      mapping_support_point_table,
+                      tria_mapping_support_points_cpu,
+                      tria_mapping_support_points_gpu,
+                      tria_mapping_indices_gpu,
                       normal_detector,
                       sauter_quad_rule2);
 

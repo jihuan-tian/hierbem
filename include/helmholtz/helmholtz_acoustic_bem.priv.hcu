@@ -62,8 +62,6 @@
 #include <deal.II/numerics/vector_tools_interpolate.templates.h>
 
 #include <algorithm>
-#include <array>
-#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -75,19 +73,14 @@
 
 #include "bem/bem_bilinear_form.h"
 #include "bem/bem_function_space.h"
-#include "bem/bem_general.hcu"
+#include "bem/bem_general.h"
 #include "bem/bem_tools.h"
-#include "bem/bem_values.hcu"
 #include "bem/types.h"
 #include "cad_mesh/gmsh_manipulation.h"
 #include "cad_mesh/subdomain_topology.h"
-#include "cluster_tree/block_cluster_tree.h"
-#include "cluster_tree/cluster_tree.h"
 #include "config.h"
 #include "config_file/config_structs.h"
 #include "cuda_complex.hcu"
-#include "grid/grid_out_ext.h"
-#include "grid/triangulation_tools.h"
 #include "helmholtz_acoustic_bem.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "hmatrix/hblockmatrix_skew_symm.h"
@@ -95,21 +88,19 @@
 #include "hmatrix/hmatrix_vmult_strategy.h"
 #include "hmatrix/preconditioner/hblockmatrix_skew_symm_preconditioner.h"
 #include "hmatrix/preconditioner/hmatrix_symm_preconditioner.h"
+#include "linear_algebra/cu_table.hcu"
 #include "linear_algebra/lapack_full_matrix_ext.h"
-#include "linear_algebra/linalg.h"
 #include "mapping/mapping_info.h"
 #include "platform_shared/helmholtz_acoustic_kernels.h"
 #include "postprocessing/data_out_ext.h"
 #include "preconditioners/preconditioner_for_helmholtz_acoustic_hyper_singular_bio.h"
 #include "preconditioners/preconditioner_for_helmholtz_acoustic_single_layer_bio.h"
 #include "preconditioners/preconditioner_type.h"
-#include "quadrature/quadrature.templates.h"
 #include "solvers/solve_hblockmatrix_skew_symm.h"
 #include "solvers/solver_bicgstab_general.h"
 #include "solvers/solver_gmres_general.h"
 #include "utilities/cu_profile.hcu"
 #include "utilities/debug_tools.h"
-#include "utilities/read_octave_data.h"
 
 HBEM_NS_OPEN
 
@@ -194,6 +185,35 @@ public:
 
   void
   initialize_mappings();
+
+  /**
+   * Compute mapping support points and indices for active cells in the original
+   * triangulation, which are used for assembling system matrices.
+   */
+  void
+  compute_mapping_data_for_triangulation();
+
+  /**
+   * Release mapping support points and indices for active cells in the original
+   * triangulation.
+   */
+  void
+  release_mapping_data_for_triangulation();
+
+  /**
+   * Compute mapping support points and indices for active cells in the refined
+   * triangulation, which are used for assembling operator preconditioners for
+   * H-matrices.
+   */
+  void
+  compute_mapping_data_for_refined_triangulation();
+
+  /**
+   * Release mapping support points and indices for active cells in the refined
+   * triangulation.
+   */
+  void
+  release_mapping_data_for_refined_triangulation();
 
   void
   interpolate_dirichlet_bc();
@@ -329,19 +349,61 @@ private:
 
   /**
    * A 2D table of mapping support points for all active cells on the highest
-   * level in the triangulation.
+   * level in the triangulation. It is stored on the host.
    *
    * Dim1: cell index. Dim2: mapping support point index in a cell.
    */
-  Table<2, Point<spacedim, real_type>> tria_mapping_support_points_;
+  Table<2, Point<spacedim, real_type>> tria_mapping_support_points_cpu_;
 
   /**
    * A 2D table of mapping support points for all active cells on the highest
-   * level in the multigrid triangulation.
+   * level in the triangulation. It is stored on the device.
    *
    * Dim1: cell index. Dim2: mapping support point index in a cell.
    */
-  Table<2, Point<spacedim, real_type>> mg_tria_mapping_support_points_;
+  CUDAWrappers::CUDATable<2, Point<spacedim, real_type>>
+    tria_mapping_support_points_gpu_;
+
+  /**
+   * A list of mapping indices for all active cells on the highest level in the
+   * triangulation. It is stored on the host.
+   */
+  std::vector<unsigned int> tria_mapping_indices_cpu_;
+
+  /**
+   * A table of mapping indices for all active cells on the highest level in the
+   * triangulation. It is stored on the device.
+   */
+  CUDAWrappers::CUDATable<1, unsigned int> tria_mapping_indices_gpu_;
+
+  /**
+   * A 2D table of mapping support points for all active cells on the highest
+   * level in the multigrid triangulation. It is stored on the host.
+   *
+   * Dim1: cell index. Dim2: mapping support point index in a cell.
+   */
+  Table<2, Point<spacedim, real_type>> mg_tria_mapping_support_points_cpu_;
+
+  /**
+   * A 2D table of mapping support points for all active cells on the highest
+   * level in the multigrid triangulation. It is stored on the device.
+   *
+   * Dim1: cell index. Dim2: mapping support point index in a cell.
+   */
+  CUDAWrappers::CUDATable<2, Point<spacedim, real_type>>
+    mg_tria_mapping_support_points_gpu_;
+
+  /**
+   * A list of mapping indices for all active cells on the highest level in the
+   * multigrid triangulation. It is stored on the host.
+   */
+  std::vector<unsigned int> mg_tria_mapping_indices_cpu_;
+
+  /**
+   * A table of mapping indices for all active cells on the highest level in the
+   * multigrid triangulation. It is stored on the device.
+   */
+  CUDAWrappers::CUDATable<1, unsigned int> mg_tria_mapping_indices_gpu_;
 
   /**
    * Surface-to-volume and volume-to-surface relationship.
@@ -673,6 +735,7 @@ private:
     const std::map<types::material_id, unsigned int>
                                                 &material_id_to_mapping_index,
     const Table<2, Point<spacedim1, real_type>> &mapping_support_point_table,
+    const std::vector<unsigned int>             &mapping_indices,
     const SurfaceNormalDetector                 &normal_detector,
     const SauterQuadratureRule<dim1>            &sauter_quad_rule,
     MatrixType                                  &target_full_matrix);
@@ -692,8 +755,9 @@ private:
     const DoFHandler<dim1, spacedim1> &dof_handler_for_trial_space,
     const std::vector<MappingInfo<dim1, spacedim1> *> &mappings,
     const std::map<types::material_id, unsigned int>
-                                                &material_id_to_mapping_order,
+                                                &material_id_to_mapping_index,
     const Table<2, Point<spacedim1, real_type>> &mapping_support_point_table,
+    const std::vector<unsigned int>             &mapping_indices,
     const SurfaceNormalDetector                 &normal_detector,
     const SauterQuadratureRule<dim1>            &sauter_quad_rule,
     MatrixType                                  &target_full_matrix);
@@ -769,15 +833,11 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 {
   // Release manifold objects.
   for (auto &m : manifolds_)
-    {
-      delete m.second;
-    }
+    delete m.second;
 
-  // Release mapping objects.
+  // Release mapping objects and data.
   for (auto m : mappings_)
-    {
-      delete m;
-    }
+    delete m;
 }
 
 #pragma endregion
@@ -862,11 +922,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
   initialize_manifolds_from_manifold_description();
   initialize_mappings();
-  BEMTools::compute_mapping_support_points_for_tria(
-    tria_,
-    mappings_,
-    material_id_to_mapping_index_,
-    tria_mapping_support_points_);
+  compute_mapping_data_for_triangulation();
 
   switch (problem_type_)
     {
@@ -1624,6 +1680,106 @@ template <int dim,
           typename KernelNumberType>
 void
 HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  compute_mapping_data_for_triangulation()
+{
+  // Compute mapping data on the host and copy them to the device.
+  BEMTools::compute_mapping_support_points_and_indices_for_tria(
+    tria_,
+    mappings_,
+    material_id_to_mapping_index_,
+    tria_mapping_support_points_cpu_,
+    tria_mapping_indices_cpu_);
+
+  // When H-matrix is used, the mapping data should be copied to the device.
+  if (use_hmat_)
+    {
+      tria_mapping_support_points_gpu_.allocate(
+        tria_mapping_support_points_cpu_.size());
+      tria_mapping_support_points_gpu_.assign_from_host(
+        tria_mapping_support_points_cpu_);
+
+      tria_mapping_indices_gpu_.allocate(
+        TableIndices<1>(tria_mapping_indices_cpu_.size()));
+      tria_mapping_indices_gpu_.assign_from_host(tria_mapping_indices_cpu_);
+    }
+}
+
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  release_mapping_data_for_triangulation()
+{
+  tria_mapping_support_points_cpu_.clear();
+  tria_mapping_indices_cpu_.clear();
+
+  if (use_hmat_)
+    {
+      tria_mapping_support_points_gpu_.release();
+      tria_mapping_indices_gpu_.release();
+    }
+}
+
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  compute_mapping_data_for_refined_triangulation()
+{
+  Assert(use_hmat_ &&
+           preconditioner_type_ == PreconditionerType::OperatorPreconditioning,
+         ExcInternalError());
+
+  // Compute mapping data on the host and copy them to the device.
+  BEMTools::compute_mapping_support_points_and_indices_for_tria(
+    mg_tria_for_preconditioner_,
+    mappings_,
+    material_id_to_mapping_index_,
+    mg_tria_mapping_support_points_cpu_,
+    mg_tria_mapping_indices_cpu_);
+
+  mg_tria_mapping_support_points_gpu_.allocate(
+    mg_tria_mapping_support_points_cpu_.size());
+  mg_tria_mapping_support_points_gpu_.assign_from_host(
+    mg_tria_mapping_support_points_cpu_);
+
+  mg_tria_mapping_indices_gpu_.allocate(
+    TableIndices<1>(mg_tria_mapping_indices_cpu_.size()));
+  mg_tria_mapping_indices_gpu_.assign_from_host(mg_tria_mapping_indices_cpu_);
+}
+
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
+  release_mapping_data_for_refined_triangulation()
+{
+  Assert(use_hmat_ &&
+           preconditioner_type_ == PreconditionerType::OperatorPreconditioning,
+         ExcInternalError());
+
+  mg_tria_mapping_support_points_cpu_.clear();
+  mg_tria_mapping_indices_cpu_.clear();
+  mg_tria_mapping_support_points_gpu_.release();
+  mg_tria_mapping_indices_gpu_.release();
+}
+
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+void
+HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   interpolate_dirichlet_bc()
 {
   dirichlet_bc_.reinit(dof_handler_for_dirichlet_space_.n_dofs());
@@ -1809,7 +1965,8 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_dirichlet_space_,
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
                 I1K2_mat_);
@@ -1828,7 +1985,8 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_dirichlet_space_,
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
                 I1K2_mat_);
@@ -1879,7 +2037,8 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_neumann_space_,
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
                 V1_mat_);
@@ -1898,7 +2057,8 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_neumann_space_,
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
                 V1_mat_);
@@ -2006,7 +2166,8 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_neumann_space_,
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
                 I2K_prime2_mat_);
@@ -2025,7 +2186,8 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_neumann_space_,
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
                 I2K_prime2_mat_);
@@ -2078,7 +2240,8 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_dirichlet_space_,
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
                 D1_mat_);
@@ -2096,7 +2259,8 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_dirichlet_space_,
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
                 D1_part2_mat_);
@@ -2115,7 +2279,8 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_dirichlet_space_,
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
                 D1_mat_);
@@ -2132,7 +2297,8 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 dof_handler_for_dirichlet_space_,
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                 SauterQuadratureRule<dim>(5, 4, 4, 3),
                 D1_part2_mat_);
@@ -2158,6 +2324,8 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           break;
         }
     }
+
+  release_mapping_data_for_triangulation();
 }
 
 
@@ -2202,7 +2370,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_support_points_gpu_,
+                tria_mapping_indices_gpu_,
                 subdomain_topology_);
               timer.stop();
               print_wall_time(deallog, timer, "assemble sigma*I1+K2");
@@ -2221,7 +2391,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_support_points_gpu_,
+                tria_mapping_indices_gpu_,
                 subdomain_topology_);
               timer.stop();
               print_wall_time(deallog, timer, "assemble (sigma-1)*I1+K2");
@@ -2287,7 +2459,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                              sauter_quad_params_.slp_order),
                                            mappings_,
                                            material_id_to_mapping_index_,
-                                           tria_mapping_support_points_,
+                                           tria_mapping_support_points_cpu_,
+                                           tria_mapping_support_points_gpu_,
+                                           tria_mapping_indices_gpu_,
                                            subdomain_topology_);
             timer.stop();
             print_wall_time(deallog, timer, "assemble V1");
@@ -2340,7 +2514,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_support_points_gpu_,
+                tria_mapping_indices_gpu_,
                 subdomain_topology_);
               timer.stop();
               print_wall_time(deallog, timer, "assemble (1-sigma)*I2-K'2");
@@ -2359,7 +2535,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_support_points_gpu_,
+                tria_mapping_indices_gpu_,
                 subdomain_topology_);
               timer.stop();
               print_wall_time(deallog, timer, "assemble -sigma*I2-K'2");
@@ -2428,7 +2606,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             SauterQuadratureRule<dim>(sauter_quad_params_.hyper_singular_order),
             mappings_,
             material_id_to_mapping_index_,
-            tria_mapping_support_points_,
+            tria_mapping_support_points_cpu_,
+            tria_mapping_support_points_gpu_,
+            tria_mapping_indices_gpu_,
             subdomain_topology_);
           D1_part2_hmat_ =
             bD1_part2_->build_hmatrix(hmat_params_,
@@ -2440,7 +2620,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                         sauter_quad_params_.slp_order),
                                       mappings_,
                                       material_id_to_mapping_index_,
-                                      tria_mapping_support_points_,
+                                      tria_mapping_support_points_cpu_,
+                                      tria_mapping_support_points_gpu_,
+                                      tria_mapping_indices_gpu_,
                                       subdomain_topology_);
           D1_hmat_->add(*D1_part2_hmat_,
                         static_cast<unsigned int>(hmat_params_.max_rank) * 2);
@@ -2499,7 +2681,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_support_points_gpu_,
+                tria_mapping_indices_gpu_,
                 subdomain_topology_);
               timer.stop();
               print_wall_time(deallog, timer, "assemble sigma*I1+K2");
@@ -2517,7 +2701,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_support_points_gpu_,
+                tria_mapping_indices_gpu_,
                 subdomain_topology_);
               timer.stop();
               print_wall_time(deallog, timer, "assemble (1-sigma)*I2-K'2");
@@ -2536,7 +2722,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_support_points_gpu_,
+                tria_mapping_indices_gpu_,
                 subdomain_topology_);
               timer.stop();
               print_wall_time(deallog, timer, "assemble (sigma-1)*I1+K2");
@@ -2554,7 +2742,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
                 mappings_,
                 material_id_to_mapping_index_,
-                tria_mapping_support_points_,
+                tria_mapping_support_points_cpu_,
+                tria_mapping_support_points_gpu_,
+                tria_mapping_indices_gpu_,
                 subdomain_topology_);
               timer.stop();
               print_wall_time(deallog, timer, "assemble -sigma*I2-K'2");
@@ -2579,7 +2769,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                            sauter_quad_params_.slp_order),
                                          mappings_,
                                          material_id_to_mapping_index_,
-                                         tria_mapping_support_points_,
+                                         tria_mapping_support_points_cpu_,
+                                         tria_mapping_support_points_gpu_,
+                                         tria_mapping_indices_gpu_,
                                          subdomain_topology_);
           timer.stop();
           print_wall_time(deallog, timer, "assemble -V2");
@@ -2600,7 +2792,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             SauterQuadratureRule<dim>(sauter_quad_params_.hyper_singular_order),
             mappings_,
             material_id_to_mapping_index_,
-            tria_mapping_support_points_,
+            tria_mapping_support_points_cpu_,
+            tria_mapping_support_points_gpu_,
+            tria_mapping_indices_gpu_,
             subdomain_topology_);
           D2_part2_hmat_ =
             bD2_part2_->build_hmatrix(hmat_params_,
@@ -2612,7 +2806,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                         sauter_quad_params_.slp_order),
                                       mappings_,
                                       material_id_to_mapping_index_,
-                                      tria_mapping_support_points_,
+                                      tria_mapping_support_points_cpu_,
+                                      tria_mapping_support_points_gpu_,
+                                      tria_mapping_indices_gpu_,
                                       subdomain_topology_);
           D2_hmat_->add(*D2_part2_hmat_,
                         static_cast<unsigned int>(hmat_params_.max_rank) * 2);
@@ -2761,7 +2957,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                            sauter_quad_params_.slp_order),
                                          mappings_,
                                          material_id_to_mapping_index_,
-                                         tria_mapping_support_points_,
+                                         tria_mapping_support_points_cpu_,
+                                         tria_mapping_support_points_gpu_,
+                                         tria_mapping_indices_gpu_,
                                          subdomain_topology_);
           timer.stop();
           print_wall_time(deallog, timer, "assemble V1");
@@ -2780,7 +2978,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                            sauter_quad_params_.dlp_order),
                                          mappings_,
                                          material_id_to_mapping_index_,
-                                         tria_mapping_support_points_,
+                                         tria_mapping_support_points_cpu_,
+                                         tria_mapping_support_points_gpu_,
+                                         tria_mapping_indices_gpu_,
                                          subdomain_topology_);
           timer.stop();
           print_wall_time(deallog, timer, "assemble -K1");
@@ -2801,7 +3001,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
             SauterQuadratureRule<dim>(sauter_quad_params_.hyper_singular_order),
             mappings_,
             material_id_to_mapping_index_,
-            tria_mapping_support_points_,
+            tria_mapping_support_points_cpu_,
+            tria_mapping_support_points_gpu_,
+            tria_mapping_indices_gpu_,
             subdomain_topology_);
           D1_part2_hmat_ =
             bD1_part2_->build_hmatrix(hmat_params_,
@@ -2813,7 +3015,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                         sauter_quad_params_.slp_order),
                                       mappings_,
                                       material_id_to_mapping_index_,
-                                      tria_mapping_support_points_,
+                                      tria_mapping_support_points_cpu_,
+                                      tria_mapping_support_points_gpu_,
+                                      tria_mapping_indices_gpu_,
                                       subdomain_topology_);
           D1_hmat_->add(*D1_part2_hmat_,
                         static_cast<unsigned int>(hmat_params_.max_rank) * 2);
@@ -2879,6 +3083,8 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           break;
         }
     }
+
+  release_mapping_data_for_triangulation();
 }
 
 
@@ -2892,6 +3098,22 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 {
   LogStream::Prefix prefix_string("assemble_hmatrix_preconditioner");
   Timer             timer;
+
+  // Prepare triangulation and mapping data for operator preconditioning.
+  if (preconditioner_type_ == PreconditionerType::OperatorPreconditioning)
+    {
+      // When the operator preconditioning is used, an H-matrix assembler must
+      // be adopted.
+      Assert(use_hmat_, ExcInternalError());
+
+      // Generate the refined mesh.
+      mg_tria_for_preconditioner_.copy_triangulation(tria_);
+      mg_tria_for_preconditioner_.refine_global();
+
+      // Compute mapping data.
+      compute_mapping_data_for_refined_triangulation();
+    }
+
   switch (problem_type_)
     {
         case DirichletBCProblem: {
@@ -2953,15 +3175,6 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   break;
                 }
                 case PreconditionerType::OperatorPreconditioning: {
-                  // Generate the multigrid.
-                  mg_tria_for_preconditioner_.copy_triangulation(tria_);
-                  mg_tria_for_preconditioner_.refine_global();
-                  BEMTools::compute_mapping_support_points_for_tria(
-                    mg_tria_for_preconditioner_,
-                    mappings_,
-                    material_id_to_mapping_index_,
-                    mg_tria_mapping_support_points_);
-
                   op_precond_for_slp_ =
                     std::make_unique<HelmholtzAcousticSingleLayerPreconditioner<
                       dim,
@@ -2985,7 +3198,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
-                    mg_tria_mapping_support_points_,
+                    mg_tria_mapping_support_points_cpu_,
+                    mg_tria_mapping_support_points_gpu_,
+                    mg_tria_mapping_indices_gpu_,
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                     SauterQuadratureRule<dim>(
                       sauter_quad_precond_params_.hyper_singular_order),
@@ -3067,15 +3282,6 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   break;
                 }
                 case PreconditionerType::OperatorPreconditioning: {
-                  // Generate the multigrid.
-                  mg_tria_for_preconditioner_.copy_triangulation(tria_);
-                  mg_tria_for_preconditioner_.refine_global();
-                  BEMTools::compute_mapping_support_points_for_tria(
-                    mg_tria_for_preconditioner_,
-                    mappings_,
-                    material_id_to_mapping_index_,
-                    mg_tria_mapping_support_points_);
-
                   op_precond_for_hyper_singular_ = std::make_unique<
                     HelmholtzAcousticHyperSingularPreconditioner<
                       dim,
@@ -3099,7 +3305,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
-                    mg_tria_mapping_support_points_,
+                    mg_tria_mapping_support_points_cpu_,
+                    mg_tria_mapping_support_points_gpu_,
+                    mg_tria_mapping_indices_gpu_,
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                     SauterQuadratureRule<dim>(
                       sauter_quad_precond_params_.slp_order),
@@ -3212,15 +3420,6 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   break;
                 }
                 case PreconditionerType::OperatorPreconditioning: {
-                  // Generate the multigrid.
-                  mg_tria_for_preconditioner_.copy_triangulation(tria_);
-                  mg_tria_for_preconditioner_.refine_global();
-                  BEMTools::compute_mapping_support_points_for_tria(
-                    mg_tria_for_preconditioner_,
-                    mappings_,
-                    material_id_to_mapping_index_,
-                    mg_tria_mapping_support_points_);
-
                   // Collect material ids into sets.
                   std::set<types::material_id> dirichlet_domain_material_ids;
                   for (const auto &bc : dirichlet_bc_definition_)
@@ -3270,7 +3469,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
-                    mg_tria_mapping_support_points_,
+                    mg_tria_mapping_support_points_cpu_,
+                    mg_tria_mapping_support_points_gpu_,
+                    mg_tria_mapping_indices_gpu_,
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                     SauterQuadratureRule<dim>(
                       sauter_quad_precond_params_.hyper_singular_order),
@@ -3286,7 +3487,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     subdomain_topology_,
                     mappings_,
                     material_id_to_mapping_index_,
-                    mg_tria_mapping_support_points_,
+                    mg_tria_mapping_support_points_cpu_,
+                    mg_tria_mapping_support_points_gpu_,
+                    mg_tria_mapping_indices_gpu_,
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                     SauterQuadratureRule<dim>(
                       sauter_quad_precond_params_.slp_order),
@@ -3315,6 +3518,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           break;
         }
     }
+
+  if (preconditioner_type_ == PreconditionerType::OperatorPreconditioning)
+    release_mapping_data_for_refined_triangulation();
 }
 
 

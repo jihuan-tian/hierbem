@@ -29,22 +29,26 @@
 #include <deal.II/fe/fe_dgq.h>
 
 #include <deal.II/grid/manifold_lib.h>
+#include <deal.II/grid/tria.h>
 
 #include <boost/program_options.hpp>
 
-#include <fstream>
 #include <iostream>
 #include <map>
-#include <random>
+#include <memory>
+#include <set>
+#include <vector>
 
+#include "bem/bem_bilinear_form.h"
+#include "bem/bem_function_space.h"
 #include "bem/bem_tools.h"
+#include "cad_mesh/gmsh_manipulation.h"
 #include "cad_mesh/subdomain_topology.h"
 #include "config_file/config_structs.h"
 #include "config_file/cu_related.h"
-#include "dofs/dof_tools_ext.h"
 #include "grid/grid_in_ext.h"
 #include "hbem_test_config.h"
-#include "hmatrix/aca_plus/aca_plus.hcu"
+#include "linear_algebra/cu_table.hcu"
 #include "mapping/mapping_info.h"
 #include "platform_shared/laplace_kernels.h"
 #include "quadrature/sauter_quadrature_tools.h"
@@ -106,24 +110,12 @@ main(int argc, char *argv[])
 {
   CmdOpts opts = parse_cmdline(argc, argv);
 
-  // Parameters for building H-matrices.
-  ConfHMatrix hmat_params{
-    opts.n_min, opts.n_min, opts.eta, opts.max_rank, opts.epsilon, false};
-  ConfSauterQuadNearField sauter_quad_near_field_params;
-  ConfSauterQuadFarField  sauter_quad_far_field_params;
-  ConfParallelization     parallel_params;
-
-  // Set TBB thread num.
-  if (parallel_params.tbb_thread_num == -1)
-    MultithreadInfo::set_thread_limit(MultithreadInfo::n_threads());
-  else
-    MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
-
-  // Initialize CUDA stack size and device properties.
-  initCudaRuntime(parallel_params);
-
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
+
+  using SearchableMaterialIdContainer = std::set<EntityTag>;
+
+  const double inter_distance = 8.0;
 
   /**
    * Surface-to-volume and volume-to-surface relationship.
@@ -136,7 +128,6 @@ main(int argc, char *argv[])
                                        HBEM_TEST_MODEL_DIR "two-spheres.msh");
 
   // Define manifolds
-  const double                                            inter_distance = 8.0;
   std::map<types::manifold_id, Manifold<dim, spacedim> *> manifolds;
   Manifold<dim, spacedim>                                *left_sphere_manifold =
     new SphericalManifold<dim, spacedim>(
@@ -160,9 +151,7 @@ main(int argc, char *argv[])
   // Define mappings of different orders.
   std::vector<MappingInfo<dim, spacedim> *> mappings(3);
   for (unsigned int i = 1; i <= 3; i++)
-    {
-      mappings[i - 1] = new MappingInfo<dim, spacedim>(i);
-    }
+    mappings[i - 1] = new MappingInfo<dim, spacedim>(i);
 
   // Construct the map from material ids to mapping indices.
   std::map<types::material_id, unsigned int> material_id_to_mapping_index;
@@ -178,129 +167,105 @@ main(int argc, char *argv[])
   HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel<spacedim, double>
     single_layer_kernel;
 
-  TableHandler table;
+  // Parameters for building H-matrices.
+  ConfHMatrix hmat_params{
+    opts.n_min, opts.n_min, opts.eta, opts.max_rank, opts.epsilon, false};
+  ConfSauterQuadNearField sauter_quad_near_field_params;
+  ConfSauterQuadFarField  sauter_quad_far_field_params;
+  ConfParallelization     parallel_params;
 
+  // Set TBB thread num.
+  if (parallel_params.tbb_thread_num == -1)
+    MultithreadInfo::set_thread_limit(MultithreadInfo::n_threads());
+  else
+    MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
+
+  // Initialize CUDA stack size and device properties.
+  initCudaRuntime(parallel_params);
+
+  TableHandler table;
   for (unsigned int i = 0; i <= opts.refinement; i++)
     {
       table.add_value("Refinement", i);
       table.add_value("Object", "Surface triangulation");
       table.add_value("Memory", tria.memory_consumption());
 
-      Table<2, Point<spacedim>> tria_mapping_support_points;
-      BEMTools::compute_mapping_support_points_for_tria(
+      Table<2, Point<spacedim>> tria_mapping_support_points_cpu;
+      HierBEM::CUDAWrappers::CUDATable<2, Point<spacedim>>
+                                tria_mapping_support_points_gpu;
+      std::vector<unsigned int> tria_mapping_indices_cpu;
+      HierBEM::CUDAWrappers::CUDATable<1, unsigned int>
+        tria_mapping_indices_gpu;
+
+      BEMTools::compute_mapping_support_points_and_indices_for_tria(
         tria,
         mappings,
         material_id_to_mapping_index,
-        tria_mapping_support_points);
+        tria_mapping_support_points_cpu,
+        tria_mapping_indices_cpu);
+
+      const types::global_cell_index n_cells = tria.n_active_cells();
+      tria_mapping_support_points_gpu.allocate(
+        TableIndices<2>(n_cells,
+                        mappings.back()->get_data()->n_shape_functions));
+      tria_mapping_support_points_gpu.assign_from_host(
+        tria_mapping_support_points_cpu);
+
+      tria_mapping_indices_gpu.allocate(TableIndices<1>(n_cells));
+      tria_mapping_indices_gpu.assign_from_host(tria_mapping_indices_cpu);
 
       dof_handler.distribute_dofs(fe);
 
-      // Generate a list of cell iterators which will be used for constructing
-      // the dof-to-cell topology.
-      std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
-        cell_iterators;
-      for (const auto &cell : dof_handler.active_cell_iterators())
-        {
-          cell_iterators.push_back(cell);
-        }
+      BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, double>
+        H_minus_half(dof_handler,
+                     static_cast<unsigned int>(hmat_params.n_min_for_ct));
+      BEMBilinearForm<dim,
+                      spacedim,
+                      SearchableMaterialIdContainer,
+                      HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
+                      double,
+                      double>
+        bV(H_minus_half, H_minus_half);
 
-      DoFToCellTopology<dim, spacedim> dof_to_cell_topo;
-      DoFToolsExt::build_dof_to_cell_topology(dof_to_cell_topo,
-                                              cell_iterators,
-                                              dof_handler);
-
-      // Generate lists of DoF indices.
-      std::vector<types::global_dof_index> dof_indices(dof_handler.n_dofs());
-      gen_linear_indices<vector_uta, types::global_dof_index>(dof_indices);
-      // Get the spatial coordinates of the support points. Even though
-      // different surfaces may be assigned a manifold which is further
-      // associated with a high order mapping, here we only use the first order
-      // mapping to generate the support points for finite element shape
-      // functions. This is good enough for the partition of cluster trees.
-      std::vector<Point<spacedim>> support_points(dof_handler.n_dofs());
-      DoFTools::map_dofs_to_support_points(mappings[0]->get_mapping(),
-                                           dof_handler,
-                                           support_points);
-
-      // Compute average cell size at each support points.
-      std::vector<double> cell_size_at_support_points(dof_handler.n_dofs());
-      cell_size_at_support_points.assign(dof_handler.n_dofs(), 0);
-      DoFToolsExt::map_dofs_to_average_cell_size(dof_handler,
-                                                 cell_size_at_support_points);
-
-      // Create and partition the cluster tree.
-      ClusterTree<spacedim> ct(dof_indices,
-                               support_points,
-                               cell_size_at_support_points,
-                               static_cast<unsigned int>(
-                                 hmat_params.n_min_for_ct));
-      ct.partition(support_points, cell_size_at_support_points);
+      bV.build_block_cluster_tree(
+        hmat_params.eta, static_cast<unsigned int>(hmat_params.n_min_for_bct));
+      std::unique_ptr<HMatrix<spacedim, double>> V =
+        bV.build_hmatrix(hmat_params,
+                         sauter_quad_near_field_params,
+                         sauter_quad_far_field_params,
+                         parallel_params,
+                         1.0,
+                         SauterQuadratureRule<dim>(5, 4, 4, 3),
+                         mappings,
+                         material_id_to_mapping_index,
+                         tria_mapping_support_points_cpu,
+                         tria_mapping_support_points_gpu,
+                         tria_mapping_indices_gpu,
+                         subdomain_topology);
 
       table.start_new_row();
       table.add_value("Refinement", i);
       table.add_value("Object", "Cluster tree");
-      table.add_value("Memory", ct.memory_consumption());
-
-      // Create and partition the block cluster tree.
-      BlockClusterTree<spacedim> bct(ct,
-                                     ct,
-                                     hmat_params.eta,
-                                     static_cast<unsigned int>(
-                                       hmat_params.n_min_for_bct));
-      bct.partition(ct.get_internal_to_external_dof_numbering(),
-                    support_points,
-                    cell_size_at_support_points);
+      table.add_value("Memory",
+                      H_minus_half.get_cluster_tree().memory_consumption());
 
       table.start_new_row();
       table.add_value("Refinement", i);
       table.add_value("Object", "Block cluster tree");
-      table.add_value("Memory", bct.memory_consumption());
-
-      // Create a symmetric H-matrix with respect to the block cluster tree.
-      HMatrix<spacedim, double> V(bct,
-                                  static_cast<unsigned int>(
-                                    hmat_params.max_rank),
-                                  HMatrixSupport::Property::symmetric,
-                                  HMatrixSupport::BlockType::diagonal_block);
-
-      // Assemble the H-matrix using ACA.
-      fill_hmatrix_with_aca_plus_smp<
-        dim,
-        spacedim,
-        HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
-        double,
-        double,
-        SurfaceNormalDetector<dim, spacedim>>(
-        V,
-        hmat_params,
-        sauter_quad_near_field_params,
-        sauter_quad_far_field_params,
-        parallel_params,
-        single_layer_kernel,
-        static_cast<double>(1.0),
-        dof_to_cell_topo,
-        dof_to_cell_topo,
-        SauterQuadratureRule<dim>(5, 4, 4, 3),
-        dof_handler,
-        dof_handler,
-        nullptr,
-        nullptr,
-        ct.get_internal_to_external_dof_numbering(),
-        ct.get_internal_to_external_dof_numbering(),
-        mappings,
-        material_id_to_mapping_index,
-        tria_mapping_support_points,
-        SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
-        true);
+      table.add_value("Memory",
+                      bV.get_block_cluster_tree().memory_consumption());
 
       table.start_new_row();
       table.add_value("Refinement", i);
       table.add_value("Object", "SLP matrix V");
-      table.add_value("Memory", V.memory_consumption());
+      table.add_value("Memory", V->memory_consumption());
 
       if (i < opts.refinement)
         // Refine the mesh.
         tria.refine_global(1);
+
+      tria_mapping_support_points_gpu.release();
+      tria_mapping_indices_gpu.release();
     }
 
   table.write_text(std::cout, TableHandler::TextOutputFormat::org_mode_table);

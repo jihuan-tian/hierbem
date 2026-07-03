@@ -1,0 +1,26 @@
+Diagnostics:
+  UnusedIncludes: Strict
+
+Index:
+  Background: Build
+  StandardLibrary: false
+
+Hover:
+  ShowAKA: true
+
+Completion:
+  AllScopes: No
+  ArgumentLists: None
+  HeaderInsertion: IWYU
+  CodePatterns: None
+  MacroFilter: ExactPrefix
+
+InlayHints:
+  Enabled: false
+
+---
+If:
+  PathMatch: [extern/Catch.*, vcpkg_installed/.*, tests/units/.*, tests/regressions/.*, tests/baseline/.*, tests/demo/.*]
+
+Index:
+  Background: Skip

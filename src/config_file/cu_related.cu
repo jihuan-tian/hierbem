@@ -18,7 +18,7 @@
 
 #include "config.h"
 #include "config_file/cu_related.h"
-#include "quadrature/sauter_quadrature.hcu" // for device_properties
+#include "quadrature/cu_sauter_quadrature.hcu" // for device_properties
 
 using namespace dealii;
 using namespace HierBEM;

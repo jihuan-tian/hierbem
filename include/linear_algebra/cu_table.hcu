@@ -9,22 +9,22 @@
 // file LICENSE at the top level directory of HierBEM.
 
 /**
- * @file cu_table.h
- * @brief Introduction of cu_table.h
+ * @file cu_table.hcu
+ * @brief Multi-dimensional table on the device with the C index style.
  *
  * @date 2023-01-04
  * @author Jihuan Tian
  */
-#ifndef HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_H_
-#define HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_H_
+#ifndef HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_HCU_
+#define HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_HCU_
 
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/table.h>
 #include <deal.II/base/table_indices.h>
 
-#include <assert.h>
 #include <cuda_runtime.h>
 
+#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
@@ -34,10 +34,10 @@
 
 HBEM_NS_OPEN
 
-using namespace dealii;
-
 namespace CUDAWrappers
 {
+  using namespace dealii;
+
   /**
    * Table class with the memory for its internal data allocated on the GPU
    * device.
@@ -49,7 +49,6 @@ namespace CUDAWrappers
   class CUDATable
   {
   public:
-    // Declare class types.
     using value_type    = T;
     using size_type     = std::size_t;
     using pointer       = T *;
@@ -692,7 +691,7 @@ namespace CUDAWrappers
     // &(table_cpu(TableIndices<N>())): get the first element in the table,
     // then take its address.
     AssertCuda(cudaMemcpy((void *)values,
-                          (void *)(&(table_cpu(TableIndices<N>()))),
+                          (const void *)(&(table_cpu(TableIndices<N>()))),
                           element_num * sizeof(T),
                           cudaMemcpyHostToDevice));
   }
@@ -710,7 +709,7 @@ namespace CUDAWrappers
     // &(table_cpu(TableIndices<N>())): get the first element in the table,
     // then take its address.
     AssertCuda(cudaMemcpyAsync((void *)values,
-                               (void *)(&(table_cpu(TableIndices<N>()))),
+                               (const void *)(&(table_cpu(TableIndices<N>()))),
                                element_num * sizeof(T),
                                cudaMemcpyHostToDevice,
                                stream));
@@ -726,7 +725,7 @@ namespace CUDAWrappers
            ExcMessage("Memory for this table has not be allocated!"));
 
     AssertCuda(cudaMemcpy((void *)values,
-                          (void *)(data.data()),
+                          (const void *)(data.data()),
                           data.size() * sizeof(T),
                           cudaMemcpyHostToDevice));
   }
@@ -742,7 +741,7 @@ namespace CUDAWrappers
            ExcMessage("Memory for this table has not be allocated!"));
 
     AssertCuda(cudaMemcpyAsync((void *)values,
-                               (void *)(data.data()),
+                               (const void *)(data.data()),
                                data.size() * sizeof(T),
                                cudaMemcpyHostToDevice,
                                stream));
@@ -758,8 +757,10 @@ namespace CUDAWrappers
     Assert(values != nullptr,
            ExcMessage("Memory for this table has not be allocated!"));
 
-    AssertCuda(cudaMemcpy(
-      (void *)values, (void *)data, size * sizeof(T), cudaMemcpyHostToDevice));
+    AssertCuda(cudaMemcpy((void *)values,
+                          (const void *)data,
+                          size * sizeof(T),
+                          cudaMemcpyHostToDevice));
   }
 
 
@@ -775,7 +776,7 @@ namespace CUDAWrappers
            ExcMessage("Memory for this table has not be allocated!"));
 
     AssertCuda(cudaMemcpyAsync((void *)values,
-                               (void *)data,
+                               (const void *)data,
                                size * sizeof(T),
                                cudaMemcpyHostToDevice,
                                stream));
@@ -794,7 +795,7 @@ namespace CUDAWrappers
     AssertIndexRange(offset_in_device_table + size - 1, element_num);
 
     AssertCuda(cudaMemcpy((void *)(values + offset_in_device_table),
-                          (void *)data,
+                          (const void *)data,
                           size * sizeof(T),
                           cudaMemcpyHostToDevice));
   }
@@ -813,7 +814,7 @@ namespace CUDAWrappers
     AssertIndexRange(offset_in_device_table + size - 1, element_num);
 
     AssertCuda(cudaMemcpyAsync((void *)(values + offset_in_device_table),
-                               (void *)data,
+                               (const void *)data,
                                size * sizeof(T),
                                cudaMemcpyHostToDevice,
                                stream));
@@ -828,7 +829,7 @@ namespace CUDAWrappers
            ExcMessage("Table size mismatch!"));
 
     AssertCuda(cudaMemcpy((void *)(&(table_cpu(TableIndices<N>()))),
-                          (void *)values,
+                          (const void *)values,
                           element_num * sizeof(T),
                           cudaMemcpyDeviceToHost));
   }
@@ -843,7 +844,7 @@ namespace CUDAWrappers
            ExcMessage("Table size mismatch!"));
 
     AssertCuda(cudaMemcpyAsync((void *)(&(table_cpu(TableIndices<N>()))),
-                               (void *)values,
+                               (const void *)values,
                                element_num * sizeof(T),
                                cudaMemcpyDeviceToHost,
                                stream));
@@ -919,7 +920,7 @@ namespace CUDAWrappers
       }
 
     AssertCuda(cudaMemcpy((void *)values,
-                          (void *)(src.values),
+                          (const void *)(src.values),
                           element_num * sizeof(T),
                           cudaMemcpyDeviceToDevice));
 
@@ -945,7 +946,7 @@ namespace CUDAWrappers
       }
 
     AssertCuda(cudaMemcpyAsync((void *)values,
-                               (void *)(src.values),
+                               (const void *)(src.values),
                                element_num * sizeof(T),
                                cudaMemcpyDeviceToDevice,
                                stream));
@@ -1328,4 +1329,4 @@ namespace CUDAWrappers
 
 HBEM_NS_CLOSE
 
-#endif // HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_H_
+#endif // HIERBEM_INCLUDE_LINEAR_ALGEBRA_CU_TABLE_HCU_

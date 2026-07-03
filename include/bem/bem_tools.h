@@ -18,11 +18,12 @@
 #ifndef HIERBEM_INCLUDE_BEM_BEM_TOOLS_H_
 #define HIERBEM_INCLUDE_BEM_BEM_TOOLS_H_
 
-#include <deal.II/base/derivative_form.h>
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/subscriptor.h>
 #include <deal.II/base/table.h>
 #include <deal.II/base/table_indices.h>
+#include <deal.II/base/tensor.h>
 #include <deal.II/base/types.h>
 #include <deal.II/base/utilities.h>
 
@@ -40,16 +41,15 @@
 
 #include <deal.II/lac/full_matrix.templates.h>
 
-#include <assert.h>
-
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <map>
 #include <utility>
 #include <vector>
 
+#include "cell_neighboring_type.h"
 #include "config.h"
+#include "dofs/dof_to_cell_topology.h"
 #include "linear_algebra/lapack_full_matrix_ext.h"
 #include "mapping/mapping_info.h"
 #include "mapping/mapping_q_ext.h"
@@ -61,54 +61,6 @@ using namespace dealii;
 
 namespace BEMTools
 {
-  /**
-   * Different cell neighboring types
-   */
-  enum CellNeighboringType
-  {
-    SamePanel,    //!< SamePanel
-    CommonEdge,   //!< CommonEdge
-    CommonVertex, //!< CommonVertex
-    Regular,      //!< Regular
-    None          //!< None
-  };
-
-
-  /**
-   * Different scenarios for detecting cell neighboring types
-   */
-  enum DetectCellNeighboringTypeMethod
-  {
-    SameTriangulations,      //!< SameTriangulations
-    DifferentTriangulations, //!< DifferentTriangulations
-  };
-
-
-  /**
-   * Get the string representation of the cell neighboring type.
-   *
-   * @param s
-   * @return
-   */
-  inline const char *
-  cell_neighboring_type_name(CellNeighboringType n)
-  {
-    switch (n)
-      {
-        case SamePanel:
-          return "same panel";
-        case CommonEdge:
-          return "common edge";
-        case CommonVertex:
-          return "common vertex";
-        case Regular:
-          return "disjoint";
-        default:
-          return "unknown";
-      }
-  }
-
-
   /**
    * @brief Permute a vector by using the given permutation indices to access
    * its elements.
@@ -364,6 +316,69 @@ namespace BEMTools
 
 
   /**
+   * Build maps between global cell indices and local cell indices. The local
+   * cell indices are assigned to a subset of cells in the triangulation, which
+   * are those cells that exist in the given DoF-to-cell topology.
+   *
+   * This function can be called several times to incrementally build the
+   * two maps. This is useful to collect and index cells used by a bilinear
+   * form, which involves cells for the test space and the trial space.
+   *
+   * @param n_cells_previously_selected Number of selected cells during previous
+   * runs of this function.
+   * @param dof_to_cell_topology DoF-to-cell topology, each entry of which
+   * stores a list of cell iterator pointers that are associated with the DoF.
+   * @param global_to_local_map Its memory should be allocated with the
+   * size of the total number of cells in the triangulation and all elements
+   * should be initialized to the value <tt>n_cells_in_tria</tt> before the
+   * first call of this function.
+   * @param local_to_global_map Its capacity should be reserved with the size
+   * of the total number of cells in the triangulation.
+   * @param cell_iter_ptrs_for_local_cells A list of cell iterator pointers
+   * which correspond to the list of used cells. N.B. The actual iterators are
+   * managed by BEM function spaces.
+   * @return The total number of selected cells up to now.
+   */
+  template <int dim, int spacedim>
+  types::global_cell_index
+  generate_maps_between_global_and_local_cell_indices(
+    const types::global_cell_index          n_cells_previously_selected,
+    const DoFToCellTopology<dim, spacedim> &dof_to_cell_topology,
+    std::vector<types::global_cell_index>  &global_to_local_map,
+    std::vector<types::global_cell_index>  &local_to_global_map,
+    std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>
+      &cell_iter_ptrs_for_used_cells)
+  {
+    const types::global_cell_index n_cells_in_tria = global_to_local_map.size();
+    AssertDimension(n_cells_in_tria, local_to_global_map.capacity());
+
+    // The starting local cell index begins from the number of previously
+    // selected cells.
+    types::global_cell_index local_index(n_cells_previously_selected);
+    for (const auto &cell_iter_ptrs : dof_to_cell_topology.topology)
+      {
+        for (const auto cell_iter_ptr : cell_iter_ptrs)
+          {
+            const types::global_cell_index cell_index =
+              (*cell_iter_ptr)->active_cell_index();
+
+            // When the current cell has not been selected.
+            if (global_to_local_map[cell_index] == n_cells_in_tria)
+              {
+                global_to_local_map[cell_index] = local_index;
+                local_to_global_map.push_back(cell_index);
+                cell_iter_ptrs_for_used_cells.push_back(cell_iter_ptr);
+                local_index++;
+              }
+          }
+      }
+
+    // Return the total number of selected cells.
+    return local_index;
+  }
+
+
+  /**
    * Calculates the matrix which stores shape function gradient values with
    * respect to area coordinates. Each row of the matrix is the gradient of
    * one of the shape functions. The order of the matrix rows corresponding to
@@ -594,155 +609,6 @@ namespace BEMTools
     // product ordering of shape functions.
     return shape_values<dim, spacedim, RangeNumberType>(
       fe, fe_poly.get_poly_space_numbering_inverse(), p);
-  }
-
-
-  /**
-   * Collect two coordinate components from the list of points in 3D space.
-   *
-   * \mynote{This function is useful in constructing the surface metric tensor
-   * or surface normal vector.}
-   *
-   * @param points A list of points in 3D space
-   * @param first_component Index for the first coordinate component to be
-   * collected
-   * @param second_component Index for the second coordinate component to be
-   * collected
-   * @return A matrix storing the two coordinate components for all points. It
-   * has a dimension @p 2*points.size().
-   */
-  template <int spacedim, typename RangeNumberType = double>
-  LAPACKFullMatrixExt<RangeNumberType>
-  collect_two_components_from_point3(
-    const std::vector<Point<spacedim, RangeNumberType>> &points,
-    const unsigned int                                   first_component,
-    const unsigned int                                   second_component)
-  {
-    Assert(first_component < spacedim, ExcInternalError());
-    Assert(second_component < spacedim, ExcInternalError());
-
-    LAPACKFullMatrixExt<RangeNumberType> two_component_coords(2, points.size());
-
-    for (unsigned int i = 0; i < points.size(); i++)
-      {
-        two_component_coords(0, i) = points[i](first_component);
-        two_component_coords(1, i) = points[i](second_component);
-      }
-
-    return two_component_coords;
-  }
-
-
-  /**
-   * Collect two coordinate components from the list of points in 3D space.
-   * Only the first @p effective_point_num will be used.
-   *
-   * \mynote{This function is useful in constructing the surface metric tensor
-   * or surface normal vector.}
-   *
-   * @param points A list of points in 3D space
-   * @param effective_point_num Number of points to be used.
-   * @param first_component Index for the first coordinate component to be
-   * collected
-   * @param second_component Index for the second coordinate component to be
-   * collected
-   * @return A matrix storing the two coordinate components for all points. It
-   * has a dimension @p 2*points.size().
-   */
-  template <int spacedim, typename RangeNumberType = double>
-  LAPACKFullMatrixExt<RangeNumberType>
-  collect_two_components_from_point3(
-    const std::vector<Point<spacedim, RangeNumberType>> &points,
-    const unsigned int                                   effective_point_num,
-    const unsigned int                                   first_component,
-    const unsigned int                                   second_component)
-  {
-    Assert(first_component < spacedim, ExcInternalError());
-    Assert(second_component < spacedim, ExcInternalError());
-    Assert(effective_point_num <= points.size(), ExcInternalError());
-
-    LAPACKFullMatrixExt<RangeNumberType> two_component_coords(
-      2, effective_point_num);
-
-    for (unsigned int i = 0; i < effective_point_num; i++)
-      {
-        two_component_coords(0, i) = points[i](first_component);
-        two_component_coords(1, i) = points[i](second_component);
-      }
-
-    return two_component_coords;
-  }
-
-
-  /**
-   * Collect coordinate components from the list of points in
-   * \f$\mathbb{R}^d\f$. The obtained coordinate matrix has this format:
-   * \f[
-   * \begin{pmatrix}
-   * x_1(1) & \cdots & x_1(k) \\
-   * \vdots & \vdots & \vdots \\
-   * x_d(1) & \cdots & x_d(k)
-   * \end{pmatrix}
-   * \f]
-   * where \f$k\f$ is the number of points and \f$x(i)\f$ is the i-th point in
-   * the list.
-   *
-   * \mynote{This function will be used for calculating the Jacobian matrix.
-   * Let \f$DN\f$ be the matrix of first order derivatives of shape functions
-   * and \f$P\f$ be the resulted coordinate matrix. Then
-   * \[
-   * J = P \cdot DN
-   * \]}
-   *
-   * @param points
-   * @return
-   */
-  template <int spacedim, typename RangeNumberType = double>
-  LAPACKFullMatrixExt<RangeNumberType>
-  collect_components_from_points(
-    const std::vector<Point<spacedim, RangeNumberType>> &points)
-  {
-    LAPACKFullMatrixExt<RangeNumberType> point_coords(spacedim, points.size());
-
-    for (unsigned int i = 0; i < points.size(); i++)
-      {
-        for (unsigned int j = 0; j < spacedim; j++)
-          {
-            point_coords(j, i) = points[i](j);
-          }
-      }
-
-    return point_coords;
-  }
-
-
-  /**
-   * This overloaded function only use the first @p point_num number of points.
-   *
-   * @pre
-   * @post
-   * @tparam spacedim
-   * @param points
-   * @param point_num
-   * @return
-   */
-  template <int spacedim, typename RangeNumberType = double>
-  LAPACKFullMatrixExt<RangeNumberType>
-  collect_components_from_points(
-    const std::vector<Point<spacedim, RangeNumberType>> &points,
-    const unsigned int                                   point_num)
-  {
-    LAPACKFullMatrixExt<RangeNumberType> point_coords(spacedim, point_num);
-
-    for (unsigned int i = 0; i < point_num; i++)
-      {
-        for (unsigned int j = 0; j < spacedim; j++)
-          {
-            point_coords(j, i) = points[i](j);
-          }
-      }
-
-    return point_coords;
   }
 
 
@@ -2991,334 +2857,6 @@ namespace BEMTools
 
 
   /**
-   * Calculate the surface Jacobian determinant at the quadrature point
-   * specified by its index.
-   *
-   * @param k3_index \f$k_3\f$ term index
-   * @param quad_no Quadrature point index
-   * @param shape_grad_matrix_table The data table storing the gradient values
-   * of the shape functions. Refer to @p BEMValues::kx_shape_grad_matrix_table_for_same_panel.
-   * @param support_points_in_real_cell A list of support points in the real
-   * cell in the lexicographic order.
-   * @return Surface Jacobian determinant or surface metric tensor
-   */
-  template <int spacedim>
-  double
-  surface_jacobian_det(
-    const unsigned int                           k3_index,
-    const unsigned int                           quad_no,
-    const Table<2, LAPACKFullMatrixExt<double>> &shape_grad_matrix_table,
-    const std::vector<Point<spacedim>>          &support_points_in_real_cell)
-  {
-    // Currently, only spacedim=3 is supported.
-    Assert(spacedim == 3, ExcInternalError());
-
-    /**
-     * Extract the shape function's gradient matrix under the specified
-     * \f$k_3\f$ index and quadrature point.
-     */
-    const LAPACKFullMatrixExt<double> &shape_grad_matrix_at_quad_point =
-      shape_grad_matrix_table(k3_index, quad_no);
-
-    double                      jacobian_det_squared = 0.0;
-    LAPACKFullMatrixExt<double> jacobian_matrix_2x2(2, 2);
-    for (unsigned int i = 0; i < spacedim; i++)
-      {
-        LAPACKFullMatrixExt<double> support_point_components =
-          collect_two_components_from_point3(support_points_in_real_cell,
-                                             i,
-                                             (i + 1) % spacedim);
-        support_point_components.mmult(jacobian_matrix_2x2,
-                                       shape_grad_matrix_at_quad_point);
-        jacobian_det_squared +=
-          Utilities::fixed_power<2>(jacobian_matrix_2x2.determinant2x2());
-      }
-
-    return std::sqrt(jacobian_det_squared);
-  }
-
-
-  /**
-   * Calculate the surface Jacobian determinant and the normal vector at the
-   * quadrature point specified by its index.
-   *
-   * \mynote{N.B. The reversed lexicographic order appears for \f$K_y\f$
-   * when the cell neighboring type is common edge. Then the calculated
-   * normal vector \f$n_y\f$ has the opposite direction of the real one,
-   * which should be negated in the subsequent calculation.}
-   *
-   * @param k3_index \f$k_3\f$ term index
-   * @param quad_no Quadrature point index
-   * @param mapping_shape_grad_matrix_table The data table storing the
-   * gradient values of the shape functions. Refer to
-   * <tt>BEMValues::kx_shape_grad_matrix_table_for_same_panel</tt>.
-   * @param mapping_index Index to the mapping object for the current cell.
-   * @param support_points_in_real_cell A list of support points in the real
-   * cell in the lexicographic order.
-   * @param normal_vector
-   * @param is_normal_vector_negated Whether the direction of the computed
-   * normal vector should be negated.
-   * @return Surface Jacobian determinant or surface metric tensor
-   */
-  template <int spacedim, typename RangeNumberType = double>
-  RangeNumberType
-  surface_jacobian_det_and_normal_vector(
-    const unsigned int k3_index,
-    const unsigned int quad_no,
-    const Table<3, LAPACKFullMatrixExt<RangeNumberType>>
-                      &mapping_shape_grad_matrix_table,
-    const unsigned int mapping_index,
-    const unsigned int mapping_n_shape_functions,
-    const std::vector<Point<spacedim, RangeNumberType>>
-                                         &support_points_in_real_cell,
-    Tensor<1, spacedim, RangeNumberType> &normal_vector,
-    const bool                            is_normal_vector_negated = false)
-  {
-    // Currently, only @p spacedim=3 is supported.
-    Assert(spacedim == 3, ExcInternalError());
-
-    /**
-     * Extract the shape function's gradient matrix under the specified
-     * mapping index, \f$k_3\f$ index and quadrature point index. The first
-     * dimension of the gradient matrix is the shape function index and the
-     * second dimension is coordinate component index in the unit cell.
-     */
-    const LAPACKFullMatrixExt<RangeNumberType>
-      &mapping_shape_grad_matrix_at_quad_point =
-        mapping_shape_grad_matrix_table(mapping_index, k3_index, quad_no);
-
-    RangeNumberType surface_jacobian_det = RangeNumberType();
-    LAPACKFullMatrixExt<RangeNumberType> jacobian_matrix_2x2(2, 2);
-    RangeNumberType surface_jacobian_det_components[spacedim];
-    for (unsigned int i = 0; i < spacedim; i++)
-      {
-        LAPACKFullMatrixExt<RangeNumberType> support_point_components =
-          collect_two_components_from_point3(support_points_in_real_cell,
-                                             mapping_n_shape_functions,
-                                             i,
-                                             (i + 1) % spacedim);
-        support_point_components.mmult(jacobian_matrix_2x2,
-                                       mapping_shape_grad_matrix_at_quad_point);
-        surface_jacobian_det_components[i] =
-          jacobian_matrix_2x2.determinant2x2();
-        surface_jacobian_det +=
-          Utilities::fixed_power<2>(surface_jacobian_det_components[i]);
-      }
-
-    surface_jacobian_det = std::sqrt(surface_jacobian_det);
-
-    /**
-     * This loop transform the vector \f$[J_{01}, J_{12}, J_{20}]/\abs{J}\f$
-     * to \f$[J_{12}, J_{20}, J_{01}]/\abs{J}\f$, which is the normal vector.
-     */
-    for (unsigned int i = 0; i < spacedim; i++)
-      {
-        if (is_normal_vector_negated)
-          {
-            normal_vector[i] =
-              -surface_jacobian_det_components[(i + 1) % spacedim] /
-              surface_jacobian_det;
-          }
-        else
-          {
-            normal_vector[i] =
-              surface_jacobian_det_components[(i + 1) % spacedim] /
-              surface_jacobian_det;
-          }
-      }
-
-    return surface_jacobian_det;
-  }
-
-
-  /**
-   * Compute the Jacobian determinant and normal vector at a given point in the
-   * unit cell.
-   *
-   * The point in the unit cell is not explicitly given, but the mapping shape
-   * function's gradient matrix provided has been evaluated at this point.
-   */
-  template <int spacedim, typename RangeNumberType = double>
-  RangeNumberType
-  surface_jacobian_det_and_normal_vector(
-    const std::vector<Point<spacedim, RangeNumberType>> &mapping_support_points,
-    const LAPACKFullMatrixExt<RangeNumberType> &mapping_shape_grad_matrix,
-    Tensor<1, spacedim, RangeNumberType>       &normal_vector,
-    const bool is_normal_vector_negated = false)
-  {
-    // Currently, only @p spacedim=3 is supported.
-    Assert(spacedim == 3, ExcInternalError());
-
-    RangeNumberType surface_jacobian_det = RangeNumberType();
-    LAPACKFullMatrixExt<RangeNumberType> jacobian_matrix_2x2(2, 2);
-    RangeNumberType surface_jacobian_det_components[spacedim];
-    for (unsigned int i = 0; i < spacedim; i++)
-      {
-        LAPACKFullMatrixExt<RangeNumberType> support_point_components =
-          collect_two_components_from_point3(mapping_support_points,
-                                             i,
-                                             (i + 1) % spacedim);
-        support_point_components.mmult(jacobian_matrix_2x2,
-                                       mapping_shape_grad_matrix);
-        surface_jacobian_det_components[i] =
-          jacobian_matrix_2x2.determinant2x2();
-        surface_jacobian_det +=
-          Utilities::fixed_power<2>(surface_jacobian_det_components[i]);
-      }
-
-    surface_jacobian_det = std::sqrt(surface_jacobian_det);
-
-    /**
-     * This loop transform the vector \f$[J_{01}, J_{12}, J_{20}]/\abs{J}\f$
-     * to \f$[J_{12}, J_{20}, J_{01}]/\abs{J}\f$, which is the normal vector.
-     */
-    for (unsigned int i = 0; i < spacedim; i++)
-      {
-        if (is_normal_vector_negated)
-          {
-            normal_vector[i] =
-              -surface_jacobian_det_components[(i + 1) % spacedim] /
-              surface_jacobian_det;
-          }
-        else
-          {
-            normal_vector[i] =
-              surface_jacobian_det_components[(i + 1) % spacedim] /
-              surface_jacobian_det;
-          }
-      }
-
-    return surface_jacobian_det;
-  }
-
-
-  /**
-   * Calculate the covariant transformation matrix for mapping the gradient in
-   * local coordinate chart to global coordinates.
-   *
-   * The formula for calculating the covariant transformation matrix:
-   * \f[
-   * J G^{-1} = J (J^T J)^{-1}.
-   * \f]
-   * N.B. \f$J\f$ is the Jacobian matrix in \f$\mathbb{R}^{{\rm
-   * spacedim}\times{\rm dim}}\f$. Therefore, the covariant transformation
-   * matrix has the same sizes as \f$J\f$.
-   *
-   * @param k3_index
-   * @param quad_no
-   * @param mapping_shape_grad_matrix_table
-   * @param mapping_index
-   * @param mapping_n_shape_functions
-   * @param support_points_in_real_cell
-   * @return
-   */
-  template <int spacedim, typename RangeNumberType = double>
-  LAPACKFullMatrixExt<RangeNumberType>
-  surface_covariant_transformation(
-    const unsigned int k3_index,
-    const unsigned int quad_no,
-    const Table<3, LAPACKFullMatrixExt<RangeNumberType>>
-                      &mapping_shape_grad_matrix_table,
-    const unsigned int mapping_index,
-    const unsigned int mapping_n_shape_functions,
-    const std::vector<Point<spacedim, RangeNumberType>>
-      &support_points_in_real_cell)
-  {
-    // Currently, only @p spacedim=3 is supported.
-    Assert(spacedim == 3, ExcInternalError());
-
-    /**
-     * Extract the shape function's gradient matrix under the specified
-     * \f$k_3\f$ index and quadrature point, which will then be used for
-     * calculating the Jacobian matrix.
-     */
-    const LAPACKFullMatrixExt<RangeNumberType>
-      &mapping_shape_grad_matrix_at_quad_point =
-        mapping_shape_grad_matrix_table(mapping_index, k3_index, quad_no);
-
-    LAPACKFullMatrixExt<RangeNumberType> support_point_components =
-      collect_components_from_points(support_points_in_real_cell,
-                                     mapping_n_shape_functions);
-
-    const unsigned int dim = mapping_shape_grad_matrix_at_quad_point.n();
-    AssertDimension(dim, 2);
-
-    LAPACKFullMatrixExt<RangeNumberType> jacobian_matrix(spacedim, dim);
-    support_point_components.mmult(jacobian_matrix,
-                                   mapping_shape_grad_matrix_at_quad_point);
-
-    /**
-     * Metric tensor
-     */
-    LAPACKFullMatrixExt<RangeNumberType> G(dim, dim);
-    /**
-     * Inverse of the metric tensor
-     */
-    LAPACKFullMatrixExt<RangeNumberType> G_inv(dim, dim);
-    /**
-     * \f$G=J^T J\f$
-     */
-    jacobian_matrix.Tmmult(G, jacobian_matrix);
-    G_inv.invert(G);
-
-    LAPACKFullMatrixExt<RangeNumberType> covariant(spacedim, dim);
-    jacobian_matrix.mmult(covariant, G_inv);
-
-    return covariant;
-  }
-
-  /**
-   * Coordinate transformation of the specified quadrature point in the unit
-   * cell to the real cell based on a list of support points in the real cell.
-   * This version runs on the host.
-   *
-   * @param k3_index
-   * @param quad_no Quadrature point index
-   * @param mapping_shape_value_table Data table for the mapping shape
-   * function values. Refer to BEMValues::kx_shape_value_table_for_same_panel.
-   * @param mapping_support_points_in_real_cell A list of support points in
-   * the real cell in the lexicographic order.
-   * @return Point coordinates in the real cell, which has the spatial
-   * dimension @p spacedim.
-   */
-  template <int spacedim, typename RangeNumberType = double>
-  Point<spacedim, RangeNumberType>
-  transform_quad_point_from_unit_to_permuted_real_cell(
-    const unsigned int               k3_index,
-    const unsigned int               quad_no,
-    const Table<4, RangeNumberType> &mapping_shape_value_table,
-    const unsigned int               mapping_index,
-    const unsigned int               mapping_n_shape_functions,
-    const std::vector<Point<spacedim, RangeNumberType>>
-      &mapping_support_points_in_real_cell)
-  {
-    // @p mapping_n_shape_functions is the number of shape functions in the
-    // actual mapping object, while the vector @p mapping_support_points_in_real_cell
-    // is preallocated with memory for holding the shape functions in the
-    // highest order mapping object. Therefore, we make this assertion.
-    Assert(mapping_n_shape_functions <=
-             mapping_support_points_in_real_cell.size(),
-           ExcInternalError());
-
-    Point<spacedim, RangeNumberType> real_coords;
-
-    /**
-     * Linear combination of support point coordinates and evaluation of
-     * mapping shape functions at the specified area coordinates.
-     */
-    for (unsigned int i = 0; i < mapping_n_shape_functions; i++)
-      {
-        real_coords =
-          real_coords +
-          mapping_shape_value_table(mapping_index, i, k3_index, quad_no) *
-            mapping_support_points_in_real_cell[i];
-      }
-
-    return real_coords;
-  }
-
-
-  /**
    * Generate the permutation of the polynomial space inverse numbering by
    * starting from the specified corner in the forward direction. The
    * numbering is returned from the function as the return value.
@@ -3496,172 +3034,6 @@ namespace BEMTools
               for (int j = poly_degree; j >= 0; j--)
                 {
                   dof_permutation[c] = dof_numbering_matrix(i, j);
-                  c++;
-                }
-            }
-
-          break;
-        default:
-          Assert(false, ExcInternalError());
-          break;
-      }
-  }
-
-
-  template <int dim, int spacedim>
-  std::vector<unsigned int>
-  generate_forward_mapping_support_point_permutation(
-    const MappingQExt<dim, spacedim> &mapping,
-    unsigned int                      starting_corner)
-  {
-    // Currently, only dim=2 and spacedim=3 are supported.
-    Assert((dim == 2) && (spacedim == 3), ExcInternalError());
-    const int poly_degree = mapping.polynomial_degree;
-
-    std::vector<unsigned int> poly_space_inverse_numbering(
-      FETools::lexicographic_to_hierarchic_numbering<dim>(poly_degree));
-    std::vector<unsigned int> support_point_permutation(
-      poly_space_inverse_numbering.size());
-
-    // Store the inverse numbering into a matrix for further traversing.
-    unsigned int             c = 0;
-    FullMatrix<unsigned int> support_point_numbering_matrix(poly_degree + 1,
-                                                            poly_degree + 1);
-    for (int i = poly_degree; i >= 0; i--)
-      {
-        for (int j = 0; j <= poly_degree; j++)
-          {
-            support_point_numbering_matrix(i, j) =
-              poly_space_inverse_numbering[c];
-            c++;
-          }
-      }
-
-    switch (starting_corner)
-      {
-        case 0:
-          return poly_space_inverse_numbering;
-
-          break;
-        case 1:
-          c = 0;
-          for (int j = poly_degree; j >= 0; j--)
-            {
-              for (int i = poly_degree; i >= 0; i--)
-                {
-                  support_point_permutation[c] =
-                    support_point_numbering_matrix(i, j);
-                  c++;
-                }
-            }
-
-          break;
-        case 2:
-          c = 0;
-          for (int j = 0; j <= poly_degree; j++)
-            {
-              for (int i = 0; i <= poly_degree; i++)
-                {
-                  support_point_permutation[c] =
-                    support_point_numbering_matrix(i, j);
-                  c++;
-                }
-            }
-
-          break;
-        case 3:
-          c = 0;
-          for (int i = 0; i <= poly_degree; i++)
-            {
-              for (int j = poly_degree; j >= 0; j--)
-                {
-                  support_point_permutation[c] =
-                    support_point_numbering_matrix(i, j);
-                  c++;
-                }
-            }
-
-          break;
-        default:
-          Assert(false, ExcInternalError());
-          break;
-      }
-
-    return support_point_permutation;
-  }
-
-
-  template <int dim, int spacedim>
-  void
-  generate_forward_mapping_support_point_permutation(
-    const MappingQExt<dim, spacedim> &mapping,
-    unsigned int                      starting_corner,
-    std::vector<unsigned int>        &support_point_permutation)
-  {
-    // Currently, only dim=2 and spacedim=3 are supported.
-    Assert((dim == 2) && (spacedim == 3), ExcInternalError());
-    const int poly_degree = mapping.get_degree();
-
-    std::vector<unsigned int> poly_space_inverse_numbering(
-      FETools::lexicographic_to_hierarchic_numbering<dim>(poly_degree));
-
-    AssertDimension(support_point_permutation.size(),
-                    poly_space_inverse_numbering.size());
-
-    // Store the inverse numbering into a matrix for further traversing.
-    unsigned int             c = 0;
-    FullMatrix<unsigned int> support_point_numbering_matrix(poly_degree + 1,
-                                                            poly_degree + 1);
-    for (int i = poly_degree; i >= 0; i--)
-      {
-        for (int j = 0; j <= poly_degree; j++)
-          {
-            support_point_numbering_matrix(i, j) =
-              poly_space_inverse_numbering[c];
-            c++;
-          }
-      }
-
-    switch (starting_corner)
-      {
-        case 0:
-          support_point_permutation = poly_space_inverse_numbering;
-
-          break;
-        case 1:
-          c = 0;
-          for (int j = poly_degree; j >= 0; j--)
-            {
-              for (int i = poly_degree; i >= 0; i--)
-                {
-                  support_point_permutation[c] =
-                    support_point_numbering_matrix(i, j);
-                  c++;
-                }
-            }
-
-          break;
-        case 2:
-          c = 0;
-          for (int j = 0; j <= poly_degree; j++)
-            {
-              for (int i = 0; i <= poly_degree; i++)
-                {
-                  support_point_permutation[c] =
-                    support_point_numbering_matrix(i, j);
-                  c++;
-                }
-            }
-
-          break;
-        case 3:
-          c = 0;
-          for (int i = 0; i <= poly_degree; i++)
-            {
-              for (int j = poly_degree; j >= 0; j--)
-                {
-                  support_point_permutation[c] =
-                    support_point_numbering_matrix(i, j);
                   c++;
                 }
             }
@@ -3880,228 +3252,69 @@ namespace BEMTools
   }
 
 
-  template <int dim, int spacedim>
-  std::vector<unsigned int>
-  generate_backward_mapping_support_point_permutation(
-    const MappingQExt<dim, spacedim> &mapping,
-    unsigned int                      starting_corner)
-  {
-    // Currently, only dim=2 and spacedim=3 are supported.
-    Assert((dim == 2) && (spacedim == 3), ExcInternalError());
-    const int poly_degree = mapping.polynomial_degree;
-
-    std::vector<unsigned int> poly_space_inverse_numbering(
-      FETools::lexicographic_to_hierarchic_numbering<dim>(poly_degree));
-    std::vector<unsigned int> support_point_permutation(
-      poly_space_inverse_numbering.size());
-
-    // Store the inverse numbering into a matrix for further traversing.
-    unsigned int             c = 0;
-    FullMatrix<unsigned int> support_point_numbering_matrix(poly_degree + 1,
-                                                            poly_degree + 1);
-    for (int i = poly_degree; i >= 0; i--)
-      {
-        for (int j = 0; j <= poly_degree; j++)
-          {
-            support_point_numbering_matrix(i, j) =
-              poly_space_inverse_numbering[c];
-            c++;
-          }
-      }
-
-    switch (starting_corner)
-      {
-        case 0:
-          c = 0;
-          for (int j = 0; j <= poly_degree; j++)
-            {
-              for (int i = poly_degree; i >= 0; i--)
-                {
-                  support_point_permutation[c] =
-                    support_point_numbering_matrix(i, j);
-                  c++;
-                }
-            }
-
-          break;
-        case 1:
-          c = 0;
-          for (int i = poly_degree; i >= 0; i--)
-            {
-              for (int j = poly_degree; j >= 0; j--)
-                {
-                  support_point_permutation[c] =
-                    support_point_numbering_matrix(i, j);
-                  c++;
-                }
-            }
-
-          break;
-        case 2:
-          c = 0;
-          for (int i = 0; i <= poly_degree; i++)
-            {
-              for (int j = 0; j <= poly_degree; j++)
-                {
-                  support_point_permutation[c] =
-                    support_point_numbering_matrix(i, j);
-                  c++;
-                }
-            }
-
-          break;
-        case 3:
-          c = 0;
-          for (int j = poly_degree; j >= 0; j--)
-            {
-              for (int i = 0; i <= poly_degree; i++)
-                {
-                  support_point_permutation[c] =
-                    support_point_numbering_matrix(i, j);
-                  c++;
-                }
-            }
-
-          break;
-        default:
-          Assert(false, ExcInternalError());
-          break;
-      }
-
-    return support_point_permutation;
-  }
-
-
-  template <int dim, int spacedim>
-  void
-  generate_backward_mapping_support_point_permutation(
-    const MappingQExt<dim, spacedim> &mapping,
-    unsigned int                      starting_corner,
-    std::vector<unsigned int>        &support_point_permutation)
-  {
-    // Currently, only dim=2 and spacedim=3 are supported.
-    Assert((dim == 2) && (spacedim == 3), ExcInternalError());
-    const int poly_degree = mapping.get_degree();
-
-    std::vector<unsigned int> poly_space_inverse_numbering(
-      FETools::lexicographic_to_hierarchic_numbering<dim>(poly_degree));
-
-    AssertDimension(support_point_permutation.size(),
-                    poly_space_inverse_numbering.size());
-
-    // Store the inverse numbering into a matrix for further traversing.
-    unsigned int             c = 0;
-    FullMatrix<unsigned int> support_point_numbering_matrix(poly_degree + 1,
-                                                            poly_degree + 1);
-    for (int i = poly_degree; i >= 0; i--)
-      {
-        for (int j = 0; j <= poly_degree; j++)
-          {
-            support_point_numbering_matrix(i, j) =
-              poly_space_inverse_numbering[c];
-            c++;
-          }
-      }
-
-    switch (starting_corner)
-      {
-        case 0:
-          c = 0;
-          for (int j = 0; j <= poly_degree; j++)
-            {
-              for (int i = poly_degree; i >= 0; i--)
-                {
-                  support_point_permutation[c] =
-                    support_point_numbering_matrix(i, j);
-                  c++;
-                }
-            }
-
-          break;
-        case 1:
-          c = 0;
-          for (int i = poly_degree; i >= 0; i--)
-            {
-              for (int j = poly_degree; j >= 0; j--)
-                {
-                  support_point_permutation[c] =
-                    support_point_numbering_matrix(i, j);
-                  c++;
-                }
-            }
-
-          break;
-        case 2:
-          c = 0;
-          for (int i = 0; i <= poly_degree; i++)
-            {
-              for (int j = 0; j <= poly_degree; j++)
-                {
-                  support_point_permutation[c] =
-                    support_point_numbering_matrix(i, j);
-                  c++;
-                }
-            }
-
-          break;
-        case 3:
-          c = 0;
-          for (int j = poly_degree; j >= 0; j--)
-            {
-              for (int i = 0; i <= poly_degree; i++)
-                {
-                  support_point_permutation[c] =
-                    support_point_numbering_matrix(i, j);
-                  c++;
-                }
-            }
-
-          break;
-        default:
-          Assert(false, ExcInternalError());
-          break;
-      }
-  }
-
-
   /**
-   * Compute mapping support points for all cells in the given triangulation.
+   * Compute mapping support points and mapping indices for all cells in the
+   * given triangulation.
+   *
+   * For each cell, the mapping support points are stored in the lexicographic
+   * order.
+   *
+   * A mapping index is used to access the list of @p MappingInfo objects for
+   * all cells in the triangulation. The mapping order for a quad cell is its
+   * mapping index plus one. The number of mapping support points in one
+   * dimension is the mapping order plus one. The total number of mapping
+   * support points for a quad cell is <tt>(mapping_order+1)^2</tt>.
    *
    * @tparam Number Value type of @p Point objects.
    *
    * @param tria Triangulation object
-   * @param mappings Array of pointers to @p MappingInfo objects from the 1st
+   * @param mappings A list of pointers to @p MappingInfo objects from the 1st
    * order to a fixed highest order.
    * @param material_id_to_mapping_index Map from cell material ids to indices
    * for accessing the array of pointers to @p MappingInfo objects.
    * @param mapping_support_point_table A two dimensional table storing the
    * mapping support points for all cells. Dim1: cell index. Dim2: mapping
    * support point index.
+   * @param mapping_indices A list of mapping indices for all cells in the
+   * triangulation.
    */
   template <int dim, int spacedim, typename Number>
   void
-  compute_mapping_support_points_for_tria(
+  compute_mapping_support_points_and_indices_for_tria(
     const Triangulation<dim, spacedim>              &tria,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                       &material_id_to_mapping_index,
-    Table<2, Point<spacedim, Number>> &mapping_support_point_table)
+    Table<2, Point<spacedim, Number>> &mapping_support_point_table,
+    std::vector<unsigned int>         &mapping_indices)
   {
     mapping_support_point_table.reinit(
       TableIndices<2>(tria.n_active_cells(),
                       mappings.back()->get_data()->n_shape_functions));
+    mapping_indices.resize(tria.n_active_cells());
 
     for (const auto &cell : tria.active_cell_iterators())
       {
+        const types::global_cell_index cell_index = cell->active_cell_index();
+        const unsigned int             mapping_index =
+          material_id_to_mapping_index.at(cell->material_id());
+        mapping_indices[cell_index] = mapping_index;
+
+        // Compute mapping support points in the default hierarchic order for
+        // the current cell.
         MappingQExt<dim, spacedim> cell_mapping(
-          mappings[material_id_to_mapping_index.at(cell->material_id())]
-            ->get_mapping());
+          mappings[mapping_index]->get_mapping());
         cell_mapping.compute_mapping_support_points(cell);
         const auto &mapping_support_points = cell_mapping.get_support_points();
 
+        // Reorder mapping support points into the lexicographic order. The
+        // starting point is the first vertex of the cell.
+        std::vector<unsigned int> poly_space_inverse_numbering(
+          FETools::lexicographic_to_hierarchic_numbering<dim>(
+            cell_mapping.get_degree()));
         for (unsigned int i = 0; i < mapping_support_points.size(); i++)
-          mapping_support_point_table(cell->active_cell_index(), i) =
-            mapping_support_points[i];
+          mapping_support_point_table(cell_index, i) =
+            mapping_support_points[poly_space_inverse_numbering[i]];
       }
   }
 } // namespace BEMTools

@@ -34,16 +34,13 @@
 #include <string>
 #include <vector>
 
-#include "bem/types.h"
 #include "cad_mesh/gmsh_manipulation.h"
 #include "cad_mesh/subdomain_topology.h"
 #include "config.h"
 #include "config_file/config_structs.h"
-#include "dofs/dof_tools_ext.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
 #include "mapping/mapping_info.h"
 #include "preconditioners/preconditioner_type.h"
-#include "quadrature/sauter_quadrature_tools.h"
 #include <experimental/propagate_const>
 
 HBEM_NS_OPEN

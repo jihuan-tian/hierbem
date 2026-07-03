@@ -43,8 +43,7 @@
 #include "cad_mesh/subdomain_topology.h"
 #include "config.h"
 #include "config_file/config_structs.h"
-#include "dofs/dof_to_cell_topology.h"
-#include "dofs/dof_tools_ext.h"
+#include "linear_algebra/cu_table.hcu"
 #include "mapping/mapping_info.h"
 #include "platform_shared/laplace_kernels.h"
 #include "preconditioners/operator_preconditioner.h"
@@ -115,10 +114,16 @@ public:
       2,
       Point<spacedim,
             typename numbers::NumberTraits<KernelNumberType>::real_type>>
-                                    &mapping_support_point_table,
-    const SurfaceNormalDetector     &normal_detector,
-    const SauterQuadratureRule<dim> &sauter_quad_rule,
-    const Quadrature<dim>           &quad_rule_for_mass);
+      &tria_mapping_support_points_cpu,
+    const CUDAWrappers::CUDATable<
+      2,
+      Point<spacedim,
+            typename numbers::NumberTraits<KernelNumberType>::real_type>>
+      &tria_mapping_support_points_gpu,
+    const CUDAWrappers::CUDATable<1, unsigned int> &tria_mapping_indices_gpu,
+    const SurfaceNormalDetector                    &normal_detector,
+    const SauterQuadratureRule<dim>                &sauter_quad_rule,
+    const Quadrature<dim>                          &quad_rule_for_mass);
 
 private:
   /**
@@ -128,7 +133,7 @@ private:
    * number type, i.e. the second template parameter should be
    * <tt>DeviceNumberType<KernelNumberType></tt>.}
    */
-  PlatformShared::LaplaceKernel::
+  HierBEM::PlatformShared::LaplaceKernel::
     SingleLayerKernel<spacedim, DeviceNumberType<KernelNumberType>>
       slp_kernel;
 };
@@ -231,16 +236,22 @@ LaplaceHyperSingularPreconditioner<dim,
       2,
       Point<spacedim,
             typename numbers::NumberTraits<KernelNumberType>::real_type>>
-                                    &mapping_support_point_table,
-    const SurfaceNormalDetector     &normal_detector,
-    const SauterQuadratureRule<dim> &sauter_quad_rule,
-    const Quadrature<dim>           &quad_rule_for_mass)
+      &tria_mapping_support_points_cpu,
+    const CUDAWrappers::CUDATable<
+      2,
+      Point<spacedim,
+            typename numbers::NumberTraits<KernelNumberType>::real_type>>
+      &tria_mapping_support_points_gpu,
+    const CUDAWrappers::CUDATable<1, unsigned int> &tria_mapping_indices_gpu,
+    const SurfaceNormalDetector                    &normal_detector,
+    const SauterQuadratureRule<dim>                &sauter_quad_rule,
+    const Quadrature<dim>                          &quad_rule_for_mass)
 {
   OperatorPreconditioner<dim, spacedim, RangeNumberType>::setup_preconditioner(
     hmat_params, mappings, quad_rule_for_mass);
 
   this->template build_preconditioner_hmat_on_refined_mesh<
-    PlatformShared::LaplaceKernel::SingleLayerKernel,
+    HierBEM::PlatformShared::LaplaceKernel::SingleLayerKernel,
     KernelNumberType>(this->preconditioner_hmat,
                       hmat_params,
                       sauter_quad_near_field_params,
@@ -250,7 +261,9 @@ LaplaceHyperSingularPreconditioner<dim,
                       subdomain_topology,
                       mappings,
                       material_id_to_mapping_index,
-                      mapping_support_point_table,
+                      tria_mapping_support_points_cpu,
+                      tria_mapping_support_points_gpu,
+                      tria_mapping_indices_gpu,
                       normal_detector,
                       sauter_quad_rule);
 }

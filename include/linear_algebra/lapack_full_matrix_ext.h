@@ -9,7 +9,7 @@
 // file LICENSE at the top level directory of HierBEM.
 
 /**
- * @file lapack_linalg.h
+ * @file lapack_full_matrix_ext.h
  * @brief Linear algebra computation using LAPACK functions.
  * @date 2021-06-10
  * @author Jihuan Tian
@@ -38,7 +38,6 @@
 
 #include "blas_helpers.h"
 #include "config.h"
-#include "exceptions/general_exceptions.h"
 #include "lapack_helpers.h"
 #include "utilities/generic_functors.h"
 #include "utilities/number_traits.h"
@@ -1315,6 +1314,29 @@ public:
    */
   Number
   determinant3x3() const;
+
+  /**
+   * Assign the inverse of the given @p 2x2 matrix to @p *this.
+   *
+   * Let
+   * \f[
+   * M = \begin{pmatrix}
+   * a & b \\
+   * c & d
+   * \end{pmatrix}
+   * \f]
+   *
+   * \f[
+   * M^{-1} = \frac{1}{\abs{M}} \begin{pmatrix}
+   * d & -b \\
+   * -c & a
+   * \end{pmatrix}
+   * \f]
+   *
+   * @param inv
+   */
+  void
+  invert2x2(const LAPACKFullMatrixExt<Number> &M);
 
   /**
    * Assign the inverse of the given matrix to @p *this.
@@ -6481,6 +6503,23 @@ LAPACKFullMatrixExt<Number>::determinant3x3() const
          (*this)(0, 2) * (*this)(1, 1) * (*this)(2, 0) -
          (*this)(0, 1) * (*this)(1, 0) * (*this)(2, 2) -
          (*this)(0, 0) * (*this)(1, 2) * (*this)(2, 1);
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::invert2x2(const LAPACKFullMatrixExt<Number> &M)
+{
+  AssertDimension(M.m(), 2);
+  AssertDimension(M.n(), 2);
+
+  this->reinit(2, 2);
+  (*this)(0, 0) = M(1, 1);
+  (*this)(0, 1) = -M(0, 1);
+  (*this)(1, 0) = -M(1, 0);
+  (*this)(1, 1) = M(0, 0);
+
+  (*this) /= M.determinant2x2();
 }
 
 

@@ -49,6 +49,9 @@ using namespace dealii;
  * @brief Abstract class for the dual mesh operator preconditioner, which
  * preconditions the hyper singular boundary integral operator.
  *
+ * This class implements the virtual methods @p build_dof_to_cell_topology
+ * @p build_coupling_matrix and @p build_averaging_matrix.
+ *
  * @tparam dim Manifold dimension of the surface
  * @tparam spacedim Space dimension
  * @tparam RangeNumberType Number type of matrix and vector entries
@@ -220,6 +223,8 @@ HyperSingularPreconditioner<dim, spacedim, RangeNumberType>::
                  this->primal_mesh_level))
             cell_iterators_primal_space.push_back(cell);
         }
+
+      cell_iterators_primal_space.shrink_to_fit();
 
       DoFToolsExt::build_mg_dof_to_cell_topology(
         dof_to_cell_topo_primal_space,

@@ -22,32 +22,42 @@
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
+#include <deal.II/base/types.h>
 #include <deal.II/base/utilities.h>
 
-#include "bem_values.hcu"
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/grid/tria.h>
+
+#include <cuda_runtime.h>
+
+#include "bem_values.h"
 #include "config.h"
 #include "linear_algebra/cu_table.hcu"
-#include "linear_algebra/cu_table_indices.hcu"
-#include "linear_algebra/cu_vector.hcu"
+#include "linear_algebra/cu_table_view.hcu"
+#include "platform_shared/full_matrix_wrapper.h"
+#include "platform_shared/utilities.h"
 #include "quadrature/cu_qgauss.hcu"
 
 HBEM_NS_OPEN
 
-using namespace dealii;
-using namespace BEMTools;
-
 namespace CUDAWrappers
 {
+  using namespace dealii;
+
   /**
    * Perform memory copy for shape gradient matrix from host to device.
    *
+   * This overloaded version is only used for the same panel, common edge and
+   * common vertex cases.
+   *
    * \alert{The data on the host are not continuous, since the memory of each
-   * matrix in the table is independently allocated,  while those on the
-   * device are continuous.}
+   * matrix in the table is independently allocated, while those on the device
+   * are continuous.}
    *
    * \mynote{The memory address of the first element in a matrix is acquired
    * by first getting the iterator to the first matrix entry then getting its
-   * references. For example, <tt>&(table_cpu(k, q).begin()->value()</tt>.}
+   * references. For example, <tt>&(table_cpu(k, q).begin()->value())</tt>.}
    *
    * @tparam RangeNumberType
    * @param table_gpu
@@ -79,8 +89,45 @@ namespace CUDAWrappers
       }
   }
 
+
   /**
-   * @brief Perform memory copy for shape gradient matrix from host to device.
+   * Perform memory copy for shape gradient matrix from host to device.
+   *
+   * This overloaded version is only used for the regular case.
+   *
+   * @tparam RangeNumberType
+   * @param table_gpu
+   * @param table_cpu
+   */
+  template <typename RangeNumberType = double>
+  void
+  shape_grad_matrix_table_assign_from_host(
+    CUDATable<3, RangeNumberType>                        &table_gpu,
+    const Table<1, LAPACKFullMatrixExt<RangeNumberType>> &table_cpu)
+  {
+    const unsigned int n_elements_in_grad_matrix =
+      table_cpu(0).m() * table_cpu(0).n();
+
+    // Get table sizes.
+    const unsigned int quad_num = table_cpu.n_elements();
+
+    for (unsigned int q = 0; q < quad_num; q++)
+      {
+        // Calculate the offset address in the table on the device.
+        std::size_t offset = q * n_elements_in_grad_matrix;
+        table_gpu.assign_from_host(&(table_cpu(q).begin()->value()),
+                                   offset,
+                                   n_elements_in_grad_matrix);
+      }
+  }
+
+
+  /**
+   * @brief Perform memory copy for mapping shape gradient matrix from host to
+   * device.
+   *
+   * This overloaded version is only used for the same panel, common edge and
+   * common vertex cases.
    *
    * \alert{The data on the host are not continuous, since the memory of each
    * matrix in the table is independently allocated,  while those on the
@@ -145,6 +192,293 @@ namespace CUDAWrappers
   }
 
 
+  /**
+   * @brief Perform memory copy for shape gradient matrix from host to device.
+   *
+   * This overloaded version is only used for the regular case.
+   *
+   * @tparam RangeNumberType
+   * @param table_gpu
+   * @param table_cpu
+   * @param max_mapping_n_shape_function
+   */
+  template <typename RangeNumberType = double>
+  void
+  mapping_shape_grad_matrix_table_assign_from_host(
+    CUDATable<3, RangeNumberType>                        &table_gpu,
+    const Table<2, LAPACKFullMatrixExt<RangeNumberType>> &table_cpu,
+    const unsigned int max_mapping_n_shape_function)
+  {
+    // Get the sizes of table dimensions.
+    const unsigned int mapping_num = table_cpu.size(0);
+    const unsigned int quad_num    = table_cpu.size(1);
+    const unsigned int dim         = table_cpu(0, 0).n();
+    // The gradient matrix should have 2 columns.
+    AssertDimension(dim, 2);
+
+    // The space on GPU reserved for the gradient matrix, which can hold the
+    // data for the highest order mapping.
+    const unsigned int reserved_elements_for_grad_matrix_gpu =
+      max_mapping_n_shape_function * dim;
+
+    for (unsigned int m = 0; m < mapping_num; m++)
+      {
+        // All gradient matrices should have @p dim columns.
+        AssertDimension(dim, table_cpu(m, 0).n());
+
+        // Get the gradient matrix size on CPU.
+        const unsigned int n_elements_in_grad_matrix_cpu =
+          table_cpu(m, 0).m() * table_cpu(m, 0).n();
+
+        Assert(reserved_elements_for_grad_matrix_gpu >=
+                 n_elements_in_grad_matrix_cpu,
+               ExcInternalError());
+
+        for (unsigned int q = 0; q < quad_num; q++)
+          {
+            // Calculate the offset address in the table on the device.
+            std::size_t offset =
+              (m * quad_num + q) * reserved_elements_for_grad_matrix_gpu;
+            table_gpu.assign_from_host(&(table_cpu(m, q).begin()->value()),
+                                       offset,
+                                       n_elements_in_grad_matrix_cpu);
+          }
+      }
+  }
+
+
+  /**
+   * Compute cell values at quadrature points for all cells used by a bilinear
+   * form, which will be used in the regular cell neighboring type.
+   *
+   * This version does not compute surface curls of finite element shape
+   * functions.
+   *
+   * @param tria_mapping_support_points Mapping support points for all cells
+   * in the triangulation
+   * @param tria_mapping_indices Mapping indices for all cells in the
+   * triangulation
+   * @param quad_rule_for_regular
+   * @param mapping_shape_value_table_for_regular
+   * @param mapping_shape_grad_matrix_table_for_regular
+   * @param local_to_global_cell_index_map
+   * @param cell_normals_inward_flags
+   * @param JxW_at_quad_points_for_regular
+   * @param normals_at_quad_points_for_regular
+   * @param quad_points_for_regular
+   */
+  template <int dim, int spacedim, typename RangeNumberType>
+  __global__ void
+  compute_bilinear_form_cell_values_for_regular_kernel(
+    const CUDATableView<2, Point<spacedim, RangeNumberType>>
+                                         tria_mapping_support_points,
+    const CUDATableView<1, unsigned int> tria_mapping_indices,
+    const CUDAQGauss<dim>                quad_rule_for_regular,
+    const CUDATable<3, RangeNumberType>  mapping_shape_value_table_for_regular,
+    const CUDATable<3, RangeNumberType>
+      mapping_shape_grad_matrix_table_for_regular,
+    const CUDATable<1, types::global_cell_index> local_to_global_cell_index_map,
+    const CUDATable<1, unsigned int>             cell_normals_inward_flags,
+    CUDATable<2, RangeNumberType>                JxW_at_quad_points_for_regular,
+    CUDATable<2, Tensor<1, spacedim, RangeNumberType>>
+      normals_at_quad_points_for_regular,
+    CUDATable<2, Point<spacedim, RangeNumberType>> quad_points_for_regular)
+  {
+    // Each thread corresponds to a cell.
+    const types::global_cell_index cell_index_local =
+      blockIdx.x * blockDim.x + threadIdx.x;
+    const types::global_cell_index n_cells =
+      local_to_global_cell_index_map.n_elements();
+    assert(n_cells == cell_normals_inward_flags.n_elements());
+
+    if (cell_index_local < n_cells)
+      {
+        const types::global_cell_index cell_index_global =
+          local_to_global_cell_index_map(cell_index_local);
+        const unsigned int mapping_index =
+          tria_mapping_indices(cell_index_global);
+        const unsigned int mapping_n_shape_functions =
+          HierBEM::PlatformShared::Utilities::fixed_power<2>(mapping_index + 2);
+
+        // Computation and usage of the normal vector stored in a local
+        // variable, which reduces then number of CUDA global memory access.
+        Tensor<1, spacedim, RangeNumberType> normal_vector;
+
+        const unsigned int n_quad_points = quad_rule_for_regular.size();
+        const double      *quad_weights  = quad_rule_for_regular.get_weights();
+
+        for (unsigned int quad_no = 0; quad_no < n_quad_points; quad_no++)
+          {
+            BEMTools::PlatformShared::
+              transform_quad_point_from_unit_to_permuted_real_cell(
+                &mapping_shape_value_table_for_regular(quad_no,
+                                                       mapping_index,
+                                                       0),
+                &tria_mapping_support_points(cell_index_global, 0),
+                mapping_n_shape_functions,
+                quad_points_for_regular(cell_index_local, quad_no));
+
+            JxW_at_quad_points_for_regular(cell_index_local, quad_no) =
+              BEMTools::PlatformShared::surface_jacobian_det_and_normal_vector(
+                &mapping_shape_grad_matrix_table_for_regular(mapping_index,
+                                                             quad_no,
+                                                             0),
+                &tria_mapping_support_points(cell_index_global, 0),
+                mapping_n_shape_functions,
+                normal_vector,
+                cell_normals_inward_flags(cell_index_local)) *
+              static_cast<RangeNumberType>(quad_weights[quad_no]);
+
+            normals_at_quad_points_for_regular(cell_index_local, quad_no) =
+              normal_vector;
+          }
+      }
+  }
+
+  /**
+   * Compute cell values at quadrature points for all cells used by a bilinear
+   * form, which will be used in the regular cell neighboring type.
+   *
+   * This version computes surface curls of all finite element shape functions.
+   *
+   * @param tria_mapping_support_points Mapping support points for all cells
+   * in the triangulation
+   * @param tria_mapping_indices Mapping indices for all cells in the
+   * triangulation
+   * @param quad_rule_for_regular
+   * @param mapping_shape_value_table_for_regular
+   * @param mapping_shape_grad_matrix_table_for_regular
+   * @param kx_shape_grad_matrix_table_for_regular
+   * @param ky_shape_grad_matrix_table_for_regular
+   * @param local_to_global_cell_index_map
+   * @param cell_normals_inward_flags
+   * @param JxW_at_quad_points_for_regular
+   * @param normals_at_quad_points_for_regular
+   * @param quad_points_for_regular
+   * @param kx_shape_curls_at_quad_points_for_regular
+   * @param ky_shape_curls_at_quad_points_for_regular
+   */
+  template <int dim, int spacedim, typename RangeNumberType>
+  __global__ void
+  compute_bilinear_form_cell_values_for_regular_kernel(
+    const CUDATableView<2, Point<spacedim, RangeNumberType>>
+                                         tria_mapping_support_points,
+    const CUDATableView<1, unsigned int> tria_mapping_indices,
+    const CUDAQGauss<dim>                quad_rule_for_regular,
+    const CUDATable<3, RangeNumberType>  mapping_shape_value_table_for_regular,
+    const CUDATable<3, RangeNumberType>
+      mapping_shape_grad_matrix_table_for_regular,
+    const CUDATable<3, RangeNumberType> kx_shape_grad_matrix_table_for_regular,
+    const CUDATable<3, RangeNumberType> ky_shape_grad_matrix_table_for_regular,
+    const CUDATable<1, types::global_cell_index> local_to_global_cell_index_map,
+    const CUDATable<1, unsigned int>             cell_normals_inward_flags,
+    CUDATable<2, RangeNumberType>                JxW_at_quad_points_for_regular,
+    CUDATable<2, Tensor<1, spacedim, RangeNumberType>>
+      normals_at_quad_points_for_regular,
+    CUDATable<2, Point<spacedim, RangeNumberType>> quad_points_for_regular,
+    CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
+      kx_shape_curls_at_quad_points_for_regular,
+    CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
+      ky_shape_curls_at_quad_points_for_regular)
+  {
+    // Each thread corresponds to a cell.
+    const types::global_cell_index cell_index_local =
+      blockIdx.x * blockDim.x + threadIdx.x;
+    const types::global_cell_index n_cells =
+      local_to_global_cell_index_map.n_elements();
+    assert(n_cells == cell_normals_inward_flags.n_elements());
+
+    if (cell_index_local < n_cells)
+      {
+        const types::global_cell_index cell_index_global =
+          local_to_global_cell_index_map(cell_index_local);
+        const unsigned int mapping_index =
+          tria_mapping_indices(cell_index_global);
+        const unsigned int mapping_n_shape_functions =
+          HierBEM::PlatformShared::Utilities::fixed_power<2>(mapping_index + 2);
+
+        // Computation and usage of the normal vector stored in a local
+        // variable, which reduces then number of CUDA global memory access.
+        Tensor<1, spacedim, RangeNumberType> normal_vector;
+
+        const unsigned int n_quad_points = quad_rule_for_regular.size();
+        const double      *quad_weights  = quad_rule_for_regular.get_weights();
+        const unsigned int kx_fe_dofs_per_cell =
+          kx_shape_curls_at_quad_points_for_regular.size(1);
+        const unsigned int ky_fe_dofs_per_cell =
+          ky_shape_curls_at_quad_points_for_regular.size(1);
+
+        for (unsigned int quad_no = 0; quad_no < n_quad_points; quad_no++)
+          {
+            BEMTools::PlatformShared::
+              transform_quad_point_from_unit_to_permuted_real_cell(
+                &mapping_shape_value_table_for_regular(quad_no,
+                                                       mapping_index,
+                                                       0),
+                &tria_mapping_support_points(cell_index_global, 0),
+                mapping_n_shape_functions,
+                quad_points_for_regular(cell_index_local, quad_no));
+
+            RangeNumberType covariant_matrix_data[spacedim * dim];
+            HierBEM::PlatformShared::FullMatrixWrapper<RangeNumberType>
+              covariant_matrix(covariant_matrix_data, spacedim, dim);
+
+            JxW_at_quad_points_for_regular(cell_index_local, quad_no) =
+              BEMTools::PlatformShared::
+                surface_jacobian_det_normal_vector_and_covariant(
+                  &mapping_shape_grad_matrix_table_for_regular(mapping_index,
+                                                               quad_no,
+                                                               0),
+                  &tria_mapping_support_points(cell_index_global, 0),
+                  mapping_n_shape_functions,
+                  normal_vector,
+                  covariant_matrix,
+                  cell_normals_inward_flags(cell_index_local)) *
+              static_cast<RangeNumberType>(quad_weights[quad_no]);
+
+            // Iterate over each shape function in the finite element for
+            // Kx.
+            for (unsigned int fe_shape_index = 0;
+                 fe_shape_index < kx_fe_dofs_per_cell;
+                 fe_shape_index++)
+              {
+                BEMTools::PlatformShared::
+                  surface_curl<dim, spacedim, RangeNumberType>(
+                    fe_shape_index,
+                    &kx_shape_grad_matrix_table_for_regular(quad_no, 0, 0),
+                    kx_fe_dofs_per_cell,
+                    covariant_matrix,
+                    normal_vector,
+                    kx_shape_curls_at_quad_points_for_regular(cell_index_local,
+                                                              fe_shape_index,
+                                                              quad_no));
+              }
+
+            // Iterate over each shape function in the finite element for
+            // Ky.
+            for (unsigned int fe_shape_index = 0;
+                 fe_shape_index < ky_fe_dofs_per_cell;
+                 fe_shape_index++)
+              {
+                BEMTools::PlatformShared::
+                  surface_curl<dim, spacedim, RangeNumberType>(
+                    fe_shape_index,
+                    &ky_shape_grad_matrix_table_for_regular(quad_no, 0, 0),
+                    ky_fe_dofs_per_cell,
+                    covariant_matrix,
+                    normal_vector,
+                    ky_shape_curls_at_quad_points_for_regular(cell_index_local,
+                                                              fe_shape_index,
+                                                              quad_no));
+              }
+
+            normals_at_quad_points_for_regular(cell_index_local, quad_no) =
+              normal_vector;
+          }
+      }
+  }
+
+
   template <int dim, int spacedim, typename RangeNumberType = double>
   class CUDABEMValues
   {
@@ -156,11 +490,24 @@ namespace CUDAWrappers
      * Allocate global memory on the device and assign data from @p BEMValues
      * on the host.
      *
-     * @param bem_values_cpu
+     * @param bem_values_cpu BEMValues on the host
+     * @param tria_mapping_support_points Mapping support points for all cells
+     * in the triangulation. A view object will be created as a member of
+     * @p CUDABEMValues, which links to this table.
+     * @param tria_mapping_indices Indices used to access the list of
+     * MappingInfo objects for all cells in the triangulation. The mapping order
+     * for a quad cell is its mapping index plus one. The number of mapping
+     * support points in one dimension is the mapping order plus one. The total
+     * number of mapping support points for a quad cell is
+     * <tt>(mapping_order+1)^2</tt>. A view object will be created as a member
+     * of @p CUDABEMValues, which links to this table.
      */
     HBEM_ATTR_HOST void
     allocate_and_assign_from_host(
-      const BEMValues<dim, spacedim, RangeNumberType> &bem_values_cpu);
+      const BEMValues<dim, spacedim, RangeNumberType> &bem_values_cpu,
+      const CUDATable<2, Point<spacedim, RangeNumberType>>
+                                       &tria_mapping_support_points,
+      const CUDATable<1, unsigned int> &tria_mapping_indices);
 
     /**
      * Release the allocated global memory on the device.
@@ -168,6 +515,33 @@ namespace CUDAWrappers
     HBEM_ATTR_HOST void
     release();
 
+    /**
+     * Compute cell values at quadrature points for all cells used by a bilinear
+     * form, which will be used in the regular cell neighboring type.
+     *
+     * This function should be called after @p allocate_and_assign_from_host.
+     *
+     * @param Map from local cell indices to global cell indices. Local cell
+     * indices are used to index used cells in a @p BEMBilinearForm.
+     * @param A list of pointers to the used cell iterators.
+     * @param normal_detector An object with a member function named
+     * @p is_normal_vector_inward, which is used to determine if the normal vector
+     * of a cell points into (true) or outside from a associated volume.
+     * @param is_surface_curl_needed Whether computation of surface curl is
+     * needed. This involves pushing forward the gradient vector of a finite
+     * element shape function from the unit cell to a real cell with the help of
+     * the covariant matrix.
+     */
+    template <typename SurfaceNormalDetector>
+    HBEM_ATTR_HOST void
+    compute_bilinear_form_cell_values_for_regular(
+      const std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator
+                          *> &cell_iterator_ptrs,
+      const std::vector<types::global_cell_index>
+                                  &local_to_global_cell_index_map,
+      const SurfaceNormalDetector &normal_detector);
+
+#pragma region ****Quadrature rules for various cell neighboring types ****
     /**
      * Reference to 4D Sauter quadrature rule for the case that \f$K_x \equiv
      * K_y\f$.
@@ -184,11 +558,14 @@ namespace CUDAWrappers
      */
     CUDAQGauss<dim * 2> quad_rule_for_common_vertex;
     /**
-     * Reference to 4D Sauter quadrature rule for the case that \f$K_x\f$ and
+     * Reference to 2D Sauter quadrature rule for the case that \f$K_x\f$ and
      * \f$K_y\f$ are separated.
      */
-    CUDAQGauss<dim * 2> quad_rule_for_regular;
+    CUDAQGauss<dim> quad_rule_for_regular;
+#pragma endregion
 
+#pragma region ****Data tables for finite element shape functions evaluated at \
+  quadrature points in the unit cell ****
     /**
      * Data table of finite element shape function values for \f$K_x\f$ in the
      * same panel case. It has three dimensions:
@@ -239,113 +616,113 @@ namespace CUDAWrappers
     CUDATable<3, RangeNumberType> ky_shape_value_table_for_common_vertex;
     /**
      * Data table of finite element shape function values for \f$K_x\f$ in the
-     * regular case. It has three dimensions:
+     * regular case. It has two dimensions:
      * 1. shape function index: size=@p dofs_per_cell
-     * 2. \f$k_3\f$ term index: size=1
-     * 3. Quadrature point index: size=number of quadrature points
+     * 2. Quadrature point index: size=number of quadrature points
      */
-    CUDATable<3, RangeNumberType> kx_shape_value_table_for_regular;
+    CUDATable<2, RangeNumberType> kx_shape_value_table_for_regular;
     /**
      * Data table of finite element shape function values for \f$K_y\f$ in the
-     * regular case. It has three dimensions:
+     * regular case. It has two dimensions:
      * 1. shape function index: size=@p dofs_per_cell
-     * 2. \f$k_3\f$ term index: size=1
-     * 3. Quadrature point index: size=number of quadrature points
+     * 2. Quadrature point index: size=number of quadrature points
      */
-    CUDATable<3, RangeNumberType> ky_shape_value_table_for_regular;
+    CUDATable<2, RangeNumberType> ky_shape_value_table_for_regular;
+#pragma endregion
 
+#pragma region ****Data tables for mapping shape functions evaluated at \
+  quadrature points in the unit cell ****
     /**
      * Data table of mapping shape function values for \f$K_x\f$ in the
      * same panel case. It has 4 dimensions:
-     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * 1. \f$k_3\f$ term index: size=8
+     * 2. Quadrature point index: size=number of quadrature points
+     * 3. Mapping index, which is mapping order minus 1. It is used to get the
      * corresponding pointer to the MappingInfo object in BEMValues::mappings.
-     * 2. shape function index: size=number of shape functions in the highest
+     * 4. Shape function index: size=number of shape functions in the highest
      * order mapping object
-     * 3. \f$k_3\f$ term index: size=8
-     * 4. Quadrature point index: size=number of quadrature points
      */
     CUDATable<4, RangeNumberType> kx_mapping_shape_value_table_for_same_panel;
     /**
      * Data table of mapping shape function values for \f$K_y\f$ in the
      * same panel case. It has 4 dimensions:
-     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * 1. \f$k_3\f$ term index: size=8
+     * 2. Quadrature point index: size=number of quadrature points
+     * 3. Mapping index, which is mapping order minus 1. It is used to get the
      * corresponding pointer to the MappingInfo object in BEMValues::mappings.
-     * 2. shape function index: size=number of shape functions in the highest
+     * 4. Shape function index: size=number of shape functions in the highest
      * order mapping object
-     * 3. \f$k_3\f$ term index: size=8
-     * 4. Quadrature point index: size=number of quadrature points
      */
     CUDATable<4, RangeNumberType> ky_mapping_shape_value_table_for_same_panel;
     /**
      * Data table of mapping shape function values for \f$K_x\f$ in the
      * common edge case. It has 4 dimensions:
-     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * 1. \f$k_3\f$ term index: size=6
+     * 2. Quadrature point index: size=number of quadrature points
+     * 3. Mapping index, which is mapping order minus 1. It is used to get the
      * corresponding pointer to the MappingInfo object in BEMValues::mappings.
-     * 2. shape function index: size=number of shape functions in the
-     * highest order mapping object
-     * 3. \f$k_3\f$ term index: size=6
-     * 4. Quadrature point index: size=number of quadrature points
+     * 4. Shape function index: size=number of shape functions in the highest
+     * order mapping object
      */
     CUDATable<4, RangeNumberType> kx_mapping_shape_value_table_for_common_edge;
     /**
      * Data table of mapping shape function values for \f$K_y\f$ in the
      * common edge case. It has 4 dimensions:
-     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * 1. \f$k_3\f$ term index: size=6
+     * 2. Quadrature point index: size=number of quadrature points
+     * 3. Mapping index, which is mapping order minus 1. It is used to get the
      * corresponding pointer to the MappingInfo object in BEMValues::mappings.
-     * 2. shape function index: size=number of shape functions in the
-     * highest order mapping object
-     * 3. \f$k_3\f$ term index: size=6
-     * 4. Quadrature point index: size=number of quadrature points
+     * 4. Shape function index: size=number of shape functions in the highest
+     * order mapping object
      */
     CUDATable<4, RangeNumberType> ky_mapping_shape_value_table_for_common_edge;
     /**
      * Data table of mapping shape function values for \f$K_x\f$ in the
      * common vertex case. It has 4 dimensions:
-     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * 1. \f$k_3\f$ term index: size=4
+     * 2. Quadrature point index: size=number of quadrature points
+     * 3. Mapping index, which is mapping order minus 1. It is used to get the
      * corresponding pointer to the MappingInfo object in BEMValues::mappings.
-     * 2. shape function index: size=number of shape functions in the
-     * highest order mapping object
-     * 3. \f$k_3\f$ term index: size=4
-     * 4. Quadrature point index: size=number of quadrature points
+     * 4. Shape function index: size=number of shape functions in the highest
+     * order mapping object
      */
     CUDATable<4, RangeNumberType>
       kx_mapping_shape_value_table_for_common_vertex;
     /**
      * Data table of mapping shape function values for \f$K_y\f$ in the
      * common vertex case. It has 4 dimensions:
-     * 1. Mapping index, which is mapping order minus 1. It is used to get the
+     * 1. \f$k_3\f$ term index: size=4
+     * 2. Quadrature point index: size=number of quadrature points
+     * 3. Mapping index, which is mapping order minus 1. It is used to get the
      * corresponding pointer to the MappingInfo object in BEMValues::mappings.
-     * 2. shape function index: size=number of shape functions in the
-     * highest order mapping object
-     * 3. \f$k_3\f$ term index: size=4
-     * 4. Quadrature point index: size=number of quadrature points
+     * 4. Shape function index: size=number of shape functions in the highest
+     * order mapping object
      */
     CUDATable<4, RangeNumberType>
       ky_mapping_shape_value_table_for_common_vertex;
     /**
-     * Data table of mapping shape function values for \f$K_x\f$ in the
-     * regular case. It has 4 dimensions:
-     * 1. Mapping index, which is mapping order minus 1. It is used to get the
-     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
-     * 2. shape function index: size=number of shape functions in the
+     * Data table of mapping shape function values in the regular case.
+     *
+     * Because there is no coordinate transformation from the Sauter parametric
+     * space to the pair unit cell space \f$\hat{K}_x \times \hat{K}_y\f$,
+     * there is no differentiation of \f$K_x\f$ and \f$K_y\f$ anymore.
+     * Meanwhile, this data table is evaluated at each quadrature points in
+     * <tt>QGauss<dim></tt>, which is different from <tt>QGauss<dim*2></tt> used
+     * by other data tables.
+     *
+     * It has 3 dimensions:
+     * 1. Quadrature point index: size=number of quadrature points
+     * 2. Mapping index, which is mapping order minus 1. It is used to get the
+     * corresponding pointer to the @p MappingInfo object in
+     * @p BEMValues::mappings.
+     * 3. Shape function index: size=number of shape functions in the
      * highest order mapping object
-     * 3. \f$k_3\f$ term index: size=1
-     * 4. Quadrature point index: size=number of quadrature points
      */
-    CUDATable<4, RangeNumberType> kx_mapping_shape_value_table_for_regular;
-    /**
-     * Data table of mapping shape function values for \f$K_y\f$ in the
-     * regular case. It has 4 dimensions:
-     * 11. Mapping index, which is mapping order minus 1. It is used to get
-     * the corresponding pointer to the MappingInfo object in
-     * BEMValues::mappings.
-     * 2. shape function index: size=number of shape functions in the
-     * highest order mapping object
-     * 3. \f$k_3\f$ term index: size=1
-     * 4. Quadrature point index: size=number of quadrature points
-     */
-    CUDATable<4, RangeNumberType> ky_mapping_shape_value_table_for_regular;
+    CUDATable<3, RangeNumberType> mapping_shape_value_table_for_regular;
+#pragma endregion
 
+#pragma region ****Data tables for the gradient of finite element shape \
+  functions evaluated at quadrature points in the unit cell ****
     /**
      * Data table of finite element shape function's gradient values for
      * \f$K_x\f$ in the same panel case. It has four dimensions:
@@ -367,7 +744,7 @@ namespace CUDAWrappers
     /**
      * Data table of finite element shape function's gradient values for
      * \f$K_x\f$ in the common edge case. It has four dimensions:
-     * 1. \f$k_3\f$ term index: size=8
+     * 1. \f$k_3\f$ term index: size=6
      * 2. Quadrature point index: size=number of quadrature points
      * 3. Coordinate component index in the unit cell
      * 4. Shape function index: size=@p dofs_per_cell
@@ -376,7 +753,7 @@ namespace CUDAWrappers
     /**
      * Data table of finite element shape function's gradient values for
      * \f$K_y\f$ in the common edge case. It has four dimensions:
-     * 1. \f$k_3\f$ term index: size=8
+     * 1. \f$k_3\f$ term index: size=6
      * 2. Quadrature point index: size=number of quadrature points
      * 3. Coordinate component index in the unit cell
      * 4. Shape function index: size=@p dofs_per_cell
@@ -385,7 +762,7 @@ namespace CUDAWrappers
     /**
      * Data table of finite element shape function's gradient values for
      * \f$K_x\f$ in the common vertex case. It has four dimensions:
-     * 1. \f$k_3\f$ term index: size=8
+     * 1. \f$k_3\f$ term index: size=4
      * 2. Quadrature point index: size=number of quadrature points
      * 3. Coordinate component index in the unit cell
      * 4. Shape function index: size=@p dofs_per_cell
@@ -394,7 +771,7 @@ namespace CUDAWrappers
     /**
      * Data table of finite element shape function's gradient values for
      * \f$K_y\f$ in the common vertex case. It has four dimensions:
-     * 1. \f$k_3\f$ term index: size=8
+     * 1. \f$k_3\f$ term index: size=4
      * 2. Quadrature point index: size=number of quadrature points
      * 3. Coordinate component index in the unit cell
      * 4. Shape function index: size=@p dofs_per_cell
@@ -402,23 +779,24 @@ namespace CUDAWrappers
     CUDATable<4, RangeNumberType> ky_shape_grad_matrix_table_for_common_vertex;
     /**
      * Data table of finite element shape function's gradient values for
-     * \f$K_x\f$ in the regular case. It has four dimensions:
-     * 1. \f$k_3\f$ term index: size=8
-     * 2. Quadrature point index: size=number of quadrature points
-     * 3. Coordinate component index in the unit cell
-     * 4. Shape function index: size=@p dofs_per_cell
+     * \f$K_x\f$ in the regular case. It has three dimensions:
+     * 1. Quadrature point index: size=number of quadrature points
+     * 2. Coordinate component index in the unit cell
+     * 3. Shape function index: size=@p dofs_per_cell
      */
-    CUDATable<4, RangeNumberType> kx_shape_grad_matrix_table_for_regular;
+    CUDATable<3, RangeNumberType> kx_shape_grad_matrix_table_for_regular;
     /**
      * Data table of finite element shape function's gradient values for
-     * \f$K_y\f$ in the regular case. It has four dimensions:
-     * 1. \f$k_3\f$ term index: size=8
-     * 2. Quadrature point index: size=number of quadrature points
-     * 3. Coordinate component index in the unit cell
-     * 4. Shape function index: size=@p dofs_per_cell
+     * \f$K_y\f$ in the regular case. It has three dimensions:
+     * 1. Quadrature point index: size=number of quadrature points
+     * 2. Coordinate component index in the unit cell
+     * 3. Shape function index: size=@p dofs_per_cell
      */
-    CUDATable<4, RangeNumberType> ky_shape_grad_matrix_table_for_regular;
+    CUDATable<3, RangeNumberType> ky_shape_grad_matrix_table_for_regular;
+#pragma endregion
 
+#pragma region ****Data tables for the gradient of mapping shape functions \
+  evaluated at quadrature points in the unit cell ****
     /**
      * Data table of mapping shape function's gradient values for
      * \f$K_x\f$ in the same panel case. It has 4 dimensions:
@@ -498,31 +876,109 @@ namespace CUDAWrappers
     CUDATable<4, RangeNumberType>
       ky_mapping_shape_grad_matrix_table_for_common_vertex;
     /**
-     * Data table of mapping shape function's gradient values for
-     * \f$K_x\f$ in the regular case. It has 4 dimensions:
+     * Data table of mapping shape function's gradient values in the regular
+     * case.
+     *
+     * Because there is no coordinate transformation from the Sauter parametric
+     * space to the pair unit cell space \f$\hat{K}_x \times \hat{K}_y\f$,
+     * there is no differentiation of \f$K_x\f$ and \f$K_y\f$ anymore.
+     * Meanwhile, this data table is evaluated at each quadrature points in
+     * <tt>QGauss<2></tt>, which is different from <tt>QGauss<4></tt> used by
+     * other data tables.
+     *
+     * It has 3 dimensions:
      * 1. Mapping index, which is mapping order minus 1. It is used to get the
-     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
-     * 2. \f$k_3\f$ term index: size=1
-     * 3. Quadrature point index: size=number of quadrature points
-     * 4. Gradient matrix element index in column major. The total number of
+     * corresponding pointer to the @p MappingInfo object in
+     * @p BEMValues::mappings.
+     * 2. Quadrature point index: size=number of quadrature points
+     * 3. Gradient matrix element index in column major. The total number of
      * elements is (number of shape functions in the highest order mapping
      * object)*dim.
      */
-    CUDATable<4, RangeNumberType>
-      kx_mapping_shape_grad_matrix_table_for_regular;
+    CUDATable<3, RangeNumberType> mapping_shape_grad_matrix_table_for_regular;
+#pragma endregion
+
+#pragma region ****Views of global data tables on the device ***
     /**
-     * Data table of mapping shape function's gradient values for
-     * \f$K_y\f$ in the regular case. It has 4 dimensions:
-     * 1. Mapping index, which is mapping order minus 1. It is used to get the
-     * corresponding pointer to the MappingInfo object in BEMValues::mappings.
-     * 2. \f$k_3\f$ term index: size=1
-     * 3. Quadrature point index: size=number of quadrature points
-     * 4. Gradient matrix element index in column major. The total number of
-     * elements is (number of shape functions in the highest order mapping
-     * object)*dim.
+     * Mapping support points in all cells in the triangulation.
+     *
+     * Dim1: cell index
+     * Dim2: mapping support point index (in the lexicographic order). The size
+     * of this dimension is allocated to the number of mapping support points in
+     * the mapping object with the highest order.
      */
-    CUDATable<4, RangeNumberType>
-      ky_mapping_shape_grad_matrix_table_for_regular;
+    CUDATableView<2, Point<spacedim, RangeNumberType>>
+      mapping_support_point_table;
+    /**
+     * Mapping indices for all cells in the triangulation.
+     */
+    CUDATableView<1, unsigned int> mapping_indices;
+#pragma endregion
+
+#pragma region ****Data tables evaluated at quadrature points in all real \
+  cells ****
+    /**
+     * Jacobian values scaled by quadrature weights at quadrature points in used
+     * cells.
+     *
+     * This data table is only used for the regular cell neighboring type.
+     *
+     * It has two dimensions:
+     * 1. Local cell index.
+     * 2. Quadrature point index.
+     */
+    CUDATable<2, RangeNumberType> JxW_at_quad_points_for_regular;
+    /**
+     * Normal vectors at quadrature points in used cells.
+     *
+     * This data table is only used for the regular cell neighboring type.
+     *x
+     * It has two dimensions:
+     * 1. Local cell index.
+     * 2. Quadrature point index.
+     */
+    CUDATable<2, Tensor<1, spacedim, RangeNumberType>>
+      normals_at_quad_points_for_regular;
+    /**
+     * Quadrature point coordinates in used cells.
+     *
+     * This data table is only used for the regular cell neighboring type.
+     *
+     * It has two dimensions:
+     * 1. Local cell index.
+     * 2. Quadrature point index.
+     */
+    CUDATable<2, Point<spacedim, RangeNumberType>> quad_points_for_regular;
+    /**
+     * Whether surface curls of finite element shape functions should be
+     * computed.
+     */
+    bool is_surface_curl_needed;
+    /**
+     * Surface gradient at quadrature points in used cells for the test space.
+     *
+     * This data table is only used for the regular cell neighboring type.
+     *
+     * It has three dimensions:
+     * 1. Local cell index.
+     * 2. Shape function index of the finite element.
+     * 3. Quadrature point index.
+     */
+    CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
+      kx_shape_curls_at_quad_points_for_regular;
+    /**
+     * Surface gradient at quadrature points in used cells for the trial space.
+     *
+     * This data table is only used for the regular cell neighboring type.
+     *
+     * It has three dimensions:
+     * 1. Local cell index.
+     * 2. Shape function index of the finite element.
+     * 3. Quadrature point index.
+     */
+    CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
+      ky_shape_curls_at_quad_points_for_regular;
+#pragma endregion
 
   protected:
     HBEM_ATTR_HOST void
@@ -550,13 +1006,24 @@ namespace CUDAWrappers
   template <int dim, int spacedim, typename RangeNumberType>
   HBEM_ATTR_HOST void
   CUDABEMValues<dim, spacedim, RangeNumberType>::allocate_and_assign_from_host(
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values_cpu)
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values_cpu,
+    const CUDATable<2, Point<spacedim, RangeNumberType>>
+                                     &tria_mapping_support_points,
+    const CUDATable<1, unsigned int> &tria_mapping_indices)
   {
+    is_surface_curl_needed = bem_values_cpu.is_surface_curl_needed;
+
+    // Copy data tables from the host.
     init_quadrature_rules(bem_values_cpu);
     init_shape_value_tables(bem_values_cpu);
     init_mapping_shape_value_tables(bem_values_cpu);
-    init_shape_grad_matrix_tables(bem_values_cpu);
+    if (is_surface_curl_needed)
+      init_shape_grad_matrix_tables(bem_values_cpu);
     init_mapping_shape_grad_matrix_tables(bem_values_cpu);
+
+    // Acquire views of global mapping data.
+    mapping_support_point_table = make_view(tria_mapping_support_points);
+    mapping_indices             = make_view(tria_mapping_indices);
   }
 
 
@@ -617,12 +1084,10 @@ namespace CUDAWrappers
                       bem_values_cpu.quad_rule_for_common_vertex.size()));
 
     kx_shape_value_table_for_regular.allocate(
-      TableIndices<3>(bem_values_cpu.kx_fe.dofs_per_cell,
-                      1,
+      TableIndices<2>(bem_values_cpu.kx_fe.dofs_per_cell,
                       bem_values_cpu.quad_rule_for_regular.size()));
     ky_shape_value_table_for_regular.allocate(
-      TableIndices<3>(bem_values_cpu.ky_fe.dofs_per_cell,
-                      1,
+      TableIndices<2>(bem_values_cpu.ky_fe.dofs_per_cell,
                       bem_values_cpu.quad_rule_for_regular.size()));
 
     kx_shape_value_table_for_same_panel.assign_from_host(
@@ -657,48 +1122,42 @@ namespace CUDAWrappers
       bem_values_cpu.mappings.back()->get_data()->n_shape_functions;
 
     kx_mapping_shape_value_table_for_same_panel.allocate(
-      TableIndices<4>(bem_values_cpu.mappings.size(),
-                      max_mapping_n_shape_functions,
-                      8,
-                      bem_values_cpu.quad_rule_for_same_panel.size()));
+      TableIndices<4>(8,
+                      bem_values_cpu.quad_rule_for_same_panel.size(),
+                      bem_values_cpu.mappings.size(),
+                      max_mapping_n_shape_functions));
     ky_mapping_shape_value_table_for_same_panel.allocate(
-      TableIndices<4>(bem_values_cpu.mappings.size(),
-                      max_mapping_n_shape_functions,
-                      8,
-                      bem_values_cpu.quad_rule_for_same_panel.size()));
+      TableIndices<4>(8,
+                      bem_values_cpu.quad_rule_for_same_panel.size(),
+                      bem_values_cpu.mappings.size(),
+                      max_mapping_n_shape_functions));
 
     kx_mapping_shape_value_table_for_common_edge.allocate(
-      TableIndices<4>(bem_values_cpu.mappings.size(),
-                      max_mapping_n_shape_functions,
-                      6,
-                      bem_values_cpu.quad_rule_for_common_edge.size()));
+      TableIndices<4>(6,
+                      bem_values_cpu.quad_rule_for_common_edge.size(),
+                      bem_values_cpu.mappings.size(),
+                      max_mapping_n_shape_functions));
     ky_mapping_shape_value_table_for_common_edge.allocate(
-      TableIndices<4>(bem_values_cpu.mappings.size(),
-                      max_mapping_n_shape_functions,
-                      6,
-                      bem_values_cpu.quad_rule_for_common_edge.size()));
+      TableIndices<4>(6,
+                      bem_values_cpu.quad_rule_for_common_edge.size(),
+                      bem_values_cpu.mappings.size(),
+                      max_mapping_n_shape_functions));
 
     kx_mapping_shape_value_table_for_common_vertex.allocate(
-      TableIndices<4>(bem_values_cpu.mappings.size(),
-                      max_mapping_n_shape_functions,
-                      4,
-                      bem_values_cpu.quad_rule_for_common_vertex.size()));
+      TableIndices<4>(4,
+                      bem_values_cpu.quad_rule_for_common_vertex.size(),
+                      bem_values_cpu.mappings.size(),
+                      max_mapping_n_shape_functions));
     ky_mapping_shape_value_table_for_common_vertex.allocate(
-      TableIndices<4>(bem_values_cpu.mappings.size(),
-                      max_mapping_n_shape_functions,
-                      4,
-                      bem_values_cpu.quad_rule_for_common_vertex.size()));
+      TableIndices<4>(4,
+                      bem_values_cpu.quad_rule_for_common_vertex.size(),
+                      bem_values_cpu.mappings.size(),
+                      max_mapping_n_shape_functions));
 
-    kx_mapping_shape_value_table_for_regular.allocate(
-      TableIndices<4>(bem_values_cpu.mappings.size(),
-                      max_mapping_n_shape_functions,
-                      1,
-                      bem_values_cpu.quad_rule_for_regular.size()));
-    ky_mapping_shape_value_table_for_regular.allocate(
-      TableIndices<4>(bem_values_cpu.mappings.size(),
-                      max_mapping_n_shape_functions,
-                      1,
-                      bem_values_cpu.quad_rule_for_regular.size()));
+    mapping_shape_value_table_for_regular.allocate(
+      TableIndices<3>(bem_values_cpu.quad_rule_for_regular.size(),
+                      bem_values_cpu.mappings.size(),
+                      max_mapping_n_shape_functions));
 
     kx_mapping_shape_value_table_for_same_panel.assign_from_host(
       bem_values_cpu.kx_mapping_shape_value_table_for_same_panel);
@@ -715,10 +1174,8 @@ namespace CUDAWrappers
     ky_mapping_shape_value_table_for_common_vertex.assign_from_host(
       bem_values_cpu.ky_mapping_shape_value_table_for_common_vertex);
 
-    kx_mapping_shape_value_table_for_regular.assign_from_host(
-      bem_values_cpu.kx_mapping_shape_value_table_for_regular);
-    ky_mapping_shape_value_table_for_regular.assign_from_host(
-      bem_values_cpu.ky_mapping_shape_value_table_for_regular);
+    mapping_shape_value_table_for_regular.assign_from_host(
+      bem_values_cpu.mapping_shape_value_table_for_regular);
   }
 
 
@@ -761,13 +1218,11 @@ namespace CUDAWrappers
                       bem_values_cpu.ky_fe.dofs_per_cell));
 
     kx_shape_grad_matrix_table_for_regular.allocate(
-      TableIndices<4>(1,
-                      bem_values_cpu.quad_rule_for_regular.size(),
+      TableIndices<3>(bem_values_cpu.quad_rule_for_regular.size(),
                       dim,
                       bem_values_cpu.kx_fe.dofs_per_cell));
     ky_shape_grad_matrix_table_for_regular.allocate(
-      TableIndices<4>(1,
-                      bem_values_cpu.quad_rule_for_regular.size(),
+      TableIndices<3>(bem_values_cpu.quad_rule_for_regular.size(),
                       dim,
                       bem_values_cpu.ky_fe.dofs_per_cell));
 
@@ -843,14 +1298,8 @@ namespace CUDAWrappers
                       bem_values_cpu.quad_rule_for_common_vertex.size(),
                       dim * max_mapping_n_shape_functions));
 
-    kx_mapping_shape_grad_matrix_table_for_regular.allocate(
-      TableIndices<4>(bem_values_cpu.mappings.size(),
-                      1,
-                      bem_values_cpu.quad_rule_for_regular.size(),
-                      dim * max_mapping_n_shape_functions));
-    ky_mapping_shape_grad_matrix_table_for_regular.allocate(
-      TableIndices<4>(bem_values_cpu.mappings.size(),
-                      1,
+    mapping_shape_grad_matrix_table_for_regular.allocate(
+      TableIndices<3>(bem_values_cpu.mappings.size(),
                       bem_values_cpu.quad_rule_for_regular.size(),
                       dim * max_mapping_n_shape_functions));
 
@@ -882,13 +1331,110 @@ namespace CUDAWrappers
       max_mapping_n_shape_functions);
 
     mapping_shape_grad_matrix_table_assign_from_host(
-      kx_mapping_shape_grad_matrix_table_for_regular,
-      bem_values_cpu.kx_mapping_shape_grad_matrix_table_for_regular,
+      mapping_shape_grad_matrix_table_for_regular,
+      bem_values_cpu.mapping_shape_grad_matrix_table_for_regular,
       max_mapping_n_shape_functions);
-    mapping_shape_grad_matrix_table_assign_from_host(
-      ky_mapping_shape_grad_matrix_table_for_regular,
-      bem_values_cpu.ky_mapping_shape_grad_matrix_table_for_regular,
-      max_mapping_n_shape_functions);
+  }
+
+
+  template <int dim, int spacedim, typename RangeNumberType>
+  template <typename SurfaceNormalDetector>
+  HBEM_ATTR_HOST void
+  CUDABEMValues<dim, spacedim, RangeNumberType>::
+    compute_bilinear_form_cell_values_for_regular(
+      const std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator
+                          *> &cell_iterator_ptrs,
+      const std::vector<types::global_cell_index>
+                                  &local_to_global_cell_index_map,
+      const SurfaceNormalDetector &normal_detector)
+  {
+    const types::global_cell_index n_cells =
+      local_to_global_cell_index_map.size();
+    AssertDimension(n_cells, cell_iterator_ptrs.size());
+
+    // Copy the local-to-global cell index map to the device.
+    CUDATable<1, types::global_cell_index> local_to_global_cell_index_map_gpu;
+    local_to_global_cell_index_map_gpu.allocate(TableIndices<1>(n_cells));
+    local_to_global_cell_index_map_gpu.assign_from_host(
+      local_to_global_cell_index_map);
+
+    // Generate cell normal vector inward direction flags and copy them to the
+    // device, only for the used cells.
+    std::vector<unsigned int> cell_normals_inward_flags_cpu(n_cells);
+    for (types::global_cell_index c = 0; c < n_cells; c++)
+      {
+        cell_normals_inward_flags_cpu[c] =
+          normal_detector.is_normal_vector_inward(
+            (*cell_iterator_ptrs[c])->material_id()) ?
+            1 :
+            0;
+      }
+
+    CUDATable<1, unsigned int> cell_normals_inward_flags_gpu;
+    cell_normals_inward_flags_gpu.allocate(TableIndices<1>(n_cells));
+    cell_normals_inward_flags_gpu.assign_from_host(
+      cell_normals_inward_flags_cpu);
+
+    // Allocate device memory for cell values to be computed.
+    const unsigned int n_quad_points = quad_rule_for_regular.size();
+    JxW_at_quad_points_for_regular.allocate(
+      TableIndices<2>(n_cells, n_quad_points));
+    normals_at_quad_points_for_regular.allocate(
+      TableIndices<2>(n_cells, n_quad_points));
+    quad_points_for_regular.allocate(TableIndices<2>(n_cells, n_quad_points));
+    if (is_surface_curl_needed)
+      {
+        kx_shape_curls_at_quad_points_for_regular.allocate(TableIndices<3>(
+          n_cells, kx_shape_value_table_for_regular.size(0), n_quad_points));
+        ky_shape_curls_at_quad_points_for_regular.allocate(TableIndices<3>(
+          n_cells, ky_shape_value_table_for_regular.size(0), n_quad_points));
+      }
+
+    const unsigned int block_size = 256;
+    const unsigned int block_num  = (n_cells + block_size - 1) / block_size;
+    if (is_surface_curl_needed)
+      {
+        CUDAWrappers::
+          compute_bilinear_form_cell_values_for_regular_kernel<<<block_num,
+                                                                 block_size>>>(
+            mapping_support_point_table,
+            mapping_indices,
+            quad_rule_for_regular,
+            mapping_shape_value_table_for_regular,
+            mapping_shape_grad_matrix_table_for_regular,
+            kx_shape_grad_matrix_table_for_regular,
+            ky_shape_grad_matrix_table_for_regular,
+            local_to_global_cell_index_map_gpu,
+            cell_normals_inward_flags_gpu,
+            JxW_at_quad_points_for_regular,
+            normals_at_quad_points_for_regular,
+            quad_points_for_regular,
+            kx_shape_curls_at_quad_points_for_regular,
+            ky_shape_curls_at_quad_points_for_regular);
+      }
+    else
+      {
+        CUDAWrappers::
+          compute_bilinear_form_cell_values_for_regular_kernel<<<block_num,
+                                                                 block_size>>>(
+            mapping_support_point_table,
+            mapping_indices,
+            quad_rule_for_regular,
+            mapping_shape_value_table_for_regular,
+            mapping_shape_grad_matrix_table_for_regular,
+            local_to_global_cell_index_map_gpu,
+            cell_normals_inward_flags_gpu,
+            JxW_at_quad_points_for_regular,
+            normals_at_quad_points_for_regular,
+            quad_points_for_regular);
+      }
+
+    // Ensure the computation is complete.
+    AssertCuda(cudaGetLastError());
+    AssertCuda(cudaDeviceSynchronize());
+
+    local_to_global_cell_index_map_gpu.release();
+    cell_normals_inward_flags_gpu.release();
   }
 
 
@@ -914,65 +1460,82 @@ namespace CUDAWrappers
     kx_mapping_shape_value_table_for_same_panel.release();
     kx_mapping_shape_value_table_for_common_edge.release();
     kx_mapping_shape_value_table_for_common_vertex.release();
-    kx_mapping_shape_value_table_for_regular.release();
 
     ky_mapping_shape_value_table_for_same_panel.release();
     ky_mapping_shape_value_table_for_common_edge.release();
     ky_mapping_shape_value_table_for_common_vertex.release();
-    ky_mapping_shape_value_table_for_regular.release();
 
-    kx_shape_grad_matrix_table_for_same_panel.release();
-    kx_shape_grad_matrix_table_for_common_edge.release();
-    kx_shape_grad_matrix_table_for_common_vertex.release();
-    kx_shape_grad_matrix_table_for_regular.release();
+    mapping_shape_value_table_for_regular.release();
 
-    ky_shape_grad_matrix_table_for_same_panel.release();
-    ky_shape_grad_matrix_table_for_common_edge.release();
-    ky_shape_grad_matrix_table_for_common_vertex.release();
-    ky_shape_grad_matrix_table_for_regular.release();
+    if (is_surface_curl_needed)
+      {
+        kx_shape_grad_matrix_table_for_same_panel.release();
+        kx_shape_grad_matrix_table_for_common_edge.release();
+        kx_shape_grad_matrix_table_for_common_vertex.release();
+        kx_shape_grad_matrix_table_for_regular.release();
+
+        ky_shape_grad_matrix_table_for_same_panel.release();
+        ky_shape_grad_matrix_table_for_common_edge.release();
+        ky_shape_grad_matrix_table_for_common_vertex.release();
+        ky_shape_grad_matrix_table_for_regular.release();
+      }
 
     kx_mapping_shape_grad_matrix_table_for_same_panel.release();
     kx_mapping_shape_grad_matrix_table_for_common_edge.release();
     kx_mapping_shape_grad_matrix_table_for_common_vertex.release();
-    kx_mapping_shape_grad_matrix_table_for_regular.release();
 
     ky_mapping_shape_grad_matrix_table_for_same_panel.release();
     ky_mapping_shape_grad_matrix_table_for_common_edge.release();
     ky_mapping_shape_grad_matrix_table_for_common_vertex.release();
-    ky_mapping_shape_grad_matrix_table_for_regular.release();
+
+    mapping_shape_grad_matrix_table_for_regular.release();
+
+    JxW_at_quad_points_for_regular.release();
+    normals_at_quad_points_for_regular.release();
+    quad_points_for_regular.release();
+
+    if (is_surface_curl_needed)
+      {
+        kx_shape_curls_at_quad_points_for_regular.release();
+        ky_shape_curls_at_quad_points_for_regular.release();
+      }
   }
 
 
-  template <int dim, int spacedim = dim, typename CUDAKernelNumberType = double>
-  class CUDAPairCellWiseScratchData
+  template <int dim, int spacedim, typename CUDAKernelNumberType = double>
+  class CUDAPairCellWiseScratchDataForHMatrix
   {
   public:
-    using value_type = CUDAKernelNumberType;
-    using size_type  = std::size_t;
     using real_type =
       typename numbers::NumberTraits<CUDAKernelNumberType>::real_type;
 
     /**
-     * Allocate global memory on the device according to the data size of
-     * @p PairCellWiseScratchData on the host.
-     *
-     * @param bem_values_cpu
+     * Allocate global memory on the device.
      */
-    template <typename KernelNumberType>
     HBEM_ATTR_HOST void
-    allocate(const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
-               &scratch_cpu);
+    allocate(const FiniteElement<dim, spacedim>              &kx_fe,
+             const FiniteElement<dim, spacedim>              &ky_fe,
+             const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+             const QGauss<dim * 2> &quad_rule_for_same_panel,
+             const QGauss<dim * 2> &quad_rule_for_common_edge,
+             const QGauss<dim * 2> &quad_rule_for_common_vertex,
+             const bool             is_surface_curl_needed,
+             const unsigned int     n_quad_values_in_thread_blocks,
+             const cudaStream_t     cuda_stream_handle);
 
     /**
-     * Copy some of the calculated data in @p PairCellWiseScratchData on the host to
-     * the device.
+     * Copy permuted mapping support points for cells Kx and Ky in
+     * @p PairCellWiseScratchData on the host to the device.
+     *
+     * When the cell neighboring type is same panel or regular, mapping support
+     * points have been precomputed and there is no need to call this function.
      *
      * @param scratch_cpu
      */
     template <typename KernelNumberType>
     HBEM_ATTR_HOST void
     assign_from_host(
-      const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
+      const PairCellWiseScratchDataForHMatrix<dim, spacedim, KernelNumberType>
         &scratch_cpu);
 
     /**
@@ -990,23 +1553,10 @@ namespace CUDAWrappers
      */
     CUDATable<1, Point<spacedim, real_type>> ky_mapping_support_points_permuted;
 
-    CUDATable<1, Point<2, real_type>>
-      kx_mapping_support_points_permuted_xy_components;
-    CUDATable<1, Point<2, real_type>>
-      kx_mapping_support_points_permuted_yz_components;
-    CUDATable<1, Point<2, real_type>>
-      kx_mapping_support_points_permuted_zx_components;
-
-    CUDATable<1, Point<2, real_type>>
-      ky_mapping_support_points_permuted_xy_components;
-    CUDATable<1, Point<2, real_type>>
-      ky_mapping_support_points_permuted_yz_components;
-    CUDATable<1, Point<2, real_type>>
-      ky_mapping_support_points_permuted_zx_components;
-
     /**
-     * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
-     * \f$k_3\f$ term and at each quadrature point for the same panel case.
+     * Jacobian (scaled by quadrature weight) from the unit cell to the real
+     * cell \f$K_x\f$ for each \f$k_3\f$ term and at each quadrature point for
+     * the same panel case.
      *
      * Table dimensions
      * 1. k3 term index
@@ -1014,8 +1564,9 @@ namespace CUDAWrappers
      */
     CUDATable<2, real_type> kx_jacobians_same_panel;
     /**
-     * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
-     * \f$k_3\f$ term and at each quadrature point for the common edge case.
+     * Jacobian (scaled by quadrature weight) from the unit cell to the real
+     * cell \f$K_x\f$ for each \f$k_3\f$ term and at each quadrature point for
+     * the common edge case.
      *
      * Table dimensions
      * 1. k3 term index
@@ -1023,23 +1574,15 @@ namespace CUDAWrappers
      */
     CUDATable<2, real_type> kx_jacobians_common_edge;
     /**
-     * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
-     * \f$k_3\f$ term and at each quadrature point for the common vertex case.
+     * Jacobian (scaled by quadrature weight) from the unit cell to the real
+     * cell \f$K_x\f$ for each \f$k_3\f$ term and at each quadrature point for
+     * the common vertex case.
      *
      * Table dimensions
      * 1. k3 term index
      * 2. Quadrature point index
      */
     CUDATable<2, real_type> kx_jacobians_common_vertex;
-    /**
-     * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
-     * \f$k_3\f$ term and at each quadrature point for the regular case.
-     *
-     * Table dimensions
-     * 1. k3 term index
-     * 2. Quadrature point index
-     */
-    CUDATable<2, real_type> kx_jacobians_regular;
 
     /**
      * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
@@ -1068,64 +1611,37 @@ namespace CUDAWrappers
      * 2. Quadrature point index
      */
     CUDATable<2, Tensor<1, spacedim, real_type>> kx_normals_common_vertex;
-    /**
-     * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
-     * the regular case.
-     *
-     * Table dimensions
-     * 1. k3 term index
-     * 2. Quadrature point index
-     */
-    CUDATable<2, Tensor<1, spacedim, real_type>> kx_normals_regular;
 
     /**
-     * Covariant transformation matrix (with dimension <tt>spacedim *
-     * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
-     * cell \f$K_x\f$ for the same panel case.
-     *
-     * Table dimensions
-     * 1. k3 term index
-     * 2. Quadrature point index
-     * 3. Unit cell coordinate index
-     * 4. Real cell coordinate index
+     * Whether surface curls of finite element shape functions should be
+     * computed.
      */
-    CUDATable<4, real_type> kx_covariants_same_panel;
+    bool is_surface_curl_needed;
+
     /**
-     * Covariant transformation matrix (with dimension <tt>spacedim *
-     * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
-     * cell \f$K_x\f$ for the common edge case.
-     *
-     * Table dimensions
-     * 1. k3 term index
-     * 2. Quadrature point index
-     * 3. Unit cell coordinate index
-     * 4. Real cell coordinate index
+     * Surface curl vectors of finite element shape functions at each
+     * quadrature point in the real cell \f$K_x\f$ for the same panel case.
+     * Dim1: fe shape function index
+     * Dim2: k3 index
+     * Dim3: quad point index
      */
-    CUDATable<4, real_type> kx_covariants_common_edge;
+    CUDATable<3, Tensor<1, spacedim, real_type>> kx_shape_curls_same_panel;
     /**
-     * Covariant transformation matrix (with dimension <tt>spacedim *
-     * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
-     * cell \f$K_x\f$ for the common vertex case.
-     *
-     * Table dimensions
-     * 1. k3 term index
-     * 2. Quadrature point index
-     * 3. Unit cell coordinate index
-     * 4. Real cell coordinate index
+     * Surface curl vectors of finite element shape functions at each
+     * quadrature point in the real cell \f$K_x\f$ for the common edge case.
+     * Dim1: fe shape function index
+     * Dim2: k3 index
+     * Dim3: quad point index
      */
-    CUDATable<4, real_type> kx_covariants_common_vertex;
+    CUDATable<3, Tensor<1, spacedim, real_type>> kx_shape_curls_common_edge;
     /**
-     * Covariant transformation matrix (with dimension <tt>spacedim *
-     * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
-     * cell \f$K_x\f$ for the regular case.
-     *
-     * Table dimensions
-     * 1. k3 term index
-     * 2. Quadrature point index
-     * 3. Unit cell coordinate index
-     * 4. Real cell coordinate index
+     * Surface curl vectors of finite element shape functions at each
+     * quadrature point in the real cell \f$K_x\f$ for the common vertex case.
+     * Dim1: fe shape function index
+     * Dim2: k3 index
+     * Dim3: quad point index
      */
-    CUDATable<4, real_type> kx_covariants_regular;
+    CUDATable<3, Tensor<1, spacedim, real_type>> kx_shape_curls_common_vertex;
 
     /**
      * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
@@ -1154,19 +1670,11 @@ namespace CUDAWrappers
      * 2. Quadrature point index
      */
     CUDATable<2, Point<spacedim, real_type>> kx_quad_points_common_vertex;
-    /**
-     * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
-     * quadrature point for the regular case.
-     *
-     * Table dimensions
-     * 1. k3 term index
-     * 2. Quadrature point index
-     */
-    CUDATable<2, Point<spacedim, real_type>> kx_quad_points_regular;
 
     /**
-     * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
-     * \f$k_3\f$ term and at each quadrature point for the same panel case.
+     * Jacobian (scaled by quadrature weight) from the unit cell to the real
+     * cell \f$K_y\f$ for each \f$k_3\f$ term and at each quadrature point for
+     * the same panel case.
      *
      * Table dimensions
      * 1. k3 term index
@@ -1174,8 +1682,9 @@ namespace CUDAWrappers
      */
     CUDATable<2, real_type> ky_jacobians_same_panel;
     /**
-     * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
-     * \f$k_3\f$ term and at each quadrature point for the common edge case.
+     * Jacobian (scaled by quadrature weight) from the unit cell to the real
+     * cell \f$K_y\f$ for each \f$k_3\f$ term and at each quadrature point for
+     * the common edge case.
      *
      * Table dimensions
      * 1. k3 term index
@@ -1183,23 +1692,15 @@ namespace CUDAWrappers
      */
     CUDATable<2, real_type> ky_jacobians_common_edge;
     /**
-     * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
-     * \f$k_3\f$ term and at each quadrature point for the common vertex case.
+     * Jacobian (scaled by quadrature weight) from the unit cell to the real
+     * cell \f$K_y\f$ for each \f$k_3\f$ term and at each quadrature point for
+     * the common vertex case.
      *
      * Table dimensions
      * 1. k3 term index
      * 2. Quadrature point index
      */
     CUDATable<2, real_type> ky_jacobians_common_vertex;
-    /**
-     * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
-     * \f$k_3\f$ term and at each quadrature point for the regular case.
-     *
-     * Table dimensions
-     * 1. k3 term index
-     * 2. Quadrature point index
-     */
-    CUDATable<2, real_type> ky_jacobians_regular;
 
     /**
      * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
@@ -1228,64 +1729,31 @@ namespace CUDAWrappers
      * 2. Quadrature point index
      */
     CUDATable<2, Tensor<1, spacedim, real_type>> ky_normals_common_vertex;
-    /**
-     * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
-     * the regular case.
-     *
-     * Table dimensions
-     * 1. k3 term index
-     * 2. Quadrature point index
-     */
-    CUDATable<2, Tensor<1, spacedim, real_type>> ky_normals_regular;
 
     /**
-     * Covariant transformation matrix (with dimension <tt>spacedim *
-     * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
-     * cell \f$K_y\f$ for the same panel case.
-     *
-     * Table dimensions
-     * 1. k3 term index
-     * 2. Quadrature point index
-     * 3. Unit cell coordinate index
-     * 4. Real cell coordinate index
+     * Surface curl vectors of finite element shape functions at each
+     * quadrature point in the real cell \f$K_y\f$ for the same panel case.
+     * Dim1: fe shape function index
+     * Dim2: k3 index
+     * Dim3: quad point index
      */
-    CUDATable<4, real_type> ky_covariants_same_panel;
+    CUDATable<3, Tensor<1, spacedim, real_type>> ky_shape_curls_same_panel;
     /**
-     * Covariant transformation matrix (with dimension <tt>spacedim *
-     * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
-     * cell \f$K_y\f$ for the common edge case.
-     *
-     * Table dimensions
-     * 1. k3 term index
-     * 2. Quadrature point index
-     * 3. Unit cell coordinate index
-     * 4. Real cell coordinate index
+     * Surface curl vectors of finite element shape functions at each
+     * quadrature point in the real cell \f$K_y\f$ for the common edge case.
+     * Dim1: fe shape function index
+     * Dim2: k3 index
+     * Dim3: quad point index
      */
-    CUDATable<4, real_type> ky_covariants_common_edge;
+    CUDATable<3, Tensor<1, spacedim, real_type>> ky_shape_curls_common_edge;
     /**
-     * Covariant transformation matrix (with dimension <tt>spacedim *
-     * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
-     * cell \f$K_y\f$ for the common vertex case.
-     *
-     * Table dimensions
-     * 1. k3 term index
-     * 2. Quadrature point index
-     * 3. Unit cell coordinate index
-     * 4. Real cell coordinate index
+     * Surface curl vectors of finite element shape functions at each
+     * quadrature point in the real cell \f$K_y\f$ for the common vertex case.
+     * Dim1: fe shape function index
+     * Dim2: k3 index
+     * Dim3: quad point index
      */
-    CUDATable<4, real_type> ky_covariants_common_vertex;
-    /**
-     * Covariant transformation matrix (with dimension <tt>spacedim *
-     * dim</tt>) for each \f$k_3\f$ term and each quadrature point in the real
-     * cell \f$K_y\f$ for the regular case.
-     *
-     * Table dimensions
-     * 1. k3 term index
-     * 2. Quadrature point index
-     * 3. Unit cell coordinate index
-     * 4. Real cell coordinate index
-     */
-    CUDATable<4, real_type> ky_covariants_regular;
+    CUDATable<3, Tensor<1, spacedim, real_type>> ky_shape_curls_common_vertex;
 
     /**
      * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
@@ -1314,206 +1782,137 @@ namespace CUDAWrappers
      * 2. Quadrature point index
      */
     CUDATable<2, Point<spacedim, real_type>> ky_quad_points_common_vertex;
-    /**
-     * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
-     * quadrature point for the regular case.
-     *
-     * Table dimensions
-     * 1. k3 term index
-     * 2. Quadrature point index
-     */
-    CUDATable<2, Point<spacedim, real_type>> ky_quad_points_regular;
 
     /**
      * Sauter quadrature values calculated from the accumulation of each
-     * thread blocks.
+     * thread blocks used by @p ApplyQuadratureUsingBEMValues{NeighboringType},
+     * when H-matrix assembly without the producer-consumer model is adopted. It
+     * is the counterpart on the device of
+     * @p PairCellWiseScratchData::quad_values_in_thread_blocks on the host.
      */
     CUDAKernelNumberType *quad_values_in_thread_blocks;
   };
 
 
   template <int dim, int spacedim, typename CUDAKernelNumberType>
-  template <typename KernelNumberType>
   HBEM_ATTR_HOST void
-  CUDAPairCellWiseScratchData<dim, spacedim, CUDAKernelNumberType>::allocate(
-    const PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_cpu)
+  CUDAPairCellWiseScratchDataForHMatrix<dim, spacedim, CUDAKernelNumberType>::
+    allocate(const FiniteElement<dim, spacedim>              &kx_fe,
+             const FiniteElement<dim, spacedim>              &ky_fe,
+             const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+             const QGauss<dim * 2> &quad_rule_for_same_panel,
+             const QGauss<dim * 2> &quad_rule_for_common_edge,
+             const QGauss<dim * 2> &quad_rule_for_common_vertex,
+             const bool             is_surface_curl_needed_,
+             const unsigned int     n_quad_values_in_thread_blocks,
+             const cudaStream_t     cuda_stream_handle)
   {
+    is_surface_curl_needed = is_surface_curl_needed_;
+
     kx_mapping_support_points_permuted.allocate(
-      TableIndices<1>(scratch_cpu.kx_mapping_support_points_permuted.size()),
-      scratch_cpu.cuda_stream_handle);
+      TableIndices<1>(mappings.back()->get_data()->n_shape_functions),
+      cuda_stream_handle);
 
-    kx_mapping_support_points_permuted_xy_components.allocate(
-      TableIndices<1>(
-        scratch_cpu.kx_mapping_support_points_permuted_xy_components.size()),
-      scratch_cpu.cuda_stream_handle);
-
-    kx_mapping_support_points_permuted_yz_components.allocate(
-      TableIndices<1>(
-        scratch_cpu.kx_mapping_support_points_permuted_yz_components.size()),
-      scratch_cpu.cuda_stream_handle);
-
-    kx_mapping_support_points_permuted_zx_components.allocate(
-      TableIndices<1>(
-        scratch_cpu.kx_mapping_support_points_permuted_zx_components.size()),
-      scratch_cpu.cuda_stream_handle);
-
-    kx_jacobians_same_panel.allocate(scratch_cpu.kx_jacobians_same_panel.size(),
-                                     scratch_cpu.cuda_stream_handle);
+    kx_jacobians_same_panel.allocate(
+      TableIndices<2>(8, quad_rule_for_same_panel.size()), cuda_stream_handle);
     kx_jacobians_common_edge.allocate(
-      scratch_cpu.kx_jacobians_common_edge.size(),
-      scratch_cpu.cuda_stream_handle);
+      TableIndices<2>(6, quad_rule_for_common_edge.size()), cuda_stream_handle);
     kx_jacobians_common_vertex.allocate(
-      scratch_cpu.kx_jacobians_common_vertex.size(),
-      scratch_cpu.cuda_stream_handle);
-    kx_jacobians_regular.allocate(scratch_cpu.kx_jacobians_regular.size(),
-                                  scratch_cpu.cuda_stream_handle);
+      TableIndices<2>(4, quad_rule_for_common_vertex.size()),
+      cuda_stream_handle);
 
-    kx_normals_same_panel.allocate(scratch_cpu.kx_normals_same_panel.size(),
-                                   scratch_cpu.cuda_stream_handle);
-    kx_normals_common_edge.allocate(scratch_cpu.kx_normals_common_edge.size(),
-                                    scratch_cpu.cuda_stream_handle);
+    kx_normals_same_panel.allocate(
+      TableIndices<2>(8, quad_rule_for_same_panel.size()), cuda_stream_handle);
+    kx_normals_common_edge.allocate(
+      TableIndices<2>(6, quad_rule_for_common_edge.size()), cuda_stream_handle);
     kx_normals_common_vertex.allocate(
-      scratch_cpu.kx_normals_common_vertex.size(),
-      scratch_cpu.cuda_stream_handle);
-    kx_normals_regular.allocate(scratch_cpu.kx_normals_regular.size(),
-                                scratch_cpu.cuda_stream_handle);
-
-    // N.B. The covariant transformation matrix belongs to \f$\mathbb{R}^{{\rm
-    // spacedim}\times{\rm dim}}\f$. Since a data table adopts the C style
-    // indexing, i.e. the last index runs the fastest, while a LAPACK or BLAS
-    // matrix adopts the Fortran style indexing, @p dim should be placed in
-    // front of @p spacedim in the table indices.
-    kx_covariants_same_panel.allocate(
-      TableIndices<4>(scratch_cpu.kx_covariants_same_panel.n_rows(),
-                      scratch_cpu.kx_covariants_same_panel.n_cols(),
-                      dim,
-                      spacedim),
-      scratch_cpu.cuda_stream_handle);
-    kx_covariants_common_edge.allocate(
-      TableIndices<4>(scratch_cpu.kx_covariants_common_edge.n_rows(),
-                      scratch_cpu.kx_covariants_common_edge.n_cols(),
-                      dim,
-                      spacedim),
-      scratch_cpu.cuda_stream_handle);
-    kx_covariants_common_vertex.allocate(
-      TableIndices<4>(scratch_cpu.kx_covariants_common_vertex.n_rows(),
-                      scratch_cpu.kx_covariants_common_vertex.n_cols(),
-                      dim,
-                      spacedim),
-      scratch_cpu.cuda_stream_handle);
-    kx_covariants_regular.allocate(
-      TableIndices<4>(scratch_cpu.kx_covariants_regular.n_rows(),
-                      scratch_cpu.kx_covariants_regular.n_cols(),
-                      dim,
-                      spacedim),
-      scratch_cpu.cuda_stream_handle);
+      TableIndices<2>(4, quad_rule_for_common_vertex.size()),
+      cuda_stream_handle);
 
     kx_quad_points_same_panel.allocate(
-      scratch_cpu.kx_quad_points_same_panel.size(),
-      scratch_cpu.cuda_stream_handle);
+      TableIndices<2>(8, quad_rule_for_same_panel.size()), cuda_stream_handle);
     kx_quad_points_common_edge.allocate(
-      scratch_cpu.kx_quad_points_common_edge.size(),
-      scratch_cpu.cuda_stream_handle);
+      TableIndices<2>(6, quad_rule_for_common_edge.size()), cuda_stream_handle);
     kx_quad_points_common_vertex.allocate(
-      scratch_cpu.kx_quad_points_common_vertex.size(),
-      scratch_cpu.cuda_stream_handle);
-    kx_quad_points_regular.allocate(scratch_cpu.kx_quad_points_regular.size(),
-                                    scratch_cpu.cuda_stream_handle);
+      TableIndices<2>(4, quad_rule_for_common_vertex.size()),
+      cuda_stream_handle);
 
     ky_mapping_support_points_permuted.allocate(
-      TableIndices<1>(scratch_cpu.ky_mapping_support_points_permuted.size()),
-      scratch_cpu.cuda_stream_handle);
+      TableIndices<1>(mappings.back()->get_data()->n_shape_functions),
+      cuda_stream_handle);
 
-    ky_mapping_support_points_permuted_xy_components.allocate(
-      TableIndices<1>(
-        scratch_cpu.ky_mapping_support_points_permuted_xy_components.size()),
-      scratch_cpu.cuda_stream_handle);
-
-    ky_mapping_support_points_permuted_yz_components.allocate(
-      TableIndices<1>(
-        scratch_cpu.ky_mapping_support_points_permuted_yz_components.size()),
-      scratch_cpu.cuda_stream_handle);
-
-    ky_mapping_support_points_permuted_zx_components.allocate(
-      TableIndices<1>(
-        scratch_cpu.ky_mapping_support_points_permuted_zx_components.size()),
-      scratch_cpu.cuda_stream_handle);
-
-    ky_jacobians_same_panel.allocate(scratch_cpu.ky_jacobians_same_panel.size(),
-                                     scratch_cpu.cuda_stream_handle);
+    ky_jacobians_same_panel.allocate(
+      TableIndices<2>(8, quad_rule_for_same_panel.size()), cuda_stream_handle);
     ky_jacobians_common_edge.allocate(
-      scratch_cpu.ky_jacobians_common_edge.size(),
-      scratch_cpu.cuda_stream_handle);
+      TableIndices<2>(6, quad_rule_for_common_edge.size()), cuda_stream_handle);
     ky_jacobians_common_vertex.allocate(
-      scratch_cpu.ky_jacobians_common_vertex.size(),
-      scratch_cpu.cuda_stream_handle);
-    ky_jacobians_regular.allocate(scratch_cpu.ky_jacobians_regular.size(),
-                                  scratch_cpu.cuda_stream_handle);
+      TableIndices<2>(4, quad_rule_for_common_vertex.size()),
+      cuda_stream_handle);
 
-    ky_normals_same_panel.allocate(scratch_cpu.ky_normals_same_panel.size(),
-                                   scratch_cpu.cuda_stream_handle);
-    ky_normals_common_edge.allocate(scratch_cpu.ky_normals_common_edge.size(),
-                                    scratch_cpu.cuda_stream_handle);
+    ky_normals_same_panel.allocate(
+      TableIndices<2>(8, quad_rule_for_same_panel.size()), cuda_stream_handle);
+    ky_normals_common_edge.allocate(
+      TableIndices<2>(6, quad_rule_for_common_edge.size()), cuda_stream_handle);
     ky_normals_common_vertex.allocate(
-      scratch_cpu.ky_normals_common_vertex.size(),
-      scratch_cpu.cuda_stream_handle);
-    ky_normals_regular.allocate(scratch_cpu.ky_normals_regular.size(),
-                                scratch_cpu.cuda_stream_handle);
-
-    // N.B. The covariant transformation matrix belongs to \f$\mathbb{R}^{{\rm
-    // spacedim}\times{\rm dim}}\f$. Since a data table adopts the C style
-    // indexing, i.e. the last index runs the fastest, while a LAPACK or BLAS
-    // matrix adopts the Fortran style indexing, @p dim should be placed in
-    // front of @p spacedim in the table indices.
-    ky_covariants_same_panel.allocate(
-      TableIndices<4>(scratch_cpu.ky_covariants_same_panel.n_rows(),
-                      scratch_cpu.ky_covariants_same_panel.n_cols(),
-                      dim,
-                      spacedim),
-      scratch_cpu.cuda_stream_handle);
-    ky_covariants_common_edge.allocate(
-      TableIndices<4>(scratch_cpu.ky_covariants_common_edge.n_rows(),
-                      scratch_cpu.ky_covariants_common_edge.n_cols(),
-                      dim,
-                      spacedim),
-      scratch_cpu.cuda_stream_handle);
-    ky_covariants_common_vertex.allocate(
-      TableIndices<4>(scratch_cpu.ky_covariants_common_vertex.n_rows(),
-                      scratch_cpu.ky_covariants_common_vertex.n_cols(),
-                      dim,
-                      spacedim),
-      scratch_cpu.cuda_stream_handle);
-    ky_covariants_regular.allocate(
-      TableIndices<4>(scratch_cpu.ky_covariants_regular.n_rows(),
-                      scratch_cpu.ky_covariants_regular.n_cols(),
-                      dim,
-                      spacedim),
-      scratch_cpu.cuda_stream_handle);
+      TableIndices<2>(4, quad_rule_for_common_vertex.size()),
+      cuda_stream_handle);
 
     ky_quad_points_same_panel.allocate(
-      scratch_cpu.ky_quad_points_same_panel.size(),
-      scratch_cpu.cuda_stream_handle);
+      TableIndices<2>(8, quad_rule_for_same_panel.size()), cuda_stream_handle);
     ky_quad_points_common_edge.allocate(
-      scratch_cpu.ky_quad_points_common_edge.size(),
-      scratch_cpu.cuda_stream_handle);
+      TableIndices<2>(6, quad_rule_for_common_edge.size()), cuda_stream_handle);
     ky_quad_points_common_vertex.allocate(
-      scratch_cpu.ky_quad_points_common_vertex.size(),
-      scratch_cpu.cuda_stream_handle);
-    ky_quad_points_regular.allocate(scratch_cpu.ky_quad_points_regular.size(),
-                                    scratch_cpu.cuda_stream_handle);
+      TableIndices<2>(4, quad_rule_for_common_vertex.size()),
+      cuda_stream_handle);
+
+    if (is_surface_curl_needed)
+      {
+        kx_shape_curls_same_panel.allocate(
+          TableIndices<3>(kx_fe.dofs_per_cell,
+                          8,
+                          quad_rule_for_same_panel.size()),
+          cuda_stream_handle);
+        kx_shape_curls_common_edge.allocate(
+          TableIndices<3>(kx_fe.dofs_per_cell,
+                          6,
+                          quad_rule_for_common_edge.size()),
+          cuda_stream_handle);
+        kx_shape_curls_common_vertex.allocate(
+          TableIndices<3>(kx_fe.dofs_per_cell,
+                          4,
+                          quad_rule_for_common_vertex.size()),
+          cuda_stream_handle);
+
+        ky_shape_curls_same_panel.allocate(
+          TableIndices<3>(ky_fe.dofs_per_cell,
+                          8,
+                          quad_rule_for_same_panel.size()),
+          cuda_stream_handle);
+        ky_shape_curls_common_edge.allocate(
+          TableIndices<3>(ky_fe.dofs_per_cell,
+                          6,
+                          quad_rule_for_common_edge.size()),
+          cuda_stream_handle);
+        ky_shape_curls_common_vertex.allocate(
+          TableIndices<3>(ky_fe.dofs_per_cell,
+                          4,
+                          quad_rule_for_common_vertex.size()),
+          cuda_stream_handle);
+      }
 
     AssertCuda(cudaMallocAsync((void **)&quad_values_in_thread_blocks,
-                               sizeof(CUDAKernelNumberType) * 100,
-                               scratch_cpu.cuda_stream_handle));
+                               sizeof(CUDAKernelNumberType) *
+                                 n_quad_values_in_thread_blocks,
+                               cuda_stream_handle));
   }
 
 
   template <int dim, int spacedim, typename CUDAKernelNumberType>
   template <typename KernelNumberType>
   HBEM_ATTR_HOST void
-  CUDAPairCellWiseScratchData<dim, spacedim, CUDAKernelNumberType>::
+  CUDAPairCellWiseScratchDataForHMatrix<dim, spacedim, CUDAKernelNumberType>::
     assign_from_host(
-      const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
+      const PairCellWiseScratchDataForHMatrix<dim, spacedim, KernelNumberType>
         &scratch_cpu)
   {
     kx_mapping_support_points_permuted.assign_from_host(
@@ -1523,85 +1922,52 @@ namespace CUDAWrappers
     ky_mapping_support_points_permuted.assign_from_host(
       scratch_cpu.ky_mapping_support_points_permuted,
       scratch_cpu.cuda_stream_handle);
-
-    kx_mapping_support_points_permuted_xy_components.assign_from_host(
-      scratch_cpu.kx_mapping_support_points_permuted_xy_components,
-      scratch_cpu.cuda_stream_handle);
-    kx_mapping_support_points_permuted_yz_components.assign_from_host(
-      scratch_cpu.kx_mapping_support_points_permuted_yz_components,
-      scratch_cpu.cuda_stream_handle);
-    kx_mapping_support_points_permuted_zx_components.assign_from_host(
-      scratch_cpu.kx_mapping_support_points_permuted_zx_components,
-      scratch_cpu.cuda_stream_handle);
-
-    ky_mapping_support_points_permuted_xy_components.assign_from_host(
-      scratch_cpu.ky_mapping_support_points_permuted_xy_components,
-      scratch_cpu.cuda_stream_handle);
-    ky_mapping_support_points_permuted_yz_components.assign_from_host(
-      scratch_cpu.ky_mapping_support_points_permuted_yz_components,
-      scratch_cpu.cuda_stream_handle);
-    ky_mapping_support_points_permuted_zx_components.assign_from_host(
-      scratch_cpu.ky_mapping_support_points_permuted_zx_components,
-      scratch_cpu.cuda_stream_handle);
   }
 
 
   template <int dim, int spacedim, typename CUDAKernelNumberType>
   HBEM_ATTR_HOST void
-  CUDAPairCellWiseScratchData<dim, spacedim, CUDAKernelNumberType>::release(
-    const cudaStream_t stream)
+  CUDAPairCellWiseScratchDataForHMatrix<dim, spacedim, CUDAKernelNumberType>::
+    release(const cudaStream_t stream)
   {
     kx_mapping_support_points_permuted.release(stream);
-
-    kx_mapping_support_points_permuted_xy_components.release(stream);
-    kx_mapping_support_points_permuted_yz_components.release(stream);
-    kx_mapping_support_points_permuted_zx_components.release(stream);
 
     kx_jacobians_same_panel.release(stream);
     kx_jacobians_common_edge.release(stream);
     kx_jacobians_common_vertex.release(stream);
-    kx_jacobians_regular.release(stream);
 
     kx_normals_same_panel.release(stream);
     kx_normals_common_edge.release(stream);
     kx_normals_common_vertex.release(stream);
-    kx_normals_regular.release(stream);
-
-    kx_covariants_same_panel.release(stream);
-    kx_covariants_common_edge.release(stream);
-    kx_covariants_common_vertex.release(stream);
-    kx_covariants_regular.release(stream);
 
     kx_quad_points_same_panel.release(stream);
     kx_quad_points_common_edge.release(stream);
     kx_quad_points_common_vertex.release(stream);
-    kx_quad_points_regular.release(stream);
 
     ky_mapping_support_points_permuted.release(stream);
-
-    ky_mapping_support_points_permuted_xy_components.release(stream);
-    ky_mapping_support_points_permuted_yz_components.release(stream);
-    ky_mapping_support_points_permuted_zx_components.release(stream);
 
     ky_jacobians_same_panel.release(stream);
     ky_jacobians_common_edge.release(stream);
     ky_jacobians_common_vertex.release(stream);
-    ky_jacobians_regular.release(stream);
 
     ky_normals_same_panel.release(stream);
     ky_normals_common_edge.release(stream);
     ky_normals_common_vertex.release(stream);
-    ky_normals_regular.release(stream);
-
-    ky_covariants_same_panel.release(stream);
-    ky_covariants_common_edge.release(stream);
-    ky_covariants_common_vertex.release(stream);
-    ky_covariants_regular.release(stream);
 
     ky_quad_points_same_panel.release(stream);
     ky_quad_points_common_edge.release(stream);
     ky_quad_points_common_vertex.release(stream);
-    ky_quad_points_regular.release(stream);
+
+    if (is_surface_curl_needed)
+      {
+        kx_shape_curls_same_panel.release(stream);
+        kx_shape_curls_common_edge.release(stream);
+        kx_shape_curls_common_vertex.release(stream);
+
+        ky_shape_curls_same_panel.release(stream);
+        ky_shape_curls_common_edge.release(stream);
+        ky_shape_curls_common_vertex.release(stream);
+      }
 
     AssertCuda(cudaFreeAsync(quad_values_in_thread_blocks, stream));
   }

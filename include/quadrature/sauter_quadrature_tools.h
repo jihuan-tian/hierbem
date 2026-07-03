@@ -18,13 +18,13 @@
 #ifndef HIERBEM_INCLUDE_QUADRATURE_SAUTER_QUADRATURE_TOOLS_H_
 #define HIERBEM_INCLUDE_QUADRATURE_SAUTER_QUADRATURE_TOOLS_H_
 
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature_lib.h>
 
 #include <cstdint>
 
 #include "config.h"
-#include "quadrature.templates.h"
 
 HBEM_NS_OPEN
 
@@ -62,7 +62,7 @@ struct SauterQuadratureRule
   QGauss<dim * 2> quad_rule_for_same_panel;
   QGauss<dim * 2> quad_rule_for_common_edge;
   QGauss<dim * 2> quad_rule_for_common_vertex;
-  QGauss<dim * 2> quad_rule_for_regular;
+  QGauss<dim>     quad_rule_for_regular;
 };
 
 template <int dim>

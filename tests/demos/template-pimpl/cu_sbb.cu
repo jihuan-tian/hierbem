@@ -1,4 +1,5 @@
 // Copyright (C) 2024 Xiaozhe Wang <chaoslawful@gmail.com>
+// Copyright (C) 2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -12,5 +13,6 @@
 #include "cu_sbb.impl.h"
 
 #define INST_CLASSES (CuSbb)
+#define INST_TYPES (float)(double)
 
-TEMPLATE_CLASS_EXPLICITLY_INSTANTIATE_1(INST_CLASSES, TI_INST_NUM_TYPES)
+TEMPLATE_CLASS_EXPLICITLY_INSTANTIATE_1(INST_CLASSES, INST_TYPES)

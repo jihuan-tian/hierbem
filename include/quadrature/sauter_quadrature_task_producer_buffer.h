@@ -28,10 +28,10 @@
 #include <cstring>
 #include <vector>
 
-#include "bem/bem_tools.h"
+#include "bem/cell_neighboring_type.h"
 #include "config.h"
 #include "linear_algebra/lapack_full_matrix_ext.h"
-#include "sauter_quadrature_task_scalar_data.h"
+#include "sauter_quadrature_task_scalar_data_near_field.h"
 #include "utilities/number_traits.h"
 
 HBEM_NS_OPEN
@@ -94,15 +94,17 @@ public:
   /**
    * Add a Sauter quadrature task to the buffer.
    */
-  template <typename KernelNumberType>
   void
-  add_task(LAPACKFullMatrixExt<RangeNumberType> *fullmat,
-           const unsigned int                    fullmat_row_index,
-           const unsigned int                    fullmat_col_index,
-           const SauterQuadratureTaskScalarData &scalar_data,
-           const real_type                       mass_matrix_entry,
-           const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
-             &scratch_data);
+  add_task(
+    LAPACKFullMatrixExt<RangeNumberType>          *fullmat,
+    const unsigned int                             fullmat_row_index,
+    const unsigned int                             fullmat_col_index,
+    const SauterQuadratureTaskScalarDataNearField &scalar_data,
+    const real_type                                mass_matrix_entry,
+    const Point<spacedim, real_type> *kx_mapping_support_points_permuted_ptr =
+      nullptr,
+    const Point<spacedim, real_type> *ky_mapping_support_points_permuted_ptr =
+      nullptr);
 
   /**
    * Capacity of the task buffer.
@@ -177,7 +179,7 @@ public:
   /**
    * Array of scalar data collections on the host.
    */
-  SauterQuadratureTaskScalarData *scalar_data_buffer;
+  SauterQuadratureTaskScalarDataNearField *scalar_data_buffer;
 
   /**
    * Mass matrix entries
@@ -201,14 +203,20 @@ SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>::allocate(
   fullmat_col_index_buffer.resize(capacity);
   mass_matrix_entries_buffer.resize(capacity);
 
-  kx_mapping_support_points_permuted_buffer.reinit(
-    TableIndices<2>(capacity, max_mapping_n_shape_functions));
-  ky_mapping_support_points_permuted_buffer.reinit(
-    TableIndices<2>(capacity, max_mapping_n_shape_functions));
+  if (cell_neighboring_type != CellNeighboringType::SamePanel &&
+      cell_neighboring_type != CellNeighboringType::Regular)
+    {
+      // Mapping support points do not need permutation when the cell
+      // neighboring type is not same panel and regular.
+      kx_mapping_support_points_permuted_buffer.reinit(
+        TableIndices<2>(capacity, max_mapping_n_shape_functions));
+      ky_mapping_support_points_permuted_buffer.reinit(
+        TableIndices<2>(capacity, max_mapping_n_shape_functions));
+    }
 
   if (scalar_data_buffer != nullptr)
     delete[] scalar_data_buffer;
-  scalar_data_buffer = new SauterQuadratureTaskScalarData[capacity];
+  scalar_data_buffer = new SauterQuadratureTaskScalarDataNearField[capacity];
 }
 
 template <int dim, int spacedim, typename RangeNumberType>
@@ -222,22 +230,28 @@ SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>::release()
   fullmat_row_index_buffer.clear();
   fullmat_col_index_buffer.clear();
   mass_matrix_entries_buffer.clear();
-  kx_mapping_support_points_permuted_buffer.clear();
-  ky_mapping_support_points_permuted_buffer.clear();
+
+  if (cell_neighboring_type != CellNeighboringType::SamePanel &&
+      cell_neighboring_type != CellNeighboringType::Regular)
+    {
+      kx_mapping_support_points_permuted_buffer.clear();
+      ky_mapping_support_points_permuted_buffer.clear();
+    }
+
   if (scalar_data_buffer != nullptr)
     delete[] scalar_data_buffer;
 }
 
 template <int dim, int spacedim, typename RangeNumberType>
-template <typename KernelNumberType>
 void
 SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>::add_task(
-  LAPACKFullMatrixExt<RangeNumberType> *fullmat,
-  const unsigned int                    fullmat_row_index,
-  const unsigned int                    fullmat_col_index,
-  const SauterQuadratureTaskScalarData &scalar_data,
-  const real_type                       mass_matrix_entry,
-  const PairCellWiseScratchData<dim, spacedim, KernelNumberType> &scratch_data)
+  LAPACKFullMatrixExt<RangeNumberType>          *fullmat,
+  const unsigned int                             fullmat_row_index,
+  const unsigned int                             fullmat_col_index,
+  const SauterQuadratureTaskScalarDataNearField &scalar_data,
+  const real_type                                mass_matrix_entry,
+  const Point<spacedim, real_type> *kx_mapping_support_points_permuted_ptr,
+  const Point<spacedim, real_type> *ky_mapping_support_points_permuted_ptr)
 {
   AssertIndexRange(task_num, capacity);
 
@@ -247,14 +261,21 @@ SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>::add_task(
   mass_matrix_entries_buffer[task_num] = mass_matrix_entry;
   scalar_data_buffer[task_num]         = scalar_data;
 
-  std::memcpy(&kx_mapping_support_points_permuted_buffer(task_num, 0),
-              scratch_data.kx_mapping_support_points_permuted.data(),
-              sizeof(Point<spacedim, real_type>) *
-                scalar_data.kx_mapping_n_shape_functions);
-  std::memcpy(&ky_mapping_support_points_permuted_buffer(task_num, 0),
-              scratch_data.ky_mapping_support_points_permuted.data(),
-              sizeof(Point<spacedim, real_type>) *
-                scalar_data.ky_mapping_n_shape_functions);
+  if (kx_mapping_support_points_permuted_ptr != nullptr)
+    {
+      std::memcpy(&kx_mapping_support_points_permuted_buffer(task_num, 0),
+                  kx_mapping_support_points_permuted_ptr,
+                  sizeof(Point<spacedim, real_type>) *
+                    scalar_data.kx_mapping_n_shape_functions);
+    }
+
+  if (ky_mapping_support_points_permuted_ptr != nullptr)
+    {
+      std::memcpy(&ky_mapping_support_points_permuted_buffer(task_num, 0),
+                  ky_mapping_support_points_permuted_ptr,
+                  sizeof(Point<spacedim, real_type>) *
+                    scalar_data.ky_mapping_n_shape_functions);
+    }
 
   task_num++;
 }

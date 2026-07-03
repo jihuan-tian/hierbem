@@ -11,14 +11,14 @@
 /**
  * @file sauter_quadrature.cu
  * @brief Implementation of functions in
- * <tt>include/quadrature/sauter_quadrature.hcu</tt>.
+ * <tt>include/quadrature/cu_sauter_quadrature.hcu</tt>.
  *
  * @date 2022-03-03
  * @author Jihuan Tian
  */
 
 #include "config.h"
-#include "quadrature/sauter_quadrature.hcu"
+#include "quadrature/cu_sauter_quadrature.hcu"
 
 namespace HierBEM
 {

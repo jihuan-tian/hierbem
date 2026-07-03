@@ -25,6 +25,7 @@
 #include <deal.II/base/quadrature.h>
 #include <deal.II/base/subscriptor.h>
 #include <deal.II/base/table.h>
+#include <deal.II/base/types.h>
 
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_tools.h>
@@ -53,7 +54,8 @@
 #if ENABLE_NVTX == 1
 #  include "utilities/cu_profile.hcu"
 #endif
-#include "bem/bem_general.hcu"
+#include "bem/bem_general.h"
+#include "bem/bem_tools.h"
 #include "cad_mesh/subdomain_topology.h"
 #include "cluster_tree/block_cluster_tree.h"
 #include "config.h"
@@ -62,6 +64,7 @@
 #include "dofs/dof_tools_ext.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "hmatrix/hmatrix.h"
+#include "linear_algebra/cu_table.hcu"
 #include "mapping/mapping_info.h"
 #include "quadrature/sauter_quadrature_tools.h"
 #include "solvers/solver_gmres_general.h"
@@ -152,6 +155,14 @@ public:
    */
   virtual void
   build_dof_to_cell_topology();
+
+  /**
+   * Build maps between global and local cell indices, which are related to the
+   * cells used by the dual space on the refined mesh. Meanwhile, extract
+   * pointers to cell iterators.
+   */
+  void
+  build_dual_space_cell_index_maps();
 
   /**
    * Set up the operator preconditioner by building related structures and
@@ -259,9 +270,15 @@ public:
       2,
       Point<spacedim,
             typename numbers::NumberTraits<KernelNumberType>::real_type>>
-                                    &mapping_support_point_table,
-    const SurfaceNormalDetector     &normal_detector,
-    const SauterQuadratureRule<dim> &sauter_quad_rule);
+      &tria_mapping_support_points_cpu,
+    const CUDAWrappers::CUDATable<
+      2,
+      Point<spacedim,
+            typename numbers::NumberTraits<KernelNumberType>::real_type>>
+      &tria_mapping_support_points_gpu,
+    const CUDAWrappers::CUDATable<1, unsigned int> &tria_mapping_indices_gpu,
+    const SurfaceNormalDetector                    &normal_detector,
+    const SauterQuadratureRule<dim>                &sauter_quad_rule);
 
   void
   write_matrices(const std::string &filename) const;
@@ -801,6 +818,25 @@ protected:
    * DoF-to-cell topology for the dual space on the refined mesh.
    */
   DoFToCellTopology<dim, spacedim> dof_to_cell_topo_dual_space;
+  /**
+   * Map from global cell indices to local cell indices for the dual space on
+   * the refined mesh, which is used to build the preconditioning H-matrix.
+   */
+  std::vector<types::global_cell_index>
+    global_to_local_cell_index_map_dual_space;
+  /**
+   * Map from local cell indices to global cell indices for the dual space on
+   * the refined mesh, which is used to build the preconditioning H-matrix.
+   */
+  std::vector<types::global_cell_index>
+    local_to_global_cell_index_map_dual_space;
+  /**
+   * A list of cell iterator pointers which correspond to the list of cells
+   * used by the preconditioning H-matrix with respect to the dual space on the
+   * refined mesh.
+   */
+  std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>
+    cell_iterator_ptrs_dual_space;
 
   // Intermediate vectors during @p vmult. The input vector is @p x and the
   // final output vector is @p y. Both @p x and @p y adopt the internal DoF
@@ -1074,9 +1110,15 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
       2,
       Point<spacedim,
             typename numbers::NumberTraits<KernelNumberType>::real_type>>
-                                    &mapping_support_point_table,
-    const SurfaceNormalDetector     &normal_detector,
-    const SauterQuadratureRule<dim> &sauter_quad_rule)
+      &tria_mapping_support_points_cpu,
+    const CUDAWrappers::CUDATable<
+      2,
+      Point<spacedim,
+            typename numbers::NumberTraits<KernelNumberType>::real_type>>
+      &tria_mapping_support_points_gpu,
+    const CUDAWrappers::CUDATable<1, unsigned int> &tria_mapping_indices_gpu,
+    const SurfaceNormalDetector                    &normal_detector,
+    const SauterQuadratureRule<dim>                &sauter_quad_rule)
 {
 #if ENABLE_NVTX == 1
   nvtxRangeId_t nvtx_id = nvtxRangeStartA("build_hmat_op_precond");
@@ -1139,9 +1181,9 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                 {
                   mass_matrix.vmult(mass_vmult_weq_external_numbering,
                                     boundary_indicators[i]);
-                  permute_vector(mass_vmult_weq_external_numbering,
-                                 dof_i2e_numbering,
-                                 mass_vmult_weq[i]);
+                  BEMTools::permute_vector(mass_vmult_weq_external_numbering,
+                                           dof_i2e_numbering,
+                                           mass_vmult_weq[i]);
                 }
               // The stabilization factor \f$\alpha\f$ is set to 1.
               // TODO: Use the average eigenvalue of the matrix D as the
@@ -1173,7 +1215,12 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                     dof_i2e_numbering,
                     mappings,
                     material_id_to_mapping_index,
-                    mapping_support_point_table,
+                    global_to_local_cell_index_map_dual_space,
+                    local_to_global_cell_index_map_dual_space,
+                    cell_iterator_ptrs_dual_space,
+                    tria_mapping_support_points_cpu,
+                    tria_mapping_support_points_gpu,
+                    tria_mapping_indices_gpu,
                     normal_detector,
                     true);
                 }
@@ -1205,7 +1252,12 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                     dof_i2e_numbering,
                     mappings,
                     material_id_to_mapping_index,
-                    mapping_support_point_table,
+                    global_to_local_cell_index_map_dual_space,
+                    local_to_global_cell_index_map_dual_space,
+                    cell_iterator_ptrs_dual_space,
+                    tria_mapping_support_points_cpu,
+                    tria_mapping_support_points_gpu,
+                    tria_mapping_indices_gpu,
                     normal_detector,
                     true);
                 }
@@ -1237,7 +1289,12 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                     dof_i2e_numbering,
                     mappings,
                     material_id_to_mapping_index,
-                    mapping_support_point_table,
+                    global_to_local_cell_index_map_dual_space,
+                    local_to_global_cell_index_map_dual_space,
+                    cell_iterator_ptrs_dual_space,
+                    tria_mapping_support_points_cpu,
+                    tria_mapping_support_points_gpu,
+                    tria_mapping_indices_gpu,
                     normal_detector,
                     true);
                 }
@@ -1269,7 +1326,12 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                     dof_i2e_numbering,
                     mappings,
                     material_id_to_mapping_index,
-                    mapping_support_point_table,
+                    global_to_local_cell_index_map_dual_space,
+                    local_to_global_cell_index_map_dual_space,
+                    cell_iterator_ptrs_dual_space,
+                    tria_mapping_support_points_cpu,
+                    tria_mapping_support_points_gpu,
+                    tria_mapping_indices_gpu,
                     normal_detector,
                     true);
                 }
@@ -1304,7 +1366,12 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                 dof_i2e_numbering,
                 mappings,
                 material_id_to_mapping_index,
-                mapping_support_point_table,
+                global_to_local_cell_index_map_dual_space,
+                local_to_global_cell_index_map_dual_space,
+                cell_iterator_ptrs_dual_space,
+                tria_mapping_support_points_cpu,
+                tria_mapping_support_points_gpu,
+                tria_mapping_indices_gpu,
                 normal_detector,
                 true);
             }
@@ -1336,7 +1403,12 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                 dof_i2e_numbering,
                 mappings,
                 material_id_to_mapping_index,
-                mapping_support_point_table,
+                global_to_local_cell_index_map_dual_space,
+                local_to_global_cell_index_map_dual_space,
+                cell_iterator_ptrs_dual_space,
+                tria_mapping_support_points_cpu,
+                tria_mapping_support_points_gpu,
+                tria_mapping_indices_gpu,
                 normal_detector,
                 true);
             }
@@ -1369,7 +1441,12 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                 dof_i2e_numbering,
                 mappings,
                 material_id_to_mapping_index,
-                mapping_support_point_table,
+                global_to_local_cell_index_map_dual_space,
+                local_to_global_cell_index_map_dual_space,
+                cell_iterator_ptrs_dual_space,
+                tria_mapping_support_points_cpu,
+                tria_mapping_support_points_gpu,
+                tria_mapping_indices_gpu,
                 normal_detector,
                 true);
             }
@@ -1399,7 +1476,12 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                 dof_i2e_numbering,
                 mappings,
                 material_id_to_mapping_index,
-                mapping_support_point_table,
+                global_to_local_cell_index_map_dual_space,
+                local_to_global_cell_index_map_dual_space,
+                cell_iterator_ptrs_dual_space,
+                tria_mapping_support_points_cpu,
+                tria_mapping_support_points_gpu,
+                tria_mapping_indices_gpu,
                 normal_detector,
                 true);
             }
@@ -1429,7 +1511,12 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                 dof_i2e_numbering,
                 mappings,
                 material_id_to_mapping_index,
-                mapping_support_point_table,
+                global_to_local_cell_index_map_dual_space,
+                local_to_global_cell_index_map_dual_space,
+                cell_iterator_ptrs_dual_space,
+                tria_mapping_support_points_cpu,
+                tria_mapping_support_points_gpu,
+                tria_mapping_indices_gpu,
                 normal_detector,
                 true);
             }
@@ -1459,7 +1546,12 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
                 dof_i2e_numbering,
                 mappings,
                 material_id_to_mapping_index,
-                mapping_support_point_table,
+                global_to_local_cell_index_map_dual_space,
+                local_to_global_cell_index_map_dual_space,
+                cell_iterator_ptrs_dual_space,
+                tria_mapping_support_points_cpu,
+                tria_mapping_support_points_gpu,
+                tria_mapping_indices_gpu,
                 normal_detector,
                 true);
             }
@@ -1592,14 +1684,19 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
     primal_space_dof_selectors_on_primal_mesh,
     primal_space_full_to_local_dof_id_map_on_primal_mesh,
     primal_space_local_to_full_dof_id_map_on_primal_mesh);
+  primal_space_local_to_full_dof_id_map_on_primal_mesh.shrink_to_fit();
+
   DoFToolsExt::generate_maps_between_full_and_local_dof_ids(
     primal_space_dof_selectors_on_refined_mesh,
     primal_space_full_to_local_dof_id_map_on_refined_mesh,
     primal_space_local_to_full_dof_id_map_on_refined_mesh);
+  primal_space_local_to_full_dof_id_map_on_refined_mesh.shrink_to_fit();
+
   DoFToolsExt::generate_maps_between_full_and_local_dof_ids(
     dual_space_dof_selectors_on_refined_mesh,
     dual_space_full_to_local_dof_id_map_on_refined_mesh,
     dual_space_local_to_full_dof_id_map_on_refined_mesh);
+  dual_space_local_to_full_dof_id_map_on_refined_mesh.shrink_to_fit();
 }
 
 
@@ -1624,8 +1721,6 @@ void
 OperatorPreconditioner<dim, spacedim, RangeNumberType>::
   build_dof_to_cell_topology()
 {
-  // Generate DoF-to-cell topologies for the dual function space on the
-  // refined mesh.
   cell_iterators_dual_space.reserve(tria.n_cells(refined_mesh_level));
 
   if (is_full_domain)
@@ -1662,12 +1757,57 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
             cell_iterators_dual_space.push_back(cell);
         }
 
+      cell_iterators_dual_space.shrink_to_fit();
+
       DoFToolsExt::build_mg_dof_to_cell_topology(
         dof_to_cell_topo_dual_space,
         cell_iterators_dual_space,
         dof_handler_dual_space,
         dual_space_dof_selectors_on_refined_mesh,
         refined_mesh_level);
+    }
+}
+
+
+template <int dim, int spacedim, typename RangeNumberType>
+void
+OperatorPreconditioner<dim, spacedim, RangeNumberType>::
+  build_dual_space_cell_index_maps()
+{
+  const types::global_cell_index n_cells = tria.n_active_cells();
+  AssertDimension(tria.n_cells(refined_mesh_level), n_cells);
+
+  if (is_full_domain)
+    {
+      global_to_local_cell_index_map_dual_space.resize(n_cells);
+      gen_linear_indices<vector_uta, types::global_cell_index>(
+        global_to_local_cell_index_map_dual_space);
+      local_to_global_cell_index_map_dual_space =
+        global_to_local_cell_index_map_dual_space;
+      cell_iterator_ptrs_dual_space.resize(n_cells);
+
+      types::global_cell_index c = 0;
+      for (auto &cell_iter : cell_iterators_dual_space)
+        {
+          cell_iterator_ptrs_dual_space[c] = &cell_iter;
+          c++;
+        }
+    }
+  else
+    {
+      global_to_local_cell_index_map_dual_space.assign(n_cells, n_cells);
+      local_to_global_cell_index_map_dual_space.reserve(n_cells);
+      cell_iterator_ptrs_dual_space.reserve(n_cells);
+
+      BEMTools::generate_maps_between_global_and_local_cell_indices(
+        0,
+        dof_to_cell_topo_dual_space,
+        global_to_local_cell_index_map_dual_space,
+        local_to_global_cell_index_map_dual_space,
+        cell_iterator_ptrs_dual_space);
+
+      local_to_global_cell_index_map_dual_space.shrink_to_fit();
+      cell_iterator_ptrs_dual_space.shrink_to_fit();
     }
 }
 
@@ -1688,6 +1828,7 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::setup_preconditioner(
     }
 
   build_dof_to_cell_topology();
+  build_dual_space_cell_index_maps();
   build_coupling_matrix();
   build_averaging_matrix();
   build_mass_matrix_on_refined_mesh(quad_rule_for_mass);
@@ -1808,19 +1949,23 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::vmult(
   Vector<RangeNumberType>       &y,
   const Vector<RangeNumberType> &x) const
 {
-  permute_vector(x, primal_space_dof_e2i_numbering, *x_external_dof_numbering);
+  BEMTools::permute_vector(x,
+                           primal_space_dof_e2i_numbering,
+                           *x_external_dof_numbering);
   solve_mass_matrix_transpose_triple(*v1, *x_external_dof_numbering);
   averaging_matrix.Tvmult(*v2, *v1);
-  permute_vector(*v2,
-                 ct.get_internal_to_external_dof_numbering(),
-                 *v2_internal_dof_numbering);
+  BEMTools::permute_vector(*v2,
+                           ct.get_internal_to_external_dof_numbering(),
+                           *v2_internal_dof_numbering);
   vmult_preconditioner_hmat(*v3, *v2_internal_dof_numbering);
-  permute_vector(*v3,
-                 ct.get_external_to_internal_dof_numbering(),
-                 *v3_external_dof_numbering);
+  BEMTools::permute_vector(*v3,
+                           ct.get_external_to_internal_dof_numbering(),
+                           *v3_external_dof_numbering);
   averaging_matrix.vmult(*v1, *v3_external_dof_numbering);
   solve_mass_matrix_triple(*y_external_dof_numbering, *v1);
-  permute_vector(*y_external_dof_numbering, primal_space_dof_i2e_numbering, y);
+  BEMTools::permute_vector(*y_external_dof_numbering,
+                           primal_space_dof_i2e_numbering,
+                           y);
 }
 
 

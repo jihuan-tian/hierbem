@@ -28,7 +28,7 @@
 #include <memory>
 #include <vector>
 
-#include "bem/bem_tools.h"
+#include "bem_tools.h"
 #include "cluster_tree/cluster_tree.h"
 #include "cluster_tree/cluster_tree_builder.h"
 #include "config.h"
@@ -234,6 +234,18 @@ public:
   get_n_dofs() const
   {
     return n_dofs;
+  }
+
+  std::vector<typename DoFHandler<dim, spacedim>::cell_iterator> &
+  get_cell_iterators()
+  {
+    return cell_iterators;
+  }
+
+  const std::vector<typename DoFHandler<dim, spacedim>::cell_iterator> &
+  get_cell_iterators() const
+  {
+    return cell_iterators;
   }
 
 private:
@@ -473,10 +485,18 @@ BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, Number>::
 
   if (is_full_domain || !limit_support_in_subdomain)
     {
+      // When @p limit_support_in_subdomain is false, even though the function
+      // space is defined on a subdomain, we still need to collect iterators for
+      // all cells in the triangulation, because there is one layer of cells
+      // extending from the current subdomain into adjacent subdomains, which
+      // contain those DoFs at the subdomain interface. At the moment, it is not
+      // obvious to directly extract this layer of cells, so we collect
+      // iterators for all cells in the triangulation, which will be used for
+      // building the DoF-to-cell topology.
       for (const auto &cell : dof_handler.active_cell_iterators())
         cell_iterators.push_back(cell);
     }
-  else if (limit_support_in_subdomain)
+  else
     {
       // When the support of DoFs are limited within the subdomain, only the
       // cells with material ids belonging to the subdomain are collected.
@@ -487,6 +507,8 @@ BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, Number>::
           if (found_iter != material_ids.end())
             cell_iterators.push_back(cell);
         }
+
+      cell_iterators.shrink_to_fit();
     }
 }
 

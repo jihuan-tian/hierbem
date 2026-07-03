@@ -18,11 +18,13 @@
  * @date 2023-03-22
  */
 
+#include <deal.II/base/point.h>
 #include <deal.II/base/quadrature_lib.h>
 
 #include <iostream>
+#include <string>
+#include <vector>
 
-#include "quadrature/quadrature.templates.h"
 #include "quadrature/sauter_quadrature_tools.h"
 #include "utilities/debug_tools.h"
 

@@ -44,12 +44,12 @@ main()
     table_gpu1.assign_from_host(table_cpu);
     std::cout << "Table1:" << std::endl;
     print_cuda_object<<<1, 10>>>(table_gpu1);
-    cudaThreadSynchronize();
+    cudaDeviceSynchronize();
 
     table_gpu2 = table_gpu1;
     std::cout << "Table2:" << std::endl;
     print_cuda_object<<<1, 10>>>(table_gpu2);
-    cudaThreadSynchronize();
+    cudaDeviceSynchronize();
 
     table_gpu1.release();
     table_gpu2.release();
@@ -75,13 +75,13 @@ main()
 
     std::cout << "Table1:" << std::endl;
     print_cuda_object<<<1, 10>>>(table_gpu1);
-    cudaThreadSynchronize();
+    cudaDeviceSynchronize();
 
     table_gpu2.assign(table_gpu1, stream);
     cudaStreamSynchronize(stream);
     std::cout << "Table2:" << std::endl;
     print_cuda_object<<<1, 10>>>(table_gpu2);
-    cudaThreadSynchronize();
+    cudaDeviceSynchronize();
 
     table_gpu1.release(stream);
     table_gpu2.release(stream);

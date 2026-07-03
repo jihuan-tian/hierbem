@@ -17,8 +17,8 @@
  * @date 2026-03-14
  * @author Jihuan Tian
  */
-#ifndef HIERBEM_INCLUDE_QUADRATURE_SAUTER_QUADRATURE_TASK_BUFFER_FOR_VECTOR_H_
-#define HIERBEM_INCLUDE_QUADRATURE_SAUTER_QUADRATURE_TASK_BUFFER_FOR_VECTOR_H_
+#ifndef HIERBEM_INCLUDE_QUADRATURE_SAUTER_QUADRATURE_TASK_BUFFER_FOR_VECTOR_HCU_
+#define HIERBEM_INCLUDE_QUADRATURE_SAUTER_QUADRATURE_TASK_BUFFER_FOR_VECTOR_HCU_
 
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/numbers.h>
@@ -32,13 +32,13 @@
 
 #include <type_traits>
 
-#include "bem/bem_values.hcu"
+#include "bem/bem_values.h"
 #include "bem/cu_bem_values.hcu"
 #include "config.h"
 #include "config_file/config_structs.h"
-#include "linear_algebra/cu_table.hcu"
+#include "platform_shared/utilities.h"
 #include "sauter_quadrature_far_field_kernels.hcu"
-#include "sauter_quadrature_task_scalar_data.h"
+#include "sauter_quadrature_task_scalar_data_far_field.h"
 #include "utilities/cu_profile.hcu"
 #include "utilities/number_traits.h"
 
@@ -103,13 +103,9 @@ namespace CUDAWrappers
      * are still on the host.
      *
      * @param scalar_data
-     * @param scratch_data
      */
-    template <typename KernelNumberType>
     void
-    add_task(const SauterQuadratureTaskScalarData &scalar_data,
-             const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
-               &scratch_data);
+    add_task(const SauterQuadratureTaskScalarDataFarField &scalar_data);
 
     /**
      * Copy data from host to device and process all Sauter quadrature tasks
@@ -149,14 +145,11 @@ namespace CUDAWrappers
     unsigned int capacity;
 
     /**
-     * Number of quadrature points.
-     *
-     * \mynote{For building far field \hmats, the cell neighboring type can
-     * only be @p regular, therefore the number of quadrature points is the
-     * size of the quadrature rule for this regular case, which can be
-     * acquired from @p BEMValues.}
+     * Number of quadrature points used for the 4D quadrature, which should be
+     * the square of the number of quadrature points for the 2D quadrature
+     * object adopted for the regular cell neighboring type.
      */
-    unsigned int quad_point_num;
+    unsigned int n_quad_points_4d;
 
     /**
      * Actual number of Sauter quadrature tasks in the buffer.
@@ -188,77 +181,21 @@ namespace CUDAWrappers
     unsigned int *starting_task_indices_for_dof_pairs_gpu;
 
     /**
-     * List of permuted mapping support points in \f$K_x\f$, which are stored
-     * on the host.
-     *
-     * 1. First dimension: task index in the buffer.
-     * 2. Second dimension: point index in the permuted mapping support points
-     * in \f$K_x\f$.
-     *
-     * The size of the second dimension of this table is allocated with respect
-     * to the highest order mapping adopted.
-     */
-    Table<2, Point<spacedim, real_type>>
-      kx_mapping_support_points_permuted_buffer_cpu;
-
-    /**
-     * List of permuted mapping support points in \f$K_y\f$, which are stored
-     * on the host.
-     *
-     * 1. First dimension: task index in the buffer.
-     * 2. Second dimension: point index in the permuted mapping support points
-     * in \f$K_y\f$.
-     *
-     * The size of the second dimension of this table is allocated with respect
-     * to the highest order mapping adopted.
-     */
-    Table<2, Point<spacedim, real_type>>
-      ky_mapping_support_points_permuted_buffer_cpu;
-
-    /**
-     * List of permuted mapping support points in \f$K_x\f$, which are stored
-     * on the device.
-     *
-     * 1. First dimension: task index in the buffer.
-     * 2. Second dimension: point index in the permuted mapping support points
-     * in \f$K_x\f$.
-     *
-     * The size of the second dimension of this table is allocated with respect
-     * to the highest order mapping adopted.
-     */
-    CUDATable<2, Point<spacedim, real_type>>
-      kx_mapping_support_points_permuted_buffer_gpu;
-
-    /**
-     * List of permuted mapping support points in \f$K_y\f$, which are stored
-     * on the device.
-     *
-     * 1. First dimension: task index in the buffer.
-     * 2. Second dimension: point index in the permuted mapping support points
-     * in \f$K_y\f$.
-     *
-     * The size of the second dimension of this table is allocated with respect
-     * to the highest order mapping adopted.
-     */
-    CUDATable<2, Point<spacedim, real_type>>
-      ky_mapping_support_points_permuted_buffer_gpu;
-
-    /**
      * Array of scalar data collections on the host.
      */
-    SauterQuadratureTaskScalarData *scalar_data_buffer_cpu;
+    SauterQuadratureTaskScalarDataFarField *scalar_data_buffer_cpu;
 
     /**
      * Array of scalar data collections on the device.
      */
-    SauterQuadratureTaskScalarData *scalar_data_buffer_gpu;
+    SauterQuadratureTaskScalarDataFarField *scalar_data_buffer_gpu;
 
     /**
      * Values at all quadrature points on the device, which need to be
      * accumulated into the array @p vector_element_values_gpu, then copied
      * into the row or column vector in the \hmat.
      *
-     * The number of elements in this array is @p capacity*quad_point_num.
+     * The number of elements in this array is @p capacity*n_quad_points_4d.
      */
     CUDAKernelNumberType *values_at_all_quad_points_gpu;
 
@@ -287,7 +224,8 @@ namespace CUDAWrappers
     , vector_size(v_vector_size)
     , capacity(vector_size * max_cells_per_dof_in_test_space *
                max_cells_per_dof_in_ansatz_space)
-    , quad_point_num(bem_values.quad_rule_for_regular.size())
+    , n_quad_points_4d(HierBEM::PlatformShared::Utilities::fixed_power<2>(
+        bem_values.quad_rule_for_regular.size()))
     , task_num(0)
     , starting_task_indices_for_dof_pairs_cpu(nullptr)
     , starting_task_indices_for_dof_pairs_gpu(nullptr)
@@ -313,58 +251,25 @@ namespace CUDAWrappers
                       sizeof(unsigned int) * (vector_size + 1),
                       cuda_stream_handle));
 
-    kx_mapping_support_points_permuted_buffer_gpu.allocate(
-      TableIndices<2>(
-        capacity, bem_values.mappings.back()->get_data()->n_shape_functions),
-      cuda_stream_handle);
-    ky_mapping_support_points_permuted_buffer_gpu.allocate(
-      TableIndices<2>(
-        capacity, bem_values.mappings.back()->get_data()->n_shape_functions),
-      cuda_stream_handle);
-
     AssertCuda(
       cudaMallocAsync((void **)&scalar_data_buffer_gpu,
-                      capacity * sizeof(SauterQuadratureTaskScalarData),
+                      capacity * sizeof(SauterQuadratureTaskScalarDataFarField),
                       cuda_stream_handle));
 
-    AssertCuda(
-      cudaMallocAsync((void **)&values_at_all_quad_points_gpu,
-                      capacity * quad_point_num * sizeof(CUDAKernelNumberType),
-                      cuda_stream_handle));
+    AssertCuda(cudaMallocAsync((void **)&values_at_all_quad_points_gpu,
+                               capacity * n_quad_points_4d *
+                                 sizeof(CUDAKernelNumberType),
+                               cuda_stream_handle));
 
 
     AssertCuda(cudaMallocAsync((void **)&vector_element_values_gpu,
                                vector_size * sizeof(CUDARangeNumberType),
                                cuda_stream_handle));
 
-
-    /**
-     * @internal Allocate memory on the host.
-     *
-     * \mynote{These operations are placed after asynchronous memory
-     * allocations on the device, in order that they can run in parallel.}
-     */
-    kx_mapping_support_points_permuted_buffer_cpu.reinit(TableIndices<2>(
-      capacity, bem_values.mappings.back()->get_data()->n_shape_functions));
-    AssertCuda(cudaHostRegister(
-      (void *)&(kx_mapping_support_points_permuted_buffer_cpu(0, 0)),
-      kx_mapping_support_points_permuted_buffer_cpu.n_elements() *
-        sizeof(Point<spacedim, real_type>),
-      0));
-
-
-    ky_mapping_support_points_permuted_buffer_cpu.reinit(TableIndices<2>(
-      capacity, bem_values.mappings.back()->get_data()->n_shape_functions));
-    AssertCuda(cudaHostRegister(
-      (void *)&(ky_mapping_support_points_permuted_buffer_cpu(0, 0)),
-      ky_mapping_support_points_permuted_buffer_cpu.n_elements() *
-        sizeof(Point<spacedim, real_type>),
-      0));
-
-
     AssertCuda(
       cudaMallocHost((void **)&scalar_data_buffer_cpu,
-                     capacity * sizeof(SauterQuadratureTaskScalarData)));
+                     capacity *
+                       sizeof(SauterQuadratureTaskScalarDataFarField)));
   }
 
 
@@ -389,9 +294,6 @@ namespace CUDAWrappers
                                  cuda_stream_handle));
       }
 
-    kx_mapping_support_points_permuted_buffer_gpu.release(cuda_stream_handle);
-    ky_mapping_support_points_permuted_buffer_gpu.release(cuda_stream_handle);
-
     if (scalar_data_buffer_gpu != nullptr)
       {
         AssertCuda(cudaFreeAsync(scalar_data_buffer_gpu, cuda_stream_handle));
@@ -409,22 +311,14 @@ namespace CUDAWrappers
           cudaFreeAsync(vector_element_values_gpu, cuda_stream_handle));
       }
 
-    AssertCuda(cudaHostUnregister(
-      (void *)&(kx_mapping_support_points_permuted_buffer_cpu(0, 0))));
-
-
-    AssertCuda(cudaHostUnregister(
-      (void *)&(ky_mapping_support_points_permuted_buffer_cpu(0, 0))));
-
-
     if (scalar_data_buffer_cpu != nullptr)
       {
         AssertCuda(cudaFreeHost(scalar_data_buffer_cpu));
       }
 
-    vector_size    = 0;
-    capacity       = 0;
-    quad_point_num = 0;
+    vector_size      = 0;
+    capacity         = 0;
+    n_quad_points_4d = 0;
   }
 
 
@@ -449,39 +343,20 @@ namespace CUDAWrappers
             int spacedim,
             typename CUDARangeNumberType,
             typename CUDAKernelNumberType>
-  template <typename KernelNumberType>
   void
   SauterQuadratureTaskBufferForVector<dim,
                                       spacedim,
                                       CUDARangeNumberType,
                                       CUDAKernelNumberType>::
-    add_task(const SauterQuadratureTaskScalarData &scalar_data,
-             const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
-               &scratch_data)
+    add_task(const SauterQuadratureTaskScalarDataFarField &scalar_data)
   {
     AssertIndexRange(task_num, capacity);
 
-    /**
-     * @internal Copy task data to host, which include the array indices to
-     * access DoF indices in the cell and the permuted mapping support points.
-     */
+    // Copy task data to host, which include the array indices to access DoF
+    // indices in the cell and the permuted mapping support points.
     scalar_data_buffer_cpu[task_num] = scalar_data;
 
-    for (unsigned int i = 0; i < scalar_data.kx_mapping_n_shape_functions; i++)
-      {
-        kx_mapping_support_points_permuted_buffer_cpu(task_num, i) =
-          scratch_data.kx_mapping_support_points_permuted[i];
-      }
-
-    for (unsigned int i = 0; i < scalar_data.ky_mapping_n_shape_functions; i++)
-      {
-        ky_mapping_support_points_permuted_buffer_cpu(task_num, i) =
-          scratch_data.ky_mapping_support_points_permuted[i];
-      }
-
-    /**
-     * @internal Increase the task counter.
-     */
+    // Increase the task counter.
     task_num++;
   }
 
@@ -510,32 +385,19 @@ namespace CUDAWrappers
       std::string("process_tasks_far_field_vector"));
 #endif
 
-    /**
-     * @internal Copy task data from host to device.
-     */
-    kx_mapping_support_points_permuted_buffer_gpu.assign_from_host(
-      &(kx_mapping_support_points_permuted_buffer_cpu(0, 0)),
-      0,
-      task_num * kx_mapping_support_points_permuted_buffer_cpu.size(1),
-      cuda_stream_handle);
-    ky_mapping_support_points_permuted_buffer_gpu.assign_from_host(
-      &(ky_mapping_support_points_permuted_buffer_cpu(0, 0)),
-      0,
-      task_num * ky_mapping_support_points_permuted_buffer_cpu.size(1),
-      cuda_stream_handle);
-
     AssertCuda(
       cudaMemcpyAsync((void *)scalar_data_buffer_gpu,
-                      (void *)scalar_data_buffer_cpu,
-                      sizeof(SauterQuadratureTaskScalarData) * task_num,
+                      (const void *)scalar_data_buffer_cpu,
+                      sizeof(SauterQuadratureTaskScalarDataFarField) * task_num,
                       cudaMemcpyHostToDevice,
                       cuda_stream_handle));
 
-    AssertCuda(cudaMemcpyAsync((void *)starting_task_indices_for_dof_pairs_gpu,
-                               (void *)starting_task_indices_for_dof_pairs_cpu,
-                               sizeof(unsigned int) * (vector_size + 1),
-                               cudaMemcpyHostToDevice,
-                               cuda_stream_handle));
+    AssertCuda(
+      cudaMemcpyAsync((void *)starting_task_indices_for_dof_pairs_gpu,
+                      (const void *)starting_task_indices_for_dof_pairs_cpu,
+                      sizeof(unsigned int) * (vector_size + 1),
+                      cudaMemcpyHostToDevice,
+                      cuda_stream_handle));
 
     /**
      * @internal Process all Sauter quadrature tasks in the
@@ -551,7 +413,7 @@ namespace CUDAWrappers
                       1) /
                        static_cast<unsigned int>(
                          sauter_quad_far_field_params.task_num_per_block),
-                     (quad_point_num +
+                     (n_quad_points_4d +
                       static_cast<unsigned int>(
                         sauter_quad_far_field_params.quad_point_num_per_block) -
                       1) /
@@ -567,12 +429,9 @@ namespace CUDAWrappers
       0,
       cuda_stream_handle>>>(kernel,
                             kernel_factor,
-                            kx_mapping_support_points_permuted_buffer_gpu,
-                            ky_mapping_support_points_permuted_buffer_gpu,
                             scalar_data_buffer_gpu,
                             values_at_all_quad_points_gpu,
                             task_num,
-                            quad_point_num,
                             bem_values);
 
     /**
@@ -591,7 +450,7 @@ namespace CUDAWrappers
         sauter_quad_far_field_params.vector_entry_num_per_block),
       0,
       cuda_stream_handle>>>(vector_size,
-                            quad_point_num,
+                            n_quad_points_4d,
                             starting_task_indices_for_dof_pairs_gpu,
                             values_at_all_quad_points_gpu,
                             vector_element_values_gpu);
@@ -600,7 +459,7 @@ namespace CUDAWrappers
      * Copy vector element values from device to host.
      */
     AssertCuda(cudaMemcpyAsync((void *)hmat_vector.data(),
-                               (void *)vector_element_values_gpu,
+                               (const void *)vector_element_values_gpu,
                                sizeof(RangeNumberType) * vector_size,
                                cudaMemcpyDeviceToHost,
                                cuda_stream_handle));
@@ -611,4 +470,4 @@ namespace CUDAWrappers
 
 HBEM_NS_CLOSE
 
-#endif // HIERBEM_INCLUDE_QUADRATURE_SAUTER_QUADRATURE_TASK_BUFFER_FOR_VECTOR_H_
+#endif // HIERBEM_INCLUDE_QUADRATURE_SAUTER_QUADRATURE_TASK_BUFFER_FOR_VECTOR_HCU_

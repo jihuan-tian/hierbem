@@ -33,7 +33,6 @@
 #include <deal.II/grid/tria.h>
 
 #include <fstream>
-#include <iostream>
 #include <memory>
 #include <vector>
 

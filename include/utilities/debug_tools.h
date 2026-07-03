@@ -44,7 +44,6 @@
 
 #include "config.h"
 #include "linear_algebra/lapack_full_matrix_ext.h"
-#include "quadrature/quadrature.templates.h"
 
 HBEM_NS_OPEN
 

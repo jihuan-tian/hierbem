@@ -26,13 +26,16 @@
 #include <deal.II/base/table.h>
 #include <deal.II/base/types.h>
 
+#include <deal.II/dofs/dof_handler.h>
+
 #include <deal.II/lac/vector.h>
 
 #include <map>
 #include <memory>
 #include <vector>
 
-#include "bem/bem_function_space.h"
+#include "bem_function_space.h"
+#include "bem_tools.h"
 #include "cad_mesh/subdomain_topology.h"
 #include "cluster_tree/block_cluster_tree.h"
 #include "config.h"
@@ -40,9 +43,11 @@
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "hmatrix/hmatrix.h"
 #include "hmatrix/hmatrix_support.h"
+#include "linear_algebra/cu_table.hcu"
 #include "mapping/mapping_info.h"
 #include "quadrature/sauter_quadrature_tools.h"
 #include "utilities/number_traits.h"
+#include "utilities/unary_template_arg_containers.h"
 
 HBEM_NS_OPEN
 
@@ -101,8 +106,11 @@ public:
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                                &material_id_to_mapping_index,
-    const Table<2, Point<spacedim, real_type>> &mapping_support_point_table,
-    SubdomainTopology<dim, spacedim>           &subdomain_topology);
+    const Table<2, Point<spacedim, real_type>> &tria_mapping_support_points_cpu,
+    const CUDAWrappers::CUDATable<2, Point<spacedim, real_type>>
+      &tria_mapping_support_points_gpu,
+    const CUDAWrappers::CUDATable<1, unsigned int> &tria_mapping_indices_gpu,
+    SubdomainTopology<dim, spacedim>               &subdomain_topology);
 
   /**
    * Build an H-matrix for the bilinear form and add a mass matrix directly into
@@ -121,8 +129,11 @@ public:
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                                &material_id_to_mapping_index,
-    const Table<2, Point<spacedim, real_type>> &mapping_support_point_table,
-    SubdomainTopology<dim, spacedim>           &subdomain_topology);
+    const Table<2, Point<spacedim, real_type>> &tria_mapping_support_points_cpu,
+    const CUDAWrappers::CUDATable<2, Point<spacedim, real_type>>
+      &tria_mapping_support_points_gpu,
+    const CUDAWrappers::CUDATable<1, unsigned int> &tria_mapping_indices_gpu,
+    SubdomainTopology<dim, spacedim>               &subdomain_topology);
 
   /**
    * @brief Build an H-matrix for a bilinear form which needs regularization,
@@ -150,8 +161,11 @@ public:
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                                &material_id_to_mapping_index,
-    const Table<2, Point<spacedim, real_type>> &mapping_support_point_table,
-    SubdomainTopology<dim, spacedim>           &subdomain_topology);
+    const Table<2, Point<spacedim, real_type>> &tria_mapping_support_points_cpu,
+    const CUDAWrappers::CUDATable<2, Point<spacedim, real_type>>
+      &tria_mapping_support_points_gpu,
+    const CUDAWrappers::CUDATable<1, unsigned int> &tria_mapping_indices_gpu,
+    SubdomainTopology<dim, spacedim>               &subdomain_topology);
 
   KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>> &
   get_kernel()
@@ -229,10 +243,36 @@ private:
                          spacedim,
                          SearchableMaterialIdContainer,
                          real_type>                               &test_space;
-  // Whether the bilinear form is symmetric, i.e. the trial space is the same as
-  // the test space.
+  /**
+   * Whether the bilinear form is symmetric.
+   *
+   * Only when the kernel function of the boundary integral operator is
+   * symmetric and the trial and test spaces are the same BEM function
+   * space, the bilinear form is symmetric.
+   */
   bool                                                   is_symmetric;
   std::unique_ptr<BlockClusterTree<spacedim, real_type>> block_cluster_tree;
+  /**
+   * Total number of cells used by the trial and test function spaces.
+   */
+  types::global_cell_index n_cells;
+  /**
+   * Map from global cell indices to local cell indices.
+   */
+  std::vector<types::global_cell_index> global_to_local_cell_index_map;
+  /**
+   * Map from local cell indices to global cell indices.
+   */
+  std::vector<types::global_cell_index> local_to_global_cell_index_map;
+  /**
+   * A list of cell iterator pointers which correspond to the list of used
+   * cells.
+   *
+   * N.B. The actual iterators are managed by BEM function spaces of a BEM
+   * bilinear form.
+   */
+  std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>
+    cell_iterator_ptrs;
 };
 
 
@@ -260,8 +300,82 @@ BEMBilinearForm<dim,
   : kernel()
   , trial_space(trial_space_)
   , test_space(test_space_)
+  // We make a predicate about if the trial and test spaces are the same BEM
+  // function space by checking the equality of their memory addresses.
   , is_symmetric(kernel.is_symmetric() && (&trial_space == &test_space))
-{}
+  , n_cells(0)
+{
+  const types::global_cell_index n_cells_in_tria =
+    trial_space.get_dof_handler().get_triangulation().n_active_cells();
+  // At the moment, the trial space and the test space are constructed on the
+  // same triangulation, hence their associated numbers of cells should be the
+  // same.
+  AssertDimension(
+    n_cells_in_tria,
+    test_space.get_dof_handler().get_triangulation().n_active_cells());
+
+  // If one of the function spaces (test or trial space) is constructed on the
+  // full domain, i.e. the complete triangulation, all cells are used. Then we
+  // directly set the global-to-local and local-to-global cell index maps to a
+  // linear range starting from 0 with a step 1.
+  if (trial_space.get_is_full_domain() || test_space.get_is_full_domain())
+    {
+      global_to_local_cell_index_map.resize(n_cells_in_tria);
+      gen_linear_indices<vector_uta, types::global_cell_index>(
+        global_to_local_cell_index_map);
+      local_to_global_cell_index_map = global_to_local_cell_index_map;
+      cell_iterator_ptrs.resize(n_cells_in_tria);
+      n_cells = n_cells_in_tria;
+
+      types::global_cell_index c = 0;
+      if (trial_space.get_is_full_domain())
+        {
+          for (auto &cell_iter : trial_space.get_cell_iterators())
+            {
+              cell_iterator_ptrs[c] = &cell_iter;
+              c++;
+            }
+        }
+      else
+        {
+          for (auto &cell_iter : test_space.get_cell_iterators())
+            {
+              cell_iterator_ptrs[c] = &cell_iter;
+              c++;
+            }
+        }
+    }
+  else
+    {
+      // Initialize all entries in the global-to-local cell index map to the
+      // total number of cells in the triangulation, which indicates they have
+      // not been touched yet.
+      global_to_local_cell_index_map.assign(n_cells_in_tria, n_cells_in_tria);
+      local_to_global_cell_index_map.reserve(n_cells_in_tria);
+      cell_iterator_ptrs.reserve(n_cells_in_tria);
+
+      // Collect cells in the trial space first.
+      n_cells = BEMTools::generate_maps_between_global_and_local_cell_indices(
+        0,
+        trial_space.get_dof_to_cell_topo(),
+        global_to_local_cell_index_map,
+        local_to_global_cell_index_map,
+        cell_iterator_ptrs);
+
+      // When the trial and test spaces are not the same BEM function space, we
+      // should also collect cells in the test space.
+      if ((&trial_space != &test_space))
+        n_cells = BEMTools::generate_maps_between_global_and_local_cell_indices(
+          n_cells,
+          test_space.get_dof_to_cell_topo(),
+          global_to_local_cell_index_map,
+          local_to_global_cell_index_map,
+          cell_iterator_ptrs);
+
+      local_to_global_cell_index_map.shrink_to_fit();
+      cell_iterator_ptrs.shrink_to_fit();
+    }
+}
 
 
 template <int dim,
@@ -327,8 +441,11 @@ BEMBilinearForm<dim,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                                &material_id_to_mapping_index,
-    const Table<2, Point<spacedim, real_type>> &mapping_support_point_table,
-    SubdomainTopology<dim, spacedim>           &subdomain_topology)
+    const Table<2, Point<spacedim, real_type>> &tria_mapping_support_points_cpu,
+    const CUDAWrappers::CUDATable<2, Point<spacedim, real_type>>
+      &tria_mapping_support_points_gpu,
+    const CUDAWrappers::CUDATable<1, unsigned int> &tria_mapping_indices_gpu,
+    SubdomainTopology<dim, spacedim>               &subdomain_topology)
 {
   // The kernel does not need regularization.
   Assert(!kernel.needs_regularization(), ExcInternalError());
@@ -371,7 +488,12 @@ BEMBilinearForm<dim,
         trial_space.get_internal_to_external_dof_numbering(),
         mappings,
         material_id_to_mapping_index,
-        mapping_support_point_table,
+        global_to_local_cell_index_map,
+        local_to_global_cell_index_map,
+        cell_iterator_ptrs,
+        tria_mapping_support_points_cpu,
+        tria_mapping_support_points_gpu,
+        tria_mapping_indices_gpu,
         SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
         is_symmetric);
     }
@@ -405,7 +527,12 @@ BEMBilinearForm<dim,
         trial_space.get_internal_to_external_dof_numbering(),
         mappings,
         material_id_to_mapping_index,
-        mapping_support_point_table,
+        global_to_local_cell_index_map,
+        local_to_global_cell_index_map,
+        cell_iterator_ptrs,
+        tria_mapping_support_points_cpu,
+        tria_mapping_support_points_gpu,
+        tria_mapping_indices_gpu,
         SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
         is_symmetric);
     }
@@ -440,8 +567,11 @@ BEMBilinearForm<dim,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                                &material_id_to_mapping_index,
-    const Table<2, Point<spacedim, real_type>> &mapping_support_point_table,
-    SubdomainTopology<dim, spacedim>           &subdomain_topology)
+    const Table<2, Point<spacedim, real_type>> &tria_mapping_support_points_cpu,
+    const CUDAWrappers::CUDATable<2, Point<spacedim, real_type>>
+      &tria_mapping_support_points_gpu,
+    const CUDAWrappers::CUDATable<1, unsigned int> &tria_mapping_indices_gpu,
+    SubdomainTopology<dim, spacedim>               &subdomain_topology)
 {
   // The kernel does not need regularization.
   Assert(!kernel.needs_regularization(), ExcInternalError());
@@ -486,7 +616,12 @@ BEMBilinearForm<dim,
         trial_space.get_internal_to_external_dof_numbering(),
         mappings,
         material_id_to_mapping_index,
-        mapping_support_point_table,
+        global_to_local_cell_index_map,
+        local_to_global_cell_index_map,
+        cell_iterator_ptrs,
+        tria_mapping_support_points_cpu,
+        tria_mapping_support_points_gpu,
+        tria_mapping_indices_gpu,
         SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
         is_symmetric);
     }
@@ -522,7 +657,12 @@ BEMBilinearForm<dim,
         trial_space.get_internal_to_external_dof_numbering(),
         mappings,
         material_id_to_mapping_index,
-        mapping_support_point_table,
+        global_to_local_cell_index_map,
+        local_to_global_cell_index_map,
+        cell_iterator_ptrs,
+        tria_mapping_support_points_cpu,
+        tria_mapping_support_points_gpu,
+        tria_mapping_indices_gpu,
         SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
         is_symmetric);
     }
@@ -557,8 +697,11 @@ BEMBilinearForm<dim,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
     const std::map<types::material_id, unsigned int>
                                                &material_id_to_mapping_index,
-    const Table<2, Point<spacedim, real_type>> &mapping_support_point_table,
-    SubdomainTopology<dim, spacedim>           &subdomain_topology)
+    const Table<2, Point<spacedim, real_type>> &tria_mapping_support_points_cpu,
+    const CUDAWrappers::CUDATable<2, Point<spacedim, real_type>>
+      &tria_mapping_support_points_gpu,
+    const CUDAWrappers::CUDATable<1, unsigned int> &tria_mapping_indices_gpu,
+    SubdomainTopology<dim, spacedim>               &subdomain_topology)
 {
   // The kernel must be regularized.
   Assert(kernel.needs_regularization(), ExcInternalError());
@@ -609,7 +752,12 @@ BEMBilinearForm<dim,
         trial_space.get_internal_to_external_dof_numbering(),
         mappings,
         material_id_to_mapping_index,
-        mapping_support_point_table,
+        global_to_local_cell_index_map,
+        local_to_global_cell_index_map,
+        cell_iterator_ptrs,
+        tria_mapping_support_points_cpu,
+        tria_mapping_support_points_gpu,
+        tria_mapping_indices_gpu,
         SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
         is_symmetric);
     }
@@ -645,7 +793,12 @@ BEMBilinearForm<dim,
         trial_space.get_internal_to_external_dof_numbering(),
         mappings,
         material_id_to_mapping_index,
-        mapping_support_point_table,
+        global_to_local_cell_index_map,
+        local_to_global_cell_index_map,
+        cell_iterator_ptrs,
+        tria_mapping_support_points_cpu,
+        tria_mapping_support_points_gpu,
+        tria_mapping_indices_gpu,
         SurfaceNormalDetector<dim, spacedim>(subdomain_topology),
         is_symmetric);
     }

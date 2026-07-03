@@ -23,7 +23,7 @@
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
 
-#include <assert.h>
+#include <cassert>
 
 #include "bem/types.h"
 #include "config.h"

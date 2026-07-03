@@ -164,6 +164,8 @@ DDMEfieldMatrix<spacedim, Number>::
             1;
         }
     }
+
+  nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map.shrink_to_fit();
 }
 
 HBEM_NS_CLOSE

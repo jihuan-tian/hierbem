@@ -39,7 +39,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "bem/bem_tools.h"
+#include "bem/cell_neighboring_type.h"
 #include "bem/cu_bem_values.hcu"
 #include "config.h"
 #include "hmatrix/hmatrix_assembly_profile.h"
@@ -47,7 +47,7 @@
 #include "linear_algebra/lapack_full_matrix_ext.h"
 #include "sauter_quadrature_near_field_kernels.hcu"
 #include "sauter_quadrature_task_producer_buffer.h"
-#include "sauter_quadrature_task_scalar_data.h"
+#include "sauter_quadrature_task_scalar_data_near_field.h"
 #include "utilities/cu_profile.hcu"
 #include "utilities/number_traits.h"
 
@@ -133,23 +133,8 @@ namespace CUDAWrappers
     is_empty() const;
 
     /**
-     * Add a Sauter quadrature task to the ring buffer, which is called by a
-     * producer thread.
-     *
-     * \mynote{About the @p scratch_data argument
-     * 1. It data fields for permuted mapping support points in \f$K_x\f$ and
-     * \f$K_y\f$ should have been computed for a pair of DoFs on the CPU.
-     * 2. It is created with the creation of the associated producer thread.
-     * During its initialization, a CUDA stream is created for this producer
-     * thread.
-     * 3. When adding a Sauter quadrature task, its data fields for permuted
-     * mapping support points in \f$K_x\f$ and \f$K_y\f$ will be copied to the
-     * related data fields in the ring buffer.
-     * 4. For other quadrature related values, namely Jacobians, normal
-     * vectors, covariant matrices and quadrature point coordinates in real
-     * cells, they will be computed on the device when the quadrature task is
-     * fetched from the ring buffer. The results will be stored back into the
-     * ring buffer.}
+     * Add a Sauter quadrature task to the ring buffer with mapping support
+     * points, which is called by a producer thread.
      *
      * @param fullmat Full matrix within a near field \hmatrix node
      * @param fullmat_row_index Row index of the entry in the full matrix
@@ -158,18 +143,27 @@ namespace CUDAWrappers
      * device.
      * @param mass_matrix_entry Value of the mass matrix entry, if there is
      * any.
-     * @param scratch_data
+     * @param kx_mapping_support_points_permuted_ptr
+     * @param ky_mapping_support_points_permuted_ptr
+     * @param hmat_profile
      */
     HBEM_ATTR_HOST void
-    add_task(LAPACKFullMatrixExt<RangeNumberType> *fullmat,
-             const unsigned int                    fullmat_row_index,
-             const unsigned int                    fullmat_col_index,
-             const SauterQuadratureTaskScalarData &scalar_data,
-             const real_type                       mass_matrix_entry,
-             const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
-                                    &scratch_data,
-             HMatrixAssemblyProfile *hmat_profile = nullptr);
+    add_task(
+      LAPACKFullMatrixExt<RangeNumberType>          *fullmat,
+      const unsigned int                             fullmat_row_index,
+      const unsigned int                             fullmat_col_index,
+      const SauterQuadratureTaskScalarDataNearField &scalar_data,
+      const real_type                                mass_matrix_entry,
+      const Point<spacedim, real_type> *kx_mapping_support_points_permuted_ptr =
+        nullptr,
+      const Point<spacedim, real_type> *ky_mapping_support_points_permuted_ptr =
+        nullptr,
+      HMatrixAssemblyProfile *hmat_profile = nullptr);
 
+    /**
+     * Copy a batch of Sauter quadrature tasks from the producer's task buffer
+     * to this ring buffer.
+     */
     HBEM_ATTR_HOST void
     add_tasks_from_producer_buffer(
       SauterQuadratureTaskProducerBuffer<dim, spacedim, RangeNumberType>
@@ -328,12 +322,12 @@ namespace CUDAWrappers
     /**
      * Array of scalar data collections on the host.
      */
-    SauterQuadratureTaskScalarData *scalar_data_ring_buffer_cpu;
+    SauterQuadratureTaskScalarDataNearField *scalar_data_ring_buffer_cpu;
 
     /**
      * Array of scalar data collections on the device.
      */
-    SauterQuadratureTaskScalarData *scalar_data_ring_buffer_gpu;
+    SauterQuadratureTaskScalarDataNearField *scalar_data_ring_buffer_gpu;
 
     /**
      * Mass matrix entries
@@ -432,33 +426,41 @@ namespace CUDAWrappers
     fullmat_col_index_ring_buffer_cpu.resize(capacity);
     mass_matrix_entries_ring_buffer_cpu.resize(capacity);
 
-    kx_mapping_support_points_permuted_ring_buffer_cpu.reinit(
-      TableIndices<2>(capacity, max_mapping_n_shape_functions));
-    AssertCuda(cudaHostRegister(
-      (void *)&(kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
-      kx_mapping_support_points_permuted_ring_buffer_cpu.n_elements() *
-        sizeof(Point<spacedim, real_type>),
-      0));
+    if (cell_neighboring_type != CellNeighboringType::SamePanel &&
+        cell_neighboring_type != CellNeighboringType::Regular)
+      {
+        // Mapping support points do not need permutation when the cell
+        // neighboring type is not same panel and regular.
+        kx_mapping_support_points_permuted_ring_buffer_cpu.reinit(
+          TableIndices<2>(capacity, max_mapping_n_shape_functions));
+        AssertCuda(cudaHostRegister(
+          (void *)&(kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
+          kx_mapping_support_points_permuted_ring_buffer_cpu.n_elements() *
+            sizeof(Point<spacedim, real_type>),
+          0));
 
-    ky_mapping_support_points_permuted_ring_buffer_cpu.reinit(
-      TableIndices<2>(capacity, max_mapping_n_shape_functions));
-    AssertCuda(cudaHostRegister(
-      (void *)&(ky_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
-      ky_mapping_support_points_permuted_ring_buffer_cpu.n_elements() *
-        sizeof(Point<spacedim, real_type>),
-      0));
+        ky_mapping_support_points_permuted_ring_buffer_cpu.reinit(
+          TableIndices<2>(capacity, max_mapping_n_shape_functions));
+        AssertCuda(cudaHostRegister(
+          (void *)&(ky_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
+          ky_mapping_support_points_permuted_ring_buffer_cpu.n_elements() *
+            sizeof(Point<spacedim, real_type>),
+          0));
 
-    kx_mapping_support_points_permuted_ring_buffer_gpu.allocate(
-      TableIndices<2>(capacity, max_mapping_n_shape_functions));
-    ky_mapping_support_points_permuted_ring_buffer_gpu.allocate(
-      TableIndices<2>(capacity, max_mapping_n_shape_functions));
+        kx_mapping_support_points_permuted_ring_buffer_gpu.allocate(
+          TableIndices<2>(capacity, max_mapping_n_shape_functions));
+        ky_mapping_support_points_permuted_ring_buffer_gpu.allocate(
+          TableIndices<2>(capacity, max_mapping_n_shape_functions));
+      }
 
     AssertCuda(
       cudaMallocHost((void **)&scalar_data_ring_buffer_cpu,
-                     capacity * sizeof(SauterQuadratureTaskScalarData)));
+                     capacity *
+                       sizeof(SauterQuadratureTaskScalarDataNearField)));
 
-    AssertCuda(cudaMalloc((void **)&scalar_data_ring_buffer_gpu,
-                          capacity * sizeof(SauterQuadratureTaskScalarData)));
+    AssertCuda(
+      cudaMalloc((void **)&scalar_data_ring_buffer_gpu,
+                 capacity * sizeof(SauterQuadratureTaskScalarDataNearField)));
 
     /**
      * @internal Allocate pinned memory on the host for the quadrature values.
@@ -497,14 +499,18 @@ namespace CUDAWrappers
     fullmat_col_index_ring_buffer_cpu.clear();
     mass_matrix_entries_ring_buffer_cpu.clear();
 
-    AssertCuda(cudaHostUnregister(
-      (void *)&(kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0))));
-    AssertCuda(cudaHostUnregister(
-      (void *)&(ky_mapping_support_points_permuted_ring_buffer_cpu(0, 0))));
-    kx_mapping_support_points_permuted_ring_buffer_cpu.clear();
-    ky_mapping_support_points_permuted_ring_buffer_cpu.clear();
-    kx_mapping_support_points_permuted_ring_buffer_gpu.release();
-    ky_mapping_support_points_permuted_ring_buffer_gpu.release();
+    if (cell_neighboring_type != CellNeighboringType::SamePanel &&
+        cell_neighboring_type != CellNeighboringType::Regular)
+      {
+        AssertCuda(cudaHostUnregister(
+          (void *)&(kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0))));
+        AssertCuda(cudaHostUnregister(
+          (void *)&(ky_mapping_support_points_permuted_ring_buffer_cpu(0, 0))));
+        kx_mapping_support_points_permuted_ring_buffer_cpu.clear();
+        ky_mapping_support_points_permuted_ring_buffer_cpu.clear();
+        kx_mapping_support_points_permuted_ring_buffer_gpu.release();
+        ky_mapping_support_points_permuted_ring_buffer_gpu.release();
+      }
 
     if (scalar_data_ring_buffer_cpu != nullptr)
       {
@@ -667,14 +673,15 @@ namespace CUDAWrappers
                                  spacedim,
                                  RangeNumberType,
                                  KernelNumberType>::
-    add_task(LAPACKFullMatrixExt<RangeNumberType> *fullmat,
-             const unsigned int                    fullmat_row_index,
-             const unsigned int                    fullmat_col_index,
-             const SauterQuadratureTaskScalarData &scalar_data,
-             const real_type                       mass_matrix_entry,
-             const PairCellWiseScratchData<dim, spacedim, KernelNumberType>
-                                                     &scratch_data,
-             [[maybe_unused]] HMatrixAssemblyProfile *hmat_profile)
+    add_task(
+      LAPACKFullMatrixExt<RangeNumberType>          *fullmat,
+      const unsigned int                             fullmat_row_index,
+      const unsigned int                             fullmat_col_index,
+      const SauterQuadratureTaskScalarDataNearField &scalar_data,
+      const real_type                                mass_matrix_entry,
+      const Point<spacedim, real_type> *kx_mapping_support_points_permuted_ptr,
+      const Point<spacedim, real_type> *ky_mapping_support_points_permuted_ptr,
+      [[maybe_unused]] HMatrixAssemblyProfile *hmat_profile)
   {
 #if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
     LogStream::Prefix prefix_string(
@@ -756,18 +763,20 @@ namespace CUDAWrappers
       mass_matrix_entries_ring_buffer_cpu[task_index] = mass_matrix_entry;
       scalar_data_ring_buffer_cpu[task_index]         = scalar_data;
 
-      for (unsigned int i = 0; i < scalar_data.kx_mapping_n_shape_functions;
-           i++)
+      if (kx_mapping_support_points_permuted_ptr != nullptr)
         {
-          kx_mapping_support_points_permuted_ring_buffer_cpu(task_index, i) =
-            scratch_data.kx_mapping_support_points_permuted[i];
+          for (unsigned int i = 0; i < scalar_data.kx_mapping_n_shape_functions;
+               i++)
+            kx_mapping_support_points_permuted_ring_buffer_cpu(task_index, i) =
+              kx_mapping_support_points_permuted_ptr[i];
         }
 
-      for (unsigned int i = 0; i < scalar_data.ky_mapping_n_shape_functions;
-           i++)
+      if (ky_mapping_support_points_permuted_ptr != nullptr)
         {
-          ky_mapping_support_points_permuted_ring_buffer_cpu(task_index, i) =
-            scratch_data.ky_mapping_support_points_permuted[i];
+          for (unsigned int i = 0; i < scalar_data.ky_mapping_n_shape_functions;
+               i++)
+            ky_mapping_support_points_permuted_ring_buffer_cpu(task_index, i) =
+              ky_mapping_support_points_permuted_ptr[i];
         }
 
       /**
@@ -933,25 +942,35 @@ namespace CUDAWrappers
             std::memcpy(scalar_data_ring_buffer_cpu + task_index_in_ring_buffer,
                         producer_buffer.scalar_data_buffer,
                         producer_buffer.task_num *
-                          sizeof(SauterQuadratureTaskScalarData));
-            // No matter which mapping order is used, we copy the whole memory
-            // which can contain support points of the maximum mapping order.
-            std::memcpy(
-              &kx_mapping_support_points_permuted_ring_buffer_cpu(
-                task_index_in_ring_buffer, 0),
-              &producer_buffer.kx_mapping_support_points_permuted_buffer(0, 0),
-              producer_buffer.task_num *
-                producer_buffer.kx_mapping_support_points_permuted_buffer.size(
-                  1) *
-                sizeof(Point<spacedim, real_type>));
-            std::memcpy(
-              &ky_mapping_support_points_permuted_ring_buffer_cpu(
-                task_index_in_ring_buffer, 0),
-              &producer_buffer.ky_mapping_support_points_permuted_buffer(0, 0),
-              producer_buffer.task_num *
-                producer_buffer.ky_mapping_support_points_permuted_buffer.size(
-                  1) *
-                sizeof(Point<spacedim, real_type>));
+                          sizeof(SauterQuadratureTaskScalarDataNearField));
+
+            // Mapping support points are only permuted and copied when the cell
+            // neighboring type is not same panel and regular.
+            if (cell_neighboring_type != CellNeighboringType::SamePanel &&
+                cell_neighboring_type != CellNeighboringType::Regular)
+              {
+                // No matter which mapping order is used, we copy the whole
+                // memory which can contain support points of the maximum
+                // mapping order.
+                std::memcpy(
+                  &kx_mapping_support_points_permuted_ring_buffer_cpu(
+                    task_index_in_ring_buffer, 0),
+                  &producer_buffer.kx_mapping_support_points_permuted_buffer(0,
+                                                                             0),
+                  producer_buffer.task_num *
+                    producer_buffer.kx_mapping_support_points_permuted_buffer
+                      .size(1) *
+                    sizeof(Point<spacedim, real_type>));
+                std::memcpy(
+                  &ky_mapping_support_points_permuted_ring_buffer_cpu(
+                    task_index_in_ring_buffer, 0),
+                  &producer_buffer.ky_mapping_support_points_permuted_buffer(0,
+                                                                             0),
+                  producer_buffer.task_num *
+                    producer_buffer.ky_mapping_support_points_permuted_buffer
+                      .size(1) *
+                    sizeof(Point<spacedim, real_type>));
+              }
 
             if (has_mass_matrix_entries)
               {
@@ -1021,48 +1040,57 @@ namespace CUDAWrappers
             std::memcpy(scalar_data_ring_buffer_cpu + task_index_in_ring_buffer,
                         producer_buffer.scalar_data_buffer,
                         number_of_data_until_ring_buffer_end *
-                          sizeof(SauterQuadratureTaskScalarData));
+                          sizeof(SauterQuadratureTaskScalarDataNearField));
             std::memcpy(scalar_data_ring_buffer_cpu,
                         producer_buffer.scalar_data_buffer +
                           number_of_data_until_ring_buffer_end,
                         number_of_data_from_ring_buffer_start *
-                          sizeof(SauterQuadratureTaskScalarData));
+                          sizeof(SauterQuadratureTaskScalarDataNearField));
 
-            // No matter which mapping order is used, we copy the whole memory
-            // which can contain support points of the maximum mapping order.
-            std::memcpy(
-              &kx_mapping_support_points_permuted_ring_buffer_cpu(
-                task_index_in_ring_buffer, 0),
-              &producer_buffer.kx_mapping_support_points_permuted_buffer(0, 0),
-              number_of_data_until_ring_buffer_end *
-                producer_buffer.kx_mapping_support_points_permuted_buffer.size(
-                  1) *
-                sizeof(Point<spacedim, real_type>));
-            std::memcpy(
-              &kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0),
-              &producer_buffer.kx_mapping_support_points_permuted_buffer(
-                number_of_data_until_ring_buffer_end, 0),
-              number_of_data_from_ring_buffer_start *
-                producer_buffer.kx_mapping_support_points_permuted_buffer.size(
-                  1) *
-                sizeof(Point<spacedim, real_type>));
+            // Mapping support points are only permuted and copied when the cell
+            // neighboring type is not same panel and regular.
+            if (cell_neighboring_type != CellNeighboringType::SamePanel &&
+                cell_neighboring_type != CellNeighboringType::Regular)
+              {
+                // No matter which mapping order is used, we copy the whole
+                // memory which can contain support points of the maximum
+                // mapping order.
+                std::memcpy(
+                  &kx_mapping_support_points_permuted_ring_buffer_cpu(
+                    task_index_in_ring_buffer, 0),
+                  &producer_buffer.kx_mapping_support_points_permuted_buffer(0,
+                                                                             0),
+                  number_of_data_until_ring_buffer_end *
+                    producer_buffer.kx_mapping_support_points_permuted_buffer
+                      .size(1) *
+                    sizeof(Point<spacedim, real_type>));
+                std::memcpy(
+                  &kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0),
+                  &producer_buffer.kx_mapping_support_points_permuted_buffer(
+                    number_of_data_until_ring_buffer_end, 0),
+                  number_of_data_from_ring_buffer_start *
+                    producer_buffer.kx_mapping_support_points_permuted_buffer
+                      .size(1) *
+                    sizeof(Point<spacedim, real_type>));
 
-            std::memcpy(
-              &ky_mapping_support_points_permuted_ring_buffer_cpu(
-                task_index_in_ring_buffer, 0),
-              &producer_buffer.ky_mapping_support_points_permuted_buffer(0, 0),
-              number_of_data_until_ring_buffer_end *
-                producer_buffer.ky_mapping_support_points_permuted_buffer.size(
-                  1) *
-                sizeof(Point<spacedim, real_type>));
-            std::memcpy(
-              &ky_mapping_support_points_permuted_ring_buffer_cpu(0, 0),
-              &producer_buffer.ky_mapping_support_points_permuted_buffer(
-                number_of_data_until_ring_buffer_end, 0),
-              number_of_data_from_ring_buffer_start *
-                producer_buffer.ky_mapping_support_points_permuted_buffer.size(
-                  1) *
-                sizeof(Point<spacedim, real_type>));
+                std::memcpy(
+                  &ky_mapping_support_points_permuted_ring_buffer_cpu(
+                    task_index_in_ring_buffer, 0),
+                  &producer_buffer.ky_mapping_support_points_permuted_buffer(0,
+                                                                             0),
+                  number_of_data_until_ring_buffer_end *
+                    producer_buffer.ky_mapping_support_points_permuted_buffer
+                      .size(1) *
+                    sizeof(Point<spacedim, real_type>));
+                std::memcpy(
+                  &ky_mapping_support_points_permuted_ring_buffer_cpu(0, 0),
+                  &producer_buffer.ky_mapping_support_points_permuted_buffer(
+                    number_of_data_until_ring_buffer_end, 0),
+                  number_of_data_from_ring_buffer_start *
+                    producer_buffer.ky_mapping_support_points_permuted_buffer
+                      .size(1) *
+                    sizeof(Point<spacedim, real_type>));
+              }
 
             if (has_mass_matrix_entries)
               {
@@ -1327,86 +1355,116 @@ namespace CUDAWrappers
          */
         if (is_task_batch_before_buffer_end)
           {
-            // The mapping orders of kx or ky may be different in different
-            // quadrature tasks, hence the numbers of mapping support points
-            // in these tasks may also be different.
-            // @p kx_mapping_support_points_permuted_ring_buffer_cpu is
-            // allocated enough memory to hold the support points of the
-            // highest order of mapping, here we copy this whole memory from
-            // the host to device.
-            kx_mapping_support_points_permuted_ring_buffer_gpu.assign_from_host(
-              &(kx_mapping_support_points_permuted_ring_buffer_cpu(
-                task_start_index_to_fetch, 0)),
-              kx_mapping_support_points_permuted_ring_buffer_gpu.offset(
-                task_start_index_to_fetch, 0),
-              task_num_to_fetch *
-                kx_mapping_support_points_permuted_ring_buffer_cpu.size(1),
-              cuda_stream_handle);
+            // Mapping support points are only permuted and copied when the cell
+            // neighboring type is not same panel and regular.
+            if (cell_neighboring_type != CellNeighboringType::SamePanel &&
+                cell_neighboring_type != CellNeighboringType::Regular)
+              {
+                // The mapping orders of kx or ky may be different in different
+                // quadrature tasks, hence the numbers of mapping support points
+                // in these tasks may also be different.
+                // @p kx_mapping_support_points_permuted_ring_buffer_cpu is
+                // allocated enough memory to hold the support points of the
+                // highest order of mapping, here we copy this whole memory from
+                // the host to device.
+                kx_mapping_support_points_permuted_ring_buffer_gpu
+                  .assign_from_host(
+                    &(kx_mapping_support_points_permuted_ring_buffer_cpu(
+                      task_start_index_to_fetch, 0)),
+                    kx_mapping_support_points_permuted_ring_buffer_gpu.offset(
+                      task_start_index_to_fetch, 0),
+                    task_num_to_fetch *
+                      kx_mapping_support_points_permuted_ring_buffer_cpu.size(
+                        1),
+                    cuda_stream_handle);
 
-            ky_mapping_support_points_permuted_ring_buffer_gpu.assign_from_host(
-              &(ky_mapping_support_points_permuted_ring_buffer_cpu(
-                task_start_index_to_fetch, 0)),
-              ky_mapping_support_points_permuted_ring_buffer_gpu.offset(
-                task_start_index_to_fetch, 0),
-              task_num_to_fetch *
-                ky_mapping_support_points_permuted_ring_buffer_cpu.size(1),
-              cuda_stream_handle);
+                ky_mapping_support_points_permuted_ring_buffer_gpu
+                  .assign_from_host(
+                    &(ky_mapping_support_points_permuted_ring_buffer_cpu(
+                      task_start_index_to_fetch, 0)),
+                    ky_mapping_support_points_permuted_ring_buffer_gpu.offset(
+                      task_start_index_to_fetch, 0),
+                    task_num_to_fetch *
+                      ky_mapping_support_points_permuted_ring_buffer_cpu.size(
+                        1),
+                    cuda_stream_handle);
+              }
 
             AssertCuda(cudaMemcpyAsync(
               (void *)(scalar_data_ring_buffer_gpu + task_start_index_to_fetch),
-              (void *)(scalar_data_ring_buffer_cpu + task_start_index_to_fetch),
-              sizeof(SauterQuadratureTaskScalarData) * task_num_to_fetch,
+              (const void *)(scalar_data_ring_buffer_cpu +
+                             task_start_index_to_fetch),
+              sizeof(SauterQuadratureTaskScalarDataNearField) *
+                task_num_to_fetch,
               cudaMemcpyHostToDevice,
               cuda_stream_handle));
           }
         else
           {
-            kx_mapping_support_points_permuted_ring_buffer_gpu.assign_from_host(
-              &(kx_mapping_support_points_permuted_ring_buffer_cpu(
-                task_start_index_to_fetch, 0)),
-              kx_mapping_support_points_permuted_ring_buffer_gpu.offset(
-                task_start_index_to_fetch, 0),
-              number_of_data_until_ring_buffer_end *
-                kx_mapping_support_points_permuted_ring_buffer_cpu.size(1),
-              cuda_stream_handle);
+            // Mapping support points are only permuted and copied when the cell
+            // neighboring type is not same panel and regular.
+            if (cell_neighboring_type != CellNeighboringType::SamePanel &&
+                cell_neighboring_type != CellNeighboringType::Regular)
+              {
+                kx_mapping_support_points_permuted_ring_buffer_gpu
+                  .assign_from_host(
+                    &(kx_mapping_support_points_permuted_ring_buffer_cpu(
+                      task_start_index_to_fetch, 0)),
+                    kx_mapping_support_points_permuted_ring_buffer_gpu.offset(
+                      task_start_index_to_fetch, 0),
+                    number_of_data_until_ring_buffer_end *
+                      kx_mapping_support_points_permuted_ring_buffer_cpu.size(
+                        1),
+                    cuda_stream_handle);
 
-            ky_mapping_support_points_permuted_ring_buffer_gpu.assign_from_host(
-              &(ky_mapping_support_points_permuted_ring_buffer_cpu(
-                task_start_index_to_fetch, 0)),
-              ky_mapping_support_points_permuted_ring_buffer_gpu.offset(
-                task_start_index_to_fetch, 0),
-              number_of_data_until_ring_buffer_end *
-                ky_mapping_support_points_permuted_ring_buffer_cpu.size(1),
-              cuda_stream_handle);
+                ky_mapping_support_points_permuted_ring_buffer_gpu
+                  .assign_from_host(
+                    &(ky_mapping_support_points_permuted_ring_buffer_cpu(
+                      task_start_index_to_fetch, 0)),
+                    ky_mapping_support_points_permuted_ring_buffer_gpu.offset(
+                      task_start_index_to_fetch, 0),
+                    number_of_data_until_ring_buffer_end *
+                      ky_mapping_support_points_permuted_ring_buffer_cpu.size(
+                        1),
+                    cuda_stream_handle);
+
+                kx_mapping_support_points_permuted_ring_buffer_gpu
+                  .assign_from_host(
+                    &(kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
+                    kx_mapping_support_points_permuted_ring_buffer_gpu.offset(
+                      0, 0),
+                    number_of_data_from_ring_buffer_start *
+                      kx_mapping_support_points_permuted_ring_buffer_cpu.size(
+                        1),
+                    cuda_stream_handle);
+
+                ky_mapping_support_points_permuted_ring_buffer_gpu
+                  .assign_from_host(
+                    &(ky_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
+                    ky_mapping_support_points_permuted_ring_buffer_gpu.offset(
+                      0, 0),
+                    number_of_data_from_ring_buffer_start *
+                      ky_mapping_support_points_permuted_ring_buffer_cpu.size(
+                        1),
+                    cuda_stream_handle);
+              }
 
             AssertCuda(cudaMemcpyAsync(
               (void *)(scalar_data_ring_buffer_gpu + task_start_index_to_fetch),
-              (void *)(scalar_data_ring_buffer_cpu + task_start_index_to_fetch),
-              sizeof(SauterQuadratureTaskScalarData) *
+              (const void *)(scalar_data_ring_buffer_cpu +
+                             task_start_index_to_fetch),
+              sizeof(SauterQuadratureTaskScalarDataNearField) *
                 number_of_data_until_ring_buffer_end,
               cudaMemcpyHostToDevice,
               cuda_stream_handle));
 
-            kx_mapping_support_points_permuted_ring_buffer_gpu.assign_from_host(
-              &(kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
-              kx_mapping_support_points_permuted_ring_buffer_gpu.offset(0, 0),
-              number_of_data_from_ring_buffer_start *
-                kx_mapping_support_points_permuted_ring_buffer_cpu.size(1),
-              cuda_stream_handle);
-
-            ky_mapping_support_points_permuted_ring_buffer_gpu.assign_from_host(
-              &(ky_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
-              ky_mapping_support_points_permuted_ring_buffer_gpu.offset(0, 0),
-              number_of_data_from_ring_buffer_start *
-                ky_mapping_support_points_permuted_ring_buffer_cpu.size(1),
-              cuda_stream_handle);
-
-            AssertCuda(cudaMemcpyAsync((void *)scalar_data_ring_buffer_gpu,
-                                       (void *)scalar_data_ring_buffer_cpu,
-                                       sizeof(SauterQuadratureTaskScalarData) *
-                                         number_of_data_from_ring_buffer_start,
-                                       cudaMemcpyHostToDevice,
-                                       cuda_stream_handle));
+            AssertCuda(
+              cudaMemcpyAsync((void *)scalar_data_ring_buffer_gpu,
+                              (const void *)scalar_data_ring_buffer_cpu,
+                              sizeof(SauterQuadratureTaskScalarDataNearField) *
+                                number_of_data_from_ring_buffer_start,
+                              cudaMemcpyHostToDevice,
+                              cuda_stream_handle));
           }
 
         /**
@@ -1428,26 +1486,23 @@ namespace CUDAWrappers
         switch (cell_neighboring_type)
           {
               case CellNeighboringType::SamePanel: {
-                process_sauter_task_on_one_pair_of_dofs_same_panel<<<
+                process_near_field_sauter_task_batch_same_panel<<<
                   block_num,
                   block_size,
                   0,
-                  cuda_stream_handle>>>(
-                  kernel,
-                  kernel_factor,
-                  capacity,
-                  kx_mapping_support_points_permuted_ring_buffer_gpu,
-                  ky_mapping_support_points_permuted_ring_buffer_gpu,
-                  scalar_data_ring_buffer_gpu,
-                  quadrature_value_ring_buffer_gpu,
-                  task_start_index_to_fetch,
-                  task_num_to_fetch,
-                  bem_values);
+                  cuda_stream_handle>>>(kernel,
+                                        kernel_factor,
+                                        capacity,
+                                        scalar_data_ring_buffer_gpu,
+                                        quadrature_value_ring_buffer_gpu,
+                                        task_start_index_to_fetch,
+                                        task_num_to_fetch,
+                                        bem_values);
 
                 break;
               }
               case CellNeighboringType::CommonEdge: {
-                process_sauter_task_on_one_pair_of_dofs_common_edge<<<
+                process_near_field_sauter_task_batch_common_edge<<<
                   block_num,
                   block_size,
                   0,
@@ -1466,7 +1521,7 @@ namespace CUDAWrappers
                 break;
               }
               case CellNeighboringType::CommonVertex: {
-                process_sauter_task_on_one_pair_of_dofs_common_vertex<<<
+                process_near_field_sauter_task_batch_common_vertex<<<
                   block_num,
                   block_size,
                   0,
@@ -1485,21 +1540,18 @@ namespace CUDAWrappers
                 break;
               }
               case CellNeighboringType::Regular: {
-                process_sauter_task_on_one_pair_of_dofs_regular<<<
+                process_near_field_sauter_task_batch_regular<<<
                   block_num,
                   block_size,
                   0,
-                  cuda_stream_handle>>>(
-                  kernel,
-                  kernel_factor,
-                  capacity,
-                  kx_mapping_support_points_permuted_ring_buffer_gpu,
-                  ky_mapping_support_points_permuted_ring_buffer_gpu,
-                  scalar_data_ring_buffer_gpu,
-                  quadrature_value_ring_buffer_gpu,
-                  task_start_index_to_fetch,
-                  task_num_to_fetch,
-                  bem_values);
+                  cuda_stream_handle>>>(kernel,
+                                        kernel_factor,
+                                        capacity,
+                                        scalar_data_ring_buffer_gpu,
+                                        quadrature_value_ring_buffer_gpu,
+                                        task_start_index_to_fetch,
+                                        task_num_to_fetch,
+                                        bem_values);
 
                 break;
               }
@@ -1523,8 +1575,8 @@ namespace CUDAWrappers
             AssertCuda(
               cudaMemcpyAsync((void *)(quadrature_value_ring_buffer_cpu +
                                        task_start_index_to_fetch),
-                              (void *)(quadrature_value_ring_buffer_gpu +
-                                       task_start_index_to_fetch),
+                              (const void *)(quadrature_value_ring_buffer_gpu +
+                                             task_start_index_to_fetch),
                               task_num_to_fetch * sizeof(KernelNumberType),
                               cudaMemcpyDeviceToHost,
                               cuda_stream_handle));
@@ -1595,8 +1647,8 @@ namespace CUDAWrappers
             AssertCuda(
               cudaMemcpyAsync((void *)(quadrature_value_ring_buffer_cpu +
                                        task_start_index_to_fetch),
-                              (void *)(quadrature_value_ring_buffer_gpu +
-                                       task_start_index_to_fetch),
+                              (const void *)(quadrature_value_ring_buffer_gpu +
+                                             task_start_index_to_fetch),
                               number_of_data_until_ring_buffer_end *
                                 sizeof(KernelNumberType),
                               cudaMemcpyDeviceToHost,
@@ -1605,7 +1657,7 @@ namespace CUDAWrappers
 
             AssertCuda(
               cudaMemcpyAsync((void *)(quadrature_value_ring_buffer_cpu),
-                              (void *)(quadrature_value_ring_buffer_gpu),
+                              (const void *)(quadrature_value_ring_buffer_gpu),
                               number_of_data_from_ring_buffer_start *
                                 sizeof(KernelNumberType),
                               cudaMemcpyDeviceToHost,
@@ -1621,110 +1673,104 @@ namespace CUDAWrappers
             /**
              * Assemble the result to full matrix in \hmatrix node.
              */
-            {
-              for (unsigned int i = task_start_index_to_fetch; i < capacity;
-                   i++)
-                {
-                  RangeNumberType &entry = (*fullmat_ring_buffer_cpu[i])(
-                    fullmat_row_index_ring_buffer_cpu[i],
-                    fullmat_col_index_ring_buffer_cpu[i]);
+            for (unsigned int i = task_start_index_to_fetch; i < capacity; i++)
+              {
+                RangeNumberType &entry = (*fullmat_ring_buffer_cpu[i])(
+                  fullmat_row_index_ring_buffer_cpu[i],
+                  fullmat_col_index_ring_buffer_cpu[i]);
 
-                  if constexpr (numbers::NumberTraits<
-                                  RangeNumberType>::is_complex)
-                    {
-                      real_type *raw_ptr =
-                        reinterpret_cast<real_type *>(&entry);
-                      std::atomic_ref<real_type> real_part(raw_ptr[0]);
+                if constexpr (numbers::NumberTraits<
+                                RangeNumberType>::is_complex)
+                  {
+                    real_type *raw_ptr = reinterpret_cast<real_type *>(&entry);
+                    std::atomic_ref<real_type> real_part(raw_ptr[0]);
 
-                      if constexpr (numbers::NumberTraits<
-                                      KernelNumberType>::is_complex)
-                        {
-                          KernelNumberType update_value =
-                            quadrature_value_ring_buffer_cpu[i] +
-                            mass_matrix_entries_ring_buffer_cpu[i];
-                          std::atomic_ref<real_type> imag_part(raw_ptr[1]);
-                          real_part.fetch_add(update_value.real(),
-                                              std::memory_order_relaxed);
-                          imag_part.fetch_add(update_value.imag(),
-                                              std::memory_order_relaxed);
-                        }
-                      else
-                        {
-                          real_type update_value =
-                            quadrature_value_ring_buffer_cpu[i] +
-                            mass_matrix_entries_ring_buffer_cpu[i];
-                          real_part.fetch_add(update_value,
-                                              std::memory_order_relaxed);
-                        }
-                    }
-                  else
-                    {
-                      std::atomic_ref<RangeNumberType> atomic_entry(entry);
-                      RangeNumberType                  update_value =
-                        quadrature_value_ring_buffer_cpu[i] +
-                        mass_matrix_entries_ring_buffer_cpu[i];
-                      atomic_entry.fetch_add(update_value);
-                    }
+                    if constexpr (numbers::NumberTraits<
+                                    KernelNumberType>::is_complex)
+                      {
+                        KernelNumberType update_value =
+                          quadrature_value_ring_buffer_cpu[i] +
+                          mass_matrix_entries_ring_buffer_cpu[i];
+                        std::atomic_ref<real_type> imag_part(raw_ptr[1]);
+                        real_part.fetch_add(update_value.real(),
+                                            std::memory_order_relaxed);
+                        imag_part.fetch_add(update_value.imag(),
+                                            std::memory_order_relaxed);
+                      }
+                    else
+                      {
+                        real_type update_value =
+                          quadrature_value_ring_buffer_cpu[i] +
+                          mass_matrix_entries_ring_buffer_cpu[i];
+                        real_part.fetch_add(update_value,
+                                            std::memory_order_relaxed);
+                      }
+                  }
+                else
+                  {
+                    std::atomic_ref<RangeNumberType> atomic_entry(entry);
+                    RangeNumberType                  update_value =
+                      quadrature_value_ring_buffer_cpu[i] +
+                      mass_matrix_entries_ring_buffer_cpu[i];
+                    atomic_entry.fetch_add(update_value);
+                  }
 
-                  /**
-                   * @internal Reset the task status to @p before_creation.
-                   */
-                  task_status_ring_buffer[i].store(
-                    SauterQuadratureTaskStatus::before_creation);
-                }
+                /**
+                 * @internal Reset the task status to @p before_creation.
+                 */
+                task_status_ring_buffer[i].store(
+                  SauterQuadratureTaskStatus::before_creation);
+              }
 
-              for (unsigned int i = 0;
-                   i < number_of_data_from_ring_buffer_start;
-                   i++)
-                {
-                  RangeNumberType &entry = (*fullmat_ring_buffer_cpu[i])(
-                    fullmat_row_index_ring_buffer_cpu[i],
-                    fullmat_col_index_ring_buffer_cpu[i]);
+            for (unsigned int i = 0; i < number_of_data_from_ring_buffer_start;
+                 i++)
+              {
+                RangeNumberType &entry = (*fullmat_ring_buffer_cpu[i])(
+                  fullmat_row_index_ring_buffer_cpu[i],
+                  fullmat_col_index_ring_buffer_cpu[i]);
 
-                  if constexpr (numbers::NumberTraits<
-                                  RangeNumberType>::is_complex)
-                    {
-                      real_type *raw_ptr =
-                        reinterpret_cast<real_type *>(&entry);
-                      std::atomic_ref<real_type> real_part(raw_ptr[0]);
+                if constexpr (numbers::NumberTraits<
+                                RangeNumberType>::is_complex)
+                  {
+                    real_type *raw_ptr = reinterpret_cast<real_type *>(&entry);
+                    std::atomic_ref<real_type> real_part(raw_ptr[0]);
 
-                      if constexpr (numbers::NumberTraits<
-                                      KernelNumberType>::is_complex)
-                        {
-                          KernelNumberType update_value =
-                            quadrature_value_ring_buffer_cpu[i] +
-                            mass_matrix_entries_ring_buffer_cpu[i];
-                          std::atomic_ref<real_type> imag_part(raw_ptr[1]);
-                          real_part.fetch_add(update_value.real(),
-                                              std::memory_order_relaxed);
-                          imag_part.fetch_add(update_value.imag(),
-                                              std::memory_order_relaxed);
-                        }
-                      else
-                        {
-                          real_type update_value =
-                            quadrature_value_ring_buffer_cpu[i] +
-                            mass_matrix_entries_ring_buffer_cpu[i];
-                          real_part.fetch_add(update_value,
-                                              std::memory_order_relaxed);
-                        }
-                    }
-                  else
-                    {
-                      std::atomic_ref<RangeNumberType> atomic_entry(entry);
-                      RangeNumberType                  update_value =
-                        quadrature_value_ring_buffer_cpu[i] +
-                        mass_matrix_entries_ring_buffer_cpu[i];
-                      atomic_entry.fetch_add(update_value);
-                    }
+                    if constexpr (numbers::NumberTraits<
+                                    KernelNumberType>::is_complex)
+                      {
+                        KernelNumberType update_value =
+                          quadrature_value_ring_buffer_cpu[i] +
+                          mass_matrix_entries_ring_buffer_cpu[i];
+                        std::atomic_ref<real_type> imag_part(raw_ptr[1]);
+                        real_part.fetch_add(update_value.real(),
+                                            std::memory_order_relaxed);
+                        imag_part.fetch_add(update_value.imag(),
+                                            std::memory_order_relaxed);
+                      }
+                    else
+                      {
+                        real_type update_value =
+                          quadrature_value_ring_buffer_cpu[i] +
+                          mass_matrix_entries_ring_buffer_cpu[i];
+                        real_part.fetch_add(update_value,
+                                            std::memory_order_relaxed);
+                      }
+                  }
+                else
+                  {
+                    std::atomic_ref<RangeNumberType> atomic_entry(entry);
+                    RangeNumberType                  update_value =
+                      quadrature_value_ring_buffer_cpu[i] +
+                      mass_matrix_entries_ring_buffer_cpu[i];
+                    atomic_entry.fetch_add(update_value);
+                  }
 
-                  /**
-                   * @internal Reset the task status to @p before_creation.
-                   */
-                  task_status_ring_buffer[i].store(
-                    SauterQuadratureTaskStatus::before_creation);
-                }
-            }
+                /**
+                 * @internal Reset the task status to @p before_creation.
+                 */
+                task_status_ring_buffer[i].store(
+                  SauterQuadratureTaskStatus::before_creation);
+              }
           }
 #if ENABLE_NVTX == 1
         nvtxRangePop(); // NVTX range: assemble_quad

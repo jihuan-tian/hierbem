@@ -50,10 +50,9 @@ public:
    * surface normals all point outward and surfaces are not assigned any
    * physical groups.
    *
-   * They are logically considered to be a single domain.
-   *
-   * @pre
-   * @post
+   * They are logically considered to be a single domain. Because surface
+   * normals point outward with respect to the single volume, the subdomain tag
+   * associated with a surface in the topology is always positive.
    */
   void
   generate_single_domain_topology_for_dealii_model(
@@ -214,16 +213,16 @@ public:
    * surface-to-subdomain relationship.
    *
    * \mynote{In the Laplace solver, a domain (with a non-zero subdomain tag)
-   * must be fully in contact with the surrounding space (whose subdomain
-   * tag is zero). This still holds if there are several subdomains in the
-   * model, because they are all well separated from each other. This leads
-   * to the fact the in a record in the surface-to-subdomain relationship,
-   * there should be only one non-zero value. We use this fact to check the
-   * direction of the surface normal vector.}
+   * must be fully in contact with the surrounding space (whose subdomain tag is
+   * zero). This still holds if there are several subdomains in the model,
+   * because they are all well separated from each other. This leads to the fact
+   * in a record in the surface-to-subdomain relationship, there should be only
+   * one non-zero value. We use this fact to check the direction of the surface
+   * normal vector with respect to the volume. Therefore, this surface normal
+   * detector cannot be used for BEM with DDM for multiple subdomains in contact
+   * and the mesh is a skeleton mesh.}
    *
-   * @pre
-   * @post
-   * @param m
+   * @param m Surface entity tag
    * @return
    */
   bool
@@ -241,6 +240,28 @@ public:
                ExcInternalError());
         return true;
       }
+  }
+
+  /**
+   * Given a material id of a cell, this function checks if its normal
+   * vector points into a corresponding domain by checking the
+   * surface-to-subdomain relationship.
+   *
+   * This overloaded version is used for multiple subdomains, some of which may
+   * be in contact.
+   *
+   * @param volume_tag Volume entity tag
+   * @param m Surface entity tag
+   * @return
+   */
+  bool
+  is_normal_vector_inward(const EntityTag          volume_tag,
+                          const types::material_id m) const
+  {
+    if (subdomain_topology.get_surface_to_subdomain()[m][0] == volume_tag)
+      return false;
+    else
+      return true;
   }
 
 private:

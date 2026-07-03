@@ -19,6 +19,7 @@
 #define HIERBEM_INCLUDE_QUADRATURE_CU_QGAUSS_H_
 
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/point.h>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/table_indices.h>
 
@@ -30,7 +31,6 @@
 
 #include "config.h"
 #include "linear_algebra/cu_table.hcu"
-#include "quadrature.templates.h"
 
 HBEM_NS_OPEN
 
@@ -91,6 +91,13 @@ namespace CUDAWrappers
     get_points() const;
 
     /**
+     * Get the i'th quadrature point. The quadrature point is stored on the
+     * device, so this function is only a device function.
+     */
+    HBEM_ATTR_DEV const Point<dim, double>
+                        point(const unsigned int i) const;
+
+    /**
      * Get the const pointer which is also pointer to const of the quadrature
      * weights.
      *
@@ -145,7 +152,7 @@ namespace CUDAWrappers
     points.assign_from_host((const double *)(quad_cpu.get_points().data()),
                             dim * quad_num);
     AssertCuda(cudaMemcpy((void *)weights,
-                          (void *)(quad_cpu.get_weights().data()),
+                          (const void *)(quad_cpu.get_weights().data()),
                           quad_num * sizeof(double),
                           cudaMemcpyHostToDevice));
   }
@@ -180,6 +187,18 @@ namespace CUDAWrappers
   CUDAQGauss<dim>::get_points() const
   {
     return points;
+  }
+
+
+  template <int dim>
+  HBEM_ATTR_DEV const Point<dim, double>
+                      CUDAQGauss<dim>::point(const unsigned int i) const
+  {
+    Point<dim> p;
+    for (unsigned int c = 0; c < dim; c++)
+      p(c) = points(i, c);
+
+    return p;
   }
 
 

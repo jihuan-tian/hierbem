@@ -20,6 +20,7 @@
 
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor_product_polynomials.h>
+#include <deal.II/base/utilities.h>
 
 #include <deal.II/fe/fe_data.h>
 #include <deal.II/fe/fe_q_base.h>

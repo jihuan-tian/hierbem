@@ -40,10 +40,8 @@ main()
   Vector<double> row_vector(8);
   for (unsigned int i = 0; i < 8; i++)
     {
-      ref_row_index = random_select_ref_row(row_vector,
-                                            A,
-                                            remaining_row_indices,
-                                            ref_row_index);
+      ref_row_index = random_select_ref_row(
+        row_vector, A, remaining_row_indices, ref_row_index, 8);
       std::cout << "Current ref row: " << ref_row_index << std::endl;
       std::cout << "Current row vector: ";
       row_vector.print(std::cout, 10, false);

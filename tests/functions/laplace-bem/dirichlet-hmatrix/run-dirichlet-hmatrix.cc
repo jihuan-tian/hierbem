@@ -13,6 +13,7 @@
 
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/manifold_lib.h>
+#include <deal.II/grid/tria.h>
 
 #include <fstream>
 #include <iostream>
@@ -20,7 +21,7 @@
 #include "bem/types.h"
 #include "config_file/config_structs.h"
 #include "config_file/cu_related.h"
-#include "hbem_test_config.h"
+#include "grid/grid_out_ext.h"
 #include "hmatrix/hmatrix.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
 #include "laplace/laplace_bem.h"
@@ -66,7 +67,9 @@ private:
 };
 
 void
-run_dirichlet_hmatrix(const IterativeSolverVmultType vmult_type)
+run_dirichlet_hmatrix(const unsigned int             refinement,
+                      const IterativeSolverVmultType vmult_type,
+                      const bool cpu_serial_without_producer_consumer)
 {
   /**
    * @internal Pop out the default "DEAL" prefix string.
@@ -93,11 +96,13 @@ run_dirichlet_hmatrix(const IterativeSolverVmultType vmult_type)
   ConfLaplaceBEM bem_params;
   bem_params.problem_type        = ProblemType::DirichletBCProblem;
   bem_params.is_interior_problem = true;
-  ConfHMatrix      hmat_params{4, 4, 0.8, 5, 0.01, false};
-  ConfHMatrix      hmat_preconditioner_params{4, 4, 1.0, 2, 0.1, false};
-  ConfSauterQuad   sauter_quad_params;
-  ConfSauterQuad   sauter_quad_precond_params;
-  ConfLinearSolver linear_solver_params;
+  ConfHMatrix hmat_params{
+    4, 4, 0.8, 5, 0.01, cpu_serial_without_producer_consumer};
+  ConfHMatrix hmat_preconditioner_params{
+    4, 4, 1.0, 2, 0.1, cpu_serial_without_producer_consumer};
+  ConfSauterQuad             sauter_quad_params;
+  ConfSauterQuad             sauter_quad_precond_params;
+  ConfLinearSolver           linear_solver_params;
   ConfOperatorPreconditioner op_precond_params;
   ConfParallelization        parallel_params;
 
@@ -120,6 +125,11 @@ run_dirichlet_hmatrix(const IterativeSolverVmultType vmult_type)
                                                 parallel_params);
   bem.set_project_name("dirichlet-hmatrix");
   bem.set_iterative_solver_vmult_type(vmult_type);
+  if (vmult_type == IterativeSolverVmultType::TaskParallel)
+    {
+      HMatrix<spacedim, double>::set_leaf_set_traversal_method(
+        HMatrix<spacedim, double>::SpaceFillingCurveType::Hilbert);
+    }
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");
@@ -147,7 +157,7 @@ run_dirichlet_hmatrix(const IterativeSolverVmultType vmult_type)
   Triangulation<spacedim> tria;
   // The manifold_id is set to 0 on the boundary faces in @p hyper_ball.
   GridGenerator::hyper_ball(tria, center, radius);
-  tria.refine_global(1);
+  tria.refine_global(refinement);
 
   Triangulation<dim, spacedim> surface_tria;
 
@@ -167,6 +177,8 @@ run_dirichlet_hmatrix(const IterativeSolverVmultType vmult_type)
   // then perform surface mesh extraction.
   surface_tria.set_manifold(0, *ball_surface_manifold);
   bem.extract_surface_triangulation(tria, std::move(surface_tria), true);
+  std::ofstream mesh_out("sphere.msh");
+  write_msh_correct(bem.get_triangulation(), mesh_out);
 
   // Create the map from manifold id to mapping order.
   bem.get_manifold_id_to_mapping_order()[0] = 1;

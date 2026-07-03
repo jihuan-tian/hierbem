@@ -15,7 +15,7 @@
 
 #include "hmatrix/hmatrix.h"
 #include "linear_algebra/lapack_full_matrix_ext.h"
-#include "utilities/cu_debug_tools.hcu"
+#include "utilities/cu_debug_tools.h"
 #include "utilities/read_octave_data.h"
 
 using namespace HierBEM;
