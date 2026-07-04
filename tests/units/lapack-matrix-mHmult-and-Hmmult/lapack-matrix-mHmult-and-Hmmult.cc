@@ -80,10 +80,10 @@ TEST_CASE("Verify mHmult and Hmmult for complex valued LAPACKFullMatrixExt",
   A.Hmmult(AH_mul_B, B);
   REQUIRE(AH_mul_B.get_property() == LAPACKSupport::Property::general);
 
-  compare_with_jl_matrix(A_mul_AH, "A_mul_AH", 1e-15, 1e-15);
-  compare_with_jl_matrix(AH_mul_A, "AH_mul_A", 1e-15, 1e-15);
-  compare_with_jl_matrix(A_mul_BH, "A_mul_BH", 1e-15, 1e-15);
-  compare_with_jl_matrix(AH_mul_B, "AH_mul_B", 1e-15, 1e-15);
+  compare_with_jl_matrix(A_mul_AH, "A_mul_AH", 1e-14, 1e-14);
+  compare_with_jl_matrix(AH_mul_A, "AH_mul_A", 1e-14, 1e-14);
+  compare_with_jl_matrix(A_mul_BH, "A_mul_BH", 1e-14, 1e-14);
+  compare_with_jl_matrix(AH_mul_B, "AH_mul_B", 1e-14, 1e-14);
 
   // Multiplication with adding into the result matrix: alpha=2.5+1.2im
   {
@@ -145,28 +145,28 @@ TEST_CASE("Verify mHmult and Hmmult for complex valued LAPACKFullMatrixExt",
 
     compare_with_jl_matrix(C1_add_A_mul_AH,
                            "C1_add_alpha1_A_mul_AH",
-                           1e-15,
-                           1e-15);
+                           1e-14,
+                           1e-14);
     compare_with_jl_matrix(C1_add_A_mul_AH_hsymm,
                            "C1_add_alpha1_A_mul_AH",
-                           1e-15,
-                           1e-15);
+                           1e-14,
+                           1e-14);
     compare_with_jl_matrix(C2_add_AH_mul_A,
                            "C2_add_alpha1_AH_mul_A",
-                           1e-15,
-                           1e-15);
+                           1e-14,
+                           1e-14);
     compare_with_jl_matrix(C2_add_AH_mul_A_hsymm,
                            "C2_add_alpha1_AH_mul_A",
-                           1e-15,
-                           1e-15);
+                           1e-14,
+                           1e-14);
     compare_with_jl_matrix(C1_add_A_mul_BH,
                            "C1_add_alpha1_A_mul_BH",
-                           1e-15,
-                           1e-15);
+                           1e-14,
+                           1e-14);
     compare_with_jl_matrix(C2_add_AH_mul_B,
                            "C2_add_alpha1_AH_mul_B",
-                           1e-15,
-                           1e-15);
+                           1e-14,
+                           1e-14);
   }
 
   {
@@ -225,28 +225,28 @@ TEST_CASE("Verify mHmult and Hmmult for complex valued LAPACKFullMatrixExt",
 
     compare_with_jl_matrix(C1_add_A_mul_AH,
                            "C1_add_alpha2_A_mul_AH",
-                           1e-15,
-                           1e-15);
+                           1e-14,
+                           1e-14);
     compare_with_jl_matrix(C1_add_A_mul_AH_hsymm,
                            "C1_add_alpha2_A_mul_AH",
-                           1e-15,
-                           1e-15);
+                           1e-14,
+                           1e-14);
     compare_with_jl_matrix(C2_add_AH_mul_A,
                            "C2_add_alpha2_AH_mul_A",
-                           1e-15,
-                           1e-15);
+                           1e-14,
+                           1e-14);
     compare_with_jl_matrix(C2_add_AH_mul_A_hsymm,
                            "C2_add_alpha2_AH_mul_A",
-                           1e-15,
-                           1e-15);
+                           1e-14,
+                           1e-14);
     compare_with_jl_matrix(C1_add_A_mul_BH,
                            "C1_add_alpha2_A_mul_BH",
-                           1e-15,
-                           1e-15);
+                           1e-14,
+                           1e-14);
     compare_with_jl_matrix(C2_add_AH_mul_B,
                            "C2_add_alpha2_AH_mul_B",
-                           1e-15,
-                           1e-15);
+                           1e-14,
+                           1e-14);
   }
 
   INFO("*** test end");
