@@ -1682,8 +1682,7 @@ ApplyQuadratureUsingBEMValues(
         quad_rule     = &bem_values.quad_rule_for_common_vertex;
         break;
       default:
-        Assert(false, ExcInternalError());
-        break;
+        AssertThrow(false, ExcInternalError());
     }
 
   KernelNumberType           result       = KernelNumberType();

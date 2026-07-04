@@ -396,6 +396,10 @@ KernelPulledbackToUnitCell<dim,
         }
         default: {
           assert(false);
+          kx_shape_value = 0.;
+          ky_shape_value = 0.;
+          Jx             = 0.;
+          Jy             = 0.;
         }
     }
 
