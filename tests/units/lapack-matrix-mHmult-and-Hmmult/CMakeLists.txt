@@ -17,17 +17,8 @@ add_executable(${_target} lapack-matrix-mHmult-and-Hmmult.cc)
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})
 
-target_link_libraries(
-  ${_target}
-  hierbem
-  hbem_julia_wrapper
-  Boost::program_options
-  dl # Lazy way: always link with libdl no matter if CUDA is used or not
-  julia
-  Catch2::Catch2WithMain)
-
-# Disable warning about unused parameters which is caused by Julia 1.12.
-target_compile_options(${_target} PRIVATE -Wno-unused-parameter)
+target_link_libraries(${_target} hierbem hbem_julia_wrapper
+                      Catch2::Catch2WithMain)
 
 # Discover Catch2 testcases
 include(CTest)

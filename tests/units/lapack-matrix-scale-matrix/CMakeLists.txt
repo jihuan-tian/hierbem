@@ -23,11 +23,7 @@ target_link_libraries(
   hbem_julia_wrapper
   Boost::program_options
   dl # Lazy way: always link with libdl no matter if CUDA is used or not
-  julia
   Catch2::Catch2WithMain)
-
-# Disable warning about unused parameters which is caused by Julia 1.12.
-target_compile_options(${_target} PRIVATE -Wno-unused-parameter)
 
 # Discover Catch2 testcases
 include(CTest)

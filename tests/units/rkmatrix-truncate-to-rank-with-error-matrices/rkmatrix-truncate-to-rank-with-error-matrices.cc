@@ -22,12 +22,10 @@
 
 #include <cmath>
 #include <complex>
-#include <vector>
 
 #include "hbem_cpp_validate.h"
 #include "hmatrix/rkmatrix.h"
 #include "linear_algebra/lapack_full_matrix_ext.h"
-#include "utilities/debug_tools.h"
 
 using namespace Catch::Matchers;
 using namespace dealii;

@@ -25,9 +25,6 @@ target_link_libraries(
   dl # Lazy way: always link with libdl no matter if CUDA is used or not
   Catch2::Catch2WithMain)
 
-# Disable warning about unused parameters which is caused by Julia 1.12.
-target_compile_options(${_target} PRIVATE -Wno-unused-parameter)
-
 # Discover Catch2 testcases
 include(CTest)
 include(Catch)

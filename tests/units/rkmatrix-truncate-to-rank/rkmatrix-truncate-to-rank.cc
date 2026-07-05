@@ -23,26 +23,28 @@
 #include <complex>
 #include <fstream>
 #include <iostream>
-#include <vector>
 
 #include "hbem_cpp_validate.h"
+#include "hbem_julia_cpp_compare.h"
 #include "hmatrix/rkmatrix.h"
 #include "linear_algebra/lapack_full_matrix_ext.h"
-#include "utilities/debug_tools.h"
 
 using namespace Catch::Matchers;
-using namespace dealii;
 using namespace HierBEM;
 
 TEST_CASE("Verify truncation of an RkMatrix to a given rank", "[linalg]")
 {
   INFO("*** test start");
 
+  HBEMJuliaWrapper &inst = HBEMJuliaWrapper::get_instance();
+  inst.source_file(SOURCE_DIR "/process.jl");
+
   std::ofstream ofs("rkmatrix-truncate-to-rank.log");
 
   const unsigned int n = 6;
 
   // Both full matrices have rank=2.
+  const unsigned int                        actual_rank = 2;
   LAPACKFullMatrixExt<double>               A(n, n);
   LAPACKFullMatrixExt<std::complex<double>> A_complex(n, n);
 
@@ -75,36 +77,39 @@ TEST_CASE("Verify truncation of an RkMatrix to a given rank", "[linalg]")
       ofs << "*** Real valued matrix" << std::endl;
       RkMatrix<double> A_rk(A_copy);
       A_rk.truncate_to_rank(r);
-      A_rk.print_formatted(ofs, 8, false, 15, "0");
+      A_rk.print_formatted(ofs, 15, false, 25, "0");
 
       ofs << "*** Complex valued matrix" << std::endl;
       RkMatrix<std::complex<double>> A_complex_rk(A_complex_copy);
       A_complex_rk.truncate_to_rank(r);
-      A_complex_rk.print_formatted(ofs, 8, false, 25, "0");
+      A_complex_rk.print_formatted(ofs, 15, false, 25, "0");
 
-      // When truncation rank >= actual rank, we compare the rkmatrix
-      // and the full matrix.
-      if (r >= 2)
+      // Because the signs of the component matrices A and B are indefinite,
+      // which depend on the implementation of LAPACK, we do not check A and B
+      // themselves, but their outer product. When the truncation rank r >=
+      // actual_rank, we compare the product with the original full matrix. When
+      // r == 1, we compare the product with the precomputed results.
+      LAPACKFullMatrixExt<double>               A_rk_full;
+      LAPACKFullMatrixExt<std::complex<double>> A_complex_rk_full;
+
+      A_rk.convertToFullMatrix(A_rk_full);
+      A_complex_rk.convertToFullMatrix(A_complex_rk_full);
+
+      if (r >= actual_rank)
         {
-          LAPACKFullMatrixExt<double>               A_rk_full;
-          LAPACKFullMatrixExt<std::complex<double>> A_complex_rk_full;
-
-          A_rk.convertToFullMatrix(A_rk_full);
-          A_complex_rk.convertToFullMatrix(A_complex_rk_full);
-
           compare_lapack_matrices(A, A_rk_full, 1e-12, 1e-12);
           compare_lapack_matrices(A_complex, A_complex_rk_full, 1e-12, 1e-12);
+        }
+
+      if (r == 1)
+        {
+          compare_with_jl_matrix(A_rk_full, "A_rk_full_jl", 1e-14, 1e-14);
+          compare_with_jl_matrix(A_complex_rk_full,
+                                 "A_complex_rk_full_jl",
+                                 1e-14,
+                                 1e-14);
         }
     }
 
   ofs.close();
-
-  auto check_equality = [](const auto &a, const auto &b) {
-    INFO("Operand 1: " << a);
-    INFO("Operand 2: " << b);
-    REQUIRE(a == b);
-  };
-  compare_two_files(SOURCE_DIR "/reference.output",
-                    "rkmatrix-truncate-to-rank.log",
-                    check_equality);
 }

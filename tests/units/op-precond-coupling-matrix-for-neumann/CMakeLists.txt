@@ -15,8 +15,8 @@ find_package(Julia REQUIRED)
 set(_target test-op-precond-coupling-matrix-for-neumann)
 
 add_executable(${_target} op-precond-coupling-matrix-for-neumann.cu)
-target_include_directories(${_target} PUBLIC ${JULIA_INCLUDE_DIR})
-target_link_directories(${_target} PUBLIC ${JULIA_LIBRARY_DIR})
+target_include_directories(${_target} PRIVATE ${JULIA_INCLUDE_DIR})
+target_link_directories(${_target} PRIVATE ${JULIA_LIBRARY_DIR})
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})

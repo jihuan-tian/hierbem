@@ -21,9 +21,6 @@ deal_ii_setup_target(${_target})
 target_link_libraries(${_target} hierbem hbem_julia_wrapper
                       Catch2::Catch2WithMain)
 
-# Disable warning about unused parameters which is caused by Julia 1.12.
-target_compile_options(${_target} PRIVATE -Wno-unused-parameter)
-
 # Discover Catch2 testcases
 include(CTest)
 include(Catch)

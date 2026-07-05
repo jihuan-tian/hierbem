@@ -23,14 +23,10 @@
 
 #include <cmath>
 #include <complex>
-#include <iostream>
-#include <vector>
 
-#include "hbem_cpp_validate.h"
 #include "hbem_julia_cpp_compare.h"
 #include "hbem_julia_wrapper.h"
 #include "linear_algebra/lapack_full_matrix_ext.h"
-#include "utilities/debug_tools.h"
 
 using namespace Catch::Matchers;
 using namespace dealii;

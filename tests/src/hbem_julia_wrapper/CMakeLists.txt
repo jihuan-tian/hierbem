@@ -12,11 +12,13 @@ find_package(Julia REQUIRED)
 
 set(_target hbem_julia_wrapper)
 
+# Julia wrapper solib
 add_library(${_target} SHARED ${_target}.cc)
 
 # XXX Relax compiler's pedantic checks to include buggy Julia headers
 set_target_properties(${_target} PROPERTIES HBEM_CHECK_RELAXED 1)
-target_compile_options(${_target} PRIVATE -Wno-unused-parameter)
+# Disable unused parameter warning coming from julia.h
+target_compile_options(${_target} PUBLIC -Wno-unused-parameter)
 
 target_include_directories(${_target} PUBLIC ${JULIA_INCLUDE_DIR})
 target_link_directories(${_target} PUBLIC ${JULIA_LIBRARY_DIR})
