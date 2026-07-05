@@ -142,8 +142,6 @@ main()
   HierBEM::PlatformShared::LaplaceKernel::HyperSingularKernelRegular<spacedim>
     hyper_regular;
 
-  const bool is_build_hmat_without_producer_consumer = true;
-
   {
     std::cout << "=== fe-order=(dirichlet:2, neumann:2), mapping order=2 ==="
               << std::endl;
@@ -357,8 +355,6 @@ main()
       std::cout, "hyper_regular", 15, true, 25);
 
     dof_handler.clear();
-
-    scratch_data.release();
   }
 
   {
@@ -455,8 +451,6 @@ main()
 
       std::cout << "Cell matrix for single layer potential kernel:\n";
       slp_cell_matrix.print_formatted_to_mat(std::cout, "slp", 15, true, 25);
-
-      scratch_data.release();
     }
 
     {
@@ -512,8 +506,6 @@ main()
 
       std::cout << "Cell matrix for double layer potential kernel:\n";
       dlp_cell_matrix.print_formatted_to_mat(std::cout, "dlp", 15, true, 25);
-
-      scratch_data.release();
     }
 
     {
@@ -569,8 +561,6 @@ main()
 
       std::cout << "Cell matrix for adjoint double layer potential kernel:\n";
       adlp_cell_matrix.print_formatted_to_mat(std::cout, "adlp", 15, true, 25);
-
-      scratch_data.release();
     }
 
     {
@@ -656,8 +646,6 @@ main()
         << "Cell matrix for regularized hyper-singular potential kernel:\n";
       hyper_regular_cell_matrix.print_formatted_to_mat(
         std::cout, "hyper_regular", 15, true, 25);
-
-      scratch_data.release();
     }
 
     dof_handler_neumann_space.clear();

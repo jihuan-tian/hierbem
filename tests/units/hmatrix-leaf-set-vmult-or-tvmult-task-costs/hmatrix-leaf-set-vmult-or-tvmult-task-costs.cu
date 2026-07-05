@@ -146,10 +146,11 @@ main()
   // Initialize CUDA stack size and device properties.
   initCudaRuntime(parallel_params);
 
-  Table<2, Point<spacedim>>                   tria_mapping_support_points_cpu;
-  CUDAWrappers::CUDATable<2, Point<spacedim>> tria_mapping_support_points_gpu;
-  std::vector<unsigned int>                   tria_mapping_indices_cpu;
-  CUDAWrappers::CUDATable<1, unsigned int>    tria_mapping_indices_gpu;
+  Table<2, Point<spacedim>> tria_mapping_support_points_cpu;
+  HierBEM::CUDAWrappers::CUDATable<2, Point<spacedim>>
+                            tria_mapping_support_points_gpu;
+  std::vector<unsigned int> tria_mapping_indices_cpu;
+  HierBEM::CUDAWrappers::CUDATable<1, unsigned int> tria_mapping_indices_gpu;
 
   BEMTools::compute_mapping_support_points_and_indices_for_tria(
     tria,
