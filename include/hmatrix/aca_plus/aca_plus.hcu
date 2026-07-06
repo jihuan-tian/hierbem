@@ -8218,6 +8218,8 @@ fill_hmatrix_with_aca_plus_serial(
       real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
+  Timer timer;
+
   /**
    * Precalculate data tables for shape values at quadrature points.
    *
@@ -8257,6 +8259,9 @@ fill_hmatrix_with_aca_plus_serial(
                                                tria_mapping_indices_gpu);
   bem_values_gpu.compute_bilinear_form_cell_values_for_regular(
     cell_iterator_ptrs, local_to_global_cell_index_map, normal_detector);
+
+  timer.stop();
+  print_wall_time(deallog, timer, "compute BEM values");
 
   /**
    * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
@@ -8444,6 +8449,8 @@ fill_hmatrix_with_aca_plus_serial(
       real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
+  Timer timer;
+
   /**
    * Precalculate data tables for shape values at quadrature points.
    *
@@ -8483,6 +8490,9 @@ fill_hmatrix_with_aca_plus_serial(
                                                tria_mapping_indices_gpu);
   bem_values_gpu.compute_bilinear_form_cell_values_for_regular(
     cell_iterator_ptrs, local_to_global_cell_index_map, normal_detector);
+
+  timer.stop();
+  print_wall_time(deallog, timer, "compute BEM values");
 
   /**
    * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
@@ -8658,6 +8668,8 @@ fill_hmatrix_with_aca_plus_serial(
       real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
+  Timer timer;
+
   /**
    * Precalculate data tables for shape values at quadrature points.
    *
@@ -8697,6 +8709,9 @@ fill_hmatrix_with_aca_plus_serial(
                                                tria_mapping_indices_gpu);
   bem_values_gpu.compute_bilinear_form_cell_values_for_regular(
     cell_iterator_ptrs, local_to_global_cell_index_map, normal_detector);
+
+  timer.stop();
+  print_wall_time(deallog, timer, "compute BEM values");
 
   /**
    * Define @p CellWiseScratchDataForMassMatrix which is local to current

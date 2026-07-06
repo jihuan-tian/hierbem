@@ -1371,7 +1371,10 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
   initialize_manifolds_from_manifold_description();
   initialize_mappings();
+  timer.start();
   compute_mapping_data_for_triangulation();
+  timer.stop();
+  print_wall_time(deallog, timer, "compute mapping data for tria");
 
   switch (problem_type_)
     {
@@ -3384,6 +3387,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 {
   LogStream::Prefix prefix_string("assemble_hmatrix_preconditioner");
   Timer             timer;
+  timer.stop();
 
   // Prepare triangulation and mapping data for operator preconditioning.
   if (preconditioner_type_ == PreconditionerType::OperatorPreconditioning)
@@ -3397,13 +3401,17 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
       mg_tria_for_preconditioner_.refine_global();
 
       // Compute mapping data.
+      timer.start();
       compute_mapping_data_for_refined_triangulation();
+      timer.stop();
+      print_wall_time(deallog, timer, "compute mapping data for refined tria");
     }
 
+  timer.start();
   switch (problem_type_)
     {
         case DirichletBCProblem: {
-          std::cout << "=== Assemble preconditioner for V ===" << std::endl;
+          std::cout << "=== Assemble preconditioner for V1 ===" << std::endl;
 
           switch (preconditioner_type_)
             {
@@ -3425,7 +3433,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                           hmat_preconditioner_params_.max_rank);
                     }
                   timer.stop();
-                  print_wall_time(deallog, timer, "truncate V");
+                  print_wall_time(deallog, timer, "truncate V1");
                   add_memory_consumption_row("V1 H-matrix preconditioner",
                                              V1_hmat_preconditioner_,
                                              "After assembly");
@@ -3455,7 +3463,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   timer.stop();
                   print_wall_time(deallog,
                                   timer,
-                                  "Cholesky factorization of V");
+                                  "H-Cholesky factorization of V1");
 
                   break;
                 }
@@ -3490,6 +3498,11 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                       sauter_quad_precond_params_.hyper_singular_order),
                     QGauss<dim>(fe_for_dirichlet_space_.degree + 1));
 
+                  timer.stop();
+                  print_wall_time(deallog,
+                                  timer,
+                                  "build V1 operator preconditioner");
+
                   break;
                 }
                 case PreconditionerType::Identity: {
@@ -3498,6 +3511,12 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 case PreconditionerType::Jacobi: {
                   // TODO
                   Assert(false, ExcNotImplemented());
+
+                  timer.stop();
+                  print_wall_time(deallog,
+                                  timer,
+                                  "build V1 Jacobi preconditioner");
+
                   break;
                 }
                 default: {
@@ -3509,7 +3528,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           break;
         }
         case NeumannBCProblem: {
-          std::cout << "=== Assemble preconditioner for D ===" << std::endl;
+          std::cout << "=== Assemble preconditioner for D1 ===" << std::endl;
           switch (preconditioner_type_)
             {
                 case PreconditionerType::HMatrixFactorization: {
@@ -3519,9 +3538,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
                   // Only when the \hmat actually has a hierarchical structure,
                   // the SPD preserving rank truncation will be performed. This
-                  // excludes
-                  // the case when @p D1 has a single root node, which is a full
-                  // matrix.
+                  // excludes the case when @p D1 has a single root node, which
+                  // is a full matrix.
                   if (D1_hmat_preconditioner_.get_type() ==
                       HMatrixType::HierarchicalMatrixType)
                     {
@@ -3530,20 +3548,19 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                           hmat_preconditioner_params_.max_rank);
                     }
                   timer.stop();
-                  print_wall_time(deallog, timer, "truncate D");
+                  print_wall_time(deallog, timer, "truncate D1");
                   add_memory_consumption_row("D1 H-matrix preconditioner",
                                              D1_hmat_preconditioner_,
                                              "After assembly");
 
-                  // Perform Cholesky factorization of the preconditioner.
-                  std::cout << "=== Cholesky factorization of D ==="
+                  // Perform H-Cholesky factorization of the preconditioner.
+                  std::cout << "=== H-Cholesky factorization of D ==="
                             << std::endl;
                   timer.start();
                   // Only when the \hmat actually has a hierarchical structure,
                   // the task parallel Cholesky factorization will be performed.
-                  // This
-                  // excludes the case when @p D1 has a single root node, which is a
-                  // full matrix.
+                  // This excludes the case when @p D1 has a single root node,
+                  // which is a full matrix.
                   if (D1_hmat_preconditioner_.get_type() ==
                       HMatrixType::HierarchicalMatrixType)
                     {
@@ -3559,7 +3576,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   timer.stop();
                   print_wall_time(deallog,
                                   timer,
-                                  "Cholesky factorization of D");
+                                  "H-Cholesky factorization of D1");
 
                   break;
                 }
@@ -3594,6 +3611,11 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                       sauter_quad_precond_params_.slp_order),
                     QGauss<dim>(fe_for_dirichlet_space_.degree + 1));
 
+                  timer.stop();
+                  print_wall_time(deallog,
+                                  timer,
+                                  "build D1 operator preconditioner");
+
                   break;
                 }
                 case PreconditionerType::Identity: {
@@ -3602,6 +3624,12 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 case PreconditionerType::Jacobi: {
                   // TODO
                   Assert(false, ExcNotImplemented());
+
+                  timer.stop();
+                  print_wall_time(deallog,
+                                  timer,
+                                  "build D1 Jacobi preconditioner");
+
                   break;
                 }
                 default: {
@@ -3628,9 +3656,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
                   // Only when the \hmat actually has a hierarchical structure,
                   // the SPD preserving rank truncation will be performed. This
-                  // excludes
-                  // the case when @p M11 has a single root node, which is a full
-                  // matrix.
+                  // excludes the case when @p M11 has a single root node, which
+                  // is a full matrix.
                   if (M11_in_preconditioner_.get_type() ==
                       HMatrixType::HierarchicalMatrixType)
                     {
@@ -3639,7 +3666,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                           hmat_preconditioner_params_.max_rank);
                     }
                   timer.stop();
-                  print_wall_time(deallog, timer, "truncate M11(==V1)");
+                  print_wall_time(deallog, timer, "truncate M11(V1)");
                   add_memory_consumption_row("M11(V1) H-matrix preconditioner",
                                              M11_in_preconditioner_,
                                              "After assembly");
@@ -3656,7 +3683,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                         hmat_preconditioner_params_.max_rank);
                     }
                   timer.stop();
-                  print_wall_time(deallog, timer, "truncate M12(==K1)");
+                  print_wall_time(deallog, timer, "truncate M12(K1)");
                   add_memory_consumption_row("M12(K1) H-matrix preconditioner",
                                              M12_in_preconditioner_,
                                              "After assembly");
@@ -3664,9 +3691,8 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   timer.start();
                   // Only when the \hmat actually has a hierarchical structure,
                   // the SPD preserving rank truncation will be performed. This
-                  // excludes
-                  // the case when @p M22 has a single root node, which is a full
-                  // matrix.
+                  // excludes the case when @p M22 has a single root node, which
+                  // is a full matrix.
                   if (M22_in_preconditioner_.get_type() ==
                       HMatrixType::HierarchicalMatrixType)
                     {
@@ -3675,7 +3701,7 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                           hmat_preconditioner_params_.max_rank);
                     }
                   timer.stop();
-                  print_wall_time(deallog, timer, "truncate M22(==D1)");
+                  print_wall_time(deallog, timer, "truncate M22(D1)");
                   add_memory_consumption_row("M22(D1) H-matrix preconditioner",
                                              M22_in_preconditioner_,
                                              "After assembly");
@@ -3688,13 +3714,14 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     M22_in_preconditioner_);
 
                   // Perform \hmat-LU factorization to the block preconditioner.
-                  std::cout << "=== LU factorization of system block matrix ==="
-                            << std::endl;
+                  std::cout
+                    << "=== H-LU factorization of system block matrix ==="
+                    << std::endl;
                   timer.start();
                   M_hmat_preconditioner_->compute_lu_factorization(
                     hmat_preconditioner_params_.max_rank);
                   timer.stop();
-                  print_wall_time(deallog, timer, "LU factorization of M");
+                  print_wall_time(deallog, timer, "H-LU factorization of M");
 
                   break;
                 }
@@ -3703,10 +3730,6 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   std::set<types::material_id> dirichlet_domain_material_ids;
                   for (const auto &bc : dirichlet_bc_definition_)
                     dirichlet_domain_material_ids.insert(bc.first);
-
-                  std::set<types::material_id> neumann_domain_material_ids;
-                  for (const auto &bc : neumann_bc_definition_)
-                    neumann_domain_material_ids.insert(bc.first);
 
                   op_precond_for_slp_ = std::make_unique<
                     LaplaceSingleLayerPreconditioner<dim,
@@ -3721,21 +3744,6 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     neumann_space_on_dirichlet_domain_
                       ->get_external_to_internal_dof_numbering(),
                     dirichlet_domain_material_ids,
-                    op_precond_params_);
-
-                  op_precond_for_hyper_singular_ = std::make_unique<
-                    LaplaceHyperSingularPreconditioner<dim,
-                                                       spacedim,
-                                                       RangeNumberType,
-                                                       KernelNumberType>>(
-                    fe_for_dirichlet_space_,
-                    fe_for_neumann_space_,
-                    mg_tria_for_preconditioner_,
-                    dirichlet_space_on_neumann_domain_
-                      ->get_internal_to_external_dof_numbering(),
-                    dirichlet_space_on_neumann_domain_
-                      ->get_external_to_internal_dof_numbering(),
-                    neumann_domain_material_ids,
                     op_precond_params_);
 
                   op_precond_for_slp_->setup_preconditioner(
@@ -3754,6 +3762,31 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                       sauter_quad_precond_params_.hyper_singular_order),
                     QGauss<dim>(fe_for_dirichlet_space_.degree + 1));
 
+                  timer.stop();
+                  print_wall_time(deallog,
+                                  timer,
+                                  "build V1 operator preconditioner");
+
+                  timer.start();
+                  std::set<types::material_id> neumann_domain_material_ids;
+                  for (const auto &bc : neumann_bc_definition_)
+                    neumann_domain_material_ids.insert(bc.first);
+
+                  op_precond_for_hyper_singular_ = std::make_unique<
+                    LaplaceHyperSingularPreconditioner<dim,
+                                                       spacedim,
+                                                       RangeNumberType,
+                                                       KernelNumberType>>(
+                    fe_for_dirichlet_space_,
+                    fe_for_neumann_space_,
+                    mg_tria_for_preconditioner_,
+                    dirichlet_space_on_neumann_domain_
+                      ->get_internal_to_external_dof_numbering(),
+                    dirichlet_space_on_neumann_domain_
+                      ->get_external_to_internal_dof_numbering(),
+                    neumann_domain_material_ids,
+                    op_precond_params_);
+
                   op_precond_for_hyper_singular_->setup_preconditioner(
                     hmat_preconditioner_params_,
                     sauter_quad_precond_params_.near_field,
@@ -3770,14 +3803,32 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                       sauter_quad_precond_params_.slp_order),
                     QGauss<dim>(fe_for_dirichlet_space_.degree + 1));
 
+                  timer.stop();
+                  print_wall_time(deallog,
+                                  timer,
+                                  "build D1 operator preconditioner");
+
                   break;
                 }
                 case PreconditionerType::Identity: {
                   break;
                 }
                 case PreconditionerType::Jacobi: {
-                  // TODO
                   Assert(false, ExcNotImplemented());
+
+                  // TODO: Build V1 Jacobi preconditioner
+                  timer.stop();
+                  print_wall_time(deallog,
+                                  timer,
+                                  "build V1 Jacobi preconditioner");
+
+                  timer.start();
+                  // TODO: Build D1 Jacobi preconditioner
+                  timer.stop();
+                  print_wall_time(deallog,
+                                  timer,
+                                  "build D1 Jacobi preconditioner");
+
                   break;
                 }
                 default: {
