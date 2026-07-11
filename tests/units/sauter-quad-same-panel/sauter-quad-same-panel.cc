@@ -202,7 +202,8 @@ main()
       bem_values.quad_rule_for_common_edge,
       bem_values.quad_rule_for_common_vertex,
       is_surface_curl_needed);
-    PairCellWisePerTaskData<dim, spacedim, double> copy_data(fe, fe);
+    PairCellWisePerTaskDataForFullMatrix<dim, spacedim, double> copy_data(fe,
+                                                                          fe);
 
     DoFHandler<dim, spacedim>::active_cell_iterator cell_iter =
       dof_handler.begin_active();
@@ -408,7 +409,7 @@ main()
         bem_values.quad_rule_for_common_edge,
         bem_values.quad_rule_for_common_vertex,
         is_surface_curl_needed);
-      PairCellWisePerTaskData<dim, spacedim, double> copy_data(
+      PairCellWisePerTaskDataForFullMatrix<dim, spacedim, double> copy_data(
         fe_neumann_space, fe_neumann_space);
 
       /**
@@ -467,7 +468,7 @@ main()
         bem_values.quad_rule_for_common_edge,
         bem_values.quad_rule_for_common_vertex,
         is_surface_curl_needed);
-      PairCellWisePerTaskData<dim, spacedim, double> copy_data(
+      PairCellWisePerTaskDataForFullMatrix<dim, spacedim, double> copy_data(
         fe_neumann_space, fe_dirichlet_space);
 
       LAPACKFullMatrixExt<double> dlp_cell_matrix(
@@ -522,7 +523,7 @@ main()
         bem_values.quad_rule_for_common_edge,
         bem_values.quad_rule_for_common_vertex,
         is_surface_curl_needed);
-      PairCellWisePerTaskData<dim, spacedim, double> copy_data(
+      PairCellWisePerTaskDataForFullMatrix<dim, spacedim, double> copy_data(
         fe_dirichlet_space, fe_neumann_space);
 
       LAPACKFullMatrixExt<double> adlp_cell_matrix(
@@ -577,7 +578,7 @@ main()
         bem_values.quad_rule_for_common_edge,
         bem_values.quad_rule_for_common_vertex,
         is_surface_curl_needed);
-      PairCellWisePerTaskData<dim, spacedim, double> copy_data(
+      PairCellWisePerTaskDataForFullMatrix<dim, spacedim, double> copy_data(
         fe_dirichlet_space, fe_dirichlet_space);
 
       LAPACKFullMatrixExt<double> hyper_cell_matrix(

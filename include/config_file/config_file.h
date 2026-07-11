@@ -18,7 +18,7 @@
 #include <string>
 
 #include "config.h"
-#include "config_file/config_structs.h"
+#include "config_structs.h"
 
 HBEM_NS_OPEN
 

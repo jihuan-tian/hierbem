@@ -751,7 +751,8 @@ assemble_fem_scaled_mass_matrix_serial(
 template <int dim, int spacedim, typename RangeNumberType, typename MatrixType>
 void
 copy_pair_of_cells_local_to_global_for_bem_full_matrix(
-  const PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
+  const PairCellWisePerTaskDataForFullMatrix<dim, spacedim, RangeNumberType>
+             &data,
   MatrixType &target_full_matrix)
 {
   const unsigned int kx_dofs_per_cell = data.local_pair_cell_matrix.m();
@@ -880,8 +881,9 @@ assemble_bem_full_matrix(
                  bem_values.quad_rule_for_common_edge,
                  bem_values.quad_rule_for_common_vertex,
                  bem_values.is_surface_curl_needed);
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> per_task_data(
-    dof_handler_for_test_space.get_fe(), dof_handler_for_trial_space.get_fe());
+  PairCellWisePerTaskDataForFullMatrix<dim, spacedim, KernelNumberType>
+    per_task_data(dof_handler_for_test_space.get_fe(),
+                  dof_handler_for_trial_space.get_fe());
 
   for (const auto &e : dof_handler_for_test_space.active_cell_iterators())
     {
@@ -1045,8 +1047,9 @@ assemble_bem_full_matrix_serial(
                  bem_values.quad_rule_for_common_edge,
                  bem_values.quad_rule_for_common_vertex,
                  bem_values.is_surface_curl_needed);
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> per_task_data(
-    dof_handler_for_test_space.get_fe(), dof_handler_for_trial_space.get_fe());
+  PairCellWisePerTaskDataForFullMatrix<dim, spacedim, KernelNumberType>
+    per_task_data(dof_handler_for_test_space.get_fe(),
+                  dof_handler_for_trial_space.get_fe());
 
   for (const auto &e : dof_handler_for_test_space.active_cell_iterators())
     {

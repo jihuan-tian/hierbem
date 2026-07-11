@@ -212,7 +212,8 @@ main()
       bem_values.quad_rule_for_common_edge,
       bem_values.quad_rule_for_common_vertex,
       is_surface_curl_needed);
-    PairCellWisePerTaskData<dim, spacedim, double> copy_data(fe, fe);
+    PairCellWisePerTaskDataForFullMatrix<dim, spacedim, double> copy_data(fe,
+                                                                          fe);
 
     std::vector<DoFHandler<dim, spacedim>::active_cell_iterator> cell_iterators;
     for (auto iter : dof_handler.active_cell_iterators())
@@ -428,7 +429,7 @@ main()
         bem_values.quad_rule_for_common_edge,
         bem_values.quad_rule_for_common_vertex,
         is_surface_curl_needed);
-      PairCellWisePerTaskData<dim, spacedim, double> copy_data(
+      PairCellWisePerTaskDataForFullMatrix<dim, spacedim, double> copy_data(
         fe_neumann_space, fe_neumann_space);
 
       /**
@@ -490,7 +491,7 @@ main()
         bem_values.quad_rule_for_common_edge,
         bem_values.quad_rule_for_common_vertex,
         is_surface_curl_needed);
-      PairCellWisePerTaskData<dim, spacedim, double> copy_data(
+      PairCellWisePerTaskDataForFullMatrix<dim, spacedim, double> copy_data(
         fe_neumann_space, fe_dirichlet_space);
 
       LAPACKFullMatrixExt<double> dlp_cell_matrix(
@@ -548,7 +549,7 @@ main()
         bem_values.quad_rule_for_common_edge,
         bem_values.quad_rule_for_common_vertex,
         is_surface_curl_needed);
-      PairCellWisePerTaskData<dim, spacedim, double> copy_data(
+      PairCellWisePerTaskDataForFullMatrix<dim, spacedim, double> copy_data(
         fe_dirichlet_space, fe_neumann_space);
 
       LAPACKFullMatrixExt<double> adlp_cell_matrix(
@@ -606,7 +607,7 @@ main()
         bem_values.quad_rule_for_common_edge,
         bem_values.quad_rule_for_common_vertex,
         is_surface_curl_needed);
-      PairCellWisePerTaskData<dim, spacedim, double> copy_data(
+      PairCellWisePerTaskDataForFullMatrix<dim, spacedim, double> copy_data(
         fe_dirichlet_space, fe_dirichlet_space);
 
       LAPACKFullMatrixExt<double> hyper_cell_matrix(

@@ -286,7 +286,7 @@ template <int dim, int spacedim, typename KernelNumberType>
 void
 permute_dofs_and_mapping_support_points_for_sauter_quad(
   PairCellWiseScratchDataBase<dim, spacedim, KernelNumberType> &scratch,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType>     &data,
+  PairCellWisePerTaskData<dim, spacedim>                       &data,
   const CellNeighboringType cell_neighboring_type,
   const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter,
   const typename DoFHandler<dim, spacedim>::cell_iterator &ky_cell_iter,
@@ -1837,8 +1837,9 @@ sauter_quadrature_on_one_pair_of_cells(
                               &bem_values,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchDataForFullMatrix<dim, spacedim, KernelNumberType>
-                                                           &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
+    &scratch_data,
+  PairCellWisePerTaskDataForFullMatrix<dim, spacedim, KernelNumberType>
+            &copy_data,
   const bool is_kx_mapping_internaldata_computed = true,
   const bool is_symmetric                        = false)
 {
@@ -2033,8 +2034,9 @@ sauter_quadrature_on_one_pair_of_cells_parallel_over_ky(
                               &bem_values,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchDataForFullMatrix<dim, spacedim, KernelNumberType>
-                                                           &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
+    &scratch_data,
+  PairCellWisePerTaskDataForFullMatrix<dim, spacedim, KernelNumberType>
+            &copy_data,
   const bool is_kx_mapping_internaldata_computed = true,
   const bool is_symmetric                        = false)
 {
@@ -2079,8 +2081,9 @@ sauter_quadrature_on_one_pair_of_shape_functions(
                               &bem_values,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchDataForFullMatrix<dim, spacedim, KernelNumberType>
-                                                           &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+    &scratch_data,
+  PairCellWisePerTaskDataForFullMatrix<dim, spacedim, KernelNumberType>
+    &copy_data)
 {
   AssertIndexRange(i, kx_cell_iter->get_fe().dofs_per_cell);
   AssertIndexRange(j, ky_cell_iter->get_fe().dofs_per_cell);

@@ -158,8 +158,8 @@ assemble_kernel_row(
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
     dim,
     spacedim,
-    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+    DeviceNumberType<KernelNumberType>>  &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
@@ -277,8 +277,8 @@ assemble_kernel_row(
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
     dim,
     spacedim,
-    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+    DeviceNumberType<KernelNumberType>>  &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
@@ -378,8 +378,8 @@ assemble_kernel_row(
           typename numbers::NumberTraits<KernelNumberType>::real_type>>
     &mapping_support_point_table,
   PairCellWiseScratchDataForHMatrixFarField<dim, spacedim, KernelNumberType>
-                                                           &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+                                         &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
@@ -494,8 +494,8 @@ assemble_kernel_row(
           typename numbers::NumberTraits<KernelNumberType>::real_type>>
     &mapping_support_point_table,
   PairCellWiseScratchDataForHMatrixFarField<dim, spacedim, KernelNumberType>
-                                                           &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+                                         &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
@@ -605,8 +605,8 @@ assemble_kernel_column(
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
     dim,
     spacedim,
-    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+    DeviceNumberType<KernelNumberType>>  &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
@@ -725,8 +725,8 @@ assemble_kernel_column(
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
     dim,
     spacedim,
-    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+    DeviceNumberType<KernelNumberType>>  &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
@@ -827,8 +827,8 @@ assemble_kernel_column(
           typename numbers::NumberTraits<KernelNumberType>::real_type>>
     &mapping_support_point_table,
   PairCellWiseScratchDataForHMatrixFarField<dim, spacedim, KernelNumberType>
-                                                           &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+                                         &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
@@ -939,8 +939,8 @@ assemble_kernel_column(
           typename numbers::NumberTraits<KernelNumberType>::real_type>>
     &mapping_support_point_table,
   PairCellWiseScratchDataForHMatrixFarField<dim, spacedim, KernelNumberType>
-                                                           &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+                                         &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
@@ -1057,8 +1057,8 @@ random_select_ref_row(
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
     dim,
     spacedim,
-    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+    DeviceNumberType<KernelNumberType>>  &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
@@ -1246,8 +1246,8 @@ random_select_ref_row(
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
     dim,
     spacedim,
-    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+    DeviceNumberType<KernelNumberType>>  &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
@@ -1402,8 +1402,8 @@ random_select_ref_row(
           typename numbers::NumberTraits<KernelNumberType>::real_type>>
     &mapping_support_point_table,
   PairCellWiseScratchDataForHMatrixFarField<dim, spacedim, KernelNumberType>
-                                                           &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+                                         &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
@@ -1559,8 +1559,8 @@ random_select_ref_row(
           typename numbers::NumberTraits<KernelNumberType>::real_type>>
     &mapping_support_point_table,
   PairCellWiseScratchDataForHMatrixFarField<dim, spacedim, KernelNumberType>
-                                                           &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+                                         &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
@@ -1835,8 +1835,8 @@ random_select_ref_column(
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
     dim,
     spacedim,
-    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+    DeviceNumberType<KernelNumberType>>  &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
@@ -2024,8 +2024,8 @@ random_select_ref_column(
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
     dim,
     spacedim,
-    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+    DeviceNumberType<KernelNumberType>>  &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
@@ -2181,8 +2181,8 @@ random_select_ref_column(
           typename numbers::NumberTraits<KernelNumberType>::real_type>>
     &mapping_support_point_table,
   PairCellWiseScratchDataForHMatrixFarField<dim, spacedim, KernelNumberType>
-                                                           &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+                                         &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
@@ -2339,8 +2339,8 @@ random_select_ref_column(
           typename numbers::NumberTraits<KernelNumberType>::real_type>>
     &mapping_support_point_table,
   PairCellWiseScratchDataForHMatrixFarField<dim, spacedim, KernelNumberType>
-                                                           &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+                                         &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
   static_assert(
@@ -2605,8 +2605,8 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
     dim,
     spacedim,
-    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+    DeviceNumberType<KernelNumberType>>  &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
@@ -3342,8 +3342,8 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
     dim,
     spacedim,
-    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+    DeviceNumberType<KernelNumberType>>  &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
@@ -4085,8 +4085,8 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                               &material_id_to_mapping_index,
   const std::vector<types::global_cell_index> &global_to_local_cell_index_map,
   PairCellWiseScratchDataForHMatrixFarField<dim, spacedim, KernelNumberType>
-                                                           &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+                                         &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
   using CUDARangeNumberType  = DeviceNumberType<RangeNumberType>;
@@ -4895,8 +4895,8 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                               &material_id_to_mapping_index,
   const std::vector<types::global_cell_index> &global_to_local_cell_index_map,
   PairCellWiseScratchDataForHMatrixFarField<dim, spacedim, KernelNumberType>
-                                                           &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+                                         &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
   using CUDARangeNumberType  = DeviceNumberType<RangeNumberType>;
@@ -6253,9 +6253,9 @@ fill_hmatrix_leaf_node_with_aca_plus(
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
     dim,
     spacedim,
-    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
-  const bool enable_build_symmetric_hmat = false)
+    DeviceNumberType<KernelNumberType>>  &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data,
+  const bool                              enable_build_symmetric_hmat = false)
 {
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
@@ -6684,9 +6684,9 @@ fill_hmatrix_leaf_node_with_aca_plus(
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
     dim,
     spacedim,
-    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
-  const bool enable_build_symmetric_hmat = false)
+    DeviceNumberType<KernelNumberType>>  &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data,
+  const bool                              enable_build_symmetric_hmat = false)
 {
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
@@ -7114,9 +7114,9 @@ fill_hmatrix_leaf_node_with_aca_plus(
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
     dim,
     spacedim,
-    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
-  const bool enable_build_symmetric_hmat = false)
+    DeviceNumberType<KernelNumberType>>  &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data,
+  const bool                              enable_build_symmetric_hmat = false)
 {
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
@@ -7451,9 +7451,9 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
                                               &material_id_to_mapping_index,
   const std::vector<types::global_cell_index> &global_to_local_cell_index_map,
   PairCellWiseScratchDataForHMatrixFarField<dim, spacedim, KernelNumberType>
-                                                           &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
-  const bool enable_build_symmetric_hmat = false)
+                                         &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data,
+  const bool                              enable_build_symmetric_hmat = false)
 {
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
@@ -7624,9 +7624,9 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
                                               &material_id_to_mapping_index,
   const std::vector<types::global_cell_index> &global_to_local_cell_index_map,
   PairCellWiseScratchDataForHMatrixFarField<dim, spacedim, KernelNumberType>
-                                                           &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data,
-  const bool enable_build_symmetric_hmat = false)
+                                         &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data,
+  const bool                              enable_build_symmetric_hmat = false)
 {
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
   static_assert(is_number_larger_or_equal<RangeNumberType, KernelNumberType>());
@@ -7823,13 +7823,16 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
   /**
-   * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
-   * are local to the current working thread. This is mandatory because
-   * each current working thread should have its own copy of these data.
+   * Define @p PairCellWiseScratchDataForHMatrixFarField and
+   * @p PairCellWisePerTaskData which are local to the current working thread.
+   * This is mandatory because each current working thread should have its own
+   * copy of these data.
    */
-  PairCellWiseScratchDataForHMatrixFarField<dim, spacedim, KernelNumberType>
+  thread_local PairCellWiseScratchDataForHMatrixFarField<dim,
+                                                         spacedim,
+                                                         KernelNumberType>
     scratch_data(kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings);
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> copy_data(
+  thread_local PairCellWisePerTaskData<dim, spacedim> copy_data(
     kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
   for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
@@ -7858,11 +7861,6 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
         copy_data,
         enable_build_symmetric_hmat);
     }
-
-  /**
-   * Release pair cell wise scratch and copy data.
-   */
-  scratch_data.release();
 }
 
 
@@ -7941,13 +7939,16 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
   /**
-   * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
-   * are local to the current working thread. This is mandatory because
-   * each current working thread should have its own copy of these data.
+   * Define @p PairCellWiseScratchDataForHMatrixFarField and
+   * @p PairCellWisePerTaskData which are local to the current working thread.
+   * This is mandatory because each current working thread should have its own
+   * copy of these data.
    */
-  PairCellWiseScratchDataForHMatrixFarField<dim, spacedim, KernelNumberType>
+  thread_local PairCellWiseScratchDataForHMatrixFarField<dim,
+                                                         spacedim,
+                                                         KernelNumberType>
     scratch_data(kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings);
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> copy_data(
+  thread_local PairCellWisePerTaskData<dim, spacedim> copy_data(
     kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
   for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
@@ -7978,11 +7979,6 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
         copy_data,
         enable_build_symmetric_hmat);
     }
-
-  /**
-   * Release pair cell wise scratch and copy data.
-   */
-  scratch_data.release();
 }
 
 
@@ -8264,14 +8260,14 @@ fill_hmatrix_with_aca_plus_serial(
   print_wall_time(deallog, timer, "compute BEM values");
 
   /**
-   * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
-   * are local to the current working thread. This is mandatory because
+   * Define @p PairCellWiseScratchDataForHMatrix and @p PairCellWisePerTaskData
+   * which are local to the current working thread. This is mandatory because
    * each current working thread should have its own copy of these data.
    */
   PairCellWiseScratchDataForHMatrix<dim, spacedim, KernelNumberType>
     scratch_data(kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings);
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> copy_data(
-    kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
+  PairCellWisePerTaskData<dim, spacedim> copy_data(kx_dof_handler.get_fe(),
+                                                   ky_dof_handler.get_fe());
 
   /**
    * Create pair cell wise scratch data and task data on GPU device.
@@ -8495,14 +8491,14 @@ fill_hmatrix_with_aca_plus_serial(
   print_wall_time(deallog, timer, "compute BEM values");
 
   /**
-   * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
-   * are local to the current working thread. This is mandatory because
+   * Define @p PairCellWiseScratchDataForHMatrix and @p PairCellWisePerTaskData
+   * which are local to the current working thread. This is mandatory because
    * each current working thread should have its own copy of these data.
    */
   PairCellWiseScratchDataForHMatrix<dim, spacedim, KernelNumberType>
     scratch_data(kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings);
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> copy_data(
-    kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
+  PairCellWisePerTaskData<dim, spacedim> copy_data(kx_dof_handler.get_fe(),
+                                                   ky_dof_handler.get_fe());
 
   /**
    * Create pair cell wise scratch data and task data on GPU device.
@@ -8724,14 +8720,14 @@ fill_hmatrix_with_aca_plus_serial(
     update_values | update_JxW_values);
 
   /**
-   * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
-   * are local to the current working thread. This is mandatory because
+   * Define @p PairCellWiseScratchDataForHMatrix and @p PairCellWisePerTaskData
+   * which are local to the current working thread. This is mandatory because
    * each current working thread should have its own copy of these data.
    */
   PairCellWiseScratchDataForHMatrix<dim, spacedim, KernelNumberType>
     scratch_data(kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings);
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> copy_data(
-    kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
+  PairCellWisePerTaskData<dim, spacedim> copy_data(kx_dof_handler.get_fe(),
+                                                   ky_dof_handler.get_fe());
 
   /**
    * Create pair cell wise scratch data and task data on GPU device.

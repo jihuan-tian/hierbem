@@ -2719,26 +2719,17 @@ public:
                                                     KernelNumberType> &) =
     default;
 
-  void
-  release()
+  ~PairCellWiseScratchDataForHMatrixFarField()
   {
     AssertCuda(cudaStreamDestroy(cuda_stream_handle));
   }
 };
 
 
-template <int dim, int spacedim, typename KernelNumberType = double>
+template <int dim, int spacedim>
 class PairCellWisePerTaskData
 {
 public:
-  /**
-   * Local matrix for the pair of cells to be assembled into the global full
-   * matrix representation of the boundary integral operator.
-   *
-   * \comment{Therefore, this data field is only defined for verification.}
-   */
-  LAPACKFullMatrixExt<KernelNumberType> local_pair_cell_matrix;
-
   /**
    * Permuted list of DoF indices in the cell \f$K_x\f$, each element of
    * which is associated with the corresponding element in
@@ -2760,8 +2751,7 @@ public:
    */
   PairCellWisePerTaskData(const FiniteElement<dim, spacedim> &kx_fe,
                           const FiniteElement<dim, spacedim> &ky_fe)
-    : local_pair_cell_matrix(kx_fe.dofs_per_cell, ky_fe.dofs_per_cell)
-    , kx_local_dof_indices_permuted(kx_fe.dofs_per_cell)
+    : kx_local_dof_indices_permuted(kx_fe.dofs_per_cell)
     , ky_local_dof_indices_permuted(ky_fe.dofs_per_cell)
   {}
 
@@ -2769,8 +2759,44 @@ public:
   /**
    * Default copy constructor.
    */
-  PairCellWisePerTaskData(
-    const PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &) = default;
+  PairCellWisePerTaskData(const PairCellWisePerTaskData<dim, spacedim> &) =
+    default;
+};
+
+
+template <int dim, int spacedim, typename KernelNumberType = double>
+class PairCellWisePerTaskDataForFullMatrix
+  : public PairCellWisePerTaskData<dim, spacedim>
+{
+public:
+  /**
+   * Local matrix for the pair of cells to be assembled into the global full
+   * matrix representation of the boundary integral operator.
+   *
+   * \comment{Therefore, this data field is only defined for verification.}
+   */
+  LAPACKFullMatrixExt<KernelNumberType> local_pair_cell_matrix;
+
+  /**
+   * Constructor
+   *
+   * @param kx_fe
+   * @param ky_fe
+   */
+  PairCellWisePerTaskDataForFullMatrix(
+    const FiniteElement<dim, spacedim> &kx_fe,
+    const FiniteElement<dim, spacedim> &ky_fe)
+    : PairCellWisePerTaskData<dim, spacedim>(kx_fe, ky_fe)
+    , local_pair_cell_matrix(kx_fe.dofs_per_cell, ky_fe.dofs_per_cell)
+  {}
+
+
+  /**
+   * Default copy constructor.
+   */
+  PairCellWisePerTaskDataForFullMatrix(
+    const PairCellWisePerTaskDataForFullMatrix<dim, spacedim, KernelNumberType>
+      &) = default;
 };
 
 HBEM_NS_CLOSE

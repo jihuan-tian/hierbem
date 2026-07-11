@@ -36,6 +36,8 @@
 
 #include <deal.II/grid/tria.h>
 
+#include <cuda_runtime.h>
+
 #include <cmath>
 #include <iostream>
 
@@ -50,6 +52,10 @@
 HBEM_NS_OPEN
 
 using namespace dealii;
+
+#define AssertCudaThrow(error_code)      \
+  AssertThrow(error_code == cudaSuccess, \
+              ::ExcCudaError(cudaGetErrorString(error_code)))
 
 /**
  * Check the equality of the quadrature objects on CPU and GPU.

@@ -20,11 +20,13 @@
 #ifndef HIERBEM_INCLUDE_PRECONDITIONERS_OPERATOR_PRECONDITIONER_H_
 #define HIERBEM_INCLUDE_PRECONDITIONERS_OPERATOR_PRECONDITIONER_H_
 
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature.h>
 #include <deal.II/base/subscriptor.h>
 #include <deal.II/base/table.h>
+#include <deal.II/base/timer.h>
 #include <deal.II/base/types.h>
 
 #include <deal.II/dofs/dof_handler.h>
@@ -1007,6 +1009,7 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
     const ConfHMatrix                               &hmat_params,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings)
 {
+  Timer timer;
   /**
    * Generate lists of DoF indices.
    */
@@ -1049,7 +1052,10 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
         dual_space_local_to_full_dof_id_map_on_refined_mesh,
         dof_average_cell_size_list);
     }
+  timer.stop();
+  print_wall_time(deallog, timer, "prepare build trees");
 
+  timer.start();
   /**
    * Initialize the cluster tree.
    */
@@ -1063,6 +1069,8 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
    * Partition the cluster tree.
    */
   ct.partition(support_points_in_dual_space, dof_average_cell_size_list);
+  timer.stop();
+  print_wall_time(deallog, timer, "build cluster tree");
 
   /**
    * Get the internal-to-external DoF numberings.
@@ -1070,6 +1078,7 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
   std::vector<types::global_dof_index> &dof_i2e_numbering =
     ct.get_internal_to_external_dof_numbering();
 
+  timer.start();
   /**
    * Create the block cluster tree.
    */
@@ -1085,6 +1094,8 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
   bct.partition(dof_i2e_numbering,
                 support_points_in_dual_space,
                 dof_average_cell_size_list);
+  timer.stop();
+  print_wall_time(deallog, timer, "build block cluster tree");
 }
 
 
@@ -1829,9 +1840,19 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::setup_preconditioner(
 
   build_dof_to_cell_topology();
   build_dual_space_cell_index_maps();
+
+  Timer timer;
   build_coupling_matrix();
+  timer.stop();
+  print_wall_time(deallog, timer, "build coupling matrix");
+  timer.start();
   build_averaging_matrix();
+  timer.stop();
+  print_wall_time(deallog, timer, "build averaging matrix");
+  timer.start();
   build_mass_matrix_on_refined_mesh(quad_rule_for_mass);
+  timer.stop();
+  print_wall_time(deallog, timer, "build mass matrix");
   build_cluster_and_block_cluster_trees(hmat_params, mappings);
 
   mass_matrix_triple.reinit();

@@ -1428,8 +1428,8 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
     dim,
     spacedim,
-    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+    DeviceNumberType<KernelNumberType>>  &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
 
@@ -1831,8 +1831,8 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
     dim,
     spacedim,
-    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+    DeviceNumberType<KernelNumberType>>  &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
 
@@ -2282,8 +2282,8 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
   HierBEM::CUDAWrappers::CUDAPairCellWiseScratchDataForHMatrix<
     dim,
     spacedim,
-    DeviceNumberType<KernelNumberType>>                    &scratch_data_gpu,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+    DeviceNumberType<KernelNumberType>>  &scratch_data_gpu,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   using real_type = typename numbers::NumberTraits<KernelNumberType>::real_type;
 
@@ -2526,14 +2526,14 @@ sauter_quadrature_for_near_field_matrix_entries_producer(
 #endif
 
   /**
-   * @internal Define @p PairCellWiseScratchData and @p
+   * @internal Define @p PairCellWiseScratchDataBase and @p
    * PairCellWisePerTaskData which are local to the current working
    * thread. This is mandatory because each producer thread should have
    * its own copy of these data.
    */
-  PairCellWiseScratchDataBase<dim, spacedim, KernelNumberType> scratch_data(
-    kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings);
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> copy_data(
+  thread_local PairCellWiseScratchDataBase<dim, spacedim, KernelNumberType>
+    scratch_data(kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings);
+  thread_local PairCellWisePerTaskData<dim, spacedim> copy_data(
     kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
   // Create four local buffers for producing quadrature tasks in batch.
@@ -2970,14 +2970,14 @@ sauter_quadrature_for_near_field_matrix_entries_producer(
     update_values | update_JxW_values);
 
   /**
-   * @internal Define @p PairCellWiseScratchData and
+   * @internal Define @p PairCellWiseScratchDataBase and
    * @p PairCellWisePerTaskData which are local to the current working
    * thread. This is mandatory because each producer thread should
    * have its own copy of these data.
    */
-  PairCellWiseScratchDataBase<dim, spacedim, KernelNumberType> scratch_data(
-    kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings);
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> copy_data(
+  thread_local PairCellWiseScratchDataBase<dim, spacedim, KernelNumberType>
+    scratch_data(kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings);
+  thread_local PairCellWisePerTaskData<dim, spacedim> copy_data(
     kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
   // Create four local buffers for producing quadrature tasks in batch.
@@ -3465,7 +3465,7 @@ create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
                               &mapping_support_point_table,
   const SurfaceNormalDetector &normal_detector,
   PairCellWiseScratchDataBase<dim, spacedim, KernelNumberType> &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType>     &copy_data,
+  PairCellWisePerTaskData<dim, spacedim>                       &copy_data,
   const bool                               is_last_matrix_entry,
   [[maybe_unused]] HMatrixAssemblyProfile *hmat_profile = nullptr)
 {
@@ -3894,7 +3894,7 @@ create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
   const SurfaceNormalDetector                     &normal_detector,
   CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
   PairCellWiseScratchDataBase<dim, spacedim, KernelNumberType> &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType>     &copy_data,
+  PairCellWisePerTaskData<dim, spacedim>                       &copy_data,
   const bool                               is_last_matrix_entry,
   [[maybe_unused]] HMatrixAssemblyProfile *hmat_profile = nullptr)
 {
@@ -4395,8 +4395,8 @@ create_sauter_quadrature_tasks_on_one_pair_of_far_field_dofs(
           typename numbers::NumberTraits<KernelNumberType>::real_type>>
     &mapping_support_point_table,
   PairCellWiseScratchDataForHMatrixFarField<dim, spacedim, KernelNumberType>
-                                                           &scratch_data,
-  PairCellWisePerTaskData<dim, spacedim, KernelNumberType> &copy_data)
+                                         &scratch_data,
+  PairCellWisePerTaskData<dim, spacedim> &copy_data)
 {
   static_assert(
     is_number_larger_or_equal<CUDARangeNumberType, KernelNumberType>());

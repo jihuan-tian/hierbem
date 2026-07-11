@@ -39,6 +39,7 @@
 #include "platform_shared/utilities.h"
 #include "sauter_quadrature_far_field_kernels.hcu"
 #include "sauter_quadrature_task_scalar_data_far_field.h"
+#include "utilities/cu_debug_tools.h"
 #include "utilities/cu_profile.hcu"
 #include "utilities/number_traits.h"
 
@@ -243,30 +244,31 @@ namespace CUDAWrappers
     /**
      * @internal Allocate memory asynchronously on the device.
      */
-    AssertCuda(cudaMallocHost((void **)&starting_task_indices_for_dof_pairs_cpu,
-                              sizeof(unsigned int) * (vector_size + 1)));
+    AssertCudaThrow(
+      cudaMallocHost((void **)&starting_task_indices_for_dof_pairs_cpu,
+                     sizeof(unsigned int) * (vector_size + 1)));
 
-    AssertCuda(
+    AssertCudaThrow(
       cudaMallocAsync((void **)&starting_task_indices_for_dof_pairs_gpu,
                       sizeof(unsigned int) * (vector_size + 1),
                       cuda_stream_handle));
 
-    AssertCuda(
+    AssertCudaThrow(
       cudaMallocAsync((void **)&scalar_data_buffer_gpu,
                       capacity * sizeof(SauterQuadratureTaskScalarDataFarField),
                       cuda_stream_handle));
 
-    AssertCuda(cudaMallocAsync((void **)&values_at_all_quad_points_gpu,
-                               capacity * n_quad_points_4d *
-                                 sizeof(CUDAKernelNumberType),
-                               cuda_stream_handle));
+    AssertCudaThrow(cudaMallocAsync((void **)&values_at_all_quad_points_gpu,
+                                    capacity * n_quad_points_4d *
+                                      sizeof(CUDAKernelNumberType),
+                                    cuda_stream_handle));
 
 
-    AssertCuda(cudaMallocAsync((void **)&vector_element_values_gpu,
-                               vector_size * sizeof(CUDARangeNumberType),
-                               cuda_stream_handle));
+    AssertCudaThrow(cudaMallocAsync((void **)&vector_element_values_gpu,
+                                    vector_size * sizeof(CUDARangeNumberType),
+                                    cuda_stream_handle));
 
-    AssertCuda(
+    AssertCudaThrow(
       cudaMallocHost((void **)&scalar_data_buffer_cpu,
                      capacity *
                        sizeof(SauterQuadratureTaskScalarDataFarField)));
