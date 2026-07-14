@@ -19,6 +19,7 @@
 
 #include <cpptrace/from_current.hpp>
 #include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <filesystem>
 #include <fstream>

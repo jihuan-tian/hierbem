@@ -4181,10 +4181,14 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   Vector<RangeNumberType> vr(n);
   Vector<RangeNumberType> uc(m);
 
-  AssertCuda(
-    cudaHostRegister((void *)(vr.data()), sizeof(RangeNumberType) * n, 0));
-  AssertCuda(
-    cudaHostRegister((void *)(uc.data()), sizeof(RangeNumberType) * m, 0));
+  // Pin the host memory for vr and uc, which is required by asynchronous memory
+  // copy from the device to the host.
+  AssertCuda(cudaHostRegister((void *)(vr.data()),
+                              sizeof(RangeNumberType) * n,
+                              cudaHostRegisterDefault));
+  AssertCuda(cudaHostRegister((void *)(uc.data()),
+                              sizeof(RangeNumberType) * m,
+                              cudaHostRegisterDefault));
 
   size_type r = random_select_ref_row(sauter_task_buffer_for_row_vector,
                                       vr,
@@ -4293,10 +4297,14 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   Vector<RangeNumberType> vk(n);
   Vector<RangeNumberType> uk(m);
 
-  AssertCuda(
-    cudaHostRegister((void *)(vk.data()), sizeof(RangeNumberType) * n, 0));
-  AssertCuda(
-    cudaHostRegister((void *)(uk.data()), sizeof(RangeNumberType) * m, 0));
+  // Pin the host memory for vk and uk, which is required by asynchronous memory
+  // copy from the device to the host.
+  AssertCuda(cudaHostRegister((void *)(vk.data()),
+                              sizeof(RangeNumberType) * n,
+                              cudaHostRegisterDefault));
+  AssertCuda(cudaHostRegister((void *)(uk.data()),
+                              sizeof(RangeNumberType) * m,
+                              cudaHostRegisterDefault));
 
   /**
    * The absolute values for the temporary row and column vectors for the
@@ -4907,9 +4915,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
-  /**
-   * Get the size of each dimension of the matrix block to be built.
-   */
+  // Get the size of each dimension of the matrix block to be built.
   const size_type m = row_dof_index_range[1] - row_dof_index_range[0];
   const size_type n = col_dof_index_range[1] - col_dof_index_range[0];
 
@@ -4990,10 +4996,14 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   Vector<RangeNumberType> vr(n);
   Vector<RangeNumberType> uc(m);
 
-  AssertCuda(
-    cudaHostRegister((void *)(vr.data()), sizeof(RangeNumberType) * n, 0));
-  AssertCuda(
-    cudaHostRegister((void *)(uc.data()), sizeof(RangeNumberType) * m, 0));
+  // Pin the host memory for vr and uc, which is required by asynchronous memory
+  // copy from the device to the host.
+  AssertCuda(cudaHostRegister((void *)(vr.data()),
+                              sizeof(RangeNumberType) * n,
+                              cudaHostRegisterDefault));
+  AssertCuda(cudaHostRegister((void *)(uc.data()),
+                              sizeof(RangeNumberType) * m,
+                              cudaHostRegisterDefault));
 
   size_type r = random_select_ref_row(sauter_task_buffer_for_row_vector,
                                       vr,
@@ -5109,10 +5119,14 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   Vector<RangeNumberType> vk(n);
   Vector<RangeNumberType> uk(m);
 
-  AssertCuda(
-    cudaHostRegister((void *)(vk.data()), sizeof(RangeNumberType) * n, 0));
-  AssertCuda(
-    cudaHostRegister((void *)(uk.data()), sizeof(RangeNumberType) * m, 0));
+  // Pin the host memory for vk and uk, which is required by asynchronous memory
+  // copy from the device to the host.
+  AssertCuda(cudaHostRegister((void *)(vk.data()),
+                              sizeof(RangeNumberType) * n,
+                              cudaHostRegisterDefault));
+  AssertCuda(cudaHostRegister((void *)(uk.data()),
+                              sizeof(RangeNumberType) * m,
+                              cudaHostRegisterDefault));
 
   /**
    * The absolute values for the temporary row and column vectors for the
@@ -8242,8 +8256,7 @@ fill_hmatrix_with_aca_plus_serial(
     sauter_quad_rule.quad_rule_for_common_edge,
     sauter_quad_rule.quad_rule_for_common_vertex,
     sauter_quad_rule.quad_rule_for_regular,
-    false);
-
+    kernel.needs_regularization());
   bem_values.fill_shape_function_value_tables();
 
   /**
@@ -8473,8 +8486,7 @@ fill_hmatrix_with_aca_plus_serial(
     sauter_quad_rule.quad_rule_for_common_edge,
     sauter_quad_rule.quad_rule_for_common_vertex,
     sauter_quad_rule.quad_rule_for_regular,
-    true);
-
+    kernel.needs_regularization());
   bem_values.fill_shape_function_value_tables();
 
   /**
@@ -8692,8 +8704,7 @@ fill_hmatrix_with_aca_plus_serial(
     sauter_quad_rule.quad_rule_for_common_edge,
     sauter_quad_rule.quad_rule_for_common_vertex,
     sauter_quad_rule.quad_rule_for_regular,
-    false);
-
+    kernel.needs_regularization());
   bem_values.fill_shape_function_value_tables();
 
   /**
@@ -8936,8 +8947,7 @@ fill_hmatrix_with_aca_plus_smp(
     sauter_quad_rule.quad_rule_for_common_edge,
     sauter_quad_rule.quad_rule_for_common_vertex,
     sauter_quad_rule.quad_rule_for_regular,
-    false);
-
+    kernel.needs_regularization());
   bem_values.fill_shape_function_value_tables();
 
   /**
@@ -9437,8 +9447,7 @@ fill_hmatrix_with_aca_plus_smp(
     sauter_quad_rule.quad_rule_for_common_edge,
     sauter_quad_rule.quad_rule_for_common_vertex,
     sauter_quad_rule.quad_rule_for_regular,
-    true);
-
+    kernel.needs_regularization());
   bem_values.fill_shape_function_value_tables();
 
   /**
@@ -9967,8 +9976,7 @@ fill_hmatrix_with_aca_plus_smp(
     sauter_quad_rule.quad_rule_for_common_edge,
     sauter_quad_rule.quad_rule_for_common_vertex,
     sauter_quad_rule.quad_rule_for_regular,
-    false);
-
+    kernel.needs_regularization());
   bem_values.fill_shape_function_value_tables();
 
   /**

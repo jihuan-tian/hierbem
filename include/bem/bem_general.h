@@ -858,7 +858,7 @@ assemble_bem_full_matrix(
     sauter_quad_rule.quad_rule_for_common_edge,
     sauter_quad_rule.quad_rule_for_common_vertex,
     sauter_quad_rule.quad_rule_for_regular,
-    kernel.kernel_type == KernelType::HyperSingularRegular);
+    kernel.needs_regularization());
 
   bem_values.fill_shape_function_value_tables();
   bem_values.compute_bilinear_form_cell_values_for_regular(
@@ -1024,7 +1024,7 @@ assemble_bem_full_matrix_serial(
     sauter_quad_rule.quad_rule_for_common_edge,
     sauter_quad_rule.quad_rule_for_common_vertex,
     sauter_quad_rule.quad_rule_for_regular,
-    kernel.kernel_type == KernelType::HyperSingularRegular);
+    kernel.needs_regularization());
 
   bem_values.fill_shape_function_value_tables();
   bem_values.compute_bilinear_form_cell_values_for_regular(

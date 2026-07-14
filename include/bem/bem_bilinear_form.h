@@ -215,6 +215,30 @@ public:
     return *block_cluster_tree;
   }
 
+  const std::vector<types::global_cell_index> &
+  get_global_to_local_cell_index_map() const
+  {
+    return global_to_local_cell_index_map;
+  }
+
+  std::vector<types::global_cell_index> &
+  get_global_to_local_cell_index_map()
+  {
+    return global_to_local_cell_index_map;
+  }
+
+  const std::vector<types::global_cell_index> &
+  get_local_to_global_cell_index_map() const
+  {
+    return local_to_global_cell_index_map;
+  }
+
+  std::vector<types::global_cell_index> &
+  get_local_to_global_cell_index_map()
+  {
+    return local_to_global_cell_index_map;
+  }
+
   const BEMFunctionSpace<dim,
                          spacedim,
                          SearchableMaterialIdContainer,
@@ -231,6 +255,18 @@ public:
   get_test_space() const
   {
     return test_space;
+  }
+
+  const std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *> &
+  get_cell_iterator_ptrs() const
+  {
+    return cell_iterator_ptrs;
+  }
+
+  std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *> &
+  get_cell_iterator_ptrs()
+  {
+    return cell_iterator_ptrs;
   }
 
 private:
@@ -703,14 +739,13 @@ BEMBilinearForm<dim,
     const CUDAWrappers::CUDATable<1, unsigned int> &tria_mapping_indices_gpu,
     SubdomainTopology<dim, spacedim>               &subdomain_topology)
 {
-  // The kernel must be regularized.
+  // The kernel must be regularized, which involves computation of surface
+  // curls.
   Assert(kernel.needs_regularization(), ExcInternalError());
-  // When the stabilziation vectors @p mass_vmult_weq is not empty, the kernel
+  // When the stabilization vectors @p mass_vmult_weq is not empty, the kernel
   // needs stabilization.
   if (mass_vmult_weq.size() > 0)
-    {
-      Assert(kernel.needs_stabilization_on_full_domain(), ExcInternalError());
-    }
+    Assert(kernel.needs_stabilization_on_full_domain(), ExcInternalError());
 
   HMatrixSupport::Property  property = is_symmetric ?
                                          HMatrixSupport::Property::symmetric :

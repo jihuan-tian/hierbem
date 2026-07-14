@@ -2656,13 +2656,13 @@ public:
       cudaHostRegister((void *)this->kx_mapping_support_points_permuted.data(),
                        this->kx_mapping_support_points_permuted.size() *
                          sizeof(Point<spacedim, real_type>),
-                       0));
+                       cudaHostRegisterDefault));
 
     AssertCuda(
       cudaHostRegister((void *)this->ky_mapping_support_points_permuted.data(),
                        this->ky_mapping_support_points_permuted.size() *
                          sizeof(Point<spacedim, real_type>),
-                       0));
+                       cudaHostRegisterDefault));
 
     AssertCuda(cudaMallocHost((void **)&quad_values_in_thread_blocks,
                               n_quad_values_in_thread_blocks *

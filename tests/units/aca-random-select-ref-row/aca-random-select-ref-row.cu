@@ -18,7 +18,6 @@
 
 #include <forward_list>
 #include <iostream>
-#include <iterator>
 #include <vector>
 
 #include "hmatrix/aca_plus/aca_plus.hcu"

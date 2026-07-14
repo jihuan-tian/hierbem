@@ -437,7 +437,7 @@ namespace CUDAWrappers
           (void *)&(kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
           kx_mapping_support_points_permuted_ring_buffer_cpu.n_elements() *
             sizeof(Point<spacedim, real_type>),
-          0));
+          cudaHostRegisterDefault));
 
         ky_mapping_support_points_permuted_ring_buffer_cpu.reinit(
           TableIndices<2>(capacity, max_mapping_n_shape_functions));
@@ -445,7 +445,7 @@ namespace CUDAWrappers
           (void *)&(ky_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
           ky_mapping_support_points_permuted_ring_buffer_cpu.n_elements() *
             sizeof(Point<spacedim, real_type>),
-          0));
+          cudaHostRegisterDefault));
 
         kx_mapping_support_points_permuted_ring_buffer_gpu.allocate(
           TableIndices<2>(capacity, max_mapping_n_shape_functions));

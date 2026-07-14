@@ -72,12 +72,5 @@ TEST_CASE("Compare two number types", "[type]")
 
   ofs.close();
 
-  auto check_equality = [](const auto &a, const auto &b) {
-    INFO("Operand 1: " << a);
-    INFO("Operand 2: " << b);
-    REQUIRE(a == b);
-  };
-  compare_two_files(SOURCE_DIR "/reference.output",
-                    "compare-number-types.log",
-                    check_equality);
+  compare_two_files(SOURCE_DIR "/reference.output", "compare-number-types.log");
 }

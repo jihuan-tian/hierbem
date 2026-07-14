@@ -4356,13 +4356,15 @@ private:
 
   /**
    * Pointer to the range of row indices (in internal DoF numbering), which
-   * has been stored in the cluster \f$\tau\f$. It is a subset of \f$I\f$.
+   * has been stored in the cluster \f$\tau\f$. It is a subset of \f$I\f$. It is
+   * a half-closed half open range.
    */
   std::array<types::global_dof_index, 2> *row_index_range;
 
   /**
    * Pointer to the range of column indices (in internal DoF numbering), which
-   * has been stored in the cluster \f$\sigma\f$. It is a subset of \f$J\f$.
+   * has been stored in the cluster \f$\sigma\f$. It is a subset of \f$J\f$. It
+   * is a half-closed half open range.
    */
   std::array<types::global_dof_index, 2> *col_index_range;
 

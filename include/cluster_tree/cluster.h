@@ -639,7 +639,8 @@ private:
    */
   std::vector<types::global_dof_index> index_set;
   /**
-   * The DoF index range in the internal numbering.
+   * The DoF index range in the internal numbering, which is a half-closed
+   * half-open range.
    */
   std::array<types::global_dof_index, 2> index_range;
   SimpleBoundingBox<spacedim, Number>    bbox;

@@ -38,6 +38,7 @@
 
 #include "config_file/config_structs.h"
 #include "grid/grid_out_ext.h"
+#include "hbem_cpp_validate.h"
 #include "preconditioners/preconditioner_for_laplace_hyper_singular_bio.h"
 
 using namespace Catch::Matchers;
@@ -69,24 +70,6 @@ setup_preconditioner(
   precond.generate_dof_selectors();
   precond.generate_maps_between_full_and_local_dof_ids();
   precond.build_dof_to_cell_topology();
-}
-
-void
-compare_two_files(const string &file1, const string &file2)
-{
-  vector<string> file1_lines, file2_lines;
-  read_file_lines(file1, file1_lines);
-  read_file_lines(file2, file2_lines);
-
-  REQUIRE(file1_lines.size() == file2_lines.size());
-
-  for (size_t i = 0; i < file1_lines.size(); i++)
-    {
-      INFO("File 1: " << file1 << "\n"
-                      << "File 2: " << file2 << "\n"
-                      << "Mismatch on line: " << i + 1);
-      REQUIRE(file1_lines[i] == file2_lines[i]);
-    }
 }
 
 TEST_CASE(

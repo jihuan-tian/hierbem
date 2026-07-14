@@ -35,20 +35,29 @@ HBEM_NS_OPEN
 using namespace Catch::Matchers;
 using namespace dealii;
 
-template <typename Func>
-void
-compare_two_files(const std::string &file1,
-                  const std::string &file2,
-                  const Func        &check_equality)
+inline void
+compare_two_files(const std::string &file1, const std::string &file2)
 {
   std::vector<std::string> file1_lines, file2_lines;
   read_file_lines(file1, file1_lines);
   read_file_lines(file2, file2_lines);
 
-  check_equality(file1_lines.size(), file2_lines.size());
+  if (file1_lines.size() != file2_lines.size())
+    {
+      INFO("File 1 has " << file1_lines.size() << " lines");
+      INFO("File 2 has " << file2_lines.size() << " lines");
+      FAIL("Number of lines not equal");
+    }
 
   for (size_t i = 0; i < file1_lines.size(); i++)
-    check_equality(file1_lines[i], file2_lines[i]);
+    {
+      if (file1_lines[i] != file2_lines[i])
+        {
+          INFO("File 1: " << file1_lines[i]);
+          INFO("File 2: " << file2_lines[i]);
+          FAIL("File contents mismatch");
+        }
+    }
 }
 
 
