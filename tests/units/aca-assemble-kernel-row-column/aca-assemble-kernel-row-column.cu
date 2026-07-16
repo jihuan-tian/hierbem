@@ -59,7 +59,7 @@
 #include "config_file/cu_related.h"
 #include "dofs/dof_to_cell_topology.h"
 #include "grid/grid_in_ext.h"
-#include "hbem_cpp_validate.h"
+#include "hbem_octave_wrapper.h"
 #include "hbem_test_config.h"
 #include "hmatrix/aca_plus/aca_plus.hcu"
 #include "hmatrix/hmatrix.h"
@@ -81,6 +81,9 @@ using size_type = std::make_unsigned<types::blas_int>::type;
 
 TEST_CASE("Compute a row/column vector with ACA", "[hmatrix]")
 {
+  HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
+  inst.add_path(SOURCE_DIR);
+
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
@@ -332,11 +335,29 @@ TEST_CASE("Compute a row/column vector with ACA", "[hmatrix]")
   AssertCuda(cudaHostUnregister((void *)(v.data())));
   AssertCuda(cudaHostUnregister((void *)(u.data())));
 
-  std::string   logfile("aca-assemble-kernel-row.log");
+  std::string   logfile("aca-assemble-kernel-row-column.output");
   std::ofstream ofs(logfile);
   print_vector_to_mat(ofs, "v", v);
   print_vector_to_mat(ofs, "u", u);
   ofs.close();
+
+  // Calculate relative error
+  try
+    {
+      inst.source_file(SOURCE_DIR "/process.m");
+    }
+  catch (...)
+    {
+      // Ignore errors
+    }
+
+  // Check relative error
+  HBEMOctaveValue out;
+  out = inst.eval_string("v_rel_err");
+  REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-12));
+
+  out = inst.eval_string("u_rel_err");
+  REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-12));
 
   // Delete manifolds and mappings.
   for (auto &m : manifolds)
@@ -349,6 +370,4 @@ TEST_CASE("Compute a row/column vector with ACA", "[hmatrix]")
 
   tria_mapping_support_points_gpu.release();
   tria_mapping_indices_gpu.release();
-
-  compare_two_files(SOURCE_DIR "/reference.output", logfile);
 }
