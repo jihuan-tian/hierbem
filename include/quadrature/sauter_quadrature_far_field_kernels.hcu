@@ -151,7 +151,7 @@ namespace CUDAWrappers
    * Accumulate quadrature values at all quadrature points for all tasks
    * associated with each vector element.
    *
-   * @param vector_size
+   * @param n_vector_entries
    * @param n_quad_points_4d Number of 4D quadrature points
    * @param starting_task_indices_for_dof_pairs_gpu
    * @param values_at_all_quad_points_gpu
@@ -160,7 +160,7 @@ namespace CUDAWrappers
   template <typename CUDARangeNumberType, typename CUDAKernelNumberType>
   __global__ void
   accumulate_quadrature_values_into_vector(
-    const unsigned int          vector_size,
+    const unsigned int          n_vector_entries,
     const unsigned int          n_quad_points_4d,
     unsigned int               *starting_task_indices_for_dof_pairs_gpu,
     const CUDAKernelNumberType *values_at_all_quad_points_gpu,
@@ -172,7 +172,7 @@ namespace CUDAWrappers
      */
     const unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if (idx < vector_size)
+    if (idx < n_vector_entries)
       {
         /**
          * @internal Accumulation of results into a register variable.

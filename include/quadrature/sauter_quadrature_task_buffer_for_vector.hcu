@@ -74,14 +74,14 @@ namespace CUDAWrappers
      * @p max_cells_per_dof_in_ansatz_space is used to estimate the number of
      * pairs of cells contributing to a same pair of global DoFs.}
      *
-     * @param v_vector_size
+     * @param n_max_vector_entries
      * @param max_cells_per_dof_in_test_space
      * @param max_cells_per_dof_in_ansatz_space
      * @param bem_values
      * @param stream
      */
     SauterQuadratureTaskBufferForVector(
-      const unsigned int v_vector_size,
+      const unsigned int n_max_vector_entries,
       const unsigned int max_cells_per_dof_in_test_space,
       const unsigned int max_cells_per_dof_in_ansatz_space,
       const BEMValues<dim, spacedim, real_type> &bem_values,
@@ -117,13 +117,14 @@ namespace CUDAWrappers
               typename RangeNumberType>
     void
     process_tasks(
-      Vector<RangeNumberType>                                  &hmat_vector,
+      Vector<RangeNumberType> &hmat_vector,
+      const unsigned int       start_vector_entry_index,
+      const unsigned int       n_vector_entries,
       const KernelFunctionType<spacedim, CUDAKernelNumberType> &kernel,
       const CUDAKernelNumberType                                kernel_factor,
       const CUDABEMValues<dim, spacedim, real_type>            &bem_values,
       const ConfSauterQuadFarField &sauter_quad_far_field_params,
       const cudaStream_t            cuda_stream_handle);
-
 
     /**
      * CUDA stream.
@@ -135,13 +136,15 @@ namespace CUDAWrappers
     cudaStream_t cuda_stream_handle;
 
     /**
-     * Number of elements in the row or column vector.
+     * Maximum number of vector entries that can be held by the buffer.
      */
-    unsigned int vector_size;
+    unsigned int n_max_vector_entries;
 
     /**
      * Capacity of the task buffer, which is
-     * @p vector_size*max_cells_per_dof_in_test_space*max_cells_per_dof_in_ansatz_space.
+     * <code>
+     * n_max_vector_entries*max_cells_per_dof_in_test_space*max_cells_per_dof_in_ansatz_space.
+     * </code>
      */
     unsigned int capacity;
 
@@ -167,7 +170,7 @@ namespace CUDAWrappers
      * accumulate the quadrature results from all tasks associated with this
      * vector element. Therefore, we need this array to consecutively store
      * the starting task index for each pair of DoFs. The length of this array
-     * is @p vector_size+1, with the last element being the pass-the-end index
+     * is @p n_max_vector_entries+1, with the last element being the pass-the-end index
      * after the last task for the last vector entry.}
      *
      * The data are on the host.
@@ -202,7 +205,7 @@ namespace CUDAWrappers
 
     /**
      * Vector element values on the device. The number of elements in this
-     * array is @p vector_size.
+     * array is @p n_max_vector_entries.
      */
     CUDARangeNumberType *vector_element_values_gpu;
   };
@@ -216,14 +219,14 @@ namespace CUDAWrappers
                                       CUDARangeNumberType,
                                       CUDAKernelNumberType>::
     SauterQuadratureTaskBufferForVector(
-      const unsigned int v_vector_size,
+      const unsigned int n_max_vector_entries,
       const unsigned int max_cells_per_dof_in_test_space,
       const unsigned int max_cells_per_dof_in_ansatz_space,
       const BEMValues<dim, spacedim, real_type> &bem_values,
       const cudaStream_t                         stream)
     : cuda_stream_handle(stream)
-    , vector_size(v_vector_size)
-    , capacity(vector_size * max_cells_per_dof_in_test_space *
+    , n_max_vector_entries(n_max_vector_entries)
+    , capacity(n_max_vector_entries * max_cells_per_dof_in_test_space *
                max_cells_per_dof_in_ansatz_space)
     , n_quad_points_4d(HierBEM::PlatformShared::Utilities::fixed_power<2>(
         bem_values.quad_rule_for_regular.size()))
@@ -246,11 +249,11 @@ namespace CUDAWrappers
      */
     AssertCudaThrow(
       cudaMallocHost((void **)&starting_task_indices_for_dof_pairs_cpu,
-                     sizeof(unsigned int) * (vector_size + 1)));
+                     sizeof(unsigned int) * (n_max_vector_entries + 1)));
 
     AssertCudaThrow(
       cudaMallocAsync((void **)&starting_task_indices_for_dof_pairs_gpu,
-                      sizeof(unsigned int) * (vector_size + 1),
+                      sizeof(unsigned int) * (n_max_vector_entries + 1),
                       cuda_stream_handle));
 
     AssertCudaThrow(
@@ -264,9 +267,10 @@ namespace CUDAWrappers
                                     cuda_stream_handle));
 
 
-    AssertCudaThrow(cudaMallocAsync((void **)&vector_element_values_gpu,
-                                    vector_size * sizeof(CUDARangeNumberType),
-                                    cuda_stream_handle));
+    AssertCudaThrow(
+      cudaMallocAsync((void **)&vector_element_values_gpu,
+                      n_max_vector_entries * sizeof(CUDARangeNumberType),
+                      cuda_stream_handle));
 
     AssertCudaThrow(
       cudaMallocHost((void **)&scalar_data_buffer_cpu,
@@ -286,9 +290,7 @@ namespace CUDAWrappers
     CUDAKernelNumberType>::~SauterQuadratureTaskBufferForVector()
   {
     if (starting_task_indices_for_dof_pairs_cpu != nullptr)
-      {
-        AssertCuda(cudaFreeHost(starting_task_indices_for_dof_pairs_cpu));
-      }
+      AssertCuda(cudaFreeHost(starting_task_indices_for_dof_pairs_cpu));
 
     if (starting_task_indices_for_dof_pairs_gpu != nullptr)
       {
@@ -297,9 +299,7 @@ namespace CUDAWrappers
       }
 
     if (scalar_data_buffer_gpu != nullptr)
-      {
-        AssertCuda(cudaFreeAsync(scalar_data_buffer_gpu, cuda_stream_handle));
-      }
+      AssertCuda(cudaFreeAsync(scalar_data_buffer_gpu, cuda_stream_handle));
 
     if (values_at_all_quad_points_gpu != nullptr)
       {
@@ -314,13 +314,7 @@ namespace CUDAWrappers
       }
 
     if (scalar_data_buffer_cpu != nullptr)
-      {
-        AssertCuda(cudaFreeHost(scalar_data_buffer_cpu));
-      }
-
-    vector_size      = 0;
-    capacity         = 0;
-    n_quad_points_4d = 0;
+      AssertCuda(cudaFreeHost(scalar_data_buffer_cpu));
   }
 
 
@@ -334,10 +328,8 @@ namespace CUDAWrappers
                                       CUDARangeNumberType,
                                       CUDAKernelNumberType>::reinit()
   {
-    /**
-     * @internal Reset the number of quadrature tasks to zero.
-     */
-    task_num = 0;
+    task_num                                   = 0;
+    starting_task_indices_for_dof_pairs_cpu[0] = 0;
   }
 
 
@@ -375,7 +367,9 @@ namespace CUDAWrappers
                                       CUDARangeNumberType,
                                       CUDAKernelNumberType>::
     process_tasks(
-      Vector<RangeNumberType>                                  &hmat_vector,
+      Vector<RangeNumberType> &hmat_vector,
+      const unsigned int       start_vector_entry_index,
+      const unsigned int       n_vector_entries,
       const KernelFunctionType<spacedim, CUDAKernelNumberType> &kernel,
       const CUDAKernelNumberType                                kernel_factor,
       const CUDABEMValues<dim, spacedim, real_type>            &bem_values,
@@ -397,7 +391,7 @@ namespace CUDAWrappers
     AssertCuda(
       cudaMemcpyAsync((void *)starting_task_indices_for_dof_pairs_gpu,
                       (const void *)starting_task_indices_for_dof_pairs_cpu,
-                      sizeof(unsigned int) * (vector_size + 1),
+                      sizeof(unsigned int) * (n_vector_entries + 1),
                       cudaMemcpyHostToDevice,
                       cuda_stream_handle));
 
@@ -440,7 +434,7 @@ namespace CUDAWrappers
      * Accumulate quadrature results for each vector element.
      */
     const unsigned int block_num_for_quad_result_accumulation =
-      (vector_size +
+      (n_vector_entries +
        static_cast<unsigned int>(
          sauter_quad_far_field_params.vector_entry_num_per_block) -
        1) /
@@ -451,7 +445,7 @@ namespace CUDAWrappers
       static_cast<unsigned int>(
         sauter_quad_far_field_params.vector_entry_num_per_block),
       0,
-      cuda_stream_handle>>>(vector_size,
+      cuda_stream_handle>>>(n_vector_entries,
                             n_quad_points_4d,
                             starting_task_indices_for_dof_pairs_gpu,
                             values_at_all_quad_points_gpu,
@@ -460,11 +454,12 @@ namespace CUDAWrappers
     /**
      * Copy vector element values from device to host.
      */
-    AssertCuda(cudaMemcpyAsync((void *)hmat_vector.data(),
-                               (const void *)vector_element_values_gpu,
-                               sizeof(RangeNumberType) * vector_size,
-                               cudaMemcpyDeviceToHost,
-                               cuda_stream_handle));
+    AssertCuda(
+      cudaMemcpyAsync((void *)(hmat_vector.data() + start_vector_entry_index),
+                      (const void *)vector_element_values_gpu,
+                      sizeof(RangeNumberType) * n_vector_entries,
+                      cudaMemcpyDeviceToHost,
+                      cuda_stream_handle));
 
     AssertCuda(cudaStreamSynchronize(cuda_stream_handle));
   }

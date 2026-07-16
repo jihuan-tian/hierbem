@@ -41,6 +41,7 @@ near_field.task_num_per_block = 256
 near_field.block_num_per_batch = 8
 near_field.batch_num_in_buffer = 8
 near_field.consumer_wait_time_us = 1
+far_field.vector_entry_num_in_task_buffer = 10000
 far_field.task_num_per_block = 128
 far_field.quad_point_num_per_block = 4
 far_field.vector_entry_num_per_block = 128

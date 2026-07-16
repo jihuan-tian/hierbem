@@ -96,6 +96,9 @@ struct ConfSauterQuadNearField
 
 struct ConfSauterQuadFarField
 {
+  // Number of vector entries can be held by a task buffer, which is used to
+  // determine the buffer's capacity.
+  std::uint32_t vector_entry_num_in_task_buffer = 10000;
   // Number of Sauter quadrature tasks in a thread block, which is in the x
   // direction of the thread grid.
   std::uint32_t task_num_per_block = 128;

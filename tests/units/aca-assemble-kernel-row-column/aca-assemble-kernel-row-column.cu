@@ -42,6 +42,7 @@
 
 #include <array>
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <set>
@@ -237,127 +238,129 @@ TEST_CASE("Compute a row/column vector with ACA", "[hmatrix]")
   const size_type m = row_index_range[1] - row_index_range[0];
   const size_type n = col_index_range[1] - col_index_range[0];
 
-  HierBEM::CUDAWrappers::
-    SauterQuadratureTaskBufferForVector<dim, spacedim, double, double>
-      sauter_task_buffer_for_row_vector(
-        n,
-        bD.get_test_space().get_dof_to_cell_topo().max_cells_per_dof,
-        bD.get_trial_space().get_dof_to_cell_topo().max_cells_per_dof,
-        bem_values,
-        scratch_data.cuda_stream_handle);
-  HierBEM::CUDAWrappers::
-    SauterQuadratureTaskBufferForVector<dim, spacedim, double, double>
-      sauter_task_buffer_for_col_vector(
-        m,
-        bD.get_test_space().get_dof_to_cell_topo().max_cells_per_dof,
-        bD.get_trial_space().get_dof_to_cell_topo().max_cells_per_dof,
-        bem_values,
-        scratch_data.cuda_stream_handle);
-
-  // Row and column vectors.
-  Vector<double> v(n);
-  Vector<double> u(m);
-
-  // Pin the host memory for v and u, which is required by asynchronous memory
-  // copy from the device to the host.
-  AssertCuda(cudaHostRegister((void *)(v.data()),
-                              sizeof(double) * n,
-                              cudaHostRegisterDefault));
-  AssertCuda(cudaHostRegister((void *)(u.data()),
-                              sizeof(double) * m,
-                              cudaHostRegisterDefault));
-
-  /**
-   * Generate lists of internal DoF indices (internal DoF numbering) from
-   * corresponding index ranges.
-   */
-  std::vector<types::global_dof_index> row_dof_indices(m);
-  std::vector<types::global_dof_index> col_dof_indices(n);
-  gen_linear_indices<vector_uta, types::global_dof_index>(row_dof_indices,
-                                                          row_index_range[0]);
-  gen_linear_indices<vector_uta, types::global_dof_index>(col_dof_indices,
-                                                          col_index_range[0]);
-
-  assemble_kernel_row(sauter_task_buffer_for_row_vector,
-                      v,
-                      sauter_quad_far_field_params,
-                      bD.get_kernel(),
-                      1.0,
-                      {},
-                      0.,
-                      row_dof_indices[0],
-                      col_dof_indices,
-                      bD.get_test_space().get_dof_to_cell_topo().topology,
-                      bD.get_trial_space().get_dof_to_cell_topo().topology,
-                      bem_values_gpu,
-                      nullptr,
-                      nullptr,
-                      bD.get_test_space()
-                        .get_cluster_tree()
-                        .get_internal_to_external_dof_numbering(),
-                      bD.get_trial_space()
-                        .get_cluster_tree()
-                        .get_internal_to_external_dof_numbering(),
-                      mappings,
-                      material_id_to_mapping_index,
-                      bD.get_global_to_local_cell_index_map(),
-                      bem_values.mapping_support_point_table,
-                      scratch_data,
-                      copy_data);
-
-  assemble_kernel_column(sauter_task_buffer_for_col_vector,
-                         u,
-                         sauter_quad_far_field_params,
-                         bD.get_kernel(),
-                         1.0,
-                         {},
-                         0.,
-                         row_dof_indices,
-                         col_dof_indices[0],
-                         bD.get_test_space().get_dof_to_cell_topo().topology,
-                         bD.get_trial_space().get_dof_to_cell_topo().topology,
-                         bem_values_gpu,
-                         nullptr,
-                         nullptr,
-                         bD.get_test_space()
-                           .get_cluster_tree()
-                           .get_internal_to_external_dof_numbering(),
-                         bD.get_trial_space()
-                           .get_cluster_tree()
-                           .get_internal_to_external_dof_numbering(),
-                         mappings,
-                         material_id_to_mapping_index,
-                         bD.get_global_to_local_cell_index_map(),
-                         bem_values.mapping_support_point_table,
-                         scratch_data,
-                         copy_data);
-
-  AssertCuda(cudaHostUnregister((void *)(v.data())));
-  AssertCuda(cudaHostUnregister((void *)(u.data())));
-
-  std::string   logfile("aca-assemble-kernel-row-column.output");
-  std::ofstream ofs(logfile);
-  print_vector_to_mat(ofs, "v", v);
-  print_vector_to_mat(ofs, "u", u);
-  ofs.close();
-
-  // Calculate relative error
-  try
+  for (auto vector_entry_num : {1, 2, 4, 64, 128, 1024, 10000})
     {
-      inst.source_file(SOURCE_DIR "/process.m");
-    }
-  catch (...)
-    {
-      // Ignore errors
-    }
+      std::cout << "Number of vector entries in task buffer: "
+                << vector_entry_num << std::endl;
 
-  // Check relative error
-  HBEMOctaveValue out;
-  out = inst.eval_string("v_rel_err");
-  REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-12));
+      sauter_quad_far_field_params.vector_entry_num_in_task_buffer =
+        vector_entry_num;
 
-  out = inst.eval_string("u_rel_err");
-  REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-12));
+      HierBEM::CUDAWrappers::
+        SauterQuadratureTaskBufferForVector<dim, spacedim, double, double>
+          sauter_task_buffer_for_vector(
+            sauter_quad_far_field_params.vector_entry_num_in_task_buffer,
+            bD.get_test_space().get_dof_to_cell_topo().max_cells_per_dof,
+            bD.get_trial_space().get_dof_to_cell_topo().max_cells_per_dof,
+            bem_values,
+            scratch_data.cuda_stream_handle);
+
+      // Row and column vectors.
+      Vector<double> v(n);
+      Vector<double> u(m);
+
+      // Pin the host memory for v and u, which is required by asynchronous
+      // memory copy from the device to the host.
+      AssertCuda(cudaHostRegister((void *)(v.data()),
+                                  sizeof(double) * n,
+                                  cudaHostRegisterDefault));
+      AssertCuda(cudaHostRegister((void *)(u.data()),
+                                  sizeof(double) * m,
+                                  cudaHostRegisterDefault));
+
+      /**
+       * Generate lists of internal DoF indices (internal DoF numbering) from
+       * corresponding index ranges.
+       */
+      std::vector<types::global_dof_index> row_dof_indices(m);
+      std::vector<types::global_dof_index> col_dof_indices(n);
+      gen_linear_indices<vector_uta, types::global_dof_index>(
+        row_dof_indices, row_index_range[0]);
+      gen_linear_indices<vector_uta, types::global_dof_index>(
+        col_dof_indices, col_index_range[0]);
+
+      assemble_kernel_row(sauter_task_buffer_for_vector,
+                          v,
+                          sauter_quad_far_field_params,
+                          bD.get_kernel(),
+                          1.0,
+                          {},
+                          0.,
+                          row_dof_indices[0],
+                          col_dof_indices,
+                          bD.get_test_space().get_dof_to_cell_topo().topology,
+                          bD.get_trial_space().get_dof_to_cell_topo().topology,
+                          bem_values_gpu,
+                          nullptr,
+                          nullptr,
+                          bD.get_test_space()
+                            .get_cluster_tree()
+                            .get_internal_to_external_dof_numbering(),
+                          bD.get_trial_space()
+                            .get_cluster_tree()
+                            .get_internal_to_external_dof_numbering(),
+                          mappings,
+                          material_id_to_mapping_index,
+                          bD.get_global_to_local_cell_index_map(),
+                          bem_values.mapping_support_point_table,
+                          scratch_data,
+                          copy_data);
+
+      assemble_kernel_column(
+        sauter_task_buffer_for_vector,
+        u,
+        sauter_quad_far_field_params,
+        bD.get_kernel(),
+        1.0,
+        {},
+        0.,
+        row_dof_indices,
+        col_dof_indices[0],
+        bD.get_test_space().get_dof_to_cell_topo().topology,
+        bD.get_trial_space().get_dof_to_cell_topo().topology,
+        bem_values_gpu,
+        nullptr,
+        nullptr,
+        bD.get_test_space()
+          .get_cluster_tree()
+          .get_internal_to_external_dof_numbering(),
+        bD.get_trial_space()
+          .get_cluster_tree()
+          .get_internal_to_external_dof_numbering(),
+        mappings,
+        material_id_to_mapping_index,
+        bD.get_global_to_local_cell_index_map(),
+        bem_values.mapping_support_point_table,
+        scratch_data,
+        copy_data);
+
+      AssertCuda(cudaHostUnregister((void *)(v.data())));
+      AssertCuda(cudaHostUnregister((void *)(u.data())));
+
+      std::string   logfile("aca-assemble-kernel-row-column.output");
+      std::ofstream ofs(logfile);
+      print_vector_to_mat(ofs, "v", v);
+      print_vector_to_mat(ofs, "u", u);
+      ofs.close();
+
+      // Calculate relative error
+      try
+        {
+          inst.source_file(SOURCE_DIR "/process.m");
+        }
+      catch (...)
+        {
+          // Ignore errors
+        }
+
+      // Check relative error
+      HBEMOctaveValue out;
+      out = inst.eval_string("v_rel_err");
+      REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-12));
+
+      out = inst.eval_string("u_rel_err");
+      REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-12));
+    }
 
   // Delete manifolds and mappings.
   for (auto &m : manifolds)

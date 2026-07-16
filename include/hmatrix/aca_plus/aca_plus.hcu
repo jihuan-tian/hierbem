@@ -387,14 +387,12 @@ assemble_kernel_row(
       typename numbers::NumberTraits<RangeNumberType>::real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
-  AssertDimension(row_vector.size(), column_dof_indices.size());
+  const size_type n = row_vector.size();
+  AssertDimension(n, column_dof_indices.size());
 
-  task_buffer.reinit();
+  const size_type n_task_batches = (n + task_buffer.n_max_vector_entries - 1) /
+                                   task_buffer.n_max_vector_entries;
 
-  /**
-   * @internal Add all Sauter quadrature tasks to the buffer for assembling
-   * the row or column vector.
-   */
   types::global_dof_index i_global_dof_index =
     (kx_map_from_local_to_full_dof_indices == nullptr) ?
       kx_dof_i2e_numbering[row_dof_index] :
@@ -402,42 +400,58 @@ assemble_kernel_row(
         kx_dof_i2e_numbering[row_dof_index]);
   types::global_dof_index j_global_dof_index;
 
-  /**
-   * @internal Iterate over each column DoF index.
-   */
-  task_buffer.starting_task_indices_for_dof_pairs_cpu[0] = 0;
-  for (size_type j = 0; j < column_dof_indices.size(); j++)
+  for (unsigned int batch_no = 0; batch_no < n_task_batches; batch_no++)
     {
-      j_global_dof_index = (ky_map_from_local_to_full_dof_indices == nullptr) ?
-                             ky_dof_i2e_numbering[column_dof_indices[j]] :
-                             ky_map_from_local_to_full_dof_indices->at(
-                               ky_dof_i2e_numbering[column_dof_indices[j]]);
+      task_buffer.reinit();
+      const size_type start_vector_entry_index =
+        batch_no * task_buffer.n_max_vector_entries;
+      const size_type pass_the_end_vector_entry_index =
+        std::min(n, (batch_no + 1) * task_buffer.n_max_vector_entries);
 
-      task_buffer.starting_task_indices_for_dof_pairs_cpu[j + 1] =
-        task_buffer.starting_task_indices_for_dof_pairs_cpu[j] +
-        create_sauter_quadrature_tasks_on_one_pair_of_far_field_dofs(
-          task_buffer,
-          i_global_dof_index,
-          j_global_dof_index,
-          kx_dof_to_cell_topo,
-          ky_dof_to_cell_topo,
-          mappings,
-          material_id_to_mapping_index,
-          global_to_local_cell_index_map,
-          mapping_support_point_table,
-          scratch_data,
-          copy_data);
+      /**
+       * @internal Iterate over each column DoF index.
+       */
+      for (size_type j = start_vector_entry_index;
+           j < pass_the_end_vector_entry_index;
+           j++)
+        {
+          j_global_dof_index =
+            (ky_map_from_local_to_full_dof_indices == nullptr) ?
+              ky_dof_i2e_numbering[column_dof_indices[j]] :
+              ky_map_from_local_to_full_dof_indices->at(
+                ky_dof_i2e_numbering[column_dof_indices[j]]);
+
+          task_buffer.starting_task_indices_for_dof_pairs_cpu
+            [j - start_vector_entry_index + 1] =
+            task_buffer.starting_task_indices_for_dof_pairs_cpu
+              [j - start_vector_entry_index] +
+            create_sauter_quadrature_tasks_on_one_pair_of_far_field_dofs(
+              task_buffer,
+              i_global_dof_index,
+              j_global_dof_index,
+              kx_dof_to_cell_topo,
+              ky_dof_to_cell_topo,
+              mappings,
+              material_id_to_mapping_index,
+              global_to_local_cell_index_map,
+              mapping_support_point_table,
+              scratch_data,
+              copy_data);
+        }
+
+      /**
+       * @internal Process all Sauter quadrature tasks and generate the vector.
+       */
+      task_buffer.process_tasks(row_vector,
+                                start_vector_entry_index,
+                                pass_the_end_vector_entry_index -
+                                  start_vector_entry_index,
+                                kernel,
+                                kernel_factor,
+                                bem_values_gpu,
+                                sauter_quad_far_field_params,
+                                scratch_data.cuda_stream_handle);
     }
-
-  /**
-   * @internal Process all Sauter quadrature tasks and generate the vector.
-   */
-  task_buffer.process_tasks(row_vector,
-                            kernel,
-                            kernel_factor,
-                            bem_values_gpu,
-                            sauter_quad_far_field_params,
-                            scratch_data.cuda_stream_handle);
 }
 
 
@@ -836,9 +850,11 @@ assemble_kernel_column(
       typename numbers::NumberTraits<RangeNumberType>::real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
-  AssertDimension(col_vector.size(), row_dof_indices.size());
+  const size_type m = col_vector.size();
+  AssertDimension(m, row_dof_indices.size());
 
-  task_buffer.reinit();
+  const size_type n_task_batches = (m + task_buffer.n_max_vector_entries - 1) /
+                                   task_buffer.n_max_vector_entries;
 
   types::global_dof_index i_global_dof_index;
   types::global_dof_index j_global_dof_index =
@@ -847,42 +863,58 @@ assemble_kernel_column(
       ky_map_from_local_to_full_dof_indices->at(
         ky_dof_i2e_numbering[col_dof_index]);
 
-  /**
-   * @internal Iterate over each row DoF index.
-   */
-  task_buffer.starting_task_indices_for_dof_pairs_cpu[0] = 0;
-  for (size_type i = 0; i < row_dof_indices.size(); i++)
+  for (unsigned int batch_no = 0; batch_no < n_task_batches; batch_no++)
     {
-      i_global_dof_index = (kx_map_from_local_to_full_dof_indices == nullptr) ?
-                             kx_dof_i2e_numbering[row_dof_indices[i]] :
-                             kx_map_from_local_to_full_dof_indices->at(
-                               kx_dof_i2e_numbering[row_dof_indices[i]]);
+      task_buffer.reinit();
+      const size_type start_vector_entry_index =
+        batch_no * task_buffer.n_max_vector_entries;
+      const size_type pass_the_end_vector_entry_index =
+        std::min(m, (batch_no + 1) * task_buffer.n_max_vector_entries);
 
-      task_buffer.starting_task_indices_for_dof_pairs_cpu[i + 1] =
-        task_buffer.starting_task_indices_for_dof_pairs_cpu[i] +
-        create_sauter_quadrature_tasks_on_one_pair_of_far_field_dofs(
-          task_buffer,
-          i_global_dof_index,
-          j_global_dof_index,
-          kx_dof_to_cell_topo,
-          ky_dof_to_cell_topo,
-          mappings,
-          material_id_to_mapping_index,
-          global_to_local_cell_index_map,
-          mapping_support_point_table,
-          scratch_data,
-          copy_data);
+      /**
+       * @internal Iterate over each row DoF index.
+       */
+      for (size_type i = start_vector_entry_index;
+           i < pass_the_end_vector_entry_index;
+           i++)
+        {
+          i_global_dof_index =
+            (kx_map_from_local_to_full_dof_indices == nullptr) ?
+              kx_dof_i2e_numbering[row_dof_indices[i]] :
+              kx_map_from_local_to_full_dof_indices->at(
+                kx_dof_i2e_numbering[row_dof_indices[i]]);
+
+          task_buffer.starting_task_indices_for_dof_pairs_cpu
+            [i - start_vector_entry_index + 1] =
+            task_buffer.starting_task_indices_for_dof_pairs_cpu
+              [i - start_vector_entry_index] +
+            create_sauter_quadrature_tasks_on_one_pair_of_far_field_dofs(
+              task_buffer,
+              i_global_dof_index,
+              j_global_dof_index,
+              kx_dof_to_cell_topo,
+              ky_dof_to_cell_topo,
+              mappings,
+              material_id_to_mapping_index,
+              global_to_local_cell_index_map,
+              mapping_support_point_table,
+              scratch_data,
+              copy_data);
+        }
+
+      /**
+       * @internal Process all Sauter quadrature tasks and generate the vector.
+       */
+      task_buffer.process_tasks(col_vector,
+                                start_vector_entry_index,
+                                pass_the_end_vector_entry_index -
+                                  start_vector_entry_index,
+                                kernel,
+                                kernel_factor,
+                                bem_values_gpu,
+                                sauter_quad_far_field_params,
+                                scratch_data.cuda_stream_handle);
     }
-
-  /**
-   * @internal Process all Sauter quadrature tasks and generate the vector.
-   */
-  task_buffer.process_tasks(col_vector,
-                            kernel,
-                            kernel_factor,
-                            bem_values_gpu,
-                            sauter_quad_far_field_params,
-                            scratch_data.cuda_stream_handle);
 }
 
 
@@ -4056,9 +4088,14 @@ template <int dim,
           typename KernelNumberType>
 void
 aca_plus_parallel_sauter_quad_for_whole_vector(
-  RkMatrix<RangeNumberType>    &rkmat,
-  const ConfHMatrix            &hmat_params,
-  const ConfSauterQuadFarField &sauter_quad_far_field_params,
+  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    DeviceNumberType<RangeNumberType>,
+    DeviceNumberType<KernelNumberType>> &sauter_task_buffer_for_vector,
+  RkMatrix<RangeNumberType>             &rkmat,
+  const ConfHMatrix                     &hmat_params,
+  const ConfSauterQuadFarField          &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                                &kernel,
   const DeviceNumberType<KernelNumberType>      kernel_factor,
@@ -4105,31 +4142,6 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
 
   AssertDimension(rkmat.get_m(), m);
   AssertDimension(rkmat.get_n(), n);
-
-  /**
-   * @internal Create Sauter task buffers for assembling row vectors and
-   * column vectors.
-   */
-  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
-    dim,
-    spacedim,
-    CUDARangeNumberType,
-    CUDAKernelNumberType>
-    sauter_task_buffer_for_row_vector(n,
-                                      kx_dof_to_cell_topo.max_cells_per_dof,
-                                      ky_dof_to_cell_topo.max_cells_per_dof,
-                                      bem_values,
-                                      scratch_data.cuda_stream_handle);
-  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
-    dim,
-    spacedim,
-    CUDARangeNumberType,
-    CUDAKernelNumberType>
-    sauter_task_buffer_for_col_vector(m,
-                                      kx_dof_to_cell_topo.max_cells_per_dof,
-                                      ky_dof_to_cell_topo.max_cells_per_dof,
-                                      bem_values,
-                                      scratch_data.cuda_stream_handle);
 
   /**
    * Adjust the maximum ACA+ iteration if is larger than the matrix
@@ -4190,7 +4202,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                               sizeof(RangeNumberType) * m,
                               cudaHostRegisterDefault));
 
-  size_type r = random_select_ref_row(sauter_task_buffer_for_row_vector,
+  size_type r = random_select_ref_row(sauter_task_buffer_for_vector,
                                       vr,
                                       sauter_quad_far_field_params,
                                       kernel,
@@ -4226,7 +4238,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       return;
     }
 
-  size_type c = random_select_ref_column(sauter_task_buffer_for_col_vector,
+  size_type c = random_select_ref_column(sauter_task_buffer_for_vector,
                                          uc,
                                          sauter_quad_far_field_params,
                                          kernel,
@@ -4355,7 +4367,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           /**
            * Extract the \f$i_k\f$'th row of \f$A\f$.
            */
-          assemble_kernel_row(sauter_task_buffer_for_row_vector,
+          assemble_kernel_row(sauter_task_buffer_for_vector,
                               vk,
                               sauter_quad_far_field_params,
                               kernel,
@@ -4417,7 +4429,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           /**
            * Extract the \f$j_k\f$'th column from \f$A\f$.
            */
-          assemble_kernel_column(sauter_task_buffer_for_col_vector,
+          assemble_kernel_column(sauter_task_buffer_for_vector,
                                  uk,
                                  sauter_quad_far_field_params,
                                  kernel,
@@ -4459,7 +4471,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           /**
            * Extract the \f$j_k\f$'th column from the matrix \f$A\f$.
            */
-          assemble_kernel_column(sauter_task_buffer_for_col_vector,
+          assemble_kernel_column(sauter_task_buffer_for_vector,
                                  uk,
                                  sauter_quad_far_field_params,
                                  kernel,
@@ -4507,7 +4519,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           /**
            * Extract the \f$i_k\f$'th row from \f$A\f$.
            */
-          assemble_kernel_row(sauter_task_buffer_for_row_vector,
+          assemble_kernel_row(sauter_task_buffer_for_vector,
                               vk,
                               sauter_quad_far_field_params,
                               kernel,
@@ -4572,7 +4584,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            * When the index of the selected row is the same as that of the
            * reference row, reselect a reference row.
            */
-          r = random_select_ref_row(sauter_task_buffer_for_row_vector,
+          r = random_select_ref_row(sauter_task_buffer_for_vector,
                                     vr,
                                     sauter_quad_far_field_params,
                                     kernel,
@@ -4664,7 +4676,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            * When the index of the selected column is the same as that of
            * the reference column, reselect a reference column.
            */
-          c = random_select_ref_column(sauter_task_buffer_for_col_vector,
+          c = random_select_ref_column(sauter_task_buffer_for_vector,
                                        uc,
                                        sauter_quad_far_field_params,
                                        kernel,
@@ -4872,9 +4884,14 @@ template <int dim,
           typename KernelNumberType>
 void
 aca_plus_parallel_sauter_quad_for_whole_vector(
-  RkMatrix<RangeNumberType>    &rkmat,
-  const ConfHMatrix            &hmat_params,
-  const ConfSauterQuadFarField &sauter_quad_far_field_params,
+  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    DeviceNumberType<RangeNumberType>,
+    DeviceNumberType<KernelNumberType>> &sauter_task_buffer_for_vector,
+  RkMatrix<RangeNumberType>             &rkmat,
+  const ConfHMatrix                     &hmat_params,
+  const ConfSauterQuadFarField          &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                                &kernel,
   const DeviceNumberType<KernelNumberType>      kernel_factor,
@@ -4921,31 +4938,6 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
 
   AssertDimension(rkmat.get_m(), m);
   AssertDimension(rkmat.get_n(), n);
-
-  /**
-   * @internal Create Sauter task buffers for assembling row vectors and
-   * column vectors.
-   */
-  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
-    dim,
-    spacedim,
-    CUDARangeNumberType,
-    CUDAKernelNumberType>
-    sauter_task_buffer_for_row_vector(n,
-                                      kx_dof_to_cell_topo.max_cells_per_dof,
-                                      ky_dof_to_cell_topo.max_cells_per_dof,
-                                      bem_values,
-                                      scratch_data.cuda_stream_handle);
-  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
-    dim,
-    spacedim,
-    CUDARangeNumberType,
-    CUDAKernelNumberType>
-    sauter_task_buffer_for_col_vector(m,
-                                      kx_dof_to_cell_topo.max_cells_per_dof,
-                                      ky_dof_to_cell_topo.max_cells_per_dof,
-                                      bem_values,
-                                      scratch_data.cuda_stream_handle);
 
   /**
    * Adjust the maximum ACA+ iteration if is larger than the matrix
@@ -5005,7 +4997,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                               sizeof(RangeNumberType) * m,
                               cudaHostRegisterDefault));
 
-  size_type r = random_select_ref_row(sauter_task_buffer_for_row_vector,
+  size_type r = random_select_ref_row(sauter_task_buffer_for_vector,
                                       vr,
                                       sauter_quad_far_field_params,
                                       kernel,
@@ -5043,7 +5035,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       return;
     }
 
-  size_type c = random_select_ref_column(sauter_task_buffer_for_col_vector,
+  size_type c = random_select_ref_column(sauter_task_buffer_for_vector,
                                          uc,
                                          sauter_quad_far_field_params,
                                          kernel,
@@ -5177,7 +5169,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           /**
            * Extract the \f$i_k\f$'th row of \f$A\f$.
            */
-          assemble_kernel_row(sauter_task_buffer_for_row_vector,
+          assemble_kernel_row(sauter_task_buffer_for_vector,
                               vk,
                               sauter_quad_far_field_params,
                               kernel,
@@ -5241,7 +5233,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           /**
            * Extract the \f$j_k\f$'th column from \f$A\f$.
            */
-          assemble_kernel_column(sauter_task_buffer_for_col_vector,
+          assemble_kernel_column(sauter_task_buffer_for_vector,
                                  uk,
                                  sauter_quad_far_field_params,
                                  kernel,
@@ -5285,7 +5277,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           /**
            * Extract the \f$j_k\f$'th column from the matrix \f$A\f$.
            */
-          assemble_kernel_column(sauter_task_buffer_for_col_vector,
+          assemble_kernel_column(sauter_task_buffer_for_vector,
                                  uk,
                                  sauter_quad_far_field_params,
                                  kernel,
@@ -5335,7 +5327,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           /**
            * Extract the \f$i_k\f$'th row from \f$A\f$.
            */
-          assemble_kernel_row(sauter_task_buffer_for_row_vector,
+          assemble_kernel_row(sauter_task_buffer_for_vector,
                               vk,
                               sauter_quad_far_field_params,
                               kernel,
@@ -5402,7 +5394,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            * When the index of the selected row is the same as that of the
            * reference row, reselect a reference row.
            */
-          r = random_select_ref_row(sauter_task_buffer_for_row_vector,
+          r = random_select_ref_row(sauter_task_buffer_for_vector,
                                     vr,
                                     sauter_quad_far_field_params,
                                     kernel,
@@ -5496,7 +5488,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            * When the index of the selected column is the same as that of
            * the reference column, reselect a reference column.
            */
-          c = random_select_ref_column(sauter_task_buffer_for_col_vector,
+          c = random_select_ref_column(sauter_task_buffer_for_vector,
                                        uc,
                                        sauter_quad_far_field_params,
                                        kernel,
@@ -7438,9 +7430,14 @@ template <int dim,
           typename KernelNumberType>
 void
 fill_far_field_hmatrix_leaf_node_with_aca_plus(
-  HMatrix<spacedim, RangeNumberType> *leaf_mat,
-  const ConfHMatrix                  &hmat_params,
-  const ConfSauterQuadFarField       &sauter_quad_far_field_params,
+  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    DeviceNumberType<RangeNumberType>,
+    DeviceNumberType<KernelNumberType>> &sauter_task_buffer_for_vector,
+  HMatrix<spacedim, RangeNumberType>    *leaf_mat,
+  const ConfHMatrix                     &hmat_params,
+  const ConfSauterQuadFarField          &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                           &kernel,
   const DeviceNumberType<KernelNumberType> kernel_factor,
@@ -7516,6 +7513,7 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
                        * lower triangular part using ACA+.
                        */
                       aca_plus_parallel_sauter_quad_for_whole_vector(
+                        sauter_task_buffer_for_vector,
                         (*rkmat),
                         hmat_params,
                         sauter_quad_far_field_params,
@@ -7569,6 +7567,7 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
           else
             {
               aca_plus_parallel_sauter_quad_for_whole_vector(
+                sauter_task_buffer_for_vector,
                 (*rkmat),
                 hmat_params,
                 sauter_quad_far_field_params,
@@ -7609,9 +7608,14 @@ template <int dim,
           typename KernelNumberType>
 void
 fill_far_field_hmatrix_leaf_node_with_aca_plus(
-  HMatrix<spacedim, RangeNumberType> *leaf_mat,
-  const ConfHMatrix                  &hmat_params,
-  const ConfSauterQuadFarField       &sauter_quad_far_field_params,
+  HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    DeviceNumberType<RangeNumberType>,
+    DeviceNumberType<KernelNumberType>> &sauter_task_buffer_for_vector,
+  HMatrix<spacedim, RangeNumberType>    *leaf_mat,
+  const ConfHMatrix                     &hmat_params,
+  const ConfSauterQuadFarField          &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
   const DeviceNumberType<KernelNumberType>     kernel_factor,
@@ -7686,6 +7690,7 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
                        * lower triangular part using ACA+.
                        */
                       aca_plus_parallel_sauter_quad_for_whole_vector(
+                        sauter_task_buffer_for_vector,
                         (*rkmat),
                         hmat_params,
                         sauter_quad_far_field_params,
@@ -7735,6 +7740,7 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
           else
             {
               aca_plus_parallel_sauter_quad_for_whole_vector(
+                sauter_task_buffer_for_vector,
                 (*rkmat),
                 hmat_params,
                 sauter_quad_far_field_params,
@@ -7836,12 +7842,10 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
       real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
-  /**
-   * Define @p PairCellWiseScratchDataForHMatrixFarField and
-   * @p PairCellWisePerTaskData which are local to the current working thread.
-   * This is mandatory because each current working thread should have its own
-   * copy of these data.
-   */
+  // Define @p PairCellWiseScratchDataForHMatrixFarField and
+  // @p PairCellWisePerTaskData which are local to the current working thread.
+  // This is mandatory because each current working thread should have its own
+  // copy of these data.
   thread_local PairCellWiseScratchDataForHMatrixFarField<dim,
                                                          spacedim,
                                                          KernelNumberType>
@@ -7849,12 +7853,26 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
   thread_local PairCellWisePerTaskData<dim, spacedim> copy_data(
     kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
+  // Create thread local task buffer for computing vector entries.
+  thread_local HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    DeviceNumberType<RangeNumberType>,
+    DeviceNumberType<KernelNumberType>>
+    sauter_task_buffer_for_vector(
+      sauter_quad_far_field_params.vector_entry_num_in_task_buffer,
+      kx_dof_to_cell_topo.max_cells_per_dof,
+      ky_dof_to_cell_topo.max_cells_per_dof,
+      bem_values,
+      scratch_data.cuda_stream_handle);
+
   for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
          iter = range.begin();
        iter != range.end();
        iter++)
     {
       fill_far_field_hmatrix_leaf_node_with_aca_plus(
+        sauter_task_buffer_for_vector,
         (*iter),
         hmat_params,
         sauter_quad_far_field_params,
@@ -7952,12 +7970,10 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
       real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
-  /**
-   * Define @p PairCellWiseScratchDataForHMatrixFarField and
-   * @p PairCellWisePerTaskData which are local to the current working thread.
-   * This is mandatory because each current working thread should have its own
-   * copy of these data.
-   */
+  // Define @p PairCellWiseScratchDataForHMatrixFarField and
+  // @p PairCellWisePerTaskData which are local to the current working thread.
+  // This is mandatory because each current working thread should have its own
+  // copy of these data.
   thread_local PairCellWiseScratchDataForHMatrixFarField<dim,
                                                          spacedim,
                                                          KernelNumberType>
@@ -7965,12 +7981,26 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
   thread_local PairCellWisePerTaskData<dim, spacedim> copy_data(
     kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
+  // Create thread local task buffer for computing vector entries.
+  thread_local HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
+    dim,
+    spacedim,
+    DeviceNumberType<RangeNumberType>,
+    DeviceNumberType<KernelNumberType>>
+    sauter_task_buffer_for_vector(
+      sauter_quad_far_field_params.vector_entry_num_in_task_buffer,
+      kx_dof_to_cell_topo.max_cells_per_dof,
+      ky_dof_to_cell_topo.max_cells_per_dof,
+      bem_values,
+      scratch_data.cuda_stream_handle);
+
   for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
          iter = range.begin();
        iter != range.end();
        iter++)
     {
       fill_far_field_hmatrix_leaf_node_with_aca_plus(
+        sauter_task_buffer_for_vector,
         (*iter),
         hmat_params,
         sauter_quad_far_field_params,
