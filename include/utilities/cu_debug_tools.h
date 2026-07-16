@@ -39,6 +39,7 @@
 #include <cuda_runtime.h>
 
 #include <cmath>
+#include <iomanip>
 #include <iostream>
 
 #include "bem/bem_values.h"
@@ -147,7 +148,8 @@ is_equal(const std::vector<T>                         &vector_cpu,
               if (std::fabs(*(vector_cpu_ptr + i) - *(table_from_gpu_ptr + i)) >
                   eps)
                 {
-                  std::cout << "(" << *(vector_cpu_ptr + i) << ","
+                  std::cout << std::setprecision(15) << "("
+                            << *(vector_cpu_ptr + i) << ","
                             << *(table_from_gpu_ptr + i) << ")" << std::endl;
                   return false;
                 }
@@ -208,7 +210,8 @@ is_equal(const std::vector<Tensor<1, spacedim, RangeNumberType>> &vector_cpu,
                   if (std::fabs(vector_cpu[i][d] -
                                 table_copied_from_gpu(i)[d]) > eps)
                     {
-                      std::cout << "(" << vector_cpu[i][d] << ","
+                      std::cout << std::setprecision(15) << "("
+                                << vector_cpu[i][d] << ","
                                 << table_copied_from_gpu(i)[d] << ")"
                                 << std::endl;
                       return false;
@@ -273,7 +276,8 @@ is_equal(
                   if (std::fabs(vector_cpu[i](d) -
                                 table_copied_from_gpu(i)(d)) > eps)
                     {
-                      std::cout << "(" << vector_cpu[i][d] << ","
+                      std::cout << std::setprecision(15) << "("
+                                << vector_cpu[i][d] << ","
                                 << table_copied_from_gpu(i)[d] << ")"
                                 << std::endl;
                       return false;
@@ -337,7 +341,8 @@ is_equal(const Table<2, T>                            &table_cpu,
               if (std::fabs(*(table_cpu_ptr + i) - *(table_from_gpu_ptr + i)) >
                   eps)
                 {
-                  std::cout << "(" << *(table_cpu_ptr + i) << ","
+                  std::cout << std::setprecision(15) << "("
+                            << *(table_cpu_ptr + i) << ","
                             << *(table_from_gpu_ptr + i) << ")" << std::endl;
                   return false;
                 }
@@ -401,7 +406,8 @@ is_equal(const Table<2, Tensor<1, spacedim, RangeNumberType>> &table_cpu,
                       if (std::fabs(table_cpu(i, j)[d] -
                                     table_copied_from_gpu(i, j)[d]) > eps)
                         {
-                          std::cout << "(" << table_cpu(i, j)[d] << ","
+                          std::cout << std::setprecision(15) << "("
+                                    << table_cpu(i, j)[d] << ","
                                     << table_copied_from_gpu(i, j)[d] << ")"
                                     << std::endl;
                           return false;
@@ -478,7 +484,8 @@ is_equal(const Table<3, Tensor<1, spacedim, RangeNumberType>> &table_cpu,
                                         table_copied_from_gpu(c, s, q)[d]) >
                               eps)
                             {
-                              std::cout << "(" << table_cpu(c, s, q)[d] << ","
+                              std::cout << std::setprecision(15) << "("
+                                        << table_cpu(c, s, q)[d] << ","
                                         << table_copied_from_gpu(c, s, q)[d]
                                         << ")" << std::endl;
                               return false;
@@ -550,7 +557,8 @@ is_equal(
                       if (std::fabs(table_cpu(i, j)[d] -
                                     table_copied_from_gpu(i, j)[d]) > eps)
                         {
-                          std::cout << "(" << table_cpu(i, j)[d] << ","
+                          std::cout << std::setprecision(15) << "("
+                                    << table_cpu(i, j)[d] << ","
                                     << table_copied_from_gpu(i, j)[d] << ")"
                                     << std::endl;
                           return false;
@@ -619,7 +627,8 @@ is_equal(const Table<3, T>                            &table_cpu,
               if (std::fabs(*(table_cpu_ptr + i) - *(table_from_gpu_ptr + i)) >
                   eps)
                 {
-                  std::cout << "(" << *(table_cpu_ptr + i) << ","
+                  std::cout << std::setprecision(15) << "("
+                            << *(table_cpu_ptr + i) << ","
                             << *(table_from_gpu_ptr + i) << ")" << std::endl;
                   return false;
                 }
@@ -683,7 +692,8 @@ is_equal(const Table<4, T>                            &table_cpu,
               if (std::fabs(*(table_cpu_ptr + i) - *(table_from_gpu_ptr + i)) >
                   eps)
                 {
-                  std::cout << "(" << *(table_cpu_ptr + i) << ","
+                  std::cout << std::setprecision(15) << "("
+                            << *(table_cpu_ptr + i) << ","
                             << *(table_from_gpu_ptr + i) << ")" << std::endl;
                   return false;
                 }
@@ -763,7 +773,8 @@ is_equal(const Table<2, LAPACKFullMatrixExt<T>>       &table_cpu,
                           if (std::fabs(*(table_from_gpu_ptr + counter) -
                                         table_cpu(k, q)(i, j)) > eps)
                             {
-                              std::cout << "(" << table_cpu(k, q)(i, j) << ","
+                              std::cout << std::setprecision(15) << "("
+                                        << table_cpu(k, q)(i, j) << ","
                                         << *(table_from_gpu_ptr + counter)
                                         << ")" << std::endl;
                               return false;
@@ -841,7 +852,8 @@ is_equal(const Table<1, LAPACKFullMatrixExt<T>>       &table_cpu,
                       if (std::fabs(*(table_from_gpu_ptr + counter) -
                                     table_cpu(q)(i, j)) > eps)
                         {
-                          std::cout << "(" << table_cpu(q)(i, j) << ","
+                          std::cout << std::setprecision(15) << "("
+                                    << table_cpu(q)(i, j) << ","
                                     << *(table_from_gpu_ptr + counter) << ")"
                                     << std::endl;
                           return false;
@@ -935,7 +947,7 @@ is_equal(const Table<3, LAPACKFullMatrixExt<T>>       &table_cpu,
                                     table_cpu(mapping_index, k, q)(i, j)) > eps)
                                 {
                                   std::cout
-                                    << "("
+                                    << std::setprecision(15) << "("
                                     << table_cpu(mapping_index, k, q)(i, j)
                                     << ","
                                     << table_copied_from_gpu(mapping_index,
@@ -1041,7 +1053,7 @@ is_equal(const Table<2, LAPACKFullMatrixExt<T>>       &table_cpu,
                                         table_cpu(mapping_index, q)(i, j)) >
                               eps)
                             {
-                              std::cout << "("
+                              std::cout << std::setprecision(15) << "("
                                         << table_cpu(mapping_index, q)(i, j)
                                         << ","
                                         << table_copied_from_gpu(mapping_index,
@@ -1557,7 +1569,8 @@ is_equal(
 
   // Compare precomputed cell data at quadrature points.
   if (is_equal(bem_values_cpu.JxW_at_quad_points_for_regular,
-               bem_values_gpu.JxW_at_quad_points_for_regular))
+               bem_values_gpu.JxW_at_quad_points_for_regular,
+               eps))
     {
       std::cout << "JxW_at_quad_points_for_regular is equal" << std::endl;
     }
@@ -1568,7 +1581,8 @@ is_equal(
     }
 
   if (is_equal(bem_values_cpu.normals_at_quad_points_for_regular,
-               bem_values_gpu.normals_at_quad_points_for_regular))
+               bem_values_gpu.normals_at_quad_points_for_regular,
+               eps))
     {
       std::cout << "normals_at_quad_points_for_regular is equal" << std::endl;
     }
@@ -1580,7 +1594,8 @@ is_equal(
     }
 
   if (is_equal(bem_values_cpu.quad_points_for_regular,
-               bem_values_gpu.quad_points_for_regular))
+               bem_values_gpu.quad_points_for_regular,
+               eps))
     {
       std::cout << "quad_points_for_regular is equal" << std::endl;
     }
@@ -1593,7 +1608,8 @@ is_equal(
   if (bem_values_cpu.is_surface_curl_needed)
     {
       if (is_equal(bem_values_cpu.kx_shape_curls_at_quad_points_for_regular,
-                   bem_values_gpu.kx_shape_curls_at_quad_points_for_regular))
+                   bem_values_gpu.kx_shape_curls_at_quad_points_for_regular,
+                   eps))
         {
           std::cout << "kx_shape_curls_at_quad_points_for_regular is equal"
                     << std::endl;

@@ -172,7 +172,7 @@ TEST_CASE("Initialize BEMValues and precompute cell values", "[cuda]")
   bem_values_gpu.compute_bilinear_form_cell_values_for_regular(
     cell_iterator_ptrs, local_to_global_cell_index_map, normal_detector);
 
-  REQUIRE(is_equal(bem_values_cpu, bem_values_gpu));
+  REQUIRE(is_equal(bem_values_cpu, bem_values_gpu, 1e-11));
 
   bem_values_gpu.release();
 }
