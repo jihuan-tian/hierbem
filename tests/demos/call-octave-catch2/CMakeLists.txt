@@ -25,8 +25,8 @@ target_include_directories(${_target} PRIVATE ${OCTAVE_INCLUDE_DIRS})
 target_compile_definitions(${_target}
                            PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
-target_link_libraries(${_target} hierbem Boost::program_options dl
-                      ${OCTAVE_LIBRARIES} Catch2::Catch2WithMain)
+target_link_libraries(${_target} hierbem dl ${OCTAVE_LIBRARIES}
+                      Catch2::Catch2WithMain)
 
 include(CTest)
 include(Catch)

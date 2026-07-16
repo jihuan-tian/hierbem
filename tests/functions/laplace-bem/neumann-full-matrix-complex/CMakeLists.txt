@@ -8,8 +8,6 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
-find_package(Octave REQUIRED)
-
 # Target should contains 'test' substring in any cases in order to be found by
 # Visual Studio Code's TestMate extension
 set(_target test-neumann-full-matrix-complex)
@@ -27,14 +25,8 @@ target_compile_definitions(${_target}
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/process.m.in
                ${CMAKE_CURRENT_SOURCE_DIR}/process.m)
 
-target_link_libraries(
-  ${_target}
-  hbem_octave_wrapper
-  hierbem
-  Boost::program_options
-  dl
-  ${OCTAVE_LIBRARIES}
-  Catch2::Catch2WithMain)
+target_link_libraries(${_target} hbem_octave_wrapper hierbem dl
+                      Catch2::Catch2WithMain)
 
 include(CTest)
 include(Catch)

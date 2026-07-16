@@ -8,12 +8,10 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
-find_package(Octave REQUIRED)
-
 set(TEST_TARGET hmatrix-symm-write-leaf-set-by-iteration-hilbert-curve)
 
 # Link TEST_TARGET to hierbem library.
-set(TEST_LIBRARIES hierbem hbem_octave_wrapper ${OCTAVE_LIBRARIES})
+set(TEST_LIBRARIES hierbem hbem_octave_wrapper)
 
 deal_ii_pickup_tests()
 

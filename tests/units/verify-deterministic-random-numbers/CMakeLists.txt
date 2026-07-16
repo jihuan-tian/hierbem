@@ -8,13 +8,11 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
-SET(TEST_TARGET verify-deterministic-random-numbers)
+set(TEST_TARGET verify-deterministic-random-numbers)
 
 # Link TEST_TARGET to hierbem library.
-SET(TEST_LIBRARIES
-    hierbem
-    Boost::program_options
-    dl  # Lazy way: always link with libdl no matter if CUDA is used or not
+set(TEST_LIBRARIES hierbem dl # Lazy way: always link with libdl no matter if
+                              # CUDA is used or not
 )
 
-DEAL_II_PICKUP_TESTS()
+deal_ii_pickup_tests()

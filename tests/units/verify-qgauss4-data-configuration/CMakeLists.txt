@@ -10,7 +10,4 @@
 
 set(TEST_TARGET verify-qgauss4-data-configuration)
 
-# # Link TEST_TARGET to hierbem library. SET(TEST_LIBRARIES hierbem
-# Boost::program_options)
-
 deal_ii_pickup_tests()

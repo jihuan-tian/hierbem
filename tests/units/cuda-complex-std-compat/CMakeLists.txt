@@ -14,7 +14,8 @@ set(_target test-cuda-complex-std-compat)
 
 add_executable(${_target} cuda-complex-std-compat.cc)
 
-target_include_directories(${_target} PRIVATE ${CMAKE_SOURCE_DIR}/extern/cuda_complex)
+target_include_directories(${_target}
+                           PRIVATE ${CMAKE_SOURCE_DIR}/extern/cuda_complex)
 
 target_link_libraries(${_target} Catch2::Catch2WithMain)
 

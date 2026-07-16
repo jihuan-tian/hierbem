@@ -8,9 +8,9 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
-SET(TEST_TARGET hmatrix-hmatrix-mTmult-level-conserving-all-fine-ntp)
+set(TEST_TARGET hmatrix-hmatrix-mTmult-level-conserving-all-fine-ntp)
 
 # Link TEST_TARGET to hierbem library.
-SET(TEST_LIBRARIES hierbem)
+set(TEST_LIBRARIES hierbem)
 
-DEAL_II_PICKUP_TESTS()
+deal_ii_pickup_tests()

@@ -8,17 +8,14 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
-# Target should contains 'test' substring in any cases in order to be
-# found by Visual Studio Code's TestMate extension
-SET(_target determinant4x4-test)
-ADD_EXECUTABLE(${_target} determinant4x4.cc)
+# Target should contains 'test' substring in any cases in order to be found by
+# Visual Studio Code's TestMate extension
+set(_target determinant4x4-test)
+add_executable(${_target} determinant4x4.cc)
 # Allow target to include deal.ii header files
-DEAL_II_SETUP_TARGET(${_target})
-TARGET_LINK_LIBRARIES(
-    ${_target}
-    Catch2::Catch2WithMain
-)
+deal_ii_setup_target(${_target})
+target_link_libraries(${_target} Catch2::Catch2WithMain)
 
-INCLUDE(CTest)
-INCLUDE(Catch)
+include(CTest)
+include(Catch)
 catch_discover_tests(${_target})

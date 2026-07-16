@@ -11,10 +11,8 @@
 set(TEST_TARGET op-precond-mass-matrix-for-dirichlet)
 
 # Link TEST_TARGET to hierbem library.
-set(TEST_LIBRARIES
-    hierbem
-    Boost::program_options
-    dl  # Lazy way: always link with libdl no matter if CUDA is used or not
+set(TEST_LIBRARIES hierbem dl # Lazy way: always link with libdl no matter if
+                              # CUDA is used or not
 )
 
 deal_ii_pickup_tests()

@@ -8,5 +8,5 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
-SET(TEST_TARGET planarity-of-gmsh-quad-cell)
-DEAL_II_PICKUP_TESTS()
+set(TEST_TARGET planarity-of-gmsh-quad-cell)
+deal_ii_pickup_tests()

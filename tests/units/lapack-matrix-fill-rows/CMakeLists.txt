@@ -8,9 +8,6 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
-SET(TEST_TARGET lapack-matrix-fill-rows)
+set(TEST_TARGET lapack-matrix-fill-rows)
 
-# Link TEST_TARGET to hierbem library.
-# SET(TEST_LIBRARIES hierbem Boost::program_options)
-
-DEAL_II_PICKUP_TESTS()
+deal_ii_pickup_tests()

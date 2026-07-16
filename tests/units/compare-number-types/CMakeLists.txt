@@ -22,10 +22,8 @@ target_compile_definitions(${_target}
                            PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_link_libraries(
-  ${_target}
-  hierbem
-  Boost::program_options
-  dl # Lazy way: always link with libdl no matter if CUDA is used or not
+  ${_target} hierbem dl # Lazy way: always link with libdl no matter if CUDA is
+                        # used or not
   Catch2::Catch2WithMain)
 
 # Discover Catch2 testcases

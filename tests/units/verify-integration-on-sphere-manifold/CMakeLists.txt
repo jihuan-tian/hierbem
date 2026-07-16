@@ -8,9 +8,9 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
-SET(TEST_TARGET verify-integration-on-sphere-manifold)
+set(TEST_TARGET verify-integration-on-sphere-manifold)
 
 # Link TEST_TARGET to hierbem library.
-SET(TEST_LIBRARIES hierbem Boost::program_options dl)
+set(TEST_LIBRARIES hierbem dl)
 
-DEAL_II_PICKUP_TESTS()
+deal_ii_pickup_tests()

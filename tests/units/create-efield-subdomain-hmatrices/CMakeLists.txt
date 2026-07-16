@@ -8,8 +8,8 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
-# Target should contains 'test' substring in any cases in order to be
-# found by Visual Studio Code's TestMate extension
+# Target should contains 'test' substring in any cases in order to be found by
+# Visual Studio Code's TestMate extension
 set(_target test-create-efield-subdomain-hmatrices)
 
 add_executable(${_target} create-efield-subdomain-hmatrices.cc)
@@ -18,15 +18,13 @@ add_executable(${_target} create-efield-subdomain-hmatrices.cc)
 deal_ii_setup_target(${_target})
 
 # Define SOURCE_DIR macro to be used in the source files
-target_compile_definitions(${_target} PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+target_compile_definitions(${_target}
+                           PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_link_libraries(
-    ${_target}
-    hierbem
-    Boost::program_options
-    dl  # Lazy way: always link with libdl no matter if CUDA is used or not
-    Catch2::Catch2WithMain
-)
+  ${_target} hierbem dl # Lazy way: always link with libdl no matter if CUDA is
+                        # used or not
+  Catch2::Catch2WithMain)
 
 # Discover Catch2 testcases
 include(CTest)

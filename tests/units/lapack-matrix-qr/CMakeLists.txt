@@ -18,11 +18,8 @@ add_executable(${_target} lapack-matrix-qr.cc)
 deal_ii_setup_target(${_target})
 
 target_link_libraries(
-  ${_target}
-  hbem_julia_wrapper
-  hierbem
-  Boost::program_options
-  dl # Lazy way: always link with libdl no matter if CUDA is used or not
+  ${_target} hbem_julia_wrapper hierbem dl # Lazy way: always link with libdl no
+                                           # matter if CUDA is used or not
   Catch2::Catch2WithMain)
 
 # Discover Catch2 testcases
