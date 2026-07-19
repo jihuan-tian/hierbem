@@ -156,7 +156,7 @@ TEST_CASE("Compute a row/column vector with ACA", "[hmatrix]")
   tria_mapping_indices_gpu.assign_from_host(tria_mapping_indices_cpu);
 
   // Parameters for building H-matrices.
-  ConfHMatrix               hmat_params{32, 32, 0.8, 5, 0.01, false};
+  ConfHMatrix               hmat_params{32, 32, 1, 1, 0.8, 5, 0.01, false};
   ConfSauterQuadFarField    sauter_quad_far_field_params;
   SauterQuadratureRule<dim> sauter_quad_rule(5, 4, 4, 3);
   ConfParallelization       parallel_params;
@@ -176,7 +176,9 @@ TEST_CASE("Compute a row/column vector with ACA", "[hmatrix]")
   DoFHandler<dim, spacedim> dof_handler_H_half(tria);
   dof_handler_H_half.distribute_dofs(fe_H_half);
   BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, double> H_half(
-    dof_handler_H_half, static_cast<unsigned int>(hmat_params.n_min_for_ct));
+    dof_handler_H_half,
+    static_cast<unsigned int>(hmat_params.n_min_for_ct),
+    static_cast<unsigned int>(hmat_params.cutoff_level_ct));
 
   // Create a bilinear form \f$b_D: H^{1/2}(\Gamma)\times H^{1/2}(\Gamma)
   // \rightarrow \mathbb{R}\f$ for the hypersingular operator \f$D\f$ with

@@ -58,10 +58,14 @@ struct ConfHelmholtzAcousticBEM
  */
 struct ConfHMatrix
 {
-  std::uint32_t n_min_for_ct  = 64;  // n_min for ClusterTree
-  std::uint32_t n_min_for_bct = 64;  // n_min for BlockClusterTree
-  double        eta           = 0.8; // eta for H-matrix
-  std::uint32_t max_rank      = 100; // max_rank for H-matrix
+  std::uint32_t n_min_for_ct  = 64; // n_min for ClusterTree
+  std::uint32_t n_min_for_bct = 64; // n_min for BlockClusterTree
+  std::uint32_t cutoff_level_ct =
+    8; // Cutoff level for ClusterTree construction in parallel
+  std::uint32_t cutoff_level_bct =
+    4; // Cutoff level for BlockClusterTree construction in parallel
+  double        eta      = 0.8; // eta for H-matrix
+  std::uint32_t max_rank = 100; // max_rank for H-matrix
   double        aca_relative_err =
     0.001; // for ACA: max relative error while assembling H-matrix
   // Assemble H-matrix using the old implementation, which is serial on the host

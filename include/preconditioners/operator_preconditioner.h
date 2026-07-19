@@ -1068,7 +1068,9 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
   /**
    * Partition the cluster tree.
    */
-  ct.partition(support_points_in_dual_space, dof_average_cell_size_list);
+  ct.partition(support_points_in_dual_space,
+               dof_average_cell_size_list,
+               static_cast<unsigned int>(hmat_params.cutoff_level_ct));
   timer.stop();
   print_wall_time(deallog, timer, "build cluster tree");
 

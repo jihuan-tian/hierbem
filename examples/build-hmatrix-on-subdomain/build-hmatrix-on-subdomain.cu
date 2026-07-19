@@ -161,7 +161,7 @@ main()
   tria_mapping_indices_gpu.assign_from_host(tria_mapping_indices_cpu);
 
   // Parameters for building H-matrices.
-  ConfHMatrix             hmat_params{4, 4, 1.2, 5, 0.01, false};
+  ConfHMatrix             hmat_params{4, 4, 1, 1, 1.2, 5, 0.01, false};
   ConfSauterQuadNearField sauter_quad_near_field_params;
   ConfSauterQuadFarField  sauter_quad_far_field_params;
   ConfParallelization     parallel_params;
@@ -184,15 +184,17 @@ main()
   // \f$\tilde{H}_h^{1/2}(\Gamma_{\mathrm{D}}^{\ast})\f$.
   BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, double>
     H_half_Gamma_D(dof_handler_H_half,
-                   static_cast<unsigned int>(hmat_params.n_min_for_ct),
                    {5, 6},
+                   static_cast<unsigned int>(hmat_params.n_min_for_ct),
+                   static_cast<unsigned int>(hmat_params.cutoff_level_ct),
                    true,
                    false);
   // Define a function space \f$\tilde{H}_h^{1/2}(\Gamma_{\mathrm{N}})\f$.
   BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, double>
     H_half_Gamma_N(dof_handler_H_half,
-                   static_cast<unsigned int>(hmat_params.n_min_for_ct),
                    {1, 2, 3, 4},
+                   static_cast<unsigned int>(hmat_params.n_min_for_ct),
+                   static_cast<unsigned int>(hmat_params.cutoff_level_ct),
                    false,
                    false);
 
@@ -204,15 +206,17 @@ main()
   // Define a function space \f$\tilde{H}_h^{-1/2}(\Gamma_{\mathrm{D}})\f$.
   BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, double>
     H_minus_half_Gamma_D(dof_handler_H_minus_half,
-                         static_cast<unsigned int>(hmat_params.n_min_for_ct),
                          {5, 6},
+                         static_cast<unsigned int>(hmat_params.n_min_for_ct),
+                         static_cast<unsigned int>(hmat_params.cutoff_level_ct),
                          true,
                          false);
   // Define a function space \f$\tilde{H}_h^{-1/2}(\Gamma_{\mathrm{N}})\f$.
   BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, double>
     H_minus_half_Gamma_N(dof_handler_H_minus_half,
-                         static_cast<unsigned int>(hmat_params.n_min_for_ct),
                          {1, 2, 3, 4},
+                         static_cast<unsigned int>(hmat_params.n_min_for_ct),
+                         static_cast<unsigned int>(hmat_params.cutoff_level_ct),
                          true,
                          false);
 

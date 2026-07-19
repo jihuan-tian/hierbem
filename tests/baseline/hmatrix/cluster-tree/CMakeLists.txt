@@ -8,18 +8,11 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
-set(_target test-cluster-tree)
+set(_target baseline-cluster-tree)
 
 add_executable(${_target} cluster-tree.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})
 
-# Define SOURCE_DIR macro to be used in the source files
-target_compile_definitions(${_target}
-                           PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
-
-target_link_libraries(${_target} hierbem Catch2::Catch2WithMain)
-
-include(CTest)
-include(Catch)
+target_link_libraries(${_target} hierbem Boost::program_options)

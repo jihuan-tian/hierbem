@@ -57,18 +57,23 @@ public:
    * @brief Construct a function space on the whole domain.
    * @param dof_handler_
    * @param n_min
+   * @param cutoff_level During building the cluster tree associated with this
+   * function space, when the level of a cluster is smaller then this level, the
+   * partition from this cluster will be sent to a TBB task.
    */
   BEMFunctionSpace(const DoFHandler<dim, spacedim> &dof_handler_,
-                   const unsigned int               n_min);
+                   const unsigned int               n_min,
+                   const unsigned int               cutoff_level = 0);
 
   /**
    * Construct a function space on a material subdomain.
    */
   BEMFunctionSpace(const DoFHandler<dim, spacedim>     &dof_handler_,
-                   const unsigned int                   n_min,
                    const SearchableMaterialIdContainer &material_ids_,
-                   const bool include_boundary_dofs_      = true,
-                   const bool limit_support_in_subdomain_ = false);
+                   const unsigned int                   n_min,
+                   const unsigned int                   cutoff_level = 0,
+                   const bool include_boundary_dofs_                 = true,
+                   const bool limit_support_in_subdomain_            = false);
 
   /**
    * Convert a vector from internal numbering to external numbering.
@@ -385,7 +390,8 @@ template <int dim,
           typename Number>
 BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, Number>::
   BEMFunctionSpace(const DoFHandler<dim, spacedim> &dof_handler_,
-                   const unsigned int               n_min)
+                   const unsigned int               n_min,
+                   const unsigned int               cutoff_level)
   : dof_handler(dof_handler_)
   , is_full_domain(true)
   , include_boundary_dofs(true)
@@ -394,7 +400,7 @@ BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, Number>::
 {
   cluster_tree_builder =
     std::make_unique<ClusterTreeBuilder<spacedim, Number>>(dof_handler, n_min);
-  cluster_tree = cluster_tree_builder->build();
+  cluster_tree = cluster_tree_builder->build(cutoff_level);
 
   build_dof_to_cell_topology();
 }
@@ -406,8 +412,9 @@ template <int dim,
           typename Number>
 BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, Number>::
   BEMFunctionSpace(const DoFHandler<dim, spacedim>     &dof_handler_,
-                   const unsigned int                   n_min,
                    const SearchableMaterialIdContainer &material_ids_,
+                   const unsigned int                   n_min,
+                   const unsigned int                   cutoff_level,
                    const bool                           include_boundary_dofs_,
                    const bool limit_support_in_subdomain_)
   : dof_handler(dof_handler_)
@@ -421,7 +428,7 @@ BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, Number>::
 
   cluster_tree_builder = std::make_unique<ClusterTreeBuilder<spacedim, Number>>(
     dof_handler, local_to_full_dof_id_map, n_min);
-  cluster_tree = cluster_tree_builder->build();
+  cluster_tree = cluster_tree_builder->build(cutoff_level);
 
   build_dof_to_cell_topology();
 }

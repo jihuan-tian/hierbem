@@ -11,7 +11,11 @@
 #ifndef HIERBEM_INCLUDE_CLUSTER_TREE_CLUSTER_TREE_H_
 #define HIERBEM_INCLUDE_CLUSTER_TREE_CLUSTER_TREE_H_
 
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/memory_consumption.h>
+#include <deal.II/base/multithread_info.h>
+
+#include <tbb/task_group.h>
 
 #include "cluster.h"
 #include "config.h"
@@ -200,6 +204,16 @@ public:
   partition();
 
   /**
+   * Perform a pure cardinality based recursive partition, which will
+   * ultimately be used in constructing an \f$\mathcal{H}^p\f$ matrix for
+   * example.
+   *
+   * This version runs in parallel.
+   */
+  void
+  partition(const unsigned int cutoff_level);
+
+  /**
    * Perform a recursive partition dependent on the coordinates of DoF support
    * points by starting from the root node.
    *
@@ -226,6 +240,17 @@ public:
    * Perform a recursive partition dependent on the coordinates of DoF support
    * points by starting from the root node.
    *
+   * In this version, there is no mesh cell size correction to the cluster
+   * diameter and cluster pair distance. This version runs in parallel.
+   */
+  void
+  partition(const std::vector<Point<spacedim, Number>> &all_support_points,
+            const unsigned int                          cutoff_level);
+
+  /**
+   * Perform a recursive partition dependent on the coordinates of DoF support
+   * points by starting from the root node.
+   *
    * In this version, there is mesh cell size correction to the cluster
    * diameter and cluster pair distance.
    *
@@ -245,6 +270,18 @@ public:
   void
   partition(const std::vector<Point<spacedim, Number>> &all_support_points,
             const std::vector<Number>                  &cell_size_at_dofs);
+
+  /**
+   * Perform a recursive partition dependent on the coordinates of DoF support
+   * points by starting from the root node.
+   *
+   * In this version, there is mesh cell size correction to the cluster
+   * diameter and cluster pair distance. This version runs in parallel.
+   */
+  void
+  partition(const std::vector<Point<spacedim, Number>> &all_support_points,
+            const std::vector<Number>                  &cell_size_at_dofs,
+            const unsigned int                          cutoff_level);
 
   /**
    * Get the pointer to the root node of the cluster tree.
@@ -373,6 +410,25 @@ public:
 
 private:
   /**
+   * Split the cluster of DoF indices by cardinality.
+   */
+  static void
+  split_cluster_by_cardinality(
+    node_const_pointer_type               current_cluster_node,
+    std::vector<types::global_dof_index> &left_child_index_set,
+    std::vector<types::global_dof_index> &right_child_index_set);
+
+  /**
+   * Split the cluster of DoF indices by halving their bounding box.
+   */
+  static void
+  split_cluster_by_bounding_box(
+    node_const_pointer_type                     current_cluster_node,
+    const std::vector<Point<spacedim, Number>> &all_support_points,
+    std::vector<types::global_dof_index>       &left_child_index_set,
+    std::vector<types::global_dof_index>       &right_child_index_set);
+
+  /**
    * Print the \bct hierarchy information recursively as a node in the
    * directional graph in GraphViz dot format.
    *
@@ -403,9 +459,21 @@ private:
    * @param current_cluster_node
    * @param leaf_set_wrt_current_node
    */
-  void
+  unsigned int
   partition_from_cluster_node(
     node_pointer_type               current_cluster_node,
+    std::vector<node_pointer_type> &leaf_set_wrt_current_node);
+
+  /**
+   * Perform a pure cardinality based recursive partition by starting from a
+   * cluster node.
+   *
+   * This version runs in parallel.
+   */
+  unsigned int
+  partition_from_cluster_node(
+    node_pointer_type               current_cluster_node,
+    const unsigned int              cutoff_level,
     std::vector<node_pointer_type> &leaf_set_wrt_current_node);
 
   /**
@@ -430,10 +498,24 @@ private:
    *
    * @param all_support_points All the support points.
    */
-  void
+  unsigned int
   partition_from_cluster_node(
     node_pointer_type                           current_cluster_node,
     const std::vector<Point<spacedim, Number>> &all_support_points,
+    std::vector<node_pointer_type>             &leaf_set_wrt_current_node);
+
+  /**
+   * Perform a recursive partition dependent on the coordinates of DoF support
+   * points by starting from a cluster node.
+   *
+   * In this version, there is no mesh cell size correction to the cluster
+   * diameter and cluster pair distance. This version runs in parallel.
+   */
+  unsigned int
+  partition_from_cluster_node(
+    node_pointer_type                           current_cluster_node,
+    const std::vector<Point<spacedim, Number>> &all_support_points,
+    const unsigned int                          cutoff_level,
     std::vector<node_pointer_type>             &leaf_set_wrt_current_node);
 
   /**
@@ -458,11 +540,26 @@ private:
    *
    * @param all_support_points All the support points.
    */
-  void
+  unsigned int
   partition_from_cluster_node(
     node_pointer_type                           current_cluster_node,
     const std::vector<Point<spacedim, Number>> &all_support_points,
     const std::vector<Number>                  &cell_size_at_dofs,
+    std::vector<node_pointer_type>             &leaf_set_wrt_current_node);
+
+  /**
+   * Perform a recursive partition dependent on the coordinates of DoF support
+   * points by starting from a cluster node.
+   *
+   * In this version, there is mesh cell size correction to the cluster
+   * diameter and cluster pair distance. This version runs in parallel.
+   */
+  unsigned int
+  partition_from_cluster_node(
+    node_pointer_type                           current_cluster_node,
+    const std::vector<Point<spacedim, Number>> &all_support_points,
+    const std::vector<Number>                  &cell_size_at_dofs,
+    const unsigned int                          cutoff_level,
     std::vector<node_pointer_type>             &leaf_set_wrt_current_node);
 
   /**
@@ -795,59 +892,23 @@ ClusterTree<spacedim, Number>::operator=(
 
 
 template <int spacedim, typename Number>
-void
+unsigned int
 ClusterTree<spacedim, Number>::partition_from_cluster_node(
   node_pointer_type               current_cluster_node,
   std::vector<node_pointer_type> &leaf_set_wrt_current_node)
 {
+  unsigned int node_num_from_descendants = 0;
   leaf_set_wrt_current_node.clear();
 
-  /**
-   * When the size/cardinality of the current cluster is large enough,
-   * continue the partition.
-   */
+  // When the size/cardinality of the current cluster is large enough,
+  // continue the partition.
   if (current_cluster_node->get_data_pointer()->get_index_set().size() > n_min)
     {
-      /**
-       * Declare the two child index sets.
-       */
       std::vector<types::global_dof_index> left_child_index_set;
       std::vector<types::global_dof_index> right_child_index_set;
-
-      /**
-       * Split the index set of the current node into halves.
-       */
-      const std::vector<types::global_dof_index> &current_index_set =
-        current_cluster_node->get_data_pointer()->get_index_set();
-
-      /**
-       * Calculate the splitting index in the middle of the index set, which
-       * is to be used for constructing half-closed and half-open
-       * subintervals.
-       */
-      const unsigned int splitting_index =
-        (current_index_set.size() - 1) / 2 + 1;
-
-      /**
-       * Construct the left child index set.
-       */
-      for (unsigned int i = 0; i < splitting_index; i++)
-        {
-          left_child_index_set.push_back(current_index_set.at(i));
-        }
-
-      /**
-       * Construct the right child index set.
-       */
-      for (unsigned int i = splitting_index; i < current_index_set.size(); i++)
-        {
-          right_child_index_set.push_back(current_index_set.at(i));
-        }
-
-      Assert(left_child_index_set.size() > 0,
-             ExcLowerRange(left_child_index_set.size(), 1));
-      Assert(right_child_index_set.size() > 0,
-             ExcLowerRange(right_child_index_set.size(), 1));
+      split_cluster_by_cardinality(current_cluster_node,
+                                   left_child_index_set,
+                                   right_child_index_set);
 
       if (left_child_index_set.size() > 0)
         {
@@ -858,28 +919,22 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
             nullptr,
             current_cluster_node);
 
-          /**
-           * Append this new node as the left child of the current cluster
-           * node.
-           */
+          // Append this new node as the left child of the current cluster
+          // node.
+          AssertThrow(child_node != nullptr, ExcInternalError());
           current_cluster_node->Left(child_node);
-          node_num++;
+          node_num_from_descendants++;
 
           std::vector<node_pointer_type> leaf_set_wrt_child_node;
-          /**
-           * Continue the recursive partition by starting from this child
-           * node.
-           */
-          partition_from_cluster_node(child_node, leaf_set_wrt_child_node);
+          // Continue the recursive partition by starting from this child
+          // node.
+          node_num_from_descendants +=
+            partition_from_cluster_node(child_node, leaf_set_wrt_child_node);
 
-          /**
-           * Merge the leaf set wrt. the child cluster node into the
-           * leaf set of the current cluster node.
-           */
+          // Merge the leaf set wrt. the child cluster node into the
+          // leaf set of the current cluster node.
           for (node_pointer_type cluster_node : leaf_set_wrt_child_node)
-            {
-              leaf_set_wrt_current_node.push_back(cluster_node);
-            }
+            leaf_set_wrt_current_node.push_back(cluster_node);
         }
 
       if (right_child_index_set.size() > 0)
@@ -891,157 +946,182 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
             nullptr,
             current_cluster_node);
 
-          /**
-           * Append this new node as the right child of the current cluster
-           * node.
-           */
+          // Append this new node as the right child of the current cluster
+          // node.
+          AssertThrow(child_node != nullptr, ExcInternalError());
           current_cluster_node->Right(child_node);
-          node_num++;
+          node_num_from_descendants++;
 
           std::vector<node_pointer_type> leaf_set_wrt_child_node;
-          /**
-           * Continue the recursive partition by starting from this child
-           * node.
-           */
-          partition_from_cluster_node(child_node, leaf_set_wrt_child_node);
+          // Continue the recursive partition by starting from this child
+          // node.
+          node_num_from_descendants +=
+            partition_from_cluster_node(child_node, leaf_set_wrt_child_node);
 
-          /**
-           * Merge the leaf set wrt. the child cluster node into the
-           * leaf set of the current cluster node.
-           */
+          // Merge the leaf set wrt. the child cluster node into the
+          // leaf set of the current cluster node.
           for (node_pointer_type cluster_node : leaf_set_wrt_child_node)
-            {
-              leaf_set_wrt_current_node.push_back(cluster_node);
-            }
+            leaf_set_wrt_current_node.push_back(cluster_node);
         }
     }
   else
-    {
-      leaf_set_wrt_current_node.push_back(current_cluster_node);
-    }
+    leaf_set_wrt_current_node.push_back(current_cluster_node);
+
+  return node_num_from_descendants;
 }
 
 
 template <int spacedim, typename Number>
-void
+unsigned int
+ClusterTree<spacedim, Number>::partition_from_cluster_node(
+  node_pointer_type               current_cluster_node,
+  const unsigned int              cutoff_level,
+  std::vector<node_pointer_type> &leaf_set_wrt_current_node)
+{
+  unsigned int node_num_from_left_descendants  = 0;
+  unsigned int node_num_from_right_descendants = 0;
+  leaf_set_wrt_current_node.clear();
+
+  // When the size/cardinality of the current cluster is large enough,
+  // continue the partition.
+  if (current_cluster_node->get_data_pointer()->get_index_set().size() > n_min)
+    {
+      std::vector<types::global_dof_index> left_child_index_set;
+      std::vector<types::global_dof_index> right_child_index_set;
+      split_cluster_by_cardinality(current_cluster_node,
+                                   left_child_index_set,
+                                   right_child_index_set);
+
+      tbb::task_group tg;
+
+      node_pointer_type              left_child_node  = nullptr;
+      node_pointer_type              right_child_node = nullptr;
+      std::vector<node_pointer_type> leaf_set_wrt_left_child_node;
+      std::vector<node_pointer_type> leaf_set_wrt_right_child_node;
+
+      if (left_child_index_set.size() > 0)
+        {
+          left_child_node = CreateTreeNode<data_value_type>(
+            Cluster<spacedim, Number>(left_child_index_set),
+            current_cluster_node->get_level() + 1,
+            nullptr,
+            nullptr,
+            current_cluster_node);
+
+          // Append this new node as the left child of the current cluster
+          // node.
+          AssertThrow(left_child_node != nullptr, ExcInternalError());
+          current_cluster_node->Left(left_child_node);
+
+          // Continue the recursive partition by starting from this child
+          // node.
+          if (current_cluster_node->get_level() < cutoff_level)
+            {
+              tg.run([&] {
+                node_num_from_left_descendants =
+                  partition_from_cluster_node(left_child_node,
+                                              cutoff_level,
+                                              leaf_set_wrt_left_child_node) +
+                  1;
+              });
+            }
+          else
+            {
+              node_num_from_left_descendants =
+                partition_from_cluster_node(left_child_node,
+                                            leaf_set_wrt_left_child_node) +
+                1;
+            }
+        }
+
+      if (right_child_index_set.size() > 0)
+        {
+          right_child_node = CreateTreeNode<data_value_type>(
+            Cluster<spacedim, Number>(right_child_index_set),
+            current_cluster_node->get_level() + 1,
+            nullptr,
+            nullptr,
+            current_cluster_node);
+
+          // Append this new node as the right child of the current cluster
+          // node.
+          AssertThrow(right_child_node != nullptr, ExcInternalError());
+          current_cluster_node->Right(right_child_node);
+
+          // Continue the recursive partition by starting from this child
+          // node.
+          if (current_cluster_node->get_level() < cutoff_level)
+            {
+              tg.run([&] {
+                node_num_from_right_descendants =
+                  partition_from_cluster_node(right_child_node,
+                                              cutoff_level,
+                                              leaf_set_wrt_right_child_node) +
+                  1;
+              });
+            }
+          else
+            {
+              node_num_from_right_descendants =
+                partition_from_cluster_node(right_child_node,
+                                            leaf_set_wrt_right_child_node) +
+                1;
+            }
+        }
+
+      if (current_cluster_node->get_level() < cutoff_level)
+        tg.wait();
+
+      // Merge the leaf set wrt. the left and right child cluster nodes into the
+      // leaf set of the current cluster node.
+      for (node_pointer_type cluster_node : leaf_set_wrt_left_child_node)
+        leaf_set_wrt_current_node.push_back(cluster_node);
+
+      for (node_pointer_type cluster_node : leaf_set_wrt_right_child_node)
+        leaf_set_wrt_current_node.push_back(cluster_node);
+    }
+  else
+    leaf_set_wrt_current_node.push_back(current_cluster_node);
+
+  return node_num_from_left_descendants + node_num_from_right_descendants;
+}
+
+
+template <int spacedim, typename Number>
+unsigned int
 ClusterTree<spacedim, Number>::partition_from_cluster_node(
   node_pointer_type                           current_cluster_node,
   const std::vector<Point<spacedim, Number>> &all_support_points,
   std::vector<node_pointer_type>             &leaf_set_wrt_current_node)
 {
+  unsigned int node_num_from_descendants = 0;
   leaf_set_wrt_current_node.clear();
 
-  /**
-   * When the size/cardinality of the current cluster is large enough,
-   * continue the partition.
-   *
-   * If the bounding box of the current cluster has zero volume, we use the
-   * cardinality based partition instead. The reason why such case appears is
-   * because when the finite element is of a discontinuous type, such as that
-   * used for the Neumann space, there will be multiple support points having
-   * the same coordinates, for example, all the support points associated with
-   * a common vertex which is shared by several cells. The number of such
-   * support points may be larger than \f$n_{\min}\f$.
-   */
+  // When the size/cardinality of the current cluster is large enough,
+  // continue the partition.
+  //
+  // If the bounding box of the current cluster has zero volume, we use the
+  // cardinality based partition instead. The reason why such case appears is
+  // because when the finite element is of a discontinuous type, such as that
+  // used for the Neumann space, there will be multiple support points having
+  // the same coordinates, for example, all the support points associated with
+  // a common vertex which is shared by several cells. The number of such
+  // support points may be larger than \f$n_{\min}\f$.
   if (current_cluster_node->get_data_pointer()->get_index_set().size() > n_min)
     {
-      /**
-       * Declare the two child index sets.
-       */
       std::vector<types::global_dof_index> left_child_index_set;
       std::vector<types::global_dof_index> right_child_index_set;
-
-      if (current_cluster_node->get_data_pointer()
-            ->get_bounding_box()
-            .volume() <=
-          SimpleBoundingBox<spacedim, Number>::zero_volume_threshold)
-        {
-          /**
-           * @internal Perform cardinality based partition.
-           */
-          /**
-           * Split the index set of the current node into halves.
-           */
-          const std::vector<types::global_dof_index> &current_index_set =
-            current_cluster_node->get_data_pointer()->get_index_set();
-
-          /**
-           * Calculate the splitting index in the middle of the index set,
-           * which is to be used for constructing half-closed and half-open
-           * subintervals.
-           */
-          const unsigned int splitting_index =
-            (current_index_set.size() - 1) / 2 + 1;
-
-          /**
-           * Construct the left child index set.
-           */
-          for (unsigned int i = 0; i < splitting_index; i++)
-            {
-              left_child_index_set.push_back(current_index_set.at(i));
-            }
-
-          /**
-           * Construct the right child index set.
-           */
-          for (unsigned int i = splitting_index; i < current_index_set.size();
-               i++)
-            {
-              right_child_index_set.push_back(current_index_set.at(i));
-            }
-
-          Assert(left_child_index_set.size() > 0,
-                 ExcLowerRange(left_child_index_set.size(), 1));
-          Assert(right_child_index_set.size() > 0,
-                 ExcLowerRange(right_child_index_set.size(), 1));
-        }
-      else
-        {
-          /**
-           * Divide the bounding box of the current cluster into halves.
-           */
-          std::pair<SimpleBoundingBox<spacedim, Number>,
-                    SimpleBoundingBox<spacedim, Number>>
-            bbox_children = current_cluster_node->get_data_pointer()
-                              ->get_bounding_box()
-                              .divide_geometrically();
-
-          /**
-           * Determine to which child index set each support point in the
-           * original bounding box belongs to.
-           */
-          for (auto dof_index :
-               current_cluster_node->get_data_pointer()->get_index_set())
-            {
-              if (bbox_children.first.point_inside(
-                    all_support_points.at(dof_index)))
-                {
-                  /**
-                   * If the support point associated with the current DoF
-                   * index belongs to the left child box, add this DoF index
-                   * to the left child index set.
-                   */
-                  left_child_index_set.push_back(dof_index);
-                }
-              else
-                {
-                  /**
-                   * Otherwise, add this DoF index to the right child index
-                   * set.
-                   */
-                  right_child_index_set.push_back(dof_index);
-                }
-            }
-        }
+      split_cluster_by_bounding_box(current_cluster_node,
+                                    all_support_points,
+                                    left_child_index_set,
+                                    right_child_index_set);
 
       if (left_child_index_set.size() > 0)
         {
-          /**
-           * N.B. During the creation of the new child cluster, its bounding
-           * box will be recalculated, which may be smaller than the child
-           * bounding box obtained from the previous bounding box geometric
-           * bisection.
-           */
+          // N.B. During the creation of the new child cluster, its bounding
+          // box will be recalculated, which may be smaller than the child
+          // bounding box obtained from the previous bounding box geometric
+          // bisection.
           node_pointer_type child_node = CreateTreeNode<data_value_type>(
             Cluster<spacedim, Number>(left_child_index_set, all_support_points),
             current_cluster_node->get_level() + 1,
@@ -1049,40 +1129,32 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
             nullptr,
             current_cluster_node);
 
-          /**
-           * Append this new node as the left child of the current cluster
-           * node.
-           */
+          // Append this new node as the left child of the current cluster
+          // node.
+          AssertThrow(child_node != nullptr, ExcInternalError());
           current_cluster_node->Left(child_node);
-          node_num++;
+          node_num_from_descendants++;
 
           std::vector<node_pointer_type> leaf_set_wrt_child_node;
-          /**
-           * Continue the recursive partition by starting from this child
-           * node.
-           */
-          partition_from_cluster_node(child_node,
-                                      all_support_points,
-                                      leaf_set_wrt_child_node);
+          // Continue the recursive partition by starting from this child
+          // node.
+          node_num_from_descendants +=
+            partition_from_cluster_node(child_node,
+                                        all_support_points,
+                                        leaf_set_wrt_child_node);
 
-          /**
-           * Merge the leaf set wrt. the child cluster node into the
-           * leaf set of the current cluster node.
-           */
+          // Merge the leaf set wrt. the child cluster node into the
+          // leaf set of the current cluster node.
           for (node_pointer_type cluster_node : leaf_set_wrt_child_node)
-            {
-              leaf_set_wrt_current_node.push_back(cluster_node);
-            }
+            leaf_set_wrt_current_node.push_back(cluster_node);
         }
 
       if (right_child_index_set.size() > 0)
         {
-          /**
-           * N.B. During the creation of the new child cluster, its bounding
-           * box will be recalculated, which may be smaller than the child
-           * bounding box obtained from the previous bounding box geometric
-           * bisection.
-           */
+          // N.B. During the creation of the new child cluster, its bounding
+          // box will be recalculated, which may be smaller than the child
+          // bounding box obtained from the previous bounding box geometric
+          // bisection.
           node_pointer_type child_node = CreateTreeNode<data_value_type>(
             Cluster<spacedim, Number>(right_child_index_set,
                                       all_support_points),
@@ -1091,160 +1163,208 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
             nullptr,
             current_cluster_node);
 
-          /**
-           * Append this new node as the right child of the current cluster
-           * node.
-           */
+          // Append this new node as the right child of the current cluster
+          // node.
+          AssertThrow(child_node != nullptr, ExcInternalError());
           current_cluster_node->Right(child_node);
-          node_num++;
+          node_num_from_descendants++;
 
           std::vector<node_pointer_type> leaf_set_wrt_child_node;
-          /**
-           * Continue the recursive partition by starting from this child
-           * node.
-           */
-          partition_from_cluster_node(child_node,
-                                      all_support_points,
-                                      leaf_set_wrt_child_node);
+          // Continue the recursive partition by starting from this child
+          // node.
+          node_num_from_descendants +=
+            partition_from_cluster_node(child_node,
+                                        all_support_points,
+                                        leaf_set_wrt_child_node);
 
-          /**
-           * Merge the leaf set wrt. the child cluster node into the
-           * leaf set of the current cluster node.
-           */
+          // Merge the leaf set wrt. the child cluster node into the
+          // leaf set of the current cluster node.
           for (node_pointer_type cluster_node : leaf_set_wrt_child_node)
-            {
-              leaf_set_wrt_current_node.push_back(cluster_node);
-            }
+            leaf_set_wrt_current_node.push_back(cluster_node);
         }
     }
   else
-    {
-      leaf_set_wrt_current_node.push_back(current_cluster_node);
-    }
+    leaf_set_wrt_current_node.push_back(current_cluster_node);
+
+  return node_num_from_descendants;
 }
 
 
 template <int spacedim, typename Number>
-void
+unsigned int
+ClusterTree<spacedim, Number>::partition_from_cluster_node(
+  node_pointer_type                           current_cluster_node,
+  const std::vector<Point<spacedim, Number>> &all_support_points,
+  const unsigned int                          cutoff_level,
+  std::vector<node_pointer_type>             &leaf_set_wrt_current_node)
+{
+  unsigned int node_num_from_left_descendants  = 0;
+  unsigned int node_num_from_right_descendants = 0;
+  leaf_set_wrt_current_node.clear();
+
+  // When the size/cardinality of the current cluster is large enough,
+  // continue the partition.
+  //
+  // If the bounding box of the current cluster has zero volume, we use the
+  // cardinality based partition instead. The reason why such case appears is
+  // because when the finite element is of a discontinuous type, such as that
+  // used for the Neumann space, there will be multiple support points having
+  // the same coordinates, for example, all the support points associated with
+  // a common vertex which is shared by several cells. The number of such
+  // support points may be larger than \f$n_{\min}\f$.
+  if (current_cluster_node->get_data_pointer()->get_index_set().size() > n_min)
+    {
+      std::vector<types::global_dof_index> left_child_index_set;
+      std::vector<types::global_dof_index> right_child_index_set;
+      split_cluster_by_bounding_box(current_cluster_node,
+                                    all_support_points,
+                                    left_child_index_set,
+                                    right_child_index_set);
+
+      tbb::task_group tg;
+
+      node_pointer_type              left_child_node  = nullptr;
+      node_pointer_type              right_child_node = nullptr;
+      std::vector<node_pointer_type> leaf_set_wrt_left_child_node;
+      std::vector<node_pointer_type> leaf_set_wrt_right_child_node;
+
+      if (left_child_index_set.size() > 0)
+        {
+          // N.B. During the creation of the new child cluster, its bounding
+          // box will be recalculated, which may be smaller than the child
+          // bounding box obtained from the previous bounding box geometric
+          // bisection.
+          left_child_node = CreateTreeNode<data_value_type>(
+            Cluster<spacedim, Number>(left_child_index_set, all_support_points),
+            current_cluster_node->get_level() + 1,
+            nullptr,
+            nullptr,
+            current_cluster_node);
+
+          // Append this new node as the left child of the current cluster
+          // node.
+          AssertThrow(left_child_node != nullptr, ExcInternalError());
+          current_cluster_node->Left(left_child_node);
+
+          // Continue the recursive partition by starting from this child
+          // node.
+          if (current_cluster_node->get_level() < cutoff_level)
+            {
+              tg.run([&] {
+                node_num_from_left_descendants =
+                  partition_from_cluster_node(left_child_node,
+                                              all_support_points,
+                                              cutoff_level,
+                                              leaf_set_wrt_left_child_node) +
+                  1;
+              });
+            }
+          else
+            {
+              node_num_from_left_descendants =
+                partition_from_cluster_node(left_child_node,
+                                            all_support_points,
+                                            leaf_set_wrt_left_child_node) +
+                1;
+            }
+        }
+
+      if (right_child_index_set.size() > 0)
+        {
+          // N.B. During the creation of the new child cluster, its bounding
+          // box will be recalculated, which may be smaller than the child
+          // bounding box obtained from the previous bounding box geometric
+          // bisection.
+          right_child_node = CreateTreeNode<data_value_type>(
+            Cluster<spacedim, Number>(right_child_index_set,
+                                      all_support_points),
+            current_cluster_node->get_level() + 1,
+            nullptr,
+            nullptr,
+            current_cluster_node);
+
+          // Append this new node as the right child of the current cluster
+          // node.
+          AssertThrow(right_child_node != nullptr, ExcInternalError());
+          current_cluster_node->Right(right_child_node);
+
+          // Continue the recursive partition by starting from this child
+          // node.
+          if (current_cluster_node->get_level() < cutoff_level)
+            {
+              tg.run([&] {
+                node_num_from_right_descendants =
+                  partition_from_cluster_node(right_child_node,
+                                              all_support_points,
+                                              cutoff_level,
+                                              leaf_set_wrt_right_child_node) +
+                  1;
+              });
+            }
+          else
+            {
+              node_num_from_right_descendants =
+                partition_from_cluster_node(right_child_node,
+                                            all_support_points,
+                                            leaf_set_wrt_right_child_node) +
+                1;
+            }
+        }
+
+      if (current_cluster_node->get_level() < cutoff_level)
+        tg.wait();
+
+      // Merge the leaf set wrt. the left and right child cluster nodes into the
+      // leaf set of the current cluster node.
+      for (node_pointer_type cluster_node : leaf_set_wrt_left_child_node)
+        leaf_set_wrt_current_node.push_back(cluster_node);
+
+      for (node_pointer_type cluster_node : leaf_set_wrt_right_child_node)
+        leaf_set_wrt_current_node.push_back(cluster_node);
+    }
+  else
+    leaf_set_wrt_current_node.push_back(current_cluster_node);
+
+  return node_num_from_left_descendants + node_num_from_right_descendants;
+}
+
+
+template <int spacedim, typename Number>
+unsigned int
 ClusterTree<spacedim, Number>::partition_from_cluster_node(
   node_pointer_type                           current_cluster_node,
   const std::vector<Point<spacedim, Number>> &all_support_points,
   const std::vector<Number>                  &cell_size_at_dofs,
   std::vector<node_pointer_type>             &leaf_set_wrt_current_node)
 {
+  unsigned int node_num_from_descendants = 0;
   leaf_set_wrt_current_node.clear();
 
-  /**
-   * When the size/cardinality of the current cluster is large enough,
-   * continue the partition.
-   *
-   * If the bounding box of the current cluster has zero volume, we use the
-   * cardinality based partition instead. The reason why such case appears is
-   * because when the finite element is of a discontinuous type, such as that
-   * used for the Neumann space, there will be multiple support points having
-   * the same coordinates, for example, all the support points associated with
-   * a common vertex which is shared by several cells. The number of such
-   * support points may be larger than \f$n_{\min}\f$.
-   */
+  // When the size/cardinality of the current cluster is large enough,
+  // continue the partition.
+  //
+  // If the bounding box of the current cluster has zero volume, we use the
+  // cardinality based partition instead. The reason why such case appears is
+  // because when the finite element is of a discontinuous type, such as that
+  // used for the Neumann space, there will be multiple support points having
+  // the same coordinates, for example, all the support points associated with
+  // a common vertex which is shared by several cells. The number of such
+  // support points may be larger than \f$n_{\min}\f$.
   if (current_cluster_node->get_data_pointer()->get_index_set().size() > n_min)
     {
-      /**
-       * Declare the two child index sets.
-       */
       std::vector<types::global_dof_index> left_child_index_set;
       std::vector<types::global_dof_index> right_child_index_set;
-
-      if (current_cluster_node->get_data_pointer()
-            ->get_bounding_box()
-            .volume() <=
-          SimpleBoundingBox<spacedim, Number>::zero_volume_threshold)
-        {
-          /**
-           * @internal Perform cardinality based partition.
-           */
-          /**
-           * Split the index set of the current node into halves.
-           */
-          const std::vector<types::global_dof_index> &current_index_set =
-            current_cluster_node->get_data_pointer()->get_index_set();
-
-          /**
-           * Calculate the splitting index in the middle of the index set,
-           * which is to be used for constructing half-closed and half-open
-           * subintervals.
-           */
-          const unsigned int splitting_index =
-            (current_index_set.size() - 1) / 2 + 1;
-
-          /**
-           * Construct the left child index set.
-           */
-          for (unsigned int i = 0; i < splitting_index; i++)
-            {
-              left_child_index_set.push_back(current_index_set.at(i));
-            }
-
-          /**
-           * Construct the right child index set.
-           */
-          for (unsigned int i = splitting_index; i < current_index_set.size();
-               i++)
-            {
-              right_child_index_set.push_back(current_index_set.at(i));
-            }
-
-          Assert(left_child_index_set.size() > 0,
-                 ExcLowerRange(left_child_index_set.size(), 1));
-          Assert(right_child_index_set.size() > 0,
-                 ExcLowerRange(right_child_index_set.size(), 1));
-        }
-      else
-        {
-          /**
-           * Divide the bounding box of the current cluster into halves.
-           */
-          std::pair<SimpleBoundingBox<spacedim, Number>,
-                    SimpleBoundingBox<spacedim, Number>>
-            bbox_children = current_cluster_node->get_data_pointer()
-                              ->get_bounding_box()
-                              .divide_geometrically();
-
-          /**
-           * Determine to which child index set each support point in the
-           * original bounding box belongs to.
-           */
-          for (auto dof_index :
-               current_cluster_node->get_data_pointer()->get_index_set())
-            {
-              if (bbox_children.first.point_inside(
-                    all_support_points.at(dof_index)))
-                {
-                  /**
-                   * If the support point associated with the current DoF
-                   * index belongs to the left child box, add this DoF index
-                   * to the left child index set.
-                   */
-                  left_child_index_set.push_back(dof_index);
-                }
-              else
-                {
-                  /**
-                   * Otherwise, add this DoF index to the right child index
-                   * set.
-                   */
-                  right_child_index_set.push_back(dof_index);
-                }
-            }
-        }
+      split_cluster_by_bounding_box(current_cluster_node,
+                                    all_support_points,
+                                    left_child_index_set,
+                                    right_child_index_set);
 
       if (left_child_index_set.size() > 0)
         {
-          /**
-           * N.B. During the creation of the new child cluster, its bounding
-           * box will be recalculated, which may be smaller than the child
-           * bounding box obtained from the previous bounding box geometric
-           * bisection.
-           */
+          // N.B. During the creation of the new child cluster, its bounding
+          // box will be recalculated, which may be smaller than the child
+          // bounding box obtained from the previous bounding box geometric
+          // bisection.
           node_pointer_type child_node = CreateTreeNode<data_value_type>(
             Cluster<spacedim, Number>(left_child_index_set,
                                       all_support_points,
@@ -1254,41 +1374,33 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
             nullptr,
             current_cluster_node);
 
-          /**
-           * Append this new node as the left child of the current cluster
-           * node.
-           */
+          // Append this new node as the left child of the current cluster
+          // node.
+          AssertThrow(child_node != nullptr, ExcInternalError());
           current_cluster_node->Left(child_node);
-          node_num++;
+          node_num_from_descendants++;
 
           std::vector<node_pointer_type> leaf_set_wrt_child_node;
-          /**
-           * Continue the recursive partition by starting from this child
-           * node.
-           */
-          partition_from_cluster_node(child_node,
-                                      all_support_points,
-                                      cell_size_at_dofs,
-                                      leaf_set_wrt_child_node);
+          // Continue the recursive partition by starting from this child
+          // node.
+          node_num_from_descendants +=
+            partition_from_cluster_node(child_node,
+                                        all_support_points,
+                                        cell_size_at_dofs,
+                                        leaf_set_wrt_child_node);
 
-          /**
-           * Merge the leaf set wrt. the child cluster node into the
-           * leaf set of the current cluster node.
-           */
+          // Merge the leaf set wrt. the child cluster node into the
+          // leaf set of the current cluster node.
           for (node_pointer_type cluster_node : leaf_set_wrt_child_node)
-            {
-              leaf_set_wrt_current_node.push_back(cluster_node);
-            }
+            leaf_set_wrt_current_node.push_back(cluster_node);
         }
 
       if (right_child_index_set.size() > 0)
         {
-          /**
-           * N.B. During the creation of the new child cluster, its bounding
-           * box will be recalculated, which may be smaller than the child
-           * bounding box obtained from the previous bounding box geometric
-           * bisection.
-           */
+          // N.B. During the creation of the new child cluster, its bounding
+          // box will be recalculated, which may be smaller than the child
+          // bounding box obtained from the previous bounding box geometric
+          // bisection.
           node_pointer_type child_node = CreateTreeNode<data_value_type>(
             Cluster<spacedim, Number>(right_child_index_set,
                                       all_support_points,
@@ -1298,37 +1410,178 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
             nullptr,
             current_cluster_node);
 
-          /**
-           * Append this new node as the right child of the current cluster
-           * node.
-           */
+          // Append this new node as the right child of the current cluster
+          // node.
+          AssertThrow(child_node != nullptr, ExcInternalError());
           current_cluster_node->Right(child_node);
-          node_num++;
+          node_num_from_descendants++;
 
           std::vector<node_pointer_type> leaf_set_wrt_child_node;
-          /**
-           * Continue the recursive partition by starting from this child
-           * node.
-           */
-          partition_from_cluster_node(child_node,
-                                      all_support_points,
-                                      cell_size_at_dofs,
-                                      leaf_set_wrt_child_node);
+          // Continue the recursive partition by starting from this child
+          // node.
+          node_num_from_descendants +=
+            partition_from_cluster_node(child_node,
+                                        all_support_points,
+                                        cell_size_at_dofs,
+                                        leaf_set_wrt_child_node);
 
-          /**
-           * Merge the leaf set wrt. the child cluster node into the
-           * leaf set of the current cluster node.
-           */
+          // Merge the leaf set wrt. the child cluster node into the
+          // leaf set of the current cluster node.
           for (node_pointer_type cluster_node : leaf_set_wrt_child_node)
-            {
-              leaf_set_wrt_current_node.push_back(cluster_node);
-            }
+            leaf_set_wrt_current_node.push_back(cluster_node);
         }
     }
   else
+    leaf_set_wrt_current_node.push_back(current_cluster_node);
+
+  return node_num_from_descendants;
+}
+
+
+template <int spacedim, typename Number>
+unsigned int
+ClusterTree<spacedim, Number>::partition_from_cluster_node(
+  node_pointer_type                           current_cluster_node,
+  const std::vector<Point<spacedim, Number>> &all_support_points,
+  const std::vector<Number>                  &cell_size_at_dofs,
+  const unsigned int                          cutoff_level,
+  std::vector<node_pointer_type>             &leaf_set_wrt_current_node)
+{
+  unsigned int node_num_from_left_descendants  = 0;
+  unsigned int node_num_from_right_descendants = 0;
+  leaf_set_wrt_current_node.clear();
+
+  // When the size/cardinality of the current cluster is large enough,
+  // continue the partition.
+  //
+  // If the bounding box of the current cluster has zero volume, we use the
+  // cardinality based partition instead. The reason why such case appears is
+  // because when the finite element is of a discontinuous type, such as that
+  // used for the Neumann space, there will be multiple support points having
+  // the same coordinates, for example, all the support points associated with
+  // a common vertex which is shared by several cells. The number of such
+  // support points may be larger than \f$n_{\min}\f$.
+  if (current_cluster_node->get_data_pointer()->get_index_set().size() > n_min)
     {
-      leaf_set_wrt_current_node.push_back(current_cluster_node);
+      std::vector<types::global_dof_index> left_child_index_set;
+      std::vector<types::global_dof_index> right_child_index_set;
+      split_cluster_by_bounding_box(current_cluster_node,
+                                    all_support_points,
+                                    left_child_index_set,
+                                    right_child_index_set);
+
+      tbb::task_group tg;
+
+      node_pointer_type              left_child_node  = nullptr;
+      node_pointer_type              right_child_node = nullptr;
+      std::vector<node_pointer_type> leaf_set_wrt_left_child_node;
+      std::vector<node_pointer_type> leaf_set_wrt_right_child_node;
+
+      if (left_child_index_set.size() > 0)
+        {
+          // N.B. During the creation of the new child cluster, its bounding
+          // box will be recalculated, which may be smaller than the child
+          // bounding box obtained from the previous bounding box geometric
+          // bisection.
+          left_child_node = CreateTreeNode<data_value_type>(
+            Cluster<spacedim, Number>(left_child_index_set,
+                                      all_support_points,
+                                      cell_size_at_dofs),
+            current_cluster_node->get_level() + 1,
+            nullptr,
+            nullptr,
+            current_cluster_node);
+
+          // Append this new node as the left child of the current cluster
+          // node.
+          AssertThrow(left_child_node != nullptr, ExcInternalError());
+          current_cluster_node->Left(left_child_node);
+
+          // Continue the recursive partition by starting from this child
+          // node.
+          if (current_cluster_node->get_level() < cutoff_level)
+            {
+              tg.run([&] {
+                node_num_from_left_descendants =
+                  partition_from_cluster_node(left_child_node,
+                                              all_support_points,
+                                              cell_size_at_dofs,
+                                              cutoff_level,
+                                              leaf_set_wrt_left_child_node) +
+                  1;
+              });
+            }
+          else
+            {
+              node_num_from_left_descendants =
+                partition_from_cluster_node(left_child_node,
+                                            all_support_points,
+                                            cell_size_at_dofs,
+                                            leaf_set_wrt_left_child_node) +
+                1;
+            }
+        }
+
+      if (right_child_index_set.size() > 0)
+        {
+          // N.B. During the creation of the new child cluster, its bounding
+          // box will be recalculated, which may be smaller than the child
+          // bounding box obtained from the previous bounding box geometric
+          // bisection.
+          right_child_node = CreateTreeNode<data_value_type>(
+            Cluster<spacedim, Number>(right_child_index_set,
+                                      all_support_points,
+                                      cell_size_at_dofs),
+            current_cluster_node->get_level() + 1,
+            nullptr,
+            nullptr,
+            current_cluster_node);
+
+          // Append this new node as the right child of the current cluster
+          // node.
+          AssertThrow(right_child_node != nullptr, ExcInternalError());
+          current_cluster_node->Right(right_child_node);
+
+          // Continue the recursive partition by starting from this child
+          // node.
+          if (current_cluster_node->get_level() < cutoff_level)
+            {
+              tg.run([&] {
+                node_num_from_right_descendants =
+                  partition_from_cluster_node(right_child_node,
+                                              all_support_points,
+                                              cell_size_at_dofs,
+                                              cutoff_level,
+                                              leaf_set_wrt_right_child_node) +
+                  1;
+              });
+            }
+          else
+            {
+              node_num_from_right_descendants =
+                partition_from_cluster_node(right_child_node,
+                                            all_support_points,
+                                            cell_size_at_dofs,
+                                            leaf_set_wrt_right_child_node) +
+                1;
+            }
+        }
+
+      if (current_cluster_node->get_level() < cutoff_level)
+        tg.wait();
+
+      // Merge the leaf set wrt. the left and right child cluster nodes into the
+      // leaf set of the current cluster node.
+      for (node_pointer_type cluster_node : leaf_set_wrt_left_child_node)
+        leaf_set_wrt_current_node.push_back(cluster_node);
+
+      for (node_pointer_type cluster_node : leaf_set_wrt_right_child_node)
+        leaf_set_wrt_current_node.push_back(cluster_node);
     }
+  else
+    leaf_set_wrt_current_node.push_back(current_cluster_node);
+
+  return node_num_from_left_descendants + node_num_from_right_descendants;
 }
 
 
@@ -1409,7 +1662,24 @@ template <int spacedim, typename Number>
 void
 ClusterTree<spacedim, Number>::partition()
 {
-  partition_from_cluster_node(root_node, leaf_set);
+  node_num += partition_from_cluster_node(root_node, leaf_set);
+  build_internal_and_external_dof_numbering_mappings();
+  set_index_ranges_and_clear_index_sets();
+
+  depth     = calc_depth(root_node);
+  max_level = depth - 1;
+}
+
+
+template <int spacedim, typename Number>
+void
+ClusterTree<spacedim, Number>::partition(const unsigned int cutoff_level)
+{
+  if (MultithreadInfo::n_threads() > 1 && cutoff_level > 0)
+    node_num += partition_from_cluster_node(root_node, cutoff_level, leaf_set);
+  else
+    node_num += partition_from_cluster_node(root_node, leaf_set);
+
   build_internal_and_external_dof_numbering_mappings();
   set_index_ranges_and_clear_index_sets();
 
@@ -1423,13 +1693,42 @@ void
 ClusterTree<spacedim, Number>::partition(
   const std::vector<Point<spacedim, Number>> &all_support_points)
 {
-  partition_from_cluster_node(root_node, all_support_points, leaf_set);
+  node_num +=
+    partition_from_cluster_node(root_node, all_support_points, leaf_set);
   build_internal_and_external_dof_numbering_mappings();
   set_index_ranges_and_clear_index_sets();
 
   depth     = calc_depth(root_node);
   max_level = depth - 1;
 }
+
+
+template <int spacedim, typename Number>
+void
+ClusterTree<spacedim, Number>::partition(
+  const std::vector<Point<spacedim, Number>> &all_support_points,
+  const unsigned int                          cutoff_level)
+{
+  if (MultithreadInfo::n_threads() > 1 && cutoff_level > 0)
+    {
+      node_num += partition_from_cluster_node(root_node,
+                                              all_support_points,
+                                              cutoff_level,
+                                              leaf_set);
+    }
+  else
+    {
+      node_num +=
+        partition_from_cluster_node(root_node, all_support_points, leaf_set);
+    }
+
+  build_internal_and_external_dof_numbering_mappings();
+  set_index_ranges_and_clear_index_sets();
+
+  depth     = calc_depth(root_node);
+  max_level = depth - 1;
+}
+
 
 template <int spacedim, typename Number>
 void
@@ -1437,16 +1736,48 @@ ClusterTree<spacedim, Number>::partition(
   const std::vector<Point<spacedim, Number>> &all_support_points,
   const std::vector<Number>                  &cell_size_at_dofs)
 {
-  partition_from_cluster_node(root_node,
-                              all_support_points,
-                              cell_size_at_dofs,
-                              leaf_set);
+  node_num += partition_from_cluster_node(root_node,
+                                          all_support_points,
+                                          cell_size_at_dofs,
+                                          leaf_set);
   build_internal_and_external_dof_numbering_mappings();
   set_index_ranges_and_clear_index_sets();
 
   depth     = calc_depth(root_node);
   max_level = depth - 1;
 }
+
+
+template <int spacedim, typename Number>
+void
+ClusterTree<spacedim, Number>::partition(
+  const std::vector<Point<spacedim, Number>> &all_support_points,
+  const std::vector<Number>                  &cell_size_at_dofs,
+  const unsigned int                          cutoff_level)
+{
+  if (MultithreadInfo::n_threads() > 1 && cutoff_level > 0)
+    {
+      node_num += partition_from_cluster_node(root_node,
+                                              all_support_points,
+                                              cell_size_at_dofs,
+                                              cutoff_level,
+                                              leaf_set);
+    }
+  else
+    {
+      node_num += partition_from_cluster_node(root_node,
+                                              all_support_points,
+                                              cell_size_at_dofs,
+                                              leaf_set);
+    }
+
+  build_internal_and_external_dof_numbering_mappings();
+  set_index_ranges_and_clear_index_sets();
+
+  depth     = calc_depth(root_node);
+  max_level = depth - 1;
+}
+
 
 template <int spacedim, typename Number>
 typename ClusterTree<spacedim, Number>::node_pointer_type
@@ -1614,6 +1945,91 @@ ClusterTree<spacedim, Number>::memory_consumption_of_all_clusters() const
   Preorder_for_memory_consumption(root_node, memory_size);
 
   return memory_size;
+}
+
+
+template <int spacedim, typename Number>
+void
+ClusterTree<spacedim, Number>::split_cluster_by_cardinality(
+  node_const_pointer_type               current_cluster_node,
+  std::vector<types::global_dof_index> &left_child_index_set,
+  std::vector<types::global_dof_index> &right_child_index_set)
+{
+  left_child_index_set.clear();
+  right_child_index_set.clear();
+
+  // Split the index set of the current node into halves.
+  const std::vector<types::global_dof_index> &current_index_set =
+    current_cluster_node->get_data_pointer()->get_index_set();
+
+  // Calculate the splitting index in the middle of the index set, which
+  // is to be used for constructing half-closed and half-open
+  // subintervals.
+  const unsigned int splitting_index = (current_index_set.size() - 1) / 2 + 1;
+
+  // Construct the left child index set.
+  for (unsigned int i = 0; i < splitting_index; i++)
+    left_child_index_set.push_back(current_index_set.at(i));
+
+  // Construct the right child index set.
+  for (unsigned int i = splitting_index; i < current_index_set.size(); i++)
+    right_child_index_set.push_back(current_index_set.at(i));
+
+  Assert(left_child_index_set.size() > 0,
+         ExcLowerRange(left_child_index_set.size(), 1));
+  Assert(right_child_index_set.size() > 0,
+         ExcLowerRange(right_child_index_set.size(), 1));
+}
+
+
+template <int spacedim, typename Number>
+void
+ClusterTree<spacedim, Number>::split_cluster_by_bounding_box(
+  node_const_pointer_type                     current_cluster_node,
+  const std::vector<Point<spacedim, Number>> &all_support_points,
+  std::vector<types::global_dof_index>       &left_child_index_set,
+  std::vector<types::global_dof_index>       &right_child_index_set)
+{
+  left_child_index_set.clear();
+  right_child_index_set.clear();
+
+  if (current_cluster_node->get_data_pointer()->get_bounding_box().volume() <=
+      SimpleBoundingBox<spacedim, Number>::zero_volume_threshold)
+    {
+      split_cluster_by_cardinality(current_cluster_node,
+                                   left_child_index_set,
+                                   right_child_index_set);
+    }
+  else
+    {
+      // Divide the bounding box of the current cluster into halves.
+      std::pair<SimpleBoundingBox<spacedim, Number>,
+                SimpleBoundingBox<spacedim, Number>>
+        bbox_children = current_cluster_node->get_data_pointer()
+                          ->get_bounding_box()
+                          .divide_geometrically();
+
+      // Determine to which child index set each support point in the
+      // original bounding box belongs to.
+      for (auto dof_index :
+           current_cluster_node->get_data_pointer()->get_index_set())
+        {
+          if (bbox_children.first.point_inside(
+                all_support_points.at(dof_index)))
+            {
+              // If the support point associated with the current DoF
+              // index belongs to the left child box, add this DoF index
+              // to the left child index set.
+              left_child_index_set.push_back(dof_index);
+            }
+          else
+            {
+              // Otherwise, add this DoF index to the right child index
+              // set.
+              right_child_index_set.push_back(dof_index);
+            }
+        }
+    }
 }
 
 

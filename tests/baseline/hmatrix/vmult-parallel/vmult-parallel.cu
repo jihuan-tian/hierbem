@@ -75,7 +75,7 @@ parse_cmdline(int argc, char *argv[])
   desc.add_options()
     ("help,h", "show help message")
     ("mapping-order,o", po::value<unsigned int>()->default_value(2), "Mapping order for the sphere")
-    ("refinement,r", po::value<unsigned int>()->default_value(1), "Number of refinements")
+    ("refinement,r", po::value<unsigned int>()->default_value(1), "Number of global mesh refinement")
     ("repeats,p", po::value<unsigned int>()->default_value(10), "Repeat times for vmult");
   // clang-format on
 
@@ -159,7 +159,7 @@ main(int argc, char *argv[])
     single_layer_kernel;
 
   // Parameters for building H-matrices.
-  ConfHMatrix             hmat_params{32, 32, 0.8, 5, 0.01, false};
+  ConfHMatrix             hmat_params{32, 32, 1, 1, 0.8, 5, 0.01, false};
   ConfSauterQuadNearField sauter_quad_near_field_params;
   ConfSauterQuadFarField  sauter_quad_far_field_params;
   ConfParallelization     parallel_params;
@@ -205,7 +205,8 @@ main(int argc, char *argv[])
 
       BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, double>
         H_minus_half(dof_handler,
-                     static_cast<unsigned int>(hmat_params.n_min_for_ct));
+                     static_cast<unsigned int>(hmat_params.n_min_for_ct),
+                     static_cast<unsigned int>(hmat_params.cutoff_level_ct));
       BEMBilinearForm<dim,
                       spacedim,
                       SearchableMaterialIdContainer,

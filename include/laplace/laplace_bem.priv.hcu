@@ -1417,14 +1417,16 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                                   SearchableMaterialIdContainer,
                                                   real_type>>(
                   dof_handler_for_dirichlet_space_,
-                  static_cast<unsigned int>(hmat_params_.n_min_for_ct));
+                  static_cast<unsigned int>(hmat_params_.n_min_for_ct),
+                  static_cast<unsigned int>(hmat_params_.cutoff_level_ct));
               neumann_space_on_dirichlet_domain_ =
                 std::make_unique<BEMFunctionSpace<dim,
                                                   spacedim,
                                                   SearchableMaterialIdContainer,
                                                   real_type>>(
                   dof_handler_for_neumann_space_,
-                  static_cast<unsigned int>(hmat_params_.n_min_for_ct));
+                  static_cast<unsigned int>(hmat_params_.n_min_for_ct),
+                  static_cast<unsigned int>(hmat_params_.cutoff_level_ct));
               timer.stop();
               print_wall_time(deallog, timer, "create function spaces");
 
@@ -1542,14 +1544,16 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                                   SearchableMaterialIdContainer,
                                                   real_type>>(
                   dof_handler_for_dirichlet_space_,
-                  static_cast<unsigned int>(hmat_params_.n_min_for_ct));
+                  static_cast<unsigned int>(hmat_params_.n_min_for_ct),
+                  static_cast<unsigned int>(hmat_params_.cutoff_level_ct));
               neumann_space_on_neumann_domain_ =
                 std::make_unique<BEMFunctionSpace<dim,
                                                   spacedim,
                                                   SearchableMaterialIdContainer,
                                                   real_type>>(
                   dof_handler_for_neumann_space_,
-                  static_cast<unsigned int>(hmat_params_.n_min_for_ct));
+                  static_cast<unsigned int>(hmat_params_.n_min_for_ct),
+                  static_cast<unsigned int>(hmat_params_.cutoff_level_ct));
               timer.stop();
               print_wall_time(deallog, timer, "create function spaces");
 
@@ -1646,8 +1650,9 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                               SearchableMaterialIdContainer,
                                               real_type>>(
               dof_handler_for_dirichlet_space_,
-              static_cast<unsigned int>(hmat_params_.n_min_for_ct),
               dirichlet_bc_definition_,
+              static_cast<unsigned int>(hmat_params_.n_min_for_ct),
+              static_cast<unsigned int>(hmat_params_.cutoff_level_ct),
               true,
               false);
           dirichlet_space_on_neumann_domain_ =
@@ -1656,8 +1661,9 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                               SearchableMaterialIdContainer,
                                               real_type>>(
               dof_handler_for_dirichlet_space_,
-              static_cast<unsigned int>(hmat_params_.n_min_for_ct),
               neumann_bc_definition_,
+              static_cast<unsigned int>(hmat_params_.n_min_for_ct),
+              static_cast<unsigned int>(hmat_params_.cutoff_level_ct),
               false,
               false);
           neumann_space_on_dirichlet_domain_ =
@@ -1666,8 +1672,9 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                               SearchableMaterialIdContainer,
                                               real_type>>(
               dof_handler_for_neumann_space_,
-              static_cast<unsigned int>(hmat_params_.n_min_for_ct),
               dirichlet_bc_definition_,
+              static_cast<unsigned int>(hmat_params_.n_min_for_ct),
+              static_cast<unsigned int>(hmat_params_.cutoff_level_ct),
               true,
               false);
           neumann_space_on_neumann_domain_ =
@@ -1676,8 +1683,9 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                                               SearchableMaterialIdContainer,
                                               real_type>>(
               dof_handler_for_neumann_space_,
-              static_cast<unsigned int>(hmat_params_.n_min_for_ct),
               neumann_bc_definition_,
+              static_cast<unsigned int>(hmat_params_.n_min_for_ct),
+              static_cast<unsigned int>(hmat_params_.cutoff_level_ct),
               true,
               false);
           timer.stop();

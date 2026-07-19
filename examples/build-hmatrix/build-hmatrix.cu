@@ -144,7 +144,7 @@ main()
   tria_mapping_indices_gpu.assign_from_host(tria_mapping_indices_cpu);
 
   // Parameters for building H-matrices.
-  ConfHMatrix             hmat_params{32, 32, 0.8, 5, 0.01, false};
+  ConfHMatrix             hmat_params{32, 32, 1, 1, 0.8, 5, 0.01, false};
   ConfSauterQuadNearField sauter_quad_near_field_params;
   ConfSauterQuadFarField  sauter_quad_far_field_params;
   ConfParallelization     parallel_params;
@@ -164,7 +164,9 @@ main()
   DoFHandler<dim, spacedim> dof_handler_H_half(tria);
   dof_handler_H_half.distribute_dofs(fe_H_half);
   BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, double> H_half(
-    dof_handler_H_half, static_cast<unsigned int>(hmat_params.n_min_for_ct));
+    dof_handler_H_half,
+    static_cast<unsigned int>(hmat_params.n_min_for_ct),
+    hmat_params.cutoff_level_ct);
 
   // Create a discontinuous Lagrangian finite element and a DoF handler for the
   // Sobolev space \f$H^{-1/2}(\Gamma)\f$ space.
@@ -173,7 +175,8 @@ main()
   dof_handler_H_minus_half.distribute_dofs(fe_H_minus_half);
   BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, double>
     H_minus_half(dof_handler_H_minus_half,
-                 static_cast<unsigned int>(hmat_params.n_min_for_ct));
+                 static_cast<unsigned int>(hmat_params.n_min_for_ct),
+                 hmat_params.cutoff_level_ct);
 
   // Create a bilinear form \f$b_V: H^{-1/2}(\Gamma)\times H^{-1/2}(\Gamma)
   // \rightarrow \mathbb{R}\f$ for the single layer potential operator \f$V\f$.

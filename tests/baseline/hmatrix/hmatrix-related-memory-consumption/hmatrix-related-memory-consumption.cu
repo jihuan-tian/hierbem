@@ -78,7 +78,7 @@ parse_cmdline(int argc, char *argv[])
   desc.add_options()
     ("help,h", "show help message")
     ("mapping-order,o", po::value<unsigned int>()->default_value(2), "Mapping order for the sphere")
-    ("refinement,r", po::value<unsigned int>()->default_value(5), "Number of refinements")
+    ("refinement,r", po::value<unsigned int>()->default_value(5), "Number of global mesh refinement")
     ("n-min,n", po::value<unsigned int>()->default_value(32), "n_min criteria for small cluster")
     ("eta,e", po::value<double>()->default_value(0.8), "Admissibility constant eta")
     ("max-rank,m", po::value<unsigned int>()->default_value(5), "Maximum rank allowed for a rank-k matrix")
@@ -169,7 +169,7 @@ main(int argc, char *argv[])
 
   // Parameters for building H-matrices.
   ConfHMatrix hmat_params{
-    opts.n_min, opts.n_min, opts.eta, opts.max_rank, opts.epsilon, false};
+    opts.n_min, opts.n_min, 1, 1, opts.eta, opts.max_rank, opts.epsilon, false};
   ConfSauterQuadNearField sauter_quad_near_field_params;
   ConfSauterQuadFarField  sauter_quad_far_field_params;
   ConfParallelization     parallel_params;
@@ -218,7 +218,8 @@ main(int argc, char *argv[])
 
       BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, double>
         H_minus_half(dof_handler,
-                     static_cast<unsigned int>(hmat_params.n_min_for_ct));
+                     static_cast<unsigned int>(hmat_params.n_min_for_ct),
+                     static_cast<unsigned int>(hmat_params.cutoff_level_ct));
       BEMBilinearForm<dim,
                       spacedim,
                       SearchableMaterialIdContainer,

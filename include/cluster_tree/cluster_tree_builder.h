@@ -77,10 +77,14 @@ public:
 
   /**
    * Build a cluster tree and return it as a unique smart pointer, since it will
-   * be associated with a unique function space.
+   * be associated with a unique function space. This function runs with TBB
+   * parallelization.
+   *
+   * @param cutoff_level When the level of a cluster is smaller then this level,
+   * the partition from this cluster will be sent to a TBB task.
    */
   std::unique_ptr<ClusterTree<spacedim, Number>>
-  build() const;
+  build(const unsigned int cutoff_level = 0) const;
 
   std::vector<Point<spacedim, Number>> &
   get_support_points()
@@ -193,13 +197,14 @@ ClusterTreeBuilder<spacedim, Number>::ClusterTreeBuilder(
 
 template <int spacedim, typename Number>
 std::unique_ptr<ClusterTree<spacedim, Number>>
-ClusterTreeBuilder<spacedim, Number>::build() const
+ClusterTreeBuilder<spacedim, Number>::build(
+  const unsigned int cutoff_level) const
 {
   // Create a cluster tree for all the DoF indices.
   auto cluster_tree = std::make_unique<ClusterTree<spacedim, Number>>(
     dof_indices, support_points, dof_average_cell_size, n_min);
   // Partition the cluster tree.
-  cluster_tree->partition(support_points, dof_average_cell_size);
+  cluster_tree->partition(support_points, dof_average_cell_size, cutoff_level);
 
   return cluster_tree;
 }
