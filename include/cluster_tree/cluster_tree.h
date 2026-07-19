@@ -1001,23 +1001,23 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
 
       if (left_child_index_set.size() > 0)
         {
-          left_child_node = CreateTreeNode<data_value_type>(
-            Cluster<spacedim, Number>(left_child_index_set),
-            current_cluster_node->get_level() + 1,
-            nullptr,
-            nullptr,
-            current_cluster_node);
-
-          // Append this new node as the left child of the current cluster
-          // node.
-          AssertThrow(left_child_node != nullptr, ExcInternalError());
-          current_cluster_node->Left(left_child_node);
-
           // Continue the recursive partition by starting from this child
           // node.
           if (current_cluster_node->get_level() < cutoff_level)
             {
               tg.run([&] {
+                left_child_node = CreateTreeNode<data_value_type>(
+                  Cluster<spacedim, Number>(left_child_index_set),
+                  current_cluster_node->get_level() + 1,
+                  nullptr,
+                  nullptr,
+                  nullptr);
+
+                // Append this new node as the left child of the current cluster
+                // node.
+                AssertThrow(left_child_node != nullptr, ExcInternalError());
+                left_child_node->Parent(current_cluster_node);
+                current_cluster_node->Left(left_child_node);
                 node_num_from_left_descendants =
                   partition_from_cluster_node(left_child_node,
                                               cutoff_level,
@@ -1036,23 +1036,23 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
 
       if (right_child_index_set.size() > 0)
         {
-          right_child_node = CreateTreeNode<data_value_type>(
-            Cluster<spacedim, Number>(right_child_index_set),
-            current_cluster_node->get_level() + 1,
-            nullptr,
-            nullptr,
-            current_cluster_node);
-
-          // Append this new node as the right child of the current cluster
-          // node.
-          AssertThrow(right_child_node != nullptr, ExcInternalError());
-          current_cluster_node->Right(right_child_node);
-
           // Continue the recursive partition by starting from this child
           // node.
           if (current_cluster_node->get_level() < cutoff_level)
             {
               tg.run([&] {
+                right_child_node = CreateTreeNode<data_value_type>(
+                  Cluster<spacedim, Number>(right_child_index_set),
+                  current_cluster_node->get_level() + 1,
+                  nullptr,
+                  nullptr,
+                  nullptr);
+
+                // Append this new node as the right child of the current
+                // cluster node.
+                AssertThrow(right_child_node != nullptr, ExcInternalError());
+                right_child_node->Parent(current_cluster_node);
+                current_cluster_node->Right(right_child_node);
                 node_num_from_right_descendants =
                   partition_from_cluster_node(right_child_node,
                                               cutoff_level,
@@ -1070,7 +1070,12 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
         }
 
       if (current_cluster_node->get_level() < cutoff_level)
-        tg.wait();
+        {
+          tg.wait();
+          current_cluster_node->set_child_num(
+            static_cast<unsigned int>(left_child_node != nullptr) +
+            static_cast<unsigned int>(right_child_node != nullptr));
+        }
 
       // Merge the leaf set wrt. the left and right child cluster nodes into the
       // leaf set of the current cluster node.
