@@ -1010,9 +1010,7 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
     const std::vector<MappingInfo<dim, spacedim> *> &mappings)
 {
   Timer timer;
-  /**
-   * Generate lists of DoF indices.
-   */
+  // Generate lists of DoF indices.
   const unsigned int n_dofs =
     is_full_domain ? dof_handler_dual_space.n_dofs(refined_mesh_level) :
                      dual_space_local_to_full_dof_id_map_on_refined_mesh.size();
@@ -1020,21 +1018,18 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
   gen_linear_indices<vector_uta, types::global_dof_index>(
     dof_indices_in_dual_space);
 
-  /**
-   * Get the spatial coordinates of the support points and calculate the average
-   * mesh cell size at each support point.
-   */
+  // Get the spatial coordinates of the support points and calculate the DoF
+  // support set diameter at each DoF support point.
   std::vector<Point<spacedim, real_type>> support_points_in_dual_space(n_dofs);
-  std::vector<real_type> dof_average_cell_size_list(n_dofs, 0.0);
+  std::vector<real_type> dof_support_set_diameters(n_dofs, 0.0);
   if (is_full_domain)
     {
       DoFToolsExt::map_mg_dofs_to_support_points(mappings[0]->get_mapping(),
                                                  dof_handler_dual_space,
                                                  refined_mesh_level,
                                                  support_points_in_dual_space);
-      DoFToolsExt::map_mg_dofs_to_average_cell_size(dof_handler_dual_space,
-                                                    refined_mesh_level,
-                                                    dof_average_cell_size_list);
+      DoFToolsExt::map_mg_dofs_to_support_set_diameters(
+        dof_handler_dual_space, refined_mesh_level, dof_support_set_diameters);
     }
   else
     {
@@ -1046,56 +1041,44 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
         dual_space_dof_selectors_on_refined_mesh,
         dual_space_full_to_local_dof_id_map_on_refined_mesh,
         support_points_in_dual_space);
-      DoFToolsExt::map_mg_dofs_to_average_cell_size(
+      DoFToolsExt::map_mg_dofs_to_support_set_diameters(
         dof_handler_dual_space,
         refined_mesh_level,
         dual_space_local_to_full_dof_id_map_on_refined_mesh,
-        dof_average_cell_size_list);
+        dof_support_set_diameters);
     }
   timer.stop();
   print_wall_time(deallog, timer, "prepare build trees");
 
   timer.start();
-  /**
-   * Initialize the cluster tree.
-   */
+  // Initialize the cluster tree.
   ct = ClusterTree<spacedim, real_type>(dof_indices_in_dual_space,
                                         support_points_in_dual_space,
-                                        dof_average_cell_size_list,
+                                        dof_support_set_diameters,
                                         static_cast<unsigned int>(
                                           hmat_params.n_min_for_ct));
 
-  /**
-   * Partition the cluster tree.
-   */
+  // Partition the cluster tree.
   ct.partition(support_points_in_dual_space,
-               dof_average_cell_size_list,
+               dof_support_set_diameters,
                static_cast<unsigned int>(hmat_params.cutoff_level_ct));
   timer.stop();
   print_wall_time(deallog, timer, "build cluster tree");
 
-  /**
-   * Get the internal-to-external DoF numberings.
-   */
+  // Get the internal-to-external DoF numberings.
   std::vector<types::global_dof_index> &dof_i2e_numbering =
     ct.get_internal_to_external_dof_numbering();
 
   timer.start();
-  /**
-   * Create the block cluster tree.
-   */
+  // Create the block cluster tree.
   bct = BlockClusterTree<spacedim, real_type>(
     ct,
     ct,
     static_cast<real_type>(hmat_params.eta),
     static_cast<unsigned int>(hmat_params.n_min_for_bct));
 
-  /**
-   * Partition the block cluster tree.
-   */
-  bct.partition(dof_i2e_numbering,
-                support_points_in_dual_space,
-                dof_average_cell_size_list);
+  // Partition the block cluster tree.
+  bct.partition(static_cast<unsigned int>(hmat_params.cutoff_level_bct));
   timer.stop();
   print_wall_time(deallog, timer, "build block cluster tree");
 }

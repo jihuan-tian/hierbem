@@ -113,8 +113,8 @@ run_dirichlet_hmatrix_two_spheres(const IterativeSolverVmultType vmult_type)
   ConfLaplaceBEM bem_params;
   bem_params.problem_type        = ProblemType::DirichletBCProblem;
   bem_params.is_interior_problem = false;
-  ConfHMatrix      hmat_params{16, 16, 0.8, 10, 0.01, false};
-  ConfHMatrix      hmat_preconditioner_params{16, 16, 1.0, 5, 0.1, false};
+  ConfHMatrix      hmat_params{16, 16, 8, 4, 0.8, 10, 0.01, false};
+  ConfHMatrix      hmat_preconditioner_params{16, 16, 8, 4, 1.0, 5, 0.1, false};
   ConfSauterQuad   sauter_quad_params;
   ConfSauterQuad   sauter_quad_precond_params;
   ConfLinearSolver linear_solver_params;

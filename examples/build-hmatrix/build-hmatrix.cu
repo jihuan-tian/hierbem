@@ -166,7 +166,7 @@ main()
   BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, double> H_half(
     dof_handler_H_half,
     static_cast<unsigned int>(hmat_params.n_min_for_ct),
-    hmat_params.cutoff_level_ct);
+    static_cast<unsigned int>(hmat_params.cutoff_level_ct));
 
   // Create a discontinuous Lagrangian finite element and a DoF handler for the
   // Sobolev space \f$H^{-1/2}(\Gamma)\f$ space.
@@ -176,7 +176,7 @@ main()
   BEMFunctionSpace<dim, spacedim, SearchableMaterialIdContainer, double>
     H_minus_half(dof_handler_H_minus_half,
                  static_cast<unsigned int>(hmat_params.n_min_for_ct),
-                 hmat_params.cutoff_level_ct);
+                 static_cast<unsigned int>(hmat_params.cutoff_level_ct));
 
   // Create a bilinear form \f$b_V: H^{-1/2}(\Gamma)\times H^{-1/2}(\Gamma)
   // \rightarrow \mathbb{R}\f$ for the single layer potential operator \f$V\f$.
@@ -186,7 +186,9 @@ main()
                   SingleLayerKernel>
     bV(H_minus_half, H_minus_half);
   bV.build_block_cluster_tree(
-    hmat_params.eta, static_cast<unsigned int>(hmat_params.n_min_for_bct));
+    hmat_params.eta,
+    static_cast<unsigned int>(hmat_params.n_min_for_bct),
+    static_cast<unsigned int>(hmat_params.cutoff_level_bct));
   // Create a bilinear form \f$b_{\frac{1}{2}I+K}: H^{1/2}{\Gamma}\times
   // H^{-1/2}{\Gamma} \rightarrow \mathbb{R}\f$ for the double layer potential
   // operator plus a scaled identity operator \f$\frac{1}{2}I+K\f$. This
@@ -198,7 +200,9 @@ main()
                   DoubleLayerKernel>
     bIK(H_half, H_minus_half);
   bIK.build_block_cluster_tree(
-    hmat_params.eta, static_cast<unsigned int>(hmat_params.n_min_for_bct));
+    hmat_params.eta,
+    static_cast<unsigned int>(hmat_params.n_min_for_bct),
+    static_cast<unsigned int>(hmat_params.cutoff_level_bct));
 
   // Build an H-matrix for bV.
   std::unique_ptr<HMatrix<spacedim, double>> V =

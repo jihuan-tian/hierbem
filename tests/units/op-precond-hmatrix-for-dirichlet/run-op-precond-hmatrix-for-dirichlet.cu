@@ -125,7 +125,7 @@ run_op_precond_hmatrix_for_dirichlet()
     dummy_numbering,
     ConfOperatorPreconditioner());
 
-  ConfHMatrix         hmat_params{64, 64, 1.0, 2, 0.1, false};
+  ConfHMatrix         hmat_params{64, 64, 8, 4, 1.0, 2, 0.1, false};
   ConfSauterQuad      sauter_quad_params;
   ConfParallelization parallel_params;
 

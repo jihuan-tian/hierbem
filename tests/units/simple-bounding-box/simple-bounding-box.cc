@@ -1,4 +1,4 @@
-// Copyright (C) 2021-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2021-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -24,10 +24,15 @@
 #include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/grid_out.h>
 
+#include <catch2/catch_all.hpp>
+
 #include <fstream>
+#include <iostream>
 
 #include "cluster_tree/simple_bounding_box.h"
+#include "hbem_cpp_validate.h"
 
+using namespace Catch::Matchers;
 using namespace HierBEM;
 using namespace dealii;
 
@@ -40,121 +45,102 @@ print_bbox_info(const SimpleBoundingBox<dim> &bbox)
           << bbox.coordinate_index_with_longest_dimension() << "\n";
   const auto &boundary_points = bbox.get_boundary_points();
   deallog << "Bottom corner:\t" << boundary_points.first << "\n";
-  deallog << "Top corner:\t" << boundary_points.second << std::endl;
+  deallog << "Top corner:\t" << boundary_points.second << "\n";
+  deallog << "Diameter: " << bbox.diameter() << std::endl;
 
   Point<dim> p1(1, 1, 1);
   Point<dim> p2(5, 9, 10);
   deallog << "Point (" << p1 << ") is "
-          << (bbox.point_inside(p1) ? "inside" : "outside") << " the box\n";
+          << (bbox.is_point_inside(p1) ? "inside" : "outside") << " the box\n";
   deallog << "Point (" << p2 << ") is "
-          << (bbox.point_inside(p2) ? "inside" : "outside") << " the box\n";
+          << (bbox.is_point_inside(p2) ? "inside" : "outside") << " the box\n";
   deallog << "Memory consumption: " << bbox.memory_consumption() << std::endl;
 }
 
-int
-main()
+TEST_CASE("Verify axis-parallel bounding box", "[hmatrix]")
 {
-  /**
-   * Initialize deal.ii log stream.
-   */
+  // Initialize deal.ii log stream.
   deallog.pop();
   deallog.depth_console(2);
+  std::ofstream ofs("simple-bounding-box.log");
+  deallog.attach(ofs, false);
 
-  /**
-   * Generate the grid for a 3D sphere.
-   */
+  // Generate the grid for a 3D sphere.
   const unsigned int      dim = 3;
   Triangulation<dim, dim> triangulation;
   GridGenerator::hyper_ball(triangulation, Point<3>(0., 0., 0.), 2.0, true);
   triangulation.refine_global(2);
 
-  /**
-   * Save the mesh to a file for visualization.
-   */
+  // Save the mesh to a file for visualization.
   GridOut       grid_out;
   std::ofstream mesh_file("ball.msh");
   grid_out.write_msh(triangulation, mesh_file);
 
-  /**
-   * Generate a bounding box for the
-   * triangulation using the vertex coordinates of the triangulation.
-   */
+  // Generate a bounding box for the triangulation using the vertex coordinates
+  // of the triangulation.
   SimpleBoundingBox<dim, double> bbox(triangulation.get_vertices());
-  std::cout << "Total number of vertices: " << triangulation.n_vertices()
-            << "\n";
+  deallog << "Total number of vertices: " << triangulation.n_vertices() << "\n";
 
-  /**
-   * Print geometric information of the
-   * bounding box.
-   */
+  // Print geometric information of the
+  // bounding box.
   print_bbox_info(bbox);
 
-  /**
-   * Divide the bounding box into halves.
-   */
+  // Creating a new box by shifting the previous one, then compute their
+  // distance.
+  SimpleBoundingBox<dim, double> bbox_shifted(bbox);
+  auto &boundary_points = bbox_shifted.get_boundary_points();
+  boundary_points.first(0) += 10;
+  boundary_points.first(1) += 5;
+  boundary_points.second(0) += 10;
+  boundary_points.second(1) += 5;
+  deallog << "Distance between the original and shifted bounding boxes: "
+          << bbox.distance_to_bounding_box(bbox_shifted) << std::endl;
+
+  // Divide the bounding box into halves.
   std::pair<SimpleBoundingBox<dim, double>, SimpleBoundingBox<dim, double>>
     bbox_children = bbox.divide_geometrically();
 
-  /**
-   * Print geometric information of the two children boxes.
-   */
+  // Print geometric information of the two children boxes.
   print_bbox_info(bbox_children.first);
   print_bbox_info(bbox_children.second);
 
-  /**
-   * Create a high order Lagrangian finite element.
-   */
+  // Create a high order Lagrangian finite element.
   const unsigned int fe_order = 2;
   FE_Q<dim, dim>     fe(fe_order);
 
-  /**
-   * Create a DoFHandler, which is associated with the triangulation and
-   * distributed with the finite element.
-   */
+  // Create a DoFHandler, which is associated with the triangulation and
+  // distributed with the finite element.
   DoFHandler<dim, dim> dof_handler(triangulation);
   dof_handler.distribute_dofs(fe);
 
-  /**
-   * Create a 2nd order mapping, which is required in generating the map from
-   * DoF indices to support points.
-   */
+  // Create a 2nd order mapping, which is required in generating the map from
+  // DoF indices to support points.
   const MappingQ<dim, dim> mapping(fe_order);
 
-  /**
-   * Create bounding box based on the high order mapping.
-   */
+  // Create bounding box based on the high order mapping.
   SimpleBoundingBox<dim, double> bbox_dof(mapping, dof_handler);
 
-  /**
-   * Print geometric information of the
-   * bounding box.
-   */
+  // Print geometric information of the
+  // bounding box.
   print_bbox_info(bbox_dof);
 
-  /**
-   * Create a DoF index set.
-   */
+  // Create a DoF index set.
   std::vector<types::global_dof_index> dof_index_set{1, 5, 10, 12};
 
-  /**
-   * Get the vector of support points.
-   */
+  // Get the vector of support points.
   std::vector<Point<dim>> support_points(dof_handler.n_dofs());
-  std::cout << "Total number of DoFs: " << dof_handler.n_dofs() << "\n";
+  deallog << "Total number of DoFs: " << dof_handler.n_dofs() << "\n";
   DoFTools::map_dofs_to_support_points(mapping, dof_handler, support_points);
 
-  /**
-   * Create a bounding box for the DoF index set.
-   */
+  // Create a bounding box for the DoF index set.
   SimpleBoundingBox<dim, double> bbox_dof_index(dof_index_set, support_points);
 
-  /**
-   * Print geometric information of the
-   * bounding box.
-   */
+  // Print geometric information of the bounding box.
   print_bbox_info(bbox_dof_index);
 
   dof_handler.clear();
 
-  return 0;
+  ofs.close();
+
+  compare_two_files(SOURCE_DIR "/reference.output", "simple-bounding-box.log");
 }

@@ -10,14 +10,17 @@
 
 /**
  * @file cluster-tree.cc
- * This file verifies the ClusterTree class.
+ * @brief This file verifies the ClusterTree class.
  *
+ * @ingroup test_cases hierarchical_matrices
  * @author Jihuan Tian
  */
 
-#include <deal.II/base/multithread_info.h>
 #include <deal.II/base/point.h>
-#include <deal.II/base/timer.h>
+#include <deal.II/base/types.h>
+
+#include <deal.II/dofs/dof_handler.h>
+#include <deal.II/dofs/dof_tools.h>
 
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/mapping_q.h>
@@ -26,12 +29,13 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/grid_out.h>
+#include <deal.II/grid/tria.h>
 
 #include <catch2/catch_all.hpp>
-#include <cluster_tree/simple_bounding_box.h>
 
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 #include "cluster_tree/cluster_tree.h"
 #include "hbem_cpp_validate.h"
@@ -52,7 +56,7 @@ TEST_CASE("Construct cluster tree", "[hmatrix]")
                             Point<3>(0., 0., 0.),
                             2.0,
                             true);
-  triangulation.refine_global(3);
+  triangulation.refine_global(1);
 
   // Create a Lagrangian finite element.
   FE_Q<dim, dim> fe(1);
@@ -87,40 +91,7 @@ TEST_CASE("Construct cluster tree", "[hmatrix]")
   const unsigned int n_min        = 4;
   const unsigned int cutoff_level = 8;
 
-  {
-    std::ofstream    ofs("cluster-tree-parallel.log");
-    Timer            timer;
-    ClusterTree<dim> cluster_tree(dof_indices, all_support_points, n_min);
-    timer.stop();
-    print_wall_time(std::cout, timer, "create root node");
-
-    // Partition the cluster tree.
-    timer.start();
-    cluster_tree.partition(all_support_points, cutoff_level);
-    timer.stop();
-    print_wall_time(std::cout, timer, "partition cluster tree in parallel");
-
-    // Print the coordinates of all support points.
-    ofs << "=== Support point coordinates ===\n";
-    for (auto &point : all_support_points)
-      {
-        ofs << point << "\n";
-      }
-
-    // Print the whole cluster tree.
-    ofs << "=== Cluster tree ===\n";
-    ofs << cluster_tree << std::endl;
-
-    // Compute the memory consumption.
-    ofs << "Memory consumption of all clusters: "
-        << cluster_tree.memory_consumption_of_all_clusters() << "\n";
-    ofs << "Memory consumption: " << cluster_tree.memory_consumption()
-        << std::endl;
-    ofs.close();
-
-    // compare_two_files("cluster-tree.log", SOURCE_DIR "/reference.output");
-  }
-
+  SECTION("build tree in serial")
   {
     std::ofstream    ofs("cluster-tree-serial.log");
     ClusterTree<dim> cluster_tree(dof_indices, all_support_points, n_min);
@@ -154,8 +125,43 @@ TEST_CASE("Construct cluster tree", "[hmatrix]")
     cluster_tree.print_tree_info_as_dot(graph);
     graph.close();
 
-    // compare_two_files("cluster-tree.log", SOURCE_DIR "/reference.output");
+    compare_two_files(SOURCE_DIR "/reference.output",
+                      "cluster-tree-serial.log");
   }
 
-  compare_two_files("cluster-tree-serial.log", "cluster-tree-parallel.log");
+  SECTION("build tree in parallel")
+  {
+    std::ofstream    ofs("cluster-tree-parallel.log");
+    Timer            timer;
+    ClusterTree<dim> cluster_tree(dof_indices, all_support_points, n_min);
+    timer.stop();
+    print_wall_time(std::cout, timer, "create root node");
+
+    // Partition the cluster tree.
+    timer.start();
+    cluster_tree.partition(all_support_points, cutoff_level);
+    timer.stop();
+    print_wall_time(std::cout, timer, "partition cluster tree in parallel");
+
+    // Print the coordinates of all support points.
+    ofs << "=== Support point coordinates ===\n";
+    for (auto &point : all_support_points)
+      {
+        ofs << point << "\n";
+      }
+
+    // Print the whole cluster tree.
+    ofs << "=== Cluster tree ===\n";
+    ofs << cluster_tree << std::endl;
+
+    // Compute the memory consumption.
+    ofs << "Memory consumption of all clusters: "
+        << cluster_tree.memory_consumption_of_all_clusters() << "\n";
+    ofs << "Memory consumption: " << cluster_tree.memory_consumption()
+        << std::endl;
+    ofs.close();
+
+    compare_two_files(SOURCE_DIR "/reference.output",
+                      "cluster-tree-parallel.log");
+  }
 }

@@ -28,6 +28,7 @@
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_tools.h>
 
+#include <deal.II/fe/fe_data.h>
 #include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/grid/grid_tools.h>
@@ -926,22 +927,16 @@ namespace DoFToolsExt
     const unsigned int n_dofs = dof_handler.n_dofs();
     AssertDimension(n_dofs, dof_average_cell_size.size());
 
-    /**
-     * Create the vector which stores the number of cells that share a common
-     * DoF for each DoF.
-     */
+    // Create the vector which stores the number of cells that share a common
+    // DoF for each DoF.
     std::vector<unsigned int> number_of_cells_sharing_dof(n_dofs, 0);
 
     for (const auto &cell : dof_handler.active_cell_iterators())
       {
-        /**
-         * Get the diameter of the current cell.
-         */
+        // Get the diameter of the current cell.
         Number cell_diameter = cell->diameter();
 
-        /**
-         * Get DoF indices local to this cell.
-         */
+        // Get DoF indices local to this cell.
         std::vector<types::global_dof_index> dof_indices(
           cell->get_fe().dofs_per_cell);
         cell->get_dof_indices(dof_indices);
@@ -954,9 +949,7 @@ namespace DoFToolsExt
       }
 
     for (unsigned int i = 0; i < n_dofs; i++)
-      {
-        dof_average_cell_size.at(i) /= number_of_cells_sharing_dof.at(i);
-      }
+      dof_average_cell_size.at(i) /= number_of_cells_sharing_dof.at(i);
   }
 
 
@@ -964,9 +957,6 @@ namespace DoFToolsExt
    * @brief Calculate the average cell sizes associated with those DoFs on a
    * specific level in the given DoF handler object.
    *
-   * @tparam Number
-   * @tparam dim
-   * @tparam spacedim
    * @param dof_handler
    * @param level
    * @param dof_average_cell_size The returned list of average cell sizes. The
@@ -982,22 +972,16 @@ namespace DoFToolsExt
     const unsigned int n_dofs = dof_handler.n_dofs(level);
     AssertDimension(n_dofs, dof_average_cell_size.size());
 
-    /**
-     * Create the vector which stores the number of cells that share a common
-     * DoF for each DoF.
-     */
+    // Create the vector which stores the number of cells that share a common
+    // DoF for each DoF.
     std::vector<unsigned int> number_of_cells_sharing_dof(n_dofs, 0);
 
     for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
       {
-        /**
-         * Get the diameter of the current cell.
-         */
+        // Get the diameter of the current cell.
         Number cell_diameter = cell->diameter();
 
-        /**
-         * Get DoF indices local to this cell.
-         */
+        // Get DoF indices local to this cell.
         std::vector<types::global_dof_index> dof_indices(
           cell->get_fe().dofs_per_cell);
         cell->get_mg_dof_indices(dof_indices);
@@ -1010,9 +994,7 @@ namespace DoFToolsExt
       }
 
     for (unsigned int i = 0; i < n_dofs; i++)
-      {
-        dof_average_cell_size.at(i) /= number_of_cells_sharing_dof.at(i);
-      }
+      dof_average_cell_size.at(i) /= number_of_cells_sharing_dof.at(i);
   }
 
 
@@ -1020,14 +1002,6 @@ namespace DoFToolsExt
    * Calculate the average cell sizes associated with a subset of DoFs
    * selected from all those DoFs in the DoF handler.
    *
-   * \mynote{The doubled cell size will be used as an estimate for the
-   * diameter of the support set of each DoF.}
-   *
-   * @pre
-   * @post
-   * @tparam dim
-   * @tparam spacedim
-   * @tparam Number
    * @param dof_handler DoF handler object.
    * @param map_from_local_to_full_dof_indices This is a vector which stores
    * a list of global DoF indices corresponding to the DoFs held in the
@@ -1064,9 +1038,6 @@ namespace DoFToolsExt
    * @brief Calculate the average cell sizes associated with a subset of DoFs
    * selected from all those DoFs on a specific level in the DoF handler.
    *
-   * @tparam Number
-   * @tparam dim
-   * @tparam spacedim
    * @param dof_handler
    * @param map_from_local_to_full_dof_indices
    * @param level
@@ -1103,32 +1074,24 @@ namespace DoFToolsExt
    * Calculate the maximum cell sizes associated with those DoFs in the given
    * DoF handler object.
    *
-   * The value doubled is used as an estimate for the diameter of the support
-   * set of each DoF.
-   *
    * @param dof_handler
    * @param dof_max_cell_size The returned list of maximum cell sizes. The
    * memory for this vector should be preallocated and initialized to zero
    * before calling this function.
    */
-  template <typename DoFHandlerType, typename Number = double>
+  template <int dim, int spacedim, typename Number = double>
   void
-  map_dofs_to_max_cell_size(const DoFHandlerType &dof_handler,
-                            std::vector<Number>  &dof_max_cell_size)
+  map_dofs_to_max_cell_size(const DoFHandler<dim, spacedim> &dof_handler,
+                            std::vector<Number>             &dof_max_cell_size)
   {
-    const unsigned int n_dofs = dof_handler.n_dofs();
-    AssertDimension(n_dofs, dof_max_cell_size.size());
+    AssertDimension(dof_handler.n_dofs(), dof_max_cell_size.size());
 
     for (const auto &cell : dof_handler.active_cell_iterators())
       {
-        /**
-         * Get the diameter of the current cell.
-         */
+        // Get the diameter of the current cell.
         Number cell_diameter = cell->diameter();
 
-        /**
-         * Get DoF indices local to this cell.
-         */
+        // Get DoF indices local to this cell.
         std::vector<types::global_dof_index> dof_indices(
           cell->get_fe().dofs_per_cell);
         cell->get_dof_indices(dof_indices);
@@ -1136,9 +1099,7 @@ namespace DoFToolsExt
         for (auto index : dof_indices)
           {
             if (cell_diameter > dof_max_cell_size.at(index))
-              {
-                dof_max_cell_size.at(index) = cell_diameter;
-              }
+              dof_max_cell_size.at(index) = cell_diameter;
           }
       }
   }
@@ -1154,25 +1115,20 @@ namespace DoFToolsExt
    * memory for this vector should be preallocated and initialized to zero
    * before calling this function.
    */
-  template <typename DoFHandlerType, typename Number = double>
+  template <int dim, int spacedim, typename Number = double>
   void
-  map_mg_dofs_to_max_cell_size(const DoFHandlerType &dof_handler,
-                               const unsigned int    level,
-                               std::vector<Number>  &dof_max_cell_size)
+  map_mg_dofs_to_max_cell_size(const DoFHandler<dim, spacedim> &dof_handler,
+                               const unsigned int               level,
+                               std::vector<Number> &dof_max_cell_size)
   {
-    const unsigned int n_dofs = dof_handler.n_dofs(level);
-    AssertDimension(n_dofs, dof_max_cell_size.size());
+    AssertDimension(dof_handler.n_dofs(level), dof_max_cell_size.size());
 
     for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
       {
-        /**
-         * Get the diameter of the current cell.
-         */
+        // Get the diameter of the current cell.
         Number cell_diameter = cell->diameter();
 
-        /**
-         * Get DoF indices local to this cell.
-         */
+        // Get DoF indices local to this cell.
         std::vector<types::global_dof_index> dof_indices(
           cell->get_fe().dofs_per_cell);
         cell->get_mg_dof_indices(dof_indices);
@@ -1180,9 +1136,7 @@ namespace DoFToolsExt
         for (const auto index : dof_indices)
           {
             if (cell_diameter > dof_max_cell_size.at(index))
-              {
-                dof_max_cell_size.at(index) = cell_diameter;
-              }
+              dof_max_cell_size.at(index) = cell_diameter;
           }
       }
   }
@@ -1224,12 +1178,9 @@ namespace DoFToolsExt
    * @brief Calculate the maximum cell sizes associated with a subset of DoFs
    * selected from all those DoFs on a specific level in the DoF handler.
    *
-   * @tparam Number
-   * @tparam dim
-   * @tparam spacedim
    * @param dof_handler
-   * @param map_from_local_to_full_dof_indices
    * @param level
+   * @param map_from_local_to_full_dof_indices
    * @param dof_max_cell_size The returned list of maximum cell sizes. The
    * memory for this vector should be preallocated and initialized to zero
    * before calling this function.
@@ -1261,31 +1212,24 @@ namespace DoFToolsExt
    * Calculate the minimum cell sizes associated with those DoFs in the given
    * DoF handler object.
    *
-   * The value doubled is used as an estimate for the diameter of the support
-   * set of each DoF.
-   *
+   * @param dof_handler
    * @param dof_min_cell_size The returned list of minimum cell sizes. The
    * memory for this vector should be preallocated and initialized to zero
    * before calling this function.
    */
-  template <typename DoFHandlerType, typename Number = double>
+  template <int dim, int spacedim, typename Number = double>
   void
-  map_dofs_to_min_cell_size(const DoFHandlerType &dof_handler,
-                            std::vector<Number>  &dof_min_cell_size)
+  map_dofs_to_min_cell_size(const DoFHandler<dim, spacedim> &dof_handler,
+                            std::vector<Number>             &dof_min_cell_size)
   {
-    const unsigned int n_dofs = dof_handler.n_dofs();
-    AssertDimension(n_dofs, dof_min_cell_size.size());
+    AssertDimension(dof_handler.n_dofs(), dof_min_cell_size.size());
 
     for (const auto &cell : dof_handler.active_cell_iterators())
       {
-        /**
-         * Get the diameter of the current cell.
-         */
+        // Get the diameter of the current cell.
         Number cell_diameter = cell->diameter();
 
-        /**
-         * Get DoF indices local to this cell.
-         */
+        // Get DoF indices local to this cell.
         std::vector<types::global_dof_index> dof_indices(
           cell->get_fe().dofs_per_cell);
         cell->get_dof_indices(dof_indices);
@@ -1294,9 +1238,7 @@ namespace DoFToolsExt
           {
             if (cell_diameter < dof_min_cell_size.at(index) ||
                 dof_min_cell_size.at(index) == 0)
-              {
-                dof_min_cell_size.at(index) = cell_diameter;
-              }
+              dof_min_cell_size.at(index) = cell_diameter;
           }
       }
   }
@@ -1306,29 +1248,26 @@ namespace DoFToolsExt
    * Calculate the minimum cell sizes associated with those DoFs on a specific
    * level in the given DoF handler object.
    *
+   * @param dof_handler
+   * @param level
    * @param dof_min_cell_size The returned list of minimum cell sizes. The
    * memory for this vector should be preallocated and initialized to zero
    * before calling this function.
    */
-  template <typename DoFHandlerType, typename Number = double>
+  template <int dim, int spacedim, typename Number = double>
   void
-  map_mg_dofs_to_min_cell_size(const DoFHandlerType &dof_handler,
-                               const unsigned int    level,
-                               std::vector<Number>  &dof_min_cell_size)
+  map_mg_dofs_to_min_cell_size(const DoFHandler<dim, spacedim> &dof_handler,
+                               const unsigned int               level,
+                               std::vector<Number> &dof_min_cell_size)
   {
-    const unsigned int n_dofs = dof_handler.n_dofs(level);
-    AssertDimension(n_dofs, dof_min_cell_size.size());
+    AssertDimension(dof_handler.n_dofs(level), dof_min_cell_size.size());
 
     for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
       {
-        /**
-         * Get the diameter of the current cell.
-         */
+        // Get the diameter of the current cell.
         Number cell_diameter = cell->diameter();
 
-        /**
-         * Get DoF indices local to this cell.
-         */
+        // Get DoF indices local to this cell.
         std::vector<types::global_dof_index> dof_indices(
           cell->get_fe().dofs_per_cell);
         cell->get_mg_dof_indices(dof_indices);
@@ -1337,9 +1276,7 @@ namespace DoFToolsExt
           {
             if (cell_diameter < dof_min_cell_size.at(index) ||
                 dof_min_cell_size.at(index) == 0)
-              {
-                dof_min_cell_size.at(index) = cell_diameter;
-              }
+              dof_min_cell_size.at(index) = cell_diameter;
           }
       }
   }
@@ -1349,9 +1286,6 @@ namespace DoFToolsExt
    * @brief Calculate the minimum cell sizes associated with a subset of DoFs
    * selected from all those DoFs in the DoF handler.
    *
-   * @tparam Number
-   * @tparam dim
-   * @tparam spacedim
    * @param dof_handler
    * @param map_from_local_to_full_dof_indices
    * @param dof_min_cell_size The returned list of minimum cell sizes. The
@@ -1384,12 +1318,9 @@ namespace DoFToolsExt
    * @brief Calculate the minimum cell sizes associated with a subset of DoFs
    * selected from all those DoFs on a specific level in the DoF handler.
    *
-   * @tparam Number
-   * @tparam dim
-   * @tparam spacedim
    * @param dof_handler
-   * @param map_from_local_to_full_dof_indices
    * @param level
+   * @param map_from_local_to_full_dof_indices
    * @param dof_min_cell_size The returned list of minimum cell sizes. The
    * memory for this vector should be preallocated and initialized to zero
    * before calling this function.
@@ -1413,6 +1344,165 @@ namespace DoFToolsExt
       {
         dof_min_cell_size[d] =
           full_dof_min_cell_size[map_from_local_to_full_dof_indices[d]];
+      }
+  }
+
+
+  /**
+   * Calculate support set diameters associated with those DoFs in the given
+   * DoF handler object.
+   *
+   * @param dof_handler
+   * @param dof_support_set_diameters The returned list of DoF support set
+   * diameters. The memory for this vector should be preallocated and
+   * initialized to zero before calling this function.
+   */
+  template <int dim, int spacedim, typename Number = double>
+  void
+  map_dofs_to_support_set_diameters(
+    const DoFHandler<dim, spacedim> &dof_handler,
+    std::vector<Number>             &dof_support_set_diameters)
+  {
+    AssertDimension(dof_handler.n_dofs(), dof_support_set_diameters.size());
+
+    Number scaling_factor;
+    if (dof_handler.get_fe().conforms(FiniteElementData<dim>::Conformity::H1))
+      scaling_factor = 2;
+    else if (dof_handler.get_fe().conforms(
+               FiniteElementData<dim>::Conformity::L2))
+      scaling_factor = 1;
+    else
+      scaling_factor = 1;
+
+    for (const auto &cell : dof_handler.active_cell_iterators())
+      {
+        Number support_set_diameter = cell->diameter() * scaling_factor;
+        std::vector<types::global_dof_index> dof_indices(
+          cell->get_fe().dofs_per_cell);
+        cell->get_dof_indices(dof_indices);
+
+        for (auto index : dof_indices)
+          {
+            if (support_set_diameter > dof_support_set_diameters[index])
+              dof_support_set_diameters[index] = support_set_diameter;
+          }
+      }
+  }
+
+
+  /**
+   * Calculate support set diameters associated with those DoFs on a specific
+   * level in the given DoF handler object.
+   *
+   * @param dof_handler
+   * @param level
+   * @param dof_support_set_diameters The returned list of DoF support set
+   * diameters. The memory for this vector should be preallocated and
+   * initialized to zero before calling this function.
+   */
+  template <int dim, int spacedim, typename Number = double>
+  void
+  map_mg_dofs_to_support_set_diameters(
+    const DoFHandler<dim, spacedim> &dof_handler,
+    const unsigned int               level,
+    std::vector<Number>             &dof_support_set_diameters)
+  {
+    AssertDimension(dof_handler.n_dofs(level),
+                    dof_support_set_diameters.size());
+
+    Number scaling_factor;
+    if (dof_handler.get_fe().conforms(FiniteElementData<dim>::Conformity::H1))
+      scaling_factor = 2;
+    else if (dof_handler.get_fe().conforms(
+               FiniteElementData<dim>::Conformity::L2))
+      scaling_factor = 1;
+    else
+      scaling_factor = 1;
+
+    for (const auto &cell : dof_handler.mg_cell_iterators_on_level(level))
+      {
+        Number support_set_diameter = cell->diameter() * scaling_factor;
+        std::vector<types::global_dof_index> dof_indices(
+          cell->get_fe().dofs_per_cell);
+        cell->get_mg_dof_indices(dof_indices);
+
+        for (const auto index : dof_indices)
+          {
+            if (support_set_diameter > dof_support_set_diameters[index])
+              dof_support_set_diameters[index] = support_set_diameter;
+          }
+      }
+  }
+
+
+  /**
+   * Calculate support set diameters associated with a subset of DoFs selected
+   * from all those DoFs in the DoF handler.
+   *
+   * @param dof_handler
+   * @param map_from_local_to_full_dof_indices
+   * @param dof_support_set_diameters The returned list of DoF support set
+   * diameters. The memory for this vector should be preallocated and
+   * initialized to zero before calling this function.
+   */
+  template <int dim, int spacedim, typename Number = double>
+  void
+  map_dofs_to_support_set_diameters(
+    const DoFHandler<dim, spacedim> &dof_handler,
+    const std::vector<types::global_dof_index>
+                        &map_from_local_to_full_dof_indices,
+    std::vector<Number> &dof_support_set_diameters)
+  {
+    const types::global_dof_index n_dofs =
+      map_from_local_to_full_dof_indices.size();
+    AssertDimension(n_dofs, dof_support_set_diameters.size());
+
+    std::vector<Number> full_dof_support_set_diameters(dof_handler.n_dofs());
+    map_dofs_to_support_set_diameters(dof_handler,
+                                      full_dof_support_set_diameters);
+
+    for (types::global_dof_index d = 0; d < n_dofs; d++)
+      {
+        dof_support_set_diameters[d] =
+          full_dof_support_set_diameters[map_from_local_to_full_dof_indices[d]];
+      }
+  }
+
+
+  /**
+   * @brief Calculate support set diameters associated with a subset of DoFs
+   * selected from all those DoFs on a specific level in the DoF handler.
+   *
+   * @param dof_handler
+   * @param level
+   * @param map_from_local_to_full_dof_indices
+   * @param dof_support_set_diameters The returned list of DoF support set
+   * diameters. The memory for this vector should be preallocated and
+   * initialized to zero before calling this function.
+   */
+  template <int dim, int spacedim, typename Number = double>
+  void
+  map_mg_dofs_to_support_set_diameters(
+    const DoFHandler<dim, spacedim> &dof_handler,
+    const unsigned int               level,
+    const std::vector<types::global_dof_index>
+                        &map_from_local_to_full_dof_indices,
+    std::vector<Number> &dof_support_set_diameters)
+  {
+    const types::global_dof_index n_dofs =
+      map_from_local_to_full_dof_indices.size();
+    AssertDimension(n_dofs, dof_support_set_diameters.size());
+
+    std::vector<Number> full_dof_support_set_diameters(
+      dof_handler.n_dofs(level));
+    map_mg_dofs_to_support_set_diameters(dof_handler,
+                                         level,
+                                         full_dof_support_set_diameters);
+
+    for (types::global_dof_index d = 0; d < n_dofs; d++)
+      {
+        dof_support_set_diameters[d] =
+          full_dof_support_set_diameters[map_from_local_to_full_dof_indices[d]];
       }
   }
 

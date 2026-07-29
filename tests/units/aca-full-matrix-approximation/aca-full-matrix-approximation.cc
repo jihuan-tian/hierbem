@@ -120,7 +120,7 @@ main(int argc, char *argv[])
   A.read_from_mat(in, matrix_var_name);
   in.close();
 
-  ConfHMatrix hmat_params{4, 4, eta, max_iter, epsilon, false};
+  ConfHMatrix hmat_params{4, 4, 8, 4, eta, max_iter, epsilon, false};
 
   const unsigned int m = A.m();
   const unsigned int n = A.n();

@@ -201,8 +201,8 @@ main(int argc, char *argv[])
                             opts.neumann_space_fe_order,
                             ProblemType::NeumannBCProblem,
                             false};
-  ConfHMatrix      hmat_params{64, 64, 0.8, 5, 0.01, false};
-  ConfHMatrix      hmat_preconditioner_params{64, 64, 1.0, 2, 0.1, false};
+  ConfHMatrix      hmat_params{64, 64, 8, 4, 0.8, 5, 0.01, false};
+  ConfHMatrix      hmat_preconditioner_params{64, 64, 8, 4, 1.0, 2, 0.1, false};
   ConfSauterQuad   sauter_quad_params;
   ConfSauterQuad   sauter_quad_precond_params;
   ConfLinearSolver linear_solver_params;

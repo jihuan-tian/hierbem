@@ -48,7 +48,7 @@ namespace PlatformShared
     FullMatrixWrapper();
 
     /**
-     * Constructor from a pointer allocated with memory.
+     * Construct from a pointer allocated with memory.
      *
      * @param p Pointer to the array of values
      * @param _rows Number of rows

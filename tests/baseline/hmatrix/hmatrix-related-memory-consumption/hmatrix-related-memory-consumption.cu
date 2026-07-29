@@ -229,7 +229,9 @@ main(int argc, char *argv[])
         bV(H_minus_half, H_minus_half);
 
       bV.build_block_cluster_tree(
-        hmat_params.eta, static_cast<unsigned int>(hmat_params.n_min_for_bct));
+        hmat_params.eta,
+        static_cast<unsigned int>(hmat_params.n_min_for_bct),
+        static_cast<unsigned int>(hmat_params.cutoff_level_bct));
       std::unique_ptr<HMatrix<spacedim, double>> V =
         bV.build_hmatrix(hmat_params,
                          sauter_quad_near_field_params,

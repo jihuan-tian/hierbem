@@ -1,4 +1,4 @@
-// Copyright (C) 2021-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2021-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -24,12 +24,16 @@
  * @{
  */
 
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/memory_consumption.h>
+#include <deal.II/base/point.h>
 #include <deal.II/base/types.h>
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <iterator>
+#include <utility>
 #include <vector>
 
 #include "config.h"
@@ -51,84 +55,6 @@ public:
   template <int spacedim1, typename Number1>
   friend std::ostream &
   operator<<(std::ostream &out, const Cluster<spacedim1, Number1> &cluster);
-
-  template <int spacedim1, typename Number1>
-  friend Number1
-  calc_cluster_distance(
-    const Cluster<spacedim1, Number1>            &cluster1,
-    const Cluster<spacedim1, Number1>            &cluster2,
-    const std::vector<Point<spacedim1, Number1>> &all_support_points);
-
-  template <int spacedim1, typename Number1>
-  friend Number1
-  calc_cluster_distance(
-    const Cluster<spacedim1, Number1> &cluster1,
-    const Cluster<spacedim1, Number1> &cluster2,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering,
-    const std::vector<Point<spacedim1, Number1>> &all_support_points);
-
-  template <int spacedim1, typename Number1>
-  friend Number1
-  calc_cluster_distance(
-    const Cluster<spacedim1, Number1>            &cluster1,
-    const Cluster<spacedim1, Number1>            &cluster2,
-    const std::vector<Point<spacedim1, Number1>> &all_support_points1,
-    const std::vector<Point<spacedim1, Number1>> &all_support_points2);
-
-  template <int spacedim1, typename Number1>
-  friend Number1
-  calc_cluster_distance(
-    const Cluster<spacedim1, Number1> &cluster1,
-    const Cluster<spacedim1, Number1> &cluster2,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering1,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering2,
-    const std::vector<Point<spacedim1, Number1>> &all_support_points1,
-    const std::vector<Point<spacedim1, Number1>> &all_support_points2);
-
-  template <int spacedim1, typename Number1>
-  friend Number1
-  calc_cluster_distance(
-    const Cluster<spacedim1, Number1>            &cluster1,
-    const Cluster<spacedim1, Number1>            &cluster2,
-    const std::vector<Point<spacedim1, Number1>> &all_support_points,
-    const std::vector<Number1>                   &cell_size_at_dofs);
-
-  template <int spacedim1, typename Number1>
-  friend Number1
-  calc_cluster_distance(
-    const Cluster<spacedim1, Number1> &cluster1,
-    const Cluster<spacedim1, Number1> &cluster2,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering,
-    const std::vector<Point<spacedim1, Number1>> &all_support_points,
-    const std::vector<Number1>                   &cell_size_at_dofs);
-
-  template <int spacedim1, typename Number1>
-  friend Number1
-  calc_cluster_distance(
-    const Cluster<spacedim1, Number1>            &cluster1,
-    const Cluster<spacedim1, Number1>            &cluster2,
-    const std::vector<Point<spacedim1, Number1>> &all_support_points1,
-    const std::vector<Point<spacedim1, Number1>> &all_support_points2,
-    const std::vector<Number1>                   &cell_size_at_dofs1,
-    const std::vector<Number1>                   &cell_size_at_dofs2);
-
-  template <int spacedim1, typename Number1>
-  friend Number1
-  calc_cluster_distance(
-    const Cluster<spacedim1, Number1> &cluster1,
-    const Cluster<spacedim1, Number1> &cluster2,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering1,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering2,
-    const std::vector<Point<spacedim1, Number1>> &all_support_points1,
-    const std::vector<Point<spacedim1, Number1>> &all_support_points2,
-    const std::vector<Number1>                   &cell_size_at_dofs1,
-    const std::vector<Number1>                   &cell_size_at_dofs2);
 
   /**
    * Check the equality of two clusters by comparing their index sets.
@@ -157,59 +83,74 @@ public:
   Cluster();
 
   /**
-   * Constructor from an index set only without support points and associated
+   * Construct from an index set only without support points and associated
    * bounding box.
+   *
    * @param index_set
    */
   Cluster(const std::vector<types::global_dof_index> &index_set);
 
   /**
-   * Constructor from an index set without cluster diameter correction.
+   * Construct from an index set in the external DoF numbering with a bounding
+   * box computed from corresponding support points but without support set
+   * diameter correction.
    *
-   * The bounding box will be recalculated.
-   * @param index_set
-   * @param all_support_points
+   * @param index_set A list of DoF indices in the external numbering.
+   * @param all_support_points A list of support points associated with a
+   * function space, which may be constructed on the whole triangulation or a
+   * subdomain.
    */
   Cluster(const std::vector<types::global_dof_index> &index_set,
           const std::vector<Point<spacedim, Number>> &all_support_points);
 
   /**
-   * Constructor from an index set with cluster diameter correction.
+   * Construct from an index set in the external DoF numbering with a bounding
+   * box computed from corresponding support points. Support set diameter
+   * correction is also applied.
    *
-   * The bounding box will be recalculated.
-   * @param index_set
-   * @param all_support_points
+   * @param index_set A list of DoF indices in the external numbering.
+   * @param all_support_points A list of support points associated with a
+   * function space, which may be constructed on the whole triangulation or a
+   * subdomain.
+   * @param dof_support_set_diameters A list of support set diameters for basis
+   * functions at support points.
    */
   Cluster(const std::vector<types::global_dof_index> &index_set,
           const std::vector<Point<spacedim, Number>> &all_support_points,
-          const std::vector<Number>                  &cell_size_at_dofs);
+          const std::vector<Number> &dof_support_set_diameters);
 
   /**
-   * Constructor from an index set and a bounding box without cluster diameter
+   * Construct from an index set in the external DoF numbering and a bounding
+   * box without support set diameter correction.
+   *
+   * The input bounding box will be copied into the cluster without
+   * recalculation. However, the diameter of the cluster is recalculated
+   * according to the bounding box.
+   *
+   * @param index_set A list of DoF indices in the external numbering.
+   * @param bbox Bounding box of the DoF support points associated with the list
+   * of DoF indices.
+   */
+  Cluster(const std::vector<types::global_dof_index> &index_set,
+          const SimpleBoundingBox<spacedim, Number>  &bbox);
+
+  /**
+   * Construct from an index set and a bounding box with support set diameter
    * correction.
    *
    * The input bounding box will be copied into the cluster without
-   * recalculation. However, the diameter of the cluster is recalculated.
-   * @param index_set
-   * @param bbox
-   */
-  Cluster(const std::vector<types::global_dof_index> &index_set,
-          const SimpleBoundingBox<spacedim, Number>  &bbox,
-          const std::vector<Point<spacedim, Number>> &all_support_points);
-
-  /**
-   * Constructor from an index set and a bounding box with cluster diameter
-   * correction.
+   * recalculation. The diameter of the cluster is recalculated according to
+   * this bounding box.
    *
-   * The input bounding box will be copied into the cluster without
-   * recalculation. However, the diameter of the cluster is recalculated.
-   * @param index_set
-   * @param bbox
+   * @param index_set A list of DoF indices in the external numbering.
+   * @param bbox Bounding box of the DoF support points associated with the list
+   * of DoF indices.
+   * @param dof_support_set_diameters A list of support set diameters for basis
+   * functions at support points.
    */
   Cluster(const std::vector<types::global_dof_index> &index_set,
           const SimpleBoundingBox<spacedim, Number>  &bbox,
-          const std::vector<Point<spacedim, Number>> &all_support_points,
-          const std::vector<Number>                  &cell_size_at_dofs);
+          const std::vector<Number> &dof_support_set_diameters);
 
   /**
    * Copy constructor.
@@ -217,302 +158,159 @@ public:
   Cluster(const Cluster<spacedim, Number> &cluster);
 
   /**
-   * Get the reference to the index set.
+   * Get the reference to the index set in the external DoF numbering.
    */
   std::vector<types::global_dof_index> &
-  get_index_set();
+  get_index_set()
+  {
+    return index_set;
+  }
 
   /**
-   * Get the reference to the index set (const version).
+   * Get the reference to the index set (const version) in the external DoF
+   * numbering.
    */
   const std::vector<types::global_dof_index> &
-  get_index_set() const;
+  get_index_set() const
+  {
+    return index_set;
+  }
 
   /**
    * Get the reference to the index range, which is in the internal numbering.
-   * @return
    */
   std::array<types::global_dof_index, 2> &
-  get_index_range();
+  get_index_range()
+  {
+    return index_range;
+  }
 
   /**
    * Get the reference to the index range, which is in the internal numbering
    * (const version).
-   * @return
    */
   const std::array<types::global_dof_index, 2> &
-  get_index_range() const;
+  get_index_range() const
+  {
+    return index_range;
+  }
 
   /**
    * Set the index range, which is in the internal numbering. After the index
-   * range is set, the original index set will be immediately cleared for
-   * saving memory.
+   * range is set, the original index set in the external numbering will be
+   * immediately cleared for saving memory.
    *
    * @param lower_bound
    * @param upper_bound
    */
   void
   set_index_range(const types::global_dof_index lower_bound,
-                  const types::global_dof_index pass_upper_bound);
+                  const types::global_dof_index pass_upper_bound)
+  {
+    index_range[0] = lower_bound;
+    index_range[1] = pass_upper_bound;
+
+    index_set.clear();
+  }
 
   /**
    * Get the reference to the bounding box.
    */
   SimpleBoundingBox<spacedim, Number> &
-  get_bounding_box();
+  get_bounding_box()
+  {
+    return bbox;
+  }
 
   /**
    * Get the reference to the bounding box (const version).
    */
   const SimpleBoundingBox<spacedim, Number> &
-  get_bounding_box() const;
+  get_bounding_box() const
+  {
+    return bbox;
+  }
 
   /**
    * Get the diameter of the cluster.
    */
   Number
-  get_diameter() const;
+  get_diameter() const
+  {
+    return diameter;
+  }
 
   /**
-   * Calculate the diameter of the cluster. There is no cell size correction.
+   * Get the maximum DoF support set diameter in the cluster.
    */
   Number
-  calc_diameter(
-    const std::vector<Point<spacedim, Number>> &all_support_points) const;
+  get_max_dof_support_set_diameter() const
+  {
+    return max_dof_support_set_diameter;
+  }
 
   /**
-   * Calculate the diameter of the cluster. There is no cell size correction.
-   *
-   * \mynote{In this version, the index set held by the cluster is empty and
-   * the index range takes effect.}
-   *
-   * @param internal_to_external_dof_numbering
-   * @param all_support_points
-   * @return
+   * Calculate the diameter of the cluster without support set diameter
+   * correction, which is equal to the diameter of the axis-parallel bounding
+   * box of the support points.
    */
-  Number
-  calc_diameter(
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering,
-    const std::vector<Point<spacedim, Number>> &all_support_points) const;
+  void
+  calc_diameter();
 
   /**
-   * Calculate the diameter of the cluster. Cell size correction is applied.
+   * Calculate the diameter of the cluster with support set diameter correction.
    *
-   * N.B. Doubled estimated cell size is adopted as an approximation of the
-   * support set diameter \f${\rm diam}(Q_j)\f$. The correction is
-   * calculated according to the following formula. \f[ \widetilde{\rm
-   * diam}(\tau) := {\rm diam}(\hat{Q}_{\tau}) + \max_{j \in \tau}
-   * {\rm diam}(Q_j) \f]
+   * N.B. For the finite element @p FE_Q, doubled estimated cell size is
+   * adopted as an approximation of the support set diameter \f${\rm
+   * diam}(Q_j)\f$ for the j-th DoF. For the finite element @p FE_DGQ, there is
+   * no doubling.
    *
-   * @param all_support_points
-   * @param cell_size_at_dofs
-   * @return
+   * The correction is calculated as
+   * \f[
+   * \widetilde{\rm diam}(\tau) := {\rm diam}(\hat{Q}_{\tau}) +
+   * \max_{j \in \tau} {\rm diam}(Q_j),
+   * \f]
+   * where \f${\rm diam}(\hat{Q}_{\tau})\f$ is the diameter of the axis-parallel
+   * bounding box.
+   *
+   * @param dof_support_set_diameters A list of diameter values of support sets
+   * for all DoFs, which is accessed with DoF indices in the external numbering.
    */
-  Number
-  calc_diameter(const std::vector<Point<spacedim, Number>> &all_support_points,
-                const std::vector<Number> &cell_size_at_dofs) const;
+  void
+  calc_diameter(const std::vector<Number> &dof_support_set_diameters);
 
   /**
-   * Calculate the diameter of the cluster. Cell size correction is applied.
+   * Calculate the diameter of the cluster with support set diameter correction.
    *
-   * N.B. Doubled estimated cell size is adopted as an approximation of the
-   * support set diameter \f${\rm diam}(Q_j)\f$. The correction is
-   * calculated according to the following formula. \f[ \widetilde{\rm
-   * diam}(\tau) := {\rm diam}(\hat{Q}_{\tau}) + \max_{j \in \tau}
-   * {\rm diam}(Q_j) \f]
+   * \mynote{In this version, the index range in the internal DoF numbering is
+   * used instead of the index set in the external numbering.}
    *
-   * \mynote{In this version, the index set held by the cluster is empty and
-   * the index range takes effect.}
-   *
-   * @param internal_to_external_dof_numbering
-   * @param all_support_points
-   * @param cell_size_at_dofs
-   * @return
+   * @param internal_to_external_dof_numbering The map from internal DoF indices
+   * to external indices.
+   * @param dof_support_set_diameters A list of diameter values of support sets
+   * for all DoFs, which is accessed with DoF indices in the external numbering.
    */
-  Number
+  void
   calc_diameter(const std::vector<types::global_dof_index>
-                  &internal_to_external_dof_numbering,
-                const std::vector<Point<spacedim, Number>> &all_support_points,
-                const std::vector<Number> &cell_size_at_dofs) const;
+                                          &internal_to_external_dof_numbering,
+                const std::vector<Number> &dof_support_set_diameters);
 
   /**
-   * Calculate the minimum distance of the current cluster to the given
-   * cluster. There is no cell size correction.
-   *
-   * \mynote{The index sets held by the two clusters share a same external
-   * DoF numbering.}
+   * Calculate the minimum distance from the current cluster to the given
+   * cluster with support set diameter correction.
    */
   Number
-  distance_to_cluster(
-    const Cluster                              &cluster,
-    const std::vector<Point<spacedim, Number>> &all_support_points) const;
-
-  /**
-   * Calculate the minimum distance of the current cluster to the given
-   * cluster. There is no cell size correction.
-   *
-   * \mynote{The index sets inferred from the index ranges held by the two
-   * clusters share a same internal DoF numbering, which need to be mapped to
-   * the external numbering for accessing the list of support point
-   * coordinates.}
-   *
-   * @param cluster
-   * @param internal_to_external_dof_numbering
-   * @param all_support_points
-   * @return
-   */
-  Number
-  distance_to_cluster(
-    const Cluster &cluster,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering,
-    const std::vector<Point<spacedim, Number>> &all_support_points) const;
-
-  /**
-   * Calculate the minimum distance of the current cluster to the given
-   * cluster. There is no cell size correction.
-   *
-   * \mynote{The index sets held by the two clusters refer to two different
-   * external DoF numberings.}
-   *
-   * @param cluster
-   * @param all_support_points1
-   * @param all_support_points2
-   * @return
-   */
-  Number
-  distance_to_cluster(
-    const Cluster                              &cluster,
-    const std::vector<Point<spacedim, Number>> &all_support_points1,
-    const std::vector<Point<spacedim, Number>> &all_support_points2) const;
-
-  /**
-   * Calculate the minimum distance of the current cluster to the given
-   * cluster. There is no cell size correction.
-   *
-   * \mynote{The index sets inferred from the index ranges held by the two
-   * clusters refer to two different internal DoF numberings, which need to be
-   * mapped to their corresponding external numberings for accessing the list
-   * of support point coordinates.}
-   *
-   * @param cluster
-   * @param internal_to_external_dof_numbering1
-   * @param internal_to_external_dof_numbering2
-   * @param all_support_points1
-   * @param all_support_points2
-   * @return
-   */
-  Number
-  distance_to_cluster(
-    const Cluster &cluster,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering1,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering2,
-    const std::vector<Point<spacedim, Number>> &all_support_points1,
-    const std::vector<Point<spacedim, Number>> &all_support_points2) const;
-
-  /**
-   * Calculate the minimum distance of the current cluster to the given
-   * cluster. Cell size correction is applied.
-   *
-   * \mynote{The index sets held by the two clusters share a same external
-   * DoF numbering.}
-   */
-  Number
-  distance_to_cluster(
-    const Cluster                              &cluster,
-    const std::vector<Point<spacedim, Number>> &all_support_points,
-    const std::vector<Number>                  &cell_size_at_dofs) const;
-
-  /**
-   * Calculate the minimum distance of the current cluster to the given
-   * cluster. Cell size correction is applied.
-   *
-   * \mynote{The index sets inferred from the index ranges held by the two
-   * clusters share a same internal DoF numbering, which need to be mapped to
-   * the external numbering for accessing the list of support point
-   * coordinates.}
-   *
-   * @param cluster
-   * @param internal_to_external_dof_numbering
-   * @param all_support_points
-   * @param cell_size_at_dofs
-   * @return
-   */
-  Number
-  distance_to_cluster(
-    const Cluster &cluster,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering,
-    const std::vector<Point<spacedim, Number>> &all_support_points,
-    const std::vector<Number>                  &cell_size_at_dofs) const;
-
-  /**
-   * Calculate the minimum distance of the current cluster to the given
-   * cluster. Cell size correction is applied.
-   *
-   * \mynote{The index sets held by the two clusters refer to two different
-   * external DoF numberings.}
-   *
-   * @param cluster
-   * @param all_support_points1
-   * @param all_support_points2
-   * @param cell_size_at_dofs1
-   * @param cell_size_at_dofs2
-   * @return
-   */
-  Number
-  distance_to_cluster(
-    const Cluster                              &cluster,
-    const std::vector<Point<spacedim, Number>> &all_support_points1,
-    const std::vector<Point<spacedim, Number>> &all_support_points2,
-    const std::vector<Number>                  &cell_size_at_dofs1,
-    const std::vector<Number>                  &cell_size_at_dofs2) const;
-
-  /**
-   * Calculate the minimum distance of the current cluster to the given
-   * cluster. Cell size correction is applied.
-   *
-   * \mynote{The index sets inferred from the index ranges held by the two
-   * clusters refer to two different internal DoF numberings, which need to be
-   * mapped to their corresponding external numberings for accessing the list
-   * of support point coordinates.}
-   *
-   * @param cluster
-   * @param internal_to_external_dof_numbering1
-   * @param internal_to_external_dof_numbering2
-   * @param all_support_points1
-   * @param all_support_points2
-   * @param cell_size_at_dofs1
-   * @param cell_size_at_dofs2
-   * @return
-   */
-  Number
-  distance_to_cluster(
-    const Cluster &cluster,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering1,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering2,
-    const std::vector<Point<spacedim, Number>> &all_support_points1,
-    const std::vector<Point<spacedim, Number>> &all_support_points2,
-    const std::vector<Number>                  &cell_size_at_dofs1,
-    const std::vector<Number>                  &cell_size_at_dofs2) const;
+  distance_to_cluster(const Cluster &cluster) const;
 
   /**
    * Check if the index set of the current cluster is a subset of that of the
    * given cluster.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>The index sets associated with clusters should be sorted before
+   * \mynote{The index sets associated with clusters should be sorted before
    * calling this function. In the current implementation of cluster tree
-   * construction, all the index sets have already been sorted.</dd>
-   * </dl>
+   * construction, all the index sets have already been sorted.}
+   *
    * @param cluster
-   * @return
    */
   bool
   is_subset(const Cluster &cluster) const;
@@ -521,14 +319,11 @@ public:
    * Check if the index set of the current cluster is a proper subset of that
    * of the given cluster.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>The index sets associated with clusters should be sorted before
+   * \mynote{The index sets associated with clusters should be sorted before
    * calling this function. In the current implementation of cluster tree
-   * construction, all the index sets have already been sorted.</dd>
-   * </dl>
+   * construction, all the index sets have already been sorted.}
+   *
    * @param cluster
-   * @return
    */
   bool
   is_proper_subset(const Cluster &cluster) const;
@@ -537,14 +332,11 @@ public:
    * Check if the index set of the current cluster is a superset of that of
    * the given cluster.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>The index sets associated with clusters should be sorted before
+   * \mynote{The index sets associated with clusters should be sorted before
    * calling this function. In the current implementation of cluster tree
-   * construction, all the index sets have already been sorted.</dd>
-   * </dl>
+   * construction, all the index sets have already been sorted.}
+   *
    * @param cluster
-   * @return
    */
   bool
   is_superset(const Cluster &cluster) const;
@@ -553,14 +345,11 @@ public:
    * Check if the index set of the current cluster is a proper superset of
    * that of the given cluster.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>The index sets associated with clusters should be sorted before
+   * \mynote{The index sets associated with clusters should be sorted before
    * calling this function. In the current implementation of cluster tree
-   * construction, all the index sets have already been sorted.</dd>
-   * </dl>
+   * construction, all the index sets have already been sorted.}
+   *
    * @param cluster
-   * @return
    */
   bool
   is_proper_superset(const Cluster &cluster) const;
@@ -569,12 +358,10 @@ public:
    * Calculate the intersection of the index sets of the current and the given
    * clusters.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>The index sets associated with clusters should be sorted before
+   * \mynote{The index sets associated with clusters should be sorted before
    * calling this function. In the current implementation of cluster tree
-   * construction, all the index sets have already been sorted.</dd>
-   * </dl>
+   * construction, all the index sets have already been sorted.}
+   *
    * @param cluster
    * @param index_set_intersection
    */
@@ -598,21 +385,17 @@ public:
    * Determine if the index set of the current cluster has a nonempty
    * intersection with the index set of the given cluster.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>The index sets associated with clusters should be sorted before
+   * \mynote{The index sets associated with clusters should be sorted before
    * calling this function. In the current implementation of cluster tree
-   * construction, all the index sets have already been sorted.</dd>
-   * </dl>
+   * construction, all the index sets have already been sorted.}
+   *
    * @param cluster
-   * @return
    */
   bool
   has_intersection(const Cluster &cluster) const;
 
   /**
    * Get the cardinality of the index set.
-   * @return
    */
   std::size_t
   get_cardinality() const;
@@ -635,7 +418,7 @@ public:
 
 private:
   /**
-   * The list of DoF indices.
+   * The list of DoF indices in the external numbering in the cluster.
    */
   std::vector<types::global_dof_index> index_set;
   /**
@@ -643,8 +426,18 @@ private:
    * half-open range.
    */
   std::array<types::global_dof_index, 2> index_range;
-  SimpleBoundingBox<spacedim, Number>    bbox;
-  Number                                 diameter;
+  /**
+   * Axis-parallel bounding box holding support points in the cluster.
+   */
+  SimpleBoundingBox<spacedim, Number> bbox;
+  /**
+   * Cluster diameter.
+   */
+  Number diameter;
+  /**
+   * Maximum support set diameter for DoFs in the cluster.
+   */
+  Number max_dof_support_set_diameter;
 };
 
 
@@ -661,569 +454,16 @@ operator<<(std::ostream &out, const Cluster<spacedim, Number> &cluster)
   out << "Index set size: " << cluster.get_cardinality() << "\n";
   out << "Index set (external numbering): [";
   for (auto index : cluster.index_set)
-    {
-      out << index << " ";
-    }
+    out << index << " ";
   out << "]\n";
   out << "Index range (internal numbering): [" << cluster.index_range[0] << " "
       << cluster.index_range[1] << ")\n";
   out << "Bounding box: " << cluster.bbox;
-  out << "Diameter: " << cluster.diameter;
+  out << "Diameter: " << cluster.diameter
+      << "\nMaximum DoF support set diameter: "
+      << cluster.max_dof_support_set_diameter;
 
   return out;
-}
-
-
-/**
- * Calculate the minimum distance between two clusters. This calculation has
- * no mesh size correction.
- *
- * The calculation is based on measuring the distance between each pair of
- * support points contained in the clusters, which prevents the distance
- * calculation between two support sets.
- *
- * \mynote{The index sets held by the two clusters share a same external
- * DoF numbering.}
- *
- * @param cluster1
- * @param cluster2
- * @param all_support_points A list of support point coordinates which are
- * ordered by external DoF indices.
- * @return
- */
-template <int spacedim, typename Number = double>
-Number
-calc_cluster_distance(
-  const Cluster<spacedim, Number>            &cluster1,
-  const Cluster<spacedim, Number>            &cluster2,
-  const std::vector<Point<spacedim, Number>> &all_support_points)
-{
-  Number cluster_distance =
-    all_support_points.at(cluster1.get_index_set().at(0))
-      .distance(all_support_points.at(cluster2.get_index_set().at(0)));
-  Number point_pair_distance;
-
-  for (const auto &index1 : cluster1.get_index_set())
-    {
-      for (const auto &index2 : cluster2.get_index_set())
-        {
-          point_pair_distance = all_support_points.at(index1).distance(
-            all_support_points.at(index2));
-
-          if (point_pair_distance < cluster_distance)
-            {
-              cluster_distance = point_pair_distance;
-            }
-        }
-    }
-
-  return cluster_distance;
-}
-
-
-/**
- * Calculate the minimum distance between two clusters. This calculation has
- * no mesh size correction.
- *
- * The calculation is based on measuring the distance between each pair of
- * support points contained in the clusters, which prevents the distance
- * calculation between two support sets.
- *
- * \mynote{The index sets inferred from the index ranges held by the two
- * clusters share a same internal DoF numbering, which need to be mapped to
- * the external numbering for accessing the list of support point
- * coordinates.}
- *
- * @param cluster1
- * @param cluster2
- * @param internal_to_external_dof_numbering
- * @param all_support_points
- * @return
- */
-template <int spacedim, typename Number = double>
-Number
-calc_cluster_distance(
-  const Cluster<spacedim, Number> &cluster1,
-  const Cluster<spacedim, Number> &cluster2,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering,
-  const std::vector<Point<spacedim, Number>> &all_support_points)
-{
-  const std::array<types::global_dof_index, 2> &cluster1_index_range =
-    cluster1.get_index_range();
-  const std::array<types::global_dof_index, 2> &cluster2_index_range =
-    cluster2.get_index_range();
-
-  Number cluster_distance =
-    all_support_points
-      .at(internal_to_external_dof_numbering[cluster1_index_range[0]])
-      .distance(all_support_points.at(
-        internal_to_external_dof_numbering[cluster2_index_range[0]]));
-  Number point_pair_distance;
-
-  for (types::global_dof_index index1 = cluster1_index_range[0];
-       index1 < cluster1_index_range[1];
-       index1++)
-    {
-      for (types::global_dof_index index2 = cluster2_index_range[0];
-           index2 < cluster2_index_range[1];
-           index2++)
-        {
-          point_pair_distance =
-            all_support_points.at(internal_to_external_dof_numbering[index1])
-              .distance(all_support_points.at(
-                internal_to_external_dof_numbering[index2]));
-
-          if (point_pair_distance < cluster_distance)
-            {
-              cluster_distance = point_pair_distance;
-            }
-        }
-    }
-
-  return cluster_distance;
-}
-
-
-/**
- * Calculate the minimum distance between two clusters. This calculation has
- * no mesh size correction.
- *
- * The calculation is based on measuring the distance between each pair of
- * support points contained in the clusters, which prevents the distance
- * calculation between two support sets.
- *
- * \mynote{The index sets held by the two clusters refer to two different
- * external DoF numberings.}
- *
- * @param cluster1
- * @param cluster2
- * @param all_support_points1
- * @param all_support_points2
- * @return
- */
-template <int spacedim, typename Number = double>
-Number
-calc_cluster_distance(
-  const Cluster<spacedim, Number>            &cluster1,
-  const Cluster<spacedim, Number>            &cluster2,
-  const std::vector<Point<spacedim, Number>> &all_support_points1,
-  const std::vector<Point<spacedim, Number>> &all_support_points2)
-{
-  Number cluster_distance =
-    all_support_points1.at(cluster1.get_index_set().at(0))
-      .distance(all_support_points2.at(cluster2.get_index_set().at(0)));
-  Number point_pair_distance;
-
-  for (const auto &index1 : cluster1.get_index_set())
-    {
-      for (const auto &index2 : cluster2.get_index_set())
-        {
-          point_pair_distance = all_support_points1.at(index1).distance(
-            all_support_points2.at(index2));
-
-          if (point_pair_distance < cluster_distance)
-            {
-              cluster_distance = point_pair_distance;
-            }
-        }
-    }
-
-  return cluster_distance;
-}
-
-
-/**
- * Calculate the minimum distance between two clusters. This calculation has
- * no mesh size correction.
- *
- * The calculation is based on measuring the distance between each pair of
- * support points contained in the clusters, which prevents the distance
- * calculation between two support sets.
- *
- * \mynote{The index sets inferred from the index ranges held by the two
- * clusters refer to two different internal DoF numberings, which need to be
- * mapped to their corresponding external numberings for accessing the list of
- * support point coordinates.}
- *
- * @param cluster1
- * @param cluster2
- * @param internal_to_external_dof_numbering1
- * @param internal_to_external_dof_numbering2
- * @param all_support_points1
- * @param all_support_points2
- * @return
- */
-template <int spacedim, typename Number = double>
-Number
-calc_cluster_distance(
-  const Cluster<spacedim, Number> &cluster1,
-  const Cluster<spacedim, Number> &cluster2,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering1,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering2,
-  const std::vector<Point<spacedim, Number>> &all_support_points1,
-  const std::vector<Point<spacedim, Number>> &all_support_points2)
-{
-  const std::array<types::global_dof_index, 2> &cluster1_index_range =
-    cluster1.get_index_range();
-  const std::array<types::global_dof_index, 2> &cluster2_index_range =
-    cluster2.get_index_range();
-
-  Number cluster_distance =
-    all_support_points1
-      .at(internal_to_external_dof_numbering1[cluster1_index_range[0]])
-      .distance(all_support_points2.at(
-        internal_to_external_dof_numbering2[cluster2_index_range[0]]));
-  Number point_pair_distance;
-
-  for (types::global_dof_index index1 = cluster1_index_range[0];
-       index1 < cluster1_index_range[1];
-       index1++)
-    {
-      for (types::global_dof_index index2 = cluster2_index_range[0];
-           index2 < cluster2_index_range[1];
-           index2++)
-        {
-          point_pair_distance =
-            all_support_points1.at(internal_to_external_dof_numbering1[index1])
-              .distance(all_support_points2.at(
-                internal_to_external_dof_numbering2[index2]));
-
-          if (point_pair_distance < cluster_distance)
-            {
-              cluster_distance = point_pair_distance;
-            }
-        }
-    }
-
-  return cluster_distance;
-}
-
-
-/**
- * Calculate the minimum distance between two clusters. This calculation has
- * the mesh size correction.
- *
- * The calculation is based on measuring the distance between each pair of
- * support points contained in the clusters, which prevents the distance
- * calculation between two support sets.
- *
- * @param cluster1
- * @param cluster2
- * @param all_support_points A list of support point coordinates which are
- * ordered by DoF indices.
- * @param cell_size_at_dofs The list of estimated cell size values at DoF
- * support points.
- * @return
- */
-template <int spacedim, typename Number = double>
-Number
-calc_cluster_distance(
-  const Cluster<spacedim, Number>            &cluster1,
-  const Cluster<spacedim, Number>            &cluster2,
-  const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number>                  &cell_size_at_dofs)
-{
-  /**
-   * Calculate the uncorrected cluster distance.
-   */
-  Number uncorrected_cluster_distance =
-    calc_cluster_distance(cluster1, cluster2, all_support_points);
-
-  /**
-   * Get the maximum diameter of the support sets for different DoFs, which is
-   * 2 times of the cell size associated with the corresponding DoF.
-   */
-  Number max_dof_cell_size = 0.0;
-
-  for (const auto &index : cluster1.get_index_set())
-    {
-      if (cell_size_at_dofs.at(index) > max_dof_cell_size)
-        {
-          max_dof_cell_size = cell_size_at_dofs.at(index);
-        }
-    }
-
-  for (const auto &index : cluster2.get_index_set())
-    {
-      if (cell_size_at_dofs.at(index) > max_dof_cell_size)
-        {
-          max_dof_cell_size = cell_size_at_dofs.at(index);
-        }
-    }
-
-  Number distance_correction = max_dof_cell_size * 2;
-
-  /**
-   * Ensure the positivity of the returned cluster distance.
-   */
-  if (uncorrected_cluster_distance > distance_correction)
-    {
-      return uncorrected_cluster_distance - distance_correction;
-    }
-  else
-    {
-      return uncorrected_cluster_distance;
-    }
-}
-
-
-/**
- * Calculate the minimum distance between two clusters. This calculation has
- * the mesh size correction.
- *
- * The calculation is based on measuring the distance between each pair of
- * support points contained in the clusters, which prevents the distance
- * calculation between two support sets.
- *
- * \mynote{The index sets inferred from the index ranges held by the two
- * clusters share a same internal DoF numbering, which need to be mapped to
- * the external numbering for accessing the list of support point coordinates
- * as well as estimated cell sizes.}
- *
- * @param cluster1
- * @param cluster2
- * @param internal_to_external_dof_numbering
- * @param all_support_points
- * @param cell_size_at_dofs
- * @return
- */
-template <int spacedim, typename Number = double>
-Number
-calc_cluster_distance(
-  const Cluster<spacedim, Number> &cluster1,
-  const Cluster<spacedim, Number> &cluster2,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering,
-  const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number>                  &cell_size_at_dofs)
-{
-  /**
-   * Calculate the uncorrected cluster distance.
-   */
-  Number uncorrected_cluster_distance = calc_cluster_distance(
-    cluster1, cluster2, internal_to_external_dof_numbering, all_support_points);
-
-  /**
-   * Get the maximum diameter of the support sets for different DoFs, which is
-   * 2 times of the cell size associated with the corresponding DoF.
-   */
-  Number                                        max_dof_cell_size = 0.0;
-  const std::array<types::global_dof_index, 2> &cluster1_index_range =
-    cluster1.get_index_range();
-  const std::array<types::global_dof_index, 2> &cluster2_index_range =
-    cluster2.get_index_range();
-
-  for (types::global_dof_index index1 = cluster1_index_range[0];
-       index1 < cluster1_index_range[1];
-       index1++)
-    {
-      if (cell_size_at_dofs.at(internal_to_external_dof_numbering[index1]) >
-          max_dof_cell_size)
-        {
-          max_dof_cell_size =
-            cell_size_at_dofs.at(internal_to_external_dof_numbering[index1]);
-        }
-    }
-
-  for (types::global_dof_index index2 = cluster2_index_range[0];
-       index2 < cluster2_index_range[1];
-       index2++)
-    {
-      if (cell_size_at_dofs.at(internal_to_external_dof_numbering[index2]) >
-          max_dof_cell_size)
-        {
-          max_dof_cell_size =
-            cell_size_at_dofs.at(internal_to_external_dof_numbering[index2]);
-        }
-    }
-
-  Number distance_correction = max_dof_cell_size * 2;
-
-  /**
-   * Ensure the positivity of the returned cluster distance.
-   */
-  if (uncorrected_cluster_distance > distance_correction)
-    {
-      return uncorrected_cluster_distance - distance_correction;
-    }
-  else
-    {
-      return uncorrected_cluster_distance;
-    }
-}
-
-
-/**
- * Calculate the minimum distance between two clusters. This calculation has
- * the mesh size correction.
- *
- * The calculation is based on measuring the distance between each pair of
- * support points contained in the clusters, which prevents the distance
- * calculation between two support sets.
- *
- * \mynote{The index sets held by the two clusters refer to two different
- * external DoF numberings.}
- *
- * @param cluster1
- * @param cluster2
- * @param all_support_points1
- * @param all_support_points2
- * @param cell_size_at_dofs1
- * @param cell_size_at_dofs2
- * @return
- */
-template <int spacedim, typename Number = double>
-Number
-calc_cluster_distance(
-  const Cluster<spacedim, Number>            &cluster1,
-  const Cluster<spacedim, Number>            &cluster2,
-  const std::vector<Point<spacedim, Number>> &all_support_points1,
-  const std::vector<Point<spacedim, Number>> &all_support_points2,
-  const std::vector<Number>                  &cell_size_at_dofs1,
-  const std::vector<Number>                  &cell_size_at_dofs2)
-{
-  /**
-   * Calculate the uncorrected cluster distance.
-   */
-  Number uncorrected_cluster_distance = calc_cluster_distance(
-    cluster1, cluster2, all_support_points1, all_support_points2);
-
-  /**
-   * Get the maximum diameter of the support sets for different DoFs, which is
-   * 2 times of the cell size associated with the corresponding DoF.
-   */
-  Number max_dof_cell_size = 0.0;
-
-  for (const auto &index : cluster1.get_index_set())
-    {
-      if (cell_size_at_dofs1.at(index) > max_dof_cell_size)
-        {
-          max_dof_cell_size = cell_size_at_dofs1.at(index);
-        }
-    }
-
-  for (const auto &index : cluster2.get_index_set())
-    {
-      if (cell_size_at_dofs2.at(index) > max_dof_cell_size)
-        {
-          max_dof_cell_size = cell_size_at_dofs2.at(index);
-        }
-    }
-
-  Number distance_correction = max_dof_cell_size * 2;
-
-  /**
-   * Ensure the positivity of the returned cluster distance.
-   */
-  if (uncorrected_cluster_distance > distance_correction)
-    {
-      return uncorrected_cluster_distance - distance_correction;
-    }
-  else
-    {
-      return uncorrected_cluster_distance;
-    }
-}
-
-
-/**
- * Calculate the minimum distance between two clusters. This calculation has
- * the mesh size correction.
- *
- * The calculation is based on measuring the distance between each pair of
- * support points contained in the clusters, which prevents the distance
- * calculation between two support sets.
- *
- * \mynote{The index sets inferred from the index ranges held by the two
- * clusters refer to two different internal DoF numberings, which need to be
- * mapped to their corresponding external numberings for accessing the list of
- * support point coordinates as well as estimated cell sizes.}
- *
- * @param cluster1
- * @param cluster2
- * @param internal_to_external_dof_numbering1
- * @param internal_to_external_dof_numbering2
- * @param all_support_points1
- * @param all_support_points2
- * @param cell_size_at_dofs1
- * @param cell_size_at_dofs2
- * @return
- */
-template <int spacedim, typename Number = double>
-Number
-calc_cluster_distance(
-  const Cluster<spacedim, Number> &cluster1,
-  const Cluster<spacedim, Number> &cluster2,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering1,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering2,
-  const std::vector<Point<spacedim, Number>> &all_support_points1,
-  const std::vector<Point<spacedim, Number>> &all_support_points2,
-  const std::vector<Number>                  &cell_size_at_dofs1,
-  const std::vector<Number>                  &cell_size_at_dofs2)
-{
-  /**
-   * Calculate the uncorrected cluster distance.
-   */
-  Number uncorrected_cluster_distance =
-    calc_cluster_distance(cluster1,
-                          cluster2,
-                          internal_to_external_dof_numbering1,
-                          internal_to_external_dof_numbering2,
-                          all_support_points1,
-                          all_support_points2);
-
-  /**
-   * Get the maximum diameter of the support sets for different DoFs, which is
-   * 2 times of the cell size associated with the corresponding DoF.
-   */
-  Number                                        max_dof_cell_size = 0.0;
-  const std::array<types::global_dof_index, 2> &cluster1_index_range =
-    cluster1.get_index_range();
-  const std::array<types::global_dof_index, 2> &cluster2_index_range =
-    cluster2.get_index_range();
-
-  for (types::global_dof_index index1 = cluster1_index_range[0];
-       index1 < cluster1_index_range[1];
-       index1++)
-    {
-      if (cell_size_at_dofs1.at(internal_to_external_dof_numbering1[index1]) >
-          max_dof_cell_size)
-        {
-          max_dof_cell_size =
-            cell_size_at_dofs1.at(internal_to_external_dof_numbering1[index1]);
-        }
-    }
-
-  for (types::global_dof_index index2 = cluster2_index_range[0];
-       index2 < cluster2_index_range[1];
-       index2++)
-    {
-      if (cell_size_at_dofs2.at(internal_to_external_dof_numbering2[index2]) >
-          max_dof_cell_size)
-        {
-          max_dof_cell_size =
-            cell_size_at_dofs2.at(internal_to_external_dof_numbering2[index2]);
-        }
-    }
-
-  Number distance_correction = max_dof_cell_size * 2;
-
-  /**
-   * Ensure the positivity of the returned cluster distance.
-   */
-  if (uncorrected_cluster_distance > distance_correction)
-    {
-      return uncorrected_cluster_distance - distance_correction;
-    }
-  else
-    {
-      return uncorrected_cluster_distance;
-    }
 }
 
 
@@ -1233,6 +473,7 @@ Cluster<spacedim, Number>::Cluster()
   , index_range({{0, 0}})
   , bbox()
   , diameter(0)
+  , max_dof_support_set_diameter(0)
 {}
 
 
@@ -1243,6 +484,7 @@ Cluster<spacedim, Number>::Cluster(
   , index_range({{0, 0}})
   , bbox()
   , diameter(0)
+  , max_dof_support_set_diameter(0)
 {}
 
 
@@ -1253,42 +495,52 @@ Cluster<spacedim, Number>::Cluster(
   : index_set(index_set)
   , index_range({{0, 0}})
   , bbox(index_set, all_support_points)
-  , diameter(calc_diameter(all_support_points))
-{}
+  , diameter(0)
+  , max_dof_support_set_diameter(0)
+{
+  calc_diameter();
+}
 
 template <int spacedim, typename Number>
 Cluster<spacedim, Number>::Cluster(
   const std::vector<types::global_dof_index> &index_set,
   const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number>                  &cell_size_at_dofs)
+  const std::vector<Number>                  &dof_support_set_diameters)
   : index_set(index_set)
   , index_range({{0, 0}})
   , bbox(index_set, all_support_points)
-  , diameter(calc_diameter(all_support_points, cell_size_at_dofs))
-{}
+  , diameter(0)
+  , max_dof_support_set_diameter(0)
+{
+  calc_diameter(dof_support_set_diameters);
+}
+
+template <int spacedim, typename Number>
+Cluster<spacedim, Number>::Cluster(
+  const std::vector<types::global_dof_index> &index_set,
+  const SimpleBoundingBox<spacedim, Number>  &bbox)
+  : index_set(index_set)
+  , index_range({{0, 0}})
+  , bbox(bbox)
+  , diameter(0)
+  , max_dof_support_set_diameter(0)
+{
+  calc_diameter();
+}
 
 template <int spacedim, typename Number>
 Cluster<spacedim, Number>::Cluster(
   const std::vector<types::global_dof_index> &index_set,
   const SimpleBoundingBox<spacedim, Number>  &bbox,
-  const std::vector<Point<spacedim, Number>> &all_support_points)
+  const std::vector<Number>                  &dof_support_set_diameters)
   : index_set(index_set)
   , index_range({{0, 0}})
   , bbox(bbox)
-  , diameter(calc_diameter(all_support_points))
-{}
-
-template <int spacedim, typename Number>
-Cluster<spacedim, Number>::Cluster(
-  const std::vector<types::global_dof_index> &index_set,
-  const SimpleBoundingBox<spacedim, Number>  &bbox,
-  const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number>                  &cell_size_at_dofs)
-  : index_set(index_set)
-  , index_range({{0, 0}})
-  , bbox(bbox)
-  , diameter(calc_diameter(all_support_points, cell_size_at_dofs))
-{}
+  , diameter(0)
+  , max_dof_support_set_diameter(0)
+{
+  calc_diameter(dof_support_set_diameters);
+}
 
 template <int spacedim, typename Number>
 Cluster<spacedim, Number>::Cluster(const Cluster<spacedim, Number> &cluster)
@@ -1296,368 +548,70 @@ Cluster<spacedim, Number>::Cluster(const Cluster<spacedim, Number> &cluster)
   , index_range(cluster.index_range)
   , bbox(cluster.bbox)
   , diameter(cluster.diameter)
+  , max_dof_support_set_diameter(cluster.max_dof_support_set_diameter)
 {}
 
-template <int spacedim, typename Number>
-std::vector<types::global_dof_index> &
-Cluster<spacedim, Number>::get_index_set()
-{
-  return index_set;
-}
 
 template <int spacedim, typename Number>
-const std::vector<types::global_dof_index> &
-Cluster<spacedim, Number>::get_index_set() const
+void
+Cluster<spacedim, Number>::calc_diameter()
 {
-  return index_set;
-}
-
-
-template <int spacedim, typename Number>
-std::array<types::global_dof_index, 2> &
-Cluster<spacedim, Number>::get_index_range()
-{
-  return index_range;
-}
-
-
-template <int spacedim, typename Number>
-const std::array<types::global_dof_index, 2> &
-Cluster<spacedim, Number>::get_index_range() const
-{
-  return index_range;
+  if (index_set.size() > 1)
+    diameter = bbox.diameter();
+  else
+    diameter = 0;
 }
 
 
 template <int spacedim, typename Number>
 void
-Cluster<spacedim, Number>::set_index_range(
-  const types::global_dof_index lower_bound,
-  const types::global_dof_index pass_upper_bound)
-{
-  index_range[0] = lower_bound;
-  index_range[1] = pass_upper_bound;
-
-  index_set.clear();
-}
-
-
-template <int spacedim, typename Number>
-SimpleBoundingBox<spacedim, Number> &
-Cluster<spacedim, Number>::get_bounding_box()
-{
-  return bbox;
-}
-
-template <int spacedim, typename Number>
-const SimpleBoundingBox<spacedim, Number> &
-Cluster<spacedim, Number>::get_bounding_box() const
-{
-  return bbox;
-}
-
-template <int spacedim, typename Number>
-Number
-Cluster<spacedim, Number>::get_diameter() const
-{
-  return diameter;
-}
-
-template <int spacedim, typename Number>
-Number
 Cluster<spacedim, Number>::calc_diameter(
-  const std::vector<Point<spacedim, Number>> &all_support_points) const
+  const std::vector<Number> &dof_support_set_diameters)
 {
-  // Number of support points in the cluster.
-  const unsigned int n = index_set.size();
-
-  Assert(n > 0, ExcLowerRange(n, 1));
-
-  if (n > 1)
-    {
-      /**
-       * Calculate the number of point pairs in the cluster. Let \f$[0, 1, 2,
-       * 3, 4, 5]\f$ be the indices of support points in the cluster, whose
-       * pairwise inter-distance will be calculated. The calculation is only
-       * needed for the marked pairs of points as shown below.
-       *
-       * \code
-       *   0 1 2 3 4 5
-       * 0   - - - - -
-       * 1     - - - -
-       * 2       - - -
-       * 3         - -
-       * 4           -
-       * 5
-       * \endcode
-       */
-      Number cluster_diameter = 0;
-      Number point_pair_distance;
-
-      for (unsigned int i = 0; i < (n - 1); i++)
-        {
-          for (unsigned int j = i + 1; j < n; j++)
-            {
-              point_pair_distance =
-                all_support_points.at(index_set.at(i))
-                  .distance(all_support_points.at(index_set.at(j)));
-
-              if (point_pair_distance > cluster_diameter)
-                {
-                  cluster_diameter = point_pair_distance;
-                }
-            }
-        }
-
-      return cluster_diameter;
-    }
-  else
-    {
-      // When there is only one point, the diameter is zero.
-      return 0;
-    }
-}
-
-
-template <int spacedim, typename Number>
-Number
-Cluster<spacedim, Number>::calc_diameter(
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering,
-  const std::vector<Point<spacedim, Number>> &all_support_points) const
-{
-  // Number of support points in the cluster.
-  const unsigned int n = index_range[1] - index_range[0];
-
-  Assert(n > 0, ExcLowerRange(n, 1));
-
-  if (n > 1)
-    {
-      /**
-       * Calculate the number of point pairs in the cluster. Let \f$[0, 1, 2,
-       * 3, 4, 5]\f$ be the indices of support points in the cluster, whose
-       * pairwise inter-distance will be calculated. The calculation is only
-       * needed for the marked pairs of points as shown below.
-       *
-       * \code
-       *   0 1 2 3 4 5
-       * 0   - - - - -
-       * 1     - - - -
-       * 2       - - -
-       * 3         - -
-       * 4           -
-       * 5
-       * \endcode
-       */
-      Number cluster_diameter = 0;
-      Number point_pair_distance;
-
-      for (unsigned int i = 0; i < (n - 1); i++)
-        {
-          for (unsigned int j = i + 1; j < n; j++)
-            {
-              point_pair_distance =
-                all_support_points
-                  .at(internal_to_external_dof_numbering[index_range[0] + i])
-                  .distance(all_support_points.at(
-                    internal_to_external_dof_numbering[index_range[0] + j]));
-
-              if (point_pair_distance > cluster_diameter)
-                {
-                  cluster_diameter = point_pair_distance;
-                }
-            }
-        }
-
-      return cluster_diameter;
-    }
-  else
-    {
-      // When there is only one point, the diameter is zero.
-      return 0;
-    }
-}
-
-
-template <int spacedim, typename Number>
-Number
-Cluster<spacedim, Number>::calc_diameter(
-  const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number>                  &cell_size_at_dofs) const
-{
-  Number uncorrected_diameter = calc_diameter(all_support_points);
-
-  Number max_dof_cell_size = 0;
-
+  calc_diameter();
+  max_dof_support_set_diameter = 0;
   for (const auto &index : index_set)
     {
-      if (cell_size_at_dofs.at(index) > max_dof_cell_size)
-        {
-          max_dof_cell_size = cell_size_at_dofs.at(index);
-        }
+      if (dof_support_set_diameters[index] > max_dof_support_set_diameter)
+        max_dof_support_set_diameter = dof_support_set_diameters[index];
     }
 
-  return uncorrected_diameter + 2 * max_dof_cell_size;
+  diameter += max_dof_support_set_diameter;
 }
 
 
 template <int spacedim, typename Number>
-Number
+void
 Cluster<spacedim, Number>::calc_diameter(
   const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering,
-  const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number>                  &cell_size_at_dofs) const
+                            &internal_to_external_dof_numbering,
+  const std::vector<Number> &dof_support_set_diameters)
 {
-  Number uncorrected_diameter =
-    calc_diameter(internal_to_external_dof_numbering, all_support_points);
-
-  Number max_dof_cell_size = 0;
-
+  calc_diameter();
+  max_dof_support_set_diameter = 0;
   for (types::global_dof_index index = index_range[0]; index < index_range[1];
        index++)
     {
-      if (cell_size_at_dofs.at(internal_to_external_dof_numbering[index]) >
-          max_dof_cell_size)
+      if (dof_support_set_diameters[internal_to_external_dof_numbering[index]] >
+          max_dof_support_set_diameter)
         {
-          max_dof_cell_size =
-            cell_size_at_dofs.at(internal_to_external_dof_numbering[index]);
+          max_dof_support_set_diameter = dof_support_set_diameters
+            [internal_to_external_dof_numbering[index]];
         }
     }
 
-  return uncorrected_diameter + 2 * max_dof_cell_size;
+  diameter += max_dof_support_set_diameter;
 }
 
 
 template <int spacedim, typename Number>
 Number
-Cluster<spacedim, Number>::distance_to_cluster(
-  const Cluster                              &cluster,
-  const std::vector<Point<spacedim, Number>> &all_support_points) const
+Cluster<spacedim, Number>::distance_to_cluster(const Cluster &cluster) const
 {
-  return calc_cluster_distance((*this), cluster, all_support_points);
-}
-
-
-template <int spacedim, typename Number>
-Number
-Cluster<spacedim, Number>::distance_to_cluster(
-  const Cluster &cluster,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering,
-  const std::vector<Point<spacedim, Number>> &all_support_points) const
-{
-  return calc_cluster_distance((*this),
-                               cluster,
-                               internal_to_external_dof_numbering,
-                               all_support_points);
-}
-
-
-template <int spacedim, typename Number>
-Number
-Cluster<spacedim, Number>::distance_to_cluster(
-  const Cluster                              &cluster,
-  const std::vector<Point<spacedim, Number>> &all_support_points1,
-  const std::vector<Point<spacedim, Number>> &all_support_points2) const
-{
-  return calc_cluster_distance((*this),
-                               cluster,
-                               all_support_points1,
-                               all_support_points2);
-}
-
-
-template <int spacedim, typename Number>
-Number
-Cluster<spacedim, Number>::distance_to_cluster(
-  const Cluster &cluster,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering1,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering2,
-  const std::vector<Point<spacedim, Number>> &all_support_points1,
-  const std::vector<Point<spacedim, Number>> &all_support_points2) const
-{
-  return calc_cluster_distance((*this),
-                               cluster,
-                               internal_to_external_dof_numbering1,
-                               internal_to_external_dof_numbering2,
-                               all_support_points1,
-                               all_support_points2);
-}
-
-
-template <int spacedim, typename Number>
-Number
-Cluster<spacedim, Number>::distance_to_cluster(
-  const Cluster                              &cluster,
-  const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number>                  &cell_size_at_dofs) const
-{
-  return calc_cluster_distance((*this),
-                               cluster,
-                               all_support_points,
-                               cell_size_at_dofs);
-}
-
-
-template <int spacedim, typename Number>
-Number
-Cluster<spacedim, Number>::distance_to_cluster(
-  const Cluster &cluster,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering,
-  const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number>                  &cell_size_at_dofs) const
-{
-  return calc_cluster_distance((*this),
-                               cluster,
-                               internal_to_external_dof_numbering,
-                               all_support_points,
-                               cell_size_at_dofs);
-}
-
-
-template <int spacedim, typename Number>
-Number
-Cluster<spacedim, Number>::distance_to_cluster(
-  const Cluster                              &cluster,
-  const std::vector<Point<spacedim, Number>> &all_support_points1,
-  const std::vector<Point<spacedim, Number>> &all_support_points2,
-  const std::vector<Number>                  &cell_size_at_dofs1,
-  const std::vector<Number>                  &cell_size_at_dofs2) const
-{
-  return calc_cluster_distance((*this),
-                               cluster,
-                               all_support_points1,
-                               all_support_points2,
-                               cell_size_at_dofs1,
-                               cell_size_at_dofs2);
-}
-
-
-template <int spacedim, typename Number>
-Number
-Cluster<spacedim, Number>::distance_to_cluster(
-  const Cluster &cluster,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering1,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering2,
-  const std::vector<Point<spacedim, Number>> &all_support_points1,
-  const std::vector<Point<spacedim, Number>> &all_support_points2,
-  const std::vector<Number>                  &cell_size_at_dofs1,
-  const std::vector<Number>                  &cell_size_at_dofs2) const
-{
-  return calc_cluster_distance((*this),
-                               cluster,
-                               internal_to_external_dof_numbering1,
-                               internal_to_external_dof_numbering2,
-                               all_support_points1,
-                               all_support_points2,
-                               cell_size_at_dofs1,
-                               cell_size_at_dofs2);
+  return std::max(bbox.distance_to_bounding_box(cluster.bbox) -
+                    std::max(max_dof_support_set_diameter,
+                             cluster.max_dof_support_set_diameter),
+                  Number(0.));
 }
 
 
@@ -1804,13 +758,9 @@ Cluster<spacedim, Number>::has_intersection(const Cluster &cluster) const
       this->intersect(cluster, index_set_intersection);
 
       if (index_set_intersection.size() > 0)
-        {
-          return true;
-        }
+        return true;
       else
-        {
-          return false;
-        }
+        return false;
     }
   else
     {
@@ -1818,13 +768,9 @@ Cluster<spacedim, Number>::has_intersection(const Cluster &cluster) const
       this->intersect(cluster, index_range_intersection);
 
       if (index_range_intersection[1] - index_range_intersection[0] > 0)
-        {
-          return true;
-        }
+        return true;
       else
-        {
-          return false;
-        }
+        return false;
     }
 }
 
@@ -1834,13 +780,9 @@ std::size_t
 Cluster<spacedim, Number>::get_cardinality() const
 {
   if (index_set.size() > 0)
-    {
-      return index_set.size();
-    }
+    return index_set.size();
   else
-    {
-      return index_range[1] - index_range[0];
-    }
+    return index_range[1] - index_range[0];
 }
 
 template <int spacedim, typename Number>
@@ -1848,13 +790,9 @@ bool
 Cluster<spacedim, Number>::is_large(unsigned int n_min) const
 {
   if (get_cardinality() > n_min)
-    {
-      return true;
-    }
+    return true;
   else
-    {
-      return false;
-    }
+    return false;
 }
 
 

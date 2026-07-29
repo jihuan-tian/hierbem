@@ -1016,10 +1016,12 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               timer.start();
               bV1_->build_block_cluster_tree(
                 static_cast<real_type>(hmat_params_.eta),
-                static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+                static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+                static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
               bI1K2_->build_block_cluster_tree(
                 static_cast<real_type>(hmat_params_.eta),
-                static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+                static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+                static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
               timer.stop();
               print_wall_time(deallog, timer, "build block cluster trees");
 
@@ -1162,13 +1164,16 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               timer.start();
               bD1_part1_->build_block_cluster_tree(
                 static_cast<real_type>(hmat_params_.eta),
-                static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+                static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+                static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
               bD1_part2_->build_block_cluster_tree(
                 static_cast<real_type>(hmat_params_.eta),
-                static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+                static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+                static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
               bI2K_prime2_->build_block_cluster_tree(
                 static_cast<real_type>(hmat_params_.eta),
-                static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+                static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+                static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
               timer.stop();
               print_wall_time(deallog, timer, "build block cluster trees");
 
@@ -1407,31 +1412,40 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           timer.start();
           bV1_->build_block_cluster_tree(
             static_cast<real_type>(hmat_params_.eta),
-            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+            static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
           bK1_->build_block_cluster_tree(
             static_cast<real_type>(hmat_params_.eta),
-            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+            static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
           bD1_part1_->build_block_cluster_tree(
             static_cast<real_type>(hmat_params_.eta),
-            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+            static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
           bD1_part2_->build_block_cluster_tree(
             static_cast<real_type>(hmat_params_.eta),
-            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+            static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
           bI1K2_->build_block_cluster_tree(
             static_cast<real_type>(hmat_params_.eta),
-            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+            static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
           bV2_->build_block_cluster_tree(
             static_cast<real_type>(hmat_params_.eta),
-            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+            static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
           bD2_part1_->build_block_cluster_tree(
             static_cast<real_type>(hmat_params_.eta),
-            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+            static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
           bD2_part2_->build_block_cluster_tree(
             static_cast<real_type>(hmat_params_.eta),
-            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+            static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
           bI2K_prime2_->build_block_cluster_tree(
             static_cast<real_type>(hmat_params_.eta),
-            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+            static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
           timer.stop();
           print_wall_time(deallog, timer, "build block cluster trees");
 

@@ -1094,9 +1094,10 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                   RangeNumberType,
                   KernelNumberType>
     bV(neumann_space_on_neumann_domain_, neumann_space_on_neumann_domain_);
-  bV.build_block_cluster_tree(static_cast<real_type>(hmat_params_.eta),
-                              static_cast<unsigned int>(
-                                hmat_params_.n_min_for_bct));
+  bV.build_block_cluster_tree(
+    static_cast<real_type>(hmat_params_.eta),
+    static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+    static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
   add_memory_consumption_row("Block cluster tree for V in Vw_eq=1",
                              bV.get_block_cluster_tree());
 
@@ -1460,10 +1461,12 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               timer.start();
               bV1_->build_block_cluster_tree(
                 static_cast<real_type>(hmat_params_.eta),
-                static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+                static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+                static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
               bI1K2_->build_block_cluster_tree(
                 static_cast<real_type>(hmat_params_.eta),
-                static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+                static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+                static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
               timer.stop();
               print_wall_time(deallog, timer, "build block cluster trees");
 
@@ -1587,10 +1590,12 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
               timer.start();
               bD1_->build_block_cluster_tree(
                 static_cast<real_type>(hmat_params_.eta),
-                static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+                static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+                static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
               bI2K_prime2_->build_block_cluster_tree(
                 static_cast<real_type>(hmat_params_.eta),
-                static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+                static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+                static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
               timer.stop();
               print_wall_time(deallog, timer, "build block cluster trees");
 
@@ -1789,25 +1794,32 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
           timer.start();
           bV1_->build_block_cluster_tree(
             static_cast<real_type>(hmat_params_.eta),
-            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+            static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
           bK1_->build_block_cluster_tree(
             static_cast<real_type>(hmat_params_.eta),
-            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+            static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
           bD1_->build_block_cluster_tree(
             static_cast<real_type>(hmat_params_.eta),
-            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+            static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
           bI1K2_->build_block_cluster_tree(
             static_cast<real_type>(hmat_params_.eta),
-            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+            static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
           bV2_->build_block_cluster_tree(
             static_cast<real_type>(hmat_params_.eta),
-            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+            static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
           bD2_->build_block_cluster_tree(
             static_cast<real_type>(hmat_params_.eta),
-            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+            static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
           bI2K_prime2_->build_block_cluster_tree(
             static_cast<real_type>(hmat_params_.eta),
-            static_cast<unsigned int>(hmat_params_.n_min_for_bct));
+            static_cast<unsigned int>(hmat_params_.n_min_for_bct),
+            static_cast<unsigned int>(hmat_params_.cutoff_level_bct));
           timer.stop();
           print_wall_time(deallog, timer, "build block cluster trees");
 

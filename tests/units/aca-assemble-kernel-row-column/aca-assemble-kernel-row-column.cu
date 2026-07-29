@@ -189,7 +189,9 @@ TEST_CASE("Compute a row/column vector with ACA", "[hmatrix]")
                   HyperSingularKernelRegular>
     bD(H_half, H_half);
   bD.build_block_cluster_tree(
-    hmat_params.eta, static_cast<unsigned int>(hmat_params.n_min_for_bct));
+    hmat_params.eta,
+    static_cast<unsigned int>(hmat_params.n_min_for_bct),
+    static_cast<unsigned int>(hmat_params.cutoff_level_bct));
 
   // Create an empty H-matrix for bD.
   std::unique_ptr<HMatrix<spacedim, double>> D =

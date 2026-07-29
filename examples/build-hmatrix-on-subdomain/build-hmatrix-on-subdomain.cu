@@ -229,7 +229,9 @@ main()
                   SingleLayerKernel>
     bV1(H_minus_half_Gamma_D, H_minus_half_Gamma_D);
   bV1.build_block_cluster_tree(
-    hmat_params.eta, static_cast<unsigned int>(hmat_params.n_min_for_bct));
+    hmat_params.eta,
+    static_cast<unsigned int>(hmat_params.n_min_for_bct),
+    static_cast<unsigned int>(hmat_params.cutoff_level_bct));
   // Create a bilinear form \f$b_{K_1}:
   // \tilde{H}^{1/2}(\Gamma_{\mathrm{N}}) \times
   // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \rightarrow \mathbb{R}\f$.
@@ -239,7 +241,9 @@ main()
                   DoubleLayerKernel>
     bK1(H_half_Gamma_N, H_minus_half_Gamma_D);
   bK1.build_block_cluster_tree(
-    hmat_params.eta, static_cast<unsigned int>(hmat_params.n_min_for_bct));
+    hmat_params.eta,
+    static_cast<unsigned int>(hmat_params.n_min_for_bct),
+    static_cast<unsigned int>(hmat_params.cutoff_level_bct));
   // Create a bilinear form \f$b_{V_2}: H^{-1/2}(\Gamma) \times
   // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \rightarrow \mathbb{R}\f$.
   BEMBilinearForm<dim,
@@ -248,7 +252,9 @@ main()
                   SingleLayerKernel>
     bV2(H_minus_half_Gamma_N, H_minus_half_Gamma_D);
   bV2.build_block_cluster_tree(
-    hmat_params.eta, static_cast<unsigned int>(hmat_params.n_min_for_bct));
+    hmat_params.eta,
+    static_cast<unsigned int>(hmat_params.n_min_for_bct),
+    static_cast<unsigned int>(hmat_params.cutoff_level_bct));
   // Create a bilinear form \f$b_{sigma I_1+K_2}: H^{1/2}(\Gamma) \times
   // \tilde{H}^{-1/2}(\Gamma_{\mathrm{D}}) \rightarrow \mathbb{R}\f$.
   BEMBilinearForm<dim,
@@ -257,7 +263,9 @@ main()
                   DoubleLayerKernel>
     bI1K2(H_half_Gamma_D, H_minus_half_Gamma_D);
   bI1K2.build_block_cluster_tree(
-    hmat_params.eta, static_cast<unsigned int>(hmat_params.n_min_for_bct));
+    hmat_params.eta,
+    static_cast<unsigned int>(hmat_params.n_min_for_bct),
+    static_cast<unsigned int>(hmat_params.cutoff_level_bct));
 
   // Build an H-matrix for bV1.
   std::unique_ptr<HMatrix<spacedim, double>> V1 =

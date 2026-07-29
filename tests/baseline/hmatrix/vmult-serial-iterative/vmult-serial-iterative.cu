@@ -218,7 +218,9 @@ main(int argc, char *argv[])
         bV(H_minus_half, H_minus_half);
 
       bV.build_block_cluster_tree(
-        hmat_params.eta, static_cast<unsigned int>(hmat_params.n_min_for_bct));
+        hmat_params.eta,
+        static_cast<unsigned int>(hmat_params.n_min_for_bct),
+        static_cast<unsigned int>(hmat_params.cutoff_level_bct));
       HMatrix<3, double>::set_leaf_set_traversal_method(
         HMatrix<3, double>::SpaceFillingCurveType::Hilbert);
       std::unique_ptr<HMatrix<spacedim, double>> V =

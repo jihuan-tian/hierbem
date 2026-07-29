@@ -1,4 +1,4 @@
-// Copyright (C) 2021-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2021-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -24,7 +24,13 @@
  * @{
  */
 
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/memory_consumption.h>
+#include <deal.II/base/multithread_info.h>
+
+#include <tbb/task_group.h>
+
+#include <array>
 
 #include "block_cluster.h"
 #include "cluster_tree.h"
@@ -219,13 +225,10 @@ public:
    * Copy constructor for \p BlockClusterTree, which realizes deep copy
    * internally.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>Because this is deep copy, the constructed block cluster tree is a
+   * \mynote{Because this is deep copy, the constructed block cluster tree is a
    * new tree but never a subtree of an existing block cluster tree. Hence,
    * the
-   * data field \p is_subtree is set to \p false.</dd>
-   * </dl>
+   * data field \p is_subtree is set to \p false.}
    *
    * @param bct
    */
@@ -234,13 +237,10 @@ public:
   /**
    * Copy constructor via shallow copy.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>The data members of the input \p bct must be cleared before exiting
+   * \mynote{The data members of the input \p bct must be cleared before exiting
    * this constructor. Otherwise, when \p bct is out of its range, the data
    * associated with the current block cluster tree will also be destroyed,
-   * which is undesired.</dd>
-   * </dl>
+   * which is undesired.}
    *
    * @param bct
    * @return
@@ -307,84 +307,13 @@ public:
   partition_fine_non_tensor_product();
 
   /**
-   * Perform a recursive partition by starting from the root node. The
-   * evaluation of the admissibility condition has no mesh cell size
-   * correction.
+   * Perform a recursive partition by starting from the root node.
    *
-   * \mynote{The index sets held by the two clusters share a same external
-   * DoF numbering.}
-   *
-   * @param all_support_points All the support points.
+   * @param cutoff_level When the level of a node is less than this value, the
+   * partition from its four children will be started as a TBB task.
    */
   void
-  partition(const std::vector<types::global_dof_index>
-              &internal_to_external_dof_numbering,
-            const std::vector<Point<spacedim, Number>> &all_support_points);
-
-  /**
-   * Perform a recursive partition by starting from the root node. The
-   * evaluation of the admissibility condition has no mesh cell size
-   * correction.
-   *
-   * \mynote{The index sets inferred from the index ranges held by the two
-   * clusters share a same internal DoF numbering, which need to be mapped to
-   * the external numbering for accessing the list of support point
-   * coordinates.}
-   *
-   * @param internal_to_external_dof_numbering_I
-   * @param internal_to_external_dof_numbering_J
-   * @param all_support_points_in_I
-   * @param all_support_points_in_J
-   */
-  void
-  partition(
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering_I,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering_J,
-    const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
-    const std::vector<Point<spacedim, Number>> &all_support_points_in_J);
-
-  /**
-   * Perform a recursive partition by starting from the root node. The
-   * evaluation of the admissibility condition has mesh cell size correction.
-   *
-   * \mynote{The index sets held by the two clusters share a same external
-   * DoF numbering.}
-   *
-   * @param all_support_points All the support points.
-   */
-  void
-  partition(const std::vector<types::global_dof_index>
-              &internal_to_external_dof_numbering,
-            const std::vector<Point<spacedim, Number>> &all_support_points,
-            const std::vector<Number>                  &cell_size_at_dofs);
-
-  /**
-   * Perform a recursive partition by starting from the root node. The
-   * evaluation of the admissibility condition has mesh cell size correction.
-   *
-   * \mynote{The index sets inferred from the index ranges held by the two
-   * clusters share a same internal DoF numbering, which need to be mapped to
-   * the external numbering for accessing the list of support point
-   * coordinates.}
-   *
-   * @param internal_to_external_dof_numbering_I
-   * @param internal_to_external_dof_numbering_J
-   * @param all_support_points_in_I
-   * @param all_support_points_in_J
-   * @param cell_size_at_dofs_in_I
-   * @param cell_size_at_dofs_in_J
-   */
-  void
-  partition(const std::vector<types::global_dof_index>
-              &internal_to_external_dof_numbering_I,
-            const std::vector<types::global_dof_index>
-              &internal_to_external_dof_numbering_J,
-            const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
-            const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
-            const std::vector<Number>                  &cell_size_at_dofs_in_I,
-            const std::vector<Number>                  &cell_size_at_dofs_in_J);
+  partition(const unsigned int cutoff_level = 0);
 
   /**
    * Extend the current block cluster tree to be finer than the given
@@ -393,18 +322,15 @@ public:
    * This member functions implements (7.10a) in Hackbusch's
    * \hmatrix book.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd><strong>This algorithm iterates over each element in the leaf set
+   * \mynote{<strong>This algorithm iterates over each element in the leaf set
    * of the block cluster tree to be extended. During the iteration, because
    * leaf nodes may be further split into smaller ones, the leaf set is not a
    * constant. Hence, the leaf set should be updated immediately whenever a
    * block cluster node is split. This behavior is different from other
    * functions such as \p HMatrix<spacedim, Number>::refine_to_supertree, the
    * leaf set of of which will be built after the whole tree hierarchy has
-   * been constructed.</strong>
-   *   </dd>
-   * </dl>
+   * been constructed.</strong>}
+   *
    * @param P
    * @return Whether the block cluster tree has really been extended.
    */
@@ -417,18 +343,14 @@ public:
    * This member functions implements (7.10b) in Hackbusch's
    * \hmatrix book.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd><strong>This algorithm iterates over each element in the leaf set
+   * \mynote{<strong>This algorithm iterates over each element in the leaf set
    * of the block cluster tree to be extended. During the iteration, because
    * leaf nodes may be further split into smaller ones, the leaf set is not a
    * constant. Hence, the leaf set should be updated immediately whenever a
    * block cluster node is split. This behavior is different from other
    * functions such as \p HMatrix<spacedim, Number>::refine_to_supertree, the
    * leaf set of of which will be built after the whole tree hierarchy has
-   * been constructed.</strong>
-   *   </dd>
-   * </dl>
+   * been constructed.</strong>}
    */
   bool
   extend_to_finer_partition(const std::vector<node_pointer_type> &partition);
@@ -728,11 +650,7 @@ private:
    * Perform a recursive partition by starting from a block cluster node in
    * the tree.
    *
-   * N.B. The evaluation of the admissibility condition has no mesh cell size
-   * correction.
-   *
-   * \mynote{The index sets held by the two clusters share a same external
-   * DoF numbering.}
+   * This versions run in serial.
    *
    * The algorithm performs an iteration over all the
    * children of the current block cluster \f$b = \tau \times \sigma\f$.
@@ -742,107 +660,40 @@ private:
    *
    * @param current_block_cluster_node The pointer to the block cluster node in
    * the tree, from which the admissible partition will be performed.
-   * @param internal_to_external_dof_numbering
-   * @param all_support_points Spatial coordinates for all the support points.
    * @param leaf_set A list of block cluster node pointers which comprise the
    * leaf set with respect to \p current_block_cluster_node.
+   * @return Number of nodes which are descendants of the current cluster node.
    */
-  void
+  unsigned int
   partition_from_block_cluster_node(
-    node_pointer_type current_block_cluster_node,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering,
-    const std::vector<Point<spacedim, Number>> &all_support_points,
-    std::vector<node_pointer_type>             &leaf_set_wrt_current_node);
+    node_pointer_type               current_block_cluster_node,
+    std::vector<node_pointer_type> &leaf_set_wrt_current_node);
 
   /**
    * Perform a recursive partition by starting from a block cluster node in
    * the tree.
    *
-   * N.B. The evaluation of the admissibility condition has no mesh cell size
-   * correction.
+   * This versions run in parallel.
    *
-   * \mynote{The index sets inferred from the index ranges held by the two
-   * clusters share a same internal DoF numbering, which need to be mapped to
-   * the external numbering for accessing the list of support point
-   * coordinates.}
+   * The algorithm performs an iteration over all the
+   * children of the current block cluster \f$b = \tau \times \sigma\f$.
+   * Because the map \f$S\f$ for generating the children of \f$b\f$ is
+   * realized from a tensor product of the children of \f$\tau\f$ and
+   * \f$\sigma\f$, the algorithm contains nested double loops.
    *
-   * @param current_block_cluster_node
-   * @param internal_to_external_dof_numbering_I
-   * @param internal_to_external_dof_numbering_J
-   * @param all_support_points_in_I
-   * @param all_support_points_in_J
-   * @param leaf_set_wrt_current_node
+   * @param current_block_cluster_node The pointer to the block cluster node in
+   * the tree, from which the admissible partition will be performed.
+   * @param cutoff_level When the level of a node is less than this value, the
+   * partition from its four children will be started as a TBB task.
+   * @param leaf_set A list of block cluster node pointers which comprise the
+   * leaf set with respect to \p current_block_cluster_node.
+   * @return Number of nodes which are descendants of the current cluster node.
    */
-  void
+  unsigned int
   partition_from_block_cluster_node(
-    node_pointer_type current_block_cluster_node,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering_I,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering_J,
-    const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
-    const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
-    std::vector<node_pointer_type>             &leaf_set_wrt_current_node);
-
-  /**
-   * Perform a recursive partition by starting from a block cluster node in
-   * the tree.
-   *
-   * N.B. The evaluation of the admissibility condition has the mesh cell size
-   * correction.
-   *
-   * \mynote{The index sets held by the two clusters share a same external
-   * DoF numbering.}
-   *
-   * @param current_block_cluster_node
-   * @param internal_to_external_dof_numbering
-   * @param all_support_points
-   * @param cell_size_at_dofs
-   * @param leaf_set_wrt_current_node
-   */
-  void
-  partition_from_block_cluster_node(
-    node_pointer_type current_block_cluster_node,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering,
-    const std::vector<Point<spacedim, Number>> &all_support_points,
-    const std::vector<Number>                  &cell_size_at_dofs,
-    std::vector<node_pointer_type>             &leaf_set_wrt_current_node);
-
-  /**
-   * Perform a recursive partition by starting from a block cluster node in
-   * the tree.
-   *
-   * N.B. The evaluation of the admissibility condition has the mesh cell size
-   * correction.
-   *
-   * \mynote{The index sets inferred from the index ranges held by the two
-   * clusters share a same internal DoF numbering, which need to be mapped to
-   * the external numbering for accessing the list of support point
-   * coordinates.}
-   *
-   * @param current_block_cluster_node
-   * @param internal_to_external_dof_numbering_I
-   * @param internal_to_external_dof_numbering_J
-   * @param all_support_points_in_I
-   * @param all_support_points_in_J
-   * @param cell_size_at_dofs_in_I
-   * @param cell_size_at_dofs_in_J
-   * @param leaf_set_wrt_current_node
-   */
-  void
-  partition_from_block_cluster_node(
-    node_pointer_type current_block_cluster_node,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering_I,
-    const std::vector<types::global_dof_index>
-      &internal_to_external_dof_numbering_J,
-    const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
-    const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
-    const std::vector<Number>                  &cell_size_at_dofs_in_I,
-    const std::vector<Number>                  &cell_size_at_dofs_in_J,
-    std::vector<node_pointer_type>             &leaf_set_wrt_current_node);
+    node_pointer_type               current_block_cluster_node,
+    const unsigned int              cutoff_level,
+    std::vector<node_pointer_type> &leaf_set_wrt_current_node);
 
   /**
    * Find a block cluster node in the leaf set of the current block cluster
@@ -1648,88 +1499,15 @@ BlockClusterTree<spacedim, Number>::partition_fine_non_tensor_product()
 
 template <int spacedim, typename Number>
 void
-BlockClusterTree<spacedim, Number>::partition(
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering,
-  const std::vector<Point<spacedim, Number>> &all_support_points)
+BlockClusterTree<spacedim, Number>::partition(const unsigned int cutoff_level)
 {
-  partition_from_block_cluster_node(root_node,
-                                    internal_to_external_dof_numbering,
-                                    all_support_points,
-                                    leaf_set);
+  if (MultithreadInfo::n_threads() > 1 && cutoff_level > 0)
+    node_num +=
+      partition_from_block_cluster_node(root_node, cutoff_level, leaf_set);
+  else
+    node_num += partition_from_block_cluster_node(root_node, leaf_set);
 
   categorize_near_and_far_field_sets();
-
-  calc_depth_and_max_level();
-}
-
-
-template <int spacedim, typename Number>
-void
-BlockClusterTree<spacedim, Number>::partition(
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering_I,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering_J,
-  const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
-  const std::vector<Point<spacedim, Number>> &all_support_points_in_J)
-{
-  partition_from_block_cluster_node(root_node,
-                                    internal_to_external_dof_numbering_I,
-                                    internal_to_external_dof_numbering_J,
-                                    all_support_points_in_I,
-                                    all_support_points_in_J,
-                                    leaf_set);
-
-  categorize_near_and_far_field_sets();
-
-  calc_depth_and_max_level();
-}
-
-
-template <int spacedim, typename Number>
-void
-BlockClusterTree<spacedim, Number>::partition(
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering,
-  const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number>                  &cell_size_at_dofs)
-{
-  partition_from_block_cluster_node(root_node,
-                                    internal_to_external_dof_numbering,
-                                    all_support_points,
-                                    cell_size_at_dofs,
-                                    leaf_set);
-
-  categorize_near_and_far_field_sets();
-
-  calc_depth_and_max_level();
-}
-
-
-template <int spacedim, typename Number>
-void
-BlockClusterTree<spacedim, Number>::partition(
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering_I,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering_J,
-  const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
-  const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
-  const std::vector<Number>                  &cell_size_at_dofs_in_I,
-  const std::vector<Number>                  &cell_size_at_dofs_in_J)
-{
-  partition_from_block_cluster_node(root_node,
-                                    internal_to_external_dof_numbering_I,
-                                    internal_to_external_dof_numbering_J,
-                                    all_support_points_in_I,
-                                    all_support_points_in_J,
-                                    cell_size_at_dofs_in_I,
-                                    cell_size_at_dofs_in_J,
-                                    leaf_set);
-
-  categorize_near_and_far_field_sets();
-
   calc_depth_and_max_level();
 }
 
@@ -2233,12 +2011,9 @@ BlockClusterTree<spacedim, Number>::
        * Make sure the current block cluster have four children, which is
        * ensured by the tensor product construction.
        *
-       * <dl class="section note">
-       *   <dt>Note</dt>
-       *   <dd>The second argument \p BlockClusterTree<spacedim,
+       * \mynote{The second argument \p BlockClusterTree<spacedim,
        * Number>::child_num should be wrapped between the brackets, otherwise,
-       * the program cannot be compiled.</dd>
-       * </dl>
+       * the program cannot be compiled.}
        */
       AssertDimension(current_block_cluster_node->get_child_num(),
                       (BlockClusterTree<spacedim, Number>::child_num));
@@ -2376,12 +2151,9 @@ BlockClusterTree<spacedim, Number>::
        * Make sure the current block cluster have four children, which is
        * ensured by the non-tensor product construction.
        *
-       * <dl class="section note">
-       *   <dt>Note</dt>
-       *   <dd>The second argument \p BlockClusterTree<spacedim,
+       * \mynote{The second argument \p BlockClusterTree<spacedim,
        * Number>::child_num should be wrapped between the brackets, otherwise,
-       * the program cannot be compiled.</dd>
-       * </dl>
+       * the program cannot be compiled.}
        */
       AssertDimension(current_block_cluster_node->get_child_num(),
                       (BlockClusterTree<spacedim, Number>::child_num));
@@ -2569,12 +2341,9 @@ BlockClusterTree<spacedim, Number>::
        * Make sure the current block cluster have four children, which is
        * ensured by the fine non-tensor product construction.
        *
-       * <dl class="section note">
-       *   <dt>Note</dt>
-       *   <dd><strong>The second argument \p BlockClusterTree<spacedim,
+       * \mynote{<strong>The second argument \p BlockClusterTree<spacedim,
        * Number>::child_num should be wrapped between the brackets, otherwise,
-       * the program cannot be compiled.</strong></dd>
-       * </dl>
+       * the program cannot be compiled.</strong>}
        */
       AssertDimension(current_block_cluster_node->get_child_num(),
                       (BlockClusterTree<spacedim, Number>::child_num));
@@ -2709,12 +2478,9 @@ BlockClusterTree<spacedim, Number>::
        * ensured by the fine non-tensor product \f$\mathcal{N}\f$-type
        * construction.
        *
-       * <dl class="section note">
-       *   <dt>Note</dt>
-       *   <dd>The second argument \p BlockClusterTree<spacedim,
+       * \mynote{The second argument \p BlockClusterTree<spacedim,
        * Number>::child_num should be wrapped between the brackets, otherwise,
-       * the program cannot be compiled.</dd>
-       * </dl>
+       * the program cannot be compiled.}
        */
       AssertDimension(current_block_cluster_node->get_child_num(),
                       (BlockClusterTree<spacedim, Number>::child_num));
@@ -2854,12 +2620,9 @@ BlockClusterTree<spacedim, Number>::
        * ensured by the fine non-tensor product \f$\mathcal{N}^*\f$-type
        * construction.
        *
-       * <dl class="section note">
-       *   <dt>Note</dt>
-       *   <dd>The second argument \p BlockClusterTree<spacedim,
+       * \mynote{The second argument \p BlockClusterTree<spacedim,
        * Number>::child_num should be wrapped between the brackets, otherwise,
-       * the program cannot be compiled.</dd>
-       * </dl>
+       * the program cannot be compiled.}
        */
       AssertDimension(current_block_cluster_node->get_child_num(),
                       (BlockClusterTree<spacedim, Number>::child_num));
@@ -2873,24 +2636,19 @@ BlockClusterTree<spacedim, Number>::
 
 
 template <int spacedim, typename Number>
-void
+unsigned int
 BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
-  node_pointer_type current_block_cluster_node,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering,
-  const std::vector<Point<spacedim, Number>> &all_support_points,
-  std::vector<node_pointer_type>             &leaf_set_wrt_current_node)
+  node_pointer_type               current_block_cluster_node,
+  std::vector<node_pointer_type> &leaf_set_wrt_current_node)
 {
+  unsigned int node_num_from_descendants = 0;
   leaf_set_wrt_current_node.clear();
 
   if (current_block_cluster_node->get_data_pointer()->is_admissible_or_small(
-        eta, internal_to_external_dof_numbering, all_support_points, n_min))
+        eta, n_min))
     {
-      /**
-       * Push back the current cluster node, which is small, to the leaf set
-       * and
-       * set its split mode as \p UnsplitMode.
-       */
+      // Push back the current cluster node, which is small, to the leaf set
+      // and set its split mode as \p UnsplitMode.
       leaf_set_wrt_current_node.push_back(current_block_cluster_node);
       current_block_cluster_node->set_split_mode(UnsplitMode);
     }
@@ -2921,21 +2679,17 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
                     ->get_child_pointer(j);
               Assert(sigma_son_node_pointer != nullptr, ExcInternalError());
 
-              /**
-               * Make sure that the two clusters \f$\tau\f$ and \f$\sigma\f$
-               * have the same level in their respective cluster trees, i.e.
-               * level preserving property should be satisfied.
-               */
+              // Make sure that the two clusters \f$\tau\f$ and \f$\sigma\f$
+              // have the same level in their respective cluster trees, i.e.
+              // level preserving property should be satisfied.
               Assert(
                 tau_son_node_pointer->get_level() ==
                   sigma_son_node_pointer->get_level(),
                 ExcClusterLevelMismatch(tau_son_node_pointer->get_level(),
                                         sigma_son_node_pointer->get_level()));
 
-              /**
-               * Create a new block cluster node as child and recursively
-               * partition from it.
-               */
+              // Create a new block cluster node as child and recursively
+              // partition from it.
               const std::array<node_pointer_type,
                                BlockClusterTree<spacedim, Number>::child_num>
                 empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
@@ -2948,87 +2702,59 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
                   current_block_cluster_node,
                   UnsplitMode);
 
-              /**
-               * Append this new node as one of the children of the current
-               * block cluster node.
-               */
+              // Append this new node as one of the children of the current
+              // block cluster node.
               current_block_cluster_node->set_child_pointer(
                 child_counter, child_block_cluster_node);
 
-              /**
-               * Update the total number of nodes in the tree.
-               */
-              node_num++;
-              child_counter++;
-
               std::vector<node_pointer_type> leaf_set_wrt_child_node;
-              partition_from_block_cluster_node(
-                child_block_cluster_node,
-                internal_to_external_dof_numbering,
-                all_support_points,
-                leaf_set_wrt_child_node);
+              node_num_from_descendants +=
+                partition_from_block_cluster_node(child_block_cluster_node,
+                                                  leaf_set_wrt_child_node) +
+                1;
 
-              /**
-               * Merge the leaf set wrt. the child block cluster node into the
-               * leaf set of the current block cluster node.
-               */
+              // Merge the leaf set wrt. the child block cluster node into the
+              // leaf set of the current block cluster node.
               for (node_pointer_type block_cluster_node :
                    leaf_set_wrt_child_node)
-                {
-                  leaf_set_wrt_current_node.push_back(block_cluster_node);
-                }
+                leaf_set_wrt_current_node.push_back(block_cluster_node);
+
+              child_counter++;
             }
         }
 
-      /**
-       * Make sure the current block cluster have four children, which is
-       * ensured by the tensor product construction.
-       *
-       * <dl class="section note">
-       *   <dt>Note</dt>
-       *   <dd>The second argument \p BlockClusterTree<spacedim,
-       * Number>::child_num should be wrapped between the brackets, otherwise,
-       * the program cannot be compiled.</dd>
-       * </dl>
-       */
+      // Make sure the current block cluster have four children, which is
+      // ensured by the tensor product construction.
+      //
+      // \mynote{The second argument \p BlockClusterTree<spacedim,
+      // Number>::child_num should be wrapped between the brackets, otherwise,
+      // the program cannot be compiled.}
       AssertDimension(current_block_cluster_node->get_child_num(),
                       (BlockClusterTree<spacedim, Number>::child_num));
 
-      /**
-       * Set the split mode of the current block cluster node as cross.
-       */
+      // Set the split mode of the current block cluster node as cross.
       current_block_cluster_node->set_split_mode(CrossSplitMode);
     }
+
+  return node_num_from_descendants;
 }
 
 
 template <int spacedim, typename Number>
-void
+unsigned int
 BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
-  node_pointer_type current_block_cluster_node,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering_I,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering_J,
-  const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
-  const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
-  std::vector<node_pointer_type>             &leaf_set_wrt_current_node)
+  node_pointer_type               current_block_cluster_node,
+  const unsigned int              cutoff_level,
+  std::vector<node_pointer_type> &leaf_set_wrt_current_node)
 {
+  unsigned int node_num_from_descendants = 0;
   leaf_set_wrt_current_node.clear();
 
   if (current_block_cluster_node->get_data_pointer()->is_admissible_or_small(
-        eta,
-        internal_to_external_dof_numbering_I,
-        internal_to_external_dof_numbering_J,
-        all_support_points_in_I,
-        all_support_points_in_J,
-        n_min))
+        eta, n_min))
     {
-      /**
-       * Push back the current cluster node, which is small, to the leaf set
-       * and
-       * set its split mode as \p UnsplitMode.
-       */
+      // Push back the current cluster node, which is small, to the leaf set
+      // and set its split mode as \p UnsplitMode.
       leaf_set_wrt_current_node.push_back(current_block_cluster_node);
       current_block_cluster_node->set_split_mode(UnsplitMode);
     }
@@ -3059,21 +2785,17 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
                     ->get_child_pointer(j);
               Assert(sigma_son_node_pointer != nullptr, ExcInternalError());
 
-              /**
-               * Make sure that the two clusters \f$\tau\f$ and \f$\sigma\f$
-               * have the same level in their respective cluster trees, i.e.
-               * level preserving property should be satisfied.
-               */
+              // Make sure that the two clusters \f$\tau\f$ and \f$\sigma\f$
+              // have the same level in their respective cluster trees, i.e.
+              // level preserving property should be satisfied.
               Assert(
                 tau_son_node_pointer->get_level() ==
                   sigma_son_node_pointer->get_level(),
                 ExcClusterLevelMismatch(tau_son_node_pointer->get_level(),
                                         sigma_son_node_pointer->get_level()));
 
-              /**
-               * Create a new block cluster node as child and recursively
-               * partition from it.
-               */
+              // Create a new block cluster node as child and recursively
+              // partition from it.
               const std::array<node_pointer_type,
                                BlockClusterTree<spacedim, Number>::child_num>
                 empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
@@ -3086,341 +2808,88 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
                   current_block_cluster_node,
                   UnsplitMode);
 
-              /**
-               * Append this new node as one of the children of the current
-               * block cluster node.
-               */
+              // Append this new node as one of the children of the current
+              // block cluster node.
               current_block_cluster_node->set_child_pointer(
                 child_counter, child_block_cluster_node);
 
-              /**
-               * Update the total number of nodes in the tree.
-               */
-              node_num++;
               child_counter++;
-
-              std::vector<node_pointer_type> leaf_set_wrt_child_node;
-              partition_from_block_cluster_node(
-                child_block_cluster_node,
-                internal_to_external_dof_numbering_I,
-                internal_to_external_dof_numbering_J,
-                all_support_points_in_I,
-                all_support_points_in_J,
-                leaf_set_wrt_child_node);
-
-              /**
-               * Merge the leaf set wrt. the child block cluster node into the
-               * leaf set of the current block cluster node.
-               */
-              for (node_pointer_type block_cluster_node :
-                   leaf_set_wrt_child_node)
-                {
-                  leaf_set_wrt_current_node.push_back(block_cluster_node);
-                }
             }
         }
 
-      /**
-       * Make sure the current block cluster have four children, which is
-       * ensured by the tensor product construction.
-       *
-       * <dl class="section note">
-       *   <dt>Note</dt>
-       *   <dd>The second argument \p BlockClusterTree<spacedim,
-       * Number>::child_num should be wrapped between the brackets, otherwise,
-       * the program cannot be compiled.</dd>
-       * </dl>
-       */
+      // Make sure the current block cluster have four children, which is
+      // ensured by the tensor product construction.
+      //
+      // \mynote{The second argument \p BlockClusterTree<spacedim,
+      // Number>::child_num should be wrapped between the brackets, otherwise,
+      // the program cannot be compiled.}
       AssertDimension(current_block_cluster_node->get_child_num(),
                       (BlockClusterTree<spacedim, Number>::child_num));
 
-      /**
-       * Set the split mode of the current block cluster node as cross.
-       */
+      // Set the split mode of the current block cluster node as cross.
       current_block_cluster_node->set_split_mode(CrossSplitMode);
-    }
-}
 
-
-template <int spacedim, typename Number>
-void
-BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
-  node_pointer_type current_block_cluster_node,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering,
-  const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number>                  &cell_size_at_dofs,
-  std::vector<node_pointer_type>             &leaf_set_wrt_current_node)
-{
-  leaf_set_wrt_current_node.clear();
-
-  if (current_block_cluster_node->get_data_pointer()->is_admissible_or_small(
-        eta,
-        internal_to_external_dof_numbering,
-        all_support_points,
-        cell_size_at_dofs,
-        n_min))
-    {
-      /**
-       * Push back the current cluster node, which is small, to the leaf set
-       * and
-       * set its split mode as \p UnsplitMode.
-       */
-      leaf_set_wrt_current_node.push_back(current_block_cluster_node);
-      current_block_cluster_node->set_split_mode(UnsplitMode);
-    }
-  else
-    {
-      unsigned int child_counter = 0;
-
-      // Iterate over each child of the cluster \f$\tau\f$.
-      for (unsigned int i = 0; i < (ClusterTree<spacedim, Number>::child_num);
-           i++)
+      if (current_block_cluster_node->get_level() < cutoff_level)
         {
-          typename ClusterTree<spacedim, Number>::node_pointer_type
-            tau_son_node_pointer =
-              current_block_cluster_node->get_data_pointer()
-                ->get_tau_node()
-                ->get_child_pointer(i);
-          Assert(tau_son_node_pointer != nullptr, ExcInternalError());
-
-          // Iterate over each child of the cluster \f$\sigma\f$.
-          for (unsigned int j = 0;
-               j < (ClusterTree<spacedim, Number>::child_num);
-               j++)
+          tbb::task_group tg;
+          std::array<unsigned int,
+                     BlockClusterTree<spacedim, Number>::child_num>
+            node_num_from_children{};
+          std::array<std::vector<node_pointer_type>,
+                     BlockClusterTree<spacedim, Number>::child_num>
+            leaf_set_wrt_child_nodes;
+          for (unsigned int i = 0;
+               i < BlockClusterTree<spacedim, Number>::child_num;
+               i++)
             {
-              typename ClusterTree<spacedim, Number>::node_pointer_type
-                sigma_son_node_pointer =
-                  current_block_cluster_node->get_data_pointer()
-                    ->get_sigma_node()
-                    ->get_child_pointer(j);
-              Assert(sigma_son_node_pointer != nullptr, ExcInternalError());
+              tg.run([&, i] {
+                node_num_from_children[i] =
+                  partition_from_block_cluster_node(
+                    current_block_cluster_node->get_child_pointer(i),
+                    cutoff_level,
+                    leaf_set_wrt_child_nodes[i]) +
+                  1;
+              });
+            }
 
-              /**
-               * Make sure that the two clusters \f$\tau\f$ and \f$\sigma\f$
-               * have the same level in their respective cluster trees, i.e.
-               * level preserving property should be satisfied.
-               */
-              Assert(
-                tau_son_node_pointer->get_level() ==
-                  sigma_son_node_pointer->get_level(),
-                ExcClusterLevelMismatch(tau_son_node_pointer->get_level(),
-                                        sigma_son_node_pointer->get_level()));
+          tg.wait();
 
-              /**
-               * Create a new block cluster node as child and recursively
-               * partition from it.
-               */
-              const std::array<node_pointer_type,
-                               BlockClusterTree<spacedim, Number>::child_num>
-                empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
-              node_pointer_type child_block_cluster_node =
-                CreateTreeNode<data_value_type,
-                               BlockClusterTree<spacedim, Number>::child_num>(
-                  data_value_type(tau_son_node_pointer, sigma_son_node_pointer),
-                  current_block_cluster_node->get_level() + 1,
-                  empty_child_pointers,
-                  current_block_cluster_node,
-                  UnsplitMode);
+          for (unsigned int i = 0;
+               i < BlockClusterTree<spacedim, Number>::child_num;
+               i++)
+            {
+              node_num_from_descendants += node_num_from_children[i];
 
-              /**
-               * Append this new node as one of the children of the current
-               * block cluster node.
-               */
-              current_block_cluster_node->set_child_pointer(
-                child_counter, child_block_cluster_node);
-
-              node_num++;
-              child_counter++;
-
-              std::vector<node_pointer_type> leaf_set_wrt_child_node;
-              partition_from_block_cluster_node(
-                child_block_cluster_node,
-                internal_to_external_dof_numbering,
-                all_support_points,
-                cell_size_at_dofs,
-                leaf_set_wrt_child_node);
-
-              /**
-               * Merge the leaf set wrt. the child block cluster node into the
-               * leaf set of the current block cluster node.
-               */
+              // Merge the leaf set wrt. the child block cluster node into the
+              // leaf set of the current block cluster node.
               for (node_pointer_type block_cluster_node :
-                   leaf_set_wrt_child_node)
-                {
-                  leaf_set_wrt_current_node.push_back(block_cluster_node);
-                }
+                   leaf_set_wrt_child_nodes[i])
+                leaf_set_wrt_current_node.push_back(block_cluster_node);
             }
         }
-
-      /**
-       * Make sure the current block cluster have four children, which is
-       * ensured by the tensor product construction.
-       *
-       * <dl class="section note">
-       *   <dt>Note</dt>
-       *   <dd>The second argument \p BlockClusterTree<spacedim,
-       * Number>::child_num should be wrapped between the brackets, otherwise,
-       * the program cannot be compiled.</dd>
-       * </dl>
-       */
-      Assert(
-        current_block_cluster_node->get_child_num() ==
-          (BlockClusterTree<spacedim, Number>::child_num),
-        ExcDimensionMismatch(current_block_cluster_node->get_child_num(),
-                             (BlockClusterTree<spacedim, Number>::child_num)));
-
-      /**
-       * Set the split mode of the current block cluster node as cross.
-       */
-      current_block_cluster_node->set_split_mode(CrossSplitMode);
-    }
-}
-
-
-template <int spacedim, typename Number>
-void
-BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
-  node_pointer_type current_block_cluster_node,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering_I,
-  const std::vector<types::global_dof_index>
-    &internal_to_external_dof_numbering_J,
-  const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
-  const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
-  const std::vector<Number>                  &cell_size_at_dofs_in_I,
-  const std::vector<Number>                  &cell_size_at_dofs_in_J,
-  std::vector<node_pointer_type>             &leaf_set_wrt_current_node)
-{
-  leaf_set_wrt_current_node.clear();
-
-  if (current_block_cluster_node->get_data_pointer()->is_admissible_or_small(
-        eta,
-        internal_to_external_dof_numbering_I,
-        internal_to_external_dof_numbering_J,
-        all_support_points_in_I,
-        all_support_points_in_J,
-        cell_size_at_dofs_in_I,
-        cell_size_at_dofs_in_J,
-        n_min))
-    {
-      /**
-       * Push back the current cluster node, which is small, to the leaf set
-       * and
-       * set its split mode as \p UnsplitMode.
-       */
-      leaf_set_wrt_current_node.push_back(current_block_cluster_node);
-      current_block_cluster_node->set_split_mode(UnsplitMode);
-    }
-  else
-    {
-      unsigned int child_counter = 0;
-
-      // Iterate over each child of the cluster \f$\tau\f$.
-      for (unsigned int i = 0; i < (ClusterTree<spacedim, Number>::child_num);
-           i++)
+      else
         {
-          typename ClusterTree<spacedim, Number>::node_pointer_type
-            tau_son_node_pointer =
-              current_block_cluster_node->get_data_pointer()
-                ->get_tau_node()
-                ->get_child_pointer(i);
-          Assert(tau_son_node_pointer != nullptr, ExcInternalError());
-
-          // Iterate over each child of the cluster \f$\sigma\f$.
-          for (unsigned int j = 0;
-               j < (ClusterTree<spacedim, Number>::child_num);
-               j++)
+          for (unsigned int i = 0;
+               i < BlockClusterTree<spacedim, Number>::child_num;
+               i++)
             {
-              typename ClusterTree<spacedim, Number>::node_pointer_type
-                sigma_son_node_pointer =
-                  current_block_cluster_node->get_data_pointer()
-                    ->get_sigma_node()
-                    ->get_child_pointer(j);
-              Assert(sigma_son_node_pointer != nullptr, ExcInternalError());
-
-              /**
-               * Make sure that the two clusters \f$\tau\f$ and \f$\sigma\f$
-               * have the same level in their respective cluster trees, i.e.
-               * level preserving property should be satisfied.
-               */
-              Assert(
-                tau_son_node_pointer->get_level() ==
-                  sigma_son_node_pointer->get_level(),
-                ExcClusterLevelMismatch(tau_son_node_pointer->get_level(),
-                                        sigma_son_node_pointer->get_level()));
-
-              /**
-               * Create a new block cluster node as child and recursively
-               * partition from it.
-               */
-              const std::array<node_pointer_type,
-                               BlockClusterTree<spacedim, Number>::child_num>
-                empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
-              node_pointer_type child_block_cluster_node =
-                CreateTreeNode<data_value_type,
-                               BlockClusterTree<spacedim, Number>::child_num>(
-                  data_value_type(tau_son_node_pointer, sigma_son_node_pointer),
-                  current_block_cluster_node->get_level() + 1,
-                  empty_child_pointers,
-                  current_block_cluster_node,
-                  UnsplitMode);
-
-              /**
-               * Append this new node as one of the children of the current
-               * block cluster node.
-               */
-              current_block_cluster_node->set_child_pointer(
-                child_counter, child_block_cluster_node);
-
-              node_num++;
-              child_counter++;
-
               std::vector<node_pointer_type> leaf_set_wrt_child_node;
-              partition_from_block_cluster_node(
-                child_block_cluster_node,
-                internal_to_external_dof_numbering_I,
-                internal_to_external_dof_numbering_J,
-                all_support_points_in_I,
-                all_support_points_in_J,
-                cell_size_at_dofs_in_I,
-                cell_size_at_dofs_in_J,
-                leaf_set_wrt_child_node);
+              node_num_from_descendants +=
+                partition_from_block_cluster_node(
+                  current_block_cluster_node->get_child_pointer(i),
+                  leaf_set_wrt_child_node) +
+                1;
 
-              /**
-               * Merge the leaf set wrt. the child block cluster node into the
-               * leaf set of the current block cluster node.
-               */
+              // Merge the leaf set wrt. the child block cluster node into the
+              // leaf set of the current block cluster node.
               for (node_pointer_type block_cluster_node :
                    leaf_set_wrt_child_node)
-                {
-                  leaf_set_wrt_current_node.push_back(block_cluster_node);
-                }
+                leaf_set_wrt_current_node.push_back(block_cluster_node);
             }
         }
-
-      /**
-       * Make sure the current block cluster have four children, which is
-       * ensured by the tensor product construction.
-       *
-       * <dl class="section note">
-       *   <dt>Note</dt>
-       *   <dd>The second argument \p BlockClusterTree<spacedim,
-       * Number>::child_num should be wrapped between the brackets, otherwise,
-       * the program cannot be compiled.</dd>
-       * </dl>
-       */
-      Assert(
-        current_block_cluster_node->get_child_num() ==
-          (BlockClusterTree<spacedim, Number>::child_num),
-        ExcDimensionMismatch(current_block_cluster_node->get_child_num(),
-                             (BlockClusterTree<spacedim, Number>::child_num)));
-
-      /**
-       * Set the split mode of the current block cluster node as cross.
-       */
-      current_block_cluster_node->set_split_mode(CrossSplitMode);
     }
+
+  return node_num_from_descendants;
 }
 
 

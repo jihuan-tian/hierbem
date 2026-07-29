@@ -176,15 +176,15 @@ public:
   }
 
   std::vector<Number> &
-  get_dof_average_cell_size()
+  get_dof_support_set_diameters()
   {
-    return cluster_tree_builder->get_dof_average_cell_size();
+    return cluster_tree_builder->get_dof_support_set_diameters();
   }
 
   const std::vector<Number> &
-  get_dof_average_cell_size() const
+  get_dof_support_set_diameters() const
   {
-    return cluster_tree_builder->get_dof_average_cell_size();
+    return cluster_tree_builder->get_dof_support_set_diameters();
   }
 
   std::vector<types::global_dof_index> &

@@ -130,7 +130,7 @@ main()
     single_layer_kernel;
 
   // Parameters for building H-matrices.
-  ConfHMatrix             hmat_params{32, 32, 0.8, 5, 0.01, false};
+  ConfHMatrix             hmat_params{32, 32, 8, 4, 0.8, 5, 0.01, false};
   ConfSauterQuadNearField sauter_quad_near_field_params;
   ConfSauterQuadFarField  sauter_quad_far_field_params;
   ConfParallelization     parallel_params;
@@ -225,9 +225,7 @@ main()
                                  hmat_params.eta,
                                  static_cast<unsigned int>(
                                    hmat_params.n_min_for_bct));
-  bct.partition(ct.get_internal_to_external_dof_numbering(),
-                support_points,
-                cell_size_at_support_points);
+  bct.partition();
 
   // Create a general \hmatrix with respect to the block cluster tree.
   HMatrix<spacedim> V(bct,

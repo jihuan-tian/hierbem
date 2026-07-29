@@ -111,7 +111,7 @@ public:
               const unsigned int                          n_min);
 
   /**
-   * Constructor from a full index set and associated support point
+   * Construct from a full index set and associated support point
    * coordinates.
    *
    * This constructor will create the root node of the cluster tree based on
@@ -128,7 +128,7 @@ public:
               const unsigned int                          n_min);
 
   /**
-   * Constructor from a full index set and associated support point
+   * Construct from a full index set and associated support point
    * coordinates.
    *
    * This constructor will create the root node of the cluster tree based on
@@ -138,13 +138,14 @@ public:
    * @param index_set The full DoF index set, which will be assigned to the root
    * node.
    * @param all_support_points All the support points.
-   * @param cell_size_at_dofs
+   * @param dof_support_set_diameters A list of support set diameters for basis
+   * functions at support points.
    * @param n_min
    */
   ClusterTree(const std::vector<types::global_dof_index> &index_set,
               const std::vector<Point<spacedim, Number>> &all_support_points,
-              const std::vector<Number>                  &cell_size_at_dofs,
-              const unsigned int                          n_min);
+              const std::vector<Number> &dof_support_set_diameters,
+              const unsigned int         n_min);
 
   /**
    * Copy constructor.
@@ -186,102 +187,57 @@ public:
    * ultimately be used in constructing an \f$\mathcal{H}^p\f$ matrix for
    * example.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>
-   * 1. If the initial complete cluster index set \f$I\f$ is sorted, which is
-   * usually \f$[0, 1, \cdots, N]\f$, the cardinality based cluster partition
-   * produces cluster index sets following the same order, i.e. the
+   * \mynote{1. If the initial complete cluster index set \f$I\f$ is sorted,
+   * which is usually \f$[0, 1, \cdots, N]\f$, the cardinality based cluster
+   * partition produces cluster index sets following the same order, i.e. the
    * cardinality based partition is order preserving.
    * 2. If the initial complete cluster index set \f$I\f$ is also continuous,
    * i.e. it is a continuous integer array, the cardinality based cluster
    * partition also produces continuous cluster index sets. Hence, the
-   * cardinality based partition is continuity preserving.
-   *   </dd>
-   * </dl>
-   */
-  void
-  partition();
-
-  /**
-   * Perform a pure cardinality based recursive partition, which will
-   * ultimately be used in constructing an \f$\mathcal{H}^p\f$ matrix for
-   * example.
+   * cardinality based partition is continuity preserving.}
    *
-   * This version runs in parallel.
+   * @param cutoff_level When the level of a node is less than this value, the
+   * partition from its two children will be started as a TBB task.
    */
   void
-  partition(const unsigned int cutoff_level);
+  partition(const unsigned int cutoff_level = 0);
 
   /**
    * Perform a recursive partition dependent on the coordinates of DoF support
    * points by starting from the root node.
    *
-   * In this version, there is no mesh cell size correction to the cluster
-   * diameter and cluster pair distance.
+   * In this version, there is no DoF support set diameter correction to the
+   * cluster diameter.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>
-   * 1. If the initial complete cluster index set \f$I\f$ is sorted, which is
-   * usually \f$[0, 1, \cdots, N]\f$, the support point coordinates based
-   * partition is also order preserving. This is because the two child
+   * \mynote{1. If the initial complete cluster index set \f$I\f$ is sorted,
+   * which is usually \f$[0, 1, \cdots, N]\f$, the support point coordinates
+   * based partition is also order preserving. This is because the two child
    * clusters of the current cluster are built by scanning the index set of
    * the current cluster from beginning to end.
    * 2. The support point coordinates based partition is not continuity
-   * preserving.
-   *   </dd>
-   * </dl>
+   * preserving.}
+   *
+   * @param cutoff_level When the level of a node is less than this value, the
+   * partition from its two children will be started as a TBB task.
    */
   void
-  partition(const std::vector<Point<spacedim, Number>> &all_support_points);
+  partition(const std::vector<Point<spacedim, Number>> &all_support_points,
+            const unsigned int                          cutoff_level = 0);
 
   /**
    * Perform a recursive partition dependent on the coordinates of DoF support
    * points by starting from the root node.
    *
-   * In this version, there is no mesh cell size correction to the cluster
-   * diameter and cluster pair distance. This version runs in parallel.
+   * In this version, there is DoF support set diameter correction to the
+   * cluster diameter.
+   *
+   * @param cutoff_level When the level of a node is less than this value, the
+   * partition from its two children will be started as a TBB task.
    */
   void
   partition(const std::vector<Point<spacedim, Number>> &all_support_points,
-            const unsigned int                          cutoff_level);
-
-  /**
-   * Perform a recursive partition dependent on the coordinates of DoF support
-   * points by starting from the root node.
-   *
-   * In this version, there is mesh cell size correction to the cluster
-   * diameter and cluster pair distance.
-   *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>
-   * 1. If the initial complete cluster index set \f$I\f$ is sorted, which is
-   * usually \f$[0, 1, \cdots, N]\f$, the support point coordinates based
-   * partition is also order preserving. This is because the two child
-   * clusters of the current cluster are built by scanning the index set of
-   * the current cluster from beginning to end.
-   * 2. The support point coordinates based partition is not continuity
-   * preserving.
-   *   </dd>
-   * </dl>
-   */
-  void
-  partition(const std::vector<Point<spacedim, Number>> &all_support_points,
-            const std::vector<Number>                  &cell_size_at_dofs);
-
-  /**
-   * Perform a recursive partition dependent on the coordinates of DoF support
-   * points by starting from the root node.
-   *
-   * In this version, there is mesh cell size correction to the cluster
-   * diameter and cluster pair distance. This version runs in parallel.
-   */
-  void
-  partition(const std::vector<Point<spacedim, Number>> &all_support_points,
-            const std::vector<Number>                  &cell_size_at_dofs,
-            const unsigned int                          cutoff_level);
+            const std::vector<Number> &dof_support_set_diameters,
+            const unsigned int         cutoff_level = 0);
 
   /**
    * Get the pointer to the root node of the cluster tree.
@@ -442,22 +398,18 @@ private:
    * Perform a pure cardinality based recursive partition by starting from a
    * cluster node.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>
-   * 1. If the initial complete cluster index set \f$I\f$ is sorted, which is
-   * usually \f$[0, 1, \cdots, N]\f$, the cardinality based cluster partition
-   * produces cluster index sets following the same order, i.e. the
+   * \mynote{1. If the initial complete cluster index set \f$I\f$ is sorted,
+   * which is usually \f$[0, 1, \cdots, N]\f$, the cardinality based cluster
+   * partition produces cluster index sets following the same order, i.e. the
    * cardinality based partition is order preserving.
    * 2. If the initial complete cluster index set \f$I\f$ is also continuous,
    * i.e. it is a continuous integer array, the cardinality based cluster
    * partition also produces continuous cluster index sets. Hence, the
-   * cardinality based partition is continuity preserving.
-   *   </dd>
-   * </dl>
+   * cardinality based partition is continuity preserving.}
    *
    * @param current_cluster_node
    * @param leaf_set_wrt_current_node
+   * @return Number of nodes which are descendants of the current cluster node.
    */
   unsigned int
   partition_from_cluster_node(
@@ -469,6 +421,10 @@ private:
    * cluster node.
    *
    * This version runs in parallel.
+   *
+   * @param cutoff_level When the level of a node is less than this value, the
+   * partition from its two children will be started as a TBB task.
+   * @return Number of nodes which are descendants of the current cluster node.
    */
   unsigned int
   partition_from_cluster_node(
@@ -483,20 +439,17 @@ private:
    * In this version, there is no mesh cell size correction to the cluster
    * diameter and cluster pair distance.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>
-   * 1. If the initial complete cluster index set \f$I\f$ is sorted, which is
-   * usually \f$[0, 1, \cdots, N]\f$, the support point coordinates based
-   * partition is also order preserving. This is because the two child
+   * \mynote{1. If the initial complete cluster index set \f$I\f$ is sorted,
+   * which is usually \f$[0, 1, \cdots, N]\f$, the support point coordinates
+   * based partition is also order preserving. This is because the two child
    * clusters of the current cluster are built by scanning the index set of
    * the current cluster from beginning to end.
    * 2. The support point coordinates based partition is not continuity
-   * preserving.
-   *   </dd>
-   * </dl>
+   * preserving.}
    *
-   * @param all_support_points All the support points.
+   * @param all_support_points All support points associated with a function
+   * space.
+   * @return Number of nodes which are descendants of the current cluster node.
    */
   unsigned int
   partition_from_cluster_node(
@@ -510,6 +463,12 @@ private:
    *
    * In this version, there is no mesh cell size correction to the cluster
    * diameter and cluster pair distance. This version runs in parallel.
+   *
+   * @param all_support_points All support points associated with a function
+   * space.
+   * @param cutoff_level When the level of a node is less than this value, the
+   * partition from its two children will be started as a TBB task.
+   * @return Number of nodes which are descendants of the current cluster node.
    */
   unsigned int
   partition_from_cluster_node(
@@ -522,43 +481,50 @@ private:
    * Perform a recursive partition dependent on the coordinates of DoF support
    * points by starting from a cluster node.
    *
-   * In this version, there is mesh cell size correction to the cluster
-   * diameter and cluster pair distance.
+   * In this version, there is a DoF support set diameter correction applied to
+   * cluster diameter and cluster pair distance.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>
-   * 1. If the initial complete cluster index set \f$I\f$ is sorted, which is
-   * usually \f$[0, 1, \cdots, N]\f$, the support point coordinates based
-   * partition is also order preserving. This is because the two child
+   * \mynote{1. If the initial complete cluster index set \f$I\f$ is sorted,
+   * which is usually \f$[0, 1, \cdots, N]\f$, the support point coordinates
+   * based partition is also order preserving. This is because the two child
    * clusters of the current cluster are built by scanning the index set of
    * the current cluster from beginning to end.
    * 2. The support point coordinates based partition is not continuity
-   * preserving.
-   *   </dd>
-   * </dl>
+   * preserving.}
    *
-   * @param all_support_points All the support points.
+   * @param all_support_points All support points associated with a function
+   * space.
+   * @param dof_support_set_diameters The diameters of DoF support sets at the
+   * list of support points.
+   * @return Number of nodes which are descendants of the current cluster node.
    */
   unsigned int
   partition_from_cluster_node(
     node_pointer_type                           current_cluster_node,
     const std::vector<Point<spacedim, Number>> &all_support_points,
-    const std::vector<Number>                  &cell_size_at_dofs,
+    const std::vector<Number>                  &dof_support_set_diameters,
     std::vector<node_pointer_type>             &leaf_set_wrt_current_node);
 
   /**
    * Perform a recursive partition dependent on the coordinates of DoF support
    * points by starting from a cluster node.
    *
-   * In this version, there is mesh cell size correction to the cluster
-   * diameter and cluster pair distance. This version runs in parallel.
+   * In this version, there is a DoF support set diameter correction applied to
+   * cluster diameter and cluster pair distance. This version runs in parallel.
+   *
+   * @param all_support_points All support points associated with a function
+   * space.
+   * @param dof_support_set_diameters The diameters of DoF support sets at the
+   * list of support points.
+   * @param cutoff_level When the level of a node is less than this value, the
+   * partition from its two children will be started as a TBB task.
+   * @return Number of nodes which are descendants of the current cluster node.
    */
   unsigned int
   partition_from_cluster_node(
     node_pointer_type                           current_cluster_node,
     const std::vector<Point<spacedim, Number>> &all_support_points,
-    const std::vector<Number>                  &cell_size_at_dofs,
+    const std::vector<Number>                  &dof_support_set_diameters,
     const unsigned int                          cutoff_level,
     std::vector<node_pointer_type>             &leaf_set_wrt_current_node);
 
@@ -755,7 +721,7 @@ template <int spacedim, typename Number>
 ClusterTree<spacedim, Number>::ClusterTree(
   const std::vector<types::global_dof_index> &index_set,
   const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number>                  &cell_size_at_dofs,
+  const std::vector<Number>                  &dof_support_set_diameters,
   const unsigned int                          n_min)
   : root_node(nullptr)
   , leaf_set(0)
@@ -768,7 +734,9 @@ ClusterTree<spacedim, Number>::ClusterTree(
   , index_sets_cleared(false)
 {
   root_node = CreateTreeNode<data_value_type>(
-    Cluster<spacedim, Number>(index_set, all_support_points, cell_size_at_dofs),
+    Cluster<spacedim, Number>(index_set,
+                              all_support_points,
+                              dof_support_set_diameters),
     0,
     nullptr,
     nullptr,
@@ -923,13 +891,13 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
           // node.
           AssertThrow(child_node != nullptr, ExcInternalError());
           current_cluster_node->Left(child_node);
-          node_num_from_descendants++;
 
           std::vector<node_pointer_type> leaf_set_wrt_child_node;
           // Continue the recursive partition by starting from this child
           // node.
           node_num_from_descendants +=
-            partition_from_cluster_node(child_node, leaf_set_wrt_child_node);
+            partition_from_cluster_node(child_node, leaf_set_wrt_child_node) +
+            1;
 
           // Merge the leaf set wrt. the child cluster node into the
           // leaf set of the current cluster node.
@@ -950,13 +918,13 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
           // node.
           AssertThrow(child_node != nullptr, ExcInternalError());
           current_cluster_node->Right(child_node);
-          node_num_from_descendants++;
 
           std::vector<node_pointer_type> leaf_set_wrt_child_node;
           // Continue the recursive partition by starting from this child
           // node.
           node_num_from_descendants +=
-            partition_from_cluster_node(child_node, leaf_set_wrt_child_node);
+            partition_from_cluster_node(child_node, leaf_set_wrt_child_node) +
+            1;
 
           // Merge the leaf set wrt. the child cluster node into the
           // leaf set of the current cluster node.
@@ -1006,6 +974,11 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
           if (current_cluster_node->get_level() < cutoff_level)
             {
               tg.run([&] {
+                // The pointer to the parent node (the last argument of
+                // @p CreateTreeNode) is temporarily set to @p nullptr, which
+                // prevents the increment of the member @p child_num of the
+                // current cluster node. Otherwise, the two TBB tasks may try to
+                // modify this member at the same time.
                 left_child_node = CreateTreeNode<data_value_type>(
                   Cluster<spacedim, Number>(left_child_index_set),
                   current_cluster_node->get_level() + 1,
@@ -1027,6 +1000,15 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
             }
           else
             {
+              left_child_node = CreateTreeNode<data_value_type>(
+                Cluster<spacedim, Number>(left_child_index_set),
+                current_cluster_node->get_level() + 1,
+                nullptr,
+                nullptr,
+                current_cluster_node);
+
+              AssertThrow(left_child_node != nullptr, ExcInternalError());
+              current_cluster_node->Left(left_child_node);
               node_num_from_left_descendants =
                 partition_from_cluster_node(left_child_node,
                                             leaf_set_wrt_left_child_node) +
@@ -1062,6 +1044,15 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
             }
           else
             {
+              right_child_node = CreateTreeNode<data_value_type>(
+                Cluster<spacedim, Number>(right_child_index_set),
+                current_cluster_node->get_level() + 1,
+                nullptr,
+                nullptr,
+                current_cluster_node);
+
+              AssertThrow(right_child_node != nullptr, ExcInternalError());
+              current_cluster_node->Right(right_child_node);
               node_num_from_right_descendants =
                 partition_from_cluster_node(right_child_node,
                                             leaf_set_wrt_right_child_node) +
@@ -1105,9 +1096,9 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
   // When the size/cardinality of the current cluster is large enough,
   // continue the partition.
   //
-  // If the bounding box of the current cluster has zero volume, we use the
-  // cardinality based partition instead. The reason why such case appears is
-  // because when the finite element is of a discontinuous type, such as that
+  // If the bounding box of the current cluster degenerates into a point, we use
+  // the cardinality based partition instead. The reason why such case appears
+  // is because when the finite element is of a discontinuous type, such as that
   // used for the Neumann space, there will be multiple support points having
   // the same coordinates, for example, all the support points associated with
   // a common vertex which is shared by several cells. The number of such
@@ -1210,9 +1201,9 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
   // When the size/cardinality of the current cluster is large enough,
   // continue the partition.
   //
-  // If the bounding box of the current cluster has zero volume, we use the
-  // cardinality based partition instead. The reason why such case appears is
-  // because when the finite element is of a discontinuous type, such as that
+  // If the bounding box of the current cluster degenerates into a point, we use
+  // the cardinality based partition instead. The reason why such case appears
+  // is because when the finite element is of a discontinuous type, such as that
   // used for the Neumann space, there will be multiple support points having
   // the same coordinates, for example, all the support points associated with
   // a common vertex which is shared by several cells. The number of such
@@ -1235,27 +1226,29 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
 
       if (left_child_index_set.size() > 0)
         {
-          // N.B. During the creation of the new child cluster, its bounding
-          // box will be recalculated, which may be smaller than the child
-          // bounding box obtained from the previous bounding box geometric
-          // bisection.
-          left_child_node = CreateTreeNode<data_value_type>(
-            Cluster<spacedim, Number>(left_child_index_set, all_support_points),
-            current_cluster_node->get_level() + 1,
-            nullptr,
-            nullptr,
-            current_cluster_node);
-
-          // Append this new node as the left child of the current cluster
-          // node.
-          AssertThrow(left_child_node != nullptr, ExcInternalError());
-          current_cluster_node->Left(left_child_node);
-
           // Continue the recursive partition by starting from this child
           // node.
           if (current_cluster_node->get_level() < cutoff_level)
             {
               tg.run([&] {
+                // The pointer to the parent node (the last argument of
+                // @p CreateTreeNode) is temporarily set to @p nullptr, which
+                // prevents the increment of the member @p child_num of the
+                // current cluster node. Otherwise, the two TBB tasks may try to
+                // modify this member at the same time.
+                left_child_node = CreateTreeNode<data_value_type>(
+                  Cluster<spacedim, Number>(left_child_index_set,
+                                            all_support_points),
+                  current_cluster_node->get_level() + 1,
+                  nullptr,
+                  nullptr,
+                  nullptr);
+
+                // Append this new node as the left child of the current cluster
+                // node.
+                AssertThrow(left_child_node != nullptr, ExcInternalError());
+                left_child_node->Parent(current_cluster_node);
+                current_cluster_node->Left(left_child_node);
                 node_num_from_left_descendants =
                   partition_from_cluster_node(left_child_node,
                                               all_support_points,
@@ -1266,6 +1259,16 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
             }
           else
             {
+              left_child_node = CreateTreeNode<data_value_type>(
+                Cluster<spacedim, Number>(left_child_index_set,
+                                          all_support_points),
+                current_cluster_node->get_level() + 1,
+                nullptr,
+                nullptr,
+                current_cluster_node);
+
+              AssertThrow(left_child_node != nullptr, ExcInternalError());
+              current_cluster_node->Left(left_child_node);
               node_num_from_left_descendants =
                 partition_from_cluster_node(left_child_node,
                                             all_support_points,
@@ -1276,28 +1279,24 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
 
       if (right_child_index_set.size() > 0)
         {
-          // N.B. During the creation of the new child cluster, its bounding
-          // box will be recalculated, which may be smaller than the child
-          // bounding box obtained from the previous bounding box geometric
-          // bisection.
-          right_child_node = CreateTreeNode<data_value_type>(
-            Cluster<spacedim, Number>(right_child_index_set,
-                                      all_support_points),
-            current_cluster_node->get_level() + 1,
-            nullptr,
-            nullptr,
-            current_cluster_node);
-
-          // Append this new node as the right child of the current cluster
-          // node.
-          AssertThrow(right_child_node != nullptr, ExcInternalError());
-          current_cluster_node->Right(right_child_node);
-
           // Continue the recursive partition by starting from this child
           // node.
           if (current_cluster_node->get_level() < cutoff_level)
             {
               tg.run([&] {
+                right_child_node = CreateTreeNode<data_value_type>(
+                  Cluster<spacedim, Number>(right_child_index_set,
+                                            all_support_points),
+                  current_cluster_node->get_level() + 1,
+                  nullptr,
+                  nullptr,
+                  nullptr);
+
+                // Append this new node as the right child of the current
+                // cluster node.
+                AssertThrow(right_child_node != nullptr, ExcInternalError());
+                right_child_node->Parent(current_cluster_node);
+                current_cluster_node->Right(right_child_node);
                 node_num_from_right_descendants =
                   partition_from_cluster_node(right_child_node,
                                               all_support_points,
@@ -1308,6 +1307,16 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
             }
           else
             {
+              right_child_node = CreateTreeNode<data_value_type>(
+                Cluster<spacedim, Number>(right_child_index_set,
+                                          all_support_points),
+                current_cluster_node->get_level() + 1,
+                nullptr,
+                nullptr,
+                current_cluster_node);
+
+              AssertThrow(right_child_node != nullptr, ExcInternalError());
+              current_cluster_node->Right(right_child_node);
               node_num_from_right_descendants =
                 partition_from_cluster_node(right_child_node,
                                             all_support_points,
@@ -1317,7 +1326,12 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
         }
 
       if (current_cluster_node->get_level() < cutoff_level)
-        tg.wait();
+        {
+          tg.wait();
+          current_cluster_node->set_child_num(
+            static_cast<unsigned int>(left_child_node != nullptr) +
+            static_cast<unsigned int>(right_child_node != nullptr));
+        }
 
       // Merge the leaf set wrt. the left and right child cluster nodes into the
       // leaf set of the current cluster node.
@@ -1339,7 +1353,7 @@ unsigned int
 ClusterTree<spacedim, Number>::partition_from_cluster_node(
   node_pointer_type                           current_cluster_node,
   const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number>                  &cell_size_at_dofs,
+  const std::vector<Number>                  &dof_support_set_diameters,
   std::vector<node_pointer_type>             &leaf_set_wrt_current_node)
 {
   unsigned int node_num_from_descendants = 0;
@@ -1348,9 +1362,9 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
   // When the size/cardinality of the current cluster is large enough,
   // continue the partition.
   //
-  // If the bounding box of the current cluster has zero volume, we use the
-  // cardinality based partition instead. The reason why such case appears is
-  // because when the finite element is of a discontinuous type, such as that
+  // If the bounding box of the current cluster degenerates into a point, we use
+  // the cardinality based partition instead. The reason why such case appears
+  // is because when the finite element is of a discontinuous type, such as that
   // used for the Neumann space, there will be multiple support points having
   // the same coordinates, for example, all the support points associated with
   // a common vertex which is shared by several cells. The number of such
@@ -1373,7 +1387,7 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
           node_pointer_type child_node = CreateTreeNode<data_value_type>(
             Cluster<spacedim, Number>(left_child_index_set,
                                       all_support_points,
-                                      cell_size_at_dofs),
+                                      dof_support_set_diameters),
             current_cluster_node->get_level() + 1,
             nullptr,
             nullptr,
@@ -1391,7 +1405,7 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
           node_num_from_descendants +=
             partition_from_cluster_node(child_node,
                                         all_support_points,
-                                        cell_size_at_dofs,
+                                        dof_support_set_diameters,
                                         leaf_set_wrt_child_node);
 
           // Merge the leaf set wrt. the child cluster node into the
@@ -1409,7 +1423,7 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
           node_pointer_type child_node = CreateTreeNode<data_value_type>(
             Cluster<spacedim, Number>(right_child_index_set,
                                       all_support_points,
-                                      cell_size_at_dofs),
+                                      dof_support_set_diameters),
             current_cluster_node->get_level() + 1,
             nullptr,
             nullptr,
@@ -1427,7 +1441,7 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
           node_num_from_descendants +=
             partition_from_cluster_node(child_node,
                                         all_support_points,
-                                        cell_size_at_dofs,
+                                        dof_support_set_diameters,
                                         leaf_set_wrt_child_node);
 
           // Merge the leaf set wrt. the child cluster node into the
@@ -1448,7 +1462,7 @@ unsigned int
 ClusterTree<spacedim, Number>::partition_from_cluster_node(
   node_pointer_type                           current_cluster_node,
   const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number>                  &cell_size_at_dofs,
+  const std::vector<Number>                  &dof_support_set_diameters,
   const unsigned int                          cutoff_level,
   std::vector<node_pointer_type>             &leaf_set_wrt_current_node)
 {
@@ -1459,9 +1473,9 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
   // When the size/cardinality of the current cluster is large enough,
   // continue the partition.
   //
-  // If the bounding box of the current cluster has zero volume, we use the
-  // cardinality based partition instead. The reason why such case appears is
-  // because when the finite element is of a discontinuous type, such as that
+  // If the bounding box of the current cluster degenerates into a point, we use
+  // the cardinality based partition instead. The reason why such case appears
+  // is because when the finite element is of a discontinuous type, such as that
   // used for the Neumann space, there will be multiple support points having
   // the same coordinates, for example, all the support points associated with
   // a common vertex which is shared by several cells. The number of such
@@ -1484,33 +1498,34 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
 
       if (left_child_index_set.size() > 0)
         {
-          // N.B. During the creation of the new child cluster, its bounding
-          // box will be recalculated, which may be smaller than the child
-          // bounding box obtained from the previous bounding box geometric
-          // bisection.
-          left_child_node = CreateTreeNode<data_value_type>(
-            Cluster<spacedim, Number>(left_child_index_set,
-                                      all_support_points,
-                                      cell_size_at_dofs),
-            current_cluster_node->get_level() + 1,
-            nullptr,
-            nullptr,
-            current_cluster_node);
-
-          // Append this new node as the left child of the current cluster
-          // node.
-          AssertThrow(left_child_node != nullptr, ExcInternalError());
-          current_cluster_node->Left(left_child_node);
-
           // Continue the recursive partition by starting from this child
           // node.
           if (current_cluster_node->get_level() < cutoff_level)
             {
               tg.run([&] {
+                // The pointer to the parent node (the last argument of
+                // @p CreateTreeNode) is temporarily set to @p nullptr, which
+                // prevents the increment of the member @p child_num of the
+                // current cluster node. Otherwise, the two TBB tasks may try to
+                // modify this member at the same time.
+                left_child_node = CreateTreeNode<data_value_type>(
+                  Cluster<spacedim, Number>(left_child_index_set,
+                                            all_support_points,
+                                            dof_support_set_diameters),
+                  current_cluster_node->get_level() + 1,
+                  nullptr,
+                  nullptr,
+                  nullptr);
+
+                // Append this new node as the left child of the current cluster
+                // node.
+                AssertThrow(left_child_node != nullptr, ExcInternalError());
+                left_child_node->Parent(current_cluster_node);
+                current_cluster_node->Left(left_child_node);
                 node_num_from_left_descendants =
                   partition_from_cluster_node(left_child_node,
                                               all_support_points,
-                                              cell_size_at_dofs,
+                                              dof_support_set_diameters,
                                               cutoff_level,
                                               leaf_set_wrt_left_child_node) +
                   1;
@@ -1518,10 +1533,21 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
             }
           else
             {
+              left_child_node = CreateTreeNode<data_value_type>(
+                Cluster<spacedim, Number>(left_child_index_set,
+                                          all_support_points,
+                                          dof_support_set_diameters),
+                current_cluster_node->get_level() + 1,
+                nullptr,
+                nullptr,
+                current_cluster_node);
+
+              AssertThrow(left_child_node != nullptr, ExcInternalError());
+              current_cluster_node->Left(left_child_node);
               node_num_from_left_descendants =
                 partition_from_cluster_node(left_child_node,
                                             all_support_points,
-                                            cell_size_at_dofs,
+                                            dof_support_set_diameters,
                                             leaf_set_wrt_left_child_node) +
                 1;
             }
@@ -1529,33 +1555,29 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
 
       if (right_child_index_set.size() > 0)
         {
-          // N.B. During the creation of the new child cluster, its bounding
-          // box will be recalculated, which may be smaller than the child
-          // bounding box obtained from the previous bounding box geometric
-          // bisection.
-          right_child_node = CreateTreeNode<data_value_type>(
-            Cluster<spacedim, Number>(right_child_index_set,
-                                      all_support_points,
-                                      cell_size_at_dofs),
-            current_cluster_node->get_level() + 1,
-            nullptr,
-            nullptr,
-            current_cluster_node);
-
-          // Append this new node as the right child of the current cluster
-          // node.
-          AssertThrow(right_child_node != nullptr, ExcInternalError());
-          current_cluster_node->Right(right_child_node);
-
           // Continue the recursive partition by starting from this child
           // node.
           if (current_cluster_node->get_level() < cutoff_level)
             {
               tg.run([&] {
+                right_child_node = CreateTreeNode<data_value_type>(
+                  Cluster<spacedim, Number>(right_child_index_set,
+                                            all_support_points,
+                                            dof_support_set_diameters),
+                  current_cluster_node->get_level() + 1,
+                  nullptr,
+                  nullptr,
+                  nullptr);
+
+                // Append this new node as the right child of the current
+                // cluster node.
+                AssertThrow(right_child_node != nullptr, ExcInternalError());
+                right_child_node->Parent(current_cluster_node);
+                current_cluster_node->Right(right_child_node);
                 node_num_from_right_descendants =
                   partition_from_cluster_node(right_child_node,
                                               all_support_points,
-                                              cell_size_at_dofs,
+                                              dof_support_set_diameters,
                                               cutoff_level,
                                               leaf_set_wrt_right_child_node) +
                   1;
@@ -1563,17 +1585,33 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
             }
           else
             {
+              right_child_node = CreateTreeNode<data_value_type>(
+                Cluster<spacedim, Number>(right_child_index_set,
+                                          all_support_points,
+                                          dof_support_set_diameters),
+                current_cluster_node->get_level() + 1,
+                nullptr,
+                nullptr,
+                current_cluster_node);
+
+              AssertThrow(right_child_node != nullptr, ExcInternalError());
+              current_cluster_node->Right(right_child_node);
               node_num_from_right_descendants =
                 partition_from_cluster_node(right_child_node,
                                             all_support_points,
-                                            cell_size_at_dofs,
+                                            dof_support_set_diameters,
                                             leaf_set_wrt_right_child_node) +
                 1;
             }
         }
 
       if (current_cluster_node->get_level() < cutoff_level)
-        tg.wait();
+        {
+          tg.wait();
+          current_cluster_node->set_child_num(
+            static_cast<unsigned int>(left_child_node != nullptr) +
+            static_cast<unsigned int>(right_child_node != nullptr));
+        }
 
       // Merge the leaf set wrt. the left and right child cluster nodes into the
       // leaf set of the current cluster node.
@@ -1665,19 +1703,6 @@ ClusterTree<spacedim, Number>::
 
 template <int spacedim, typename Number>
 void
-ClusterTree<spacedim, Number>::partition()
-{
-  node_num += partition_from_cluster_node(root_node, leaf_set);
-  build_internal_and_external_dof_numbering_mappings();
-  set_index_ranges_and_clear_index_sets();
-
-  depth     = calc_depth(root_node);
-  max_level = depth - 1;
-}
-
-
-template <int spacedim, typename Number>
-void
 ClusterTree<spacedim, Number>::partition(const unsigned int cutoff_level)
 {
   if (MultithreadInfo::n_threads() > 1 && cutoff_level > 0)
@@ -1685,21 +1710,6 @@ ClusterTree<spacedim, Number>::partition(const unsigned int cutoff_level)
   else
     node_num += partition_from_cluster_node(root_node, leaf_set);
 
-  build_internal_and_external_dof_numbering_mappings();
-  set_index_ranges_and_clear_index_sets();
-
-  depth     = calc_depth(root_node);
-  max_level = depth - 1;
-}
-
-
-template <int spacedim, typename Number>
-void
-ClusterTree<spacedim, Number>::partition(
-  const std::vector<Point<spacedim, Number>> &all_support_points)
-{
-  node_num +=
-    partition_from_cluster_node(root_node, all_support_points, leaf_set);
   build_internal_and_external_dof_numbering_mappings();
   set_index_ranges_and_clear_index_sets();
 
@@ -1739,32 +1749,14 @@ template <int spacedim, typename Number>
 void
 ClusterTree<spacedim, Number>::partition(
   const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number>                  &cell_size_at_dofs)
-{
-  node_num += partition_from_cluster_node(root_node,
-                                          all_support_points,
-                                          cell_size_at_dofs,
-                                          leaf_set);
-  build_internal_and_external_dof_numbering_mappings();
-  set_index_ranges_and_clear_index_sets();
-
-  depth     = calc_depth(root_node);
-  max_level = depth - 1;
-}
-
-
-template <int spacedim, typename Number>
-void
-ClusterTree<spacedim, Number>::partition(
-  const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number>                  &cell_size_at_dofs,
+  const std::vector<Number>                  &dof_support_set_diameters,
   const unsigned int                          cutoff_level)
 {
   if (MultithreadInfo::n_threads() > 1 && cutoff_level > 0)
     {
       node_num += partition_from_cluster_node(root_node,
                                               all_support_points,
-                                              cell_size_at_dofs,
+                                              dof_support_set_diameters,
                                               cutoff_level,
                                               leaf_set);
     }
@@ -1772,7 +1764,7 @@ ClusterTree<spacedim, Number>::partition(
     {
       node_num += partition_from_cluster_node(root_node,
                                               all_support_points,
-                                              cell_size_at_dofs,
+                                              dof_support_set_diameters,
                                               leaf_set);
     }
 
@@ -1998,9 +1990,12 @@ ClusterTree<spacedim, Number>::split_cluster_by_bounding_box(
   left_child_index_set.clear();
   right_child_index_set.clear();
 
-  if (current_cluster_node->get_data_pointer()->get_bounding_box().volume() <=
-      SimpleBoundingBox<spacedim, Number>::zero_volume_threshold)
+  if (current_cluster_node->get_data_pointer()
+        ->get_bounding_box()
+        .is_degenerate_to_point())
     {
+      // When the bounding box degenerates into a point, we split the cluster by
+      // cardinality.
       split_cluster_by_cardinality(current_cluster_node,
                                    left_child_index_set,
                                    right_child_index_set);
@@ -2016,10 +2011,10 @@ ClusterTree<spacedim, Number>::split_cluster_by_bounding_box(
 
       // Determine to which child index set each support point in the
       // original bounding box belongs to.
-      for (auto dof_index :
+      for (const auto dof_index :
            current_cluster_node->get_data_pointer()->get_index_set())
         {
-          if (bbox_children.first.point_inside(
+          if (bbox_children.first.is_point_inside(
                 all_support_points.at(dof_index)))
             {
               // If the support point associated with the current DoF

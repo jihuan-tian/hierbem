@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2025-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -84,7 +84,7 @@ public:
    * the partition from this cluster will be sent to a TBB task.
    */
   std::unique_ptr<ClusterTree<spacedim, Number>>
-  build(const unsigned int cutoff_level = 0) const;
+  build(const unsigned int cutoff_level = 0);
 
   std::vector<Point<spacedim, Number>> &
   get_support_points()
@@ -99,15 +99,15 @@ public:
   }
 
   std::vector<Number> &
-  get_dof_average_cell_size()
+  get_dof_support_set_diameters()
   {
-    return dof_average_cell_size;
+    return dof_support_set_diameters;
   }
 
   const std::vector<Number> &
-  get_dof_average_cell_size() const
+  get_dof_support_set_diameters() const
   {
-    return dof_average_cell_size;
+    return dof_support_set_diameters;
   }
 
 private:
@@ -123,9 +123,9 @@ private:
    */
   std::vector<types::global_dof_index> dof_indices;
   /**
-   * List of average cell size estimated at support points.
+   * List of support set diameters for basis functions at support points.
    */
-  std::vector<Number> dof_average_cell_size;
+  std::vector<Number> dof_support_set_diameters;
   /**
    * Minimum number of DoFs in a cluster.
    *
@@ -157,10 +157,10 @@ ClusterTreeBuilder<spacedim, Number>::ClusterTreeBuilder(
   dof_indices.resize(n_dofs);
   gen_linear_indices<vector_uta, types::global_dof_index>(dof_indices);
 
-  // Calculate the average mesh cell size at each support point.
-  dof_average_cell_size.assign(n_dofs, 0);
-  DoFToolsExt::map_dofs_to_average_cell_size(dof_handler,
-                                             dof_average_cell_size);
+  // Calculate the DoF support set diameter at each support point.
+  dof_support_set_diameters.assign(n_dofs, 0);
+  DoFToolsExt::map_dofs_to_support_set_diameters(dof_handler,
+                                                 dof_support_set_diameters);
 }
 
 
@@ -188,23 +188,29 @@ ClusterTreeBuilder<spacedim, Number>::ClusterTreeBuilder(
   gen_linear_indices<vector_uta, types::global_dof_index>(dof_indices);
 
   // Calculate the average mesh cell size at each support point.
-  dof_average_cell_size.assign(n_dofs, 0);
-  DoFToolsExt::map_dofs_to_average_cell_size(dof_handler,
-                                             local_to_full_dof_id_map,
-                                             dof_average_cell_size);
+  dof_support_set_diameters.assign(n_dofs, 0);
+  DoFToolsExt::map_dofs_to_support_set_diameters(dof_handler,
+                                                 local_to_full_dof_id_map,
+                                                 dof_support_set_diameters);
 }
 
 
 template <int spacedim, typename Number>
 std::unique_ptr<ClusterTree<spacedim, Number>>
-ClusterTreeBuilder<spacedim, Number>::build(
-  const unsigned int cutoff_level) const
+ClusterTreeBuilder<spacedim, Number>::build(const unsigned int cutoff_level)
 {
   // Create a cluster tree for all the DoF indices.
   auto cluster_tree = std::make_unique<ClusterTree<spacedim, Number>>(
-    dof_indices, support_points, dof_average_cell_size, n_min);
+    dof_indices, support_points, dof_support_set_diameters, n_min);
   // Partition the cluster tree.
-  cluster_tree->partition(support_points, dof_average_cell_size, cutoff_level);
+  cluster_tree->partition(support_points,
+                          dof_support_set_diameters,
+                          cutoff_level);
+
+  // Clear intermediate data.
+  support_points.clear();
+  dof_indices.clear();
+  dof_support_set_diameters.clear();
 
   return cluster_tree;
 }

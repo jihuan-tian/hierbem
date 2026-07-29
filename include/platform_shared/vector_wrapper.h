@@ -44,7 +44,7 @@ namespace PlatformShared
     VectorWrapper();
 
     /**
-     * Constructor from a pointer allocated with memory.
+     * Construct from a pointer allocated with memory.
      *
      * @param p Pointer to the array of values
      * @param _n Array size

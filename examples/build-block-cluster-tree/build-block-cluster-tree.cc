@@ -56,7 +56,7 @@ public:
   // Build a cluster tree and return it as a unique smart pointer, since it will
   // be associated with a unique function space.
   std::unique_ptr<ClusterTree<spacedim>>
-  build() const;
+  build(const unsigned int cutoff_level = 0);
 
   std::vector<Point<spacedim>> &
   get_support_points()
@@ -71,15 +71,15 @@ public:
   }
 
   std::vector<double> &
-  get_dof_average_cell_size()
+  get_dof_support_set_diameters()
   {
-    return dof_average_cell_size;
+    return dof_support_set_diameters;
   }
 
   const std::vector<double> &
-  get_dof_average_cell_size() const
+  get_dof_support_set_diameters() const
   {
-    return dof_average_cell_size;
+    return dof_support_set_diameters;
   }
 
 private:
@@ -88,8 +88,8 @@ private:
   std::vector<Point<spacedim>> support_points;
   // List of DoF indices in the finite element, starting from zero.
   std::vector<types::global_dof_index> dof_indices;
-  // List of average cell size estimated at support points.
-  std::vector<double> dof_average_cell_size;
+  // List of support set diameters estimated at support points.
+  std::vector<double> dof_support_set_diameters;
   // Minimum number of DoFs in a cluster. When the actual number of DoFs in a
   // cluster is smaller than @p n_min , the cluster is a leaf node in the
   // cluster tree.
@@ -118,22 +118,29 @@ ClusterTreeBuilder<spacedim>::ClusterTreeBuilder(
   for (types::global_dof_index d = 0; d < n_dofs; d++)
     dof_indices[d] = d;
 
-  // Calculate the average mesh cell size at each support point.
-  dof_average_cell_size.assign(n_dofs, 0);
-  DoFToolsExt::map_dofs_to_average_cell_size(dof_handler,
-                                             dof_average_cell_size);
+  // Calculate the support set diameter size at each support point.
+  dof_support_set_diameters.assign(n_dofs, 0);
+  DoFToolsExt::map_dofs_to_support_set_diameters(dof_handler,
+                                                 dof_support_set_diameters);
 }
 
 
 template <int spacedim>
 std::unique_ptr<ClusterTree<spacedim>>
-ClusterTreeBuilder<spacedim>::build() const
+ClusterTreeBuilder<spacedim>::build(const unsigned int cutoff_level)
 {
   // Create a cluster tree for all the DoF indices.
   auto cluster_tree = std::make_unique<ClusterTree<spacedim>>(
-    dof_indices, support_points, dof_average_cell_size, n_min);
+    dof_indices, support_points, dof_support_set_diameters, n_min);
   // Partition the cluster tree.
-  cluster_tree->partition(support_points, dof_average_cell_size);
+  cluster_tree->partition(support_points,
+                          dof_support_set_diameters,
+                          cutoff_level);
+
+  // Clear intermediate data.
+  support_points.clear();
+  dof_indices.clear();
+  dof_support_set_diameters.clear();
 
   return cluster_tree;
 }
@@ -146,7 +153,8 @@ class BEMFunctionSpace
 public:
   BEMFunctionSpace(const DoFHandler<dim, spacedim> &dof_handler_,
                    const Mapping<dim, spacedim>    &mapping,
-                   const unsigned int               n_min);
+                   const unsigned int               n_min,
+                   const unsigned int               cutoff_level = 0);
 
   ClusterTree<spacedim> &
   get_cluster_tree()
@@ -185,15 +193,15 @@ public:
   }
 
   std::vector<double> &
-  get_dof_average_cell_size()
+  get_dof_support_set_diameters()
   {
-    return cluster_tree_builder->get_dof_average_cell_size();
+    return cluster_tree_builder->get_dof_support_set_diameters();
   }
 
   const std::vector<double> &
-  get_dof_average_cell_size() const
+  get_dof_support_set_diameters() const
   {
-    return cluster_tree_builder->get_dof_average_cell_size();
+    return cluster_tree_builder->get_dof_support_set_diameters();
   }
 
   std::vector<types::global_dof_index> &
@@ -231,12 +239,13 @@ template <int dim, int spacedim>
 BEMFunctionSpace<dim, spacedim>::BEMFunctionSpace(
   const DoFHandler<dim, spacedim> &dof_handler_,
   const Mapping<dim, spacedim>    &mapping,
-  const unsigned int               n_min)
+  const unsigned int               n_min,
+  const unsigned int               cutoff_level)
   : dof_handler(dof_handler_)
 {
   cluster_tree_builder =
     std::make_unique<ClusterTreeBuilder<spacedim>>(mapping, dof_handler, n_min);
-  cluster_tree = cluster_tree_builder->build();
+  cluster_tree = cluster_tree_builder->build(cutoff_level);
 }
 
 
@@ -257,7 +266,9 @@ public:
   // \f$\sigma\f$ is smaller than @p n_min , this block cluster is a near field
   // node.
   void
-  build_block_cluster_tree(const double eta, const unsigned int n_min);
+  build_block_cluster_tree(const double       eta,
+                           const unsigned int n_min,
+                           const unsigned int cutoff_level = 0);
 
   ClusterTree<spacedim> &
   get_cluster_tree_trial_space()
@@ -315,20 +326,15 @@ template <int dim, int spacedim>
 void
 BEMBilinearForm<dim, spacedim>::build_block_cluster_tree(
   const double       eta,
-  const unsigned int n_min)
+  const unsigned int n_min,
+  const unsigned int cutoff_level)
 {
   // When building a block cluster tree, the test space appears before the trial
   // space, since the test space is related to matrix rows, while the trial
   // space is related to matrix columns.
   block_cluster_tree = std::make_unique<BlockClusterTree<spacedim>>(
     test_space.get_cluster_tree(), trial_space.get_cluster_tree(), eta, n_min);
-  block_cluster_tree->partition(
-    test_space.get_internal_to_external_dof_numbering(),
-    trial_space.get_internal_to_external_dof_numbering(),
-    test_space.get_support_points(),
-    trial_space.get_support_points(),
-    test_space.get_dof_average_cell_size(),
-    trial_space.get_dof_average_cell_size());
+  block_cluster_tree->partition(cutoff_level);
 }
 
 
@@ -356,6 +362,8 @@ main()
   const unsigned int n_min_H_minus_half       = 4;
   const double       eta                      = 4;
   const unsigned int n_min_block_cluster_tree = 4;
+  const unsigned int cutoff_level_ct          = 2;
+  const unsigned int cutoff_level_bct         = 2;
 
   // Create a continuous Lagrangian finite element and a DoF handler for the
   // Sobolev space \f$H^{1/2}(\Gamma)\f$.
@@ -365,7 +373,8 @@ main()
   dof_handler_H_half.distribute_dofs(fe_H_half);
   BEMFunctionSpace<dim, spacedim> H_half(dof_handler_H_half,
                                          mapping,
-                                         n_min_H_half);
+                                         n_min_H_half,
+                                         cutoff_level_ct);
 
   // Create a discontinuous Lagrangian finite element and a DoF handler for the
   // Sobolev space \f$H^{-1/2}(\Gamma)\f$ space.
@@ -375,16 +384,17 @@ main()
   dof_handler_H_minus_half.distribute_dofs(fe_H_minus_half);
   BEMFunctionSpace<dim, spacedim> H_minus_half(dof_handler_H_minus_half,
                                                mapping,
-                                               n_min_H_minus_half);
+                                               n_min_H_minus_half,
+                                               cutoff_level_ct);
 
   // Create a bilinear form \f$b_V: H^{-1/2}(\Gamma)\times H^{-1/2}(\Gamma)
   // \rightarrow \mathbb{R}\f$ for the single layer potential operator \f$V\f$.
   BEMBilinearForm<dim, spacedim> bV(H_minus_half, H_minus_half);
-  bV.build_block_cluster_tree(eta, n_min_block_cluster_tree);
+  bV.build_block_cluster_tree(eta, n_min_block_cluster_tree, cutoff_level_bct);
   // Create a bilinear form \f$b_K: H^{1/2}(\Gamma)\times H^{-1/2}(\Gamma)
   // \rightarrow \mathbb{R}\f$ for the double layer potential operator \f$K\f$.
   BEMBilinearForm<dim, spacedim> bK(H_half, H_minus_half);
-  bK.build_block_cluster_tree(eta, n_min_block_cluster_tree);
+  bK.build_block_cluster_tree(eta, n_min_block_cluster_tree, cutoff_level_bct);
 
   // Print out the cluster trees for the two function spaces.
   std::ofstream graph("cluster-tree-H-half.puml");

@@ -88,9 +88,13 @@ public:
    * \f$\tau\times \sigma\f$, whenever the cardinality of \f$\tau\f$ or
    * \f$\sigma\f$ is smaller than @p n_min , this block cluster is a near field
    * node.
+   * @param cutoff_level When the level of a node is less than this value, the
+   * partition from its four children will be started as a TBB task.
    */
   void
-  build_block_cluster_tree(const real_type eta, const unsigned int n_min);
+  build_block_cluster_tree(const real_type    eta,
+                           const unsigned int n_min,
+                           const unsigned int cutoff_level = 0);
 
   /**
    * Build an H-matrix for the bilinear form.
@@ -422,34 +426,22 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 void
-BEMBilinearForm<dim,
-                spacedim,
-                SearchableMaterialIdContainer,
-                KernelFunctionType,
-                RangeNumberType,
-                KernelNumberType>::build_block_cluster_tree(const real_type eta,
-                                                            const unsigned int
-                                                              n_min)
+BEMBilinearForm<
+  dim,
+  spacedim,
+  SearchableMaterialIdContainer,
+  KernelFunctionType,
+  RangeNumberType,
+  KernelNumberType>::build_block_cluster_tree(const real_type    eta,
+                                              const unsigned int n_min,
+                                              const unsigned int cutoff_level)
 {
   // When building a block cluster tree, the test space appears before the trial
   // space, since the test space is related to matrix rows, while the trial
   // space is related to matrix columns.
   block_cluster_tree = std::make_unique<BlockClusterTree<spacedim, real_type>>(
     test_space.get_cluster_tree(), trial_space.get_cluster_tree(), eta, n_min);
-
-  if (&trial_space == &test_space)
-    block_cluster_tree->partition(
-      trial_space.get_internal_to_external_dof_numbering(),
-      trial_space.get_support_points(),
-      trial_space.get_dof_average_cell_size());
-  else
-    block_cluster_tree->partition(
-      test_space.get_internal_to_external_dof_numbering(),
-      trial_space.get_internal_to_external_dof_numbering(),
-      test_space.get_support_points(),
-      trial_space.get_support_points(),
-      test_space.get_dof_average_cell_size(),
-      trial_space.get_dof_average_cell_size());
+  block_cluster_tree->partition(cutoff_level);
 }
 
 

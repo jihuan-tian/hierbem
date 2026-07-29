@@ -64,7 +64,7 @@ public:
   BinaryTreeNode(const BinaryTreeNode &node);
 
   /**
-   * Constructor from the given data.
+   * Construct from the given data.
    *
    * N.B. The data of type \p T will be copied into the created node.
    */
@@ -554,12 +554,12 @@ public:
   TreeNode();
 
   /**
-   * Constructor from the given data without children.
+   * Construct from the given data without children.
    */
   TreeNode(const T &data);
 
   /**
-   * Constructor from the given data.
+   * Construct from the given data.
    *
    * N.B. The number of children of the parent node will automatically be
    * incremented, because the current node is associated with this parent.

@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2023 Jihuan Tian <jihuan_tian@hotmail.com>
+# Copyright (C) 2021-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 #
 # This file is part of the HierBEM library.
 #
@@ -8,5 +8,21 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
-set(TEST_TARGET simple-bounding-box)
-deal_ii_pickup_tests()
+# Target should contains 'test' substring in any cases in order to be found by
+# Visual Studio Code's TestMate extension
+set(_target test-simple-bounding-box)
+
+add_executable(${_target} simple-bounding-box.cc)
+
+# Allow target to include deal.ii header files
+deal_ii_setup_target(${_target})
+
+# Define SOURCE_DIR macro to be used in the source files
+target_compile_definitions(${_target}
+                           PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
+target_link_libraries(${_target} hierbem Catch2::Catch2WithMain)
+
+include(CTest)
+include(Catch)
+catch_discover_tests(${_target})

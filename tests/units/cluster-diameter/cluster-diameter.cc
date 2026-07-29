@@ -1,4 +1,4 @@
-// Copyright (C) 2021-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2021-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -28,21 +28,30 @@
 #include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/grid_out.h>
 
-#include <cluster_tree/simple_bounding_box.h>
+#include <catch2/catch_all.hpp>
 
 #include <fstream>
+#include <iostream>
 
 #include "cluster_tree/cluster_tree.h"
+#include "cluster_tree/simple_bounding_box.h"
+#include "dofs/dof_tools_ext.h"
+#include "hbem_cpp_validate.h"
 #include "utilities/debug_tools.h"
 
-int
-main()
+using namespace Catch::Matchers;
+using namespace HierBEM;
+using namespace dealii;
+
+TEST_CASE("Verify cluster diameter and distance computation", "[hmatrix]")
 {
   /**
    * Initialize deal.ii log stream.
    */
   deallog.pop();
   deallog.depth_console(2);
+  std::ofstream ofs("cluster-diameter.log");
+  deallog.attach(ofs, false);
 
   /**
    * Generate the 3x3 grid in a 2D square.
@@ -103,9 +112,7 @@ main()
    */
   deallog << "=== Support point coordinates ===\n";
   for (auto &point : all_support_points)
-    {
-      deallog << point << "\n";
-    }
+    deallog << point << "\n";
 
   /**
    * Write DoF indices at each support point.
@@ -118,16 +125,22 @@ main()
   std::vector<double> dof_average_cell_size(dof_handler.n_dofs(), 0);
   std::vector<double> dof_max_cell_size(dof_handler.n_dofs(), 0);
   std::vector<double> dof_min_cell_size(dof_handler.n_dofs(), 0);
-  map_dofs_to_average_cell_size(dof_handler, dof_average_cell_size);
-  map_dofs_to_max_cell_size(dof_handler, dof_max_cell_size);
-  map_dofs_to_min_cell_size(dof_handler, dof_min_cell_size);
+  std::vector<double> dof_support_set_diameters(dof_handler.n_dofs(), 0);
+  DoFToolsExt::map_dofs_to_average_cell_size(dof_handler,
+                                             dof_average_cell_size);
+  DoFToolsExt::map_dofs_to_max_cell_size(dof_handler, dof_max_cell_size);
+  DoFToolsExt::map_dofs_to_min_cell_size(dof_handler, dof_min_cell_size);
+  DoFToolsExt::map_dofs_to_support_set_diameters(dof_handler,
+                                                 dof_support_set_diameters);
 
   deallog << "=== Average cell size at each support point ===" << std::endl;
-  print_vector_values(deallog.get_console(), dof_average_cell_size);
+  print_vector_values(deallog.get_file_stream(), dof_average_cell_size);
   deallog << "=== Max cell size at each support point ===" << std::endl;
-  print_vector_values(deallog.get_console(), dof_max_cell_size);
+  print_vector_values(deallog.get_file_stream(), dof_max_cell_size);
   deallog << "=== Min cell size at each support point ===" << std::endl;
-  print_vector_values(deallog.get_console(), dof_min_cell_size);
+  print_vector_values(deallog.get_file_stream(), dof_min_cell_size);
+  deallog << "=== DoF support set diameter each support point ===" << std::endl;
+  print_vector_values(deallog.get_file_stream(), dof_support_set_diameters);
 
   /**
    * Initialize the cluster tree \f$T(I)\f$ and \f$T(J)\f$ for all the DoF
@@ -136,18 +149,18 @@ main()
   const unsigned int    n_min = 4;
   ClusterTree<spacedim> TI(dof_indices,
                            all_support_points,
-                           dof_average_cell_size,
+                           dof_support_set_diameters,
                            n_min);
   ClusterTree<spacedim> TJ(dof_indices,
                            all_support_points,
-                           dof_average_cell_size,
+                           dof_support_set_diameters,
                            n_min);
 
   /**
    * Partition the cluster tree.
    */
-  TI.partition(all_support_points, dof_average_cell_size);
-  TJ.partition(all_support_points, dof_average_cell_size);
+  TI.partition(all_support_points, dof_support_set_diameters);
+  TJ.partition(all_support_points, dof_support_set_diameters);
 
   /**
    * Print the whole cluster trees.
@@ -165,7 +178,6 @@ main()
   cluster1 = TI.get_root()->Left()->Left()->get_data_pointer();
   deallog << "Cluster: [0 1 2 3]\n";
   deallog << (*cluster1) << std::endl;
-  ;
 
   /**
    * Get the cluster containing DoF indices [10, 11, 14, 15].
@@ -175,12 +187,14 @@ main()
   deallog << "Cluster: [10 11 14 15]\n";
   deallog << (*cluster2) << std::endl;
 
-  deallog << "Uncorrected distance between cluster1 and cluster2: "
-          << cluster1->distance_to_cluster((*cluster2), all_support_points)
+  deallog << "Distance between cluster1.bbox and cluster2.bbox: "
+          << cluster1->get_bounding_box().distance_to_bounding_box(
+               cluster2->get_bounding_box())
           << std::endl;
-  deallog << "Corrected distance between cluster1 and cluster2: "
-          << cluster1->distance_to_cluster((*cluster2),
-                                           all_support_points,
-                                           dof_average_cell_size)
-          << std::endl;
+  deallog << "Distance between cluster1 and cluster2: "
+          << cluster1->distance_to_cluster((*cluster2)) << std::endl;
+
+  ofs.close();
+
+  compare_two_files(SOURCE_DIR "/reference.output", "cluster-diameter.log");
 }

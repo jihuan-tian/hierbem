@@ -1310,47 +1310,47 @@ DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::
         steklov_poincare_hmat.get_subdomain_to_skeleton_neumann_dof_index_map(),
         support_points_for_local_neumann_space);
 
-      // Compute average mesh cell size at each support point.
-      std::vector<real_type> cell_sizes_for_local_dirichlet_space(
+      std::vector<real_type> support_set_diameters_for_local_dirichlet_space(
         n_dofs_for_local_dirichlet_space);
-      std::vector<real_type> cell_sizes_for_local_neumann_space(
+      std::vector<real_type> support_set_diameters_for_local_neumann_space(
         n_dofs_for_local_neumann_space);
 
-      cell_sizes_for_local_dirichlet_space.assign(
+      support_set_diameters_for_local_dirichlet_space.assign(
         n_dofs_for_local_dirichlet_space, 0);
-      cell_sizes_for_local_neumann_space.assign(n_dofs_for_local_neumann_space,
-                                                0);
+      support_set_diameters_for_local_neumann_space.assign(
+        n_dofs_for_local_neumann_space, 0);
 
-      DoFToolsExt::map_dofs_to_average_cell_size(
+      DoFToolsExt::map_dofs_to_support_set_diameters(
         dof_handler_for_dirichlet_space,
         steklov_poincare_hmat
           .get_subdomain_to_skeleton_dirichlet_dof_index_map(),
-        cell_sizes_for_local_dirichlet_space);
+        support_set_diameters_for_local_dirichlet_space);
 
-      DoFToolsExt::map_dofs_to_average_cell_size(
+      DoFToolsExt::map_dofs_to_support_set_diameters(
         dof_handler_for_neumann_space,
         steklov_poincare_hmat.get_subdomain_to_skeleton_neumann_dof_index_map(),
-        cell_sizes_for_local_neumann_space);
+        support_set_diameters_for_local_neumann_space);
 
       // Initialize cluster trees.
       steklov_poincare_hmat.get_ct_for_subdomain_dirichlet_space() =
         ClusterTree<spacedim, real_type>(
           dof_indices_for_local_dirichlet_space,
           support_points_for_local_dirichlet_space,
-          cell_sizes_for_local_dirichlet_space,
+          support_set_diameters_for_local_dirichlet_space,
           n_min_for_ct);
       steklov_poincare_hmat.get_ct_for_subdomain_neumann_space() =
-        ClusterTree<spacedim, real_type>(dof_indices_for_local_neumann_space,
-                                         support_points_for_local_neumann_space,
-                                         cell_sizes_for_local_neumann_space,
-                                         n_min_for_ct);
+        ClusterTree<spacedim, real_type>(
+          dof_indices_for_local_neumann_space,
+          support_points_for_local_neumann_space,
+          support_set_diameters_for_local_neumann_space,
+          n_min_for_ct);
 
       steklov_poincare_hmat.get_ct_for_subdomain_dirichlet_space().partition(
         support_points_for_local_dirichlet_space,
-        cell_sizes_for_local_dirichlet_space);
+        support_set_diameters_for_local_dirichlet_space);
       steklov_poincare_hmat.get_ct_for_subdomain_neumann_space().partition(
         support_points_for_local_neumann_space,
-        cell_sizes_for_local_neumann_space);
+        support_set_diameters_for_local_neumann_space);
 
       steklov_poincare_hmat.set_dof_e2i_numbering_for_subdomain_dirichlet_space(
         &(steklov_poincare_hmat.get_ct_for_subdomain_dirichlet_space()
@@ -1387,27 +1387,9 @@ DDMEfield<dim, spacedim, RangeNumberType, KernelNumberType>::
           eta,
           n_min_for_bct);
 
-      steklov_poincare_hmat.get_bct_for_bilinear_form_D().partition(
-        *steklov_poincare_hmat
-           .get_dof_i2e_numbering_for_subdomain_dirichlet_space(),
-        support_points_for_local_dirichlet_space,
-        cell_sizes_for_local_dirichlet_space);
-
-      steklov_poincare_hmat.get_bct_for_bilinear_form_K().partition(
-        *steklov_poincare_hmat
-           .get_dof_i2e_numbering_for_subdomain_neumann_space(),
-        *steklov_poincare_hmat
-           .get_dof_i2e_numbering_for_subdomain_dirichlet_space(),
-        support_points_for_local_neumann_space,
-        support_points_for_local_dirichlet_space,
-        cell_sizes_for_local_neumann_space,
-        cell_sizes_for_local_dirichlet_space);
-
-      steklov_poincare_hmat.get_bct_for_bilinear_form_V().partition(
-        *steklov_poincare_hmat
-           .get_dof_i2e_numbering_for_subdomain_neumann_space(),
-        support_points_for_local_neumann_space,
-        cell_sizes_for_local_neumann_space);
+      steklov_poincare_hmat.get_bct_for_bilinear_form_D().partition();
+      steklov_poincare_hmat.get_bct_for_bilinear_form_K().partition();
+      steklov_poincare_hmat.get_bct_for_bilinear_form_V().partition();
 
       // Initialize subdomain local \hmatrices.
       steklov_poincare_hmat.get_D() = HMatrix<spacedim, RangeNumberType>(
