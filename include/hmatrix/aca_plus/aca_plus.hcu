@@ -1050,7 +1050,12 @@ template <int dim,
           typename KernelNumberType>
 size_type
 random_select_ref_row(
-  Vector<RangeNumberType> &row_vector,
+  Vector<RangeNumberType>                    &row_vector,
+  const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
+  const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
+  Vector<RangeNumberType>                    &ul,
+  Vector<RangeNumberType>                    &vl,
+  const unsigned int                          current_aca_step,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                              &kernel,
   const DeviceNumberType<KernelNumberType>    kernel_factor,
@@ -1126,7 +1131,8 @@ random_select_ref_row(
       if (next_ref_row_index != current_ref_row_index)
         {
           /**
-           * Get the @p next_ref_row_index'th row from the kernel evaluation.
+           * Get the @p next_ref_row_index'th row from the kernel evaluation,
+           * i.e. it is a vector in the original matrix.
            */
           assemble_kernel_row(row_vector,
                               kernel,
@@ -1147,6 +1153,15 @@ random_select_ref_row(
                               scratch_data,
                               scratch_data_gpu,
                               copy_data);
+
+          // Transform the row vector to that in the remainder matrix of the
+          // current ACA step.
+          for (unsigned int l = 1; l <= current_aca_step; l++)
+            {
+              u_mat.get_column(l - 1, ul);
+              v_mat.get_column(l - 1, vl);
+              row_vector.add(-ul(next_ref_row_index), vl);
+            }
 
           if (LinAlg::is_all_zero(row_vector))
             {
@@ -1237,7 +1252,12 @@ template <int dim,
           typename KernelNumberType>
 size_type
 random_select_ref_row(
-  Vector<RangeNumberType> &row_vector,
+  Vector<RangeNumberType>                    &row_vector,
+  const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
+  const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
+  Vector<RangeNumberType>                    &ul,
+  Vector<RangeNumberType>                    &vl,
+  const unsigned int                          current_aca_step,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
   const DeviceNumberType<KernelNumberType>     kernel_factor,
@@ -1339,6 +1359,15 @@ random_select_ref_row(
                               scratch_data_gpu,
                               copy_data);
 
+          // Transform the row vector to that in the remainder matrix of the
+          // current ACA step.
+          for (unsigned int l = 1; l <= current_aca_step; l++)
+            {
+              u_mat.get_column(l - 1, ul);
+              v_mat.get_column(l - 1, vl);
+              row_vector.add(-ul(next_ref_row_index), vl);
+            }
+
           if (LinAlg::is_all_zero(row_vector))
             {
               /**
@@ -1397,9 +1426,14 @@ random_select_ref_row(
     dim,
     spacedim,
     DeviceNumberType<RangeNumberType>,
-    DeviceNumberType<KernelNumberType>> &task_buffer,
-  Vector<RangeNumberType>               &row_vector,
-  const ConfSauterQuadFarField          &sauter_quad_far_field_params,
+    DeviceNumberType<KernelNumberType>>      &task_buffer,
+  Vector<RangeNumberType>                    &row_vector,
+  const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
+  const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
+  Vector<RangeNumberType>                    &ul,
+  Vector<RangeNumberType>                    &vl,
+  const unsigned int                          current_aca_step,
+  const ConfSauterQuadFarField               &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                              &kernel,
   const DeviceNumberType<KernelNumberType>    kernel_factor,
@@ -1494,6 +1528,15 @@ random_select_ref_row(
                               scratch_data,
                               copy_data);
 
+          // Transform the row vector to that in the remainder matrix of the
+          // current ACA step.
+          for (unsigned int l = 1; l <= current_aca_step; l++)
+            {
+              u_mat.get_column(l - 1, ul);
+              v_mat.get_column(l - 1, vl);
+              row_vector.add(-ul(next_ref_row_index), vl);
+            }
+
           if (LinAlg::is_all_zero(row_vector))
             {
               /**
@@ -1552,9 +1595,14 @@ random_select_ref_row(
     dim,
     spacedim,
     DeviceNumberType<RangeNumberType>,
-    DeviceNumberType<KernelNumberType>> &task_buffer,
-  Vector<RangeNumberType>               &row_vector,
-  const ConfSauterQuadFarField          &sauter_quad_far_field_params,
+    DeviceNumberType<KernelNumberType>>      &task_buffer,
+  Vector<RangeNumberType>                    &row_vector,
+  const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
+  const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
+  Vector<RangeNumberType>                    &ul,
+  Vector<RangeNumberType>                    &vl,
+  const unsigned int                          current_aca_step,
+  const ConfSauterQuadFarField               &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
   const DeviceNumberType<KernelNumberType>     kernel_factor,
@@ -1653,6 +1701,15 @@ random_select_ref_row(
                               scratch_data,
                               copy_data);
 
+          // Transform the row vector to that in the remainder matrix of the
+          // current ACA step.
+          for (unsigned int l = 1; l <= current_aca_step; l++)
+            {
+              u_mat.get_column(l - 1, ul);
+              v_mat.get_column(l - 1, vl);
+              row_vector.add(-ul(next_ref_row_index), vl);
+            }
+
           if (LinAlg::is_all_zero(row_vector))
             {
               /**
@@ -1717,6 +1774,11 @@ random_select_ref_row(
 template <typename RangeNumberType = double>
 size_type
 random_select_ref_row(Vector<RangeNumberType>                    &row_vector,
+                      const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
+                      const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
+                      Vector<RangeNumberType>                    &ul,
+                      Vector<RangeNumberType>                    &vl,
+                      const unsigned int current_aca_step,
                       const LAPACKFullMatrixExt<RangeNumberType> &A,
                       std::forward_list<size_type> &remaining_row_indices,
                       const size_type               current_ref_row_index,
@@ -1742,6 +1804,15 @@ random_select_ref_row(Vector<RangeNumberType>                    &row_vector,
       if (next_ref_row_index != current_ref_row_index)
         {
           A.get_row(next_ref_row_index, row_vector);
+
+          // Transform the row vector to that in the remainder matrix of the
+          // current ACA step.
+          for (unsigned int l = 1; l <= current_aca_step; l++)
+            {
+              u_mat.get_column(l - 1, ul);
+              v_mat.get_column(l - 1, vl);
+              row_vector.add(-ul(next_ref_row_index), vl);
+            }
 
           if (LinAlg::is_all_zero(row_vector))
             {
@@ -1828,7 +1899,12 @@ template <int dim,
           typename KernelNumberType>
 size_type
 random_select_ref_column(
-  Vector<RangeNumberType> &col_vector,
+  Vector<RangeNumberType>                    &col_vector,
+  const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
+  const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
+  Vector<RangeNumberType>                    &ul,
+  Vector<RangeNumberType>                    &vl,
+  const unsigned int                          current_aca_step,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                              &kernel,
   const DeviceNumberType<KernelNumberType>    factor,
@@ -1925,6 +2001,15 @@ random_select_ref_column(
                                  scratch_data,
                                  scratch_data_gpu,
                                  copy_data);
+
+          // Transform the column vector to that in the remainder matrix of the
+          // current ACA step.
+          for (unsigned int l = 1; l <= current_aca_step; l++)
+            {
+              u_mat.get_column(l - 1, ul);
+              v_mat.get_column(l - 1, vl);
+              col_vector.add(-vl(next_ref_col_index), ul);
+            }
 
           if (LinAlg::is_all_zero(col_vector))
             {
@@ -2015,7 +2100,12 @@ template <int dim,
           typename KernelNumberType>
 size_type
 random_select_ref_column(
-  Vector<RangeNumberType> &col_vector,
+  Vector<RangeNumberType>                    &col_vector,
+  const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
+  const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
+  Vector<RangeNumberType>                    &ul,
+  Vector<RangeNumberType>                    &vl,
+  const unsigned int                          current_aca_step,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
   const DeviceNumberType<KernelNumberType>     kernel_factor,
@@ -2117,6 +2207,15 @@ random_select_ref_column(
                                  scratch_data_gpu,
                                  copy_data);
 
+          // Transform the column vector to that in the remainder matrix of the
+          // current ACA step.
+          for (unsigned int l = 1; l <= current_aca_step; l++)
+            {
+              u_mat.get_column(l - 1, ul);
+              v_mat.get_column(l - 1, vl);
+              col_vector.add(-vl(next_ref_col_index), ul);
+            }
+
           if (LinAlg::is_all_zero(col_vector))
             {
               /**
@@ -2176,9 +2275,14 @@ random_select_ref_column(
     dim,
     spacedim,
     DeviceNumberType<RangeNumberType>,
-    DeviceNumberType<KernelNumberType>> &task_buffer,
-  Vector<RangeNumberType>               &col_vector,
-  const ConfSauterQuadFarField          &sauter_quad_far_field_params,
+    DeviceNumberType<KernelNumberType>>      &task_buffer,
+  Vector<RangeNumberType>                    &col_vector,
+  const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
+  const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
+  Vector<RangeNumberType>                    &ul,
+  Vector<RangeNumberType>                    &vl,
+  const unsigned int                          current_aca_step,
+  const ConfSauterQuadFarField               &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                              &kernel,
   const DeviceNumberType<KernelNumberType>    factor,
@@ -2273,6 +2377,15 @@ random_select_ref_column(
                                  scratch_data,
                                  copy_data);
 
+          // Transform the column vector to that in the remainder matrix of the
+          // current ACA step.
+          for (unsigned int l = 1; l <= current_aca_step; l++)
+            {
+              u_mat.get_column(l - 1, ul);
+              v_mat.get_column(l - 1, vl);
+              col_vector.add(-vl(next_ref_col_index), ul);
+            }
+
           if (LinAlg::is_all_zero(col_vector))
             {
               /**
@@ -2332,9 +2445,14 @@ random_select_ref_column(
     dim,
     spacedim,
     DeviceNumberType<RangeNumberType>,
-    DeviceNumberType<KernelNumberType>> &task_buffer,
-  Vector<RangeNumberType>               &col_vector,
-  const ConfSauterQuadFarField          &sauter_quad_far_field_params,
+    DeviceNumberType<KernelNumberType>>      &task_buffer,
+  Vector<RangeNumberType>                    &col_vector,
+  const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
+  const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
+  Vector<RangeNumberType>                    &ul,
+  Vector<RangeNumberType>                    &vl,
+  const unsigned int                          current_aca_step,
+  const ConfSauterQuadFarField               &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
   const DeviceNumberType<KernelNumberType>     kernel_factor,
@@ -2433,6 +2551,15 @@ random_select_ref_column(
                                  scratch_data,
                                  copy_data);
 
+          // Transform the column vector to that in the remainder matrix of the
+          // current ACA step.
+          for (unsigned int l = 1; l <= current_aca_step; l++)
+            {
+              u_mat.get_column(l - 1, ul);
+              v_mat.get_column(l - 1, vl);
+              col_vector.add(-vl(next_ref_col_index), ul);
+            }
+
           if (LinAlg::is_all_zero(col_vector))
             {
               /**
@@ -2497,6 +2624,11 @@ random_select_ref_column(
 template <typename RangeNumberType = double>
 size_type
 random_select_ref_column(Vector<RangeNumberType>                    &col_vector,
+                         const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
+                         const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
+                         Vector<RangeNumberType>                    &ul,
+                         Vector<RangeNumberType>                    &vl,
+                         const unsigned int current_aca_step,
                          const LAPACKFullMatrixExt<RangeNumberType> &A,
                          std::forward_list<size_type> &remaining_col_indices,
                          const size_type               current_ref_col_index,
@@ -2523,6 +2655,15 @@ random_select_ref_column(Vector<RangeNumberType>                    &col_vector,
         {
           A.get_column(next_ref_col_index, col_vector);
 
+          // Transform the column vector to that in the remainder matrix of the
+          // current ACA step.
+          for (unsigned int l = 1; l <= current_aca_step; l++)
+            {
+              u_mat.get_column(l - 1, ul);
+              v_mat.get_column(l - 1, vl);
+              col_vector.add(-vl(next_ref_col_index), ul);
+            }
+
           if (LinAlg::is_all_zero(col_vector))
             {
               /**
@@ -2531,6 +2672,8 @@ random_select_ref_column(Vector<RangeNumberType>                    &col_vector,
                * and continue another try.
                */
               erase_at(remaining_col_indices, next_ref_col_selection_index);
+
+              continue;
             }
           else
             {
@@ -2705,7 +2848,18 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   Vector<RangeNumberType> vr(n);
   Vector<RangeNumberType> uc(m);
 
+  /**
+   * Temporary row and column vectors for the previous step \f$l\f$.
+   */
+  Vector<RangeNumberType> vl(n);
+  Vector<RangeNumberType> ul(m);
+
   size_type r = random_select_ref_row(vr,
+                                      u_mat,
+                                      v_mat,
+                                      ul,
+                                      vl,
+                                      0,
                                       kernel,
                                       kernel_factor,
                                       remaining_row_indices,
@@ -2737,6 +2891,11 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
     }
 
   size_type c = random_select_ref_column(uc,
+                                         u_mat,
+                                         v_mat,
+                                         ul,
+                                         vl,
+                                         0,
                                          kernel,
                                          kernel_factor,
                                          remaining_col_indices,
@@ -2811,12 +2970,6 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
    */
   Vector<real_type> vk_abs(n);
   Vector<real_type> uk_abs(m);
-
-  /**
-   * Temporary row and column vectors for the previous step \f$l\f$.
-   */
-  Vector<RangeNumberType> vl(n);
-  Vector<RangeNumberType> ul(m);
 
   /**
    * The error threshold as the stopping condition.
@@ -3061,13 +3214,26 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       remaining_row_indices.remove(ik);
       remaining_col_indices.remove(jk);
 
-      if (ik == r)
+      // When the currently selected row is not the reference row, we transform
+      // the reference row vector into the remainder matrix of the current step.
+      if (ik != r)
+        vr.add(-uk(r), vk);
+
+      // When the currently selected row happens to be the reference row or the
+      // above transformed reference row vector is zero, the reference row
+      // vector should be reselected.
+      if (ik == r || LinAlg::is_all_zero(vr))
         {
           /**
            * When the index of the selected row is the same as that of the
            * reference row, reselect a reference row.
            */
           r = random_select_ref_row(vr,
+                                    u_mat,
+                                    v_mat,
+                                    ul,
+                                    vl,
+                                    k,
                                     kernel,
                                     kernel_factor,
                                     remaining_row_indices,
@@ -3115,26 +3281,6 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
 
               return;
             }
-          else
-            {
-              for (unsigned int l = 1; l <= k; l++)
-                {
-                  /**
-                   * Extract the previous cross.
-                   */
-                  u_mat.get_column(l - 1, ul);
-                  v_mat.get_column(l - 1, vl);
-
-                  vr.add(-ul(r), vl);
-                }
-            }
-        }
-      else
-        {
-          /**
-           * Otherwise, update the values of the reference row vector.
-           */
-          vr.add(-uk(r), vk);
         }
 
       /**
@@ -3147,13 +3293,27 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                        return std::abs(val);
                      });
 
-      if (jk == c)
+      // When the currently selected column is not the reference column, we
+      // transform the reference column vector into the remainder matrix of the
+      // current step.
+      if (jk != c)
+        uc.add(-vk(c), uk);
+
+      // When the currently selected column happens to be the reference column
+      // or the above transformed reference column vector is zero, the reference
+      // column vector should be reselected.
+      if (jk == c || LinAlg::is_all_zero(uc))
         {
           /**
            * When the index of the selected column is the same as that of
            * the reference column, reselect a reference column.
            */
           c = random_select_ref_column(uc,
+                                       u_mat,
+                                       v_mat,
+                                       ul,
+                                       vl,
+                                       k,
                                        kernel,
                                        kernel_factor,
                                        remaining_col_indices,
@@ -3201,26 +3361,6 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
 
               return;
             }
-          else
-            {
-              for (unsigned int l = 1; l <= k; l++)
-                {
-                  /**
-                   * Extract the previous cross.
-                   */
-                  u_mat.get_column(l - 1, ul);
-                  v_mat.get_column(l - 1, vl);
-
-                  uc.add(-vl(c), ul);
-                }
-            }
-        }
-      else
-        {
-          /**
-           * Otherwise, update the values of the reference column vector.
-           */
-          uc.add(-vk(c), uk);
         }
 
       /**
@@ -3442,7 +3582,18 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   Vector<RangeNumberType> vr(n);
   Vector<RangeNumberType> uc(m);
 
+  /**
+   * Temporary row and column vectors for the previous step \f$l\f$.
+   */
+  Vector<RangeNumberType> vl(n);
+  Vector<RangeNumberType> ul(m);
+
   size_type r = random_select_ref_row(vr,
+                                      u_mat,
+                                      v_mat,
+                                      ul,
+                                      vl,
+                                      0,
                                       kernel,
                                       kernel_factor,
                                       mass_vmult_weq,
@@ -3476,6 +3627,11 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
     }
 
   size_type c = random_select_ref_column(uc,
+                                         u_mat,
+                                         v_mat,
+                                         ul,
+                                         vl,
+                                         0,
                                          kernel,
                                          kernel_factor,
                                          mass_vmult_weq,
@@ -3552,12 +3708,6 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
    */
   Vector<real_type> vk_abs(n);
   Vector<real_type> uk_abs(m);
-
-  /**
-   * Temporary row and column vectors for the previous step \f$l\f$.
-   */
-  Vector<RangeNumberType> vl(n);
-  Vector<RangeNumberType> ul(m);
 
   /**
    * The error threshold as the stopping condition.
@@ -3810,13 +3960,26 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       remaining_row_indices.remove(ik);
       remaining_col_indices.remove(jk);
 
-      if (ik == r)
+      // When the currently selected row is not the reference row, we transform
+      // the reference row vector into the remainder matrix of the current step.
+      if (ik != r)
+        vr.add(-uk(r), vk);
+
+      // When the currently selected row happens to be the reference row or the
+      // above transformed reference row vector is zero, the reference row
+      // vector should be reselected.
+      if (ik == r || LinAlg::is_all_zero(vr))
         {
           /**
            * When the index of the selected row is the same as that of the
            * reference row, reselect a reference row.
            */
           r = random_select_ref_row(vr,
+                                    u_mat,
+                                    v_mat,
+                                    ul,
+                                    vl,
+                                    k,
                                     kernel,
                                     kernel_factor,
                                     mass_vmult_weq,
@@ -3866,26 +4029,6 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
 
               return;
             }
-          else
-            {
-              for (unsigned int l = 1; l <= k; l++)
-                {
-                  /**
-                   * Extract the previous cross.
-                   */
-                  u_mat.get_column(l - 1, ul);
-                  v_mat.get_column(l - 1, vl);
-
-                  vr.add(-ul(r), vl);
-                }
-            }
-        }
-      else
-        {
-          /**
-           * Otherwise, update the values of the reference row vector.
-           */
-          vr.add(-uk(r), vk);
         }
 
       /**
@@ -3898,13 +4041,27 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                        return std::abs(val);
                      });
 
-      if (jk == c)
+      // When the currently selected column is not the reference column, we
+      // transform the reference column vector into the remainder matrix of the
+      // current step.
+      if (jk != c)
+        uc.add(-vk(c), uk);
+
+      // When the currently selected column happens to be the reference column
+      // or the above transformed reference column vector is zero, the reference
+      // column vector should be reselected.
+      if (jk == c || LinAlg::is_all_zero(uc))
         {
           /**
            * When the index of the selected column is the same as that of
            * the reference column, reselect a reference column.
            */
           c = random_select_ref_column(uc,
+                                       u_mat,
+                                       v_mat,
+                                       ul,
+                                       vl,
+                                       k,
                                        kernel,
                                        kernel_factor,
                                        mass_vmult_weq,
@@ -3954,26 +4111,6 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
 
               return;
             }
-          else
-            {
-              for (unsigned int l = 1; l <= k; l++)
-                {
-                  /**
-                   * Extract the previous cross.
-                   */
-                  u_mat.get_column(l - 1, ul);
-                  v_mat.get_column(l - 1, vl);
-
-                  uc.add(-vl(c), ul);
-                }
-            }
-        }
-      else
-        {
-          /**
-           * Otherwise, update the values of the reference column vector.
-           */
-          uc.add(-vk(c), uk);
         }
 
       /**
@@ -4202,8 +4339,19 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                               sizeof(RangeNumberType) * m,
                               cudaHostRegisterDefault));
 
+  /**
+   * Temporary row and column vectors for the previous step \f$l\f$.
+   */
+  Vector<RangeNumberType> vl(n);
+  Vector<RangeNumberType> ul(m);
+
   size_type r = random_select_ref_row(sauter_task_buffer_for_vector,
                                       vr,
+                                      u_mat,
+                                      v_mat,
+                                      ul,
+                                      vl,
+                                      0,
                                       sauter_quad_far_field_params,
                                       kernel,
                                       kernel_factor,
@@ -4240,6 +4388,11 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
 
   size_type c = random_select_ref_column(sauter_task_buffer_for_vector,
                                          uc,
+                                         u_mat,
+                                         v_mat,
+                                         ul,
+                                         vl,
+                                         0,
                                          sauter_quad_far_field_params,
                                          kernel,
                                          kernel_factor,
@@ -4324,12 +4477,6 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
    */
   Vector<real_type> vk_abs(n);
   Vector<real_type> uk_abs(m);
-
-  /**
-   * Temporary row and column vectors for the previous step \f$l\f$.
-   */
-  Vector<RangeNumberType> vl(n);
-  Vector<RangeNumberType> ul(m);
 
   /**
    * The error threshold as the stopping condition.
@@ -4578,7 +4725,15 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       remaining_row_indices.remove(ik);
       remaining_col_indices.remove(jk);
 
-      if (ik == r)
+      // When the currently selected row is not the reference row, we transform
+      // the reference row vector into the remainder matrix of the current step.
+      if (ik != r)
+        vr.add(-uk(r), vk);
+
+      // When the currently selected row happens to be the reference row or the
+      // above transformed reference row vector is zero, the reference row
+      // vector should be reselected.
+      if (ik == r || LinAlg::is_all_zero(vr))
         {
           /**
            * When the index of the selected row is the same as that of the
@@ -4586,6 +4741,11 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            */
           r = random_select_ref_row(sauter_task_buffer_for_vector,
                                     vr,
+                                    u_mat,
+                                    v_mat,
+                                    ul,
+                                    vl,
+                                    k,
                                     sauter_quad_far_field_params,
                                     kernel,
                                     kernel_factor,
@@ -4638,26 +4798,6 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
 
               return;
             }
-          else
-            {
-              for (unsigned int l = 1; l <= k; l++)
-                {
-                  /**
-                   * Extract the previous cross.
-                   */
-                  u_mat.get_column(l - 1, ul);
-                  v_mat.get_column(l - 1, vl);
-
-                  vr.add(-ul(r), vl);
-                }
-            }
-        }
-      else
-        {
-          /**
-           * Otherwise, update the values of the reference row vector.
-           */
-          vr.add(-uk(r), vk);
         }
 
       /**
@@ -4670,7 +4810,16 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                        return std::abs(val);
                      });
 
-      if (jk == c)
+      // When the currently selected column is not the reference column, we
+      // transform the reference column vector into the remainder matrix of the
+      // current step.
+      if (jk != c)
+        uc.add(-vk(c), uk);
+
+      // When the currently selected column happens to be the reference column
+      // or the above transformed reference column vector is zero, the reference
+      // column vector should be reselected.
+      if (jk == c || LinAlg::is_all_zero(uc))
         {
           /**
            * When the index of the selected column is the same as that of
@@ -4678,6 +4827,11 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            */
           c = random_select_ref_column(sauter_task_buffer_for_vector,
                                        uc,
+                                       u_mat,
+                                       v_mat,
+                                       ul,
+                                       vl,
+                                       k,
                                        sauter_quad_far_field_params,
                                        kernel,
                                        kernel_factor,
@@ -4730,26 +4884,6 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
 
               return;
             }
-          else
-            {
-              for (unsigned int l = 1; l <= k; l++)
-                {
-                  /**
-                   * Extract the previous cross.
-                   */
-                  u_mat.get_column(l - 1, ul);
-                  v_mat.get_column(l - 1, vl);
-
-                  uc.add(-vl(c), ul);
-                }
-            }
-        }
-      else
-        {
-          /**
-           * Otherwise, update the values of the reference column vector.
-           */
-          uc.add(-vk(c), uk);
         }
 
       /**
@@ -4997,8 +5131,19 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                               sizeof(RangeNumberType) * m,
                               cudaHostRegisterDefault));
 
+  /**
+   * Temporary row and column vectors for the previous step \f$l\f$.
+   */
+  Vector<RangeNumberType> vl(n);
+  Vector<RangeNumberType> ul(m);
+
   size_type r = random_select_ref_row(sauter_task_buffer_for_vector,
                                       vr,
+                                      u_mat,
+                                      v_mat,
+                                      ul,
+                                      vl,
+                                      0,
                                       sauter_quad_far_field_params,
                                       kernel,
                                       kernel_factor,
@@ -5037,6 +5182,11 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
 
   size_type c = random_select_ref_column(sauter_task_buffer_for_vector,
                                          uc,
+                                         u_mat,
+                                         v_mat,
+                                         ul,
+                                         vl,
+                                         0,
                                          sauter_quad_far_field_params,
                                          kernel,
                                          kernel_factor,
@@ -5126,12 +5276,6 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
    */
   Vector<real_type> vk_abs(n);
   Vector<real_type> uk_abs(m);
-
-  /**
-   * Temporary row and column vectors for the previous step \f$l\f$.
-   */
-  Vector<RangeNumberType> vl(n);
-  Vector<RangeNumberType> ul(m);
 
   /**
    * The error threshold as the stopping condition.
@@ -5388,7 +5532,15 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       remaining_row_indices.remove(ik);
       remaining_col_indices.remove(jk);
 
-      if (ik == r)
+      // When the currently selected row is not the reference row, we transform
+      // the reference row vector into the remainder matrix of the current step.
+      if (ik != r)
+        vr.add(-uk(r), vk);
+
+      // When the currently selected row happens to be the reference row or the
+      // above transformed reference row vector is zero, the reference row
+      // vector should be reselected.
+      if (ik == r || LinAlg::is_all_zero(vr))
         {
           /**
            * When the index of the selected row is the same as that of the
@@ -5396,6 +5548,11 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            */
           r = random_select_ref_row(sauter_task_buffer_for_vector,
                                     vr,
+                                    u_mat,
+                                    v_mat,
+                                    ul,
+                                    vl,
+                                    k,
                                     sauter_quad_far_field_params,
                                     kernel,
                                     kernel_factor,
@@ -5450,26 +5607,6 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
 
               return;
             }
-          else
-            {
-              for (unsigned int l = 1; l <= k; l++)
-                {
-                  /**
-                   * Extract the previous cross.
-                   */
-                  u_mat.get_column(l - 1, ul);
-                  v_mat.get_column(l - 1, vl);
-
-                  vr.add(-ul(r), vl);
-                }
-            }
-        }
-      else
-        {
-          /**
-           * Otherwise, update the values of the reference row vector.
-           */
-          vr.add(-uk(r), vk);
         }
 
       /**
@@ -5482,7 +5619,16 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                        return std::abs(val);
                      });
 
-      if (jk == c)
+      // When the currently selected column is not the reference column, we
+      // transform the reference column vector into the remainder matrix of the
+      // current step.
+      if (jk != c)
+        uc.add(-vk(c), uk);
+
+      // When the currently selected column happens to be the reference column
+      // or the above transformed reference column vector is zero, the reference
+      // column vector should be reselected.
+      if (jk == c || LinAlg::is_all_zero(uc))
         {
           /**
            * When the index of the selected column is the same as that of
@@ -5490,6 +5636,11 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            */
           c = random_select_ref_column(sauter_task_buffer_for_vector,
                                        uc,
+                                       u_mat,
+                                       v_mat,
+                                       ul,
+                                       vl,
+                                       k,
                                        sauter_quad_far_field_params,
                                        kernel,
                                        kernel_factor,
@@ -5544,26 +5695,6 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
 
               return;
             }
-          else
-            {
-              for (unsigned int l = 1; l <= k; l++)
-                {
-                  /**
-                   * Extract the previous cross.
-                   */
-                  u_mat.get_column(l - 1, ul);
-                  v_mat.get_column(l - 1, vl);
-
-                  uc.add(-vl(c), ul);
-                }
-            }
-        }
-      else
-        {
-          /**
-           * Otherwise, update the values of the reference column vector.
-           */
-          uc.add(-vk(c), uk);
         }
 
       /**
@@ -5718,7 +5849,14 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
   Vector<RangeNumberType> vr(n);
   Vector<RangeNumberType> uc(m);
 
-  size_type r = random_select_ref_row(vr, A, remaining_row_indices, m, m);
+  /**
+   * Temporary row and column vectors for the previous step \f$l\f$.
+   */
+  Vector<RangeNumberType> vl(n);
+  Vector<RangeNumberType> ul(m);
+
+  size_type r = random_select_ref_row(
+    vr, u_mat, v_mat, ul, vl, 0, A, remaining_row_indices, m, m);
 
   if (r == m)
     {
@@ -5728,7 +5866,8 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
       return;
     }
 
-  size_type c = random_select_ref_column(uc, A, remaining_col_indices, n, n);
+  size_type c = random_select_ref_column(
+    uc, u_mat, v_mat, ul, vl, 0, A, remaining_col_indices, n, n);
 
   if (c == n)
     {
@@ -5782,12 +5921,6 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
    */
   Vector<real_type> vk_abs(n);
   Vector<real_type> uk_abs(m);
-
-  /**
-   * Temporary row and column vectors for the previous step \f$l\f$.
-   */
-  Vector<RangeNumberType> vl(n);
-  Vector<RangeNumberType> ul(m);
 
   /**
    * Start the ACA+ iteration from \f$k=1\f$.
@@ -5946,13 +6079,22 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
       remaining_row_indices.remove(ik);
       remaining_col_indices.remove(jk);
 
-      if (ik == r)
+      // When the currently selected row is not the reference row, we transform
+      // the reference row vector into the remainder matrix of the current step.
+      if (ik != r)
+        vr.add(-uk(r), vk);
+
+      // When the currently selected row happens to be the reference row or the
+      // above transformed reference row vector is zero, the reference row
+      // vector should be reselected.
+      if (ik == r || LinAlg::is_all_zero(vr))
         {
           /**
            * When the index of the selected row is the same as that of the
            * reference row, reselect a reference row.
            */
-          r = random_select_ref_row(vr, A, remaining_row_indices, r, m);
+          r = random_select_ref_row(
+            vr, u_mat, v_mat, ul, vl, k, A, remaining_row_indices, r, m);
 
           if (r == m)
             {
@@ -5979,26 +6121,6 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
 
               return;
             }
-          else
-            {
-              for (unsigned int l = 1; l <= k; l++)
-                {
-                  /**
-                   * Extract the previous cross.
-                   */
-                  u_mat.get_column(l - 1, ul);
-                  v_mat.get_column(l - 1, vl);
-
-                  vr.add(-ul(r), vl);
-                }
-            }
-        }
-      else
-        {
-          /**
-           * Otherwise, update the values of the reference row vector.
-           */
-          vr.add(-uk(r), vk);
         }
 
       /**
@@ -6011,13 +6133,23 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
                        return std::abs(val);
                      });
 
-      if (jk == c)
+      // When the currently selected column is not the reference column, we
+      // transform the reference column vector into the remainder matrix of the
+      // current step.
+      if (jk != c)
+        uc.add(-vk(c), uk);
+
+      // When the currently selected column happens to be the reference column
+      // or the above transformed reference column vector is zero, the reference
+      // column vector should be reselected.
+      if (jk == c || LinAlg::is_all_zero(uc))
         {
           /**
            * When the index of the selected column is the same as that of
            * the reference column, reselect a reference column.
            */
-          c = random_select_ref_column(uc, A, remaining_col_indices, c, n);
+          c = random_select_ref_column(
+            uc, u_mat, v_mat, ul, vl, k, A, remaining_col_indices, c, n);
 
           if (c == n)
             {
@@ -6044,26 +6176,6 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
 
               return;
             }
-          else
-            {
-              for (unsigned int l = 1; l <= k; l++)
-                {
-                  /**
-                   * Extract the previous cross.
-                   */
-                  u_mat.get_column(l - 1, ul);
-                  v_mat.get_column(l - 1, vl);
-
-                  uc.add(-vl(c), ul);
-                }
-            }
-        }
-      else
-        {
-          /**
-           * Otherwise, update the values of the reference column vector.
-           */
-          uc.add(-vk(c), uk);
         }
 
       /**
