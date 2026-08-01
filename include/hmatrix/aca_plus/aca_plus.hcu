@@ -33,6 +33,7 @@
 
 #include <cuda_runtime.h>
 #include <nvtx3/nvToolsExt.h>
+#include <tbb/enumerable_thread_specific.h>
 #include <tbb/tbb.h>
 
 #include <algorithm>
@@ -48,6 +49,7 @@
 #include <utility>
 #include <vector>
 
+#include "aca_thread_context.h"
 #include "bem/cell_neighboring_type.h"
 #include "bem/cu_bem_values.hcu"
 #include "config.h"
@@ -7893,6 +7895,7 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
  * \mynote{This function is to be used for TBB parallelization.}
  *
  * @param range
+ * @param aca_thread_context_far_field
  * @param hmat_params
  * @param sauter_quad_far_field_params
  * @param kernel
@@ -7900,8 +7903,6 @@ fill_far_field_hmatrix_leaf_node_with_aca_plus(
  * @param kx_dof_to_cell_topo
  * @param ky_dof_to_cell_topo
  * @param bem_values
- * @param kx_dof_handler
- * @param ky_dof_handler
  * @param kx_mapping
  * @param ky_mapping
  * @param enable_build_symmetric_hmat Flag indicating whether symmetric
@@ -7917,7 +7918,10 @@ void
 fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
   const tbb::blocked_range<
     typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
-                               &range,
+    &range,
+  tbb::enumerable_thread_specific<
+    ACAThreadContext<dim, spacedim, RangeNumberType, KernelNumberType>>
+                               &aca_thread_context_far_field,
   const ConfHMatrix            &hmat_params,
   const ConfSauterQuadFarField &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
@@ -7933,8 +7937,6 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
     dim,
     spacedim,
     typename numbers::NumberTraits<RangeNumberType>::real_type> &bem_values_gpu,
-  const DoFHandler<dim, spacedim>                               &kx_dof_handler,
-  const DoFHandler<dim, spacedim>                               &ky_dof_handler,
   const std::vector<types::global_dof_index>
     *kx_map_from_local_to_full_dof_indices,
   const std::vector<types::global_dof_index>
@@ -7954,29 +7956,9 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
       real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
-  // Define @p PairCellWiseScratchDataForHMatrixFarField and
-  // @p PairCellWisePerTaskData which are local to the current working thread.
-  // This is mandatory because each current working thread should have its own
-  // copy of these data.
-  thread_local PairCellWiseScratchDataForHMatrixFarField<dim,
-                                                         spacedim,
-                                                         KernelNumberType>
-    scratch_data(kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings);
-  thread_local PairCellWisePerTaskData<dim, spacedim> copy_data(
-    kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
-
-  // Create thread local task buffer for computing vector entries.
-  thread_local HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
-    dim,
-    spacedim,
-    DeviceNumberType<RangeNumberType>,
-    DeviceNumberType<KernelNumberType>>
-    sauter_task_buffer_for_vector(
-      sauter_quad_far_field_params.vector_entry_num_in_task_buffer,
-      kx_dof_to_cell_topo.max_cells_per_dof,
-      ky_dof_to_cell_topo.max_cells_per_dof,
-      bem_values,
-      scratch_data.cuda_stream_handle);
+  typename tbb::enumerable_thread_specific<
+    ACAThreadContext<dim, spacedim, RangeNumberType, KernelNumberType>>::
+    reference aca_thread_context_local = aca_thread_context_far_field.local();
 
   for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
          iter = range.begin();
@@ -7984,7 +7966,7 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
        iter++)
     {
       fill_far_field_hmatrix_leaf_node_with_aca_plus(
-        sauter_task_buffer_for_vector,
+        aca_thread_context_local.sauter_task_buffer_for_vector,
         (*iter),
         hmat_params,
         sauter_quad_far_field_params,
@@ -8001,8 +7983,8 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
         mappings,
         material_id_to_mapping_index,
         global_to_local_cell_index_map,
-        scratch_data,
-        copy_data,
+        aca_thread_context_local.scratch_data,
+        aca_thread_context_local.copy_data,
         enable_build_symmetric_hmat);
     }
 }
@@ -8016,6 +7998,7 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
  * hyper-singular matrix with the stabilization term.}
  *
  * @param range
+ * @param aca_thread_context_far_field
  * @param hmat_params
  * @param sauter_quad_far_field_params
  * @param kernel
@@ -8025,8 +8008,6 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
  * @param kx_dof_to_cell_topo
  * @param ky_dof_to_cell_topo
  * @param bem_values
- * @param kx_dof_handler
- * @param ky_dof_handler
  * @param kx_dof_i2e_numbering
  * @param ky_dof_i2e_numbering
  * @param kx_mapping
@@ -8043,7 +8024,10 @@ void
 fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
   const tbb::blocked_range<
     typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
-                               &range,
+    &range,
+  tbb::enumerable_thread_specific<
+    ACAThreadContext<dim, spacedim, RangeNumberType, KernelNumberType>>
+                               &aca_thread_context_far_field,
   const ConfHMatrix            &hmat_params,
   const ConfSauterQuadFarField &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
@@ -8061,8 +8045,6 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
     dim,
     spacedim,
     typename numbers::NumberTraits<RangeNumberType>::real_type> &bem_values_gpu,
-  const DoFHandler<dim, spacedim>                               &kx_dof_handler,
-  const DoFHandler<dim, spacedim>                               &ky_dof_handler,
   const std::vector<types::global_dof_index>
     *kx_map_from_local_to_full_dof_indices,
   const std::vector<types::global_dof_index>
@@ -8082,29 +8064,9 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
       real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
-  // Define @p PairCellWiseScratchDataForHMatrixFarField and
-  // @p PairCellWisePerTaskData which are local to the current working thread.
-  // This is mandatory because each current working thread should have its own
-  // copy of these data.
-  thread_local PairCellWiseScratchDataForHMatrixFarField<dim,
-                                                         spacedim,
-                                                         KernelNumberType>
-    scratch_data(kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings);
-  thread_local PairCellWisePerTaskData<dim, spacedim> copy_data(
-    kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
-
-  // Create thread local task buffer for computing vector entries.
-  thread_local HierBEM::CUDAWrappers::SauterQuadratureTaskBufferForVector<
-    dim,
-    spacedim,
-    DeviceNumberType<RangeNumberType>,
-    DeviceNumberType<KernelNumberType>>
-    sauter_task_buffer_for_vector(
-      sauter_quad_far_field_params.vector_entry_num_in_task_buffer,
-      kx_dof_to_cell_topo.max_cells_per_dof,
-      ky_dof_to_cell_topo.max_cells_per_dof,
-      bem_values,
-      scratch_data.cuda_stream_handle);
+  typename tbb::enumerable_thread_specific<
+    ACAThreadContext<dim, spacedim, RangeNumberType, KernelNumberType>>::
+    reference aca_thread_context_local = aca_thread_context_far_field.local();
 
   for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
          iter = range.begin();
@@ -8112,7 +8074,7 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
        iter++)
     {
       fill_far_field_hmatrix_leaf_node_with_aca_plus(
-        sauter_task_buffer_for_vector,
+        aca_thread_context_local.sauter_task_buffer_for_vector,
         (*iter),
         hmat_params,
         sauter_quad_far_field_params,
@@ -8131,8 +8093,8 @@ fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
         mappings,
         material_id_to_mapping_index,
         global_to_local_cell_index_map,
-        scratch_data,
-        copy_data,
+        aca_thread_context_local.scratch_data,
+        aca_thread_context_local.copy_data,
         enable_build_symmetric_hmat);
     }
 }
@@ -9381,6 +9343,24 @@ fill_hmatrix_with_aca_plus_smp(
       HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_far_field_nodes");
 #endif
 
+      // Create thread local data, including task buffer for assembling a vector
+      // in a far field block, scratch data and copy data.
+      tbb::enumerable_thread_specific<
+        ACAThreadContext<dim, spacedim, RangeNumberType, KernelNumberType>>
+        aca_thread_context_far_field([&] {
+          return ACAThreadContext<dim,
+                                  spacedim,
+                                  RangeNumberType,
+                                  KernelNumberType>(
+            kx_dof_handler.get_fe(),
+            ky_dof_handler.get_fe(),
+            sauter_quad_far_field_params.vector_entry_num_in_task_buffer,
+            kx_dof_to_cell_topo.max_cells_per_dof,
+            ky_dof_to_cell_topo.max_cells_per_dof,
+            mappings,
+            bem_values);
+        });
+
       tbb::parallel_for(
         tbb::blocked_range<
           typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>(
@@ -9395,6 +9375,7 @@ fill_hmatrix_with_aca_plus_smp(
             KernelFunctionType,
             RangeNumberType,
             KernelNumberType>(range,
+                              aca_thread_context_far_field,
                               hmat_params,
                               sauter_quad_far_field_params,
                               kernel,
@@ -9403,8 +9384,6 @@ fill_hmatrix_with_aca_plus_smp(
                               ky_dof_to_cell_topo,
                               bem_values,
                               bem_values_gpu,
-                              kx_dof_handler,
-                              ky_dof_handler,
                               kx_map_from_local_to_full_dof_indices,
                               ky_map_from_local_to_full_dof_indices,
                               kx_dof_i2e_numbering,
@@ -9907,6 +9886,24 @@ fill_hmatrix_with_aca_plus_smp(
       HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_far_field_nodes");
 #endif
 
+      // Create thread local data, including task buffer for assembling a vector
+      // in a far field block, scratch data and copy data.
+      tbb::enumerable_thread_specific<
+        ACAThreadContext<dim, spacedim, RangeNumberType, KernelNumberType>>
+        aca_thread_context_far_field([&] {
+          return ACAThreadContext<dim,
+                                  spacedim,
+                                  RangeNumberType,
+                                  KernelNumberType>(
+            kx_dof_handler.get_fe(),
+            ky_dof_handler.get_fe(),
+            sauter_quad_far_field_params.vector_entry_num_in_task_buffer,
+            kx_dof_to_cell_topo.max_cells_per_dof,
+            ky_dof_to_cell_topo.max_cells_per_dof,
+            mappings,
+            bem_values);
+        });
+
       tbb::parallel_for(
         tbb::blocked_range<
           typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>(
@@ -9921,6 +9918,7 @@ fill_hmatrix_with_aca_plus_smp(
             KernelFunctionType,
             RangeNumberType,
             KernelNumberType>(range,
+                              aca_thread_context_far_field,
                               hmat_params,
                               sauter_quad_far_field_params,
                               kernel,
@@ -9931,8 +9929,6 @@ fill_hmatrix_with_aca_plus_smp(
                               ky_dof_to_cell_topo,
                               bem_values,
                               bem_values_gpu,
-                              kx_dof_handler,
-                              ky_dof_handler,
                               kx_map_from_local_to_full_dof_indices,
                               ky_map_from_local_to_full_dof_indices,
                               kx_dof_i2e_numbering,
@@ -10412,6 +10408,24 @@ fill_hmatrix_with_aca_plus_smp(
       HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_far_field_nodes");
 #endif
 
+      // Create thread local data, including task buffer for assembling a vector
+      // in a far field block, scratch data and copy data.
+      tbb::enumerable_thread_specific<
+        ACAThreadContext<dim, spacedim, RangeNumberType, KernelNumberType>>
+        aca_thread_context_far_field([&] {
+          return ACAThreadContext<dim,
+                                  spacedim,
+                                  RangeNumberType,
+                                  KernelNumberType>(
+            kx_dof_handler.get_fe(),
+            ky_dof_handler.get_fe(),
+            sauter_quad_far_field_params.vector_entry_num_in_task_buffer,
+            kx_dof_to_cell_topo.max_cells_per_dof,
+            ky_dof_to_cell_topo.max_cells_per_dof,
+            mappings,
+            bem_values);
+        });
+
       tbb::parallel_for(
         tbb::blocked_range<
           typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>(
@@ -10426,6 +10440,7 @@ fill_hmatrix_with_aca_plus_smp(
             KernelFunctionType,
             RangeNumberType,
             KernelNumberType>(range,
+                              aca_thread_context_far_field,
                               hmat_params,
                               sauter_quad_far_field_params,
                               kernel,
@@ -10434,8 +10449,6 @@ fill_hmatrix_with_aca_plus_smp(
                               ky_dof_to_cell_topo,
                               bem_values,
                               bem_values_gpu,
-                              kx_dof_handler,
-                              ky_dof_handler,
                               kx_map_from_local_to_full_dof_indices,
                               ky_map_from_local_to_full_dof_indices,
                               kx_dof_i2e_numbering,
