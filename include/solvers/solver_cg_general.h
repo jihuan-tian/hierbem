@@ -114,6 +114,15 @@ SolverCGGeneral<VectorType>::solve(const MatrixType         &A,
               << numbers::NumberTraits<Number>::abs(rho0) << std::endl;
     }
 
+  // It is possible that the initial guess is already the result, so we check it
+  // here.
+  if (numbers::NumberTraits<Number>::abs(rho) <=
+      control.tolerance() * numbers::NumberTraits<Number>::abs(rho0))
+    {
+      // CG is convergent.
+      return;
+    }
+
   unsigned int i = 1;
   for (; i <= control.max_steps(); i++)
     {
