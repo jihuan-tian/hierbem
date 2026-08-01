@@ -9332,13 +9332,12 @@ fill_hmatrix_with_aca_plus_smp(
    * @internal Second stage: fill far field \hmatrix nodes by applying the
    * parallelization only to applying Sauter quadrature.
    */
-  timer.start();
-
   std::vector<HMatrix<spacedim, RangeNumberType> *> &far_field_leaf_set =
     hmat.get_far_field_leaf_set();
 
   if (far_field_leaf_set.size() > 0)
     {
+      timer.start();
 #if ENABLE_NVTX == 1
       HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_far_field_nodes");
 #endif
@@ -9394,13 +9393,13 @@ fill_hmatrix_with_aca_plus_smp(
                               enable_build_symmetric_hmat);
         },
         tbb::auto_partitioner());
-    }
 
-  timer.stop();
+      timer.stop();
 #if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
-  hmat_profile->far_field_total_time = timer.last_wall_time();
+      hmat_profile->far_field_total_time = timer.last_wall_time();
 #endif
-  print_wall_time(deallog, timer, "build far field H-matrix nodes");
+      print_wall_time(deallog, timer, "build far field H-matrix nodes");
+    }
 
   /**
    * Release BEM values on the GPU device.
@@ -9875,13 +9874,12 @@ fill_hmatrix_with_aca_plus_smp(
    * @internal Second stage: fill far field \hmatrix nodes by applying the
    * parallelization only to applying Sauter quadrature.
    */
-  timer.start();
-
   std::vector<HMatrix<spacedim, RangeNumberType> *> &far_field_leaf_set =
     hmat.get_far_field_leaf_set();
 
   if (far_field_leaf_set.size() > 0)
     {
+      timer.start();
 #if ENABLE_NVTX == 1
       HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_far_field_nodes");
 #endif
@@ -9939,13 +9937,13 @@ fill_hmatrix_with_aca_plus_smp(
                               enable_build_symmetric_hmat);
         },
         tbb::auto_partitioner());
-    }
 
-  timer.stop();
+      timer.stop();
 #if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
-  hmat_profile->far_field_total_time = timer.last_wall_time();
+      hmat_profile->far_field_total_time = timer.last_wall_time();
 #endif
-  print_wall_time(deallog, timer, "build far field H-matrix nodes");
+      print_wall_time(deallog, timer, "build far field H-matrix nodes");
+    }
 
   /**
    * Release BEM values on the GPU device.
@@ -10397,13 +10395,12 @@ fill_hmatrix_with_aca_plus_smp(
    * @internal Second stage: fill far field \hmatrix nodes by applying the
    * parallelization only to applying Sauter quadrature.
    */
-  timer.start();
-
   std::vector<HMatrix<spacedim, RangeNumberType> *> &far_field_leaf_set =
     hmat.get_far_field_leaf_set();
 
   if (far_field_leaf_set.size() > 0)
     {
+      timer.start();
 #if ENABLE_NVTX == 1
       HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_far_field_nodes");
 #endif
@@ -10459,13 +10456,13 @@ fill_hmatrix_with_aca_plus_smp(
                               enable_build_symmetric_hmat);
         },
         tbb::auto_partitioner());
-    }
 
-  timer.stop();
+      timer.stop();
 #if ENABLE_HMAT_ASSEMBLY_PROFILE == 1
-  hmat_profile->far_field_total_time = timer.last_wall_time();
+      hmat_profile->far_field_total_time = timer.last_wall_time();
 #endif
-  print_wall_time(deallog, timer, "build far field H-matrix nodes");
+      print_wall_time(deallog, timer, "build far field H-matrix nodes");
+    }
 
   /**
    * Release BEM values on the GPU device.
