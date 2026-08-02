@@ -1104,6 +1104,17 @@ public:
   vmult_add(Vector<Number> &w, const Vector<Number> &v) const;
 
   /**
+   * Matrix-vector multiplication with adding and scaling, i.e. <code>w = w +
+   * alpha*A*v</code>. Only the first n columns of A are used.
+   */
+  template <typename Number2>
+  void
+  vmult_add(Vector<Number>       &w,
+            const size_type       n,
+            const Number2         alpha,
+            const Vector<Number> &v) const;
+
+  /**
    * Matrix-vector multiplication with the matrix applied complex conjugation.
    */
   void
@@ -2949,7 +2960,7 @@ LAPACKFullMatrixExt<Number>::get_row(const size_type row_index,
 
   AssertIndexRange(row_index, this->m());
 
-  row_values.reinit(n_cols);
+  row_values.reinit(n_cols, true);
 
   for (size_type j = 0; j < n_cols; j++)
     {
@@ -2966,7 +2977,7 @@ LAPACKFullMatrixExt<Number>::get_column(const size_type col_index,
   const size_type n_rows = this->m();
   AssertIndexRange(col_index, this->n());
 
-  col_values.reinit(n_rows);
+  col_values.reinit(n_rows, true);
 
   for (size_type i = 0; i < n_rows; i++)
     {
@@ -5207,6 +5218,27 @@ LAPACKFullMatrixExt<Number>::vmult_add(Vector<Number>       &w,
                                        const Vector<Number> &v) const
 {
   vmult(w, v, true);
+}
+
+
+template <typename Number>
+template <typename Number2>
+void
+LAPACKFullMatrixExt<Number>::vmult_add(Vector<Number>       &w,
+                                       const size_type       n,
+                                       const Number2         alpha,
+                                       const Vector<Number> &v) const
+{
+  Assert(n > 0 && n <= this->n(), ExcInternalError());
+
+  LAPACKHelpers::gemv_helper(LAPACKSupport::N,
+                             alpha,
+                             this->m(),
+                             n,
+                             this->values,
+                             v.data(),
+                             Number(1.0),
+                             w.data());
 }
 
 

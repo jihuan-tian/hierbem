@@ -1056,7 +1056,6 @@ random_select_ref_row(
   const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
   const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
   Vector<RangeNumberType>                    &ul,
-  Vector<RangeNumberType>                    &vl,
   const unsigned int                          current_aca_step,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                              &kernel,
@@ -1106,6 +1105,7 @@ random_select_ref_row(
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
   AssertDimension(row_vector.size(), col_dof_indices.size());
+  AssertDimension(ul.size(), u_mat.m());
 
   /**
    * The array index used to access the @p std::forward_list
@@ -1158,11 +1158,15 @@ random_select_ref_row(
 
           // Transform the row vector to that in the remainder matrix of the
           // current ACA step.
-          for (unsigned int l = 1; l <= current_aca_step; l++)
+          if (current_aca_step > 0)
             {
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
-              row_vector.add(-ul(next_ref_row_index), vl);
+              for (size_type l = 0; l < current_aca_step; l++)
+                ul(l) = u_mat(next_ref_row_index, l);
+
+              v_mat.vmult_add(row_vector,
+                              current_aca_step,
+                              RangeNumberType(-1.0),
+                              ul);
             }
 
           if (LinAlg::is_all_zero(row_vector))
@@ -1258,7 +1262,6 @@ random_select_ref_row(
   const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
   const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
   Vector<RangeNumberType>                    &ul,
-  Vector<RangeNumberType>                    &vl,
   const unsigned int                          current_aca_step,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
@@ -1310,6 +1313,7 @@ random_select_ref_row(
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
   AssertDimension(row_vector.size(), col_dof_indices.size());
+  AssertDimension(ul.size(), u_mat.m());
 
   /**
    * The array index used to access the @p std::forward_list
@@ -1363,11 +1367,15 @@ random_select_ref_row(
 
           // Transform the row vector to that in the remainder matrix of the
           // current ACA step.
-          for (unsigned int l = 1; l <= current_aca_step; l++)
+          if (current_aca_step > 0)
             {
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
-              row_vector.add(-ul(next_ref_row_index), vl);
+              for (size_type l = 0; l < current_aca_step; l++)
+                ul(l) = u_mat(next_ref_row_index, l);
+
+              v_mat.vmult_add(row_vector,
+                              current_aca_step,
+                              RangeNumberType(-1.0),
+                              ul);
             }
 
           if (LinAlg::is_all_zero(row_vector))
@@ -1433,7 +1441,6 @@ random_select_ref_row(
   const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
   const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
   Vector<RangeNumberType>                    &ul,
-  Vector<RangeNumberType>                    &vl,
   const unsigned int                          current_aca_step,
   const ConfSauterQuadFarField               &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
@@ -1480,6 +1487,7 @@ random_select_ref_row(
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
   AssertDimension(row_vector.size(), col_dof_indices.size());
+  AssertDimension(ul.size(), u_mat.m());
 
   /**
    * The array index used to access the @p std::forward_list
@@ -1532,11 +1540,15 @@ random_select_ref_row(
 
           // Transform the row vector to that in the remainder matrix of the
           // current ACA step.
-          for (unsigned int l = 1; l <= current_aca_step; l++)
+          if (current_aca_step > 0)
             {
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
-              row_vector.add(-ul(next_ref_row_index), vl);
+              for (size_type l = 0; l < current_aca_step; l++)
+                ul(l) = u_mat(next_ref_row_index, l);
+
+              v_mat.vmult_add(row_vector,
+                              current_aca_step,
+                              RangeNumberType(-1.0),
+                              ul);
             }
 
           if (LinAlg::is_all_zero(row_vector))
@@ -1602,7 +1614,6 @@ random_select_ref_row(
   const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
   const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
   Vector<RangeNumberType>                    &ul,
-  Vector<RangeNumberType>                    &vl,
   const unsigned int                          current_aca_step,
   const ConfSauterQuadFarField               &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
@@ -1651,6 +1662,7 @@ random_select_ref_row(
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
   AssertDimension(row_vector.size(), col_dof_indices.size());
+  AssertDimension(ul.size(), u_mat.m());
 
   /**
    * The array index used to access the @p std::forward_list
@@ -1705,11 +1717,15 @@ random_select_ref_row(
 
           // Transform the row vector to that in the remainder matrix of the
           // current ACA step.
-          for (unsigned int l = 1; l <= current_aca_step; l++)
+          if (current_aca_step > 0)
             {
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
-              row_vector.add(-ul(next_ref_row_index), vl);
+              for (size_type l = 0; l < current_aca_step; l++)
+                ul(l) = u_mat(next_ref_row_index, l);
+
+              v_mat.vmult_add(row_vector,
+                              current_aca_step,
+                              RangeNumberType(-1.0),
+                              ul);
             }
 
           if (LinAlg::is_all_zero(row_vector))
@@ -1779,13 +1795,14 @@ random_select_ref_row(Vector<RangeNumberType>                    &row_vector,
                       const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
                       const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
                       Vector<RangeNumberType>                    &ul,
-                      Vector<RangeNumberType>                    &vl,
                       const unsigned int current_aca_step,
                       const LAPACKFullMatrixExt<RangeNumberType> &A,
                       std::forward_list<size_type> &remaining_row_indices,
                       const size_type               current_ref_row_index,
                       const size_type               pass_the_end_ref_row_index)
 {
+  AssertDimension(ul.size(), u_mat.m());
+
   /**
    * The array index used to access the @p std::forward_list
    * @p remaining_row_indices.
@@ -1809,11 +1826,15 @@ random_select_ref_row(Vector<RangeNumberType>                    &row_vector,
 
           // Transform the row vector to that in the remainder matrix of the
           // current ACA step.
-          for (unsigned int l = 1; l <= current_aca_step; l++)
+          if (current_aca_step > 0)
             {
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
-              row_vector.add(-ul(next_ref_row_index), vl);
+              for (size_type l = 0; l < current_aca_step; l++)
+                ul(l) = u_mat(next_ref_row_index, l);
+
+              v_mat.vmult_add(row_vector,
+                              current_aca_step,
+                              RangeNumberType(-1.0),
+                              ul);
             }
 
           if (LinAlg::is_all_zero(row_vector))
@@ -1904,7 +1925,6 @@ random_select_ref_column(
   Vector<RangeNumberType>                    &col_vector,
   const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
   const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
-  Vector<RangeNumberType>                    &ul,
   Vector<RangeNumberType>                    &vl,
   const unsigned int                          current_aca_step,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
@@ -1955,6 +1975,7 @@ random_select_ref_column(
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
   AssertDimension(col_vector.size(), row_dof_indices.size());
+  AssertDimension(vl.size(), v_mat.m());
 
   /**
    * The array index used to access the @p std::forward_list
@@ -2006,11 +2027,15 @@ random_select_ref_column(
 
           // Transform the column vector to that in the remainder matrix of the
           // current ACA step.
-          for (unsigned int l = 1; l <= current_aca_step; l++)
+          if (current_aca_step > 0)
             {
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
-              col_vector.add(-vl(next_ref_col_index), ul);
+              for (size_type l = 0; l < current_aca_step; l++)
+                vl(l) = v_mat(next_ref_col_index, l);
+
+              u_mat.vmult_add(col_vector,
+                              current_aca_step,
+                              RangeNumberType(-1.0),
+                              vl);
             }
 
           if (LinAlg::is_all_zero(col_vector))
@@ -2105,7 +2130,6 @@ random_select_ref_column(
   Vector<RangeNumberType>                    &col_vector,
   const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
   const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
-  Vector<RangeNumberType>                    &ul,
   Vector<RangeNumberType>                    &vl,
   const unsigned int                          current_aca_step,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
@@ -2158,6 +2182,7 @@ random_select_ref_column(
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
   AssertDimension(col_vector.size(), row_dof_indices.size());
+  AssertDimension(vl.size(), v_mat.m());
 
   /**
    * The array index used to access the @p std::forward_list
@@ -2211,11 +2236,15 @@ random_select_ref_column(
 
           // Transform the column vector to that in the remainder matrix of the
           // current ACA step.
-          for (unsigned int l = 1; l <= current_aca_step; l++)
+          if (current_aca_step > 0)
             {
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
-              col_vector.add(-vl(next_ref_col_index), ul);
+              for (size_type l = 0; l < current_aca_step; l++)
+                vl(l) = v_mat(next_ref_col_index, l);
+
+              u_mat.vmult_add(col_vector,
+                              current_aca_step,
+                              RangeNumberType(-1.0),
+                              vl);
             }
 
           if (LinAlg::is_all_zero(col_vector))
@@ -2281,7 +2310,6 @@ random_select_ref_column(
   Vector<RangeNumberType>                    &col_vector,
   const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
   const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
-  Vector<RangeNumberType>                    &ul,
   Vector<RangeNumberType>                    &vl,
   const unsigned int                          current_aca_step,
   const ConfSauterQuadFarField               &sauter_quad_far_field_params,
@@ -2329,6 +2357,7 @@ random_select_ref_column(
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
   AssertDimension(col_vector.size(), row_dof_indices.size());
+  AssertDimension(vl.size(), v_mat.m());
 
   /**
    * The array index used to access the @p std::forward_list
@@ -2381,11 +2410,15 @@ random_select_ref_column(
 
           // Transform the column vector to that in the remainder matrix of the
           // current ACA step.
-          for (unsigned int l = 1; l <= current_aca_step; l++)
+          if (current_aca_step > 0)
             {
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
-              col_vector.add(-vl(next_ref_col_index), ul);
+              for (size_type l = 0; l < current_aca_step; l++)
+                vl(l) = v_mat(next_ref_col_index, l);
+
+              u_mat.vmult_add(col_vector,
+                              current_aca_step,
+                              RangeNumberType(-1.0),
+                              vl);
             }
 
           if (LinAlg::is_all_zero(col_vector))
@@ -2451,7 +2484,6 @@ random_select_ref_column(
   Vector<RangeNumberType>                    &col_vector,
   const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
   const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
-  Vector<RangeNumberType>                    &ul,
   Vector<RangeNumberType>                    &vl,
   const unsigned int                          current_aca_step,
   const ConfSauterQuadFarField               &sauter_quad_far_field_params,
@@ -2501,6 +2533,7 @@ random_select_ref_column(
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
   AssertDimension(col_vector.size(), row_dof_indices.size());
+  AssertDimension(vl.size(), v_mat.m());
 
   /**
    * The array index used to access the @p std::forward_list
@@ -2555,11 +2588,15 @@ random_select_ref_column(
 
           // Transform the column vector to that in the remainder matrix of the
           // current ACA step.
-          for (unsigned int l = 1; l <= current_aca_step; l++)
+          if (current_aca_step > 0)
             {
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
-              col_vector.add(-vl(next_ref_col_index), ul);
+              for (size_type l = 0; l < current_aca_step; l++)
+                vl(l) = v_mat(next_ref_col_index, l);
+
+              u_mat.vmult_add(col_vector,
+                              current_aca_step,
+                              RangeNumberType(-1.0),
+                              vl);
             }
 
           if (LinAlg::is_all_zero(col_vector))
@@ -2628,7 +2665,6 @@ size_type
 random_select_ref_column(Vector<RangeNumberType>                    &col_vector,
                          const LAPACKFullMatrixExt<RangeNumberType> &u_mat,
                          const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
-                         Vector<RangeNumberType>                    &ul,
                          Vector<RangeNumberType>                    &vl,
                          const unsigned int current_aca_step,
                          const LAPACKFullMatrixExt<RangeNumberType> &A,
@@ -2636,6 +2672,8 @@ random_select_ref_column(Vector<RangeNumberType>                    &col_vector,
                          const size_type               current_ref_col_index,
                          const size_type pass_the_end_ref_col_index)
 {
+  AssertDimension(vl.size(), v_mat.m());
+
   /**
    * The array index used to access the @p std::forward_list
    * @p remaining_col_indices.
@@ -2659,11 +2697,15 @@ random_select_ref_column(Vector<RangeNumberType>                    &col_vector,
 
           // Transform the column vector to that in the remainder matrix of the
           // current ACA step.
-          for (unsigned int l = 1; l <= current_aca_step; l++)
+          if (current_aca_step > 0)
             {
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
-              col_vector.add(-vl(next_ref_col_index), ul);
+              for (size_type l = 0; l < current_aca_step; l++)
+                vl(l) = v_mat(next_ref_col_index, l);
+
+              u_mat.vmult_add(col_vector,
+                              current_aca_step,
+                              RangeNumberType(-1.0),
+                              vl);
             }
 
           if (LinAlg::is_all_zero(col_vector))
@@ -2860,7 +2902,6 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                       u_mat,
                                       v_mat,
                                       ul,
-                                      vl,
                                       0,
                                       kernel,
                                       kernel_factor,
@@ -2895,7 +2936,6 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   size_type c = random_select_ref_column(uc,
                                          u_mat,
                                          v_mat,
-                                         ul,
                                          vl,
                                          0,
                                          kernel,
@@ -3037,15 +3077,12 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
            * extracting vectors from @p v_mat or @p u_mat should be
            * \f$l-1\f$.}
            */
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                ul(l) = u_mat(ik, l);
 
-              vk.add(-ul(ik), vl);
+              v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
           /**
@@ -3090,15 +3127,12 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                  scratch_data_gpu,
                                  copy_data);
 
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                vl(l) = v_mat(jk, l);
 
-              uk.add(-vl(jk), ul);
+              u_mat.vmult_add(uk, k - 1, RangeNumberType(-1.0), vl);
             }
         }
       else
@@ -3131,15 +3165,12 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                  scratch_data_gpu,
                                  copy_data);
 
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                vl(l) = v_mat(jk, l);
 
-              uk.add(-vl(jk), ul);
+              u_mat.vmult_add(uk, k - 1, RangeNumberType(-1.0), vl);
             }
 
           /**
@@ -3178,15 +3209,12 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                               scratch_data_gpu,
                               copy_data);
 
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                ul(l) = u_mat(ik, l);
 
-              vk.add(-ul(ik), vl);
+              v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
           /**
@@ -3234,7 +3262,6 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                     u_mat,
                                     v_mat,
                                     ul,
-                                    vl,
                                     k,
                                     kernel,
                                     kernel_factor,
@@ -3313,7 +3340,6 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
           c = random_select_ref_column(uc,
                                        u_mat,
                                        v_mat,
-                                       ul,
                                        vl,
                                        k,
                                        kernel,
@@ -3594,7 +3620,6 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                       u_mat,
                                       v_mat,
                                       ul,
-                                      vl,
                                       0,
                                       kernel,
                                       kernel_factor,
@@ -3631,7 +3656,6 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   size_type c = random_select_ref_column(uc,
                                          u_mat,
                                          v_mat,
-                                         ul,
                                          vl,
                                          0,
                                          kernel,
@@ -3777,15 +3801,12 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
            * extracting vectors from @p v_mat or @p u_mat should be
            * \f$l-1\f$.}
            */
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                ul(l) = u_mat(ik, l);
 
-              vk.add(-ul(ik), vl);
+              v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
           /**
@@ -3832,15 +3853,12 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                  scratch_data_gpu,
                                  copy_data);
 
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                vl(l) = v_mat(jk, l);
 
-              uk.add(-vl(jk), ul);
+              u_mat.vmult_add(uk, k - 1, RangeNumberType(-1.0), vl);
             }
         }
       else
@@ -3875,15 +3893,12 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                  scratch_data_gpu,
                                  copy_data);
 
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                vl(l) = v_mat(jk, l);
 
-              uk.add(-vl(jk), ul);
+              u_mat.vmult_add(uk, k - 1, RangeNumberType(-1.0), vl);
             }
 
           /**
@@ -3924,15 +3939,12 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                               scratch_data_gpu,
                               copy_data);
 
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                ul(l) = u_mat(ik, l);
 
-              vk.add(-ul(ik), vl);
+              v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
           /**
@@ -3980,7 +3992,6 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                     u_mat,
                                     v_mat,
                                     ul,
-                                    vl,
                                     k,
                                     kernel,
                                     kernel_factor,
@@ -4061,7 +4072,6 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
           c = random_select_ref_column(uc,
                                        u_mat,
                                        v_mat,
-                                       ul,
                                        vl,
                                        k,
                                        kernel,
@@ -4352,7 +4362,6 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                       u_mat,
                                       v_mat,
                                       ul,
-                                      vl,
                                       0,
                                       sauter_quad_far_field_params,
                                       kernel,
@@ -4392,7 +4401,6 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                          uc,
                                          u_mat,
                                          v_mat,
-                                         ul,
                                          vl,
                                          0,
                                          sauter_quad_far_field_params,
@@ -4545,15 +4553,12 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            * extracting vectors from @p v_mat or @p u_mat should be
            * \f$l-1\f$.}
            */
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                ul(l) = u_mat(ik, l);
 
-              vk.add(-ul(ik), vl);
+              v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
           /**
@@ -4599,15 +4604,12 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                  scratch_data,
                                  copy_data);
 
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                vl(l) = v_mat(jk, l);
 
-              uk.add(-vl(jk), ul);
+              u_mat.vmult_add(uk, k - 1, RangeNumberType(-1.0), vl);
             }
         }
       else
@@ -4641,15 +4643,12 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                  scratch_data,
                                  copy_data);
 
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                vl(l) = v_mat(jk, l);
 
-              uk.add(-vl(jk), ul);
+              u_mat.vmult_add(uk, k - 1, RangeNumberType(-1.0), vl);
             }
 
           /**
@@ -4689,15 +4688,12 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                               scratch_data,
                               copy_data);
 
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                ul(l) = u_mat(ik, l);
 
-              vk.add(-ul(ik), vl);
+              v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
           /**
@@ -4746,7 +4742,6 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                     u_mat,
                                     v_mat,
                                     ul,
-                                    vl,
                                     k,
                                     sauter_quad_far_field_params,
                                     kernel,
@@ -4831,7 +4826,6 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                        uc,
                                        u_mat,
                                        v_mat,
-                                       ul,
                                        vl,
                                        k,
                                        sauter_quad_far_field_params,
@@ -5144,7 +5138,6 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                       u_mat,
                                       v_mat,
                                       ul,
-                                      vl,
                                       0,
                                       sauter_quad_far_field_params,
                                       kernel,
@@ -5186,7 +5179,6 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                          uc,
                                          u_mat,
                                          v_mat,
-                                         ul,
                                          vl,
                                          0,
                                          sauter_quad_far_field_params,
@@ -5346,15 +5338,12 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
            * extracting vectors from @p v_mat or @p u_mat should be
            * \f$l-1\f$.}
            */
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                ul(l) = u_mat(ik, l);
 
-              vk.add(-ul(ik), vl);
+              v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
           /**
@@ -5402,15 +5391,12 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                  scratch_data,
                                  copy_data);
 
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                vl(l) = v_mat(jk, l);
 
-              uk.add(-vl(jk), ul);
+              u_mat.vmult_add(uk, k - 1, RangeNumberType(-1.0), vl);
             }
         }
       else
@@ -5446,15 +5432,12 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                  scratch_data,
                                  copy_data);
 
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                vl(l) = v_mat(jk, l);
 
-              uk.add(-vl(jk), ul);
+              u_mat.vmult_add(uk, k - 1, RangeNumberType(-1.0), vl);
             }
 
           /**
@@ -5496,15 +5479,12 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                               scratch_data,
                               copy_data);
 
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                ul(l) = u_mat(ik, l);
 
-              vk.add(-ul(ik), vl);
+              v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
           /**
@@ -5553,7 +5533,6 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                     u_mat,
                                     v_mat,
                                     ul,
-                                    vl,
                                     k,
                                     sauter_quad_far_field_params,
                                     kernel,
@@ -5640,7 +5619,6 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                        uc,
                                        u_mat,
                                        v_mat,
-                                       ul,
                                        vl,
                                        k,
                                        sauter_quad_far_field_params,
@@ -5858,7 +5836,7 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
   Vector<RangeNumberType> ul(m);
 
   size_type r = random_select_ref_row(
-    vr, u_mat, v_mat, ul, vl, 0, A, remaining_row_indices, m, m);
+    vr, u_mat, v_mat, ul, 0, A, remaining_row_indices, m, m);
 
   if (r == m)
     {
@@ -5869,7 +5847,7 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
     }
 
   size_type c = random_select_ref_column(
-    uc, u_mat, v_mat, ul, vl, 0, A, remaining_col_indices, n, n);
+    uc, u_mat, v_mat, vl, 0, A, remaining_col_indices, n, n);
 
   if (c == n)
     {
@@ -5966,15 +5944,12 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
            * extracting vectors from @p v_mat or @p u_mat should be
            * \f$l-1\f$.}
            */
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                ul(l) = u_mat(ik, l);
 
-              vk.add(-ul(ik), vl);
+              v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
           /**
@@ -6001,15 +5976,12 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
            */
           A.get_column(jk, uk);
 
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                vl(l) = v_mat(jk, l);
 
-              uk.add(-vl(jk), ul);
+              u_mat.vmult_add(uk, k - 1, RangeNumberType(-1.0), vl);
             }
         }
       else
@@ -6024,15 +5996,12 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
            */
           A.get_column(jk, uk);
 
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                vl(l) = v_mat(jk, l);
 
-              uk.add(-vl(jk), ul);
+              u_mat.vmult_add(uk, k - 1, RangeNumberType(-1.0), vl);
             }
 
           /**
@@ -6053,15 +6022,12 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
            */
           A.get_row(ik, vk);
 
-          for (size_type l = 1; l < k; l++)
+          if (k > 1)
             {
-              /**
-               * Extract the previous cross.
-               */
-              u_mat.get_column(l - 1, ul);
-              v_mat.get_column(l - 1, vl);
+              for (size_type l = 0; l < k - 1; l++)
+                ul(l) = u_mat(ik, l);
 
-              vk.add(-ul(ik), vl);
+              v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
           /**
@@ -6096,7 +6062,7 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
            * reference row, reselect a reference row.
            */
           r = random_select_ref_row(
-            vr, u_mat, v_mat, ul, vl, k, A, remaining_row_indices, r, m);
+            vr, u_mat, v_mat, ul, k, A, remaining_row_indices, r, m);
 
           if (r == m)
             {
@@ -6151,7 +6117,7 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
            * the reference column, reselect a reference column.
            */
           c = random_select_ref_column(
-            uc, u_mat, v_mat, ul, vl, k, A, remaining_col_indices, c, n);
+            uc, u_mat, v_mat, vl, k, A, remaining_col_indices, c, n);
 
           if (c == n)
             {
