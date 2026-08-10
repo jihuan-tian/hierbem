@@ -128,7 +128,9 @@ public:
     std::map<EntityTag, Function<spacedim, RangeNumberType> *>;
 
 #pragma region ****Internal class ctor and dtor decls ****
-  Priv(const ConfHelmholtzAcousticBEM &bem_params);
+  Priv(const ConfHelmholtzAcousticBEM &bem_params,
+       const ConfSauterQuad           &sauter_quad_params,
+       const ConfLinearSolver         &linear_solver_params);
   Priv(const ConfHelmholtzAcousticBEM   &bem_params,
        const ConfHMatrix                &hmat_params,
        const ConfHMatrix                &hmat_preconditioner_params,
@@ -771,7 +773,9 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
-  Priv(const ConfHelmholtzAcousticBEM &bem_params)
+  Priv(const ConfHelmholtzAcousticBEM &bem_params,
+       const ConfSauterQuad           &sauter_quad_params,
+       const ConfLinearSolver         &linear_solver_params)
   : project_name_("default")
   , kappa_(bem_params.kappa)
   , fe_order_for_dirichlet_space_(bem_params.fe_order_for_dirichlet_space)
@@ -782,6 +786,8 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   , fe_for_neumann_space_(bem_params.fe_order_for_neumann_space)
   , use_hmat_(false)
   , cpu_serial_(false)
+  , sauter_quad_params_(sauter_quad_params)
+  , linear_solver_params_(linear_solver_params)
 {}
 
 template <int dim,

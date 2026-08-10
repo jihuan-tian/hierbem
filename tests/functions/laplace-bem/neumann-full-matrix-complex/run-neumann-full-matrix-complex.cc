@@ -97,10 +97,13 @@ run_neumann_full_matrix_complex(const bool is_serial)
   ConfLaplaceBEM bem_params;
   bem_params.problem_type        = ProblemType::NeumannBCProblem;
   bem_params.is_interior_problem = false;
+  ConfSauterQuad      sauter_quad_params;
+  ConfLinearSolver    linear_solver_params;
   ConfParallelization parallel_params;
 
   const bool is_interior_problem = false;
-  LaplaceBEM<dim, spacedim, std::complex<double>, double> bem(bem_params);
+  LaplaceBEM<dim, spacedim, std::complex<double>, double> bem(
+    bem_params, sauter_quad_params, linear_solver_params);
   bem.set_project_name("neumann-full-matrix-complex");
   bem.set_cpu_serial(is_serial);
 

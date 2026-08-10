@@ -268,8 +268,7 @@ main(int argc, char *argv[])
 
   LaplaceBEM<dim, spacedim> bem(bem_params,
                                 sauter_quad_params,
-                                linear_solver_params,
-                                parallel_params);
+                                linear_solver_params);
   bem.set_cpu_serial(!opts.run_in_parallel);
   if (opts.run_in_parallel)
     {

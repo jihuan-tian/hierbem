@@ -82,7 +82,9 @@ public:
    *
    * @param bem_params
    */
-  HelmholtzAcousticBEM(const ConfHelmholtzAcousticBEM &bem_params);
+  HelmholtzAcousticBEM(const ConfHelmholtzAcousticBEM &bem_params,
+                       const ConfSauterQuad           &sauter_quad_params,
+                       const ConfLinearSolver         &linear_solver_params);
 
   /**
    * @brief Constructor for solving Helmholtz acoustic problem using \hmatrix.

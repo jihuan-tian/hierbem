@@ -58,8 +58,12 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
-  HelmholtzAcousticBEM(const ConfHelmholtzAcousticBEM &bem_params)
-  : priv_(std::make_unique<Priv>(bem_params))
+  HelmholtzAcousticBEM(const ConfHelmholtzAcousticBEM &bem_params,
+                       const ConfSauterQuad           &sauter_quad_params,
+                       const ConfLinearSolver         &linear_solver_params)
+  : priv_(std::make_unique<Priv>(bem_params,
+                                 sauter_quad_params,
+                                 linear_solver_params))
 {
   priv_->initialize_memory_consumption_table_headers();
 }

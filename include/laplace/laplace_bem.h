@@ -71,10 +71,9 @@ public:
    *
    * @param bem_params
    */
-  LaplaceBEM(const ConfLaplaceBEM      &bem_params,
-             const ConfSauterQuad      &sauter_quad_params,
-             const ConfLinearSolver    &linear_solver_params,
-             const ConfParallelization &parallel_params);
+  LaplaceBEM(const ConfLaplaceBEM   &bem_params,
+             const ConfSauterQuad   &sauter_quad_params,
+             const ConfLinearSolver &linear_solver_params);
 
   /**
    * @brief Constructor for solving Laplace problem using \hmatrix.

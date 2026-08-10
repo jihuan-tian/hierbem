@@ -186,8 +186,7 @@ main(int argc, char *argv[])
 
     LaplaceBEM<dim, spacedim> bem(bem_params,
                                   conf_inst.sauter_quad,
-                                  conf_inst.linear_solver,
-                                  conf_inst.parallel);
+                                  conf_inst.linear_solver);
     bem.set_project_name(project_name);
 
     timer.stop();

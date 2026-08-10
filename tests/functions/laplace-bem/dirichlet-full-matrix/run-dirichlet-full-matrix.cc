@@ -77,9 +77,13 @@ run_dirichlet_full_matrix(const bool is_serial)
   ConfLaplaceBEM bem_params;
   bem_params.problem_type        = ProblemType::DirichletBCProblem;
   bem_params.is_interior_problem = true;
+  ConfSauterQuad      sauter_quad_params;
+  ConfLinearSolver    linear_solver_params;
   ConfParallelization parallel_params;
 
-  LaplaceBEM<dim, spacedim, double, double> bem(bem_params);
+  LaplaceBEM<dim, spacedim, double, double> bem(bem_params,
+                                                sauter_quad_params,
+                                                linear_solver_params);
   bem.set_project_name("dirichlet-full-matrix");
   bem.set_cpu_serial(is_serial);
 

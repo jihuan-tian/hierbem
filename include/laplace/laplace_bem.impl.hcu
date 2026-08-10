@@ -58,14 +58,12 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::LaplaceBEM(
-  const ConfLaplaceBEM      &bem_params,
-  const ConfSauterQuad      &sauter_quad_params,
-  const ConfLinearSolver    &linear_solver_params,
-  const ConfParallelization &parallel_params)
+  const ConfLaplaceBEM   &bem_params,
+  const ConfSauterQuad   &sauter_quad_params,
+  const ConfLinearSolver &linear_solver_params)
   : priv_(std::make_unique<Priv>(bem_params,
                                  sauter_quad_params,
-                                 linear_solver_params,
-                                 parallel_params))
+                                 linear_solver_params))
 {
   priv_->initialize_memory_consumption_table_headers();
 }

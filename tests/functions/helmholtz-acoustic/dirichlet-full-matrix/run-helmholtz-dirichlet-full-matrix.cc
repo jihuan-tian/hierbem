@@ -95,9 +95,13 @@ run_helmholtz_dirichlet_full_matrix(const unsigned int refinement)
   bem_params.kappa               = std::complex<double>(2.0, 0.);
   bem_params.problem_type        = ProblemType::DirichletBCProblem;
   bem_params.is_interior_problem = true;
+  ConfSauterQuad      sauter_quad_params;
+  ConfLinearSolver    linear_solver_params;
   ConfParallelization parallel_params;
 
-  HelmholtzAcousticBEM<dim, spacedim> bem(bem_params);
+  HelmholtzAcousticBEM<dim, spacedim> bem(bem_params,
+                                          sauter_quad_params,
+                                          linear_solver_params);
   bem.set_project_name("helmholtz-dirichlet-full-matrix");
   // Set TBB thread num.
   if (parallel_params.tbb_thread_num == -1)
