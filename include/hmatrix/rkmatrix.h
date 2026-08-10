@@ -1,4 +1,4 @@
-// Copyright (C) 2021-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2021-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -20,6 +20,7 @@
 #define HIERBEM_INCLUDE_HMATRIX_RKMATRIX_H_
 
 #include <deal.II/base/numbers.h>
+#include <deal.II/base/table.h>
 #include <deal.II/base/types.h>
 
 #include <deal.II/lac/full_matrix.h>
@@ -29,6 +30,7 @@
 
 #include <cmath>
 #include <complex>
+#include <cstring>
 #include <iostream>
 #include <map>
 #include <type_traits>
@@ -374,10 +376,10 @@ public:
    *   <dd>This method converts a full matrix to a rank-k matrix, which
    * implements the operator \f$\mathcal{T}_{r}^{\mathcal{R} \leftarrow
    * \mathcal{F}}\f$ in (7.2) in Hackbusch's \f$\mathcal{H}\f$-matrix book.
-   * The
-   * original full matrix \p will be modified since SVD will be applied to
+   * The original full matrix \p will be modified since SVD will be applied to
    * it.</dd>
    * </dl>
+   *
    * @param fixed_rank_k
    * @param M
    * @param C
@@ -408,6 +410,7 @@ public:
    *   <dt>Note</dt>
    *   <dd>This operation will not modify the full global matrix \p M.</dd>
    * </dl>
+   *
    * @param tau
    * @param sigma
    * @param fixed_rank_k
@@ -665,6 +668,13 @@ public:
   reinit(const size_type m_, const size_type n_, const size_type fixed_rank_k);
 
   /**
+   * Enlarge component matrices A and B to the specified number of columns.
+   * Existing data will be copied into the new matrices.
+   */
+  void
+  expand_columns(const size_type n_cols);
+
+  /**
    * Get the number of rows.
    * @return
    */
@@ -691,6 +701,9 @@ public:
    */
   size_type
   get_formal_rank() const;
+
+  void
+  set_formal_rank(const size_type r);
 
   /**
    * Get the reference to the component matrix \p A.
@@ -805,6 +818,19 @@ public:
    */
   void
   keep_first_n_columns(const size_type n_);
+
+  /**
+   * Compute the invalid rank value, which is used to initialize the member
+   * variable @p rank, when the actual rank is not computed yet.
+   */
+  static size_type
+  invalid_rank(const size_type m, const size_type n);
+
+  /**
+   * Check if the rank of the rank-k matrix is computed.
+   */
+  bool
+  is_rank_computed() const;
 
   /**
    * Truncate the RkMatrix to \p new_rank.
@@ -1130,6 +1156,16 @@ private:
   LAPACKFullMatrixExt<Number> B;
 
   /**
+   * Total number of rows.
+   */
+  size_type m;
+
+  /**
+   * Total number of columns
+   */
+  size_type n;
+
+  /**
    * Matrix rank, which is either the actual matrix rank or the minimum of \p m,
    * \p n and \p A.n (or \p B.n). Actually, this is an upper bound of the actual
    * matrix rank.
@@ -1139,18 +1175,13 @@ private:
   /**
    * Formal matrix rank, which is equal to the number of columns of \p A or \p
    * B, i.e. \p A.n or \p B.n.
+   *
+   *
+   * \mynote{It is possible that the formal rank is larger than the row or
+   * column size of the matrix block, which may occur during H-matrix addition
+   * without rank truncation.}
    */
   size_type formal_rank;
-
-  /**
-   * Total number of rows.
-   */
-  size_type m;
-
-  /**
-   * Total number of columns
-   */
-  size_type n;
 };
 
 
@@ -1158,10 +1189,10 @@ template <typename Number>
 RkMatrix<Number>::RkMatrix()
   : A(0, 0)
   , B(0, 0)
-  , rank(0)
-  , formal_rank(0)
   , m(0)
   , n(0)
+  , rank(0)
+  , formal_rank(0)
 {}
 
 
@@ -1171,10 +1202,10 @@ RkMatrix<Number>::RkMatrix(const size_type m_,
                            const size_type fixed_rank_k)
   : A()
   , B()
-  , rank(fixed_rank_k)
-  , formal_rank(fixed_rank_k)
   , m(m_)
   , n(n_)
+  , rank(invalid_rank(m, n))
+  , formal_rank(fixed_rank_k)
 {
   reinit(m, n, formal_rank);
 }
@@ -1185,10 +1216,10 @@ RkMatrix<Number>::RkMatrix(const size_type              fixed_rank_k,
                            LAPACKFullMatrixExt<Number> &M)
   : A()
   , B()
-  , rank(0)
-  , formal_rank(0)
   , m(M.m())
   , n(M.n())
+  , rank(0)
+  , formal_rank(0)
 {
   if (m == 0 || n == 0 || fixed_rank_k == 0)
     {
@@ -1253,10 +1284,10 @@ RkMatrix<Number>::RkMatrix(const size_type              fixed_rank_k,
                            LAPACKFullMatrixExt<Number> &D)
   : A()
   , B()
-  , rank(0)
-  , formal_rank(0)
   , m(M.m())
   , n(M.n())
+  , rank(0)
+  , formal_rank(0)
 {
   if (m == 0 || n == 0 || fixed_rank_k == 0)
     {
@@ -1330,10 +1361,10 @@ template <typename Number>
 RkMatrix<Number>::RkMatrix(LAPACKFullMatrixExt<Number> &M)
   : A()
   , B()
-  , rank(0)
-  , formal_rank(0)
   , m(M.m())
   , n(M.n())
+  , rank(0)
+  , formal_rank(0)
 {
   if (m == 0 || n == 0)
     {
@@ -1399,10 +1430,10 @@ RkMatrix<Number>::RkMatrix(
   const LAPACKFullMatrixExt<Number>            &M)
   : A()
   , B()
-  , rank(0)
-  , formal_rank(0)
   , m(tau_index_range[1] - tau_index_range[0])
   , n(sigma_index_range[1] - sigma_index_range[0])
+  , rank(0)
+  , formal_rank(0)
 {
   /**
    * Convert the matrix block \p M_b in full matrix format to rank-k matrix
@@ -1478,10 +1509,10 @@ RkMatrix<Number>::RkMatrix(
   const LAPACKFullMatrixExt<Number>            &M)
   : A()
   , B()
-  , rank(0)
-  , formal_rank(0)
   , m(tau_index_range[1] - tau_index_range[0])
   , n(sigma_index_range[1] - sigma_index_range[0])
+  , rank(0)
+  , formal_rank(0)
 {
   /**
    * Convert the matrix block \p M_b in full matrix format to rank-k matrix
@@ -1560,10 +1591,10 @@ RkMatrix<Number>::RkMatrix(
   const std::array<types::global_dof_index, 2> &M_sigma_index_range)
   : A()
   , B()
-  , rank(0)
-  , formal_rank(0)
   , m(tau_index_range[1] - tau_index_range[0])
   , n(sigma_index_range[1] - sigma_index_range[0])
+  , rank(0)
+  , formal_rank(0)
 {
   /**
    * Convert the matrix block \p M_b in full matrix format to rank-k
@@ -1644,10 +1675,10 @@ RkMatrix<Number>::RkMatrix(
   const std::array<types::global_dof_index, 2> &M_sigma_index_range)
   : A()
   , B()
-  , rank(0)
-  , formal_rank(0)
   , m(tau_index_range[1] - tau_index_range[0])
   , n(sigma_index_range[1] - sigma_index_range[0])
+  , rank(0)
+  , formal_rank(0)
 {
   Assert(is_subset(tau_index_range, M_tau_index_range), ExcInternalError());
   Assert(is_subset(sigma_index_range, M_sigma_index_range), ExcInternalError());
@@ -1730,12 +1761,10 @@ RkMatrix<Number>::RkMatrix(
   const RkMatrix<Number>                       &M)
   : A()
   , B()
-  // Before restriction, set the rank and formal rank of the current
-  // rank-k matrix to be the same as \p M.
-  , rank(M.rank)
-  , formal_rank(M.formal_rank)
   , m(tau_index_range[1] - tau_index_range[0])
   , n(sigma_index_range[1] - sigma_index_range[0])
+  , rank(invalid_rank(m, n))
+  , formal_rank(M.formal_rank)
 {
   if (formal_rank > 0 && m != 0 && n != 0 && M.m != 0 && M.n != 0)
     {
@@ -1744,8 +1773,8 @@ RkMatrix<Number>::RkMatrix(
        * zero, there will be actual initialization of component matrices and
        * further restriction operation
        */
-      A.reinit(this->m, M.formal_rank);
-      B.reinit(this->n, M.formal_rank);
+      A.reinit(this->m, formal_rank);
+      B.reinit(this->n, formal_rank);
 
       /**
        * Restrict the component matrix \p A of the original global rank-k matrix
@@ -1788,12 +1817,12 @@ RkMatrix<Number>::RkMatrix(
   const RkMatrix<Number>                       &M)
   : A()
   , B()
-  // Before restriction, set the rank and formal rank of the current
-  // rank-k matrix to be the same as \p M.
-  , rank(M.rank)
-  , formal_rank(M.formal_rank)
   , m(tau_index_range[1] - tau_index_range[0])
   , n(sigma_index_range[1] - sigma_index_range[0])
+  // Before restriction, set the rank and formal rank of the current
+  // rank-k matrix to be the same as \p M.
+  , rank(invalid_rank(m, n))
+  , formal_rank(M.formal_rank)
 {
   if (formal_rank > 0 && m != 0 && n != 0 && M.m != 0 && M.n != 0)
     {
@@ -1802,8 +1831,8 @@ RkMatrix<Number>::RkMatrix(
        * zero, there will be actual initialization of component matrices and
        * further restriction operation
        */
-      A.reinit(this->m, M.formal_rank);
-      B.reinit(this->n, M.formal_rank);
+      A.reinit(this->m, formal_rank);
+      B.reinit(this->n, formal_rank);
 
       /**
        * Restrict the component matrix \p A of the original global rank-k matrix
@@ -1851,12 +1880,12 @@ RkMatrix<Number>::RkMatrix(
   const std::array<types::global_dof_index, 2> &M_sigma_index_range)
   : A()
   , B()
-  // Before restriction, set the rank and formal rank of the current
-  // rank-k matrix to be the same as \p M.
-  , rank(M.rank)
-  , formal_rank(M.formal_rank)
   , m(tau_index_range[1] - tau_index_range[0])
   , n(sigma_index_range[1] - sigma_index_range[0])
+  // Before restriction, set the rank and formal rank of the current
+  // rank-k matrix to be the same as \p M.
+  , rank(invalid_rank(m, n))
+  , formal_rank(M.formal_rank)
 {
   Assert(is_subset(tau_index_range, M_tau_index_range), ExcInternalError());
   Assert(is_subset(sigma_index_range, M_sigma_index_range), ExcInternalError());
@@ -1869,8 +1898,8 @@ RkMatrix<Number>::RkMatrix(
        * zero, there will be actual initialization of component matrices and
        * further restriction operation
        */
-      A.reinit(this->m, M.formal_rank);
-      B.reinit(this->n, M.formal_rank);
+      A.reinit(this->m, formal_rank);
+      B.reinit(this->n, formal_rank);
 
       /**
        * Restrict the component matrix \p A of the original local rank-k matrix
@@ -1916,12 +1945,12 @@ RkMatrix<Number>::RkMatrix(
   const std::array<types::global_dof_index, 2> &M_sigma_index_range)
   : A()
   , B()
-  // Before restriction, set the rank and formal rank of the current
-  // rank-k matrix to be the same as \p M.
-  , rank(M.rank)
-  , formal_rank(M.formal_rank)
   , m(tau_index_range[1] - tau_index_range[0])
   , n(sigma_index_range[1] - sigma_index_range[0])
+  // Before restriction, set the rank and formal rank of the current
+  // rank-k matrix to be the same as \p M.
+  , rank(invalid_rank(m, n))
+  , formal_rank(M.formal_rank)
 {
   Assert(is_subset(tau_index_range, M_tau_index_range), ExcInternalError());
   Assert(is_subset(sigma_index_range, M_sigma_index_range), ExcInternalError());
@@ -1933,8 +1962,8 @@ RkMatrix<Number>::RkMatrix(
        * zero, there will be actual initialization of component matrices and
        * further restriction operation
        */
-      A.reinit(this->m, M.formal_rank);
-      B.reinit(this->n, M.formal_rank);
+      A.reinit(this->m, formal_rank);
+      B.reinit(this->n, formal_rank);
 
       /**
        * Restrict the component \p A of the original local rank-k matrix \p M to
@@ -1978,10 +2007,10 @@ RkMatrix<Number>::RkMatrix(const LAPACKFullMatrixExt<Number> &A,
                            const LAPACKFullMatrixExt<Number> &B)
   : A(A)
   , B(B)
-  , rank(std::min(std::min(A.m(), B.m()), A.n()))
-  , formal_rank(A.n())
   , m(A.m())
   , n(B.m())
+  , rank(invalid_rank(m, n))
+  , formal_rank(A.n())
 {
   /**
    * The formal rank of the rank-k matrix is equal to the number of columns of
@@ -1998,10 +2027,10 @@ RkMatrix<Number>::RkMatrix(const size_type         fixed_rank_k,
                            bool                    is_horizontal_split)
   : A()
   , B()
-  , rank(0)
-  , formal_rank(0)
   , m(0)
   , n(0)
+  , rank(0)
+  , formal_rank(0)
 {
   if (fixed_rank_k > 0)
     {
@@ -2015,7 +2044,8 @@ RkMatrix<Number>::RkMatrix(const size_type         fixed_rank_k,
 
           if (m > 0 && n > 0)
             {
-              if (M1.rank == 0 && M2.rank == 0)
+              if ((M1.rank == 0 || M1.formal_rank == 0) &&
+                  (M2.rank == 0 || M2.formal_rank == 0))
                 {
                   /**
                    * When both submatrices have zero ranks, the agglomerated
@@ -2023,7 +2053,7 @@ RkMatrix<Number>::RkMatrix(const size_type         fixed_rank_k,
                    * done.
                    */
                 }
-              else if (M1.rank == 0)
+              else if (M1.rank == 0 || M1.formal_rank == 0)
                 {
                   /**
                    * When \p M1 has zero rank, the agglomeration operation is
@@ -2038,7 +2068,7 @@ RkMatrix<Number>::RkMatrix(const size_type         fixed_rank_k,
 
                   truncate_to_rank(fixed_rank_k);
                 }
-              else if (M2.rank == 0)
+              else if (M2.rank == 0 || M2.formal_rank == 0)
                 {
                   /**
                    * When \p M2 has zero rank, the agglomeration operation is
@@ -2080,7 +2110,8 @@ RkMatrix<Number>::RkMatrix(const size_type         fixed_rank_k,
 
           if (m > 0 && n > 0)
             {
-              if (M1.rank == 0 && M2.rank == 0)
+              if ((M1.rank == 0 || M1.formal_rank == 0) &&
+                  (M2.rank == 0 || M2.formal_rank == 0))
                 {
                   /**
                    * When both submatrices have zero ranks, the agglomerated
@@ -2088,7 +2119,7 @@ RkMatrix<Number>::RkMatrix(const size_type         fixed_rank_k,
                    * done.
                    */
                 }
-              else if (M1.rank == 0)
+              else if (M1.rank == 0 || M1.formal_rank == 0)
                 {
                   /**
                    * When \p M1 has zero rank, the agglomeration operation is
@@ -2103,7 +2134,7 @@ RkMatrix<Number>::RkMatrix(const size_type         fixed_rank_k,
 
                   truncate_to_rank(fixed_rank_k);
                 }
-              else if (M2.rank == 0)
+              else if (M2.rank == 0 || M2.formal_rank == 0)
                 {
                   /**
                    * When \p M2 has zero rank, the agglomeration operation is
@@ -2171,10 +2202,10 @@ RkMatrix<Number>::RkMatrix(const size_type         fixed_rank_k,
                            const Number            rank_factor)
   : A()
   , B()
-  , rank(0)
-  , formal_rank(0)
   , m(M11.m + M21.m)
   , n(M11.n + M12.n)
+  , rank(0)
+  , formal_rank(0)
 {
   AssertDimension(M11.m, M12.m);
   AssertDimension(M21.m, M22.m);
@@ -2183,7 +2214,10 @@ RkMatrix<Number>::RkMatrix(const size_type         fixed_rank_k,
 
   if (fixed_rank_k > 0 && m > 0 && n > 0)
     {
-      if (M11.rank == 0 && M12.rank == 0 && M21.rank == 0 && M22.rank == 0)
+      if ((M11.rank == 0 || M11.formal_rank == 0) &&
+          (M12.rank == 0 || M12.formal_rank == 0) &&
+          (M21.rank == 0 || M21.formal_rank == 0) &&
+          (M22.rank == 0 || M22.formal_rank == 0))
         {
           /**
            * When all submatrices have zero ranks, the agglomerated matrix
@@ -2218,25 +2252,17 @@ RkMatrix<Number>::RkMatrix(const size_type         fixed_rank_k,
            * be performed.
            */
           unsigned int total_number_of_agglomerations = 0;
-          if (M11.rank > 0)
-            {
-              total_number_of_agglomerations++;
-            }
+          if (M11.rank > 0 && M11.formal_rank > 0)
+            total_number_of_agglomerations++;
 
-          if (M12.rank > 0)
-            {
-              total_number_of_agglomerations++;
-            }
+          if (M12.rank > 0 && M12.formal_rank > 0)
+            total_number_of_agglomerations++;
 
-          if (M21.rank > 0)
-            {
-              total_number_of_agglomerations++;
-            }
+          if (M21.rank > 0 && M21.formal_rank > 0)
+            total_number_of_agglomerations++;
 
-          if (M22.rank > 0)
-            {
-              total_number_of_agglomerations++;
-            }
+          if (M22.rank > 0 && M22.formal_rank > 0)
+            total_number_of_agglomerations++;
 
           /**
            * Define a counter for the current agglomeration operation. When it
@@ -2249,7 +2275,7 @@ RkMatrix<Number>::RkMatrix(const size_type         fixed_rank_k,
            */
           unsigned int agglomeration_counter = 1;
 
-          if (M11.rank > 0)
+          if (M11.rank > 0 && M11.formal_rank > 0)
             {
               /**
                * Directly embed the matrix \p M11 into the current rank-k
@@ -2265,7 +2291,7 @@ RkMatrix<Number>::RkMatrix(const size_type         fixed_rank_k,
               agglomeration_counter++;
             }
 
-          if (M12.rank > 0)
+          if (M12.rank > 0 && M12.formal_rank > 0)
             {
               if (agglomeration_counter == 1)
                 {
@@ -2291,19 +2317,15 @@ RkMatrix<Number>::RkMatrix(const size_type         fixed_rank_k,
                   M12_embedded.B.fill(M12.B, n - M12.B.m(), 0);
 
                   if (agglomeration_counter < total_number_of_agglomerations)
-                    {
-                      this->add(M12_embedded, increased_rank);
-                    }
+                    this->add(M12_embedded, increased_rank);
                   else
-                    {
-                      this->add(M12_embedded, fixed_rank_k);
-                    }
+                    this->add(M12_embedded, fixed_rank_k);
                 }
 
               agglomeration_counter++;
             }
 
-          if (M21.rank > 0)
+          if (M21.rank > 0 && M21.formal_rank > 0)
             {
               if (agglomeration_counter == 1)
                 {
@@ -2329,19 +2351,15 @@ RkMatrix<Number>::RkMatrix(const size_type         fixed_rank_k,
                   M21_embedded.B.fill(M21.B, 0, 0);
 
                   if (agglomeration_counter < total_number_of_agglomerations)
-                    {
-                      this->add(M21_embedded, increased_rank);
-                    }
+                    this->add(M21_embedded, increased_rank);
                   else
-                    {
-                      this->add(M21_embedded, fixed_rank_k);
-                    }
+                    this->add(M21_embedded, fixed_rank_k);
                 }
 
               agglomeration_counter++;
             }
 
-          if (M22.rank > 0)
+          if (M22.rank > 0 && M22.formal_rank > 0)
             {
               if (agglomeration_counter == 1)
                 {
@@ -2367,20 +2385,14 @@ RkMatrix<Number>::RkMatrix(const size_type         fixed_rank_k,
                   M22_embedded.B.fill(M22.B, n - M22.B.m(), 0);
 
                   if (agglomeration_counter < total_number_of_agglomerations)
-                    {
-                      this->add(M22_embedded, increased_rank);
-                    }
+                    this->add(M22_embedded, increased_rank);
                   else
-                    {
-                      this->add(M22_embedded, fixed_rank_k);
-                    }
+                    this->add(M22_embedded, fixed_rank_k);
                 }
             }
 
           if (rank > fixed_rank_k)
-            {
-              truncate_to_rank(fixed_rank_k);
-            }
+            truncate_to_rank(fixed_rank_k);
         }
     }
 }
@@ -2390,10 +2402,10 @@ template <typename Number>
 RkMatrix<Number>::RkMatrix(const RkMatrix<Number> &matrix)
   : A(matrix.A)
   , B(matrix.B)
-  , rank(matrix.rank)
-  , formal_rank(matrix.formal_rank)
   , m(matrix.m)
   , n(matrix.n)
+  , rank(matrix.rank)
+  , formal_rank(matrix.formal_rank)
 {}
 
 
@@ -2418,11 +2430,14 @@ RkMatrix<Number>::reinit(const size_type m_,
                          const size_type n_,
                          const size_type fixed_rank_k)
 {
-  if (m_ != 0 && n_ != 0 && fixed_rank_k > 0)
+  m = m_;
+  n = n_;
+
+  if (m != 0 && n != 0 && fixed_rank_k > 0)
     {
-      A.reinit(m_, fixed_rank_k);
-      B.reinit(n_, fixed_rank_k);
-      rank        = fixed_rank_k;
+      A.reinit(m, fixed_rank_k);
+      B.reinit(n, fixed_rank_k);
+      rank        = invalid_rank(m, n);
       formal_rank = fixed_rank_k;
     }
   else
@@ -2432,9 +2447,18 @@ RkMatrix<Number>::reinit(const size_type m_,
       rank        = 0;
       formal_rank = 0;
     }
+}
 
-  m = m_;
-  n = n_;
+template <typename Number>
+void
+RkMatrix<Number>::expand_columns(const size_type n_cols)
+{
+  if (n_cols > formal_rank)
+    {
+      A.expand_columns(n_cols);
+      B.expand_columns(n_cols);
+      formal_rank = n_cols;
+    }
 }
 
 
@@ -2467,6 +2491,18 @@ typename RkMatrix<Number>::size_type
 RkMatrix<Number>::get_formal_rank() const
 {
   return formal_rank;
+}
+
+
+template <typename Number>
+void
+RkMatrix<Number>::set_formal_rank(const typename RkMatrix<Number>::size_type r)
+{
+  Assert(r <= A.n(),
+         ExcMessage(
+           "formal_rank must not exceed the number of columns in A/B."));
+  AssertDimension(A.n(), B.n());
+  formal_rank = r;
 }
 
 
@@ -2647,16 +2683,34 @@ template <typename Number>
 void
 RkMatrix<Number>::keep_first_n_columns(const size_type n_)
 {
-  AssertIndexRange(n_, formal_rank + 1);
+  // Use actual storage width as the bound. formal_rank can be stale if A/B
+  // were resized without going through RkMatrix::expand_columns.
+  AssertDimension(A.n(), B.n());
+  AssertIndexRange(n_, A.n() + 1);
 
-  if (n_ < formal_rank)
+  if (n_ < A.n())
     {
       A.keep_first_n_columns(n_, true);
       B.keep_first_n_columns(n_, true);
-
-      formal_rank = n_;
-      rank        = n_;
     }
+
+  formal_rank = n_;
+}
+
+
+template <typename Number>
+size_type
+RkMatrix<Number>::invalid_rank(const size_type m, const size_type n)
+{
+  return std::min(m, n) + 1;
+}
+
+
+template <typename Number>
+bool
+RkMatrix<Number>::is_rank_computed() const
+{
+  return rank < invalid_rank(m, n);
 }
 
 
@@ -2664,9 +2718,10 @@ template <typename Number>
 void
 RkMatrix<Number>::truncate_to_rank(size_type new_rank)
 {
-  // Only when the current rank-k matrix and the given new rank have nonzero
-  // rank, it is meaningful to perform the rank truncation.
-  if (rank > 0 && new_rank > 0)
+  // Only when the current rank-k matrix has a non-zero formal rank and the
+  // given new rank is non-zero, it is meaningful to perform the rank
+  // truncation.
+  if (formal_rank > 0 && new_rank > 0)
     {
       // When the new rank is less than the current formal rank of the rank-k
       // matrix or the formal rank is larger than the row or column dimension of
@@ -2678,10 +2733,8 @@ RkMatrix<Number>::truncate_to_rank(size_type new_rank)
       // need to ensure the formal rank <= min(m,n).
       if (new_rank < formal_rank || formal_rank > m || formal_rank > n)
         {
-          /**
-           * Work flow introduction: Use QR decomposition to perform the rank
-           * truncation.
-           */
+          // Work flow introduction: Use QR decomposition to perform the rank
+          // truncation.
           LAPACKFullMatrixExt<Number> U, VT;
           std::vector<typename numbers::NumberTraits<Number>::real_type>
             Sigma_r;
@@ -2689,36 +2742,28 @@ RkMatrix<Number>::truncate_to_rank(size_type new_rank)
           rank = LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBH(
             A, B, U, Sigma_r, VT, new_rank);
 
-          /**
-           * \alert{Since the initial matrix may not have the correct rank, even
-           * though its \p rank is larger than zero, its actual \p rank may be less
-           * or even zero. Therefore, it is possible that the returned \p rank from
-           * the above execution of \p reduced_svd_on_AxBH may be zero. Therefore,
-           * it needs a special treatment here.}
-           */
+          // \alert{Since the initial matrix may not have the correct rank, even
+          // though its \p rank is larger than zero, its actual \p rank may be less
+          // or even zero. Therefore, it is possible that the returned \p rank from
+          // the above execution of \p reduced_svd_on_AxBH may be zero. Therefore,
+          // it needs a special treatment here.}
           if (rank > 0)
             {
               if (n < m)
                 {
-                  /**
-                   * Adopt right associativity when the matrix is long.
-                   */
+                  // Adopt right associativity when the matrix is long.
                   A = U;
                   VT.scale_rows(Sigma_r);
                   VT.transpose(B);
                 }
               else
                 {
-                  /**
-                   * Adopt left associativity when the matrix is wide.
-                   */
+                  // Adopt left associativity when the matrix is wide.
                   U.scale_columns(A, Sigma_r);
                   VT.transpose(B);
                 }
 
-              /**
-               * Update the formal rank.
-               */
+              // Update the formal rank.
               formal_rank = A.n();
             }
           else
@@ -2746,9 +2791,10 @@ RkMatrix<Number>::truncate_to_rank(size_type                    new_rank,
                                    LAPACKFullMatrixExt<Number> &C,
                                    LAPACKFullMatrixExt<Number> &D)
 {
-  // Only when the current rank-k matrix and the given new rank have nonzero
-  // rank, it is meaningful to perform the rank truncation.
-  if (rank > 0 && new_rank > 0)
+  // Only when the current rank-k matrix has a non-zero formal rank and the
+  // given new rank is non-zero, it is meaningful to perform the rank
+  // truncation.
+  if (formal_rank > 0 && new_rank > 0)
     {
       // When the new rank is less than the current formal rank of the rank-k
       // matrix or the formal rank is larger than the row or column dimension of
@@ -2760,10 +2806,8 @@ RkMatrix<Number>::truncate_to_rank(size_type                    new_rank,
       // need to ensure the formal rank <= min(m,n).
       if (new_rank < formal_rank || formal_rank > m || formal_rank > n)
         {
-          /**
-           * Work flow introduction: Use QR decomposition to perform the rank
-           * truncation.
-           */
+          // Work flow introduction: Use QR decomposition to perform the rank
+          // truncation.
           LAPACKFullMatrixExt<Number> U, VT;
           std::vector<typename numbers::NumberTraits<Number>::real_type>
             Sigma_r;
@@ -2771,36 +2815,28 @@ RkMatrix<Number>::truncate_to_rank(size_type                    new_rank,
           rank = LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBH(
             A, B, U, Sigma_r, VT, C, D, new_rank);
 
-          /**
-           * \alert{Since the initial matrix may not have the correct rank, even
-           * though its \p rank is larger than zero, its actual \p rank may be less
-           * or even zero. Therefore, it is possible that the returned \p rank from
-           * the above execution of \p reduced_svd_on_AxBH may be zero. Therefore,
-           * it needs a special treatment here.}
-           */
+          // \alert{Since the initial matrix may not have the correct rank, even
+          // though its \p rank is larger than zero, its actual \p rank may be less
+          // or even zero. Therefore, it is possible that the returned \p rank from
+          // the above execution of \p reduced_svd_on_AxBH may be zero. Therefore,
+          // it needs a special treatment here.}
           if (rank > 0)
             {
               if (n < m)
                 {
-                  /**
-                   * Adopt right associativity when the matrix is long.
-                   */
+                  // Adopt right associativity when the matrix is long.
                   A = U;
                   VT.scale_rows(Sigma_r);
                   VT.transpose(B);
                 }
               else
                 {
-                  /**
-                   * Adopt left associativity when the matrix is wide.
-                   */
+                  // Adopt left associativity when the matrix is wide.
                   U.scale_columns(A, Sigma_r);
                   VT.transpose(B);
                 }
 
-              /**
-               * Update the formal rank.
-               */
+              // Update the formal rank.
               formal_rank = A.n();
             }
           else
@@ -2814,28 +2850,22 @@ RkMatrix<Number>::truncate_to_rank(size_type                    new_rank,
     }
   else
     {
-      if (rank == 0)
+      if (rank == 0 || formal_rank == 0)
         {
-          /**
-           * If the original matrix's rank is zero, the error matrices should
-           * be zero matrices.
-           */
+          // If the original matrix's rank is zero, the error matrices should
+          // be zero matrices.
           C.reinit(0, 0);
           D.reinit(0, 0);
         }
       else
         {
-          /**
-           * If the original matrix's rank is nonzero but it is to be
-           * truncated to zero rank, the error matrices should be directly
-           * copied from \f$A\f$ and \f$B\f$.
-           */
+          // If the original matrix's rank is nonzero but it is to be
+          // truncated to zero rank, the error matrices should be directly
+          // copied from \f$A\f$ and \f$B\f$.
           C = A;
           D = B;
 
-          /**
-           * Balance the Frobenius norm of @p C and @p D.
-           */
+          // Balance the Frobenius norm of @p C and @p D.
           balance_frobenius_norm(C, D);
         }
 
@@ -2864,12 +2894,14 @@ RkMatrix<Number>::vmult(Vector<Number>       &y,
                         const Vector<Number> &x,
                         const bool            adding) const
 {
-  if (rank > 0)
+  if (formal_rank > 0)
     {
       /**
        * \alert{Only when the rank is larger than zero, the multiplication
        * will be performed.}
        */
+      AssertDimension(formal_rank, A.n());
+      AssertDimension(formal_rank, B.n());
 
       /**
        * The vector storing \f$B^T x\f$
@@ -2898,8 +2930,11 @@ RkMatrix<Number>::Cvmult(Vector<Number>       &y,
                          const Vector<Number> &x,
                          const bool            adding) const
 {
-  if (rank > 0)
+  if (formal_rank > 0)
     {
+      AssertDimension(formal_rank, A.n());
+      AssertDimension(formal_rank, B.n());
+
       if constexpr (numbers::NumberTraits<Number>::is_complex)
         {
           Vector<Number> z(formal_rank);
@@ -2930,12 +2965,14 @@ RkMatrix<Number>::Tvmult(Vector<Number>       &y,
                          const Vector<Number> &x,
                          const bool            adding) const
 {
-  if (rank > 0)
+  if (formal_rank > 0)
     {
       /**
        * \alert{Only when the rank is larger than zero, the multiplication
        * will be performed.}
        */
+      AssertDimension(formal_rank, A.n());
+      AssertDimension(formal_rank, B.n());
 
       /**
        * The vector storing \f$A^T x\f$
@@ -2974,12 +3011,14 @@ RkMatrix<Number>::Hvmult(Vector<Number>       &y,
 {
   if constexpr (numbers::NumberTraits<Number>::is_complex)
     {
-      if (rank > 0)
+      if (formal_rank > 0)
         {
           /**
            * \alert{Only when the rank is larger than zero, the multiplication
            * will be performed.}
            */
+          AssertDimension(formal_rank, A.n());
+          AssertDimension(formal_rank, B.n());
 
           /**
            * The vector storing \f$A^H x\f$
@@ -3011,11 +3050,11 @@ template <typename Number>
 void
 RkMatrix<Number>::add(RkMatrix<Number> &M, const RkMatrix<Number> &M2) const
 {
-  if (rank == 0)
+  if (rank == 0 || formal_rank == 0)
     {
       M = M2;
     }
-  else if (M2.rank == 0)
+  else if (M2.rank == 0 || M2.formal_rank == 0)
     {
       M = (*this);
     }
@@ -3039,12 +3078,12 @@ RkMatrix<Number>::add(RkMatrix<Number>       &M,
                       const Number            m2,
                       const RkMatrix<Number> &M2) const
 {
-  if (rank == 0)
+  if (rank == 0 || formal_rank == 0)
     {
       M = M2;
       M.A *= m2;
     }
-  else if (M2.rank == 0)
+  else if (M2.rank == 0 || M2.formal_rank == 0)
     {
       M = (*this);
     }
@@ -3073,11 +3112,11 @@ template <typename Number>
 void
 RkMatrix<Number>::add(const RkMatrix<Number> &M1)
 {
-  if (rank == 0)
+  if (rank == 0 || formal_rank == 0)
     {
       (*this) = M1;
     }
-  else if (M1.rank == 0)
+  else if (M1.rank == 0 || M1.formal_rank == 0)
     {
       // Do nothing.
     }
@@ -3099,12 +3138,12 @@ template <typename Number>
 void
 RkMatrix<Number>::add(const Number m1, const RkMatrix<Number> &M1)
 {
-  if (rank == 0)
+  if (rank == 0 || formal_rank == 0)
     {
       (*this) = M1;
       A *= m1;
     }
-  else if (M1.rank == 0)
+  else if (M1.rank == 0 || M1.formal_rank == 0)
     {
       // Do nothing.
     }

@@ -485,7 +485,7 @@ BEMBilinearForm<dim,
     HMatrixSupport::BlockType::diagonal_block;
   auto hmat = std::make_unique<HMatrix<spacedim, RangeNumberType>>(
     *block_cluster_tree,
-    static_cast<unsigned int>(hmat_params.max_rank),
+    static_cast<unsigned int>(hmat_params.initial_rank),
     property,
     block_type);
 
@@ -611,7 +611,7 @@ BEMBilinearForm<dim,
     HMatrixSupport::BlockType::diagonal_block;
   auto hmat = std::make_unique<HMatrix<spacedim, RangeNumberType>>(
     *block_cluster_tree,
-    static_cast<unsigned int>(hmat_params.max_rank),
+    static_cast<unsigned int>(hmat_params.initial_rank),
     property,
     block_type);
 
@@ -746,7 +746,7 @@ BEMBilinearForm<dim,
     HMatrixSupport::BlockType::diagonal_block;
   auto hmat = std::make_unique<HMatrix<spacedim, RangeNumberType>>(
     *block_cluster_tree,
-    static_cast<unsigned int>(hmat_params.max_rank),
+    static_cast<unsigned int>(hmat_params.initial_rank),
     property,
     block_type);
 

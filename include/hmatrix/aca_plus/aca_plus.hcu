@@ -2757,7 +2757,7 @@ random_select_ref_column(Vector<RangeNumberType>                    &col_vector,
 
 
 /**
- * ACA+ algorithm
+ * Implementation of the ACA+ algorithm for building a far field block.
  *
  * \ref{Grasedyck, L. 2005. “Adaptive Recompression of
  * \f$\mathcal{H}\f$-Matrices for BEM.” Computing 74 (3): 205–23.}
@@ -2765,22 +2765,27 @@ random_select_ref_column(Vector<RangeNumberType>                    &col_vector,
  * \mynote{At present, the simple convergence condition in this paper is
  * adopted instead of that in Bebendorf's book.}
  *
- * @param rkmat The rank-k matrix to be constructed for the current block,
- * the memory of which should be preallocated and the formal rank of which
- * should be the same as the maximum rank in <tt>hmat_params</tt>.
+ * @param rkmat The rank-k matrix to be constructed for the current block. With
+ * an initial rank adopted, the memory of it should be preallocated. During ACA,
+ * this rank will be dynamically increased.
  * @param hmat_params
  * @param kernel
- * @param factor
- * @param row_dof_indices
- * @param col_dof_indices
+ * @param kernel_factor
+ * @param row_dof_index_range
+ * @param col_dof_index_range
  * @param kx_dof_to_cell_topo
  * @param ky_dof_to_cell_topo
- * @param bem_values
- * @param kx_dof_handler
- * @param ky_dof_handler
- * @param kx_mapping
- * @param ky_mapping
+ * @param bem_values_gpu
+ * @param kx_map_from_local_to_full_dof_indices
+ * @param ky_map_from_local_to_full_dof_indices
+ * @param kx_dof_i2e_numbering
+ * @param ky_dof_i2e_numbering
+ * @param mappings
+ * @param material_id_to_mapping_index
+ * @param global_to_local_cell_index_map
+ * @param mapping_support_point_table
  * @param scratch_data
+ * @param scratch_data_gpu
  * @param copy_data
  */
 template <int dim,
@@ -2834,28 +2839,37 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
-  /**
-   * @internal Get the size of each dimension of the matrix block to be built.
-   */
+  // Get the size of each dimension of the matrix block to be built.
   const size_type m = row_dof_index_range[1] - row_dof_index_range[0];
   const size_type n = col_dof_index_range[1] - col_dof_index_range[0];
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+  std::cout << "=== Build far field block [" << row_dof_index_range[0] << ","
+            << row_dof_index_range[1] << ") x [" << col_dof_index_range[0]
+            << "," << col_dof_index_range[1] << ")" << std::endl;
+#endif
 
   AssertDimension(rkmat.get_m(), m);
   AssertDimension(rkmat.get_n(), n);
 
-  /**
-   * Adjust the maximum ACA+ iteration if is larger than the matrix
-   * dimension.
-   */
   const unsigned int effective_max_iter =
-    (static_cast<unsigned int>(hmat_params.max_rank) > std::min(m, n)) ?
+    hmat_params.max_rank == 0 ?
       std::min(m, n) :
-      static_cast<unsigned int>(hmat_params.max_rank);
+      std::min(static_cast<unsigned int>(hmat_params.max_rank), std::min(m, n));
 
-  /**
-   * Generate lists of internal DoF indices (internal DoF numbering) from
-   * corresponding index ranges.
-   */
+  if (rkmat.get_formal_rank() == 0)
+    {
+      Assert(hmat_params.initial_rank > 0, ExcInternalError());
+      rkmat.reinit(m, n, hmat_params.initial_rank);
+    }
+
+  // If the initial rank of the rank-k matrix is larger than
+  // @p effective_max_iter, we shrink surplus columns.
+  if (rkmat.get_formal_rank() > effective_max_iter)
+    rkmat.keep_first_n_columns(effective_max_iter);
+
+  // Generate lists of internal DoF indices (internal DoF numbering) from
+  // corresponding index ranges.
   std::vector<types::global_dof_index> row_dof_indices(m);
   std::vector<types::global_dof_index> col_dof_indices(n);
   gen_linear_indices<vector_uta, types::global_dof_index>(
@@ -2863,38 +2877,27 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   gen_linear_indices<vector_uta, types::global_dof_index>(
     col_dof_indices, col_dof_index_range[0]);
 
-  /**
-   * Create matrix references associated with the component matrices in the
-   * rank-k matrix to be returned, which hold the row and column vectors in
-   * the selected crosses during the ACA iteration. The number of columns
-   * should be the same as the effective maximum iteration number.
-   */
-  AssertDimension(rkmat.get_formal_rank(), effective_max_iter);
+  // Create matrix references associated with the component matrices in the
+  // rank-k matrix to be returned, which hold the row and column vectors in
+  // the selected crosses during the ACA iteration.
   LAPACKFullMatrixExt<RangeNumberType> &u_mat = rkmat.get_A();
   LAPACKFullMatrixExt<RangeNumberType> &v_mat = rkmat.get_B();
   u_mat                                       = RangeNumberType();
   v_mat                                       = RangeNumberType();
 
-  /**
-   * Generate two lists for storing remaining row indices and column indices
-   * of the matrix block.
-   */
+  // Generate two lists for storing remaining row indices and column indices
+  // of the matrix block.
   std::forward_list<size_type> remaining_row_indices(m);
   std::forward_list<size_type> remaining_col_indices(n);
-
   gen_linear_indices<forward_list_uta, size_type>(remaining_row_indices);
   gen_linear_indices<forward_list_uta, size_type>(remaining_col_indices);
 
-  /**
-   * Select the initial reference row and column vectors and return their
-   * matrix indices.
-   */
+  // Select the initial reference row and column vectors and return their
+  // matrix indices.
   Vector<RangeNumberType> vr(n);
   Vector<RangeNumberType> uc(m);
 
-  /**
-   * Temporary row and column vectors for the previous step \f$l\f$.
-   */
+  // Temporary row and column vectors for the previous step \f$l\f$.
   Vector<RangeNumberType> vl(n);
   Vector<RangeNumberType> ul(m);
 
@@ -2930,6 +2933,11 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       // When there is no reference row can be selected, the current matrix
       // block is purely zero. Then return a zero rank-k matrix.
       rkmat.reinit(m, n, 0);
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+      std::cout << "ACA returns zero block (no reference rows)" << std::endl;
+#endif
+
       return;
     }
 
@@ -2965,22 +2973,17 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       // When there is no reference column can be selected, the current
       // matrix block is purely zero. Then return a zero rank-k matrix.
       rkmat.reinit(m, n, 0);
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+      std::cout << "ACA returns zero block (no reference columns)" << std::endl;
+#endif
+
       return;
     }
 
-  /**
-   * The absolute values for the reference row and column vectors.
-   */
+  // The absolute values for the reference row and column vectors.
   Vector<real_type> vr_abs(n);
   Vector<real_type> uc_abs(m);
-
-  /**
-   * Calculate the absolute values for the reference row and column
-   * vectors.
-   *
-   * \mynote{In the following, we use @p static_cast to explicitly
-   * specify which version of @p std::abs to call.}
-   */
   std::transform(vr.begin(),
                  vr.end(),
                  vr_abs.begin(),
@@ -2994,61 +2997,70 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                    return std::abs(val);
                  });
 
-  /**
-   * Row and column indices for the \f$k\f$'th step. The corresponding row
-   * and column vectors comprise the cross.
-   */
+  // Row and column indices for the \f$k\f$'th step. The corresponding row
+  // and column vectors comprise the cross.
   size_type ik, jk;
 
-  /**
-   * Temporary row and column vectors for the current step \f$k\f$.
-   */
+  // Temporary row and column vectors for the current step \f$k\f$.
   Vector<RangeNumberType> vk(n);
   Vector<RangeNumberType> uk(m);
 
-  /**
-   * The absolute values for the temporary row and column vectors for the
-   * current step \f$k\f$.
-   */
+  // The absolute values for the temporary row and column vectors for the
+  // current step \f$k\f$.
   Vector<real_type> vk_abs(n);
   Vector<real_type> uk_abs(m);
 
-  /**
-   * The error threshold as the stopping condition.
-   */
+  // The error threshold as the stopping condition.
   real_type error_threshold = 0.;
+  // The Frobenius norm of the cross in the current ACA step.
+  real_type current_cross_norm = 0.;
 
-  /**
-   * Start the ACA+ iteration from \f$k=1\f$.
-   */
+  // Start the ACA+ iteration from \f$k=1\f$.
   for (unsigned int k = 1; k <= effective_max_iter; k++)
     {
-      /**
-       * Select the row index from the maximizer of the reference column.
-       */
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+      std::cout << "=== ACA step " << k
+                << " (maximum steps: " << effective_max_iter << ")"
+                << std::endl;
+#endif
+
+      // Enlarge the number of columns in u_mat and v_mat, when the ACA step
+      // exceeds the existing number of columns in U or V.
+      if (k > u_mat.n())
+        {
+          const size_type n_cols_larger =
+            std::min(u_mat.n() * 2, effective_max_iter);
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+          std::cout << "Number of reserved columns increases from " << u_mat.n()
+                    << " to " << n_cols_larger << std::endl;
+#endif
+
+          // Expand via RkMatrix so formal_rank stays in sync with A.n()/B.n().
+          // Expanding u_mat/v_mat alone leaves formal_rank stale;
+          // RkMatrix::vmult then allocates z(formal_rank) while GEMV writes
+          // A.n() entries.
+          rkmat.expand_columns(n_cols_larger);
+        }
+
+      // Select the row index from the maximizer of the reference column.
       // N.B. The function @p std::max_element return the iterator pointing
       // to the maximum element in the list.
       size_type i_star =
         std::distance(uc_abs.begin(),
                       std::max_element(uc_abs.begin(), uc_abs.end()));
 
-      /**
-       * Select the column index from the maximizer of the reference row.
-       */
+      // Select the column index from the maximizer of the reference row.
       size_type j_star =
         std::distance(vr_abs.begin(),
                       std::max_element(vr_abs.begin(), vr_abs.end()));
 
       if (uc_abs(i_star) > vr_abs(j_star))
         {
-          /**
-           * Select \f$i^*\f$ as the current row index \f$i_k\f$.
-           */
+          // Select \f$i^*\f$ as the current row index \f$i_k\f$.
           ik = i_star;
 
-          /**
-           * Extract the \f$i_k\f$'th row of \f$A\f$.
-           */
+          // Extract the \f$i_k\f$'th row of \f$A\f$.
           assemble_kernel_row(vk,
                               kernel,
                               kernel_factor,
@@ -3069,14 +3081,12 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                               scratch_data_gpu,
                               copy_data);
 
-          /**
-           * \mynote{Here the counter \f$l\f$ iterates over all the previous
-           * steps before \f$k\f$. For each step, the row and column vectors
-           * comprising the cross have been stored as column vectors into
-           * @p v_mat and @p u_mat respectively. Hence, the index for
-           * extracting vectors from @p v_mat or @p u_mat should be
-           * \f$l-1\f$.}
-           */
+          // Here the counter \f$l\f$ iterates over all the previous steps
+          // before \f$k\f$. For each step, the row and column vectors
+          // comprising the cross have been stored as column vectors into
+          // @p v_mat and @p u_mat respectively. Hence, the index for
+          // extracting vectors from @p v_mat or @p u_mat should be
+          // \f$l-1\f$.
           if (k > 1)
             {
               for (size_type l = 0; l < k - 1; l++)
@@ -3085,10 +3095,8 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
               v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
-          /**
-           * Select the column index from the maximizer of the absolute
-           * values of \f$\widetilde{v}_k\f$.
-           */
+          // Select the column index from the maximizer of the absolute
+          // values of \f$\widetilde{v}_k\f$.
           std::transform(vk.begin(),
                          vk.end(),
                          vk_abs.begin(),
@@ -3098,15 +3106,11 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
           jk = std::distance(vk_abs.begin(),
                              std::max_element(vk_abs.begin(), vk_abs.end()));
 
-          /**
-           * Scale the vector \f$\widetilde{v}_k\f$.
-           */
+          // Scale the vector \f$\widetilde{v}_k\f$.
           RangeNumberType value_at_cross = vk(jk);
           vk /= value_at_cross;
 
-          /**
-           * Extract the \f$j_k\f$'th column from \f$A\f$.
-           */
+          // Extract the \f$j_k\f$'th column from \f$A\f$.
           assemble_kernel_column(uk,
                                  kernel,
                                  kernel_factor,
@@ -3137,14 +3141,10 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
         }
       else
         {
-          /**
-           * Select \f$j^*\f$ as the current column index \f$j_k\f$.
-           */
+          // Select \f$j^*\f$ as the current column index \f$j_k\f$.
           jk = j_star;
 
-          /**
-           * Extract the \f$j_k\f$'th column from the matrix \f$A\f$.
-           */
+          // Extract the \f$j_k\f$'th column from the matrix \f$A\f$.
           assemble_kernel_column(uk,
                                  kernel,
                                  kernel_factor,
@@ -3173,10 +3173,8 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
               u_mat.vmult_add(uk, k - 1, RangeNumberType(-1.0), vl);
             }
 
-          /**
-           * Select the row index as the maximizer of the absolute values of
-           * \f$u_k\f$.
-           */
+          // Select the row index as the maximizer of the absolute values of
+          // \f$u_k\f$.
           std::transform(uk.begin(),
                          uk.end(),
                          uk_abs.begin(),
@@ -3186,9 +3184,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
           ik = std::distance(uk_abs.begin(),
                              std::max_element(uk_abs.begin(), uk_abs.end()));
 
-          /**
-           * Extract the \f$i_k\f$'th row from \f$A\f$.
-           */
+          // Extract the \f$i_k\f$'th row from \f$A\f$.
           assemble_kernel_row(vk,
                               kernel,
                               kernel_factor,
@@ -3217,28 +3213,27 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
               v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
-          /**
-           * Scale the vector \f$\widetilde{v}_k\f$.
-           */
+          // Scale the vector \f$\widetilde{v}_k\f$.
           RangeNumberType value_at_cross = vk(jk);
           vk /= value_at_cross;
         }
 
-      /**
-       * Update the matrices storing row and column vectors comprising the
-       * cross.
-       */
+      // Update the matrices storing row and column vectors comprising the
+      // cross.
       u_mat.fill_col(k - 1, uk, false);
       v_mat.fill_col(k - 1, vk, false);
+      current_cross_norm = uk.l2_norm() * vk.l2_norm();
 
       if (k == 1)
         {
-          /**
-           * Calculate the error threshold only in the first step.
-           */
+          // Calculate the error threshold only in the first step.
           error_threshold =
             static_cast<real_type>(hmat_params.aca_relative_err) *
-            rkmat.frobenius_norm(1);
+            current_cross_norm;
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+          std::cout << "ACA error threshold is set to " << error_threshold
+                    << std::endl;
+#endif
         }
 
       remaining_row_indices.remove(ik);
@@ -3254,10 +3249,8 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       // vector should be reselected.
       if (ik == r || LinAlg::is_all_zero(vr))
         {
-          /**
-           * When the index of the selected row is the same as that of the
-           * reference row, reselect a reference row.
-           */
+          // When the index of the selected row is the same as that of the
+          // reference row, reselect a reference row.
           r = random_select_ref_row(vr,
                                     u_mat,
                                     v_mat,
@@ -3289,32 +3282,44 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
             {
               // When there is no reference row can be selected, the ACA+
               // iteration should stop here.
-              if (k < static_cast<unsigned int>(hmat_params.max_rank))
+              if (k < u_mat.n())
                 {
-                  /**
-                   * If the number of ACA+ iterations is less than the
-                   * allowed
-                   * maximum value, the @p rkmat should be truncated to its
-                   * actual rank.
-                   */
+                  // If the number of ACA+ iterations is less than the
+                  // reserved number of columns, the @p rkmat should be
+                  // truncated to its formal rank.
                   rkmat.keep_first_n_columns(k);
                 }
+              else
+                rkmat.set_formal_rank(k);
 
-              /**
-               * Apply complex conjugation to the component matrix @p B, when
-               * we're dealing with complex values, because the rank-k matrix
-               * should take the form \f$M=AB^{\mathrm{H}}\f$.
-               */
+              // Apply complex conjugation to the component matrix @p B, when
+              // we're dealing with complex values, because the rank-k matrix
+              // should take the form \f$M=AB^{\mathrm{H}}\f$.
               if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+              if (current_cross_norm <= error_threshold)
+                {
+                  std::cout << "ACA convergent (no reference rows) with\n"
+                            << "formal rank=" << k
+                            << "\nFrobenius norm of the final cross="
+                            << current_cross_norm << std::endl;
+                }
+              else
+                {
+                  std::cout << "ACA not convergent (no reference rows) with\n"
+                            << "formal rank=" << k
+                            << "\nFrobenius norm of the final cross="
+                            << current_cross_norm << std::endl;
+                }
+#endif
 
               return;
             }
         }
 
-      /**
-       * Update the vector of absolute values for @p vr.
-       */
+      // Update the vector of absolute values for @p vr.
       std::transform(vr.begin(),
                      vr.end(),
                      vr_abs.begin(),
@@ -3333,10 +3338,8 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       // column vector should be reselected.
       if (jk == c || LinAlg::is_all_zero(uc))
         {
-          /**
-           * When the index of the selected column is the same as that of
-           * the reference column, reselect a reference column.
-           */
+          // When the index of the selected column is the same as that of
+          // the reference column, reselect a reference column.
           c = random_select_ref_column(uc,
                                        u_mat,
                                        v_mat,
@@ -3368,32 +3371,45 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
             {
               // When there is no reference column can be selected, the ACA+
               // iteration should stop here.
-              if (k < static_cast<unsigned int>(hmat_params.max_rank))
+              if (k < u_mat.n())
                 {
-                  /**
-                   * If the number of ACA+ iterations is less than the
-                   * allowed
-                   * maximum value, the @p rkmat should be truncated to its
-                   * actual rank.
-                   */
+                  // If the number of ACA+ iterations is less than the
+                  // reserved number of columns, the @p rkmat should be
+                  // truncated to its formal rank.
                   rkmat.keep_first_n_columns(k);
                 }
+              else
+                rkmat.set_formal_rank(k);
 
-              /**
-               * Apply complex conjugation to the component matrix @p B, when
-               * we're dealing with complex values, because the rank-k matrix
-               * should take the form \f$M=AB^{\mathrm{H}}\f$.
-               */
+              // Apply complex conjugation to the component matrix @p B, when
+              // we're dealing with complex values, because the rank-k matrix
+              // should take the form \f$M=AB^{\mathrm{H}}\f$.
               if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+              if (current_cross_norm <= error_threshold)
+                {
+                  std::cout << "ACA convergent (no reference columns) with\n"
+                            << "formal rank=" << k
+                            << "\nFrobenius norm of the final cross="
+                            << current_cross_norm << std::endl;
+                }
+              else
+                {
+                  std::cout
+                    << "ACA not convergent (no reference columns) with\n"
+                    << "formal rank=" << k
+                    << "\nFrobenius norm of the final cross="
+                    << current_cross_norm << std::endl;
+                }
+#endif
 
               return;
             }
         }
 
-      /**
-       * Update the vector of absolute values for @p uc.
-       */
+      // Update the vector of absolute values for @p uc.
       std::transform(uc.begin(),
                      uc.end(),
                      uc_abs.begin(),
@@ -3401,75 +3417,87 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                        return std::abs(val);
                      });
 
-      /**
-       * Check the convergence condition.
-       */
-      if ((k > 1) && (uk.l2_norm() * vk.l2_norm() <= error_threshold))
+      // Check the convergence condition.
+      if ((k > 1) && (current_cross_norm <= error_threshold))
         {
-          if (k < static_cast<unsigned int>(hmat_params.max_rank))
+          if (k < u_mat.n())
             {
-              /**
-               * If the number of ACA+ iterations is less than the allowed
-               * maximum value, the @p rkmat should be truncated to its
-               * actual rank.
-               */
+              // If the number of ACA+ iterations is less than the
+              // reserved number of columns, the @p rkmat should be
+              // truncated to its formal rank.
               rkmat.keep_first_n_columns(k);
             }
+          else
+            rkmat.set_formal_rank(k);
 
-          /**
-           * Apply complex conjugation to the component matrix @p B, when
-           * we're dealing with complex values, because the rank-k matrix
-           * should take the form \f$M=AB^{\mathrm{H}}\f$.
-           */
+          // Apply complex conjugation to the component matrix @p B, when
+          // we're dealing with complex values, because the rank-k matrix
+          // should take the form \f$M=AB^{\mathrm{H}}\f$.
           if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
             v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+          std::cout << "ACA convergent with\n"
+                    << "formal rank=" << k
+                    << "\nFrobenius norm of the final cross="
+                    << current_cross_norm << std::endl;
+#endif
 
           return;
         }
       else
         {
-          if (size(remaining_row_indices) == 0)
+          if (size(remaining_row_indices) == 0 ||
+              size(remaining_col_indices) == 0)
             {
-              if (k < static_cast<unsigned int>(hmat_params.max_rank))
+              if (k < u_mat.n())
                 {
-                  /**
-                   * If the number of ACA+ iterations is less than the
-                   * allowed
-                   * maximum value, the @p rkmat should be truncated to its
-                   * actual rank.
-                   */
+                  // If the number of ACA+ iterations is less than the
+                  // reserved number of columns, the @p rkmat should be
+                  // truncated to its formal rank.
                   rkmat.keep_first_n_columns(k);
                 }
+              else
+                rkmat.set_formal_rank(k);
 
-              /**
-               * Apply complex conjugation to the component matrix @p B, when
-               * we're dealing with complex values, because the rank-k matrix
-               * should take the form \f$M=AB^{\mathrm{H}}\f$.
-               */
+              // Apply complex conjugation to the component matrix @p B, when
+              // we're dealing with complex values, because the rank-k matrix
+              // should take the form \f$M=AB^{\mathrm{H}}\f$.
               if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+              std::cout
+                << "ACA not convergent (no reference rows or columns) with\n"
+                << "formal rank=" << k
+                << "\nFrobenius norm of the final cross=" << current_cross_norm
+                << std::endl;
+#endif
 
               return;
             }
         }
     }
 
-  /**
-   * Apply complex conjugation to the component matrix @p B, when
-   * we're dealing with complex values, because the rank-k matrix
-   * should take the form \f$M=AB^{\mathrm{H}}\f$.
-   */
+  rkmat.set_formal_rank(effective_max_iter);
+
+  // Apply complex conjugation to the component matrix @p B, when
+  // we're dealing with complex values, because the rank-k matrix
+  // should take the form \f$M=AB^{\mathrm{H}}\f$.
   if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
     v_mat.conjugate();
 
-  std::cerr
-    << "Maximum H-matrix rank has been reached and the approximation accuracy has not been achieved, exit early!"
-    << std::endl;
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+  std::cout << "ACA not convergent (maximum rank reached) with\n"
+            << "formal rank=" << effective_max_iter
+            << "\nFrobenius norm of the final cross=" << current_cross_norm
+            << std::endl;
+#endif
 }
 
 
 /**
- * ACA+ algorithm
+ * Implementation of the ACA+ algorithm for building a far field block.
  *
  * \ref{Grasedyck, L. 2005. “Adaptive Recompression of
  * \f$\mathcal{H}\f$-Matrices for BEM.” Computing 74 (3): 205–23.}
@@ -3482,21 +3510,24 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
  * @param rkmat
  * @param hmat_params
  * @param kernel
- * @param factor
+ * @param kernel_factor
  * @param mass_vmult_weq
  * @param stabilization_factor
  * @param row_dof_index_range
  * @param col_dof_index_range
  * @param kx_dof_to_cell_topo
  * @param ky_dof_to_cell_topo
- * @param bem_values
- * @param kx_dof_handler
- * @param ky_dof_handler
+ * @param bem_values_gpu
+ * @param kx_map_from_local_to_full_dof_indices
+ * @param ky_map_from_local_to_full_dof_indices
  * @param kx_dof_i2e_numbering
  * @param ky_dof_i2e_numbering
- * @param kx_mapping
- * @param ky_mapping
+ * @param mappings
+ * @param material_id_to_mapping_index
+ * @param global_to_local_cell_index_map
+ * @param mapping_support_point_table
  * @param scratch_data
+ * @param scratch_data_gpu
  * @param copy_data
  */
 template <int dim,
@@ -3552,28 +3583,37 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
-  /**
-   * Get the size of each dimension of the matrix block to be built.
-   */
+  // Get the size of each dimension of the matrix block to be built.
   const size_type m = row_dof_index_range[1] - row_dof_index_range[0];
   const size_type n = col_dof_index_range[1] - col_dof_index_range[0];
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+  std::cout << "=== Build far field block [" << row_dof_index_range[0] << ","
+            << row_dof_index_range[1] << ") x [" << col_dof_index_range[0]
+            << "," << col_dof_index_range[1] << ")" << std::endl;
+#endif
 
   AssertDimension(rkmat.get_m(), m);
   AssertDimension(rkmat.get_n(), n);
 
-  /**
-   * Adjust the maximum ACA+ iteration if is larger than the matrix
-   * dimension.
-   */
   const unsigned int effective_max_iter =
-    (static_cast<unsigned int>(hmat_params.max_rank) > std::min(m, n)) ?
+    hmat_params.max_rank == 0 ?
       std::min(m, n) :
-      static_cast<unsigned int>(hmat_params.max_rank);
+      std::min(static_cast<unsigned int>(hmat_params.max_rank), std::min(m, n));
 
-  /**
-   * Generate lists of internal DoF indices (internal DoF numbering) from
-   * corresponding index ranges.
-   */
+  if (rkmat.get_formal_rank() == 0)
+    {
+      Assert(hmat_params.initial_rank > 0, ExcInternalError());
+      rkmat.reinit(m, n, hmat_params.initial_rank);
+    }
+
+  // If the initial rank of the rank-k matrix is larger than
+  // @p effective_max_iter, we shrink surplus columns.
+  if (rkmat.get_formal_rank() > effective_max_iter)
+    rkmat.keep_first_n_columns(effective_max_iter);
+
+  // Generate lists of internal DoF indices (internal DoF numbering) from
+  // corresponding index ranges.
   std::vector<types::global_dof_index> row_dof_indices(m);
   std::vector<types::global_dof_index> col_dof_indices(n);
   gen_linear_indices<vector_uta, types::global_dof_index>(
@@ -3581,38 +3621,27 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   gen_linear_indices<vector_uta, types::global_dof_index>(
     col_dof_indices, col_dof_index_range[0]);
 
-  /**
-   * Create matrix references associated with the component matrices in the
-   * rank-k matrix to be returned, which hold the row and column vectors in
-   * the selected crosses during the ACA iteration. The number of columns
-   * should be the same as the effective maximum iteration number.
-   */
-  AssertDimension(rkmat.get_formal_rank(), effective_max_iter);
+  // Create matrix references associated with the component matrices in the
+  // rank-k matrix to be returned, which hold the row and column vectors in
+  // the selected crosses during the ACA iteration.
   LAPACKFullMatrixExt<RangeNumberType> &u_mat = rkmat.get_A();
   LAPACKFullMatrixExt<RangeNumberType> &v_mat = rkmat.get_B();
   u_mat                                       = RangeNumberType();
   v_mat                                       = RangeNumberType();
 
-  /**
-   * Generate two lists for storing remaining row indices and column indices
-   * of the matrix block.
-   */
+  // Generate two lists for storing remaining row indices and column indices
+  // of the matrix block.
   std::forward_list<size_type> remaining_row_indices(m);
   std::forward_list<size_type> remaining_col_indices(n);
-
   gen_linear_indices<forward_list_uta, size_type>(remaining_row_indices);
   gen_linear_indices<forward_list_uta, size_type>(remaining_col_indices);
 
-  /**
-   * Select the initial reference row and column vectors and return their
-   * matrix indices.
-   */
+  // Select the initial reference row and column vectors and return their
+  // matrix indices.
   Vector<RangeNumberType> vr(n);
   Vector<RangeNumberType> uc(m);
 
-  /**
-   * Temporary row and column vectors for the previous step \f$l\f$.
-   */
+  // Temporary row and column vectors for the previous step \f$l\f$.
   Vector<RangeNumberType> vl(n);
   Vector<RangeNumberType> ul(m);
 
@@ -3650,6 +3679,11 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       // When there is no reference row can be selected, the current matrix
       // block is purely zero. Then return a zero rank-k matrix.
       rkmat.reinit(m, n, 0);
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+      std::cout << "ACA returns zero block (no reference rows)" << std::endl;
+#endif
+
       return;
     }
 
@@ -3687,22 +3721,17 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       // When there is no reference column can be selected, the current
       // matrix block is purely zero. Then return a zero rank-k matrix.
       rkmat.reinit(m, n, 0);
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+      std::cout << "ACA returns zero block (no reference columns)" << std::endl;
+#endif
+
       return;
     }
 
-  /**
-   * The absolute values for the reference row and column vectors.
-   */
+  // The absolute values for the reference row and column vectors.
   Vector<real_type> vr_abs(n);
   Vector<real_type> uc_abs(m);
-
-  /**
-   * Calculate the absolute values for the reference row and column
-   * vectors.
-   *
-   * \mynote{In the following, we use @p static_cast to explicitly
-   * specify which version of @p std::abs to call.}
-   */
   std::transform(vr.begin(),
                  vr.end(),
                  vr_abs.begin(),
@@ -3716,61 +3745,70 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                    return std::abs(val);
                  });
 
-  /**
-   * Row and column indices for the \f$k\f$'th step. The corresponding row
-   * and column vectors comprise the cross.
-   */
+  // Row and column indices for the \f$k\f$'th step. The corresponding row
+  // and column vectors comprise the cross.
   size_type ik, jk;
 
-  /**
-   * Temporary row and column vectors for the current step \f$k\f$.
-   */
+  // Temporary row and column vectors for the current step \f$k\f$.
   Vector<RangeNumberType> vk(n);
   Vector<RangeNumberType> uk(m);
 
-  /**
-   * The absolute values for the temporary row and column vectors for the
-   * current step \f$k\f$.
-   */
+  // The absolute values for the temporary row and column vectors for the
+  // current step \f$k\f$.
   Vector<real_type> vk_abs(n);
   Vector<real_type> uk_abs(m);
 
-  /**
-   * The error threshold as the stopping condition.
-   */
+  // The error threshold as the stopping condition.
   real_type error_threshold = 0.;
+  // The Frobenius norm of the cross in the current ACA step.
+  real_type current_cross_norm = 0.;
 
-  /**
-   * Start the ACA+ iteration from \f$k=1\f$.
-   */
+  // Start the ACA+ iteration from \f$k=1\f$.
   for (unsigned int k = 1; k <= effective_max_iter; k++)
     {
-      /**
-       * Select the row index from the maximizer of the reference column.
-       */
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+      std::cout << "=== ACA step " << k
+                << " (maximum steps: " << effective_max_iter << ")"
+                << std::endl;
+#endif
+
+      // Enlarge the number of columns in u_mat and v_mat, when the ACA step
+      // exceeds the existing number of columns in u_mat or v_mat.
+      if (k > u_mat.n())
+        {
+          const size_type n_cols_larger =
+            std::min(u_mat.n() * 2, effective_max_iter);
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+          std::cout << "Number of reserved columns increases from " << u_mat.n()
+                    << " to " << n_cols_larger << std::endl;
+#endif
+
+          // Expand via RkMatrix so formal_rank stays in sync with A.n()/B.n().
+          // Expanding u_mat/v_mat alone leaves formal_rank stale;
+          // RkMatrix::vmult then allocates z(formal_rank) while GEMV writes
+          // A.n() entries.
+          rkmat.expand_columns(n_cols_larger);
+        }
+
+      // Select the row index from the maximizer of the reference column.
       // N.B. The function @p std::max_element return the iterator pointing
       // to the maximum element in the list.
       size_type i_star =
         std::distance(uc_abs.begin(),
                       std::max_element(uc_abs.begin(), uc_abs.end()));
 
-      /**
-       * Select the column index from the maximizer of the reference row.
-       */
+      // Select the column index from the maximizer of the reference row.
       size_type j_star =
         std::distance(vr_abs.begin(),
                       std::max_element(vr_abs.begin(), vr_abs.end()));
 
       if (uc_abs(i_star) > vr_abs(j_star))
         {
-          /**
-           * Select \f$i^*\f$ as the current row index \f$i_k\f$.
-           */
+          // Select \f$i^*\f$ as the current row index \f$i_k\f$.
           ik = i_star;
 
-          /**
-           * Extract the \f$i_k\f$'th row of \f$A\f$.
-           */
+          // Extract the \f$i_k\f$'th row of \f$A\f$.
           assemble_kernel_row(vk,
                               kernel,
                               kernel_factor,
@@ -3793,14 +3831,12 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                               scratch_data_gpu,
                               copy_data);
 
-          /**
-           * \mynote{Here the counter \f$l\f$ iterates over all the previous
-           * steps before \f$k\f$. For each step, the row and column vectors
-           * comprising the cross have been stored as column vectors into
-           * @p v_mat and @p u_mat respectively. Hence, the index for
-           * extracting vectors from @p v_mat or @p u_mat should be
-           * \f$l-1\f$.}
-           */
+          // Here the counter \f$l\f$ iterates over all the previous steps
+          // before \f$k\f$. For each step, the row and column vectors
+          // comprising the cross have been stored as column vectors into
+          // @p v_mat and @p u_mat respectively. Hence, the index for
+          // extracting vectors from @p v_mat or @p u_mat should be
+          // \f$l-1\f$.
           if (k > 1)
             {
               for (size_type l = 0; l < k - 1; l++)
@@ -3809,10 +3845,8 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
               v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
-          /**
-           * Select the column index from the maximizer of the absolute
-           * values of \f$\widetilde{v}_k\f$.
-           */
+          // Select the column index from the maximizer of the absolute
+          // values of \f$\widetilde{v}_k\f$.
           std::transform(vk.begin(),
                          vk.end(),
                          vk_abs.begin(),
@@ -3822,15 +3856,11 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
           jk = std::distance(vk_abs.begin(),
                              std::max_element(vk_abs.begin(), vk_abs.end()));
 
-          /**
-           * Scale the vector \f$\widetilde{v}_k\f$.
-           */
+          // Scale the vector \f$\widetilde{v}_k\f$.
           RangeNumberType value_at_cross = vk(jk);
           vk /= value_at_cross;
 
-          /**
-           * Extract the \f$j_k\f$'th column from \f$A\f$.
-           */
+          // Extract the \f$j_k\f$'th column from \f$A\f$.
           assemble_kernel_column(uk,
                                  kernel,
                                  kernel_factor,
@@ -3863,14 +3893,10 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
         }
       else
         {
-          /**
-           * Select \f$j^*\f$ as the current column index \f$j_k\f$.
-           */
+          // Select \f$j^*\f$ as the current column index \f$j_k\f$.
           jk = j_star;
 
-          /**
-           * Extract the \f$j_k\f$'th column from the matrix \f$A\f$.
-           */
+          // Extract the \f$j_k\f$'th column from the matrix \f$A\f$.
           assemble_kernel_column(uk,
                                  kernel,
                                  kernel_factor,
@@ -3901,10 +3927,8 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
               u_mat.vmult_add(uk, k - 1, RangeNumberType(-1.0), vl);
             }
 
-          /**
-           * Select the row index as the maximizer of the absolute values of
-           * \f$u_k\f$.
-           */
+          // Select the row index as the maximizer of the absolute values of
+          // \f$u_k\f$.
           std::transform(uk.begin(),
                          uk.end(),
                          uk_abs.begin(),
@@ -3914,9 +3938,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
           ik = std::distance(uk_abs.begin(),
                              std::max_element(uk_abs.begin(), uk_abs.end()));
 
-          /**
-           * Extract the \f$i_k\f$'th row from \f$A\f$.
-           */
+          // Extract the \f$i_k\f$'th row from \f$A\f$.
           assemble_kernel_row(vk,
                               kernel,
                               kernel_factor,
@@ -3947,28 +3969,27 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
               v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
-          /**
-           * Scale the vector \f$\widetilde{v}_k\f$.
-           */
+          // Scale the vector \f$\widetilde{v}_k\f$.
           RangeNumberType value_at_cross = vk(jk);
           vk /= value_at_cross;
         }
 
-      /**
-       * Update the matrices storing row and column vectors comprising the
-       * cross.
-       */
+      // Update the matrices storing row and column vectors comprising the
+      // cross.
       u_mat.fill_col(k - 1, uk, false);
       v_mat.fill_col(k - 1, vk, false);
+      current_cross_norm = uk.l2_norm() * vk.l2_norm();
 
       if (k == 1)
         {
-          /**
-           * Calculate the error threshold only in the first step.
-           */
+          // Calculate the error threshold only in the first step.
           error_threshold =
             static_cast<real_type>(hmat_params.aca_relative_err) *
-            rkmat.frobenius_norm(1);
+            current_cross_norm;
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+          std::cout << "ACA error threshold is set to " << error_threshold
+                    << std::endl;
+#endif
         }
 
       remaining_row_indices.remove(ik);
@@ -3984,10 +4005,8 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       // vector should be reselected.
       if (ik == r || LinAlg::is_all_zero(vr))
         {
-          /**
-           * When the index of the selected row is the same as that of the
-           * reference row, reselect a reference row.
-           */
+          // When the index of the selected row is the same as that of the
+          // reference row, reselect a reference row.
           r = random_select_ref_row(vr,
                                     u_mat,
                                     v_mat,
@@ -4021,32 +4040,44 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
             {
               // When there is no reference row can be selected, the ACA+
               // iteration should stop here.
-              if (k < static_cast<unsigned int>(hmat_params.max_rank))
+              if (k < u_mat.n())
                 {
-                  /**
-                   * If the number of ACA+ iterations is less than the
-                   * allowed
-                   * maximum value, the @p rkmat should be truncated to its
-                   * actual rank.
-                   */
+                  // If the number of ACA+ iterations is less than the
+                  // reserved number of columns, the @p rkmat should be
+                  // truncated to its formal rank.
                   rkmat.keep_first_n_columns(k);
                 }
+              else
+                rkmat.set_formal_rank(k);
 
-              /**
-               * Apply complex conjugation to the component matrix @p B, when
-               * we're dealing with complex values, because the rank-k matrix
-               * should take the form \f$M=AB^{\mathrm{H}}\f$.
-               */
+              // Apply complex conjugation to the component matrix @p B, when
+              // we're dealing with complex values, because the rank-k matrix
+              // should take the form \f$M=AB^{\mathrm{H}}\f$.
               if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+              if (current_cross_norm <= error_threshold)
+                {
+                  std::cout << "ACA convergent (no reference rows) with\n"
+                            << "formal rank=" << k
+                            << "\nFrobenius norm of the final cross="
+                            << current_cross_norm << std::endl;
+                }
+              else
+                {
+                  std::cout << "ACA not convergent (no reference rows) with\n"
+                            << "formal rank=" << k
+                            << "\nFrobenius norm of the final cross="
+                            << current_cross_norm << std::endl;
+                }
+#endif
 
               return;
             }
         }
 
-      /**
-       * Update the vector of absolute values for @p vr.
-       */
+      // Update the vector of absolute values for @p vr.
       std::transform(vr.begin(),
                      vr.end(),
                      vr_abs.begin(),
@@ -4065,10 +4096,8 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       // column vector should be reselected.
       if (jk == c || LinAlg::is_all_zero(uc))
         {
-          /**
-           * When the index of the selected column is the same as that of
-           * the reference column, reselect a reference column.
-           */
+          // When the index of the selected column is the same as that of
+          // the reference column, reselect a reference column.
           c = random_select_ref_column(uc,
                                        u_mat,
                                        v_mat,
@@ -4102,32 +4131,45 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
             {
               // When there is no reference column can be selected, the ACA+
               // iteration should stop here.
-              if (k < static_cast<unsigned int>(hmat_params.max_rank))
+              if (k < u_mat.n())
                 {
-                  /**
-                   * If the number of ACA+ iterations is less than the
-                   * allowed
-                   * maximum value, the @p rkmat should be truncated to its
-                   * actual rank.
-                   */
+                  // If the number of ACA+ iterations is less than the
+                  // reserved number of columns, the @p rkmat should be
+                  // truncated to its formal rank.
                   rkmat.keep_first_n_columns(k);
                 }
+              else
+                rkmat.set_formal_rank(k);
 
-              /**
-               * Apply complex conjugation to the component matrix @p B, when
-               * we're dealing with complex values, because the rank-k matrix
-               * should take the form \f$M=AB^{\mathrm{H}}\f$.
-               */
+              // Apply complex conjugation to the component matrix @p B, when
+              // we're dealing with complex values, because the rank-k matrix
+              // should take the form \f$M=AB^{\mathrm{H}}\f$.
               if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+              if (current_cross_norm <= error_threshold)
+                {
+                  std::cout << "ACA convergent (no reference columns) with\n"
+                            << "formal rank=" << k
+                            << "\nFrobenius norm of the final cross="
+                            << current_cross_norm << std::endl;
+                }
+              else
+                {
+                  std::cout
+                    << "ACA not convergent (no reference columns) with\n"
+                    << "formal rank=" << k
+                    << "\nFrobenius norm of the final cross="
+                    << current_cross_norm << std::endl;
+                }
+#endif
 
               return;
             }
         }
 
-      /**
-       * Update the vector of absolute values for @p uc.
-       */
+      // Update the vector of absolute values for @p uc.
       std::transform(uc.begin(),
                      uc.end(),
                      uc_abs.begin(),
@@ -4135,78 +4177,93 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                        return std::abs(val);
                      });
 
-      /**
-       * Check the convergence condition.
-       */
-      if ((k > 1) && (uk.l2_norm() * vk.l2_norm() <= error_threshold))
+      // Check the convergence condition.
+      if ((k > 1) && (current_cross_norm <= error_threshold))
         {
-          if (k < static_cast<unsigned int>(hmat_params.max_rank))
+          if (k < u_mat.n())
             {
-              /**
-               * If the number of ACA+ iterations is less than the allowed
-               * maximum value, the @p rkmat should be truncated to its
-               * actual rank.
-               */
+              // If the number of ACA+ iterations is less than the
+              // reserved number of columns, the @p rkmat should be
+              // truncated to its formal rank.
               rkmat.keep_first_n_columns(k);
             }
+          else
+            rkmat.set_formal_rank(k);
 
-          /**
-           * Apply complex conjugation to the component matrix @p B, when
-           * we're dealing with complex values, because the rank-k matrix
-           * should take the form \f$M=AB^{\mathrm{H}}\f$.
-           */
+          // Apply complex conjugation to the component matrix @p B, when
+          // we're dealing with complex values, because the rank-k matrix
+          // should take the form \f$M=AB^{\mathrm{H}}\f$.
           if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
             v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+          std::cout << "ACA convergent with\n"
+                    << "formal rank=" << k
+                    << "\nFrobenius norm of the final cross="
+                    << current_cross_norm << std::endl;
+#endif
 
           return;
         }
       else
         {
-          if (size(remaining_row_indices) == 0)
+          if (size(remaining_row_indices) == 0 ||
+              size(remaining_col_indices) == 0)
             {
-              if (k < static_cast<unsigned int>(hmat_params.max_rank))
+              if (k < u_mat.n())
                 {
-                  /**
-                   * If the number of ACA+ iterations is less than the
-                   * allowed
-                   * maximum value, the @p rkmat should be truncated to its
-                   * actual rank.
-                   */
+                  // If the number of ACA+ iterations is less than the
+                  // reserved number of columns, the @p rkmat should be
+                  // truncated to its formal rank.
                   rkmat.keep_first_n_columns(k);
                 }
+              else
+                rkmat.set_formal_rank(k);
 
-              /**
-               * Apply complex conjugation to the component matrix @p B, when
-               * we're dealing with complex values, because the rank-k matrix
-               * should take the form \f$M=AB^{\mathrm{H}}\f$.
-               */
+              // Apply complex conjugation to the component matrix @p B, when
+              // we're dealing with complex values, because the rank-k matrix
+              // should take the form \f$M=AB^{\mathrm{H}}\f$.
               if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+              std::cout
+                << "ACA not convergent (no reference rows or columns) with\n"
+                << "formal rank=" << k
+                << "\nFrobenius norm of the final cross=" << current_cross_norm
+                << std::endl;
+#endif
 
               return;
             }
         }
     }
 
-  /**
-   * Apply complex conjugation to the component matrix @p B, when
-   * we're dealing with complex values, because the rank-k matrix
-   * should take the form \f$M=AB^{\mathrm{H}}\f$.
-   */
+  rkmat.set_formal_rank(effective_max_iter);
+
+  // Apply complex conjugation to the component matrix @p B, when
+  // we're dealing with complex values, because the rank-k matrix
+  // should take the form \f$M=AB^{\mathrm{H}}\f$.
   if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
     v_mat.conjugate();
 
-  std::cerr
-    << "Maximum H-matrix rank has been reached and the approximation accuracy has not been achieved, exit early!"
-    << std::endl;
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+  std::cout << "ACA not convergent (maximum rank reached) with\n"
+            << "formal rank=" << effective_max_iter
+            << "\nFrobenius norm of the final cross=" << current_cross_norm
+            << std::endl;
+#endif
 }
 
 
 /**
- * Compute a row or column vector with CUDA parallelization adopted for the
- * Sauter quadrature, which is used in the ACA+ algorithm.
+ * Implementation of the ACA+ algorithm for building a far field block.
  *
- * @param rkmat
+ * The computation of a whole row or column vector is parallelized with CUDA.
+ *
+ * @param rkmat The rank-k matrix to be constructed for the current block. With
+ * an initial rank adopted, the memory of it should be preallocated. During ACA,
+ * this rank will be dynamically increased.
  * @param hmat_params
  * @param sauter_quad_far_field_params
  * @param kernel
@@ -4283,29 +4340,37 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       real_type,
       typename numbers::NumberTraits<KernelNumberType>::real_type>::value);
 
-  /**
-   * @internal Get the size of each dimension of the matrix block to be built.
-   */
+  // Get the size of each dimension of the matrix block to be built.
   const size_type m = row_dof_index_range[1] - row_dof_index_range[0];
   const size_type n = col_dof_index_range[1] - col_dof_index_range[0];
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+  std::cout << "=== Build far field block [" << row_dof_index_range[0] << ","
+            << row_dof_index_range[1] << ") x [" << col_dof_index_range[0]
+            << "," << col_dof_index_range[1] << ")" << std::endl;
+#endif
 
   AssertDimension(rkmat.get_m(), m);
   AssertDimension(rkmat.get_n(), n);
 
-  /**
-   * Adjust the maximum ACA+ iteration if is larger than the matrix
-   * dimension. This ensures the number of assembled rows or colummns <= matrix
-   * size.
-   */
   const unsigned int effective_max_iter =
-    (static_cast<unsigned int>(hmat_params.max_rank) > std::min(m, n)) ?
+    hmat_params.max_rank == 0 ?
       std::min(m, n) :
-      static_cast<unsigned int>(hmat_params.max_rank);
+      std::min(static_cast<unsigned int>(hmat_params.max_rank), std::min(m, n));
 
-  /**
-   * Generate lists of local DoF indices with internal DoF numbering from
-   * corresponding index ranges.
-   */
+  if (rkmat.get_formal_rank() == 0)
+    {
+      Assert(hmat_params.initial_rank > 0, ExcInternalError());
+      rkmat.reinit(m, n, hmat_params.initial_rank);
+    }
+
+  // If the initial rank of the rank-k matrix is larger than
+  // @p effective_max_iter, we shrink surplus columns.
+  if (rkmat.get_formal_rank() > effective_max_iter)
+    rkmat.keep_first_n_columns(effective_max_iter);
+
+  // Generate lists of local DoF indices with internal DoF numbering from
+  // corresponding index ranges.
   std::vector<types::global_dof_index> row_dof_indices(m);
   std::vector<types::global_dof_index> col_dof_indices(n);
   gen_linear_indices<vector_uta, types::global_dof_index>(
@@ -4313,32 +4378,23 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   gen_linear_indices<vector_uta, types::global_dof_index>(
     col_dof_indices, col_dof_index_range[0]);
 
-  /**
-   * Create matrix references associated with the component matrices in the
-   * rank-k matrix to be returned, which hold the row and column vectors in
-   * the selected crosses during the ACA iteration. The number of columns
-   * should be the same as the effective maximum iteration number.
-   */
-  AssertDimension(rkmat.get_formal_rank(), effective_max_iter);
+  // Create matrix references associated with the component matrices in the
+  // rank-k matrix to be returned, which hold the row and column vectors in
+  // the selected crosses during the ACA iteration.
   LAPACKFullMatrixExt<RangeNumberType> &u_mat = rkmat.get_A();
   LAPACKFullMatrixExt<RangeNumberType> &v_mat = rkmat.get_B();
   u_mat                                       = RangeNumberType();
   v_mat                                       = RangeNumberType();
 
-  /**
-   * Generate two lists for storing remaining row indices and column indices
-   * of the matrix block.
-   */
+  // Generate two lists for storing remaining row indices and column indices
+  // of the matrix block.
   std::forward_list<size_type> remaining_row_indices(m);
   std::forward_list<size_type> remaining_col_indices(n);
-
   gen_linear_indices<forward_list_uta, size_type>(remaining_row_indices);
   gen_linear_indices<forward_list_uta, size_type>(remaining_col_indices);
 
-  /**
-   * Select the initial reference row and column vectors and return their
-   * matrix indices.
-   */
+  // Select the initial reference row and column vectors and return their
+  // matrix indices.
   Vector<RangeNumberType> vr(n);
   Vector<RangeNumberType> uc(m);
 
@@ -4351,9 +4407,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                               sizeof(RangeNumberType) * m,
                               cudaHostRegisterDefault));
 
-  /**
-   * Temporary row and column vectors for the previous step \f$l\f$.
-   */
+  // Temporary row and column vectors for the previous step \f$l\f$.
   Vector<RangeNumberType> vl(n);
   Vector<RangeNumberType> ul(m);
 
@@ -4393,6 +4447,10 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
 
       AssertCuda(cudaHostUnregister((void *)(vr.data())));
       AssertCuda(cudaHostUnregister((void *)(uc.data())));
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+      std::cout << "ACA returns zero block (no reference rows)" << std::endl;
+#endif
 
       return;
     }
@@ -4434,19 +4492,16 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       AssertCuda(cudaHostUnregister((void *)(vr.data())));
       AssertCuda(cudaHostUnregister((void *)(uc.data())));
 
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+      std::cout << "ACA returns zero block (no reference columns)" << std::endl;
+#endif
+
       return;
     }
 
-  /**
-   * The absolute values for the reference row and column vectors.
-   */
+  // The absolute values for the reference row and column vectors.
   Vector<real_type> vr_abs(n);
   Vector<real_type> uc_abs(m);
-
-  /**
-   * Calculate the absolute values for the reference row and column
-   * vectors.
-   */
   std::transform(vr.begin(),
                  vr.end(),
                  vr_abs.begin(),
@@ -4460,15 +4515,11 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                    return std::abs(val);
                  });
 
-  /**
-   * Row and column indices for the \f$k\f$'th step. The corresponding row
-   * and column vectors comprise the cross.
-   */
+  // Row and column indices for the \f$k\f$'th step. The corresponding row
+  // and column vectors comprise the cross.
   size_type ik, jk;
 
-  /**
-   * Temporary row and column vectors for the current step \f$k\f$.
-   */
+  // Temporary row and column vectors for the current step \f$k\f$.
   Vector<RangeNumberType> vk(n);
   Vector<RangeNumberType> uk(m);
 
@@ -4481,49 +4532,62 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                               sizeof(RangeNumberType) * m,
                               cudaHostRegisterDefault));
 
-  /**
-   * The absolute values for the temporary row and column vectors for the
-   * current step \f$k\f$.
-   */
+  // The absolute values for the temporary row and column vectors for the
+  // current step \f$k\f$.
   Vector<real_type> vk_abs(n);
   Vector<real_type> uk_abs(m);
 
-  /**
-   * The error threshold as the stopping condition.
-   */
+  // The error threshold as the stopping condition.
   real_type error_threshold = 0.;
+  // The Frobenius norm of the cross in the current ACA step.
+  real_type current_cross_norm = 0.;
 
-  /**
-   * Start the ACA+ iteration from \f$k=1\f$.
-   */
+  // Start the ACA+ iteration from \f$k=1\f$.
   for (unsigned int k = 1; k <= effective_max_iter; k++)
     {
-      /**
-       * Select the row index from the maximizer of the reference column.
-       */
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+      std::cout << "=== ACA step " << k
+                << " (maximum steps: " << effective_max_iter << ")"
+                << std::endl;
+#endif
+
+      // Enlarge the number of columns in u_mat and v_mat, when the ACA step
+      // exceeds the existing number of columns in u_mat or v_mat.
+      if (k > u_mat.n())
+        {
+          const size_type n_cols_larger =
+            std::min(u_mat.n() * 2, effective_max_iter);
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+          std::cout << "Number of reserved columns increases from " << u_mat.n()
+                    << " to " << n_cols_larger << std::endl;
+#endif
+
+          // Expand via RkMatrix so formal_rank stays in sync with A.n()/B.n().
+          // Expanding u_mat/v_mat alone leaves formal_rank stale;
+          // RkMatrix::vmult then allocates z(formal_rank) while GEMV writes
+          // A.n() entries.
+          rkmat.expand_columns(n_cols_larger);
+        }
+
+      // Select the row index from the maximizer of the reference column.
       // N.B. The function @p std::max_element return the iterator pointing
       // to the maximum element in the list.
       size_type i_star =
         std::distance(uc_abs.begin(),
                       std::max_element(uc_abs.begin(), uc_abs.end()));
 
-      /**
-       * Select the column index from the maximizer of the reference row.
-       */
+      // Select the column index from the maximizer of the reference row.
       size_type j_star =
         std::distance(vr_abs.begin(),
                       std::max_element(vr_abs.begin(), vr_abs.end()));
 
       if (uc_abs(i_star) > vr_abs(j_star))
         {
-          /**
-           * Select \f$i^*\f$ as the current row index \f$i_k\f$.
-           */
+          // Select \f$i^*\f$ as the current row index \f$i_k\f$.
           ik = i_star;
 
-          /**
-           * Extract the \f$i_k\f$'th row of \f$A\f$.
-           */
+          // Extract the \f$i_k\f$'th row of \f$A\f$.
           assemble_kernel_row(sauter_task_buffer_for_vector,
                               vk,
                               sauter_quad_far_field_params,
@@ -4545,14 +4609,12 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                               scratch_data,
                               copy_data);
 
-          /**
-           * \mynote{Here the counter \f$l\f$ iterates over all the previous
-           * steps before \f$k\f$. For each step, the row and column vectors
-           * comprising the cross have been stored as column vectors into
-           * @p v_mat and @p u_mat respectively. Hence, the index for
-           * extracting vectors from @p v_mat or @p u_mat should be
-           * \f$l-1\f$.}
-           */
+          // Here the counter \f$l\f$ iterates over all the previous steps
+          // before \f$k\f$. For each step, the row and column vectors
+          // comprising the cross have been stored as column vectors into
+          // @p v_mat and @p u_mat respectively. Hence, the index for
+          // extracting vectors from @p v_mat or @p u_mat should be
+          // \f$l-1\f$.
           if (k > 1)
             {
               for (size_type l = 0; l < k - 1; l++)
@@ -4561,10 +4623,8 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
               v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
-          /**
-           * Select the column index from the maximizer of the absolute
-           * values of \f$\widetilde{v}_k\f$.
-           */
+          // Select the column index from the maximizer of the absolute
+          // values of \f$\widetilde{v}_k\f$.
           std::transform(vk.begin(),
                          vk.end(),
                          vk_abs.begin(),
@@ -4574,15 +4634,11 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           jk = std::distance(vk_abs.begin(),
                              std::max_element(vk_abs.begin(), vk_abs.end()));
 
-          /**
-           * Scale the vector \f$\widetilde{v}_k\f$.
-           */
+          // Scale the vector \f$\widetilde{v}_k\f$.
           RangeNumberType value_at_cross = vk(jk);
           vk /= value_at_cross;
 
-          /**
-           * Extract the \f$j_k\f$'th column from \f$A\f$.
-           */
+          // Extract the \f$j_k\f$'th column from \f$A\f$.
           assemble_kernel_column(sauter_task_buffer_for_vector,
                                  uk,
                                  sauter_quad_far_field_params,
@@ -4614,14 +4670,10 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
         }
       else
         {
-          /**
-           * Select \f$j^*\f$ as the current column index \f$j_k\f$.
-           */
+          // Select \f$j^*\f$ as the current column index \f$j_k\f$.
           jk = j_star;
 
-          /**
-           * Extract the \f$j_k\f$'th column from the matrix \f$A\f$.
-           */
+          // Extract the \f$j_k\f$'th column from the matrix \f$A\f$.
           assemble_kernel_column(sauter_task_buffer_for_vector,
                                  uk,
                                  sauter_quad_far_field_params,
@@ -4651,10 +4703,8 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
               u_mat.vmult_add(uk, k - 1, RangeNumberType(-1.0), vl);
             }
 
-          /**
-           * Select the row index as the maximizer of the absolute values of
-           * \f$u_k\f$.
-           */
+          // Select the row index as the maximizer of the absolute values of
+          // \f$u_k\f$.
           std::transform(uk.begin(),
                          uk.end(),
                          uk_abs.begin(),
@@ -4664,9 +4714,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           ik = std::distance(uk_abs.begin(),
                              std::max_element(uk_abs.begin(), uk_abs.end()));
 
-          /**
-           * Extract the \f$i_k\f$'th row from \f$A\f$.
-           */
+          // Extract the \f$i_k\f$'th row from \f$A\f$.
           assemble_kernel_row(sauter_task_buffer_for_vector,
                               vk,
                               sauter_quad_far_field_params,
@@ -4696,28 +4744,27 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
               v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
-          /**
-           * Scale the vector \f$\widetilde{v}_k\f$.
-           */
+          // Scale the vector \f$\widetilde{v}_k\f$.
           RangeNumberType value_at_cross = vk(jk);
           vk /= value_at_cross;
         }
 
-      /**
-       * Update the matrices storing row and column vectors comprising the
-       * cross.
-       */
+      // Update the matrices storing row and column vectors comprising the
+      // cross.
       u_mat.fill_col(k - 1, uk, false);
       v_mat.fill_col(k - 1, vk, false);
+      current_cross_norm = uk.l2_norm() * vk.l2_norm();
 
       if (k == 1)
         {
-          /**
-           * Calculate the error threshold only in the first step.
-           */
+          // Calculate the error threshold only in the first step.
           error_threshold =
             static_cast<real_type>(hmat_params.aca_relative_err) *
-            rkmat.frobenius_norm(1);
+            current_cross_norm;
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+          std::cout << "ACA error threshold is set to " << error_threshold
+                    << std::endl;
+#endif
         }
 
       remaining_row_indices.remove(ik);
@@ -4733,10 +4780,8 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       // vector should be reselected.
       if (ik == r || LinAlg::is_all_zero(vr))
         {
-          /**
-           * When the index of the selected row is the same as that of the
-           * reference row, reselect a reference row.
-           */
+          // When the index of the selected row is the same as that of the
+          // reference row, reselect a reference row.
           r = random_select_ref_row(sauter_task_buffer_for_vector,
                                     vr,
                                     u_mat,
@@ -4769,37 +4814,49 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
             {
               // When there is no reference row can be selected, the ACA+
               // iteration should stop here.
-              if (k < static_cast<unsigned int>(hmat_params.max_rank))
+              if (k < u_mat.n())
                 {
-                  /**
-                   * If the number of ACA+ iterations is less than the
-                   * allowed
-                   * maximum value, the @p rkmat should be truncated to its
-                   * actual rank.
-                   */
+                  // If the number of ACA+ iterations is less than the
+                  // reserved number of columns, the @p rkmat should shrink its
+                  // storage to k number of columns.
                   rkmat.keep_first_n_columns(k);
                 }
+              else
+                rkmat.set_formal_rank(k);
 
               AssertCuda(cudaHostUnregister((void *)(vr.data())));
               AssertCuda(cudaHostUnregister((void *)(uc.data())));
               AssertCuda(cudaHostUnregister((void *)(vk.data())));
               AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
-              /**
-               * Apply complex conjugation to the component matrix @p B, when
-               * we're dealing with complex values, because the rank-k matrix
-               * should take the form \f$M=AB^{\mathrm{H}}\f$.
-               */
+              // Apply complex conjugation to the component matrix @p B, when
+              // we're dealing with complex values, because the rank-k matrix
+              // should take the form \f$M=AB^{\mathrm{H}}\f$.
               if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+              if (current_cross_norm <= error_threshold)
+                {
+                  std::cout << "ACA convergent (no reference rows) with\n"
+                            << "formal rank=" << k
+                            << "\nFrobenius norm of the final cross="
+                            << current_cross_norm << std::endl;
+                }
+              else
+                {
+                  std::cout << "ACA not convergent (no reference rows) with\n"
+                            << "formal rank=" << k
+                            << "\nFrobenius norm of the final cross="
+                            << current_cross_norm << std::endl;
+                }
+#endif
 
               return;
             }
         }
 
-      /**
-       * Update the vector of absolute values for @p vr.
-       */
+      // Update the vector of absolute values for @p vr.
       std::transform(vr.begin(),
                      vr.end(),
                      vr_abs.begin(),
@@ -4818,10 +4875,8 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       // column vector should be reselected.
       if (jk == c || LinAlg::is_all_zero(uc))
         {
-          /**
-           * When the index of the selected column is the same as that of
-           * the reference column, reselect a reference column.
-           */
+          // When the index of the selected column is the same as that of
+          // the reference column, reselect a reference column.
           c = random_select_ref_column(sauter_task_buffer_for_vector,
                                        uc,
                                        u_mat,
@@ -4854,37 +4909,50 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
             {
               // When there is no reference column can be selected, the ACA+
               // iteration should stop here.
-              if (k < static_cast<unsigned int>(hmat_params.max_rank))
+              if (k < u_mat.n())
                 {
-                  /**
-                   * If the number of ACA+ iterations is less than the
-                   * allowed
-                   * maximum value, the @p rkmat should be truncated to its
-                   * actual rank.
-                   */
+                  // If the number of ACA+ iterations is less than the
+                  // reserved number of columns, the @p rkmat should shrink its
+                  // storage to k number of columns.
                   rkmat.keep_first_n_columns(k);
                 }
+              else
+                rkmat.set_formal_rank(k);
 
               AssertCuda(cudaHostUnregister((void *)(vr.data())));
               AssertCuda(cudaHostUnregister((void *)(uc.data())));
               AssertCuda(cudaHostUnregister((void *)(vk.data())));
               AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
-              /**
-               * Apply complex conjugation to the component matrix @p B, when
-               * we're dealing with complex values, because the rank-k matrix
-               * should take the form \f$M=AB^{\mathrm{H}}\f$.
-               */
+              // Apply complex conjugation to the component matrix @p B, when
+              // we're dealing with complex values, because the rank-k matrix
+              // should take the form \f$M=AB^{\mathrm{H}}\f$.
               if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+              if (current_cross_norm <= error_threshold)
+                {
+                  std::cout << "ACA convergent (no reference columns) with\n"
+                            << "formal rank=" << k
+                            << "\nFrobenius norm of the final cross="
+                            << current_cross_norm << std::endl;
+                }
+              else
+                {
+                  std::cout
+                    << "ACA not convergent (no reference columns) with\n"
+                    << "formal rank=" << k
+                    << "\nFrobenius norm of the final cross="
+                    << current_cross_norm << std::endl;
+                }
+#endif
 
               return;
             }
         }
 
-      /**
-       * Update the vector of absolute values for @p uc.
-       */
+      // Update the vector of absolute values for @p uc.
       std::transform(uc.begin(),
                      uc.end(),
                      uc_abs.begin(),
@@ -4892,91 +4960,104 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                        return std::abs(val);
                      });
 
-      /**
-       * Check the convergence condition.
-       */
-      if ((k > 1) && (uk.l2_norm() * vk.l2_norm() <= error_threshold))
+      // Check the convergence condition.
+      if ((k > 1) && (current_cross_norm <= error_threshold))
         {
-          if (k < static_cast<unsigned int>(hmat_params.max_rank))
+          if (k < u_mat.n())
             {
-              /**
-               * If the number of ACA+ iterations is less than the allowed
-               * maximum value, the @p rkmat should be truncated to its
-               * actual rank.
-               */
+              // If the number of ACA+ iterations is less than the
+              // reserved number of columns, the @p rkmat should shrink its
+              // storage to k number of columns.
               rkmat.keep_first_n_columns(k);
             }
+          else
+            rkmat.set_formal_rank(k);
 
           AssertCuda(cudaHostUnregister((void *)(vr.data())));
           AssertCuda(cudaHostUnregister((void *)(uc.data())));
           AssertCuda(cudaHostUnregister((void *)(vk.data())));
           AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
-          /**
-           * Apply complex conjugation to the component matrix @p B, when
-           * we're dealing with complex values, because the rank-k matrix
-           * should take the form \f$M=AB^{\mathrm{H}}\f$.
-           */
+          // Apply complex conjugation to the component matrix @p B, when
+          // we're dealing with complex values, because the rank-k matrix
+          // should take the form \f$M=AB^{\mathrm{H}}\f$.
           if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
             v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+          std::cout << "ACA convergent with\n"
+                    << "formal rank=" << k
+                    << "\nFrobenius norm of the final cross="
+                    << current_cross_norm << std::endl;
+#endif
 
           return;
         }
       else
         {
-          if (size(remaining_row_indices) == 0)
+          if (size(remaining_row_indices) == 0 ||
+              size(remaining_col_indices) == 0)
             {
-              if (k < static_cast<unsigned int>(hmat_params.max_rank))
+              if (k < u_mat.n())
                 {
-                  /**
-                   * If the number of ACA+ iterations is less than the
-                   * allowed
-                   * maximum value, the @p rkmat should be truncated to its
-                   * actual rank.
-                   */
+                  // If the number of ACA+ iterations is less than the
+                  // reserved number of columns, the @p rkmat should shrink its
+                  // storage to k number of columns.
                   rkmat.keep_first_n_columns(k);
                 }
+              else
+                rkmat.set_formal_rank(k);
 
               AssertCuda(cudaHostUnregister((void *)(vr.data())));
               AssertCuda(cudaHostUnregister((void *)(uc.data())));
               AssertCuda(cudaHostUnregister((void *)(vk.data())));
               AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
-              /**
-               * Apply complex conjugation to the component matrix @p B, when
-               * we're dealing with complex values, because the rank-k matrix
-               * should take the form \f$M=AB^{\mathrm{H}}\f$.
-               */
+              // Apply complex conjugation to the component matrix @p B, when
+              // we're dealing with complex values, because the rank-k matrix
+              // should take the form \f$M=AB^{\mathrm{H}}\f$.
               if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+              std::cout
+                << "ACA not convergent (no reference rows or columns) with\n"
+                << "formal rank=" << k
+                << "\nFrobenius norm of the final cross=" << current_cross_norm
+                << std::endl;
+#endif
 
               return;
             }
         }
     }
 
+  rkmat.set_formal_rank(effective_max_iter);
+
   AssertCuda(cudaHostUnregister((void *)(vr.data())));
   AssertCuda(cudaHostUnregister((void *)(uc.data())));
   AssertCuda(cudaHostUnregister((void *)(vk.data())));
   AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
-  /**
-   * Apply complex conjugation to the component matrix @p B, when
-   * we're dealing with complex values, because the rank-k matrix
-   * should take the form \f$M=AB^{\mathrm{H}}\f$.
-   */
+  // Apply complex conjugation to the component matrix @p B, when
+  // we're dealing with complex values, because the rank-k matrix
+  // should take the form \f$M=AB^{\mathrm{H}}\f$.
   if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
     v_mat.conjugate();
 
-  std::cerr
-    << "Maximum H-matrix rank has been reached and the approximation accuracy has not been achieved, exit early!"
-    << std::endl;
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+  std::cout << "ACA not convergent (maximum rank reached) with\n"
+            << "formal rank=" << effective_max_iter
+            << "\nFrobenius norm of the final cross=" << current_cross_norm
+            << std::endl;
+#endif
 }
 
 
 /**
- * Compute a row or column vector with CUDA parallelization adopted for the
- * Sauter quadrature, which is used in the ACA+ algorithm.
+ * Implementation of the ACA+ algorithm for building a far field block.
+ *
+ * The computation of a whole row or column vector is parallelized with CUDA.
  *
  * This version is used for the regularized hypersingular BEM kernel and
  * stabilization terms should be added into its bilinear form.
@@ -5066,22 +5147,33 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   const size_type m = row_dof_index_range[1] - row_dof_index_range[0];
   const size_type n = col_dof_index_range[1] - col_dof_index_range[0];
 
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+  std::cout << "=== Build far field block [" << row_dof_index_range[0] << ","
+            << row_dof_index_range[1] << ") x [" << col_dof_index_range[0]
+            << "," << col_dof_index_range[1] << ")" << std::endl;
+#endif
+
   AssertDimension(rkmat.get_m(), m);
   AssertDimension(rkmat.get_n(), n);
 
-  /**
-   * Adjust the maximum ACA+ iteration if is larger than the matrix
-   * dimension.
-   */
   const unsigned int effective_max_iter =
-    (static_cast<unsigned int>(hmat_params.max_rank) > std::min(m, n)) ?
+    hmat_params.max_rank == 0 ?
       std::min(m, n) :
-      static_cast<unsigned int>(hmat_params.max_rank);
+      std::min(static_cast<unsigned int>(hmat_params.max_rank), std::min(m, n));
 
-  /**
-   * Generate lists of internal DoF indices (internal DoF numbering) from
-   * corresponding index ranges.
-   */
+  if (rkmat.get_formal_rank() == 0)
+    {
+      Assert(hmat_params.initial_rank > 0, ExcInternalError());
+      rkmat.reinit(m, n, hmat_params.initial_rank);
+    }
+
+  // If the initial rank of the rank-k matrix is larger than
+  // @p effective_max_iter, we shrink surplus columns.
+  if (rkmat.get_formal_rank() > effective_max_iter)
+    rkmat.keep_first_n_columns(effective_max_iter);
+
+  // Generate lists of internal DoF indices (internal DoF numbering) from
+  // corresponding index ranges.
   std::vector<types::global_dof_index> row_dof_indices(m);
   std::vector<types::global_dof_index> col_dof_indices(n);
   gen_linear_indices<vector_uta, types::global_dof_index>(
@@ -5089,32 +5181,23 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   gen_linear_indices<vector_uta, types::global_dof_index>(
     col_dof_indices, col_dof_index_range[0]);
 
-  /**
-   * Create matrix references associated with the component matrices in the
-   * rank-k matrix to be returned, which hold the row and column vectors in
-   * the selected crosses during the ACA iteration. The number of columns
-   * should be the same as the effective maximum iteration number.
-   */
-  AssertDimension(rkmat.get_formal_rank(), effective_max_iter);
+  // Create matrix references associated with the component matrices in the
+  // rank-k matrix to be returned, which hold the row and column vectors in
+  // the selected crosses during the ACA iteration.
   LAPACKFullMatrixExt<RangeNumberType> &u_mat = rkmat.get_A();
   LAPACKFullMatrixExt<RangeNumberType> &v_mat = rkmat.get_B();
   u_mat                                       = RangeNumberType();
   v_mat                                       = RangeNumberType();
 
-  /**
-   * Generate two lists for storing remaining row indices and column indices
-   * of the matrix block.
-   */
+  // Generate two lists for storing remaining row indices and column indices
+  // of the matrix block.
   std::forward_list<size_type> remaining_row_indices(m);
   std::forward_list<size_type> remaining_col_indices(n);
-
   gen_linear_indices<forward_list_uta, size_type>(remaining_row_indices);
   gen_linear_indices<forward_list_uta, size_type>(remaining_col_indices);
 
-  /**
-   * Select the initial reference row and column vectors and return their
-   * matrix indices.
-   */
+  // Select the initial reference row and column vectors and return their
+  // matrix indices.
   Vector<RangeNumberType> vr(n);
   Vector<RangeNumberType> uc(m);
 
@@ -5127,9 +5210,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                               sizeof(RangeNumberType) * m,
                               cudaHostRegisterDefault));
 
-  /**
-   * Temporary row and column vectors for the previous step \f$l\f$.
-   */
+  // Temporary row and column vectors for the previous step \f$l\f$.
   Vector<RangeNumberType> vl(n);
   Vector<RangeNumberType> ul(m);
 
@@ -5171,6 +5252,10 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
 
       AssertCuda(cudaHostUnregister((void *)(vr.data())));
       AssertCuda(cudaHostUnregister((void *)(uc.data())));
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+      std::cout << "ACA returns zero block (no reference rows)" << std::endl;
+#endif
 
       return;
     }
@@ -5214,22 +5299,16 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       AssertCuda(cudaHostUnregister((void *)(vr.data())));
       AssertCuda(cudaHostUnregister((void *)(uc.data())));
 
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+      std::cout << "ACA returns zero block (no reference columns)" << std::endl;
+#endif
+
       return;
     }
 
-  /**
-   * The absolute values for the reference row and column vectors.
-   */
+  // The absolute values for the reference row and column vectors.
   Vector<real_type> vr_abs(n);
   Vector<real_type> uc_abs(m);
-
-  /**
-   * Calculate the absolute values for the reference row and column
-   * vectors.
-   *
-   * \mynote{In the following, we use @p static_cast to explicitly
-   * specify which version of @p std::abs to call.}
-   */
   std::transform(vr.begin(),
                  vr.end(),
                  vr_abs.begin(),
@@ -5243,15 +5322,11 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                    return std::abs(val);
                  });
 
-  /**
-   * Row and column indices for the \f$k\f$'th step. The corresponding row
-   * and column vectors comprise the cross.
-   */
+  // Row and column indices for the \f$k\f$'th step. The corresponding row
+  // and column vectors comprise the cross.
   size_type ik, jk;
 
-  /**
-   * Temporary row and column vectors for the current step \f$k\f$.
-   */
+  // Temporary row and column vectors for the current step \f$k\f$.
   Vector<RangeNumberType> vk(n);
   Vector<RangeNumberType> uk(m);
 
@@ -5264,49 +5339,62 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                               sizeof(RangeNumberType) * m,
                               cudaHostRegisterDefault));
 
-  /**
-   * The absolute values for the temporary row and column vectors for the
-   * current step \f$k\f$.
-   */
+  // The absolute values for the temporary row and column vectors for the
+  // current step \f$k\f$.
   Vector<real_type> vk_abs(n);
   Vector<real_type> uk_abs(m);
 
-  /**
-   * The error threshold as the stopping condition.
-   */
+  // The error threshold as the stopping condition.
   real_type error_threshold = 0.;
+  // The Frobenius norm of the cross in the current ACA step.
+  real_type current_cross_norm = 0.;
 
-  /**
-   * Start the ACA+ iteration from \f$k=1\f$.
-   */
+  // Start the ACA+ iteration from \f$k=1\f$.
   for (unsigned int k = 1; k <= effective_max_iter; k++)
     {
-      /**
-       * Select the row index from the maximizer of the reference column.
-       */
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+      std::cout << "=== ACA step " << k
+                << " (maximum steps: " << effective_max_iter << ")"
+                << std::endl;
+#endif
+
+      // Enlarge the number of columns in u_mat and v_mat, when the ACA step
+      // exceeds the existing number of columns in u_mat or v_mat.
+      if (k > u_mat.n())
+        {
+          const size_type n_cols_larger =
+            std::min(u_mat.n() * 2, effective_max_iter);
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+          std::cout << "Number of reserved columns increases from " << u_mat.n()
+                    << " to " << n_cols_larger << std::endl;
+#endif
+
+          // Expand via RkMatrix so formal_rank stays in sync with A.n()/B.n().
+          // Expanding u_mat/v_mat alone leaves formal_rank stale;
+          // RkMatrix::vmult then allocates z(formal_rank) while GEMV writes
+          // A.n() entries.
+          rkmat.expand_columns(n_cols_larger);
+        }
+
+      // Select the row index from the maximizer of the reference column.
       // N.B. The function @p std::max_element return the iterator pointing
       // to the maximum element in the list.
       size_type i_star =
         std::distance(uc_abs.begin(),
                       std::max_element(uc_abs.begin(), uc_abs.end()));
 
-      /**
-       * Select the column index from the maximizer of the reference row.
-       */
+      // Select the column index from the maximizer of the reference row.
       size_type j_star =
         std::distance(vr_abs.begin(),
                       std::max_element(vr_abs.begin(), vr_abs.end()));
 
       if (uc_abs(i_star) > vr_abs(j_star))
         {
-          /**
-           * Select \f$i^*\f$ as the current row index \f$i_k\f$.
-           */
+          // Select \f$i^*\f$ as the current row index \f$i_k\f$.
           ik = i_star;
 
-          /**
-           * Extract the \f$i_k\f$'th row of \f$A\f$.
-           */
+          // Extract the \f$i_k\f$'th row of \f$A\f$.
           assemble_kernel_row(sauter_task_buffer_for_vector,
                               vk,
                               sauter_quad_far_field_params,
@@ -5330,14 +5418,12 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                               scratch_data,
                               copy_data);
 
-          /**
-           * \mynote{Here the counter \f$l\f$ iterates over all the previous
-           * steps before \f$k\f$. For each step, the row and column vectors
-           * comprising the cross have been stored as column vectors into
-           * @p v_mat and @p u_mat respectively. Hence, the index for
-           * extracting vectors from @p v_mat or @p u_mat should be
-           * \f$l-1\f$.}
-           */
+          // Here the counter \f$l\f$ iterates over all the previous steps
+          // before \f$k\f$. For each step, the row and column vectors
+          // comprising the cross have been stored as column vectors into
+          // @p v_mat and @p u_mat respectively. Hence, the index for
+          // extracting vectors from @p v_mat or @p u_mat should be
+          // \f$l-1\f$.
           if (k > 1)
             {
               for (size_type l = 0; l < k - 1; l++)
@@ -5346,10 +5432,8 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
               v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
-          /**
-           * Select the column index from the maximizer of the absolute
-           * values of \f$\widetilde{v}_k\f$.
-           */
+          // Select the column index from the maximizer of the absolute
+          // values of \f$\widetilde{v}_k\f$.
           std::transform(vk.begin(),
                          vk.end(),
                          vk_abs.begin(),
@@ -5359,15 +5443,11 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           jk = std::distance(vk_abs.begin(),
                              std::max_element(vk_abs.begin(), vk_abs.end()));
 
-          /**
-           * Scale the vector \f$\widetilde{v}_k\f$.
-           */
+          // Scale the vector \f$\widetilde{v}_k\f$.
           RangeNumberType value_at_cross = vk(jk);
           vk /= value_at_cross;
 
-          /**
-           * Extract the \f$j_k\f$'th column from \f$A\f$.
-           */
+          // Extract the \f$j_k\f$'th column from \f$A\f$.
           assemble_kernel_column(sauter_task_buffer_for_vector,
                                  uk,
                                  sauter_quad_far_field_params,
@@ -5401,14 +5481,10 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
         }
       else
         {
-          /**
-           * Select \f$j^*\f$ as the current column index \f$j_k\f$.
-           */
+          // Select \f$j^*\f$ as the current column index \f$j_k\f$.
           jk = j_star;
 
-          /**
-           * Extract the \f$j_k\f$'th column from the matrix \f$A\f$.
-           */
+          // Extract the \f$j_k\f$'th column from the matrix \f$A\f$.
           assemble_kernel_column(sauter_task_buffer_for_vector,
                                  uk,
                                  sauter_quad_far_field_params,
@@ -5440,10 +5516,8 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
               u_mat.vmult_add(uk, k - 1, RangeNumberType(-1.0), vl);
             }
 
-          /**
-           * Select the row index as the maximizer of the absolute values of
-           * \f$u_k\f$.
-           */
+          // Select the row index as the maximizer of the absolute values of
+          // \f$u_k\f$.
           std::transform(uk.begin(),
                          uk.end(),
                          uk_abs.begin(),
@@ -5453,9 +5527,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
           ik = std::distance(uk_abs.begin(),
                              std::max_element(uk_abs.begin(), uk_abs.end()));
 
-          /**
-           * Extract the \f$i_k\f$'th row from \f$A\f$.
-           */
+          // Extract the \f$i_k\f$'th row from \f$A\f$.
           assemble_kernel_row(sauter_task_buffer_for_vector,
                               vk,
                               sauter_quad_far_field_params,
@@ -5487,28 +5559,27 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
               v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
-          /**
-           * Scale the vector \f$\widetilde{v}_k\f$.
-           */
+          // Scale the vector \f$\widetilde{v}_k\f$.
           RangeNumberType value_at_cross = vk(jk);
           vk /= value_at_cross;
         }
 
-      /**
-       * Update the matrices storing row and column vectors comprising the
-       * cross.
-       */
+      // Update the matrices storing row and column vectors comprising the
+      // cross.
       u_mat.fill_col(k - 1, uk, false);
       v_mat.fill_col(k - 1, vk, false);
+      current_cross_norm = uk.l2_norm() * vk.l2_norm();
 
       if (k == 1)
         {
-          /**
-           * Calculate the error threshold only in the first step.
-           */
+          // Calculate the error threshold only in the first step.
           error_threshold =
             static_cast<real_type>(hmat_params.aca_relative_err) *
-            rkmat.frobenius_norm(1);
+            current_cross_norm;
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+          std::cout << "ACA error threshold is set to " << error_threshold
+                    << std::endl;
+#endif
         }
 
       remaining_row_indices.remove(ik);
@@ -5524,10 +5595,8 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       // vector should be reselected.
       if (ik == r || LinAlg::is_all_zero(vr))
         {
-          /**
-           * When the index of the selected row is the same as that of the
-           * reference row, reselect a reference row.
-           */
+          // When the index of the selected row is the same as that of the
+          // reference row, reselect a reference row.
           r = random_select_ref_row(sauter_task_buffer_for_vector,
                                     vr,
                                     u_mat,
@@ -5562,37 +5631,49 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
             {
               // When there is no reference row can be selected, the ACA+
               // iteration should stop here.
-              if (k < static_cast<unsigned int>(hmat_params.max_rank))
+              if (k < u_mat.n())
                 {
-                  /**
-                   * If the number of ACA+ iterations is less than the
-                   * allowed
-                   * maximum value, the @p rkmat should be truncated to its
-                   * actual rank.
-                   */
+                  // If the number of ACA+ iterations is less than the
+                  // reserved number of columns, the @p rkmat should shrink its
+                  // storage to k number of columns.
                   rkmat.keep_first_n_columns(k);
                 }
+              else
+                rkmat.set_formal_rank(k);
 
               AssertCuda(cudaHostUnregister((void *)(vr.data())));
               AssertCuda(cudaHostUnregister((void *)(uc.data())));
               AssertCuda(cudaHostUnregister((void *)(vk.data())));
               AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
-              /**
-               * Apply complex conjugation to the component matrix @p B, when
-               * we're dealing with complex values, because the rank-k matrix
-               * should take the form \f$M=AB^{\mathrm{H}}\f$.
-               */
+              // Apply complex conjugation to the component matrix @p B, when
+              // we're dealing with complex values, because the rank-k matrix
+              // should take the form \f$M=AB^{\mathrm{H}}\f$.
               if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+              if (current_cross_norm <= error_threshold)
+                {
+                  std::cout << "ACA convergent (no reference rows) with\n"
+                            << "formal rank=" << k
+                            << "\nFrobenius norm of the final cross="
+                            << current_cross_norm << std::endl;
+                }
+              else
+                {
+                  std::cout << "ACA not convergent (no reference rows) with\n"
+                            << "formal rank=" << k
+                            << "\nFrobenius norm of the final cross="
+                            << current_cross_norm << std::endl;
+                }
+#endif
 
               return;
             }
         }
 
-      /**
-       * Update the vector of absolute values for @p vr.
-       */
+      // Update the vector of absolute values for @p vr.
       std::transform(vr.begin(),
                      vr.end(),
                      vr_abs.begin(),
@@ -5611,10 +5692,8 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       // column vector should be reselected.
       if (jk == c || LinAlg::is_all_zero(uc))
         {
-          /**
-           * When the index of the selected column is the same as that of
-           * the reference column, reselect a reference column.
-           */
+          // When the index of the selected column is the same as that of
+          // the reference column, reselect a reference column.
           c = random_select_ref_column(sauter_task_buffer_for_vector,
                                        uc,
                                        u_mat,
@@ -5649,37 +5728,50 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
             {
               // When there is no reference column can be selected, the ACA+
               // iteration should stop here.
-              if (k < static_cast<unsigned int>(hmat_params.max_rank))
+              if (k < u_mat.n())
                 {
-                  /**
-                   * If the number of ACA+ iterations is less than the
-                   * allowed
-                   * maximum value, the @p rkmat should be truncated to its
-                   * actual rank.
-                   */
+                  // If the number of ACA+ iterations is less than the
+                  // reserved number of columns, the @p rkmat should shrink its
+                  // storage to k number of columns.
                   rkmat.keep_first_n_columns(k);
                 }
+              else
+                rkmat.set_formal_rank(k);
 
               AssertCuda(cudaHostUnregister((void *)(vr.data())));
               AssertCuda(cudaHostUnregister((void *)(uc.data())));
               AssertCuda(cudaHostUnregister((void *)(vk.data())));
               AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
-              /**
-               * Apply complex conjugation to the component matrix @p B, when
-               * we're dealing with complex values, because the rank-k matrix
-               * should take the form \f$M=AB^{\mathrm{H}}\f$.
-               */
+              // Apply complex conjugation to the component matrix @p B, when
+              // we're dealing with complex values, because the rank-k matrix
+              // should take the form \f$M=AB^{\mathrm{H}}\f$.
               if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+              if (current_cross_norm <= error_threshold)
+                {
+                  std::cout << "ACA convergent (no reference columns) with\n"
+                            << "formal rank=" << k
+                            << "\nFrobenius norm of the final cross="
+                            << current_cross_norm << std::endl;
+                }
+              else
+                {
+                  std::cout
+                    << "ACA not convergent (no reference columns) with\n"
+                    << "formal rank=" << k
+                    << "\nFrobenius norm of the final cross="
+                    << current_cross_norm << std::endl;
+                }
+#endif
 
               return;
             }
         }
 
-      /**
-       * Update the vector of absolute values for @p uc.
-       */
+      // Update the vector of absolute values for @p uc.
       std::transform(uc.begin(),
                      uc.end(),
                      uc_abs.begin(),
@@ -5687,85 +5779,97 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                        return std::abs(val);
                      });
 
-      /**
-       * Check the convergence condition.
-       */
-      if ((k > 1) && (uk.l2_norm() * vk.l2_norm() <= error_threshold))
+      // Check the convergence condition.
+      if ((k > 1) && (current_cross_norm <= error_threshold))
         {
-          if (k < static_cast<unsigned int>(hmat_params.max_rank))
+          if (k < u_mat.n())
             {
-              /**
-               * If the number of ACA+ iterations is less than the allowed
-               * maximum value, the @p rkmat should be truncated to its
-               * actual rank.
-               */
+              // If the number of ACA+ iterations is less than the
+              // reserved number of columns, the @p rkmat should shrink its
+              // storage to k number of columns.
               rkmat.keep_first_n_columns(k);
             }
+          else
+            rkmat.set_formal_rank(k);
 
           AssertCuda(cudaHostUnregister((void *)(vr.data())));
           AssertCuda(cudaHostUnregister((void *)(uc.data())));
           AssertCuda(cudaHostUnregister((void *)(vk.data())));
           AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
-          /**
-           * Apply complex conjugation to the component matrix @p B, when
-           * we're dealing with complex values, because the rank-k matrix
-           * should take the form \f$M=AB^{\mathrm{H}}\f$.
-           */
+          // Apply complex conjugation to the component matrix @p B, when
+          // we're dealing with complex values, because the rank-k matrix
+          // should take the form \f$M=AB^{\mathrm{H}}\f$.
           if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
             v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+          std::cout << "ACA convergent with\n"
+                    << "formal rank=" << k
+                    << "\nFrobenius norm of the final cross="
+                    << current_cross_norm << std::endl;
+#endif
 
           return;
         }
       else
         {
-          if (size(remaining_row_indices) == 0)
+          if (size(remaining_row_indices) == 0 ||
+              size(remaining_col_indices) == 0)
             {
-              if (k < static_cast<unsigned int>(hmat_params.max_rank))
+              if (k < u_mat.n())
                 {
-                  /**
-                   * If the number of ACA+ iterations is less than the
-                   * allowed
-                   * maximum value, the @p rkmat should be truncated to its
-                   * actual rank.
-                   */
+                  // If the number of ACA+ iterations is less than the
+                  // reserved number of columns, the @p rkmat should shrink its
+                  // storage to k number of columns.
                   rkmat.keep_first_n_columns(k);
                 }
+              else
+                rkmat.set_formal_rank(k);
 
               AssertCuda(cudaHostUnregister((void *)(vr.data())));
               AssertCuda(cudaHostUnregister((void *)(uc.data())));
               AssertCuda(cudaHostUnregister((void *)(vk.data())));
               AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
-              /**
-               * Apply complex conjugation to the component matrix @p B, when
-               * we're dealing with complex values, because the rank-k matrix
-               * should take the form \f$M=AB^{\mathrm{H}}\f$.
-               */
+              // Apply complex conjugation to the component matrix @p B, when
+              // we're dealing with complex values, because the rank-k matrix
+              // should take the form \f$M=AB^{\mathrm{H}}\f$.
               if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
                 v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+              std::cout
+                << "ACA not convergent (no reference rows or columns) with\n"
+                << "formal rank=" << k
+                << "\nFrobenius norm of the final cross=" << current_cross_norm
+                << std::endl;
+#endif
 
               return;
             }
         }
     }
 
+  rkmat.set_formal_rank(effective_max_iter);
+
   AssertCuda(cudaHostUnregister((void *)(vr.data())));
   AssertCuda(cudaHostUnregister((void *)(uc.data())));
   AssertCuda(cudaHostUnregister((void *)(vk.data())));
   AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
-  /**
-   * Apply complex conjugation to the component matrix @p B, when
-   * we're dealing with complex values, because the rank-k matrix
-   * should take the form \f$M=AB^{\mathrm{H}}\f$.
-   */
+  // Apply complex conjugation to the component matrix @p B, when
+  // we're dealing with complex values, because the rank-k matrix
+  // should take the form \f$M=AB^{\mathrm{H}}\f$.
   if constexpr (numbers::NumberTraits<KernelNumberType>::is_complex)
     v_mat.conjugate();
 
-  std::cerr
-    << "Maximum H-matrix rank has been reached and the approximation accuracy has not been achieved, exit early!"
-    << std::endl;
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+  std::cout << "ACA not convergent (maximum rank reached) with\n"
+            << "formal rank=" << effective_max_iter
+            << "\nFrobenius norm of the final cross=" << current_cross_norm
+            << std::endl;
+#endif
 }
 
 
@@ -5776,9 +5880,9 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
  * \ref{Grasedyck, L. 2005. “Adaptive Recompression of
  * \f$\mathcal{H}\f$-Matrices for BEM.” Computing 74 (3): 205–23.}
  *
- * @param rkmat The rank-k matrix to be constructed for the current block,
- * the memory of which should be preallocated and the formal rank of which
- * should be the same as the maximum rank in <tt>hmat_params</tt>.
+ * @param rkmat The rank-k matrix to be constructed for the current block. With
+ * an initial rank adopted, the memory of it should be preallocated. During ACA,
+ * this rank will be dynamically increased.
  * @param hmat_params
  * @param A The full matrix to be approximated
  */
@@ -5790,48 +5894,50 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
 {
   using real_type = typename numbers::NumberTraits<RangeNumberType>::real_type;
 
-  AssertDimension(rkmat.get_m(), A.m());
-  AssertDimension(rkmat.get_n(), A.n());
-
-  /**
-   * Get the size of each dimension of the matrix block to be built.
-   */
+  // Get the size of each dimension of the matrix block to be built.
   const size_type m = A.m();
   const size_type n = A.n();
 
-  /**
-   * Create matrix references associated with the component matrices in the
-   * rank-k matrix to be returned, which hold the row and column vectors in
-   * the selected crosses during the ACA iteration. The number of columns
-   * should be the same as the maximum rank in <tt>hmat_params</tt>.
-   */
-  AssertDimension(rkmat.get_formal_rank(),
-                  static_cast<unsigned int>(hmat_params.max_rank));
+  AssertDimension(rkmat.get_m(), m);
+  AssertDimension(rkmat.get_n(), n);
+
+  const unsigned int effective_max_iter =
+    hmat_params.max_rank == 0 ?
+      std::min(m, n) :
+      std::min(static_cast<unsigned int>(hmat_params.max_rank), std::min(m, n));
+
+  if (rkmat.get_formal_rank() == 0)
+    {
+      Assert(hmat_params.initial_rank > 0, ExcInternalError());
+      rkmat.reinit(m, n, hmat_params.initial_rank);
+    }
+
+  // If the initial rank of the rank-k matrix is larger than
+  // @p effective_max_iter, we shrink surplus columns.
+  if (rkmat.get_formal_rank() > effective_max_iter)
+    rkmat.keep_first_n_columns(effective_max_iter);
+
+  // Create matrix references associated with the component matrices in the
+  // rank-k matrix to be returned, which hold the row and column vectors in
+  // the selected crosses during the ACA iteration.
   LAPACKFullMatrixExt<RangeNumberType> &u_mat = rkmat.get_A();
   LAPACKFullMatrixExt<RangeNumberType> &v_mat = rkmat.get_B();
   u_mat                                       = RangeNumberType();
   v_mat                                       = RangeNumberType();
 
-  /**
-   * Generate two lists for storing remaining row indices and column indices
-   * of the matrix block.
-   */
+  // Generate two lists for storing remaining row indices and column indices
+  // of the matrix block.
   std::forward_list<size_type> remaining_row_indices(m);
   std::forward_list<size_type> remaining_col_indices(n);
-
   gen_linear_indices<forward_list_uta, size_type>(remaining_row_indices);
   gen_linear_indices<forward_list_uta, size_type>(remaining_col_indices);
 
-  /**
-   * Select the initial reference row and column vectors and return their
-   * matrix indices.
-   */
+  // Select the initial reference row and column vectors and return their
+  // matrix indices.
   Vector<RangeNumberType> vr(n);
   Vector<RangeNumberType> uc(m);
 
-  /**
-   * Temporary row and column vectors for the previous step \f$l\f$.
-   */
+  // Temporary row and column vectors for the previous step \f$l\f$.
   Vector<RangeNumberType> vl(n);
   Vector<RangeNumberType> ul(m);
 
@@ -5843,6 +5949,11 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
       // When there is no reference row can be selected, the current matrix
       // block is purely zero. Then return a zero rank-k matrix.
       rkmat.reinit(m, n, 0);
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+      std::cout << "ACA returns zero block (no reference rows)" << std::endl;
+#endif
+
       return;
     }
 
@@ -5854,22 +5965,17 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
       // When there is no reference column can be selected, the current
       // matrix block is purely zero. Then return a zero rank-k matrix.
       rkmat.reinit(m, n, 0);
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+      std::cout << "ACA returns zero block (no reference columns)" << std::endl;
+#endif
+
       return;
     }
 
-  /**
-   * The absolute values for the reference row and column vectors.
-   */
+  // The absolute values for the reference row and column vectors.
   Vector<real_type> vr_abs(n);
   Vector<real_type> uc_abs(m);
-
-  /**
-   * Calculate the absolute values for the reference row and column
-   * vectors.
-   *
-   * \mynote{In the following, we use @p static_cast to explicitly
-   * specify which version of @p std::abs to call.}
-   */
   std::transform(vr.begin(),
                  vr.end(),
                  vr_abs.begin(),
@@ -5883,67 +5989,78 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
                    return std::abs(val);
                  });
 
-  /**
-   * Row and column indices for the \f$k\f$'th step. The corresponding row
-   * and column vectors comprise the cross.
-   */
+  // Row and column indices for the \f$k\f$'th step. The corresponding row
+  // and column vectors comprise the cross.
   size_type ik, jk;
 
-  /**
-   * Temporary row and column vectors for the current step \f$k\f$.
-   */
+  // Temporary row and column vectors for the current step \f$k\f$.
   Vector<RangeNumberType> vk(n);
   Vector<RangeNumberType> uk(m);
 
-  /**
-   * The absolute values for the temporary row and column vectors for the
-   * current step \f$k\f$.
-   */
+  // The absolute values for the temporary row and column vectors for the
+  // current step \f$k\f$.
   Vector<real_type> vk_abs(n);
   Vector<real_type> uk_abs(m);
 
-  /**
-   * Start the ACA+ iteration from \f$k=1\f$.
-   */
-  for (unsigned int k = 1; k <= static_cast<unsigned int>(hmat_params.max_rank);
-       k++)
+  // The error threshold as the stopping condition.
+  real_type error_threshold = 0.;
+  // The Frobenius norm of the cross in the current ACA step.
+  real_type current_cross_norm = 0.;
+
+  // Start the ACA+ iteration from \f$k=1\f$.
+  for (unsigned int k = 1; k <= effective_max_iter; k++)
     {
-      /**
-       * Select the row index from the maximizer of the reference column.
-       */
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+      std::cout << "=== ACA step " << k
+                << " (maximum steps: " << effective_max_iter << ")"
+                << std::endl;
+#endif
+
+      // Enlarge the number of columns in u_mat and v_mat, when the ACA step
+      // exceeds the existing number of columns in u_mat or v_mat.
+      if (k > u_mat.n())
+        {
+          const size_type n_cols_larger =
+            std::min(u_mat.n() * 2, effective_max_iter);
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+          std::cout << "Number of reserved columns increases from " << u_mat.n()
+                    << " to " << n_cols_larger << std::endl;
+#endif
+
+          // Expand via RkMatrix so formal_rank stays in sync with A.n()/B.n().
+          // Expanding u_mat/v_mat alone leaves formal_rank stale;
+          // RkMatrix::vmult then allocates z(formal_rank) while GEMV writes
+          // A.n() entries.
+          rkmat.expand_columns(n_cols_larger);
+        }
+
+      // Select the row index from the maximizer of the reference column.
       // N.B. The function @p std::max_element return the iterator pointing
       // to the maximum element in the list.
       size_type i_star =
         std::distance(uc_abs.begin(),
                       std::max_element(uc_abs.begin(), uc_abs.end()));
 
-      /**
-       * Select the column index from the maximizer of the reference row.
-       */
+      // Select the column index from the maximizer of the reference row.
       size_type j_star =
         std::distance(vr_abs.begin(),
                       std::max_element(vr_abs.begin(), vr_abs.end()));
 
       if (uc_abs(i_star) > vr_abs(j_star))
         {
-          /**
-           * Select \f$i^*\f$ as the current row index \f$i_k\f$.
-           */
+          // Select \f$i^*\f$ as the current row index \f$i_k\f$.
           ik = i_star;
 
-          /**
-           * Extract the \f$i_k\f$'th row of \f$A\f$.
-           */
+          // Extract the \f$i_k\f$'th row of \f$A\f$.
           A.get_row(ik, vk);
 
-          /**
-           * \mynote{Here the counter \f$l\f$ iterates over all the previous
-           * steps before \f$k\f$. For each step, the row and column vectors
-           * comprising the cross have been stored as column vectors into
-           * @p v_mat and @p u_mat respectively. Hence, the index for
-           * extracting vectors from @p v_mat or @p u_mat should be
-           * \f$l-1\f$.}
-           */
+          // Here the counter \f$l\f$ iterates over all the previous steps
+          // before \f$k\f$. For each step, the row and column vectors
+          // comprising the cross have been stored as column vectors into
+          // @p v_mat and @p u_mat respectively. Hence, the index for
+          // extracting vectors from @p v_mat or @p u_mat should be
+          // \f$l-1\f$.
           if (k > 1)
             {
               for (size_type l = 0; l < k - 1; l++)
@@ -5952,10 +6069,8 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
               v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
-          /**
-           * Select the column index from the maximizer of the absolute
-           * values of \f$\widetilde{v}_k\f$.
-           */
+          // Select the column index from the maximizer of the absolute
+          // values of \f$\widetilde{v}_k\f$.
           std::transform(vk.begin(),
                          vk.end(),
                          vk_abs.begin(),
@@ -5965,15 +6080,11 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
           jk = std::distance(vk_abs.begin(),
                              std::max_element(vk_abs.begin(), vk_abs.end()));
 
-          /**
-           * Scale the vector \f$\widetilde{v}_k\f$.
-           */
+          // Scale the vector \f$\widetilde{v}_k\f$.
           RangeNumberType value_at_cross = vk(jk);
           vk /= value_at_cross;
 
-          /**
-           * Extract the \f$j_k\f$'th column from \f$A\f$.
-           */
+          // Extract the \f$j_k\f$'th column from \f$A\f$.
           A.get_column(jk, uk);
 
           if (k > 1)
@@ -5986,14 +6097,10 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
         }
       else
         {
-          /**
-           * Select \f$j^*\f$ as the current column index \f$j_k\f$.
-           */
+          // Select \f$j^*\f$ as the current column index \f$j_k\f$.
           jk = j_star;
 
-          /**
-           * Extract the \f$j_k\f$'th column from the matrix \f$A\f$.
-           */
+          // Extract the \f$j_k\f$'th column from the matrix \f$A\f$.
           A.get_column(jk, uk);
 
           if (k > 1)
@@ -6004,10 +6111,8 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
               u_mat.vmult_add(uk, k - 1, RangeNumberType(-1.0), vl);
             }
 
-          /**
-           * Select the row index as the maximizer of the absolute values of
-           * \f$u_k\f$.
-           */
+          // Select the row index as the maximizer of the absolute values of
+          // \f$u_k\f$.
           std::transform(uk.begin(),
                          uk.end(),
                          uk_abs.begin(),
@@ -6017,9 +6122,7 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
           ik = std::distance(uk_abs.begin(),
                              std::max_element(uk_abs.begin(), uk_abs.end()));
 
-          /**
-           * Extract the \f$i_k\f$'th row from \f$A\f$.
-           */
+          // Extract the \f$i_k\f$'th row from \f$A\f$.
           A.get_row(ik, vk);
 
           if (k > 1)
@@ -6030,19 +6133,28 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
               v_mat.vmult_add(vk, k - 1, RangeNumberType(-1.0), ul);
             }
 
-          /**
-           * Scale the vector \f$\widetilde{v}_k\f$.
-           */
+          // Scale the vector \f$\widetilde{v}_k\f$.
           RangeNumberType value_at_cross = vk(jk);
           vk /= value_at_cross;
         }
 
-      /**
-       * Update the matrices storing row and column vectors comprising the
-       * cross.
-       */
+      // Update the matrices storing row and column vectors comprising the
+      // cross.
       u_mat.fill_col(k - 1, uk, false);
       v_mat.fill_col(k - 1, vk, false);
+      current_cross_norm = uk.l2_norm() * vk.l2_norm();
+
+      if (k == 1)
+        {
+          // Calculate the error threshold only in the first step.
+          error_threshold =
+            static_cast<real_type>(hmat_params.aca_relative_err) *
+            current_cross_norm;
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+          std::cout << "ACA error threshold is set to " << error_threshold
+                    << std::endl;
+#endif
+        }
 
       remaining_row_indices.remove(ik);
       remaining_col_indices.remove(jk);
@@ -6057,10 +6169,8 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
       // vector should be reselected.
       if (ik == r || LinAlg::is_all_zero(vr))
         {
-          /**
-           * When the index of the selected row is the same as that of the
-           * reference row, reselect a reference row.
-           */
+          // When the index of the selected row is the same as that of the
+          // reference row, reselect a reference row.
           r = random_select_ref_row(
             vr, u_mat, v_mat, ul, k, A, remaining_row_indices, r, m);
 
@@ -6068,32 +6178,44 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
             {
               // When there is no reference row can be selected, the ACA+
               // iteration should stop here.
-              if (k < static_cast<unsigned int>(hmat_params.max_rank))
+              if (k < u_mat.n())
                 {
-                  /**
-                   * If the number of ACA+ iterations is less than the
-                   * allowed
-                   * maximum value, the @p rkmat should be truncated to its
-                   * actual rank.
-                   */
+                  // If the number of ACA+ iterations is less than the
+                  // reserved number of columns, the @p rkmat should shrink its
+                  // storage to k number of columns.
                   rkmat.keep_first_n_columns(k);
                 }
+              else
+                rkmat.set_formal_rank(k);
 
-              /**
-               * Apply complex conjugation to the component matrix @p B, when
-               * we're dealing with complex values, because the rank-k matrix
-               * should take the form \f$M=AB^{\mathrm{H}}\f$.
-               */
+              // Apply complex conjugation to the component matrix @p B, when
+              // we're dealing with complex values, because the rank-k matrix
+              // should take the form \f$M=AB^{\mathrm{H}}\f$.
               if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
                 v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+              if (current_cross_norm <= error_threshold)
+                {
+                  std::cout << "ACA convergent (no reference rows) with\n"
+                            << "formal rank=" << k
+                            << "\nFrobenius norm of the final cross="
+                            << current_cross_norm << std::endl;
+                }
+              else
+                {
+                  std::cout << "ACA not convergent (no reference rows) with\n"
+                            << "formal rank=" << k
+                            << "\nFrobenius norm of the final cross="
+                            << current_cross_norm << std::endl;
+                }
+#endif
 
               return;
             }
         }
 
-      /**
-       * Update the vector of absolute values for @p vr.
-       */
+      // Update the vector of absolute values for @p vr.
       std::transform(vr.begin(),
                      vr.end(),
                      vr_abs.begin(),
@@ -6112,10 +6234,8 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
       // column vector should be reselected.
       if (jk == c || LinAlg::is_all_zero(uc))
         {
-          /**
-           * When the index of the selected column is the same as that of
-           * the reference column, reselect a reference column.
-           */
+          // When the index of the selected column is the same as that of
+          // the reference column, reselect a reference column.
           c = random_select_ref_column(
             uc, u_mat, v_mat, vl, k, A, remaining_col_indices, c, n);
 
@@ -6123,32 +6243,45 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
             {
               // When there is no reference column can be selected, the ACA+
               // iteration should stop here.
-              if (k < static_cast<unsigned int>(hmat_params.max_rank))
+              if (k < u_mat.n())
                 {
-                  /**
-                   * If the number of ACA+ iterations is less than the
-                   * allowed
-                   * maximum value, the @p rkmat should be truncated to its
-                   * actual rank.
-                   */
+                  // If the number of ACA+ iterations is less than the
+                  // reserved number of columns, the @p rkmat should shrink its
+                  // storage to k number of columns.
                   rkmat.keep_first_n_columns(k);
                 }
+              else
+                rkmat.set_formal_rank(k);
 
-              /**
-               * Apply complex conjugation to the component matrix @p B, when
-               * we're dealing with complex values, because the rank-k matrix
-               * should take the form \f$M=AB^{\mathrm{H}}\f$.
-               */
+              // Apply complex conjugation to the component matrix @p B, when
+              // we're dealing with complex values, because the rank-k matrix
+              // should take the form \f$M=AB^{\mathrm{H}}\f$.
               if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
                 v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+              if (current_cross_norm <= error_threshold)
+                {
+                  std::cout << "ACA convergent (no reference columns) with\n"
+                            << "formal rank=" << k
+                            << "\nFrobenius norm of the final cross="
+                            << current_cross_norm << std::endl;
+                }
+              else
+                {
+                  std::cout
+                    << "ACA not convergent (no reference columns) with\n"
+                    << "formal rank=" << k
+                    << "\nFrobenius norm of the final cross="
+                    << current_cross_norm << std::endl;
+                }
+#endif
 
               return;
             }
         }
 
-      /**
-       * Update the vector of absolute values for @p uc.
-       */
+      // Update the vector of absolute values for @p uc.
       std::transform(uc.begin(),
                      uc.end(),
                      uc_abs.begin(),
@@ -6156,101 +6289,82 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
                        return std::abs(val);
                      });
 
-      /**
-       * Check the convergence condition.
-       */
-      real_type error_threshold = 0.;
-      // DEBUG
-      if (k > 1)
+      // Check the convergence condition.
+      if ((k > 1) && (current_cross_norm <= error_threshold))
         {
-          if (static_cast<real_type>(hmat_params.eta) >= 1.0)
+          if (k < u_mat.n())
             {
-              error_threshold =
-                static_cast<real_type>(hmat_params.aca_relative_err) *
-                rkmat.frobenius_norm(1);
+              // If the number of ACA+ iterations is less than the
+              // reserved number of columns, the @p rkmat should shrink its
+              // storage to k number of columns.
+              rkmat.keep_first_n_columns(k);
             }
           else
-            {
-              error_threshold =
-                static_cast<real_type>(hmat_params.aca_relative_err) *
-                (1.0 - static_cast<real_type>(hmat_params.eta)) /
-                (1.0 + static_cast<real_type>(hmat_params.aca_relative_err)) *
-                rkmat.frobenius_norm(k - 1);
-            }
+            rkmat.set_formal_rank(k);
 
-          deallog << "uk.l2_norm() * vk.l2_norm(): "
-                  << uk.l2_norm() * vk.l2_norm() << "\n"
-                  << "error_threshold: " << error_threshold << std::endl;
-        }
-      else
-        {
-          deallog << "uk.l2_norm() * vk.l2_norm(): "
-                  << uk.l2_norm() * vk.l2_norm() << std::endl;
-        }
-
-      if ((k > 1) && (uk.l2_norm() * vk.l2_norm() <= error_threshold))
-        {
-          if (k < static_cast<unsigned int>(hmat_params.max_rank))
-            {
-              /**
-               * If the number of ACA+ iterations is less than the allowed
-               * maximum value, the @p rkmat should be truncated to its
-               * actual rank.
-               */
-              rkmat.keep_first_n_columns(k);
-              // DEBUG
-              deallog << "Early successful return from ACA+!" << std::endl;
-            }
-
-          /**
-           * Apply complex conjugation to the component matrix @p B, when
-           * we're dealing with complex values, because the rank-k matrix
-           * should take the form \f$M=AB^{\mathrm{H}}\f$.
-           */
+          // Apply complex conjugation to the component matrix @p B, when
+          // we're dealing with complex values, because the rank-k matrix
+          // should take the form \f$M=AB^{\mathrm{H}}\f$.
           if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
             v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+          std::cout << "ACA convergent with\n"
+                    << "formal rank=" << k
+                    << "\nFrobenius norm of the final cross="
+                    << current_cross_norm << std::endl;
+#endif
 
           return;
         }
       else
         {
-          if (size(remaining_row_indices) == 0)
+          if (size(remaining_row_indices) == 0 ||
+              size(remaining_col_indices) == 0)
             {
-              if (k < static_cast<unsigned int>(hmat_params.max_rank))
+              if (k < u_mat.n())
                 {
-                  /**
-                   * If the number of ACA+ iterations is less than the
-                   * allowed
-                   * maximum value, the @p rkmat should be truncated to its
-                   * actual rank.
-                   */
+                  // If the number of ACA+ iterations is less than the
+                  // reserved number of columns, the @p rkmat should shrink its
+                  // storage to k number of columns.
                   rkmat.keep_first_n_columns(k);
                 }
+              else
+                rkmat.set_formal_rank(k);
 
-              /**
-               * Apply complex conjugation to the component matrix @p B, when
-               * we're dealing with complex values, because the rank-k matrix
-               * should take the form \f$M=AB^{\mathrm{H}}\f$.
-               */
+              // Apply complex conjugation to the component matrix @p B, when
+              // we're dealing with complex values, because the rank-k matrix
+              // should take the form \f$M=AB^{\mathrm{H}}\f$.
               if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
                 v_mat.conjugate();
+
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+              std::cout
+                << "ACA not convergent (no reference rows or columns) with\n"
+                << "formal rank=" << k
+                << "\nFrobenius norm of the final cross=" << current_cross_norm
+                << std::endl;
+#endif
 
               return;
             }
         }
     }
 
-  /**
-   * Apply complex conjugation to the component matrix @p B, when
-   * we're dealing with complex values, because the rank-k matrix
-   * should take the form \f$M=AB^{\mathrm{H}}\f$.
-   */
+  rkmat.set_formal_rank(effective_max_iter);
+
+  // Apply complex conjugation to the component matrix @p B, when
+  // we're dealing with complex values, because the rank-k matrix
+  // should take the form \f$M=AB^{\mathrm{H}}\f$.
   if constexpr (numbers::NumberTraits<RangeNumberType>::is_complex)
     v_mat.conjugate();
 
-  std::cerr
-    << "Maximum H-matrix rank has been reached and the approximation accuracy has not been achieved, exit early!"
-    << std::endl;
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
+  std::cout << "ACA not convergent (maximum rank reached) with\n"
+            << "formal rank=" << effective_max_iter
+            << "\nFrobenius norm of the final cross=" << current_cross_norm
+            << std::endl;
+#endif
 }
 
 

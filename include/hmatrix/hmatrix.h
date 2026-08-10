@@ -1,4 +1,4 @@
-// Copyright (C) 2021-2025 Jihuan Tian <jihuan_tian@hotmail.com>
+// Copyright (C) 2021-2026 Jihuan Tian <jihuan_tian@hotmail.com>
 //
 // This file is part of the HierBEM library.
 //
@@ -346,7 +346,7 @@ public:
     typename BlockClusterTree<spacedim1,
                               typename numbers::NumberTraits<Number1>::
                                 real_type>::node_const_pointer_type bc_node,
-    const unsigned int             fixed_rank_k,
+    const unsigned int             initial_rank,
     const HMatrixSupport::Property top_hmat_node_property);
 
   template <int spacedim1, typename Number1>
@@ -928,7 +928,7 @@ public:
    */
   HMatrix(
     const BlockClusterTree<spacedim, real_type> &bct,
-    const unsigned int                           fixed_rank_k = 1,
+    const unsigned int                           initial_rank,
     const HMatrixSupport::Property property = HMatrixSupport::Property::general,
     const HMatrixSupport::BlockType block_type =
       HMatrixSupport::BlockType::undefined_block);
@@ -939,13 +939,12 @@ public:
    *
    * \mynote{In case the \bcn is not the root node of the \bct and the
    * \hmatrix to be built is just a block in the global \hmatrix, the block
-   * type is set
-   * to @p HMatrixSupport::BlockType::undefined_block by default.}
+   * type is set to @p HMatrixSupport::BlockType::undefined_block by default.}
    */
   HMatrix(
     typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
                                    bc_node,
-    const unsigned int             fixed_rank_k = 1,
+    const unsigned int             initial_rank,
     const HMatrixSupport::Property property = HMatrixSupport::Property::general,
     const HMatrixSupport::BlockType block_type =
       HMatrixSupport::BlockType::undefined_block);
@@ -989,8 +988,7 @@ public:
    * \times J\f$.
    *
    * \mynote{The current \hmatrix to be built may only be a matrix block in
-   * the
-   * global matrix, while the full matrix @p M is global, i.e., the \hmatrix
+   * the global matrix, while the full matrix @p M is global, i.e., the \hmatrix
    * and the full matrix @p M are not on a same level in the \hmatrix
    * hierarchy. Therefore, the block type of this \hmatrix should be set to
    * @p undefined_block by default and its property cannot be inferred from the
@@ -1013,8 +1011,7 @@ public:
    * This version has no rank truncation.
    *
    * \mynote{The current \hmatrix to be built may only be a matrix block in
-   * the
-   * global matrix, while the full matrix @p M is global, i.e., the \hmatrix
+   * the global matrix, while the full matrix @p M is global, i.e., the \hmatrix
    * and the full matrix @p M are not on a same level in the \hmatrix
    * hierarchy. Therefore, the block type of this \hmatrix should be set to
    * @p undefined_block by default and its property cannot be inferred from the
@@ -1047,9 +1044,9 @@ public:
    * Construct from the root node of a BlockClusterTree while moving the data
    * from the leaf set of the \hmatrix \p H.
    *
-   * \mynote{Since this \hmatrix is the global matrix because it is
-   * constructed with respect to the root node of the \bct, its block type is
-   * set to @p HMatrixSupport::BlockType::diagonal_block.}
+   * \mynote{Since this \hmatrix is the global matrix because it is constructed
+   * with respect to the root node of the \bct, its block type is set to
+   * @p HMatrixSupport::BlockType::diagonal_block.}
    *
    * @param bct
    * @param H
@@ -1088,7 +1085,7 @@ public:
   void
   reinit(
     const BlockClusterTree<spacedim, real_type> &bct,
-    const unsigned int                           fixed_rank_k = 1,
+    const unsigned int                           initial_rank,
     const HMatrixSupport::Property property = HMatrixSupport::Property::general,
     const HMatrixSupport::BlockType block_type =
       HMatrixSupport::BlockType::diagonal_block);
@@ -1103,7 +1100,7 @@ public:
   reinit(
     typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
                                    bc_node,
-    const unsigned int             fixed_rank_k = 1,
+    const unsigned int             initial_rank,
     const HMatrixSupport::Property property = HMatrixSupport::Property::general,
     const HMatrixSupport::BlockType block_type =
       HMatrixSupport::BlockType::undefined_block);
@@ -2408,6 +2405,9 @@ public:
   void
   add(const HMatrix<spacedim, Number> &B, const size_type fixed_rank_k) const;
 
+  void
+  add(const HMatrix<spacedim, Number> &B) const;
+
   /**
    * Perform the addition \f$A = A + b B\f$.
    * @param B
@@ -2417,6 +2417,9 @@ public:
   add(const Number                     b,
       const HMatrix<spacedim, Number> &B,
       const size_type                  fixed_rank_k) const;
+
+  void
+  add(const Number b, const HMatrix<spacedim, Number> &B) const;
 
   /**
    * Add a rank-k matrix into the current \hmatnode.
@@ -4609,9 +4612,9 @@ InitHMatrixWrtBlockClusterNode(
 
 
 /**
- * Recursively construct the children of an \hmatrix with
- * respect to a block cluster tree by starting from a tree node which is
- * to be associated with the current \hmatrix.
+ * Recursively construct the children of an \hmatrix with respect to a block
+ * cluster tree by starting from a tree node which is to be associated with the
+ * current \hmatrix.
  *
  * @param hmat Pointer to the current \hmatnode, <strong>which has already
  * been created on the heap but with its internal data left empty.</strong>
@@ -4959,17 +4962,19 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
 
 
 /**
- * Recursively construct the children of an \hmatrix with
- * respect to a block cluster tree by starting from a tree node which is
- * associated with the current \hmatrix.
+ * Recursively construct the children of an \hmatrix with respect to a block
+ * cluster tree by starting from a tree node which is associated with the
+ * current \hmatrix.
  *
- * The matrices in the leaf set are initialized with zero values. The rank of
- * the near field matrices are predefined fixed values.
+ * The matrices in the leaf set are initialized with zero values. The formal
+ * ranks of far field matrices are set to an initial value, which may change in
+ * subsequent ACA stage.
  *
  * @param hmat Pointer to the current \hmatnode, <strong>which has already
  * been created on the heap but with its internal data left empty.</strong>
  * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
  * associated with \p hmat.
+ * @param initial_rank Initial rank for far field matrix blocks.
  * @param top_hmat_node_property The property of the \hmatnode on the top
  * level
  */
@@ -4980,7 +4985,7 @@ InitAndCreateHMatrixChildren(
   typename BlockClusterTree<spacedim,
                             typename numbers::NumberTraits<Number>::real_type>::
     node_const_pointer_type      bc_node,
-  const unsigned int             fixed_rank_k,
+  const unsigned int             initial_rank,
   const HMatrixSupport::Property top_hmat_node_property =
     HMatrixSupport::Property::general)
 {
@@ -5224,7 +5229,7 @@ InitAndCreateHMatrixChildren(
 
           InitAndCreateHMatrixChildren(child_hmat,
                                        bc_node->get_child_pointer(i),
-                                       fixed_rank_k,
+                                       initial_rank,
                                        top_hmat_node_property);
 
           /**
@@ -5270,7 +5275,10 @@ InitAndCreateHMatrixChildren(
                 {
                   hmat->type = RkMatrixType;
                   hmat->rkmatrix =
-                    new RkMatrix<Number>(hmat->m, hmat->n, fixed_rank_k);
+                    new RkMatrix<Number>(hmat->m,
+                                         hmat->n,
+                                         std::min(initial_rank,
+                                                  std::min(hmat->m, hmat->n)));
                 }
 
               break;
@@ -5337,9 +5345,10 @@ InitAndCreateHMatrixChildren(
                       else
                         {
                           hmat->type     = RkMatrixType;
-                          hmat->rkmatrix = new RkMatrix<Number>(hmat->m,
-                                                                hmat->n,
-                                                                fixed_rank_k);
+                          hmat->rkmatrix = new RkMatrix<Number>(
+                            hmat->m,
+                            hmat->n,
+                            std::min(initial_rank, std::min(hmat->m, hmat->n)));
                         }
 
                       break;
@@ -5440,9 +5449,10 @@ InitAndCreateHMatrixChildren(
                       else
                         {
                           hmat->type     = RkMatrixType;
-                          hmat->rkmatrix = new RkMatrix<Number>(hmat->m,
-                                                                hmat->n,
-                                                                fixed_rank_k);
+                          hmat->rkmatrix = new RkMatrix<Number>(
+                            hmat->m,
+                            hmat->n,
+                            std::min(initial_rank, std::min(hmat->m, hmat->n)));
                         }
 
                       break;
@@ -5543,9 +5553,10 @@ InitAndCreateHMatrixChildren(
                       else
                         {
                           hmat->type     = RkMatrixType;
-                          hmat->rkmatrix = new RkMatrix<Number>(hmat->m,
-                                                                hmat->n,
-                                                                fixed_rank_k);
+                          hmat->rkmatrix = new RkMatrix<Number>(
+                            hmat->m,
+                            hmat->n,
+                            std::min(initial_rank, std::min(hmat->m, hmat->n)));
                         }
 
                       break;
@@ -5645,9 +5656,10 @@ InitAndCreateHMatrixChildren(
                       else
                         {
                           hmat->type     = RkMatrixType;
-                          hmat->rkmatrix = new RkMatrix<Number>(hmat->m,
-                                                                hmat->n,
-                                                                fixed_rank_k);
+                          hmat->rkmatrix = new RkMatrix<Number>(
+                            hmat->m,
+                            hmat->n,
+                            std::min(initial_rank, std::min(hmat->m, hmat->n)));
                         }
 
                       break;
@@ -5700,9 +5712,9 @@ InitAndCreateHMatrixChildren(
 
 
 /**
- * Recursively construct the children of an \hmatrix with
- * respect to a block cluster tree by starting from a tree node which is
- * associated with the current \hmatrix.
+ * Recursively construct the children of an \hmatrix with respect to a block
+ * cluster tree by starting from a tree node which is associated with the
+ * current \hmatrix.
  *
  * The matrices in the leaf set are initialized with the data in the given
  * global full matrix \p M. @p M is created on the complete block cluster index
@@ -5720,8 +5732,11 @@ InitAndCreateHMatrixChildren(
  * been created on the heap but with its internal data left empty.</strong>
  * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
  * associated with \p hmat.
+ * @param fixed_rank_k Fixed rank for far field matrix blocks.
  * @param M The global full matrix containing all the data required to
  * initialize the \hmatrix.
+ * @param top_hmat_node_property The property of the \hmatnode on the top
+ * level
  */
 template <int spacedim, typename Number = double>
 void
@@ -6574,10 +6589,9 @@ InitAndCreateHMatrixChildren(
 
 
 /**
- * Recursively construct the children of an \hmatrix with
- * respect to a block cluster tree by starting from a tree node which is
- * associated with the current \hmatrix. There is no rank truncation to the
- * rank-k matrices.
+ * Recursively construct the children of an \hmatrix with respect to a block
+ * cluster tree by starting from a tree node which is associated with the
+ * current \hmatrix. There is no rank truncation to the rank-k matrices.
  *
  * The matrices in the leaf set are initialized with the data in the given
  * global full matrix \p M, which is created on the complete block cluster index
@@ -6597,6 +6611,8 @@ InitAndCreateHMatrixChildren(
  * associated with \p hmat. It is not necessarily the root node.
  * @param M The global full matrix containing all the data required to
  * initialize the \hmatrix.
+ * @param top_hmat_node_property The property of the \hmatnode on the top
+ * level
  */
 template <int spacedim, typename Number = double>
 void
@@ -7429,13 +7445,12 @@ InitAndCreateHMatrixChildren(
 
 
 /**
- * Recursively construct the children of an \hmatrix with
- * respect to a block cluster tree by starting from a tree node which is
- * associated with the current \hmatrix.
+ * Recursively construct the children of an \hmatrix with respect to a block
+ * cluster tree by starting from a tree node which is associated with the
+ * current \hmatrix.
  *
  * The matrices in the leaf set are initialized with the data in the given
- * full
- * matrix \p M, which is created on the block cluster index set
+ * full matrix \p M, which is created on the block cluster index set
  * \f$\tau \times \sigma\f$. <strong>N.B. This block cluster should be one of
  * the ancestors of the block cluster associated with @p hmat that has been
  * passed to the initial call of this function (let's call it @p hmat_first).
@@ -7452,8 +7467,8 @@ InitAndCreateHMatrixChildren(
  * @param bc_node
  * @param fixed_rank_k
  * @param M
- * @param M_tau_index_range
- * @param M_sigma_index_range
+ * @param M_row_index_range
+ * @param M_col_index_range
  * @param top_hmat_node_property
  */
 template <int spacedim, typename Number = double>
@@ -8300,20 +8315,25 @@ InitAndCreateHMatrixChildren(
 
 
 /**
- * Recursively construct the children of an \hmatrix with
- * respect to a block cluster tree by starting from a tree node which is
- * associated with the current \hmatrix. There is no rank truncation to the
- * rank-k matrices.
+ * Recursively construct the children of an \hmatrix with respect to a block
+ * cluster tree by starting from a tree node which is associated with the
+ * current \hmatrix. There is no rank truncation to the rank-k matrices.
  *
  * The matrices in the leaf set are initialized with the data in the given
- * full
- * matrix \p M, which is created on the block cluster index set \f$\tau \times
+ * full matrix \p M, which is created on the block cluster index set \f$\tau \times
  * \sigma\f$ associated with the current \hmatrix. Hence, this
  * full matrix is just a block of the original global full matrix created on
  * the block cluster index set \f$I \times J\f$.
  *
  * During the recursive calling of this function, the source data matrix \p M is
  * kept intact, which will not be restricted to small matrix blocks.
+ *
+ * @param hmat
+ * @param bc_node
+ * @param M
+ * @param M_row_index_range
+ * @param M_col_index_range
+ * @param top_hmat_node_property
  */
 template <int spacedim, typename Number = double>
 void
@@ -9174,13 +9194,12 @@ InitAndCreateHMatrixChildren(
 
 
 /**
- * Recursively construct the children of an \hmatnode with
- * respect to a block cluster tree by starting from a tree node which is
- * associated with the current \hmatnode.
+ * Recursively construct the children of an \hmatnode with respect to a block
+ * cluster tree by starting from a tree node which is associated with the
+ * current \hmatnode.
  *
  * The matrices in the leaf set take the data **migrated** from the leaf set
- * of
- * the given \hmatrix \p H.
+ * of the given \hmatrix \p H.
  *
  * @param hmat The \hmatnode to be associated with the \bcn @p bc_node.
  * @param bc_node The \bcn to be associated with the \hmatnode @p hmat
@@ -17633,7 +17652,7 @@ HMatrix<spacedim, Number>::HMatrix()
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
   const BlockClusterTree<spacedim, real_type> &bct,
-  const unsigned int                           fixed_rank_k,
+  const unsigned int                           initial_rank,
   const HMatrixSupport::Property               property,
   const HMatrixSupport::BlockType              block_type)
   : type(UndefinedMatrixType)
@@ -17664,7 +17683,7 @@ HMatrix<spacedim, Number>::HMatrix(
   , Sigma_R(0)
   , Sigma_F(0)
 {
-  InitAndCreateHMatrixChildren(this, bct.get_root(), fixed_rank_k, property);
+  InitAndCreateHMatrixChildren(this, bct.get_root(), initial_rank, property);
   build_leaf_set();
   link_hmat_nodes_on_same_levels();
   set_default_vmult_strategy();
@@ -17675,7 +17694,7 @@ template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
   typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
                                   bc_node,
-  const unsigned int              fixed_rank_k,
+  const unsigned int              initial_rank,
   const HMatrixSupport::Property  property,
   const HMatrixSupport::BlockType block_type)
   : type(UndefinedMatrixType)
@@ -17706,7 +17725,7 @@ HMatrix<spacedim, Number>::HMatrix(
   , Sigma_R(0)
   , Sigma_F(0)
 {
-  InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k, property);
+  InitAndCreateHMatrixChildren(this, bc_node, initial_rank, property);
   build_leaf_set();
   link_hmat_nodes_on_same_levels();
   set_default_vmult_strategy();
@@ -18052,7 +18071,7 @@ HMatrix<spacedim, Number>::reinit(
   const BlockClusterTree<spacedim,
                          typename numbers::NumberTraits<Number>::real_type>
                                  &bct,
-  const unsigned int              fixed_rank_k,
+  const unsigned int              initial_rank,
   const HMatrixSupport::Property  property,
   const HMatrixSupport::BlockType block_type)
 {
@@ -18063,7 +18082,7 @@ HMatrix<spacedim, Number>::reinit(
 
   InitAndCreateHMatrixChildren(this,
                                bct.get_root(),
-                               fixed_rank_k,
+                               initial_rank,
                                this->property);
   build_leaf_set();
   link_hmat_nodes_on_same_levels();
@@ -18076,7 +18095,7 @@ void
 HMatrix<spacedim, Number>::reinit(
   typename BlockClusterTree<spacedim, real_type>::node_const_pointer_type
                                   bc_node,
-  const unsigned int              fixed_rank_k,
+  const unsigned int              initial_rank,
   const HMatrixSupport::Property  property,
   const HMatrixSupport::BlockType block_type)
 {
@@ -18085,7 +18104,7 @@ HMatrix<spacedim, Number>::reinit(
   this->property   = property;
   this->block_type = block_type;
 
-  InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k, this->property);
+  InitAndCreateHMatrixChildren(this, bc_node, initial_rank, this->property);
   build_leaf_set();
   link_hmat_nodes_on_same_levels();
   set_default_vmult_strategy();
@@ -20018,10 +20037,7 @@ template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::print_leaf_set_info(std::ostream &out) const
 {
-  /**
-   * @internal Calculate the total number of matrix entries in the near field
-   * set.
-   */
+  // Calculate the total number of matrix entries in the near field set.
   types::global_dof_index near_field_matrix_entries_num = 0;
   for (auto mat : near_field_leaf_set)
     {
@@ -20031,10 +20047,7 @@ HMatrix<spacedim, Number>::print_leaf_set_info(std::ostream &out) const
         mat->fullmatrix->m() * mat->fullmatrix->n();
     }
 
-  /**
-   * @internal Calculate the maximum total number of matrix entries in the far
-   * field set.
-   */
+  // Calculate the total number of matrix entries in the far field set.
   types::global_dof_index far_field_matrix_entries_num = 0;
   for (auto mat : far_field_leaf_set)
     {
@@ -20052,8 +20065,16 @@ HMatrix<spacedim, Number>::print_leaf_set_info(std::ostream &out) const
       << far_field_leaf_set.size() << "\n"
       << "Number of matrix entries in the near field set: "
       << near_field_matrix_entries_num << "\n"
-      << "Maximum number of matrix entries in the far field set: "
-      << far_field_matrix_entries_num << std::endl;
+      << "Number of matrix entries in the far field set: "
+      << far_field_matrix_entries_num << "\n"
+      << "Compression ratio: "
+      // deal.II LAPACKFullMatrix uses general LAPACK matrices, the memory size
+      // of its internal data is always m*n, no matter if it is symmetric or
+      // triangular.
+      << static_cast<double>(m * n) /
+           static_cast<double>(near_field_matrix_entries_num +
+                               far_field_matrix_entries_num)
+      << std::endl;
 }
 
 
@@ -20342,6 +20363,11 @@ HMatrix<spacedim, Number>::write_rkmatrix_leaf_node(std::ostream &out) const
    * Print the \p is_near_field flag.
    */
   out << (bc_node->get_data_reference().get_is_near_field() ? 1 : 0) << ",";
+
+  /**
+   * Print the \p formal_rank flag.
+   */
+  out << rkmatrix->get_formal_rank() << ",";
 
   /**
    * Print the \p rank flag.
@@ -29557,6 +29583,28 @@ HMatrix<spacedim, Number>::add(const HMatrix<spacedim, Number> &B,
 
 template <int spacedim, typename Number>
 void
+HMatrix<spacedim, Number>::add(const HMatrix<spacedim, Number> &B) const
+{
+  switch (type)
+    {
+      case HierarchicalMatrixType:
+        for (size_type i = 0; i < submatrices.size(); i++)
+          submatrices[i]->add(*(B.submatrices[i]));
+        break;
+      case FullMatrixType:
+        this->fullmatrix->add(*(B.fullmatrix));
+        break;
+      case RkMatrixType:
+        this->rkmatrix->add(*(B.rkmatrix));
+        break;
+      case UndefinedMatrixType:
+        Assert(false, ExcInvalidHMatrixType(type));
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
 HMatrix<spacedim, Number>::add(const Number                     b,
                                const HMatrix<spacedim, Number> &B,
                                const size_type fixed_rank_k) const
@@ -29572,6 +29620,29 @@ HMatrix<spacedim, Number>::add(const Number                     b,
         break;
       case RkMatrixType:
         this->rkmatrix->add(b, *(B.rkmatrix), fixed_rank_k);
+        break;
+      case UndefinedMatrixType:
+        Assert(false, ExcInvalidHMatrixType(type));
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::add(const Number                     b,
+                               const HMatrix<spacedim, Number> &B) const
+{
+  switch (type)
+    {
+      case HierarchicalMatrixType:
+        for (size_type i = 0; i < submatrices.size(); i++)
+          submatrices[i]->add(b, *(B.submatrices[i]));
+        break;
+      case FullMatrixType:
+        this->fullmatrix->add(b, *(B.fullmatrix));
+        break;
+      case RkMatrixType:
+        this->rkmatrix->add(b, *(B.rkmatrix));
         break;
       case UndefinedMatrixType:
         Assert(false, ExcInvalidHMatrixType(type));

@@ -435,6 +435,17 @@ public:
   get_column(const size_type col_index, Vector<Number> &col_values) const;
 
   /**
+   * Expand the columns of the current matrix to the specified number of
+   * columns.
+   *
+   * @param n_cols Number of columns
+   * @param copy_data When it is true, data in the original matrix are copied to
+   * the new matrix from the start.
+   */
+  void
+  expand_columns(const size_type n_cols_larger, const bool copy_data = true);
+
+  /**
    * Remove row \p row_index from the matrix.
    * @param row_index
    */
@@ -2979,9 +2990,31 @@ LAPACKFullMatrixExt<Number>::get_column(const size_type col_index,
 
   col_values.reinit(n_rows, true);
 
-  for (size_type i = 0; i < n_rows; i++)
+  std::memcpy((void *)col_values.data(),
+              (void *)(this->values.data() + col_index * n_rows),
+              sizeof(Number) * n_rows);
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::expand_columns(const size_type n_cols_larger,
+                                            const bool      copy_data)
+{
+  const size_type n_rows = this->m();
+  const size_type n_cols = this->n();
+
+  if (n_cols_larger > n_cols)
     {
-      col_values(i) = (*this)(i, col_index);
+      TransposeTable<Number> copy(std::move(*this));
+      this->TransposeTable<Number>::reinit(n_rows, n_cols_larger);
+
+      if (copy_data)
+        {
+          std::memcpy((void *)this->values.data(),
+                      (void *)&copy(0, 0),
+                      sizeof(Number) * n_rows * n_cols);
+        }
     }
 }
 
@@ -4657,16 +4690,16 @@ LAPACKFullMatrixExt<Number>::fill_col(const size_type       col_index,
   AssertIndexRange(col_index, this->n());
   AssertDimension(values.size(), n_rows);
 
-  for (size_type i = 0; i < n_rows; i++)
+  if (is_adding)
     {
-      if (is_adding)
-        {
-          (*this)(i, col_index) += values(i);
-        }
-      else
-        {
-          (*this)(i, col_index) = values(i);
-        }
+      for (size_type i = 0; i < n_rows; i++)
+        (*this)(i, col_index) += values(i);
+    }
+  else
+    {
+      std::memcpy((void *)(this->values.data() + col_index * n_rows),
+                  (void *)values.data(),
+                  sizeof(Number) * n_rows);
     }
 }
 

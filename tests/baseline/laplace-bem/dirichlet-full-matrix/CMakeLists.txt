@@ -8,9 +8,9 @@
 # option) any later version. The full text of the license can be found in the
 # file LICENSE at the top level directory of HierBEM.
 
-set(_target baseline-laplace-dirichlet-full-matrix-single-thread)
+set(_target baseline-laplace-dirichlet-full-matrix)
 
-add_executable(${_target} dirichlet-full-matrix-single-thread.cc)
+add_executable(${_target} dirichlet-full-matrix.cc)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})

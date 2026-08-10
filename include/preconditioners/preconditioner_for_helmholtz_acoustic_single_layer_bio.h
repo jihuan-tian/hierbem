@@ -336,11 +336,8 @@ HelmholtzAcousticSingleLayerPreconditioner<dim,
                       normal_detector,
                       sauter_quad_rule2);
 
-  // Add the second part H-matrix into the first part. N.B. The truncation rank
-  // for the formatted addition is set to 2*max_rank, so the formatted
-  // addition is accurate.
-  this->preconditioner_hmat.add(
-    preconditioner_hmat2, static_cast<unsigned int>(hmat_params.max_rank) * 2);
+  // Add the second part H-matrix into the first part without rank truncation.
+  this->preconditioner_hmat.add(preconditioner_hmat2);
   preconditioner_hmat2.release();
 }
 

@@ -130,7 +130,10 @@ public:
     std::map<EntityTag, Function<spacedim, RangeNumberType> *>;
 
 #pragma region ****Internal class ctor and dtor decls ****
-  Priv(const ConfLaplaceBEM &bem_params);
+  Priv(const ConfLaplaceBEM      &bem_params,
+       const ConfSauterQuad      &sauter_quad_params,
+       const ConfLinearSolver    &linear_solver_params,
+       const ConfParallelization &parallel_params);
   Priv(const ConfLaplaceBEM             &bem_params,
        const ConfHMatrix                &hmat_params,
        const ConfHMatrix                &hmat_preconditioner_params,
@@ -816,7 +819,10 @@ template <int dim,
           typename RangeNumberType,
           typename KernelNumberType>
 LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::Priv(
-  const ConfLaplaceBEM &bem_params)
+  const ConfLaplaceBEM      &bem_params,
+  const ConfSauterQuad      &sauter_quad_params,
+  const ConfLinearSolver    &linear_solver_params,
+  const ConfParallelization &parallel_params)
   : project_name_("default")
   , fe_order_for_dirichlet_space_(bem_params.fe_order_for_dirichlet_space)
   , fe_order_for_neumann_space_(bem_params.fe_order_for_neumann_space)
@@ -831,6 +837,9 @@ LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::Priv(
   , use_hmat_(false)
   , cpu_serial_(false)
   , alpha_for_neumann_(1.0)
+  , sauter_quad_params_(sauter_quad_params)
+  , linear_solver_params_(linear_solver_params)
+  , parallel_params_(parallel_params)
 {}
 
 template <int dim,

@@ -1127,7 +1127,7 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
 
   hmat = HMatrix<spacedim, RangeNumberType>(
     bct,
-    static_cast<unsigned int>(hmat_params.max_rank),
+    static_cast<unsigned int>(hmat_params.initial_rank),
     HMatrixSupport::Property::symmetric,
     HMatrixSupport::BlockType::diagonal_block);
 

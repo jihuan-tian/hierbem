@@ -9,9 +9,9 @@
 // file LICENSE at the top level directory of HierBEM.
 
 /**
- * @file dirichlet-full-matrix-single-thread.cc
+ * @file dirichlet-full-matrix.cc
  * @brief Baseline test for solving Laplace problem with Dirichlet boundary
- * condition based on full matrix BEM, which runs in a single thread.
+ * condition based on full matrix BEM.
  *
  * @ingroup test_cases
  * @author Jihuan Tian
@@ -242,7 +242,7 @@ main(int argc, char *argv[])
   CmdOpts opts = parse_cmdline(argc, argv);
 
   // Write run-time logs to file
-  std::ofstream ofs("dirichlet-full-matrix-single-thread.log");
+  std::ofstream ofs("dirichlet-full-matrix.log");
   deallog.pop();
   deallog.depth_console(0);
   deallog.depth_file(5);
@@ -262,9 +262,14 @@ main(int argc, char *argv[])
                             opts.neumann_space_fe_order,
                             ProblemType::DirichletBCProblem,
                             true};
+  ConfSauterQuad      sauter_quad_params;
+  ConfLinearSolver    linear_solver_params;
   ConfParallelization parallel_params;
 
-  LaplaceBEM<dim, spacedim> bem(bem_params);
+  LaplaceBEM<dim, spacedim> bem(bem_params,
+                                sauter_quad_params,
+                                linear_solver_params,
+                                parallel_params);
   bem.set_cpu_serial(!opts.run_in_parallel);
   if (opts.run_in_parallel)
     {
