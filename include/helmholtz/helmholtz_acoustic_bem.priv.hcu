@@ -1999,7 +1999,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 tria_mapping_support_points_cpu_,
                 tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(sauter_quad_params_.dlp_order),
                 I1K2_mat_);
             }
           else
@@ -2019,7 +2019,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 tria_mapping_support_points_cpu_,
                 tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(sauter_quad_params_.dlp_order),
                 I1K2_mat_);
             }
           timer.stop();
@@ -2071,7 +2071,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 tria_mapping_support_points_cpu_,
                 tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(sauter_quad_params_.slp_order),
                 V1_mat_);
             }
           else
@@ -2091,7 +2091,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 tria_mapping_support_points_cpu_,
                 tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(sauter_quad_params_.slp_order),
                 V1_mat_);
             }
           timer.stop();
@@ -2200,7 +2200,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 tria_mapping_support_points_cpu_,
                 tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(sauter_quad_params_.adlp_order),
                 I2K_prime2_mat_);
             }
           else
@@ -2220,7 +2220,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 tria_mapping_support_points_cpu_,
                 tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(sauter_quad_params_.adlp_order),
                 I2K_prime2_mat_);
             }
           timer.stop();
@@ -2274,7 +2274,8 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 tria_mapping_support_points_cpu_,
                 tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(
+                  sauter_quad_params_.hyper_singular_order),
                 D1_mat_);
 
               assemble_bem_full_matrix_serial<
@@ -2293,7 +2294,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 tria_mapping_support_points_cpu_,
                 tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(sauter_quad_params_.slp_order),
                 D1_part2_mat_);
             }
           else
@@ -2313,7 +2314,8 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 tria_mapping_support_points_cpu_,
                 tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(
+                  sauter_quad_params_.hyper_singular_order),
                 D1_mat_);
 
               assemble_bem_full_matrix<dim,
@@ -2331,7 +2333,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 tria_mapping_support_points_cpu_,
                 tria_mapping_indices_cpu_,
                 SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
-                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                SauterQuadratureRule<dim>(sauter_quad_params_.slp_order),
                 D1_part2_mat_);
             }
 
