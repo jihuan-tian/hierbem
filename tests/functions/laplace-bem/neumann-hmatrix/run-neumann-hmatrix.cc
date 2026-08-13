@@ -104,11 +104,11 @@ run_neumann_hmatrix(const IterativeSolverVmultType vmult_type)
   ConfLaplaceBEM bem_params;
   bem_params.problem_type        = ProblemType::NeumannBCProblem;
   bem_params.is_interior_problem = false;
-  ConfHMatrix      hmat_params{4, 4, 8, 4, 0.8, 5, 0.01, false};
-  ConfHMatrix      hmat_preconditioner_params{4, 4, 8, 4, 1.0, 2, 0.1, false};
-  ConfSauterQuad   sauter_quad_params;
-  ConfSauterQuad   sauter_quad_precond_params;
-  ConfLinearSolver linear_solver_params;
+  ConfHMatrix    hmat_params{4, 4, 8, 4, 0.8, 5, 5, 0.01, false};
+  ConfHMatrix    hmat_preconditioner_params{4, 4, 8, 4, 1.0, 2, 2, 0.1, false};
+  ConfSauterQuad sauter_quad_params;
+  ConfSauterQuad sauter_quad_precond_params;
+  ConfLinearSolver           linear_solver_params;
   ConfOperatorPreconditioner op_precond_params;
   ConfParallelization        parallel_params;
 

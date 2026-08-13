@@ -50,6 +50,7 @@ struct CmdOpts
   unsigned int dirichlet_space_fe_order;
   unsigned int neumann_space_fe_order;
   unsigned int mapping_order;
+  unsigned int refinement;
   bool         run_in_parallel;
   /**
    * Whether the test case directly reads a 2D mesh or reads a 3D mesh first,
@@ -82,6 +83,7 @@ parse_cmdline(int argc, char *argv[])
     ("dirichlet-order,d", po::value<unsigned int>()->default_value(1), "Finite element space order for the Dirichlet data")
     ("neumann-order,n", po::value<unsigned int>()->default_value(0), "Finite element space order for the Neumann data")
     ("mapping-order,m", po::value<unsigned int>()->default_value(1), "Mapping order for the sphere")
+    ("refinement,r", po::value<unsigned int>()->default_value(0), "Number of global refinement after reading the mesh")
     ("enable-parallel,p", po::bool_switch(&opts.run_in_parallel), "Enable parallel execution")
     ("enable-2d-mesh,2", po::bool_switch(&opts.use_2d_mesh), "Enable directly reading 2D mesh")
     ("enable-sphere-manifold,s", po::bool_switch(&opts.use_sphere_manifold), "Enable using sphere manifold")
@@ -105,6 +107,7 @@ parse_cmdline(int argc, char *argv[])
   opts.dirichlet_space_fe_order = vm["dirichlet-order"].as<unsigned int>();
   opts.neumann_space_fe_order   = vm["neumann-order"].as<unsigned int>();
   opts.mapping_order            = vm["mapping-order"].as<unsigned int>();
+  opts.refinement               = vm["refinement"].as<unsigned int>();
   opts.dealii_refinement        = vm["dealii-refinement"].as<unsigned int>();
 
   if (vm.count("mesh-file") == 0)
@@ -258,7 +261,8 @@ main(int argc, char *argv[])
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  ConfLaplaceBEM      bem_params{opts.dirichlet_space_fe_order,
+  ConfLaplaceBEM      bem_params{opts.refinement,
+                            opts.dirichlet_space_fe_order,
                             opts.neumann_space_fe_order,
                             ProblemType::DirichletBCProblem,
                             true};

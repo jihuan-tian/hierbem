@@ -23,8 +23,7 @@
 HBEM_NS_OPEN
 
 // Project name pattern
-using ProjectName =
-  rfl::Pattern<R"(([a-zA-Z][a-zA-Z0-9_.=\-]*)?)", "ProjectName">;
+using ProjectName = rfl::Pattern<R"(([a-zA-Z0-9_.=\-]*)?)", "ProjectName">;
 // BEM problem type
 using ProblemTypeLiteral = rfl::Literal<"dirichlet", "neumann", "mixed">;
 // Preconditioner type

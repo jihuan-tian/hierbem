@@ -33,6 +33,7 @@ HBEM_NS_OPEN
  */
 struct ConfLaplaceBEM
 {
+  std::uint32_t mesh_refinement = 0; // Initial number of global mesh refinement
   std::uint32_t fe_order_for_dirichlet_space =
     1;                                          // FE order for Dirichlet space
   std::uint32_t fe_order_for_neumann_space = 0; // FE order for Neumann space
@@ -45,7 +46,8 @@ struct ConfLaplaceBEM
  */
 struct ConfHelmholtzAcousticBEM
 {
-  std::complex<double> kappa; // Wave number
+  std::uint32_t mesh_refinement = 0; // Initial number of global mesh refinement
+  std::complex<double> kappa;        // Wave number
   std::uint32_t        fe_order_for_dirichlet_space =
     1;                                          // FE order for Dirichlet space
   std::uint32_t fe_order_for_neumann_space = 0; // FE order for Neumann space

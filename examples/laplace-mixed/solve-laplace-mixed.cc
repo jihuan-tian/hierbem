@@ -37,11 +37,11 @@ main()
   ConfLaplaceBEM bem_params;
   bem_params.problem_type        = ProblemType::MixedBCProblem;
   bem_params.is_interior_problem = true;
-  ConfHMatrix      hmat_params{32, 32, 8, 4, 0.8, 10, 0.01, false};
-  ConfHMatrix      hmat_preconditioner_params{32, 32, 8, 4, 1.0, 5, 0.1, false};
-  ConfSauterQuad   sauter_quad_params;
-  ConfSauterQuad   sauter_quad_precond_params;
-  ConfLinearSolver linear_solver_params;
+  ConfHMatrix hmat_params{32, 32, 8, 4, 0.8, 10, 10, 0.01, false};
+  ConfHMatrix hmat_preconditioner_params{32, 32, 8, 4, 1.0, 5, 5, 0.1, false};
+  ConfSauterQuad             sauter_quad_params;
+  ConfSauterQuad             sauter_quad_precond_params;
+  ConfLinearSolver           linear_solver_params;
   ConfOperatorPreconditioner op_precond_params;
   ConfParallelization        parallel_params;
 

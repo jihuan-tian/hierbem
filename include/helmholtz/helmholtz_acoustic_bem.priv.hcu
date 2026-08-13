@@ -289,6 +289,11 @@ private:
   std::string project_name_;
 
   /**
+   * Initial global refinement of the mesh after reading the mesh file.
+   */
+  unsigned int initial_mesh_refinement;
+
+  /**
    * Wave number
    */
   KernelNumberType kappa_;
@@ -777,6 +782,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
        const ConfSauterQuad           &sauter_quad_params,
        const ConfLinearSolver         &linear_solver_params)
   : project_name_("default")
+  , initial_mesh_refinement(bem_params.mesh_refinement)
   , kappa_(bem_params.kappa)
   , fe_order_for_dirichlet_space_(bem_params.fe_order_for_dirichlet_space)
   , fe_order_for_neumann_space_(bem_params.fe_order_for_neumann_space)
@@ -804,6 +810,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
        const ConfOperatorPreconditioner &op_precond_params,
        const ConfParallelization        &parallel_params)
   : project_name_("default")
+  , initial_mesh_refinement(bem_params.mesh_refinement)
   , kappa_(bem_params.kappa)
   , fe_order_for_dirichlet_space_(bem_params.fe_order_for_dirichlet_space)
   , fe_order_for_neumann_space_(bem_params.fe_order_for_neumann_space)
@@ -928,6 +935,10 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
 
   initialize_manifolds_from_manifold_description();
   initialize_mappings();
+
+  if (initial_mesh_refinement > 0)
+    tria_.refine_global(initial_mesh_refinement);
+
   timer.start();
   compute_mapping_data_for_triangulation();
   timer.stop();

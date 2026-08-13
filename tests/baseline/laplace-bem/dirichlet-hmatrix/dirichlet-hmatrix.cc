@@ -191,7 +191,8 @@ main(int argc, char *argv[])
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  ConfLaplaceBEM bem_params{opts.dirichlet_space_fe_order,
+  ConfLaplaceBEM bem_params{0,
+                            opts.dirichlet_space_fe_order,
                             opts.neumann_space_fe_order,
                             ProblemType::DirichletBCProblem,
                             true};

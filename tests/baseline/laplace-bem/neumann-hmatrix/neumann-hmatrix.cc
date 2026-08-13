@@ -48,6 +48,8 @@ struct CmdOpts
   unsigned int             dirichlet_space_fe_order;
   unsigned int             neumann_space_fe_order;
   unsigned int             mapping_order;
+  unsigned int             refinement;
+  unsigned int             dealii_refinement;
   PreconditionerType       precond_type;
   IterativeSolverVmultType vmult_type;
 };
@@ -64,6 +66,8 @@ parse_cmdline(int argc, char *argv[])
     ("dirichlet-order,d", po::value<unsigned int>()->default_value(1), "Finite element space order for the Dirichlet data")
     ("neumann-order,n", po::value<unsigned int>()->default_value(0), "Finite element space order for the Neumann data")
     ("mapping-order,m", po::value<unsigned int>()->default_value(1), "Mapping order for the sphere")
+    ("refinement,r", po::value<unsigned int>()->default_value(0), "Number of global refinement after reading the mesh")
+    ("dealii-refinement", po::value<unsigned int>()->default_value(5), "Number of global refinement when deal.ii is used to generate the mesh")
     ("precond-type,p", po::value<unsigned int>()->default_value(0), "Preconditioner for iterative solver: 0:H-Cholesky, 1:operator preconditioner, 2:identity")
     ("vmult-type,v", po::value<unsigned int>()->default_value(0), "H-matrix vmult type: 0:serial recursive, 1:serial iterative, 2:task parallel");
   // clang-format on
@@ -81,6 +85,8 @@ parse_cmdline(int argc, char *argv[])
   opts.dirichlet_space_fe_order = vm["dirichlet-order"].as<unsigned int>();
   opts.neumann_space_fe_order   = vm["neumann-order"].as<unsigned int>();
   opts.mapping_order            = vm["mapping-order"].as<unsigned int>();
+  opts.refinement               = vm["refinement"].as<unsigned int>();
+  opts.dealii_refinement        = vm["dealii-refinement"].as<unsigned int>();
 
   switch (vm["precond-type"].as<unsigned int>())
     {
@@ -197,15 +203,16 @@ main(int argc, char *argv[])
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  ConfLaplaceBEM   bem_params{opts.dirichlet_space_fe_order,
+  ConfLaplaceBEM bem_params{opts.refinement,
+                            opts.dirichlet_space_fe_order,
                             opts.neumann_space_fe_order,
                             ProblemType::NeumannBCProblem,
                             false};
-  ConfHMatrix      hmat_params{64, 64, 8, 4, 0.8, 5, 0.01, false};
-  ConfHMatrix      hmat_preconditioner_params{64, 64, 8, 4, 1.0, 2, 0.1, false};
-  ConfSauterQuad   sauter_quad_params;
-  ConfSauterQuad   sauter_quad_precond_params;
-  ConfLinearSolver linear_solver_params;
+  ConfHMatrix    hmat_params{64, 64, 8, 4, 0.8, 5, 0, 0.01, false};
+  ConfHMatrix hmat_preconditioner_params{64, 64, 8, 4, 1.0, 2, 0, 0.1, false};
+  ConfSauterQuad             sauter_quad_params;
+  ConfSauterQuad             sauter_quad_precond_params;
+  ConfLinearSolver           linear_solver_params;
   ConfOperatorPreconditioner op_precond_params;
   ConfParallelization        parallel_params;
 
@@ -256,7 +263,7 @@ main(int argc, char *argv[])
   Triangulation<spacedim> tria;
   // The manifold_id is set to 0 on the boundary faces in @p hyper_ball.
   GridGenerator::hyper_ball(tria, center, radius);
-  tria.refine_global(5);
+  tria.refine_global(opts.dealii_refinement);
 
   // Create the map from material ids to manifold ids. By default, the material
   // ids of all cells are zero, if the triangulation is created by a deal.ii

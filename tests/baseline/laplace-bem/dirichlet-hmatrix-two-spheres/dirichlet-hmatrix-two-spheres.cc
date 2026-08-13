@@ -175,14 +175,12 @@ main(int argc, char *argv[])
     const unsigned int dim      = 2;
     const unsigned int spacedim = 3;
 
-    ConfLaplaceBEM bem_params{conf_inst.bem.fe_order_for_dirichlet_space,
+    ConfLaplaceBEM bem_params{conf_inst.bem.mesh_refinement,
+                              conf_inst.bem.fe_order_for_dirichlet_space,
                               conf_inst.bem.fe_order_for_neumann_space,
                               problemTypeLiteralToEnum(
                                 conf_inst.bem.problem_type),
                               conf_inst.bem.is_interior_problem};
-    // ConfHMatrix                hmat_params{64, 64, 8, 4, 0.8, 5, 0.01,
-    // false}; ConfHMatrix                hmat_preconditioner_params{64, 64, 8,
-    // 4, 1.0, 2, 0.1};
 
     // Set TBB thread num.
     if (conf_inst.parallel.tbb_thread_num == -1)
@@ -211,15 +209,12 @@ main(int argc, char *argv[])
     print_wall_time(deallog, timer, "program preparation");
 
     timer.start();
-    std::ifstream mesh_in(HBEM_TEST_MODEL_DIR "two-spheres-fine.msh");
+    std::ifstream mesh_in(std::string(HBEM_TEST_MODEL_DIR) +
+                          conf_inst.project.mesh_file);
     read_msh(mesh_in, bem.get_triangulation());
-    bem.get_subdomain_topology().generate_topology(HBEM_TEST_MODEL_DIR
-                                                   "two-spheres.brep",
-                                                   HBEM_TEST_MODEL_DIR
-                                                   "two-spheres-fine.msh");
-
-    if (conf_inst.bem.mesh_refinement > 0)
-      bem.get_triangulation().refine_global(conf_inst.bem.mesh_refinement);
+    bem.get_subdomain_topology().generate_topology(
+      std::string(HBEM_TEST_MODEL_DIR) + conf_inst.project.cad_file,
+      std::string(HBEM_TEST_MODEL_DIR) + conf_inst.project.mesh_file);
 
     // Generate two sphere manifolds.
     double                   inter_distance = 8.0;
@@ -233,8 +228,8 @@ main(int argc, char *argv[])
     bem.get_manifolds()[1] = right_sphere_manifold;
 
     // Create the map from manifold id to mapping order.
-    bem.get_manifold_id_to_mapping_order()[0] = 2;
-    bem.get_manifold_id_to_mapping_order()[1] = 2;
+    bem.get_manifold_id_to_mapping_order()[0] = 1;
+    bem.get_manifold_id_to_mapping_order()[1] = 1;
 
     // Assign manifolds to surface entities.
     bem.get_manifold_description()[1] = 0;

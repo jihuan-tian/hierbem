@@ -156,7 +156,7 @@ TEST_CASE("Compute a row/column vector with ACA", "[hmatrix]")
   tria_mapping_indices_gpu.assign_from_host(tria_mapping_indices_cpu);
 
   // Parameters for building H-matrices.
-  ConfHMatrix               hmat_params{32, 32, 1, 1, 0.8, 5, 0.01, false};
+  ConfHMatrix               hmat_params{32, 32, 1, 1, 0.8, 5, 5, 0.01, false};
   ConfSauterQuadFarField    sauter_quad_far_field_params;
   SauterQuadratureRule<dim> sauter_quad_rule(5, 4, 4, 3);
   ConfParallelization       parallel_params;

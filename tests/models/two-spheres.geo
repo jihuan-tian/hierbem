@@ -13,7 +13,7 @@ Mesh.Algorithm = 6;
 Include "../../scripts/gmsh-macros/CreateSphere.geo";
 
 _sphere_radius = 1;
-_sphere_center_x = -1.5;
+_sphere_center_x = -4;
 _sphere_center_y = 0;
 _sphere_center_z = 0;
 _sphere_surface_orient = -1;
@@ -24,7 +24,7 @@ _sphere_model_dim = 3;
 Call CreateSphere;
 
 _sphere_radius = 1;
-_sphere_center_x = 1.5;
+_sphere_center_x = 4;
 _sphere_center_y = 0;
 _sphere_center_z = 0;
 _sphere_surface_orient = -1;

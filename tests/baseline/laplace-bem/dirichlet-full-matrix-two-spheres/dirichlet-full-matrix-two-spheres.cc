@@ -172,7 +172,8 @@ main(int argc, char *argv[])
     const unsigned int dim      = 2;
     const unsigned int spacedim = 3;
 
-    ConfLaplaceBEM bem_params{conf_inst.bem.fe_order_for_dirichlet_space,
+    ConfLaplaceBEM bem_params{conf_inst.bem.mesh_refinement,
+                              conf_inst.bem.fe_order_for_dirichlet_space,
                               conf_inst.bem.fe_order_for_neumann_space,
                               problemTypeLiteralToEnum(
                                 conf_inst.bem.problem_type),
@@ -193,12 +194,11 @@ main(int argc, char *argv[])
     print_wall_time(deallog, timer, "program preparation");
 
     timer.start();
-    std::ifstream mesh_in(HBEM_TEST_MODEL_DIR "two-spheres-fine.msh");
+    std::ifstream mesh_in(HBEM_TEST_MODEL_DIR "two-spheres-occ-blossom.msh");
     read_msh(mesh_in, bem.get_triangulation());
-    bem.get_subdomain_topology().generate_topology(HBEM_TEST_MODEL_DIR
-                                                   "two-spheres.brep",
-                                                   HBEM_TEST_MODEL_DIR
-                                                   "two-spheres-fine.msh");
+    bem.get_subdomain_topology().generate_topology(
+      HBEM_TEST_MODEL_DIR "two-spheres.brep",
+      HBEM_TEST_MODEL_DIR "two-spheres-occ-blossom.msh");
 
     // Generate two sphere manifolds.
     double                   inter_distance = 8.0;

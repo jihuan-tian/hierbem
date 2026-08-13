@@ -101,7 +101,8 @@ public:
 
     // Initialize HierBEM Laplace solver
     bem_ = std::make_unique<SolverType>(
-      ConfLaplaceBEM{conf_inst.bem.fe_order_for_dirichlet_space,
+      ConfLaplaceBEM{conf_inst.bem.mesh_refinement,
+                     conf_inst.bem.fe_order_for_dirichlet_space,
                      conf_inst.bem.fe_order_for_neumann_space,
                      problemTypeLiteralToEnum(conf_inst.bem.problem_type),
                      conf_inst.bem.is_interior_problem},

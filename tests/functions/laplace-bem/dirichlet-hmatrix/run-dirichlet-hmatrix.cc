@@ -97,9 +97,9 @@ run_dirichlet_hmatrix(const unsigned int             refinement,
   bem_params.problem_type        = ProblemType::DirichletBCProblem;
   bem_params.is_interior_problem = true;
   ConfHMatrix hmat_params{
-    4, 4, 8, 4, 0.8, 5, 0.01, cpu_serial_without_producer_consumer};
+    4, 4, 8, 4, 0.8, 5, 5, 0.01, cpu_serial_without_producer_consumer};
   ConfHMatrix hmat_preconditioner_params{
-    4, 4, 8, 4, 1.0, 2, 0.1, cpu_serial_without_producer_consumer};
+    4, 4, 8, 4, 1.0, 2, 2, 0.1, cpu_serial_without_producer_consumer};
   ConfSauterQuad             sauter_quad_params;
   ConfSauterQuad             sauter_quad_precond_params;
   ConfLinearSolver           linear_solver_params;

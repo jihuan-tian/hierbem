@@ -64,6 +64,7 @@ struct CmdOpts
   unsigned int refinement;
   unsigned int n_min;
   double       eta;
+  unsigned int initial_rank;
   unsigned int max_rank;
   double       epsilon;
 };
@@ -81,7 +82,8 @@ parse_cmdline(int argc, char *argv[])
     ("refinement,r", po::value<unsigned int>()->default_value(5), "Number of global mesh refinement")
     ("n-min,n", po::value<unsigned int>()->default_value(32), "n_min criteria for small cluster")
     ("eta,e", po::value<double>()->default_value(0.8), "Admissibility constant eta")
-    ("max-rank,m", po::value<unsigned int>()->default_value(5), "Maximum rank allowed for a rank-k matrix")
+    ("initial-rank,i", po::value<unsigned int>()->default_value(5), "Initial rank for a rank-k matrix")
+    ("max-rank,m", po::value<unsigned int>()->default_value(0), "Max rank for a rank-k matrix; when it is 0, no limit")
     ("epsilon,E", po::value<double>()->default_value(0.01), "Relative error of ACA for building a rank-k matrix");
   // clang-format on
 
@@ -99,6 +101,7 @@ parse_cmdline(int argc, char *argv[])
   opts.refinement    = vm["refinement"].as<unsigned int>();
   opts.n_min         = vm["n-min"].as<unsigned int>();
   opts.eta           = vm["eta"].as<double>();
+  opts.initial_rank  = vm["initial-rank"].as<unsigned int>();
   opts.max_rank      = vm["max-rank"].as<unsigned int>();
   opts.epsilon       = vm["epsilon"].as<double>();
 
@@ -168,8 +171,15 @@ main(int argc, char *argv[])
     single_layer_kernel;
 
   // Parameters for building H-matrices.
-  ConfHMatrix hmat_params{
-    opts.n_min, opts.n_min, 1, 1, opts.eta, opts.max_rank, opts.epsilon, false};
+  ConfHMatrix             hmat_params{opts.n_min,
+                          opts.n_min,
+                          1,
+                          1,
+                          opts.eta,
+                          opts.initial_rank,
+                          opts.max_rank,
+                          opts.epsilon,
+                          false};
   ConfSauterQuadNearField sauter_quad_near_field_params;
   ConfSauterQuadFarField  sauter_quad_far_field_params;
   ConfParallelization     parallel_params;
