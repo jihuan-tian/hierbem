@@ -250,7 +250,7 @@ LaplaceSingleLayerPreconditioner<dim,
     const Quadrature<dim>                          &quad_rule_for_mass)
 {
   OperatorPreconditioner<dim, spacedim, RangeNumberType>::setup_preconditioner(
-    hmat_params, mappings, quad_rule_for_mass);
+    hmat_params, mappings, material_id_to_mapping_index, quad_rule_for_mass);
 
   this->template build_preconditioner_hmat_on_refined_mesh<
     HierBEM::PlatformShared::LaplaceKernel::HyperSingularKernelRegular,

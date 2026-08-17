@@ -64,10 +64,142 @@ using namespace dealii;
 /**
  * Assemble the mass matrix in FEM on one cell.
  *
+ * Evaluation of @p FEValues depends on cell dependent mapping.
+ *
  * The results is stored in a local cellwise matrix in the copy data.
  *
- * @pre
- * @post
+ * @tparam dim
+ * @tparam spacedim
+ * @tparam RangeNumberType
+ * @param factor
+ * @param iterator_for_cell_iterator_pairs
+ * @param material_id_to_mapping_index
+ * @param scratch_data
+ * @param copy_data
+ */
+template <int dim, int spacedim, typename RangeNumberType>
+void
+assemble_fem_scaled_mass_matrix_on_one_cell(
+  const RangeNumberType factor,
+  const typename std::vector<std::pair<
+    typename DoFHandler<dim, spacedim>::active_cell_iterator,
+    typename DoFHandler<dim, spacedim>::active_cell_iterator>>::const_iterator
+    &iterator_for_cell_iterator_pairs,
+  const std::map<types::material_id, unsigned int>
+                                                  &material_id_to_mapping_index,
+  CellWiseScratchDataForMassMatrix<dim, spacedim> &scratch_data,
+  CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType> &copy_data)
+{
+  /**
+   * Clear the local matrix in case that it is reused from another finished
+   * task. N.B. Its memory has already been allocated in the constructor of
+   * @p CellWisePerTaskData.
+   */
+  copy_data.local_matrix.reinit(
+    copy_data.local_dof_indices_for_test_space.size(),
+    copy_data.local_dof_indices_for_trial_space.size());
+
+  /**
+   * N.B. The construction of the object <code>scratch.fe_values</code> is
+   * carried out in the constructor of <code>CellWiseScratchData</code>.
+   *
+   * \comment{2022-06-27 I added a @p const keyword at the front to protect
+   * the internal data in the cell. Since the vector of cell iterator pairs
+   * persists at least in this function, I create references to the two cell
+   * iterators instead of making copies.}
+   */
+  const typename DoFHandler<dim, spacedim>::active_cell_iterator
+    &cell_iter_for_test_space_domain = iterator_for_cell_iterator_pairs->first;
+  const typename DoFHandler<dim, spacedim>::active_cell_iterator &
+    cell_iter_for_trial_space_domain = iterator_for_cell_iterator_pairs->second;
+
+  const unsigned int mapping_index = material_id_to_mapping_index.at(
+    cell_iter_for_test_space_domain->material_id());
+  Assert(mapping_index == material_id_to_mapping_index.at(
+                            cell_iter_for_trial_space_domain->material_id()),
+         ExcInternalError());
+
+  /**
+   * Reinitialize the @p FEValues objects for test space and trial space
+   * for the current cell.
+   */
+  scratch_data.fe_values_for_test_space[mapping_index]->reinit(
+    cell_iter_for_test_space_domain);
+  scratch_data.fe_values_for_trial_space[mapping_index]->reinit(
+    cell_iter_for_trial_space_domain);
+
+  AssertDimension(scratch_data.fe_values_for_test_space[mapping_index]
+                    ->get_quadrature()
+                    .size(),
+                  scratch_data.fe_values_for_trial_space[mapping_index]
+                    ->get_quadrature()
+                    .size());
+  const unsigned int n_q_points =
+    scratch_data.fe_values_for_test_space[mapping_index]
+      ->get_quadrature()
+      .size();
+
+  const unsigned int dofs_per_cell_for_test_space =
+    scratch_data.fe_values_for_test_space[mapping_index]
+      ->get_fe()
+      .dofs_per_cell;
+  const unsigned int dofs_per_cell_for_trial_space =
+    scratch_data.fe_values_for_trial_space[mapping_index]
+      ->get_fe()
+      .dofs_per_cell;
+
+  /**
+   *  Extract the DoF indices. N.B. Before calling
+   * <code>get_dof_indices</code>, the memory for the argument vector should
+   * have been allocated. Here, the memory for
+   * <code>data.local_dof_indices</code> has been allocated in the
+   * constructor of <code>CellWisePerTaskData</code>.
+   */
+  cell_iter_for_test_space_domain->get_dof_indices(
+    copy_data.local_dof_indices_for_test_space);
+  cell_iter_for_trial_space_domain->get_dof_indices(
+    copy_data.local_dof_indices_for_trial_space);
+
+  /**
+   * Calculate the local mass matrix multiplied by a factor in the
+   * current cell.
+   */
+  // Iterate over test function DoFs.
+  for (unsigned int i = 0; i < dofs_per_cell_for_test_space; i++)
+    {
+      // Iterate over trial function DoFs.
+      for (unsigned int j = 0; j < dofs_per_cell_for_trial_space; j++)
+        {
+          // Iterate over each quadrature point.
+          for (unsigned int q = 0; q < n_q_points; q++)
+            {
+              Assert(
+                scratch_data.fe_values_for_test_space[mapping_index]->JxW(q) ==
+                  scratch_data.fe_values_for_trial_space[mapping_index]->JxW(q),
+                ExcMessage(
+                  "The JxW values in test space domain and trial space domain should be the same!"));
+
+              copy_data.local_matrix(i, j) +=
+                factor *
+                scratch_data.fe_values_for_test_space[mapping_index]
+                  ->shape_value(i, q) *
+                scratch_data.fe_values_for_trial_space[mapping_index]
+                  ->shape_value(j, q) *
+                scratch_data.fe_values_for_test_space[mapping_index]->JxW(q);
+            }
+        }
+    }
+}
+
+
+/**
+ * Assemble the mass matrix in FEM on one cell.
+ *
+ * Evaluation of @p FEValues does not depend on cell dependent mapping. First
+ * order mapping is used.
+ *
+ * The results is stored in a local cellwise matrix in the copy data.
+ *
  * @tparam dim
  * @tparam spacedim
  * @tparam RangeNumberType
@@ -84,7 +216,7 @@ assemble_fem_scaled_mass_matrix_on_one_cell(
     typename DoFHandler<dim, spacedim>::active_cell_iterator,
     typename DoFHandler<dim, spacedim>::active_cell_iterator>>::const_iterator
     &iterator_for_cell_iterator_pairs,
-  CellWiseScratchDataForMassMatrix<dim, spacedim>               &scratch_data,
+  CellWiseScratchDataForMassMatrixMappingQ1<dim, spacedim>      &scratch_data,
   CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType> &copy_data)
 {
   /**
@@ -174,6 +306,8 @@ assemble_fem_scaled_mass_matrix_on_one_cell(
 /**
  * Assemble the mass matrix in FEM on one cell.
  *
+ * Evaluation of @p FEValues depends on cell dependent mapping.
+ *
  * This version is used for building a mass matrix on a subdomain.
  */
 template <int dim, int spacedim, typename RangeNumberType>
@@ -186,7 +320,138 @@ assemble_fem_scaled_mass_matrix_on_one_cell(
     typename DoFHandler<dim, spacedim>::active_cell_iterator,
     typename DoFHandler<dim, spacedim>::active_cell_iterator>>::const_iterator
     &iterator_for_cell_iterator_pairs,
-  CellWiseScratchDataForMassMatrix<dim, spacedim>               &scratch_data,
+  const std::map<types::material_id, unsigned int>
+                                                  &material_id_to_mapping_index,
+  CellWiseScratchDataForMassMatrix<dim, spacedim> &scratch_data,
+  CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType> &copy_data)
+{
+  /**
+   * Clear the local matrix in case that it is reused from another finished
+   * task. N.B. Its memory has already been allocated in the constructor of
+   * @p CellWisePerTaskData.
+   */
+  copy_data.local_matrix.reinit(
+    copy_data.local_dof_indices_for_test_space.size(),
+    copy_data.local_dof_indices_for_trial_space.size());
+
+  /**
+   * N.B. The construction of the object <code>scratch.fe_values</code> is
+   * carried out in the constructor of <code>CellWiseScratchData</code>.
+   *
+   * \comment{2022-06-27 I added a @p const keyword at the front to protect
+   * the internal data in the cell. Since the vector of cell iterator pairs
+   * persists at least in this function, I create references to the two cell
+   * iterators instead of making copies.}
+   */
+  const typename DoFHandler<dim, spacedim>::active_cell_iterator
+    &cell_iter_for_test_space_domain = iterator_for_cell_iterator_pairs->first;
+  const typename DoFHandler<dim, spacedim>::active_cell_iterator &
+    cell_iter_for_trial_space_domain = iterator_for_cell_iterator_pairs->second;
+
+  const unsigned int mapping_index = material_id_to_mapping_index.at(
+    cell_iter_for_test_space_domain->material_id());
+  Assert(mapping_index == material_id_to_mapping_index.at(
+                            cell_iter_for_trial_space_domain->material_id()),
+         ExcInternalError());
+
+  /**
+   * Reinitialize the @p FEValues objects for test space and trial space
+   * for the current cell.
+   */
+  scratch_data.fe_values_for_test_space[mapping_index]->reinit(
+    cell_iter_for_test_space_domain);
+  scratch_data.fe_values_for_trial_space[mapping_index]->reinit(
+    cell_iter_for_trial_space_domain);
+
+  AssertDimension(scratch_data.fe_values_for_test_space[mapping_index]
+                    ->get_quadrature()
+                    .size(),
+                  scratch_data.fe_values_for_trial_space[mapping_index]
+                    ->get_quadrature()
+                    .size());
+  const unsigned int n_q_points =
+    scratch_data.fe_values_for_test_space[mapping_index]
+      ->get_quadrature()
+      .size();
+
+  const unsigned int dofs_per_cell_for_test_space =
+    scratch_data.fe_values_for_test_space[mapping_index]
+      ->get_fe()
+      .dofs_per_cell;
+  const unsigned int dofs_per_cell_for_trial_space =
+    scratch_data.fe_values_for_trial_space[mapping_index]
+      ->get_fe()
+      .dofs_per_cell;
+
+  /**
+   *  Extract the DoF indices. N.B. Before calling
+   * <code>get_dof_indices</code>, the memory for the argument vector should
+   * have been allocated. Here, the memory for
+   * <code>data.local_dof_indices</code> has been allocated in the
+   * constructor of <code>CellWisePerTaskData</code>.
+   */
+  cell_iter_for_test_space_domain->get_dof_indices(
+    copy_data.local_dof_indices_for_test_space);
+  cell_iter_for_trial_space_domain->get_dof_indices(
+    copy_data.local_dof_indices_for_trial_space);
+
+  /**
+   * Calculate the local mass matrix multiplied by a factor in the
+   * current cell.
+   */
+  // Iterate over test function DoFs.
+  for (unsigned int i = 0; i < dofs_per_cell_for_test_space; i++)
+    {
+      // Iterate over trial function DoFs.
+      for (unsigned int j = 0; j < dofs_per_cell_for_trial_space; j++)
+        {
+          if (dof_selectors_test_space.at(
+                copy_data.local_dof_indices_for_test_space[i]) &&
+              dof_selectors_trial_space.at(
+                copy_data.local_dof_indices_for_trial_space[j]))
+            // Iterate over each quadrature point.
+            for (unsigned int q = 0; q < n_q_points; q++)
+              {
+                Assert(
+                  scratch_data.fe_values_for_test_space[mapping_index]->JxW(
+                    q) ==
+                    scratch_data.fe_values_for_trial_space[mapping_index]->JxW(
+                      q),
+                  ExcMessage(
+                    "The JxW values in test space domain and trial space domain should be the same!"));
+
+                copy_data.local_matrix(i, j) +=
+                  factor *
+                  scratch_data.fe_values_for_test_space[mapping_index]
+                    ->shape_value(i, q) *
+                  scratch_data.fe_values_for_trial_space[mapping_index]
+                    ->shape_value(j, q) *
+                  scratch_data.fe_values_for_test_space[mapping_index]->JxW(q);
+              }
+        }
+    }
+}
+
+
+/**
+ * Assemble the mass matrix in FEM on one cell.
+ *
+ * Evaluation of @p FEValues does not depend on cell dependent mapping. First
+ * order mapping is used.
+ *
+ * This version is used for building a mass matrix on a subdomain.
+ */
+template <int dim, int spacedim, typename RangeNumberType>
+void
+assemble_fem_scaled_mass_matrix_on_one_cell(
+  const RangeNumberType    factor,
+  const std::vector<bool> &dof_selectors_test_space,
+  const std::vector<bool> &dof_selectors_trial_space,
+  const typename std::vector<std::pair<
+    typename DoFHandler<dim, spacedim>::active_cell_iterator,
+    typename DoFHandler<dim, spacedim>::active_cell_iterator>>::const_iterator
+    &iterator_for_cell_iterator_pairs,
+  CellWiseScratchDataForMassMatrixMappingQ1<dim, spacedim>      &scratch_data,
   CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType> &copy_data)
 {
   /**
@@ -461,6 +726,8 @@ initialize_cell_iterator_pairs_for_mass_matrix(
 /**
  * Assemble the mass matrix in FEM.
  *
+ * Evaluation of @p FEValues depends on cell dependent mapping.
+ *
  * \mynote{We should bear in mind the following points.
  * 1. The test and ansatz function spaces related to the mass matrix may
  * be two different function spaces but residing on a same triangulation;
@@ -476,8 +743,75 @@ initialize_cell_iterator_pairs_for_mass_matrix(
  * @param dof_handler_for_trial_space
  * @param factor
  * @param quad_rule
+ * @param mappings
+ * @param material_id_to_mapping_index
  * @param target_matrix The target mass matrix to be assembled, which can be
  * either a full matrix or sparse matrix.
+ */
+template <int dim, int spacedim, typename RangeNumberType, typename MatrixType>
+void
+assemble_fem_scaled_mass_matrix(
+  const DoFHandler<dim, spacedim>                 &dof_handler_for_test_space,
+  const DoFHandler<dim, spacedim>                 &dof_handler_for_trial_space,
+  const RangeNumberType                            factor,
+  const Quadrature<dim>                           &quad_rule,
+  const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+  const std::map<types::material_id, unsigned int>
+             &material_id_to_mapping_index,
+  MatrixType &target_matrix)
+{
+  // Because the test and ansatz function spaces related to the mass matrix
+  // are on a same spatial domain, here we make an assertion about the
+  // equality of the number of cells in their respective triangulations.
+  AssertDimension(
+    dof_handler_for_test_space.get_triangulation().n_active_cells(),
+    dof_handler_for_trial_space.get_triangulation().n_active_cells());
+
+  std::vector<
+    std::pair<typename DoFHandler<dim, spacedim>::active_cell_iterator,
+              typename DoFHandler<dim, spacedim>::active_cell_iterator>>
+    cell_iterator_pairs_for_mass_matrix(
+      dof_handler_for_test_space.get_triangulation().n_active_cells());
+
+  initialize_cell_iterator_pairs_for_mass_matrix(
+    dof_handler_for_test_space,
+    dof_handler_for_trial_space,
+    cell_iterator_pairs_for_mass_matrix);
+
+  WorkStream::run(
+    cell_iterator_pairs_for_mass_matrix.begin(),
+    cell_iterator_pairs_for_mass_matrix.end(),
+    [factor, &material_id_to_mapping_index](
+      const auto &iterator_for_cell_iterator_pairs,
+      auto       &scratch_data,
+      auto       &copy_data) {
+      assemble_fem_scaled_mass_matrix_on_one_cell(
+        factor,
+        iterator_for_cell_iterator_pairs,
+        material_id_to_mapping_index,
+        scratch_data,
+        copy_data);
+    },
+    [&target_matrix](const auto &data) {
+      copy_cell_local_to_global_for_fem_matrix(data, target_matrix);
+    },
+    CellWiseScratchDataForMassMatrix<dim, spacedim>(
+      mappings,
+      dof_handler_for_test_space.get_fe(),
+      dof_handler_for_trial_space.get_fe(),
+      quad_rule,
+      update_values | update_JxW_values),
+    CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType>(
+      dof_handler_for_test_space.get_fe(),
+      dof_handler_for_trial_space.get_fe()));
+}
+
+
+/**
+ * Assemble the mass matrix in FEM.
+ *
+ * Evaluation of @p FEValues does not depend on cell dependent mapping. First
+ * order mapping is used.
  */
 template <int dim, int spacedim, typename RangeNumberType, typename MatrixType>
 void
@@ -518,7 +852,7 @@ assemble_fem_scaled_mass_matrix(
     [&target_matrix](const auto &data) {
       copy_cell_local_to_global_for_fem_matrix(data, target_matrix);
     },
-    CellWiseScratchDataForMassMatrix<dim, spacedim>(
+    CellWiseScratchDataForMassMatrixMappingQ1<dim, spacedim>(
       dof_handler_for_test_space.get_fe(),
       dof_handler_for_trial_space.get_fe(),
       quad_rule,
@@ -531,6 +865,94 @@ assemble_fem_scaled_mass_matrix(
 
 /**
  * Assemble the mass matrix in FEM on subdomain for active cells.
+ *
+ * Evaluation of @p FEValues depends on cell dependent mapping.
+ *
+ * The shape functions may extend over the boundary of the subdomain, so that
+ * we iterate over each cell in the triangulation, without checking if the
+ * cell is within the subdomain.
+ */
+template <int dim, int spacedim, typename RangeNumberType, typename MatrixType>
+void
+assemble_fem_scaled_mass_matrix(
+  const DoFHandler<dim, spacedim> &dof_handler_for_test_space,
+  const DoFHandler<dim, spacedim> &dof_handler_for_trial_space,
+  const std::vector<bool>         &dof_selectors_test_space,
+  const std::vector<types::global_dof_index>
+                          &full_to_local_dof_id_map_test_space,
+  const std::vector<bool> &dof_selectors_trial_space,
+  const std::vector<types::global_dof_index>
+                        &full_to_local_dof_id_map_trial_space,
+  const RangeNumberType  factor,
+  const Quadrature<dim> &quad_rule,
+  const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+  const std::map<types::material_id, unsigned int>
+             &material_id_to_mapping_index,
+  MatrixType &target_matrix)
+{
+  // Because the test and ansatz function spaces related to the mass matrix
+  // are on a same spatial domain, here we make an assertion about the
+  // equality of the number of cells in their respective triangulations.
+  AssertDimension(
+    dof_handler_for_test_space.get_triangulation().n_active_cells(),
+    dof_handler_for_trial_space.get_triangulation().n_active_cells());
+
+  std::vector<
+    std::pair<typename DoFHandler<dim, spacedim>::active_cell_iterator,
+              typename DoFHandler<dim, spacedim>::active_cell_iterator>>
+    cell_iterator_pairs_for_mass_matrix(
+      dof_handler_for_test_space.get_triangulation().n_active_cells());
+
+  initialize_cell_iterator_pairs_for_mass_matrix(
+    dof_handler_for_test_space,
+    dof_handler_for_trial_space,
+    cell_iterator_pairs_for_mass_matrix);
+
+  WorkStream::run(
+    cell_iterator_pairs_for_mass_matrix.begin(),
+    cell_iterator_pairs_for_mass_matrix.end(),
+    [factor,
+     &dof_selectors_test_space,
+     &dof_selectors_trial_space,
+     &material_id_to_mapping_index](
+      const auto &iterator_for_cell_iterator_pairs,
+      auto       &scratch_data,
+      auto       &copy_data) {
+      assemble_fem_scaled_mass_matrix_on_one_cell(
+        factor,
+        dof_selectors_test_space,
+        dof_selectors_trial_space,
+        iterator_for_cell_iterator_pairs,
+        material_id_to_mapping_index,
+        scratch_data,
+        copy_data);
+    },
+    [&](const auto &data) {
+      copy_cell_local_to_global_for_fem_matrix(
+        data,
+        dof_selectors_test_space,
+        full_to_local_dof_id_map_test_space,
+        dof_selectors_trial_space,
+        full_to_local_dof_id_map_trial_space,
+        target_matrix);
+    },
+    CellWiseScratchDataForMassMatrix<dim, spacedim>(
+      mappings,
+      dof_handler_for_test_space.get_fe(),
+      dof_handler_for_trial_space.get_fe(),
+      quad_rule,
+      update_values | update_JxW_values),
+    CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType>(
+      dof_handler_for_test_space.get_fe(),
+      dof_handler_for_trial_space.get_fe()));
+}
+
+
+/**
+ * Assemble the mass matrix in FEM on subdomain for active cells.
+ *
+ * Evaluation of @p FEValues does not depend on cell dependent mapping. First
+ * order mapping is used.
  *
  * The shape functions may extend over the boundary of the subdomain, so that
  * we iterate over each cell in the triangulation, without checking if the
@@ -594,7 +1016,7 @@ assemble_fem_scaled_mass_matrix(
         full_to_local_dof_id_map_trial_space,
         target_matrix);
     },
-    CellWiseScratchDataForMassMatrix<dim, spacedim>(
+    CellWiseScratchDataForMassMatrixMappingQ1<dim, spacedim>(
       dof_handler_for_test_space.get_fe(),
       dof_handler_for_trial_space.get_fe(),
       quad_rule,
@@ -607,6 +1029,98 @@ assemble_fem_scaled_mass_matrix(
 
 /**
  * Assemble the mass matrix in FEM on subdomain for active cells.
+ *
+ * Evaluation of @p FEValues depends on cell dependent mapping.
+ *
+ * The shape functions are assumed to be truncated within the subdomain, so
+ * we iterate over each cell in the subdomain.
+ */
+template <int dim, int spacedim, typename RangeNumberType, typename MatrixType>
+void
+assemble_fem_scaled_mass_matrix(
+  const DoFHandler<dim, spacedim>    &dof_handler_for_test_space,
+  const DoFHandler<dim, spacedim>    &dof_handler_for_trial_space,
+  const std::set<types::material_id> &subdomain_material_ids,
+  const std::vector<bool>            &dof_selectors_test_space,
+  const std::vector<types::global_dof_index>
+                          &full_to_local_dof_id_map_test_space,
+  const std::vector<bool> &dof_selectors_trial_space,
+  const std::vector<types::global_dof_index>
+                        &full_to_local_dof_id_map_trial_space,
+  const RangeNumberType  factor,
+  const Quadrature<dim> &quad_rule,
+  const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+  const std::map<types::material_id, unsigned int>
+             &material_id_to_mapping_index,
+  MatrixType &target_matrix)
+{
+  // Because the test and ansatz function spaces related to the mass matrix
+  // are on a same spatial domain, here we make an assertion about the
+  // equality of the number of cells in their respective triangulations.
+  AssertDimension(
+    dof_handler_for_test_space.get_triangulation().n_active_cells(),
+    dof_handler_for_trial_space.get_triangulation().n_active_cells());
+
+  std::vector<
+    std::pair<typename DoFHandler<dim, spacedim>::active_cell_iterator,
+              typename DoFHandler<dim, spacedim>::active_cell_iterator>>
+    cell_iterator_pairs_for_mass_matrix;
+  cell_iterator_pairs_for_mass_matrix.reserve(
+    dof_handler_for_test_space.get_triangulation().n_active_cells());
+
+  initialize_cell_iterator_pairs_for_mass_matrix(
+    dof_handler_for_test_space,
+    dof_handler_for_trial_space,
+    subdomain_material_ids,
+    cell_iterator_pairs_for_mass_matrix);
+
+  cell_iterator_pairs_for_mass_matrix.shrink_to_fit();
+
+  WorkStream::run(
+    cell_iterator_pairs_for_mass_matrix.begin(),
+    cell_iterator_pairs_for_mass_matrix.end(),
+    [factor,
+     &dof_selectors_test_space,
+     &dof_selectors_trial_space,
+     &material_id_to_mapping_index](
+      const auto &iterator_for_cell_iterator_pairs,
+      auto       &scratch_data,
+      auto       &copy_data) {
+      assemble_fem_scaled_mass_matrix_on_one_cell(
+        factor,
+        dof_selectors_test_space,
+        dof_selectors_trial_space,
+        iterator_for_cell_iterator_pairs,
+        material_id_to_mapping_index,
+        scratch_data,
+        copy_data);
+    },
+    [&](const auto &data) {
+      copy_cell_local_to_global_for_fem_matrix(
+        data,
+        dof_selectors_test_space,
+        full_to_local_dof_id_map_test_space,
+        dof_selectors_trial_space,
+        full_to_local_dof_id_map_trial_space,
+        target_matrix);
+    },
+    CellWiseScratchDataForMassMatrix<dim, spacedim>(
+      mappings,
+      dof_handler_for_test_space.get_fe(),
+      dof_handler_for_trial_space.get_fe(),
+      quad_rule,
+      update_values | update_JxW_values),
+    CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType>(
+      dof_handler_for_test_space.get_fe(),
+      dof_handler_for_trial_space.get_fe()));
+}
+
+
+/**
+ * Assemble the mass matrix in FEM on subdomain for active cells.
+ *
+ * Evaluation of @p FEValues does not depend on cell dependent mapping. First
+ * order mapping is used.
  *
  * The shape functions are assumed to be truncated within the subdomain, so
  * we iterate over each cell in the subdomain.
@@ -674,7 +1188,7 @@ assemble_fem_scaled_mass_matrix(
         full_to_local_dof_id_map_trial_space,
         target_matrix);
     },
-    CellWiseScratchDataForMassMatrix<dim, spacedim>(
+    CellWiseScratchDataForMassMatrixMappingQ1<dim, spacedim>(
       dof_handler_for_test_space.get_fe(),
       dof_handler_for_trial_space.get_fe(),
       quad_rule,
@@ -687,6 +1201,81 @@ assemble_fem_scaled_mass_matrix(
 
 /**
  * Assemble the mass matrix in FEM in a single thread.
+ *
+ * Evaluation of @p FEValues depends on cell dependent mapping.
+ *
+ * @tparam dim
+ * @tparam spacedim
+ * @tparam RangeNumberType Number of type of the mass matrix, which should be real valued.
+ * @tparam MatrixType
+ * @param dof_handler_for_test_space
+ * @param dof_handler_for_trial_space
+ * @param factor
+ * @param quad_rule
+ * @param mappings
+ * @param material_id_to_mapping_index
+ * @param target_full_matrix
+ */
+template <int dim, int spacedim, typename RangeNumberType, typename MatrixType>
+void
+assemble_fem_scaled_mass_matrix_serial(
+  const DoFHandler<dim, spacedim>                 &dof_handler_for_test_space,
+  const DoFHandler<dim, spacedim>                 &dof_handler_for_trial_space,
+  const RangeNumberType                            factor,
+  const Quadrature<dim>                           &quad_rule,
+  const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+  const std::map<types::material_id, unsigned int>
+             &material_id_to_mapping_index,
+  MatrixType &target_full_matrix)
+{
+  // Because the test and ansatz function spaces related to the mass matrix
+  // are on a same spatial domain, here we make an assertion about the
+  // equality of the number of cells in their respective triangulations.
+  AssertDimension(
+    dof_handler_for_test_space.get_triangulation().n_active_cells(),
+    dof_handler_for_trial_space.get_triangulation().n_active_cells());
+
+  std::vector<
+    std::pair<typename DoFHandler<dim, spacedim>::active_cell_iterator,
+              typename DoFHandler<dim, spacedim>::active_cell_iterator>>
+    cell_iterator_pairs_for_mass_matrix(
+      dof_handler_for_test_space.get_triangulation().n_active_cells());
+
+  initialize_cell_iterator_pairs_for_mass_matrix(
+    dof_handler_for_test_space,
+    dof_handler_for_trial_space,
+    cell_iterator_pairs_for_mass_matrix);
+
+  CellWiseScratchDataForMassMatrix<dim, spacedim> scratch_data(
+    mappings,
+    dof_handler_for_test_space.get_fe(),
+    dof_handler_for_trial_space.get_fe(),
+    quad_rule,
+    update_values | update_JxW_values);
+
+  CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType> copy_data(
+    dof_handler_for_test_space.get_fe(), dof_handler_for_trial_space.get_fe());
+
+  for (auto cell_pair_iter = cell_iterator_pairs_for_mass_matrix.begin();
+       cell_pair_iter != cell_iterator_pairs_for_mass_matrix.end();
+       cell_pair_iter++)
+    {
+      assemble_fem_scaled_mass_matrix_on_one_cell(factor,
+                                                  cell_pair_iter,
+                                                  material_id_to_mapping_index,
+                                                  scratch_data,
+                                                  copy_data);
+
+      copy_cell_local_to_global_for_fem_matrix(copy_data, target_full_matrix);
+    }
+}
+
+
+/**
+ * Assemble the mass matrix in FEM in a single thread.
+ *
+ * Evaluation of @p FEValues does not depend on cell dependent mapping. First
+ * order mapping is used.
  *
  * @tparam dim
  * @tparam spacedim
@@ -725,7 +1314,7 @@ assemble_fem_scaled_mass_matrix_serial(
     dof_handler_for_trial_space,
     cell_iterator_pairs_for_mass_matrix);
 
-  CellWiseScratchDataForMassMatrix<dim, spacedim> scratch_data(
+  CellWiseScratchDataForMassMatrixMappingQ1<dim, spacedim> scratch_data(
     dof_handler_for_test_space.get_fe(),
     dof_handler_for_trial_space.get_fe(),
     quad_rule,
@@ -940,8 +1529,6 @@ assemble_bem_full_matrix(
  * At the moment, this function only supports building full matrices on the
  * whole triangulation, not on a subdomain.
  *
- * @pre
- * @post
  * @tparam dim
  * @tparam spacedim
  * @tparam KernelFunctionType

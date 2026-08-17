@@ -179,7 +179,9 @@ public:
   setup_preconditioner(
     const ConfHMatrix                               &hmat_params,
     const std::vector<MappingInfo<dim, spacedim> *> &mappings,
-    const Quadrature<dim>                           &quad_rule_for_mass);
+    const std::map<types::material_id, unsigned int>
+                          &material_id_to_mapping_index,
+    const Quadrature<dim> &quad_rule_for_mass);
 
   /**
    * Calculate matrix-vector multiplication as \f$y = C^{-1} \cdot x\f$, where
@@ -214,9 +216,24 @@ public:
 
   /**
    * Build the mass matrix on the refined mesh.
+   *
+   * Evaluation of @p FEValues does not depend on cell dependent mapping. First
+   * order mapping is used.
    */
   void
   build_mass_matrix_on_refined_mesh(const Quadrature<dim> &quad_rule);
+
+  /**
+   * Build the mass matrix on the refined mesh.
+   *
+   * Evaluation of @p FEValues depends on cell dependent mapping.
+   */
+  void
+  build_mass_matrix_on_refined_mesh(
+    const Quadrature<dim>                           &quad_rule,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+      &material_id_to_mapping_index);
 
   /**
    * @brief Build the cluster and block cluster trees for the \hmat to be
@@ -997,6 +1014,81 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::
         primal_space_full_to_local_dof_id_map_on_refined_mesh,
         1.0,
         quad_rule,
+        mass_matrix);
+    }
+}
+
+
+template <int dim, int spacedim, typename RangeNumberType>
+void
+OperatorPreconditioner<dim, spacedim, RangeNumberType>::
+  build_mass_matrix_on_refined_mesh(
+    const Quadrature<dim>                           &quad_rule,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+      &material_id_to_mapping_index)
+{
+  // Generate the sparsity pattern for the mass matrix.
+  if (is_full_domain)
+    {
+      DynamicSparsityPattern dsp(
+        dof_handler_dual_space.n_dofs(refined_mesh_level),
+        dof_handler_primal_space.n_dofs(refined_mesh_level));
+      // N.B. DoFTools::make_sparsity_pattern operates on active cells, which
+      // just corresponds to the refined mesh that we desire.
+      DoFTools::make_sparsity_pattern(dof_handler_dual_space,
+                                      dof_handler_primal_space,
+                                      dsp);
+      mass_matrix_sp.copy_from(dsp);
+      mass_matrix.reinit(mass_matrix_sp);
+
+      // Assemble the mass matrix.
+      assemble_fem_scaled_mass_matrix<dim,
+                                      spacedim,
+                                      real_type,
+                                      SparseMatrix<real_type>>(
+        dof_handler_dual_space,
+        dof_handler_primal_space,
+        1.0,
+        quad_rule,
+        mappings,
+        material_id_to_mapping_index,
+        mass_matrix);
+    }
+  else
+    {
+      DynamicSparsityPattern dsp(
+        dual_space_local_to_full_dof_id_map_on_refined_mesh.size(),
+        primal_space_local_to_full_dof_id_map_on_refined_mesh.size());
+      DoFToolsExt::make_sparsity_pattern(
+        dof_handler_dual_space,
+        dof_handler_primal_space,
+        subdomain_material_ids,
+        dual_space_dof_selectors_on_refined_mesh,
+        dual_space_full_to_local_dof_id_map_on_refined_mesh,
+        primal_space_dof_selectors_on_refined_mesh,
+        primal_space_full_to_local_dof_id_map_on_refined_mesh,
+        dsp);
+      mass_matrix_sp.copy_from(dsp);
+      mass_matrix.reinit(mass_matrix_sp);
+
+      // Assemble the mass matrix. Only cells within the subdomain are
+      // considered.
+      assemble_fem_scaled_mass_matrix<dim,
+                                      spacedim,
+                                      real_type,
+                                      SparseMatrix<real_type>>(
+        dof_handler_dual_space,
+        dof_handler_primal_space,
+        subdomain_material_ids,
+        dual_space_dof_selectors_on_refined_mesh,
+        dual_space_full_to_local_dof_id_map_on_refined_mesh,
+        primal_space_dof_selectors_on_refined_mesh,
+        primal_space_full_to_local_dof_id_map_on_refined_mesh,
+        1.0,
+        quad_rule,
+        mappings,
+        material_id_to_mapping_index,
         mass_matrix);
     }
 }
@@ -1813,7 +1905,9 @@ void
 OperatorPreconditioner<dim, spacedim, RangeNumberType>::setup_preconditioner(
   const ConfHMatrix                               &hmat_params,
   const std::vector<MappingInfo<dim, spacedim> *> &mappings,
-  const Quadrature<dim>                           &quad_rule_for_mass)
+  const std::map<types::material_id, unsigned int>
+                        &material_id_to_mapping_index,
+  const Quadrature<dim> &quad_rule_for_mass)
 {
   initialize_dof_handlers();
 
@@ -1835,7 +1929,9 @@ OperatorPreconditioner<dim, spacedim, RangeNumberType>::setup_preconditioner(
   timer.stop();
   print_wall_time(deallog, timer, "build averaging matrix");
   timer.start();
-  build_mass_matrix_on_refined_mesh(quad_rule_for_mass);
+  build_mass_matrix_on_refined_mesh(quad_rule_for_mass,
+                                    mappings,
+                                    material_id_to_mapping_index);
   timer.stop();
   print_wall_time(deallog, timer, "build mass matrix");
   build_cluster_and_block_cluster_trees(hmat_params, mappings);

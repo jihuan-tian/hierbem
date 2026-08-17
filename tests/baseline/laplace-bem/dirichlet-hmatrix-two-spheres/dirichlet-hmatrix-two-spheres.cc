@@ -228,8 +228,8 @@ main(int argc, char *argv[])
     bem.get_manifolds()[1] = right_sphere_manifold;
 
     // Create the map from manifold id to mapping order.
-    bem.get_manifold_id_to_mapping_order()[0] = 1;
-    bem.get_manifold_id_to_mapping_order()[1] = 1;
+    bem.get_manifold_id_to_mapping_order()[0] = 2;
+    bem.get_manifold_id_to_mapping_order()[1] = 2;
 
     // Assign manifolds to surface entities.
     bem.get_manifold_description()[1] = 0;

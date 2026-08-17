@@ -294,7 +294,7 @@ HelmholtzAcousticSingleLayerPreconditioner<dim,
     const Quadrature<dim>                          &quad_rule_for_mass)
 {
   OperatorPreconditioner<dim, spacedim, RangeNumberType>::setup_preconditioner(
-    hmat_params, mappings, quad_rule_for_mass);
+    hmat_params, mappings, material_id_to_mapping_index, quad_rule_for_mass);
 
   // Build the H-matrix for the first part of the regularized bilinear form for
   // the hyper singular boundary integral operator.

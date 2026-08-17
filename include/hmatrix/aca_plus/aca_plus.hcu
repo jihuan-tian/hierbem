@@ -8909,6 +8909,7 @@ fill_hmatrix_with_aca_plus_serial(
    * working thread.
    */
   CellWiseScratchDataForMassMatrix<dim, spacedim> mass_matrix_scratch_data(
+    mappings,
     kx_dof_handler.get_fe(),
     ky_dof_handler.get_fe(),
     mass_matrix_quadrature_formula,

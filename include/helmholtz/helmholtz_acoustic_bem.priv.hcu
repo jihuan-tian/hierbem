@@ -711,7 +711,10 @@ private:
     const DoFHandler<dim1, spacedim1> &dof_handler_for_trial_space,
     const RangeNumberType1             factor,
     const Quadrature<dim1>            &quad_rule,
-    MatrixType                        &target_full_matrix);
+    const std::vector<MappingInfo<dim1, spacedim1> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+               &material_id_to_mapping_index,
+    MatrixType &target_full_matrix);
 
   template <int dim1,
             int spacedim1,
@@ -723,7 +726,10 @@ private:
     const DoFHandler<dim1, spacedim1> &dof_handler_for_trial_space,
     const RangeNumberType1             factor,
     const Quadrature<dim1>            &quad_rule,
-    MatrixType                        &target_full_matrix);
+    const std::vector<MappingInfo<dim1, spacedim1> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+               &material_id_to_mapping_index,
+    MatrixType &target_full_matrix);
 
   template <int dim1,
             int spacedim1,
@@ -1937,7 +1943,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     dof_handler_for_neumann_space_,
                     dof_handler_for_dirichlet_space_,
                     0.5,
-                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
+                    QGauss<dim>(sauter_quad_params_.mass_matrix_order),
+                    mappings_,
+                    material_id_to_mapping_index_,
                     I1K2_mat_);
                 }
               else
@@ -1950,7 +1958,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     dof_handler_for_neumann_space_,
                     dof_handler_for_dirichlet_space_,
                     0.5,
-                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
+                    QGauss<dim>(sauter_quad_params_.mass_matrix_order),
+                    mappings_,
+                    material_id_to_mapping_index_,
                     I1K2_mat_);
                 }
             }
@@ -1966,7 +1976,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     dof_handler_for_neumann_space_,
                     dof_handler_for_dirichlet_space_,
                     -0.5,
-                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
+                    QGauss<dim>(sauter_quad_params_.mass_matrix_order),
+                    mappings_,
+                    material_id_to_mapping_index_,
                     I1K2_mat_);
                 }
               else
@@ -1979,7 +1991,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     dof_handler_for_neumann_space_,
                     dof_handler_for_dirichlet_space_,
                     -0.5,
-                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
+                    QGauss<dim>(sauter_quad_params_.mass_matrix_order),
+                    mappings_,
+                    material_id_to_mapping_index_,
                     I1K2_mat_);
                 }
             }
@@ -2138,7 +2152,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     dof_handler_for_dirichlet_space_,
                     dof_handler_for_neumann_space_,
                     0.5,
-                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
+                    QGauss<dim>(sauter_quad_params_.mass_matrix_order),
+                    mappings_,
+                    material_id_to_mapping_index_,
                     I2K_prime2_mat_);
                 }
               else
@@ -2151,7 +2167,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     dof_handler_for_dirichlet_space_,
                     dof_handler_for_neumann_space_,
                     0.5,
-                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
+                    QGauss<dim>(sauter_quad_params_.mass_matrix_order),
+                    mappings_,
+                    material_id_to_mapping_index_,
                     I2K_prime2_mat_);
                 }
             }
@@ -2167,7 +2185,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     dof_handler_for_dirichlet_space_,
                     dof_handler_for_neumann_space_,
                     -0.5,
-                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
+                    QGauss<dim>(sauter_quad_params_.mass_matrix_order),
+                    mappings_,
+                    material_id_to_mapping_index_,
                     I2K_prime2_mat_);
                 }
               else
@@ -2180,7 +2200,9 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     dof_handler_for_dirichlet_space_,
                     dof_handler_for_neumann_space_,
                     -0.5,
-                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1),
+                    QGauss<dim>(sauter_quad_params_.mass_matrix_order),
+                    mappings_,
+                    material_id_to_mapping_index_,
                     I2K_prime2_mat_);
                 }
             }
@@ -2411,7 +2433,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 CUDAKernelNumberType(1.0),
                 real_type(0.5),
                 SauterQuadratureRule<dim>(sauter_quad_params_.dlp_order),
-                QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
+                QGauss<dim>(sauter_quad_params_.mass_matrix_order),
                 mappings_,
                 material_id_to_mapping_index_,
                 tria_mapping_support_points_cpu_,
@@ -2432,7 +2454,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 CUDAKernelNumberType(1.0),
                 real_type(-0.5),
                 SauterQuadratureRule<dim>(sauter_quad_params_.dlp_order),
-                QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
+                QGauss<dim>(sauter_quad_params_.mass_matrix_order),
                 mappings_,
                 material_id_to_mapping_index_,
                 tria_mapping_support_points_cpu_,
@@ -2555,7 +2577,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 CUDAKernelNumberType(-1.0),
                 real_type(0.5),
                 SauterQuadratureRule<dim>(sauter_quad_params_.adlp_order),
-                QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
+                QGauss<dim>(sauter_quad_params_.mass_matrix_order),
                 mappings_,
                 material_id_to_mapping_index_,
                 tria_mapping_support_points_cpu_,
@@ -2576,7 +2598,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 CUDAKernelNumberType(-1.0),
                 real_type(-0.5),
                 SauterQuadratureRule<dim>(sauter_quad_params_.adlp_order),
-                QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
+                QGauss<dim>(sauter_quad_params_.mass_matrix_order),
                 mappings_,
                 material_id_to_mapping_index_,
                 tria_mapping_support_points_cpu_,
@@ -2722,7 +2744,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 CUDAKernelNumberType(1.0),
                 real_type(0.5),
                 SauterQuadratureRule<dim>(sauter_quad_params_.dlp_order),
-                QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
+                QGauss<dim>(sauter_quad_params_.mass_matrix_order),
                 mappings_,
                 material_id_to_mapping_index_,
                 tria_mapping_support_points_cpu_,
@@ -2742,7 +2764,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 CUDAKernelNumberType(-1.0),
                 real_type(0.5),
                 SauterQuadratureRule<dim>(sauter_quad_params_.adlp_order),
-                QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
+                QGauss<dim>(sauter_quad_params_.mass_matrix_order),
                 mappings_,
                 material_id_to_mapping_index_,
                 tria_mapping_support_points_cpu_,
@@ -2763,7 +2785,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 CUDAKernelNumberType(1.0),
                 real_type(-0.5),
                 SauterQuadratureRule<dim>(sauter_quad_params_.dlp_order),
-                QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
+                QGauss<dim>(sauter_quad_params_.mass_matrix_order),
                 mappings_,
                 material_id_to_mapping_index_,
                 tria_mapping_support_points_cpu_,
@@ -2783,7 +2805,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                 CUDAKernelNumberType(-1.0),
                 real_type(-0.5),
                 SauterQuadratureRule<dim>(sauter_quad_params_.adlp_order),
-                QGauss<dim>(fe_order_for_dirichlet_space_ + 1),
+                QGauss<dim>(sauter_quad_params_.mass_matrix_order),
                 mappings_,
                 material_id_to_mapping_index_,
                 tria_mapping_support_points_cpu_,
@@ -3252,7 +3274,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                       sauter_quad_precond_params_.hyper_singular_order),
                     SauterQuadratureRule<dim>(
                       sauter_quad_precond_params_.slp_order),
-                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1));
+                    QGauss<dim>(sauter_quad_precond_params_.mass_matrix_order));
 
                   timer.stop();
                   print_wall_time(deallog,
@@ -3364,7 +3386,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                     SauterQuadratureRule<dim>(
                       sauter_quad_precond_params_.slp_order),
-                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1));
+                    QGauss<dim>(sauter_quad_precond_params_.mass_matrix_order));
 
                   timer.stop();
                   print_wall_time(deallog,
@@ -3520,7 +3542,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                       sauter_quad_precond_params_.hyper_singular_order),
                     SauterQuadratureRule<dim>(
                       sauter_quad_precond_params_.slp_order),
-                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1));
+                    QGauss<dim>(sauter_quad_precond_params_.mass_matrix_order));
 
                   timer.stop();
                   print_wall_time(deallog,
@@ -3562,7 +3584,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
                     SurfaceNormalDetector<dim, spacedim>(subdomain_topology_),
                     SauterQuadratureRule<dim>(
                       sauter_quad_precond_params_.slp_order),
-                    QGauss<dim>(fe_for_dirichlet_space_.degree + 1));
+                    QGauss<dim>(sauter_quad_precond_params_.mass_matrix_order));
 
                   timer.stop();
                   print_wall_time(deallog,

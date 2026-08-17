@@ -21,6 +21,7 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/quadrature.h>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/table.h>
 #include <deal.II/base/table_indices.h>
@@ -33,11 +34,15 @@
 #include <deal.II/fe/fe.h>
 #include <deal.II/fe/fe_data.h>
 #include <deal.II/fe/fe_tools.h>
+#include <deal.II/fe/fe_update_flags.h>
 
 #include <deal.II/grid/tria.h>
 
 #include <cuda_runtime.h>
 #include <tbb/tbb.h>
+
+#include <memory>
+#include <vector>
 
 #include "bem_tools.h"
 #include "config.h"
@@ -2092,9 +2097,113 @@ struct CellWiseCopyDataForMassMatrixVmult
  * Structure holding temporary data which are needed for cell-wise
  * integration, such as for the scaled mass matrix term \f$(v, \alpha \cdot
  * u)\f$.
+ *
+ * Evaluation of @p FEValues depends on cell dependent mapping.
  */
 template <int dim, int spacedim>
 struct CellWiseScratchDataForMassMatrix
+{
+  /**
+   * A list of @p FEValues objects for the test space. Each correspond to a
+   * @p MappingInfo object.
+   */
+  std::vector<std::unique_ptr<FEValues<dim, spacedim>>>
+    fe_values_for_test_space;
+  /**
+   * A list of @p FEValues objects for the trial space. Each correspond to a
+   * @p MappingInfo object.
+   */
+  std::vector<std::unique_ptr<FEValues<dim, spacedim>>>
+    fe_values_for_trial_space;
+
+  /**
+   * Constructor
+   *
+   * @param mappings
+   * @param fe_for_test_space
+   * @param fe_for_trial_space
+   * @param quadrature
+   * @param update_flags
+   */
+  CellWiseScratchDataForMassMatrix(
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const FiniteElement<dim, spacedim>              &fe_for_test_space,
+    const FiniteElement<dim, spacedim>              &fe_for_trial_space,
+    const Quadrature<dim>                           &quadrature,
+    const UpdateFlags                                update_flags)
+  {
+    fe_values_for_test_space.reserve(mappings.size());
+    fe_values_for_trial_space.reserve(mappings.size());
+
+    for (const auto mapping_info_ptr : mappings)
+      {
+        fe_values_for_test_space.push_back(
+          std::make_unique<FEValues<dim, spacedim>>(
+            mapping_info_ptr->get_mapping(),
+            fe_for_test_space,
+            quadrature,
+            update_flags));
+        fe_values_for_trial_space.push_back(
+          std::make_unique<FEValues<dim, spacedim>>(
+            mapping_info_ptr->get_mapping(),
+            fe_for_trial_space,
+            quadrature,
+            update_flags));
+      }
+  }
+
+
+  /**
+   * Copy constructor. Because <code>FEValues</code> is neither copyable nor
+   * has it copy constructor, this copy constructor is mandatory for
+   * replication into each task.
+   *
+   * @param scratch_data
+   */
+  CellWiseScratchDataForMassMatrix(
+    const CellWiseScratchDataForMassMatrix<dim, spacedim> &scratch_data)
+  {
+    AssertDimension(scratch_data.fe_values_for_test_space.size(),
+                    scratch_data.fe_values_for_trial_space.size());
+
+    fe_values_for_test_space.reserve(
+      scratch_data.fe_values_for_test_space.size());
+    fe_values_for_trial_space.reserve(
+      scratch_data.fe_values_for_trial_space.size());
+
+    for (const auto &fe_values : scratch_data.fe_values_for_test_space)
+      {
+        fe_values_for_test_space.push_back(
+          std::make_unique<FEValues<dim, spacedim>>(
+            fe_values->get_mapping(),
+            fe_values->get_fe(),
+            fe_values->get_quadrature(),
+            fe_values->get_update_flags()));
+      }
+
+    for (const auto &fe_values : scratch_data.fe_values_for_trial_space)
+      {
+        fe_values_for_trial_space.push_back(
+          std::make_unique<FEValues<dim, spacedim>>(
+            fe_values->get_mapping(),
+            fe_values->get_fe(),
+            fe_values->get_quadrature(),
+            fe_values->get_update_flags()));
+      }
+  }
+};
+
+
+/**
+ * Structure holding temporary data which are needed for cell-wise
+ * integration, such as for the scaled mass matrix term \f$(v, \alpha \cdot
+ * u)\f$.
+ *
+ * Evaluation of @p FEValues does not depend on cell dependent mapping. First
+ * order mapping is used.
+ */
+template <int dim, int spacedim>
+struct CellWiseScratchDataForMassMatrixMappingQ1
 {
   FEValues<dim, spacedim> fe_values_for_test_space;
   FEValues<dim, spacedim> fe_values_for_trial_space;
@@ -2107,7 +2216,7 @@ struct CellWiseScratchDataForMassMatrix
    * @param quadrature
    * @param update_flags
    */
-  CellWiseScratchDataForMassMatrix(
+  CellWiseScratchDataForMassMatrixMappingQ1(
     const FiniteElement<dim, spacedim> &fe_for_test_space,
     const FiniteElement<dim, spacedim> &fe_for_trial_space,
     const Quadrature<dim>              &quadrature,
@@ -2124,8 +2233,9 @@ struct CellWiseScratchDataForMassMatrix
    *
    * @param scratch_data
    */
-  CellWiseScratchDataForMassMatrix(
-    const CellWiseScratchDataForMassMatrix<dim, spacedim> &scratch_data)
+  CellWiseScratchDataForMassMatrixMappingQ1(
+    const CellWiseScratchDataForMassMatrixMappingQ1<dim, spacedim>
+      &scratch_data)
     : fe_values_for_test_space(
         scratch_data.fe_values_for_test_space.get_fe(),
         scratch_data.fe_values_for_test_space.get_quadrature(),
@@ -2136,6 +2246,7 @@ struct CellWiseScratchDataForMassMatrix
         scratch_data.fe_values_for_trial_space.get_update_flags())
   {}
 };
+
 
 
 /**

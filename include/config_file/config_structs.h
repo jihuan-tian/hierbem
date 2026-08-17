@@ -133,6 +133,8 @@ struct ConfSauterQuad
   SauterQuadOrder adlp_order{5, 4, 4, 3};
   // Quad order for the hyper singular operator
   SauterQuadOrder hyper_singular_order{5, 4, 4, 3};
+  // Quadrature order for the mass matrix.
+  std::uint32_t mass_matrix_order = 3;
 };
 
 /**

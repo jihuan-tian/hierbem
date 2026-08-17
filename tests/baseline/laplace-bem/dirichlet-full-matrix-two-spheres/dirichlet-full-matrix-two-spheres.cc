@@ -194,11 +194,12 @@ main(int argc, char *argv[])
     print_wall_time(deallog, timer, "program preparation");
 
     timer.start();
-    std::ifstream mesh_in(HBEM_TEST_MODEL_DIR "two-spheres-occ-blossom.msh");
+    std::ifstream mesh_in(std::string(HBEM_TEST_MODEL_DIR) +
+                          conf_inst.project.mesh_file);
     read_msh(mesh_in, bem.get_triangulation());
     bem.get_subdomain_topology().generate_topology(
-      HBEM_TEST_MODEL_DIR "two-spheres.brep",
-      HBEM_TEST_MODEL_DIR "two-spheres-occ-blossom.msh");
+      std::string(HBEM_TEST_MODEL_DIR) + conf_inst.project.cad_file,
+      std::string(HBEM_TEST_MODEL_DIR) + conf_inst.project.mesh_file);
 
     // Generate two sphere manifolds.
     double                   inter_distance = 8.0;
@@ -218,9 +219,6 @@ main(int argc, char *argv[])
     // Assign manifolds to surface entities.
     bem.get_manifold_description()[1] = 0;
     bem.get_manifold_description()[2] = 1;
-
-    if (conf_inst.bem.mesh_refinement > 0)
-      bem.get_triangulation().refine_global(conf_inst.bem.mesh_refinement);
 
     timer.stop();
     print_wall_time(deallog, timer, "read mesh");

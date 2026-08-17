@@ -2155,26 +2155,30 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
                      ExcInternalError());
 
               // Update the finite element values for the test space.
-              mass_matrix_scratch_data.fe_values_for_test_space.reinit(
-                kx_cell_iter);
+              mass_matrix_scratch_data
+                .fe_values_for_test_space[kx_mapping_index]
+                ->reinit(kx_cell_iter);
 
               // Update the finite element values for the trial space.
               //
               // \mynote{N.B. The @p FEValues related to the trial
               // space must also be updated, since the trial space may
               // be different from the test space.}
-              mass_matrix_scratch_data.fe_values_for_trial_space.reinit(
-                ky_cell_iter);
+              mass_matrix_scratch_data
+                .fe_values_for_trial_space[ky_mapping_index]
+                ->reinit(ky_cell_iter);
 
               const unsigned int n_q_points =
-                mass_matrix_scratch_data.fe_values_for_test_space
-                  .get_quadrature()
+                mass_matrix_scratch_data
+                  .fe_values_for_test_space[kx_mapping_index]
+                  ->get_quadrature()
                   .size();
               // The trial space is on a same triangulation as the test
               // space and they share a same quadrature object.
               AssertDimension(n_q_points,
-                              mass_matrix_scratch_data.fe_values_for_trial_space
-                                .get_quadrature()
+                              mass_matrix_scratch_data
+                                .fe_values_for_trial_space[ky_mapping_index]
+                                ->get_quadrature()
                                 .size());
 
               // Get the index of the global DoF index \f$i\f$ in
@@ -2223,11 +2227,15 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
                 {
                   double_integral +=
                     mass_matrix_factor *
-                    mass_matrix_scratch_data.fe_values_for_test_space
-                      .shape_value(i_local_dof_index, q) *
-                    mass_matrix_scratch_data.fe_values_for_trial_space
-                      .shape_value(j_local_dof_index, q) *
-                    mass_matrix_scratch_data.fe_values_for_test_space.JxW(q);
+                    mass_matrix_scratch_data
+                      .fe_values_for_test_space[kx_mapping_index]
+                      ->shape_value(i_local_dof_index, q) *
+                    mass_matrix_scratch_data
+                      .fe_values_for_trial_space[ky_mapping_index]
+                      ->shape_value(j_local_dof_index, q) *
+                    mass_matrix_scratch_data
+                      .fe_values_for_test_space[kx_mapping_index]
+                      ->JxW(q);
                 }
             }
         }
@@ -2964,6 +2972,7 @@ sauter_quadrature_for_near_field_matrix_entries_producer(
    * Define @p CellWiseScratchData which is local to the current working thread.
    */
   CellWiseScratchDataForMassMatrix<dim, spacedim> mass_matrix_scratch_data(
+    mappings,
     kx_dof_handler.get_fe(),
     ky_dof_handler.get_fe(),
     mass_matrix_quadrature_formula,
@@ -4016,8 +4025,9 @@ create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
                * @internal Update the finite element values for the test
                * space.
                */
-              mass_matrix_scratch_data.fe_values_for_test_space.reinit(
-                kx_cell_iter);
+              mass_matrix_scratch_data
+                .fe_values_for_test_space[kx_mapping_index]
+                ->reinit(kx_cell_iter);
 
               /**
                * @internal Update the finite element values for the trial
@@ -4027,12 +4037,14 @@ create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
                * space must also be updated, since the trial space may
                * be different from the test space.}
                */
-              mass_matrix_scratch_data.fe_values_for_trial_space.reinit(
-                ky_cell_iter);
+              mass_matrix_scratch_data
+                .fe_values_for_trial_space[ky_mapping_index]
+                ->reinit(ky_cell_iter);
 
               const unsigned int n_q_points =
-                mass_matrix_scratch_data.fe_values_for_test_space
-                  .get_quadrature()
+                mass_matrix_scratch_data
+                  .fe_values_for_test_space[kx_mapping_index]
+                  ->get_quadrature()
                   .size();
               /**
                * @internal The trial space is on a same triangulation as
@@ -4040,8 +4052,9 @@ create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
                * Hence, we make assertion about their quadrature sizes.
                */
               AssertDimension(n_q_points,
-                              mass_matrix_scratch_data.fe_values_for_trial_space
-                                .get_quadrature()
+                              mass_matrix_scratch_data
+                                .fe_values_for_trial_space[ky_mapping_index]
+                                ->get_quadrature()
                                 .size());
 
               /**
@@ -4097,11 +4110,15 @@ create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
               for (unsigned int q = 0; q < n_q_points; q++)
                 {
                   mass_matrix_entry +=
-                    mass_matrix_scratch_data.fe_values_for_test_space
-                      .shape_value(i_local_dof_index, q) *
-                    mass_matrix_scratch_data.fe_values_for_trial_space
-                      .shape_value(j_local_dof_index, q) *
-                    mass_matrix_scratch_data.fe_values_for_test_space.JxW(q);
+                    mass_matrix_scratch_data
+                      .fe_values_for_test_space[kx_mapping_index]
+                      ->shape_value(i_local_dof_index, q) *
+                    mass_matrix_scratch_data
+                      .fe_values_for_trial_space[ky_mapping_index]
+                      ->shape_value(j_local_dof_index, q) *
+                    mass_matrix_scratch_data
+                      .fe_values_for_test_space[kx_mapping_index]
+                      ->JxW(q);
                 }
 
               mass_matrix_entry *= mass_matrix_factor;
