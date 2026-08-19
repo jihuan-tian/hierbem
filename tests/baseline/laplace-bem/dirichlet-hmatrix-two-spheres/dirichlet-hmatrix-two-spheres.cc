@@ -20,8 +20,12 @@
 
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/multithread_info.h>
+#include <deal.II/base/point.h>
 
+#include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/manifold_lib.h>
+#include <deal.II/grid/tria.h>
 
 #include <cpptrace/from_current.hpp>
 #include <cuda_runtime.h>
@@ -39,6 +43,7 @@
 #include "config_file/config_structs.h"
 #include "config_file/cu_related.h"
 #include "grid/grid_in_ext.h"
+#include "grid/grid_out_ext.h"
 #include "hbem_test_config.h"
 #include "hmatrix/hmatrix.h"
 #include "hmatrix/hmatrix_vmult_strategy.h"
@@ -48,6 +53,70 @@
 
 using namespace dealii;
 using namespace HierBEM;
+
+void
+generate_grid_for_two_spheres(const Point<3>      &left_sphere_center,
+                              const Point<3>      &right_sphere_center,
+                              const double         radius,
+                              const unsigned int   refinement,
+                              Triangulation<2, 3> &two_spheres)
+{
+  Triangulation<2, 3> left_sphere, right_sphere;
+  GridGenerator::hyper_sphere(left_sphere, left_sphere_center, radius);
+  GridGenerator::hyper_sphere(right_sphere, right_sphere_center, radius);
+
+  /**
+   * @internal Set different manifold ids and material ids to all the cells in
+   * the two spheres.
+   */
+  for (typename Triangulation<2, 3>::active_cell_iterator cell =
+         left_sphere.begin_active();
+       cell != left_sphere.end();
+       cell++)
+    {
+      cell->set_all_manifold_ids(0);
+      cell->set_material_id(0);
+    }
+
+  for (typename Triangulation<2, 3>::active_cell_iterator cell =
+         right_sphere.begin_active();
+       cell != right_sphere.end();
+       cell++)
+    {
+      cell->set_all_manifold_ids(1);
+      cell->set_material_id(1);
+    }
+
+  /**
+   * @internal @p merge_triangulation can only operate on coarse mesh, i.e.
+   * triangulations not refined. During the merging, the material ids are
+   * copied. When the last argument is true, the manifold ids are copied.
+   * Boundary ids will not be copied.
+   */
+  GridGenerator::merge_triangulations(
+    left_sphere, right_sphere, two_spheres, 1e-12, true);
+
+  /**
+   * @internal Assign manifold objects to the two spheres in the merged mesh.
+   */
+  const SphericalManifold<2, 3> left_sphere_manifold(left_sphere_center);
+  const SphericalManifold<2, 3> right_sphere_manifold(right_sphere_center);
+
+  two_spheres.set_manifold(0, left_sphere_manifold);
+  two_spheres.set_manifold(1, right_sphere_manifold);
+
+  two_spheres.refine_global(refinement);
+
+  /**
+   * \alert{The MSH mesh file saved from deal.ii does not contain material id
+   * information.}
+   */
+  std::ofstream surface_mesh_file("dealii.msh");
+  write_msh_correct(two_spheres, surface_mesh_file);
+
+  std::cout << "=== Surface mesh information ===" << std::endl;
+  print_mesh_info(std::cout, two_spheres);
+}
 
 class DirichletBC : public Function<3>
 {
@@ -209,21 +278,36 @@ main(int argc, char *argv[])
     print_wall_time(deallog, timer, "program preparation");
 
     timer.start();
-    std::ifstream mesh_in(std::string(HBEM_TEST_MODEL_DIR) +
-                          conf_inst.project.mesh_file);
-    read_msh(mesh_in, bem.get_triangulation());
-    bem.get_subdomain_topology().generate_topology(
-      std::string(HBEM_TEST_MODEL_DIR) + conf_inst.project.cad_file,
-      std::string(HBEM_TEST_MODEL_DIR) + conf_inst.project.mesh_file);
+    double             inter_distance = 8.0;
+    const Point<3>     left_sphere_center(-inter_distance / 2.0, 0, 0);
+    const Point<3>     right_sphere_center(inter_distance / 2.0, 0, 0);
+    const double       radius     = 1;
+    const unsigned int refinement = 4;
+    if (conf_inst.project.mesh_file == std::string("dealii.msh"))
+      {
+        generate_grid_for_two_spheres(left_sphere_center,
+                                      right_sphere_center,
+                                      radius,
+                                      refinement,
+                                      bem.get_triangulation());
+        bem.get_subdomain_topology()
+          .generate_single_domain_topology_for_dealii_model({0, 1});
+      }
+    else
+      {
+        std::ifstream mesh_in(std::string(HBEM_TEST_MODEL_DIR) +
+                              conf_inst.project.mesh_file);
+        read_msh(mesh_in, bem.get_triangulation());
+        bem.get_subdomain_topology().generate_topology(
+          std::string(HBEM_TEST_MODEL_DIR) + conf_inst.project.cad_file,
+          std::string(HBEM_TEST_MODEL_DIR) + conf_inst.project.mesh_file);
+      }
 
     // Generate two sphere manifolds.
-    double                   inter_distance = 8.0;
     Manifold<dim, spacedim> *left_sphere_manifold =
-      new SphericalManifold<dim, spacedim>(
-        Point<spacedim>(-inter_distance / 2.0, 0, 0));
+      new SphericalManifold<dim, spacedim>(left_sphere_center);
     Manifold<dim, spacedim> *right_sphere_manifold =
-      new SphericalManifold<dim, spacedim>(
-        Point<spacedim>(inter_distance / 2.0, 0, 0));
+      new SphericalManifold<dim, spacedim>(right_sphere_center);
     bem.get_manifolds()[0] = left_sphere_manifold;
     bem.get_manifolds()[1] = right_sphere_manifold;
 
