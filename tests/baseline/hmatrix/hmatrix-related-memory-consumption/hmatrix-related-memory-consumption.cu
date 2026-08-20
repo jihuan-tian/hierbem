@@ -179,7 +179,8 @@ main(int argc, char *argv[])
                           opts.initial_rank,
                           opts.max_rank,
                           opts.epsilon,
-                          false};
+                          false,
+                          10};
   ConfSauterQuadNearField sauter_quad_near_field_params;
   ConfSauterQuadFarField  sauter_quad_far_field_params;
   ConfParallelization     parallel_params;

@@ -75,7 +75,9 @@ struct ConfHMatrix
   // Assemble H-matrix using the old implementation, which is serial on the host
   // and does not use the producer-consumer model on the device. This method is
   // obsolete and is only used for test and performance profile.
-  bool cpu_serial_without_producer_consumer = false;
+  bool          cpu_serial_without_producer_consumer = false;
+  std::uint32_t ref_selection_max_tries =
+    10; // Maximum number tries for selecting a reference row or column
 };
 
 struct ConfSauterQuadNearField
@@ -134,7 +136,7 @@ struct ConfSauterQuad
   // Quad order for the hyper singular operator
   SauterQuadOrder hyper_singular_order{5, 4, 4, 3};
   // Quadrature order for the mass matrix.
-  std::uint32_t mass_matrix_order = 3;
+  std::uint32_t mass_matrix_order = 2;
 };
 
 /**

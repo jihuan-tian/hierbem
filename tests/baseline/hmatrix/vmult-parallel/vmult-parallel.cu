@@ -159,7 +159,7 @@ main(int argc, char *argv[])
     single_layer_kernel;
 
   // Parameters for building H-matrices.
-  ConfHMatrix             hmat_params{32, 32, 1, 1, 0.8, 5, 5, 0.01, false};
+  ConfHMatrix             hmat_params{32, 32, 1, 1, 0.8, 5, 5, 0.01, false, 10};
   ConfSauterQuadNearField sauter_quad_near_field_params;
   ConfSauterQuadFarField  sauter_quad_far_field_params;
   ConfParallelization     parallel_params;

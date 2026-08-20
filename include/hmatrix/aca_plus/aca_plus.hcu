@@ -1057,6 +1057,7 @@ random_select_ref_row(
   const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
   Vector<RangeNumberType>                    &ul,
   const unsigned int                          current_aca_step,
+  const size_type                             max_tries,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                              &kernel,
   const DeviceNumberType<KernelNumberType>    kernel_factor,
@@ -1122,6 +1123,7 @@ random_select_ref_row(
    */
   types::global_dof_index next_ref_row_dof_index;
 
+  size_type num_of_tries = 0;
   while (!remaining_row_indices.empty())
     {
       next_ref_row_selection_index =
@@ -1178,7 +1180,14 @@ random_select_ref_row(
                */
               erase_at(remaining_row_indices, next_ref_row_selection_index);
 
-              continue;
+              if (max_tries > 0)
+                {
+                  num_of_tries++;
+                  if (num_of_tries >= max_tries)
+                    return pass_the_end_ref_row_index;
+                }
+              else
+                continue;
             }
           else
             {
@@ -1263,6 +1272,7 @@ random_select_ref_row(
   const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
   Vector<RangeNumberType>                    &ul,
   const unsigned int                          current_aca_step,
+  const size_type                             max_tries,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
   const DeviceNumberType<KernelNumberType>     kernel_factor,
@@ -1330,6 +1340,7 @@ random_select_ref_row(
    */
   types::global_dof_index next_ref_row_dof_index;
 
+  size_type num_of_tries = 0;
   while (!remaining_row_indices.empty())
     {
       next_ref_row_selection_index =
@@ -1387,7 +1398,14 @@ random_select_ref_row(
                */
               erase_at(remaining_row_indices, next_ref_row_selection_index);
 
-              continue;
+              if (max_tries > 0)
+                {
+                  num_of_tries++;
+                  if (num_of_tries >= max_tries)
+                    return pass_the_end_ref_row_index;
+                }
+              else
+                continue;
             }
           else
             {
@@ -1442,6 +1460,7 @@ random_select_ref_row(
   const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
   Vector<RangeNumberType>                    &ul,
   const unsigned int                          current_aca_step,
+  const size_type                             max_tries,
   const ConfSauterQuadFarField               &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                              &kernel,
@@ -1504,6 +1523,7 @@ random_select_ref_row(
    */
   types::global_dof_index next_ref_row_dof_index;
 
+  size_type num_of_tries = 0;
   while (!remaining_row_indices.empty())
     {
       next_ref_row_selection_index =
@@ -1560,7 +1580,14 @@ random_select_ref_row(
                */
               erase_at(remaining_row_indices, next_ref_row_selection_index);
 
-              continue;
+              if (max_tries > 0)
+                {
+                  num_of_tries++;
+                  if (num_of_tries >= max_tries)
+                    return pass_the_end_ref_row_index;
+                }
+              else
+                continue;
             }
           else
             {
@@ -1615,6 +1642,7 @@ random_select_ref_row(
   const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
   Vector<RangeNumberType>                    &ul,
   const unsigned int                          current_aca_step,
+  const size_type                             max_tries,
   const ConfSauterQuadFarField               &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
@@ -1679,6 +1707,7 @@ random_select_ref_row(
    */
   types::global_dof_index next_ref_row_dof_index;
 
+  size_type num_of_tries = 0;
   while (!remaining_row_indices.empty())
     {
       next_ref_row_selection_index =
@@ -1737,7 +1766,14 @@ random_select_ref_row(
                */
               erase_at(remaining_row_indices, next_ref_row_selection_index);
 
-              continue;
+              if (max_tries > 0)
+                {
+                  num_of_tries++;
+                  if (num_of_tries >= max_tries)
+                    return pass_the_end_ref_row_index;
+                }
+              else
+                continue;
             }
           else
             {
@@ -1796,6 +1832,7 @@ random_select_ref_row(Vector<RangeNumberType>                    &row_vector,
                       const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
                       Vector<RangeNumberType>                    &ul,
                       const unsigned int current_aca_step,
+                      const size_type    max_tries,
                       const LAPACKFullMatrixExt<RangeNumberType> &A,
                       std::forward_list<size_type> &remaining_row_indices,
                       const size_type               current_ref_row_index,
@@ -1813,6 +1850,7 @@ random_select_ref_row(Vector<RangeNumberType>                    &row_vector,
    */
   size_type next_ref_row_index;
 
+  size_type num_of_tries = 0;
   while (!remaining_row_indices.empty())
     {
       next_ref_row_selection_index =
@@ -1846,7 +1884,14 @@ random_select_ref_row(Vector<RangeNumberType>                    &row_vector,
                */
               erase_at(remaining_row_indices, next_ref_row_selection_index);
 
-              continue;
+              if (max_tries > 0)
+                {
+                  num_of_tries++;
+                  if (num_of_tries >= max_tries)
+                    return pass_the_end_ref_row_index;
+                }
+              else
+                continue;
             }
           else
             {
@@ -1927,6 +1972,7 @@ random_select_ref_column(
   const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
   Vector<RangeNumberType>                    &vl,
   const unsigned int                          current_aca_step,
+  const size_type                             max_tries,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                              &kernel,
   const DeviceNumberType<KernelNumberType>    factor,
@@ -1992,6 +2038,7 @@ random_select_ref_column(
    */
   types::global_dof_index next_ref_col_dof_index;
 
+  size_type num_of_tries = 0;
   while (!remaining_col_indices.empty())
     {
       next_ref_col_selection_index =
@@ -2047,7 +2094,14 @@ random_select_ref_column(
                */
               erase_at(remaining_col_indices, next_ref_col_selection_index);
 
-              continue;
+              if (max_tries > 0)
+                {
+                  num_of_tries++;
+                  if (num_of_tries >= max_tries)
+                    return pass_the_end_ref_col_index;
+                }
+              else
+                continue;
             }
           else
             {
@@ -2132,6 +2186,7 @@ random_select_ref_column(
   const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
   Vector<RangeNumberType>                    &vl,
   const unsigned int                          current_aca_step,
+  const size_type                             max_tries,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
   const DeviceNumberType<KernelNumberType>     kernel_factor,
@@ -2199,6 +2254,7 @@ random_select_ref_column(
    */
   types::global_dof_index next_ref_col_dof_index;
 
+  size_type num_of_tries = 0;
   while (!remaining_col_indices.empty())
     {
       next_ref_col_selection_index =
@@ -2256,7 +2312,14 @@ random_select_ref_column(
                */
               erase_at(remaining_col_indices, next_ref_col_selection_index);
 
-              continue;
+              if (max_tries > 0)
+                {
+                  num_of_tries++;
+                  if (num_of_tries >= max_tries)
+                    return pass_the_end_ref_col_index;
+                }
+              else
+                continue;
             }
           else
             {
@@ -2312,6 +2375,7 @@ random_select_ref_column(
   const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
   Vector<RangeNumberType>                    &vl,
   const unsigned int                          current_aca_step,
+  const size_type                             max_tries,
   const ConfSauterQuadFarField               &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                              &kernel,
@@ -2374,6 +2438,7 @@ random_select_ref_column(
    */
   types::global_dof_index next_ref_col_dof_index;
 
+  size_type num_of_tries = 0;
   while (!remaining_col_indices.empty())
     {
       next_ref_col_selection_index =
@@ -2430,7 +2495,14 @@ random_select_ref_column(
                */
               erase_at(remaining_col_indices, next_ref_col_selection_index);
 
-              continue;
+              if (max_tries > 0)
+                {
+                  num_of_tries++;
+                  if (num_of_tries >= max_tries)
+                    return pass_the_end_ref_col_index;
+                }
+              else
+                continue;
             }
           else
             {
@@ -2486,6 +2558,7 @@ random_select_ref_column(
   const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
   Vector<RangeNumberType>                    &vl,
   const unsigned int                          current_aca_step,
+  const size_type                             max_tries,
   const ConfSauterQuadFarField               &sauter_quad_far_field_params,
   const KernelFunctionType<spacedim, DeviceNumberType<KernelNumberType>>
                                               &kernel,
@@ -2550,6 +2623,7 @@ random_select_ref_column(
    */
   types::global_dof_index next_ref_col_dof_index;
 
+  size_type num_of_tries = 0;
   while (!remaining_col_indices.empty())
     {
       next_ref_col_selection_index =
@@ -2608,7 +2682,14 @@ random_select_ref_column(
                */
               erase_at(remaining_col_indices, next_ref_col_selection_index);
 
-              continue;
+              if (max_tries > 0)
+                {
+                  num_of_tries++;
+                  if (num_of_tries >= max_tries)
+                    return pass_the_end_ref_col_index;
+                }
+              else
+                continue;
             }
           else
             {
@@ -2667,6 +2748,7 @@ random_select_ref_column(Vector<RangeNumberType>                    &col_vector,
                          const LAPACKFullMatrixExt<RangeNumberType> &v_mat,
                          Vector<RangeNumberType>                    &vl,
                          const unsigned int current_aca_step,
+                         const size_type    max_tries,
                          const LAPACKFullMatrixExt<RangeNumberType> &A,
                          std::forward_list<size_type> &remaining_col_indices,
                          const size_type               current_ref_col_index,
@@ -2684,6 +2766,7 @@ random_select_ref_column(Vector<RangeNumberType>                    &col_vector,
    */
   size_type next_ref_col_index;
 
+  size_type num_of_tries = 0;
   while (!remaining_col_indices.empty())
     {
       next_ref_col_selection_index =
@@ -2717,7 +2800,14 @@ random_select_ref_column(Vector<RangeNumberType>                    &col_vector,
                */
               erase_at(remaining_col_indices, next_ref_col_selection_index);
 
-              continue;
+              if (max_tries > 0)
+                {
+                  num_of_tries++;
+                  if (num_of_tries >= max_tries)
+                    return pass_the_end_ref_col_index;
+                }
+              else
+                continue;
             }
           else
             {
@@ -2901,32 +2991,34 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   Vector<RangeNumberType> vl(n);
   Vector<RangeNumberType> ul(m);
 
-  size_type r = random_select_ref_row(vr,
-                                      u_mat,
-                                      v_mat,
-                                      ul,
-                                      0,
-                                      kernel,
-                                      kernel_factor,
-                                      remaining_row_indices,
-                                      m,
-                                      m,
-                                      row_dof_indices,
-                                      col_dof_indices,
-                                      kx_dof_to_cell_topo.topology,
-                                      ky_dof_to_cell_topo.topology,
-                                      bem_values_gpu,
-                                      kx_map_from_local_to_full_dof_indices,
-                                      ky_map_from_local_to_full_dof_indices,
-                                      kx_dof_i2e_numbering,
-                                      ky_dof_i2e_numbering,
-                                      mappings,
-                                      material_id_to_mapping_index,
-                                      global_to_local_cell_index_map,
-                                      mapping_support_point_table,
-                                      scratch_data,
-                                      scratch_data_gpu,
-                                      copy_data);
+  size_type r = random_select_ref_row(
+    vr,
+    u_mat,
+    v_mat,
+    ul,
+    0,
+    std::min(static_cast<size_type>(hmat_params.ref_selection_max_tries), m),
+    kernel,
+    kernel_factor,
+    remaining_row_indices,
+    m,
+    m,
+    row_dof_indices,
+    col_dof_indices,
+    kx_dof_to_cell_topo.topology,
+    ky_dof_to_cell_topo.topology,
+    bem_values_gpu,
+    kx_map_from_local_to_full_dof_indices,
+    ky_map_from_local_to_full_dof_indices,
+    kx_dof_i2e_numbering,
+    ky_dof_i2e_numbering,
+    mappings,
+    material_id_to_mapping_index,
+    global_to_local_cell_index_map,
+    mapping_support_point_table,
+    scratch_data,
+    scratch_data_gpu,
+    copy_data);
 
   if (r == m)
     {
@@ -2941,32 +3033,34 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       return;
     }
 
-  size_type c = random_select_ref_column(uc,
-                                         u_mat,
-                                         v_mat,
-                                         vl,
-                                         0,
-                                         kernel,
-                                         kernel_factor,
-                                         remaining_col_indices,
-                                         n,
-                                         n,
-                                         row_dof_indices,
-                                         col_dof_indices,
-                                         kx_dof_to_cell_topo.topology,
-                                         ky_dof_to_cell_topo.topology,
-                                         bem_values_gpu,
-                                         kx_map_from_local_to_full_dof_indices,
-                                         ky_map_from_local_to_full_dof_indices,
-                                         kx_dof_i2e_numbering,
-                                         ky_dof_i2e_numbering,
-                                         mappings,
-                                         material_id_to_mapping_index,
-                                         global_to_local_cell_index_map,
-                                         mapping_support_point_table,
-                                         scratch_data,
-                                         scratch_data_gpu,
-                                         copy_data);
+  size_type c = random_select_ref_column(
+    uc,
+    u_mat,
+    v_mat,
+    vl,
+    0,
+    std::min(static_cast<size_type>(hmat_params.ref_selection_max_tries), n),
+    kernel,
+    kernel_factor,
+    remaining_col_indices,
+    n,
+    n,
+    row_dof_indices,
+    col_dof_indices,
+    kx_dof_to_cell_topo.topology,
+    ky_dof_to_cell_topo.topology,
+    bem_values_gpu,
+    kx_map_from_local_to_full_dof_indices,
+    ky_map_from_local_to_full_dof_indices,
+    kx_dof_i2e_numbering,
+    ky_dof_i2e_numbering,
+    mappings,
+    material_id_to_mapping_index,
+    global_to_local_cell_index_map,
+    mapping_support_point_table,
+    scratch_data,
+    scratch_data_gpu,
+    copy_data);
 
   if (c == n)
     {
@@ -3256,6 +3350,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                     v_mat,
                                     ul,
                                     k,
+                                    0,
                                     kernel,
                                     kernel_factor,
                                     remaining_row_indices,
@@ -3345,6 +3440,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                        v_mat,
                                        vl,
                                        k,
+                                       0,
                                        kernel,
                                        kernel_factor,
                                        remaining_col_indices,
@@ -3645,34 +3741,36 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
   Vector<RangeNumberType> vl(n);
   Vector<RangeNumberType> ul(m);
 
-  size_type r = random_select_ref_row(vr,
-                                      u_mat,
-                                      v_mat,
-                                      ul,
-                                      0,
-                                      kernel,
-                                      kernel_factor,
-                                      mass_vmult_weq,
-                                      stabilization_factor,
-                                      remaining_row_indices,
-                                      m,
-                                      m,
-                                      row_dof_indices,
-                                      col_dof_indices,
-                                      kx_dof_to_cell_topo.topology,
-                                      ky_dof_to_cell_topo.topology,
-                                      bem_values_gpu,
-                                      kx_map_from_local_to_full_dof_indices,
-                                      ky_map_from_local_to_full_dof_indices,
-                                      kx_dof_i2e_numbering,
-                                      ky_dof_i2e_numbering,
-                                      mappings,
-                                      material_id_to_mapping_index,
-                                      global_to_local_cell_index_map,
-                                      mapping_support_point_table,
-                                      scratch_data,
-                                      scratch_data_gpu,
-                                      copy_data);
+  size_type r = random_select_ref_row(
+    vr,
+    u_mat,
+    v_mat,
+    ul,
+    0,
+    std::min(static_cast<size_type>(hmat_params.ref_selection_max_tries), m),
+    kernel,
+    kernel_factor,
+    mass_vmult_weq,
+    stabilization_factor,
+    remaining_row_indices,
+    m,
+    m,
+    row_dof_indices,
+    col_dof_indices,
+    kx_dof_to_cell_topo.topology,
+    ky_dof_to_cell_topo.topology,
+    bem_values_gpu,
+    kx_map_from_local_to_full_dof_indices,
+    ky_map_from_local_to_full_dof_indices,
+    kx_dof_i2e_numbering,
+    ky_dof_i2e_numbering,
+    mappings,
+    material_id_to_mapping_index,
+    global_to_local_cell_index_map,
+    mapping_support_point_table,
+    scratch_data,
+    scratch_data_gpu,
+    copy_data);
 
   if (r == m)
     {
@@ -3687,34 +3785,36 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
       return;
     }
 
-  size_type c = random_select_ref_column(uc,
-                                         u_mat,
-                                         v_mat,
-                                         vl,
-                                         0,
-                                         kernel,
-                                         kernel_factor,
-                                         mass_vmult_weq,
-                                         stabilization_factor,
-                                         remaining_col_indices,
-                                         n,
-                                         n,
-                                         row_dof_indices,
-                                         col_dof_indices,
-                                         kx_dof_to_cell_topo.topology,
-                                         ky_dof_to_cell_topo.topology,
-                                         bem_values_gpu,
-                                         kx_map_from_local_to_full_dof_indices,
-                                         ky_map_from_local_to_full_dof_indices,
-                                         kx_dof_i2e_numbering,
-                                         ky_dof_i2e_numbering,
-                                         mappings,
-                                         material_id_to_mapping_index,
-                                         global_to_local_cell_index_map,
-                                         mapping_support_point_table,
-                                         scratch_data,
-                                         scratch_data_gpu,
-                                         copy_data);
+  size_type c = random_select_ref_column(
+    uc,
+    u_mat,
+    v_mat,
+    vl,
+    0,
+    std::min(static_cast<size_type>(hmat_params.ref_selection_max_tries), n),
+    kernel,
+    kernel_factor,
+    mass_vmult_weq,
+    stabilization_factor,
+    remaining_col_indices,
+    n,
+    n,
+    row_dof_indices,
+    col_dof_indices,
+    kx_dof_to_cell_topo.topology,
+    ky_dof_to_cell_topo.topology,
+    bem_values_gpu,
+    kx_map_from_local_to_full_dof_indices,
+    ky_map_from_local_to_full_dof_indices,
+    kx_dof_i2e_numbering,
+    ky_dof_i2e_numbering,
+    mappings,
+    material_id_to_mapping_index,
+    global_to_local_cell_index_map,
+    mapping_support_point_table,
+    scratch_data,
+    scratch_data_gpu,
+    copy_data);
 
   if (c == n)
     {
@@ -4012,6 +4112,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                     v_mat,
                                     ul,
                                     k,
+                                    0,
                                     kernel,
                                     kernel_factor,
                                     mass_vmult_weq,
@@ -4103,6 +4204,7 @@ aca_plus_parallel_sauter_quad_for_vector_entry(
                                        v_mat,
                                        vl,
                                        k,
+                                       0,
                                        kernel,
                                        kernel_factor,
                                        mass_vmult_weq,
@@ -4411,33 +4513,35 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   Vector<RangeNumberType> vl(n);
   Vector<RangeNumberType> ul(m);
 
-  size_type r = random_select_ref_row(sauter_task_buffer_for_vector,
-                                      vr,
-                                      u_mat,
-                                      v_mat,
-                                      ul,
-                                      0,
-                                      sauter_quad_far_field_params,
-                                      kernel,
-                                      kernel_factor,
-                                      remaining_row_indices,
-                                      m,
-                                      m,
-                                      row_dof_indices,
-                                      col_dof_indices,
-                                      kx_dof_to_cell_topo.topology,
-                                      ky_dof_to_cell_topo.topology,
-                                      bem_values_gpu,
-                                      kx_map_from_local_to_full_dof_indices,
-                                      ky_map_from_local_to_full_dof_indices,
-                                      kx_dof_i2e_numbering,
-                                      ky_dof_i2e_numbering,
-                                      mappings,
-                                      material_id_to_mapping_index,
-                                      global_to_local_cell_index_map,
-                                      bem_values.mapping_support_point_table,
-                                      scratch_data,
-                                      copy_data);
+  size_type r = random_select_ref_row(
+    sauter_task_buffer_for_vector,
+    vr,
+    u_mat,
+    v_mat,
+    ul,
+    0,
+    std::min(static_cast<size_type>(hmat_params.ref_selection_max_tries), m),
+    sauter_quad_far_field_params,
+    kernel,
+    kernel_factor,
+    remaining_row_indices,
+    m,
+    m,
+    row_dof_indices,
+    col_dof_indices,
+    kx_dof_to_cell_topo.topology,
+    ky_dof_to_cell_topo.topology,
+    bem_values_gpu,
+    kx_map_from_local_to_full_dof_indices,
+    ky_map_from_local_to_full_dof_indices,
+    kx_dof_i2e_numbering,
+    ky_dof_i2e_numbering,
+    mappings,
+    material_id_to_mapping_index,
+    global_to_local_cell_index_map,
+    bem_values.mapping_support_point_table,
+    scratch_data,
+    copy_data);
 
   if (r == m)
     {
@@ -4455,33 +4559,35 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       return;
     }
 
-  size_type c = random_select_ref_column(sauter_task_buffer_for_vector,
-                                         uc,
-                                         u_mat,
-                                         v_mat,
-                                         vl,
-                                         0,
-                                         sauter_quad_far_field_params,
-                                         kernel,
-                                         kernel_factor,
-                                         remaining_col_indices,
-                                         n,
-                                         n,
-                                         row_dof_indices,
-                                         col_dof_indices,
-                                         kx_dof_to_cell_topo.topology,
-                                         ky_dof_to_cell_topo.topology,
-                                         bem_values_gpu,
-                                         kx_map_from_local_to_full_dof_indices,
-                                         ky_map_from_local_to_full_dof_indices,
-                                         kx_dof_i2e_numbering,
-                                         ky_dof_i2e_numbering,
-                                         mappings,
-                                         material_id_to_mapping_index,
-                                         global_to_local_cell_index_map,
-                                         bem_values.mapping_support_point_table,
-                                         scratch_data,
-                                         copy_data);
+  size_type c = random_select_ref_column(
+    sauter_task_buffer_for_vector,
+    uc,
+    u_mat,
+    v_mat,
+    vl,
+    0,
+    std::min(static_cast<size_type>(hmat_params.ref_selection_max_tries), n),
+    sauter_quad_far_field_params,
+    kernel,
+    kernel_factor,
+    remaining_col_indices,
+    n,
+    n,
+    row_dof_indices,
+    col_dof_indices,
+    kx_dof_to_cell_topo.topology,
+    ky_dof_to_cell_topo.topology,
+    bem_values_gpu,
+    kx_map_from_local_to_full_dof_indices,
+    ky_map_from_local_to_full_dof_indices,
+    kx_dof_i2e_numbering,
+    ky_dof_i2e_numbering,
+    mappings,
+    material_id_to_mapping_index,
+    global_to_local_cell_index_map,
+    bem_values.mapping_support_point_table,
+    scratch_data,
+    copy_data);
 
   if (c == n)
     {
@@ -4788,6 +4894,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                     v_mat,
                                     ul,
                                     k,
+                                    0,
                                     sauter_quad_far_field_params,
                                     kernel,
                                     kernel_factor,
@@ -4883,6 +4990,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                        v_mat,
                                        vl,
                                        k,
+                                       0,
                                        sauter_quad_far_field_params,
                                        kernel,
                                        kernel_factor,
@@ -5214,35 +5322,37 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
   Vector<RangeNumberType> vl(n);
   Vector<RangeNumberType> ul(m);
 
-  size_type r = random_select_ref_row(sauter_task_buffer_for_vector,
-                                      vr,
-                                      u_mat,
-                                      v_mat,
-                                      ul,
-                                      0,
-                                      sauter_quad_far_field_params,
-                                      kernel,
-                                      kernel_factor,
-                                      mass_vmult_weq,
-                                      stabilization_factor,
-                                      remaining_row_indices,
-                                      m,
-                                      m,
-                                      row_dof_indices,
-                                      col_dof_indices,
-                                      kx_dof_to_cell_topo.topology,
-                                      ky_dof_to_cell_topo.topology,
-                                      bem_values_gpu,
-                                      kx_map_from_local_to_full_dof_indices,
-                                      ky_map_from_local_to_full_dof_indices,
-                                      kx_dof_i2e_numbering,
-                                      ky_dof_i2e_numbering,
-                                      mappings,
-                                      material_id_to_mapping_index,
-                                      global_to_local_cell_index_map,
-                                      bem_values.mapping_support_point_table,
-                                      scratch_data,
-                                      copy_data);
+  size_type r = random_select_ref_row(
+    sauter_task_buffer_for_vector,
+    vr,
+    u_mat,
+    v_mat,
+    ul,
+    0,
+    std::min(static_cast<size_type>(hmat_params.ref_selection_max_tries), m),
+    sauter_quad_far_field_params,
+    kernel,
+    kernel_factor,
+    mass_vmult_weq,
+    stabilization_factor,
+    remaining_row_indices,
+    m,
+    m,
+    row_dof_indices,
+    col_dof_indices,
+    kx_dof_to_cell_topo.topology,
+    ky_dof_to_cell_topo.topology,
+    bem_values_gpu,
+    kx_map_from_local_to_full_dof_indices,
+    ky_map_from_local_to_full_dof_indices,
+    kx_dof_i2e_numbering,
+    ky_dof_i2e_numbering,
+    mappings,
+    material_id_to_mapping_index,
+    global_to_local_cell_index_map,
+    bem_values.mapping_support_point_table,
+    scratch_data,
+    copy_data);
 
   if (r == m)
     {
@@ -5260,35 +5370,37 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
       return;
     }
 
-  size_type c = random_select_ref_column(sauter_task_buffer_for_vector,
-                                         uc,
-                                         u_mat,
-                                         v_mat,
-                                         vl,
-                                         0,
-                                         sauter_quad_far_field_params,
-                                         kernel,
-                                         kernel_factor,
-                                         mass_vmult_weq,
-                                         stabilization_factor,
-                                         remaining_col_indices,
-                                         n,
-                                         n,
-                                         row_dof_indices,
-                                         col_dof_indices,
-                                         kx_dof_to_cell_topo.topology,
-                                         ky_dof_to_cell_topo.topology,
-                                         bem_values_gpu,
-                                         kx_map_from_local_to_full_dof_indices,
-                                         ky_map_from_local_to_full_dof_indices,
-                                         kx_dof_i2e_numbering,
-                                         ky_dof_i2e_numbering,
-                                         mappings,
-                                         material_id_to_mapping_index,
-                                         global_to_local_cell_index_map,
-                                         bem_values.mapping_support_point_table,
-                                         scratch_data,
-                                         copy_data);
+  size_type c = random_select_ref_column(
+    sauter_task_buffer_for_vector,
+    uc,
+    u_mat,
+    v_mat,
+    vl,
+    0,
+    std::min(static_cast<size_type>(hmat_params.ref_selection_max_tries), n),
+    sauter_quad_far_field_params,
+    kernel,
+    kernel_factor,
+    mass_vmult_weq,
+    stabilization_factor,
+    remaining_col_indices,
+    n,
+    n,
+    row_dof_indices,
+    col_dof_indices,
+    kx_dof_to_cell_topo.topology,
+    ky_dof_to_cell_topo.topology,
+    bem_values_gpu,
+    kx_map_from_local_to_full_dof_indices,
+    ky_map_from_local_to_full_dof_indices,
+    kx_dof_i2e_numbering,
+    ky_dof_i2e_numbering,
+    mappings,
+    material_id_to_mapping_index,
+    global_to_local_cell_index_map,
+    bem_values.mapping_support_point_table,
+    scratch_data,
+    copy_data);
 
   if (c == n)
     {
@@ -5603,6 +5715,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                     v_mat,
                                     ul,
                                     k,
+                                    0,
                                     sauter_quad_far_field_params,
                                     kernel,
                                     kernel_factor,
@@ -5700,6 +5813,7 @@ aca_plus_parallel_sauter_quad_for_whole_vector(
                                        v_mat,
                                        vl,
                                        k,
+                                       0,
                                        sauter_quad_far_field_params,
                                        kernel,
                                        kernel_factor,
@@ -5942,7 +6056,16 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
   Vector<RangeNumberType> ul(m);
 
   size_type r = random_select_ref_row(
-    vr, u_mat, v_mat, ul, 0, A, remaining_row_indices, m, m);
+    vr,
+    u_mat,
+    v_mat,
+    ul,
+    0,
+    std::min(static_cast<size_type>(hmat_params.ref_selection_max_tries), m),
+    A,
+    remaining_row_indices,
+    m,
+    m);
 
   if (r == m)
     {
@@ -5958,7 +6081,16 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
     }
 
   size_type c = random_select_ref_column(
-    uc, u_mat, v_mat, vl, 0, A, remaining_col_indices, n, n);
+    uc,
+    u_mat,
+    v_mat,
+    vl,
+    0,
+    std::min(static_cast<size_type>(hmat_params.ref_selection_max_tries), n),
+    A,
+    remaining_col_indices,
+    n,
+    n);
 
   if (c == n)
     {
@@ -6172,7 +6304,7 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
           // When the index of the selected row is the same as that of the
           // reference row, reselect a reference row.
           r = random_select_ref_row(
-            vr, u_mat, v_mat, ul, k, A, remaining_row_indices, r, m);
+            vr, u_mat, v_mat, ul, k, 0, A, remaining_row_indices, r, m);
 
           if (r == m)
             {
@@ -6237,7 +6369,7 @@ aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
           // When the index of the selected column is the same as that of
           // the reference column, reselect a reference column.
           c = random_select_ref_column(
-            uc, u_mat, v_mat, vl, k, A, remaining_col_indices, c, n);
+            uc, u_mat, v_mat, vl, k, 0, A, remaining_col_indices, c, n);
 
           if (c == n)
             {
