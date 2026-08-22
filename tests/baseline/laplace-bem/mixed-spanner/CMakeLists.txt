@@ -20,6 +20,12 @@ target_compile_definitions(${_target}
                            PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_link_libraries(
-  ${_target} hierbem Boost::program_options dl # Lazy way: always link with
+  ${_target}
+  hierbem
+  fmt::fmt
+  reflectcpp::reflectcpp
+  PkgConfig::tomlplusplus
+  cpptrace::cpptrace
+  dl # Lazy way: always link with
   # libdl no matter if CUDA is used or not
 )

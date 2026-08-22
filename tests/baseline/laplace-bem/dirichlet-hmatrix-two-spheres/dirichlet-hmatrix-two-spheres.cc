@@ -23,7 +23,6 @@
 #include <deal.II/base/point.h>
 
 #include <deal.II/grid/grid_generator.h>
-#include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/manifold_lib.h>
 #include <deal.II/grid/tria.h>
 

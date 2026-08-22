@@ -1,0 +1,119 @@
+[project]
+project_name = 'two-spheres'
+mesh_file = 'two-spheres-occ-quasi-structured-quad-vertices-corrected.msh'
+cad_file = 'two-spheres.brep'
+output_dir = './'
+
+[bem]
+boundary_dim = 2
+space_dim = 3
+mesh_refinement = 0
+fe_order_for_dirichlet_space = 1
+fe_order_for_neumann_space = 0
+problem_type = 'dirichlet'
+is_interior_problem = false
+precond_type = 'operator'
+vmult_type = 'serial_iterative'
+
+[hmatrix]
+n_min_for_ct = 64
+n_min_for_bct = 64
+cutoff_level_ct = 8
+cutoff_level_bct = 4
+eta = 0.8
+initial_rank = 10
+max_rank = 0
+aca_relative_err = 1e-8
+
+[hmatrix_precond]
+n_min_for_ct = 64
+n_min_for_bct = 64
+cutoff_level_ct = 8
+cutoff_level_bct = 4
+eta = 1.0
+initial_rank = 5
+max_rank = 0
+aca_relative_err = 1e-4
+
+[sauter_quad]
+near_field.producer_num = 2
+near_field.producer_buffer_capacity = 4096
+near_field.consumer_num_same_panel = 1
+near_field.consumer_num_common_edge = 1
+near_field.consumer_num_common_vertex = 1
+near_field.consumer_num_regular = 3
+near_field.task_num_per_block = 256
+near_field.block_num_per_batch = 64
+near_field.batch_num_in_buffer = 16
+near_field.consumer_wait_time_us = 1
+far_field.task_num_per_block = 128
+far_field.quad_point_num_per_block = 4
+far_field.vector_entry_num_per_block = 128
+slp_order.same_panel = 5
+slp_order.common_edge = 4
+slp_order.common_vertex = 4
+slp_order.regular = 3
+dlp_order.same_panel = 5
+dlp_order.common_edge = 4
+dlp_order.common_vertex = 4
+dlp_order.regular = 3
+adlp_order.same_panel = 5
+adlp_order.common_edge = 4
+adlp_order.common_vertex = 4
+adlp_order.regular = 3
+hyper_singular_order.same_panel = 5
+hyper_singular_order.common_edge = 4
+hyper_singular_order.common_vertex = 4
+hyper_singular_order.regular = 3
+mass_matrix_order = 2
+
+[sauter_quad_precond]
+near_field.producer_num = 2
+near_field.producer_buffer_capacity = 4096
+near_field.consumer_num_same_panel = 1
+near_field.consumer_num_common_edge = 1
+near_field.consumer_num_common_vertex = 1
+near_field.consumer_num_regular = 3
+near_field.task_num_per_block = 256
+near_field.block_num_per_batch = 64
+near_field.batch_num_in_buffer = 16
+near_field.consumer_wait_time_us = 1
+far_field.task_num_per_block = 128
+far_field.quad_point_num_per_block = 4
+far_field.vector_entry_num_per_block = 128
+slp_order.same_panel = 5
+slp_order.common_edge = 4
+slp_order.common_vertex = 4
+slp_order.regular = 3
+dlp_order.same_panel = 5
+dlp_order.common_edge = 4
+dlp_order.common_vertex = 4
+dlp_order.regular = 3
+adlp_order.same_panel = 5
+adlp_order.common_edge = 4
+adlp_order.common_vertex = 4
+adlp_order.regular = 3
+hyper_singular_order.same_panel = 5
+hyper_singular_order.common_edge = 4
+hyper_singular_order.common_vertex = 4
+hyper_singular_order.regular = 3
+mass_matrix_order = 2
+
+[linear_solver]
+max_iter = 1000
+abs_tol = 1e-12
+log_history = true
+log_result = true
+
+[op_precond]
+max_iter = 1000
+abs_tol = 1e-8
+omega = 1.0
+log_history = true
+log_result = true
+
+[parallel]
+tbb_thread_num = -1
+cuda_stack_size_kb = 10240
+hmat_far_field_grain_size = 1
+hmat_near_field_stabilization_grain_size = 1

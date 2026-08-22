@@ -26,10 +26,18 @@
 
 #include <boost/program_options.hpp>
 
+#include <cpptrace/from_current.hpp>
+#include <fmt/core.h>
+#include <fmt/format.h>
+
+#include <exception>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <string>
 
 #include "bem/types.h"
+#include "config_file/config_file.h"
 #include "config_file/config_structs.h"
 #include "config_file/cu_related.h"
 #include "hbem_test_config.h"
@@ -41,93 +49,6 @@
 
 using namespace dealii;
 using namespace HierBEM;
-
-namespace po = boost::program_options;
-
-struct CmdOpts
-{
-  unsigned int             dirichlet_space_fe_order;
-  unsigned int             neumann_space_fe_order;
-  unsigned int             mapping_order;
-  unsigned int             refinement;
-  PreconditionerType       precond_type;
-  IterativeSolverVmultType vmult_type;
-};
-
-CmdOpts
-parse_cmdline(int argc, char *argv[])
-{
-  CmdOpts                 opts;
-  po::options_description desc("Allowed options");
-
-  // clang-format off
-  desc.add_options()
-    ("help,h", "show help message")
-    ("dirichlet-order,d", po::value<unsigned int>()->default_value(1), "Finite element space order for the Dirichlet data")
-    ("neumann-order,n", po::value<unsigned int>()->default_value(0), "Finite element space order for the Neumann data")
-    ("mapping-order,m", po::value<unsigned int>()->default_value(1), "Mapping order for the sphere")
-    ("refinement,r", po::value<unsigned int>()->default_value(0), "Number of global refinement after reading the mesh")
-    ("precond-type,p", po::value<unsigned int>()->default_value(0), "Preconditioner for iterative solver: 0:H-Cholesky, 1:operator preconditioner, 2:identity")
-    ("vmult-type,v", po::value<unsigned int>()->default_value(0), "H-matrix vmult type: 0:serial recursive, 1:serial iterative, 2:task parallel");
-  // clang-format on
-
-  po::variables_map vm;
-  po::store(po::parse_command_line(argc, argv, desc), vm);
-  po::notify(vm);
-
-  if (vm.count("help"))
-    {
-      std::cout << desc << std::endl;
-      std::exit(EXIT_SUCCESS);
-    }
-
-  opts.dirichlet_space_fe_order = vm["dirichlet-order"].as<unsigned int>();
-  opts.neumann_space_fe_order   = vm["neumann-order"].as<unsigned int>();
-  opts.mapping_order            = vm["mapping-order"].as<unsigned int>();
-  opts.refinement               = vm["refinement"].as<unsigned int>();
-
-  switch (vm["precond-type"].as<unsigned int>())
-    {
-        case 0: {
-          opts.precond_type = PreconditionerType::HMatrixFactorization;
-          break;
-        }
-        case 1: {
-          opts.precond_type = PreconditionerType::OperatorPreconditioning;
-          break;
-        }
-        case 2: {
-          opts.precond_type = PreconditionerType::Identity;
-          break;
-        }
-        default: {
-          opts.precond_type = PreconditionerType::HMatrixFactorization;
-          break;
-        }
-    }
-
-  switch (vm["vmult-type"].as<unsigned int>())
-    {
-        case 0: {
-          opts.vmult_type = IterativeSolverVmultType::SerialRecursive;
-          break;
-        }
-        case 1: {
-          opts.vmult_type = IterativeSolverVmultType::SerialIterative;
-          break;
-        }
-        case 2: {
-          opts.vmult_type = IterativeSolverVmultType::TaskParallel;
-          break;
-        }
-        default: {
-          opts.vmult_type = IterativeSolverVmultType::SerialRecursive;
-          break;
-        }
-    }
-
-  return opts;
-}
 
 /**
  * Function object for the Dirichlet boundary condition data.
@@ -167,122 +88,207 @@ public:
   }
 };
 
+ProblemType
+problemTypeLiteralToEnum(const ProblemTypeLiteral &literal)
+{
+  switch (literal.value())
+    {
+      case ProblemTypeLiteral::value_of<"dirichlet">():
+        return ProblemType::DirichletBCProblem;
+      case ProblemTypeLiteral::value_of<"neumann">():
+        return ProblemType::NeumannBCProblem;
+      case ProblemTypeLiteral::value_of<"mixed">():
+        return ProblemType::MixedBCProblem;
+      default:
+        throw std::runtime_error("Unknown problem type");
+    }
+}
+
+PreconditionerType
+preconditionerTypeLiteralToEnum(const PreconditionerTypeLiteral &literal)
+{
+  switch (literal.value())
+    {
+      case PreconditionerTypeLiteral::value_of<"factorization">():
+        return PreconditionerType::HMatrixFactorization;
+      case PreconditionerTypeLiteral::value_of<"operator">():
+        return PreconditionerType::OperatorPreconditioning;
+      case PreconditionerTypeLiteral::value_of<"identity">():
+        return PreconditionerType::Identity;
+      case PreconditionerTypeLiteral::value_of<"jacobi">():
+        return PreconditionerType::Jacobi;
+      case PreconditionerTypeLiteral::value_of<"block_jacobi">():
+        return PreconditionerType::BlockJacobi;
+      default:
+        throw std::runtime_error("Unknown preconditioner type");
+    }
+}
+
+IterativeSolverVmultType
+vmultTypeLiteralToEnum(const VmultTypeLiteral &literal)
+{
+  switch (literal.value())
+    {
+      case VmultTypeLiteral::value_of<"serial_recursive">():
+        return IterativeSolverVmultType::SerialRecursive;
+      case VmultTypeLiteral::value_of<"serial_iterative">():
+        return IterativeSolverVmultType::SerialIterative;
+      case VmultTypeLiteral::value_of<"task_parallel">():
+        return IterativeSolverVmultType::TaskParallel;
+      default:
+        throw std::runtime_error("Unknown vmult type");
+    }
+}
+
+void
+initWorkDir()
+{
+  const auto       &conf_inst  = ConfigFile::instance().getConfig();
+  const std::string output_dir = conf_inst.project.output_dir;
+  const std::string proj_name  = conf_inst.project.project_name.value();
+  const std::filesystem::path work_dir =
+    std::filesystem::path(output_dir) / proj_name;
+
+  // Create working directory if it doesn't exist
+  std::error_code ec;
+  std::filesystem::create_directories(work_dir, ec);
+  if (ec)
+    {
+      throw fmt::system_error(ec.value(),
+                              "Failed to create working directory: {}",
+                              work_dir.string());
+    }
+
+  // Change current working directory to the project directory
+  std::filesystem::current_path(work_dir);
+}
+
 int
 main(int argc, char *argv[])
 {
-  CmdOpts opts = parse_cmdline(argc, argv);
+  CPPTRACE_TRY
+  {
+    if (argc != 2)
+      {
+        std::cerr << "Usage: " << argv[0] << " <config file>" << std::endl;
+        return 1;
+      }
 
-  /**
-   * @internal Pop out the default "DEAL" prefix string.
-   */
-  // Write run-time logs to file
-  std::ofstream ofs("hierbem.log");
-  deallog.pop();
-  deallog.depth_console(0);
-  deallog.depth_file(5);
-  deallog.attach(ofs);
+    ConfigFile::instance().initialize(argv[1]); // Load configuration file
+    initWorkDir();
+    const auto       &conf_inst    = ConfigFile::instance().getConfig();
+    const std::string project_name = conf_inst.project.project_name.value();
 
-  LogStream::Prefix prefix_string("HierBEM");
+    std::ofstream ofs(project_name + std::string(".log"));
+    deallog.pop();
+    deallog.depth_console(0);
+    deallog.depth_file(5);
+    deallog.attach(ofs);
 
-  /**
-   * @internal Create and start the timer.
-   */
-  Timer timer;
+    LogStream::Prefix prefix_string("HierBEM");
 
-  const unsigned int dim      = 2;
-  const unsigned int spacedim = 3;
+    /**
+     * @internal Create and start the timer.
+     */
+    Timer timer;
 
-  ConfLaplaceBEM bem_params{opts.refinement,
-                            opts.dirichlet_space_fe_order,
-                            opts.neumann_space_fe_order,
-                            ProblemType::MixedBCProblem,
-                            true};
-  ConfHMatrix    hmat_params{64, 64, 8, 4, 0.8, 5, 5, 0.01, false, 10};
-  ConfHMatrix    hmat_preconditioner_params{
-    64, 64, 8, 4, 1.0, 1, 1, 0.1, false, 10};
-  ConfSauterQuad             sauter_quad_params;
-  ConfSauterQuad             sauter_quad_precond_params;
-  ConfLinearSolver           linear_solver_params;
-  ConfOperatorPreconditioner op_precond_params;
-  ConfParallelization        parallel_params;
+    const unsigned int dim      = 2;
+    const unsigned int spacedim = 3;
 
-  // Set TBB thread num.
-  if (parallel_params.tbb_thread_num == -1)
-    MultithreadInfo::set_thread_limit(MultithreadInfo::n_threads());
-  else
-    MultithreadInfo::set_thread_limit(parallel_params.tbb_thread_num);
+    ConfLaplaceBEM bem_params{conf_inst.bem.mesh_refinement,
+                              conf_inst.bem.fe_order_for_dirichlet_space,
+                              conf_inst.bem.fe_order_for_neumann_space,
+                              problemTypeLiteralToEnum(
+                                conf_inst.bem.problem_type),
+                              conf_inst.bem.is_interior_problem};
 
-  // Initialize CUDA stack size and device properties.
-  initCudaRuntime(parallel_params);
+    // Set TBB thread num.
+    if (conf_inst.parallel.tbb_thread_num == -1)
+      MultithreadInfo::set_thread_limit(MultithreadInfo::n_threads());
+    else
+      MultithreadInfo::set_thread_limit(conf_inst.parallel.tbb_thread_num);
 
-  LaplaceBEM<dim, spacedim> bem(bem_params,
-                                hmat_params,
-                                hmat_preconditioner_params,
-                                sauter_quad_params,
-                                sauter_quad_precond_params,
-                                linear_solver_params,
-                                op_precond_params,
-                                parallel_params);
-  bem.set_project_name("laplace-bem-mixed-spanner");
-  bem.set_preconditioner_type(opts.precond_type);
-  bem.set_iterative_solver_vmult_type(opts.vmult_type);
+    // Initialize CUDA stack size and device properties.
+    initCudaRuntime(conf_inst.parallel);
 
-  timer.stop();
-  print_wall_time(deallog, timer, "program preparation");
+    LaplaceBEM<dim, spacedim> bem(bem_params,
+                                  conf_inst.hmatrix,
+                                  conf_inst.hmatrix_precond,
+                                  conf_inst.sauter_quad,
+                                  conf_inst.sauter_quad_precond,
+                                  conf_inst.linear_solver,
+                                  conf_inst.op_precond,
+                                  conf_inst.parallel);
+    bem.set_project_name(project_name);
+    bem.set_preconditioner_type(
+      preconditionerTypeLiteralToEnum(conf_inst.bem.precond_type));
+    bem.set_iterative_solver_vmult_type(
+      vmultTypeLiteralToEnum(conf_inst.bem.vmult_type));
 
-  timer.start();
+    timer.stop();
+    print_wall_time(deallog, timer, "program preparation");
 
-  std::ifstream           mesh_file(HBEM_TEST_MODEL_DIR "spanner.msh");
-  Triangulation<spacedim> tria;
-  GridIn<spacedim>        grid_in;
-  grid_in.attach_triangulation(tria);
-  grid_in.read_msh(mesh_file);
+    timer.start();
 
-  // Create the map from material ids to manifold ids.
-  bem.get_manifold_description()[0] = 0;
-  bem.get_manifold_description()[1] = 0;
-  bem.get_manifold_description()[2] = 0;
+    std::ifstream mesh_in(std::string(HBEM_TEST_MODEL_DIR) +
+                          conf_inst.project.mesh_file);
+    // Use @p dealii::GridIn to read the mesh, because there are physical groups
+    // defined in Gmsh for the spanner model and we need to read physical group
+    // ids as material ids. @p read_msh in HierBEM ignore physical group ids and
+    // directly read elementary entity tags as material ids.
+    GridIn<dim, spacedim> grid_in;
+    grid_in.attach_triangulation(bem.get_triangulation());
+    grid_in.read_msh(mesh_in);
+    // Build surface-to-volume and volume-to-surface relationship.
+    bem.get_subdomain_topology()
+      .generate_single_domain_topology_for_dealii_model({0, 1, 2});
 
-  FlatManifold<dim, spacedim> *flat_manifold =
-    new FlatManifold<dim, spacedim>();
-  bem.get_manifolds()[0] = flat_manifold;
+    // Create a flat manifold.
+    FlatManifold<dim, spacedim> *flat_manifold =
+      new FlatManifold<dim, spacedim>();
+    bem.get_manifolds()[0] = flat_manifold;
 
-  Triangulation<dim, spacedim> surface_tria;
-  surface_tria.set_manifold(0, *flat_manifold);
-  bem.extract_surface_triangulation(tria, std::move(surface_tria), true);
+    // Create the map from manifold id to mapping order.
+    bem.get_manifold_id_to_mapping_order()[0] = 1;
 
-  // Create the map from manifold id to mapping order.
-  bem.get_manifold_id_to_mapping_order()[0] = opts.mapping_order;
+    // Create the map from material ids to manifold ids.
+    bem.get_manifold_description()[0] = 0;
+    bem.get_manifold_description()[1] = 0;
+    bem.get_manifold_description()[2] = 0;
 
-  // Build surface-to-volume and volume-to-surface relationship.
-  bem.get_subdomain_topology().generate_single_domain_topology_for_dealii_model(
-    {0, 1, 2});
+    timer.stop();
+    print_wall_time(deallog, timer, "read mesh");
 
-  timer.stop();
-  print_wall_time(deallog, timer, "read mesh");
+    timer.start();
 
-  timer.start();
+    // Assign boundary conditions.
+    DirichletBC dirichlet_bc;
+    NeumannBC   neumann_bc;
 
-  DirichletBC dirichlet_bc;
-  NeumannBC   neumann_bc;
+    bem.assign_dirichlet_bc(dirichlet_bc, {1, 2});
+    bem.assign_neumann_bc(neumann_bc, 0);
 
-  bem.assign_dirichlet_bc(dirichlet_bc, {1, 2});
-  bem.assign_neumann_bc(neumann_bc, 0);
+    timer.stop();
+    print_wall_time(deallog, timer, "assign boundary conditions");
 
-  timer.stop();
-  print_wall_time(deallog, timer, "assign boundary conditions");
+    timer.start();
 
-  timer.start();
+    bem.run();
 
-  bem.run();
+    timer.stop();
+    print_wall_time(deallog, timer, "run the solver");
 
-  timer.stop();
-  print_wall_time(deallog, timer, "run the solver");
+    deallog << "Program exits with a total wall time " << timer.wall_time()
+            << "s" << std::endl;
 
-  deallog << "Program exits with a total wall time " << timer.wall_time() << "s"
-          << std::endl;
+    bem.print_memory_consumption_table(deallog.get_file_stream());
 
-  bem.print_memory_consumption_table(deallog.get_file_stream());
-
-  return 0;
+    return 0;
+  }
+  CPPTRACE_CATCH(const std::exception &e)
+  {
+    std::cerr << "Exception: " << e.what() << std::endl;
+    cpptrace::from_current_exception().print();
+    return 1;
+  }
 }
