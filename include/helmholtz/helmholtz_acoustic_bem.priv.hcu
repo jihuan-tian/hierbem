@@ -65,6 +65,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <map>
 #include <memory>
 #include <set>
 #include <string>
@@ -1684,17 +1685,19 @@ void
 HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   initialize_manifolds_from_manifold_description()
 {
-  // Assign manifold ids to all cells in the triangulation.
+  // Assign manifold ids to all cells in the triangulation, which depends on the
+  // mapping from material ids to manifold ids stored in
+  // @p manifold_description_. If the cell's material id cannot be found in this
+  // mapping, just use its default @p flat_manifold_id.
   for (auto &cell : tria_.active_cell_iterators())
     {
-      cell->set_all_manifold_ids(manifold_description_[cell->material_id()]);
+      if (manifold_description_.contains(cell->material_id()))
+        cell->set_all_manifold_ids(manifold_description_[cell->material_id()]);
     }
 
   // Associate manifold objects with manifold ids in the triangulation.
   for (const auto &m : manifolds_)
-    {
-      tria_.set_manifold(m.first, *m.second);
-    }
+    tria_.set_manifold(m.first, *m.second);
 }
 
 
@@ -1709,9 +1712,7 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
   // Create different orders of mapping.
   mappings_.reserve(max_mapping_order);
   for (unsigned int i = 1; i <= max_mapping_order; i++)
-    {
-      mappings_.push_back(new MappingInfo<dim, spacedim>(i));
-    }
+    mappings_.push_back(new MappingInfo<dim, spacedim>(i));
 
   // Construct the map from material ids to mapping indices.
   for (const auto &m : manifold_description_)
@@ -1851,8 +1852,10 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
         single_pair_map;
       single_pair_map[static_cast<types::material_id>(bc.first)] = bc.second;
 
+      auto it = material_id_to_mapping_index_.find(bc.first);
       VectorTools::interpolate_based_on_material_id(
-        mappings_[material_id_to_mapping_index_[bc.first]]->get_mapping(),
+        mappings_[it != material_id_to_mapping_index_.end() ? it->second : 0]
+          ->get_mapping(),
         dof_handler_for_dirichlet_space_,
         single_pair_map,
         dirichlet_bc_);
@@ -1878,8 +1881,10 @@ HelmholtzAcousticBEM<dim, spacedim, RangeNumberType, KernelNumberType>::Priv::
         single_pair_map;
       single_pair_map[static_cast<types::material_id>(bc.first)] = bc.second;
 
+      auto it = material_id_to_mapping_index_.find(bc.first);
       VectorTools::interpolate_based_on_material_id(
-        mappings_[material_id_to_mapping_index_[bc.first]]->get_mapping(),
+        mappings_[it != material_id_to_mapping_index_.end() ? it->second : 0]
+          ->get_mapping(),
         dof_handler_for_neumann_space_,
         single_pair_map,
         neumann_bc_);

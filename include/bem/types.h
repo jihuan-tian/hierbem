@@ -48,6 +48,7 @@ enum ProblemType
   DirichletBCProblem, //!< DirichletBCProblem
   NeumannBCProblem,   //!< NeumannBCProblem
   MixedBCProblem,     //!< MixedBCProblem
+  RobinBCProblem,     //!< RobinBCProblem
   UndefinedProblem
 };
 

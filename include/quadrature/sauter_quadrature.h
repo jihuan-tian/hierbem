@@ -2041,7 +2041,9 @@ sauter_quadrature_on_one_pair_of_cells_parallel_over_ky(
   const bool is_symmetric                        = false)
 {
   const unsigned int ky_mapping_index =
-    material_id_to_mapping_index.at(ky_cell_iter->material_id());
+    ky_cell_iter->manifold_id() == numbers::flat_manifold_id ?
+      0 :
+      material_id_to_mapping_index.at(ky_cell_iter->material_id());
   MappingInfo<dim, spacedim> &ky_mapping_info = *mappings[ky_mapping_index];
 
   sauter_quadrature_on_one_pair_of_cells(kernel,

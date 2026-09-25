@@ -1456,7 +1456,9 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
       const types::global_cell_index kx_cell_index_local =
         global_to_local_cell_index_map[kx_cell_index_global];
       const unsigned int kx_mapping_index =
-        material_id_to_mapping_index.at(kx_cell_iter->material_id());
+        kx_cell_iter->manifold_id() == numbers::flat_manifold_id ?
+          0 :
+          material_id_to_mapping_index.at(kx_cell_iter->material_id());
       MappingInfo<dim, spacedim> &kx_mapping_info = *mappings[kx_mapping_index];
       const unsigned int          kx_mapping_n_shape_functions =
         kx_mapping_info.get_data()->n_shape_functions;
@@ -1486,7 +1488,9 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
           const types::global_cell_index ky_cell_index_local =
             global_to_local_cell_index_map[ky_cell_index_global];
           const unsigned int ky_mapping_index =
-            material_id_to_mapping_index.at(ky_cell_iter->material_id());
+            ky_cell_iter->manifold_id() == numbers::flat_manifold_id ?
+              0 :
+              material_id_to_mapping_index.at(ky_cell_iter->material_id());
           MappingInfo<dim, spacedim> &ky_mapping_info =
             *mappings[ky_mapping_index];
           const unsigned int ky_mapping_n_shape_functions =
@@ -1859,7 +1863,9 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
       const types::global_cell_index kx_cell_index_local =
         global_to_local_cell_index_map[kx_cell_index_global];
       const unsigned int kx_mapping_index =
-        material_id_to_mapping_index.at(kx_cell_iter->material_id());
+        kx_cell_iter->manifold_id() == numbers::flat_manifold_id ?
+          0 :
+          material_id_to_mapping_index.at(kx_cell_iter->material_id());
       MappingInfo<dim, spacedim> &kx_mapping_info = *mappings[kx_mapping_index];
       const unsigned int          kx_mapping_n_shape_functions =
         kx_mapping_info.get_data()->n_shape_functions;
@@ -1890,7 +1896,9 @@ sauter_quadrature_on_one_pair_of_near_field_dofs(
           const types::global_cell_index ky_cell_index_local =
             global_to_local_cell_index_map[ky_cell_index_global];
           const unsigned int ky_mapping_index =
-            material_id_to_mapping_index.at(ky_cell_iter->material_id());
+            ky_cell_iter->manifold_id() == numbers::flat_manifold_id ?
+              0 :
+              material_id_to_mapping_index.at(ky_cell_iter->material_id());
           MappingInfo<dim, spacedim> &ky_mapping_info =
             *mappings[ky_mapping_index];
           const unsigned int ky_mapping_n_shape_functions =
@@ -2319,7 +2327,9 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
       const types::global_cell_index kx_cell_index_local =
         global_to_local_cell_index_map[kx_cell_index_global];
       const unsigned int kx_mapping_index =
-        material_id_to_mapping_index.at(kx_cell_iter->material_id());
+        kx_cell_iter->manifold_id() == numbers::flat_manifold_id ?
+          0 :
+          material_id_to_mapping_index.at(kx_cell_iter->material_id());
       MappingInfo<dim, spacedim> &kx_mapping_info = *mappings[kx_mapping_index];
 
       // Update the DoF indices.
@@ -2337,7 +2347,9 @@ sauter_quadrature_on_one_pair_of_far_field_dofs(
           const types::global_cell_index ky_cell_index_local =
             global_to_local_cell_index_map[ky_cell_index_global];
           const unsigned int ky_mapping_index =
-            material_id_to_mapping_index.at(ky_cell_iter->material_id());
+            ky_cell_iter->manifold_id() == numbers::flat_manifold_id ?
+              0 :
+              material_id_to_mapping_index.at(ky_cell_iter->material_id());
           MappingInfo<dim, spacedim> &ky_mapping_info =
             *mappings[ky_mapping_index];
 
@@ -3509,7 +3521,9 @@ create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
         global_to_local_cell_index_map[kx_cell_index_global];
 
       const unsigned int kx_mapping_index =
-        material_id_to_mapping_index.at(kx_cell_iter->material_id());
+        kx_cell_iter->manifold_id() == numbers::flat_manifold_id ?
+          0 :
+          material_id_to_mapping_index.at(kx_cell_iter->material_id());
       MappingInfo<dim, spacedim> &kx_mapping_info = *mappings[kx_mapping_index];
       const unsigned int          kx_mapping_n_shape_functions =
         kx_mapping_info.get_data()->n_shape_functions;
@@ -3549,7 +3563,9 @@ create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
               scratch_data.common_vertex_pair_local_indices);
 
           const unsigned int ky_mapping_index =
-            material_id_to_mapping_index.at(ky_cell_iter->material_id());
+            ky_cell_iter->manifold_id() == numbers::flat_manifold_id ?
+              0 :
+              material_id_to_mapping_index.at(ky_cell_iter->material_id());
           MappingInfo<dim, spacedim> &ky_mapping_info =
             *mappings[ky_mapping_index];
           const unsigned int ky_mapping_n_shape_functions =
@@ -3938,7 +3954,9 @@ create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
         global_to_local_cell_index_map[kx_cell_index_global];
 
       const unsigned int kx_mapping_index =
-        material_id_to_mapping_index.at(kx_cell_iter->material_id());
+        kx_cell_iter->manifold_id() == numbers::flat_manifold_id ?
+          0 :
+          material_id_to_mapping_index.at(kx_cell_iter->material_id());
       MappingInfo<dim, spacedim> &kx_mapping_info = *mappings[kx_mapping_index];
       const unsigned int          kx_mapping_n_shape_functions =
         kx_mapping_info.get_data()->n_shape_functions;
@@ -3978,7 +3996,9 @@ create_sauter_quadrature_tasks_on_one_pair_of_near_field_dofs(
               scratch_data.common_vertex_pair_local_indices);
 
           const unsigned int ky_mapping_index =
-            material_id_to_mapping_index.at(ky_cell_iter->material_id());
+            ky_cell_iter->manifold_id() == numbers::flat_manifold_id ?
+              0 :
+              material_id_to_mapping_index.at(ky_cell_iter->material_id());
           MappingInfo<dim, spacedim> &ky_mapping_info =
             *mappings[ky_mapping_index];
           const unsigned int ky_mapping_n_shape_functions =
@@ -4442,7 +4462,9 @@ create_sauter_quadrature_tasks_on_one_pair_of_far_field_dofs(
         global_to_local_cell_index_map[kx_cell_index_global];
 
       const unsigned int kx_mapping_index =
-        material_id_to_mapping_index.at(kx_cell_iter->material_id());
+        kx_cell_iter->manifold_id() == numbers::flat_manifold_id ?
+          0 :
+          material_id_to_mapping_index.at(kx_cell_iter->material_id());
       MappingInfo<dim, spacedim> &kx_mapping_info = *mappings[kx_mapping_index];
 
       // Update the DoF indices.
@@ -4461,7 +4483,9 @@ create_sauter_quadrature_tasks_on_one_pair_of_far_field_dofs(
             global_to_local_cell_index_map[ky_cell_index_global];
 
           const unsigned int ky_mapping_index =
-            material_id_to_mapping_index.at(ky_cell_iter->material_id());
+            ky_cell_iter->manifold_id() == numbers::flat_manifold_id ?
+              0 :
+              material_id_to_mapping_index.at(ky_cell_iter->material_id());
           MappingInfo<dim, spacedim> &ky_mapping_info =
             *mappings[ky_mapping_index];
 

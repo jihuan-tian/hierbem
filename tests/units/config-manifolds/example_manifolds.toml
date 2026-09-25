@@ -1,0 +1,52 @@
+[[manifolds]]
+center = [ 0.0, 0.0, 0.0 ]
+kind = 'spherical'
+mapping_order = 2
+surface_tags = [ 1, 2 ]
+
+[[manifolds]]
+axis = 2
+kind = 'cylindrical_cartesian_axis'
+mapping_order = 2
+surface_tags = [ 3 ]
+tolerance = 1e-10
+
+[[manifolds]]
+direction = [ 0.0, 0.0, 1.0 ]
+kind = 'cylindrical'
+mapping_order = 3
+point_on_axis = [ 1.0, 2.0, 3.0 ]
+surface_tags = [ 4, 5 ]
+tolerance = 1e-10
+
+[[manifolds]]
+R = 2.0
+kind = 'torus'
+mapping_order = 2
+r = 0.5
+surface_tags = [ 6 ]
+
+[[manifolds]]
+kind = 'occ_normal_projection'
+mapping_order = 2
+surface_tags = [ 7 ]
+tolerance = 9.9999999999999995e-08
+
+[[manifolds]]
+direction = [ 1.0, 0.0, 0.0 ]
+kind = 'occ_directional_projection'
+mapping_order = 2
+surface_tags = [ 8 ]
+tolerance = 9.9999999999999995e-08
+
+[[manifolds]]
+kind = 'occ_normal2mesh_projection'
+mapping_order = 1
+surface_tags = [ 9 ]
+tolerance = 9.9999999999999995e-08
+
+[[manifolds]]
+kind = 'occ_nurbs_patch'
+mapping_order = 2
+surface_tags = [ 10, 11 ]
+tolerance = 9.9999999999999995e-08

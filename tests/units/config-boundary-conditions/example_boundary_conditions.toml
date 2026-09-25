@@ -1,0 +1,63 @@
+[[boundary_conditions]]
+kind = 'dirichlet'
+surface_tags = [ 1, 2 ]
+
+    [boundary_conditions.value_spec]
+    type = 'constant'
+    value = 1.0
+
+[[boundary_conditions]]
+kind = 'dirichlet'
+surface_tags = [ 3 ]
+
+    [boundary_conditions.value_spec]
+    expr = 'sin(x) * cos(z)'
+    type = 'expression'
+
+[[boundary_conditions]]
+kind = 'dirichlet'
+surface_tags = [ 4 ]
+
+    [boundary_conditions.value_spec]
+    type = 'constant'
+
+        [boundary_conditions.value_spec.value]
+        imag_part = 1.0
+        real_part = 0.0
+
+[[boundary_conditions]]
+kind = 'neumann'
+surface_tags = [ 5, 6 ]
+
+    [boundary_conditions.value_spec]
+    imag_part_expr = 'sin(z)'
+    real_part_expr = 'cos(x)'
+    type = 'expression_complex'
+
+[[boundary_conditions]]
+kind = 'robin'
+surface_tags = [ 7 ]
+
+    [boundary_conditions.coeff_spec]
+    type = 'constant'
+    value = 2.0
+
+    [boundary_conditions.value_spec]
+    type = 'constant'
+    value = 0.0
+
+[[boundary_conditions]]
+kind = 'robin'
+surface_tags = [ 10, 11 ]
+
+    [boundary_conditions.coeff_spec]
+    type = 'constant'
+
+        [boundary_conditions.coeff_spec.value]
+        imag_part = 3.0
+        real_part = 2.0
+
+    [boundary_conditions.value_spec]
+    imag_part_expr = 'ctan(x)'
+    real_part_expr = 'tan(x)'
+    type = 'expression_complex'

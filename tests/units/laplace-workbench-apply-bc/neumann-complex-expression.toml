@@ -1,0 +1,40 @@
+[project]
+project_name = "neumann-complex-expression-two-spheres"
+mesh_file = "two-spheres.msh"
+cad_file = "two-spheres.brep"
+
+[bem]
+problem_type = "neumann"
+is_interior_problem = false
+fe_order_for_dirichlet_space = 1
+fe_order_for_neumann_space = 0
+
+[[boundary_conditions]]
+kind = "neumann"
+surface_tags = [ 1 ]
+
+    [boundary_conditions.value_spec]
+    type = "expression_complex"
+    real_part_expr = "cos(x) * sin(z)"
+    imag_part_expr = "sin(y)"
+
+[[boundary_conditions]]
+kind = "neumann"
+surface_tags = [ 2 ]
+
+    [boundary_conditions.value_spec]
+    type = "expression_complex"
+    real_part_expr = "cos(y)"
+    imag_part_expr = "sin(x) * cos(z)"
+
+[[manifolds]]
+kind = "spherical"
+surface_tags = [ 1 ]
+center = [ -4.0, 0.0, 0.0 ]
+mapping_order = 2
+
+[[manifolds]]
+kind = "spherical"
+surface_tags = [ 2 ]
+center = [ 4.0, 0.0, 0.0 ]
+mapping_order = 2

@@ -36,6 +36,7 @@ set(_target hierbem)
 add_library(
   ${_target} SHARED
   config_file/cu_related.cu
+  config_file/config_file.cc
   utilities/debug_tools.cc
   dofs/dof_tools_ext.cc
   hmatrix/aca_plus/aca_plus.cu

@@ -1,7 +1,8 @@
 [project]
-project_name = 'test'
-mesh_file = 'grid.msh'
-output_dir = 'output'
+project_name = "two-spheres"
+mesh_file = "two-spheres.msh"
+cad_file = "two-spheres.brep"
+output_dir = "./"
 
 [bem]
 boundary_dim = 2
@@ -9,10 +10,38 @@ space_dim = 3
 mesh_refinement = 0
 fe_order_for_dirichlet_space = 1
 fe_order_for_neumann_space = 0
-problem_type = 'dirichlet'
+problem_type = "dirichlet"
 is_interior_problem = false
-precond_type = 'operator'
-vmult_type = 'serial_iterative'
+precond_type = "operator"
+vmult_type = "serial_iterative"
+
+[[boundary_conditions]]
+kind = "dirichlet"
+surface_tags = [ 1 ]
+
+  [boundary_conditions.value_spec]
+  type = "expression"
+  expr = "sin(x) * cos(y)"
+
+[[boundary_conditions]]
+kind = "dirichlet"
+surface_tags = [ 2 ]
+
+  [boundary_conditions.value_spec]
+  type = "constant"
+  value = 1.5
+
+[[manifolds]]
+kind = "spherical"
+surface_tags = [ 1 ]
+center = [ -4.0, 0.0, 0.0 ]
+mapping_order = 2
+
+[[manifolds]]
+kind = "spherical"
+surface_tags = [ 2 ]
+center = [ 4.0, 0.0, 0.0 ]
+mapping_order = 2
 
 [hmatrix]
 n_min_for_ct = 32
@@ -20,9 +49,11 @@ n_min_for_bct = 32
 cutoff_level_ct = 8
 cutoff_level_bct = 4
 eta = 0.8
-max_rank = 50
+initial_rank = 2
+max_rank = 0
 aca_relative_err = 0.01
 cpu_serial_without_producer_consumer = false
+ref_selection_max_tries = 10
 
 [hmatrix_precond]
 n_min_for_ct = 32
@@ -30,9 +61,11 @@ n_min_for_bct = 32
 cutoff_level_ct = 8
 cutoff_level_bct = 4
 eta = 1.0
+initial_rank = 2
 max_rank = 10
 aca_relative_err = 0.1
 cpu_serial_without_producer_consumer = false
+ref_selection_max_tries = 10
 
 [sauter_quad]
 near_field.producer_num = 2
@@ -65,6 +98,7 @@ hyper_singular_order.same_panel = 5
 hyper_singular_order.common_edge = 4
 hyper_singular_order.common_vertex = 4
 hyper_singular_order.regular = 3
+mass_matrix_order = 2
 
 [sauter_quad_precond]
 near_field.producer_num = 2
@@ -73,7 +107,6 @@ near_field.consumer_num_same_panel = 1
 near_field.consumer_num_common_edge = 1
 near_field.consumer_num_common_vertex = 1
 near_field.consumer_num_regular = 2
-near_field.consumer_set_num = 1
 near_field.task_num_per_block = 256
 near_field.block_num_per_batch = 8
 near_field.batch_num_in_buffer = 8
@@ -97,6 +130,7 @@ hyper_singular_order.same_panel = 5
 hyper_singular_order.common_edge = 4
 hyper_singular_order.common_vertex = 4
 hyper_singular_order.regular = 3
+mass_matrix_order = 2
 
 [linear_solver]
 max_iter = 1000

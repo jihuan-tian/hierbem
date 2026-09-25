@@ -1,0 +1,44 @@
+[project]
+project_name = "dirichlet-complex-two-spheres"
+mesh_file = "two-spheres.msh"
+cad_file = "two-spheres.brep"
+
+[bem]
+problem_type = "dirichlet"
+is_interior_problem = false
+fe_order_for_dirichlet_space = 1
+fe_order_for_neumann_space = 0
+
+[[boundary_conditions]]
+kind = "dirichlet"
+surface_tags = [ 1 ]
+
+    [boundary_conditions.value_spec]
+    type = "constant"
+
+        [boundary_conditions.value_spec.value]
+        real_part = 1.0
+        imag_part = 2.0
+
+[[boundary_conditions]]
+kind = "dirichlet"
+surface_tags = [ 2 ]
+
+    [boundary_conditions.value_spec]
+    type = "constant"
+
+        [boundary_conditions.value_spec.value]
+        real_part = -4.0
+        imag_part = 0.5
+
+[[manifolds]]
+kind = "spherical"
+surface_tags = [ 1 ]
+center = [ -4.0, 0.0, 0.0 ]
+mapping_order = 2
+
+[[manifolds]]
+kind = "spherical"
+surface_tags = [ 2 ]
+center = [ 4.0, 0.0, 0.0 ]
+mapping_order = 2

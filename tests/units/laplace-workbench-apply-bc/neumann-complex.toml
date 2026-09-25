@@ -1,0 +1,44 @@
+[project]
+project_name = "neumann-complex-two-spheres"
+mesh_file = "two-spheres.msh"
+cad_file = "two-spheres.brep"
+
+[bem]
+problem_type = "neumann"
+is_interior_problem = false
+fe_order_for_dirichlet_space = 1
+fe_order_for_neumann_space = 0
+
+[[boundary_conditions]]
+kind = "neumann"
+surface_tags = [ 1 ]
+
+    [boundary_conditions.value_spec]
+    type = "constant"
+
+        [boundary_conditions.value_spec.value]
+        real_part = 0.0
+        imag_part = 1.0
+
+[[boundary_conditions]]
+kind = "neumann"
+surface_tags = [ 2 ]
+
+    [boundary_conditions.value_spec]
+    type = "constant"
+
+        [boundary_conditions.value_spec.value]
+        real_part = 3.0
+        imag_part = -2.0
+
+[[manifolds]]
+kind = "spherical"
+surface_tags = [ 1 ]
+center = [ -4.0, 0.0, 0.0 ]
+mapping_order = 2
+
+[[manifolds]]
+kind = "spherical"
+surface_tags = [ 2 ]
+center = [ 4.0, 0.0, 0.0 ]
+mapping_order = 2

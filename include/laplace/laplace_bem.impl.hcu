@@ -314,6 +314,28 @@ template <int dim,
           int spacedim,
           typename RangeNumberType,
           typename KernelNumberType>
+const std::map<types::material_id, unsigned int> &
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_material_id_to_mapping_index() const
+{
+  return priv_->material_id_to_mapping_index_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
+std::map<types::material_id, unsigned int> &
+LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
+  get_material_id_to_mapping_index()
+{
+  return priv_->material_id_to_mapping_index_;
+}
+
+template <int dim,
+          int spacedim,
+          typename RangeNumberType,
+          typename KernelNumberType>
 const Triangulation<dim, spacedim> &
 LaplaceBEM<dim, spacedim, RangeNumberType, KernelNumberType>::
   get_triangulation() const

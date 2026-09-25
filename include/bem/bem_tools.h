@@ -3297,7 +3297,9 @@ namespace BEMTools
       {
         const types::global_cell_index cell_index = cell->active_cell_index();
         const unsigned int             mapping_index =
-          material_id_to_mapping_index.at(cell->material_id());
+          cell->manifold_id() == numbers::flat_manifold_id ?
+                        0 :
+                        material_id_to_mapping_index.at(cell->material_id());
         mapping_indices[cell_index] = mapping_index;
 
         // Compute mapping support points in the default hierarchic order for

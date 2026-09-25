@@ -305,6 +305,12 @@ public:
   std::map<types::manifold_id, Manifold<dim, spacedim> *> &
   get_manifolds();
 
+  const std::map<types::material_id, unsigned int> &
+  get_material_id_to_mapping_index() const;
+
+  std::map<types::material_id, unsigned int> &
+  get_material_id_to_mapping_index();
+
   const Triangulation<dim, spacedim> &
   get_triangulation() const;
 

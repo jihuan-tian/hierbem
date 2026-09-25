@@ -46,6 +46,13 @@ public:
                     const double       eps_for_orientation_detection = 1e-5);
 
   /**
+   * With this version, the CAD file and mesh file should be loaded beforehand.
+   */
+  void
+  generate_topology(const bool   is_geo_cad,
+                    const double eps_for_orientation_detection = 1e-5);
+
+  /**
    * Generate a default topology for a single domain created in deal.ii, whose
    * surface normals all point outward and surfaces are not assigned any
    * physical groups.
@@ -142,6 +149,38 @@ SubdomainTopology<dim, spacedim>::generate_topology(
 
   gmsh::clear();
   gmsh::finalize();
+}
+
+
+template <int dim, int spacedim>
+void
+SubdomainTopology<dim, spacedim>::generate_topology(
+  const bool   is_geo_cad,
+  const double eps_for_orientation_detection)
+{
+  Assert(gmsh::model::getDimension() >= dim + 1, ExcInternalError());
+
+  gmsh::vectorpair volume_dimtag_list;
+  if (is_geo_cad)
+    gmsh::model::getEntities(volume_dimtag_list, dim + 1);
+  else
+    gmsh::model::occ::getEntities(volume_dimtag_list, dim + 1);
+
+  Assert(volume_dimtag_list.size() > 0, ExcInternalError());
+
+  // The boundary entities of each volume entity.
+  std::vector<EntityTag> oriented_surface_tags;
+  for (const auto &volume_dimtag : volume_dimtag_list)
+    {
+      GmshManip<dim, spacedim>::get_oriented_volume_boundaries(
+        volume_dimtag.second,
+        oriented_surface_tags,
+        surface_to_subdomain,
+        eps_for_orientation_detection);
+
+      std::sort(oriented_surface_tags.begin(), oriented_surface_tags.end());
+      subdomain_to_surface[volume_dimtag.second] = oriented_surface_tags;
+    }
 }
 
 

@@ -13,7 +13,7 @@
  * @brief
  *
  * @ingroup test_cases
- * @author
+ * @author Xiaozhe Wang
  * @date 2024-05-23
  */
 #include <catch2/catch_all.hpp>
@@ -162,8 +162,11 @@ TEST_CASE("Sanity: string literals", "[toml][demo]")
     problem_type = "interior"
   )";
   const auto  config   = rfl::toml::read<Config>(toml_str).value();
+  // Print the literal string
   std::cout << config.problem_type.name() << std::endl;
+  // Print the literal index
   std::cout << config.problem_type.value() << std::endl;
+  // A literal can be directly compared with a string or an enum value.
   REQUIRE(config.problem_type == "interior");
   REQUIRE(config.problem_type == ProblemType::value_of<"interior">());
 

@@ -28,16 +28,15 @@
 
 HBEM_NS_OPEN
 
-template <typename KernelNumberType>
+template <typename Number>
 concept HostComplex = std::is_same_v<
-  KernelNumberType,
-  std::complex<typename numbers::NumberTraits<KernelNumberType>::real_type>>;
+  Number,
+  std::complex<typename numbers::NumberTraits<Number>::real_type>>;
 
-template <typename KernelNumberType>
-concept DeviceComplex =
-  std::is_same_v<KernelNumberType,
-                 HierBEM::complex<typename numbers::NumberTraits<
-                   KernelNumberType>::real_type>>;
+template <typename Number>
+concept DeviceComplex = std::is_same_v<
+  Number,
+  HierBEM::complex<typename numbers::NumberTraits<Number>::real_type>>;
 
 HBEM_NS_CLOSE
 

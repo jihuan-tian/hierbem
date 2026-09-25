@@ -113,11 +113,12 @@ assemble_fem_scaled_mass_matrix_on_one_cell(
   const typename DoFHandler<dim, spacedim>::active_cell_iterator &
     cell_iter_for_trial_space_domain = iterator_for_cell_iterator_pairs->second;
 
-  const unsigned int mapping_index = material_id_to_mapping_index.at(
-    cell_iter_for_test_space_domain->material_id());
-  Assert(mapping_index == material_id_to_mapping_index.at(
-                            cell_iter_for_trial_space_domain->material_id()),
-         ExcInternalError());
+  const unsigned int mapping_index =
+    cell_iter_for_test_space_domain->manifold_id() ==
+        numbers::flat_manifold_id ?
+      0 :
+      material_id_to_mapping_index.at(
+        cell_iter_for_test_space_domain->material_id());
 
   /**
    * Reinitialize the @p FEValues objects for test space and trial space
@@ -348,11 +349,12 @@ assemble_fem_scaled_mass_matrix_on_one_cell(
   const typename DoFHandler<dim, spacedim>::active_cell_iterator &
     cell_iter_for_trial_space_domain = iterator_for_cell_iterator_pairs->second;
 
-  const unsigned int mapping_index = material_id_to_mapping_index.at(
-    cell_iter_for_test_space_domain->material_id());
-  Assert(mapping_index == material_id_to_mapping_index.at(
-                            cell_iter_for_trial_space_domain->material_id()),
-         ExcInternalError());
+  const unsigned int mapping_index =
+    cell_iter_for_test_space_domain->manifold_id() ==
+        numbers::flat_manifold_id ?
+      0 :
+      material_id_to_mapping_index.at(
+        cell_iter_for_test_space_domain->material_id());
 
   /**
    * Reinitialize the @p FEValues objects for test space and trial space
@@ -1481,7 +1483,9 @@ assemble_bem_full_matrix(
        * calculated within @p sauter_quadrature_on_one_pair_of_cells.
        */
       const unsigned int kx_mapping_index =
-        material_id_to_mapping_index.at(e->material_id());
+        e->manifold_id() == numbers::flat_manifold_id ?
+          0 :
+          material_id_to_mapping_index.at(e->material_id());
       MappingInfo<dim, spacedim> &kx_mapping_info = *mappings[kx_mapping_index];
 
       e->get_dof_indices(
@@ -1645,7 +1649,9 @@ assemble_bem_full_matrix_serial(
        * calculated within @p sauter_quadrature_on_one_pair_of_cells.
        */
       const unsigned int kx_mapping_index =
-        material_id_to_mapping_index.at(e->material_id());
+        e->manifold_id() == numbers::flat_manifold_id ?
+          0 :
+          material_id_to_mapping_index.at(e->material_id());
       MappingInfo<dim, spacedim> &kx_mapping_info = *mappings[kx_mapping_index];
 
       e->get_dof_indices(
@@ -1654,7 +1660,9 @@ assemble_bem_full_matrix_serial(
       for (const auto &f : dof_handler_for_trial_space.active_cell_iterators())
         {
           const unsigned int ky_mapping_index =
-            material_id_to_mapping_index.at(f->material_id());
+            f->manifold_id() == numbers::flat_manifold_id ?
+              0 :
+              material_id_to_mapping_index.at(f->material_id());
           MappingInfo<dim, spacedim> &ky_mapping_info =
             *mappings[ky_mapping_index];
 
@@ -2042,10 +2050,10 @@ interpolate_indicator_vectors_for_subdomains(
           indicator_function_map[static_cast<types::material_id>(surface_tag)] =
             &indicator;
 
+          auto it = material_id_to_mapping_index.find(
+            static_cast<types::material_id>(surface_tag));
           VectorTools::interpolate_based_on_material_id(
-            mappings
-              .at(material_id_to_mapping_index.at(
-                static_cast<types::material_id>(surface_tag)))
+            mappings[it != material_id_to_mapping_index.end() ? it->second : 0]
               ->get_mapping(),
             dof_handler,
             indicator_function_map,
